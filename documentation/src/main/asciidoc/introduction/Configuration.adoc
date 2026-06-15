@@ -27,7 +27,7 @@ to construct a `SessionFactory`
 | Using the more complex APIs defined in link:{doc-javadoc-url}org/hibernate/boot/package-summary.html[`org.hibernate.boot`]
 | Used primarily by framework integrators, this option is outside the scope of this document.
 
-| By letting the container take care of the bootstrap process and of injecting the `EntityManagerFactory` or `SessionFactory`
+| By letting the container take care of the bootstrap process and of injecting the `EntityManagerFactory`
 | Used in a container environment like WildFly or Quarkus.
 |===
 
@@ -38,7 +38,7 @@ Here we'll focus on the first two options.
 [NOTE]
 ====
 Actually, the last option is extremely popular, since every major Java application server and microservice framework comes with built-in support for Hibernate.
-Such container environments typically also feature facilities to automatically manage the lifecycle of an `EntityManager` or `Session` and its association with container-managed transactions.
+Such container environments typically also feature facilities to automatically manage the lifecycle of an `EntityManager` and its association with container-managed transactions.
 
 To learn how to configure Hibernate in such a container environment, you'll need to refer to the documentation of your chosen container.
 For Quarkus, here's the {hibernate-quarkus}[relevant documentation].
@@ -217,7 +217,7 @@ If necessary, we may override configuration properties specified in `persistence
 ----
 EntityManagerFactory entityManagerFactory =
         Persistence.createEntityManagerFactory("org.hibernate.example",
-                Map.of(AvailableSettings.JAKARTA_JDBC_PASSWORD, password));
+                Map.of(Persistence.ConnectionProperties.JDBC_PASSWORD, password));
 ----
 
 [[configuration-api]]
@@ -449,9 +449,9 @@ You can have Hibernate infer your database schema from the mapping annotations y
 | `jakarta.persistence.schema-generation.database.action`
 a| * If `drop-and-create`, first drop the schema, then export tables, sequences, and constraints, and then populate initial data
 * If `create`, export tables, sequences, and constraints, without attempting to drop them first, and then populate initial data
-* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup;
-additionally, drop the schema on `SessionFactory` shutdown
-* If `drop`, drop the schema on `SessionFactory` shutdown
+* If `create-drop`, drop the schema and recreate it on factory startup;
+additionally, drop the schema on factory shutdown
+* If `drop`, drop the schema on factory shutdown
 * If `validate`, validate the database schema without changing it
 * If `update`, only export what's missing in the schema, and alter incorrect column types
 * If `populate`, only populate initial data
@@ -497,7 +497,7 @@ sessionFactory.getSchemaManager().create(true);
 
 :log4j: https://github.com/hibernate/hibernate-reactive/blob/main/examples/session-example/src/main/resources/log4j2.properties
 
-To see the generated SQL as it's sent to the database, you have two options.
+To see the generated SQL as it's sent to the database, we have two options.
 
 One way is to set the property `hibernate.show_sql` to `true`, so that Hibernate logs SQL directly to the console.
 You can make the output much more readable by enabling formatting or highlighting.
@@ -578,7 +578,7 @@ The following settings enable additional automatic quoting:
 | link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#GLOBALLY_QUOTED_IDENTIFIERS[`hibernate.globally_quoted_identifiers`] | Automatically quote every identifier
 |===
 
-Note that `hibernate.globally_quoted_identifiers` is a synonym for `<delimited-identifiers/>` in <<configuration-jpa,`persistence.xml`>>.
+Note that `hibernate.globally_quoted_identifiers` is a synonym for `<delimited-identifiers/>` in the `orm.xml` mapping file.
 We don't recommend the use of global identifier quoting, and in fact these settings are rarely used.
 
 [TIP]

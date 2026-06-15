@@ -147,6 +147,7 @@ EntityManager entityManager =
 ----
 
 Search for implementations of `EntityManager.CreationOption` or `EntityAgent.CreationOption` to find the option types provided by the specification and by Hibernate.
+A number of useful options are declared by link:{doc-javadoc-url}org/hibernate/SessionCreationOption.html[`SessionCreationOption`].
 
 .*Read more: Injecting the EntityManager or EntityAgent*
 [%collapsible]
@@ -350,7 +351,6 @@ returning `null` if there is no such record
 | Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object
 |===
 
-
 Any of these operations might throw an exception.
 Now, if an exception occurs while interacting with the database, there's no good way to resynchronize the state of the current persistence context with the state held in database tables.
 
@@ -428,10 +428,12 @@ The following code results in a single SQL `select` statement:
 List<Book> books = entityManger.findMultiple(Book.class, bookIds);
 ----
 
+link:{doc-javadoc-url}org/hibernate/FindMultipleOption.html[`FindMultipleOption`] declares a number of options influencing the behavior of `findMultiple()` and `getMultiple()`.
+
 [[load-by-natural-id]]
 === Lookup by natural id
 As discussed <<natural-id-attributes,earlier>>, Hibernate offers the ability to map a natural id and perform retrieval operations using the natural id.
-This is accomplished using the option `KeyType.NATURAL`:
+This is accomplished using the option link:{doc-javadoc-url}org/hibernate/KeyType.html#NATURAL[`KeyType.NATURAL`]:
 
 [source,java]
 ----
@@ -624,6 +626,17 @@ Book book = entityManager.find(graph, bookId);
 // ----
 
 This results in a SQL query with _four_ ``left outer join``s.
+
+Instances of `FetchOption` influence how a node of a graph is fetched.
+
+[source,java]
+----
+var graph = entityManager.createEntityGraph(Book.class);
+graph.addAttributeNode(Book_.publisher)
+     .addOption(FetchMethod.BULK_SELECT)
+     .addOption(CacheStoreMode.BYPASS);
+Book book = entityManager.find(graph, bookId);
+----
 
 [NOTE]
 ====

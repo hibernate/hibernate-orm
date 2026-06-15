@@ -315,6 +315,9 @@ jobs:
       contents: read
     name: OpenJDK 25 - Jakarta Persistence TCK 4.0
     runs-on: ubuntu-latest
+    # The TCK runs pretty fast usually, and if it doesn't,
+    # then something is seriously wrong and needs to be analyzed manually
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:

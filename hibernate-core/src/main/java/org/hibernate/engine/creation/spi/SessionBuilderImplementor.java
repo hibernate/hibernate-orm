@@ -7,6 +7,8 @@ package org.hibernate.engine.creation.spi;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -35,6 +37,12 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	@Override
 	@Nonnull
 	SessionImplementor openSession();
+
+	@Override
+	@Nonnull
+	default SessionImplementor open() {
+		return openSession();
+	}
 
 	@Override
 	@Nonnull
@@ -91,6 +99,18 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	@Override
 	@Nonnull
 	SessionBuilderImplementor initialCacheMode(@Nonnull CacheMode cacheMode);
+
+	@Override
+	@Nonnull
+	SessionBuilderImplementor jdbcBatchSize(int batchSize);
+
+	@Override
+	@Nonnull
+	SessionBuilderImplementor cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	@Override
+	@Nonnull
+	SessionBuilderImplementor cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	@Nonnull

@@ -23,3 +23,14 @@ Process (using 6.3 -> 6.4 as an example):
 * PRs against older "dedicated release branches", will first be rebased to the latest stable branch and applied. We'll decide between 6.3 and main based mostly on ; if 6.3, the bot will pick it up.
 
 [1] Historically I am not a huge fan of a full Alpha/Beta/CR cycle for minor releases, usually just doing CRs. But open to convincing otherwise.
+
+[[ci-fixups]]
+== CI related branch fixups
+
+The GHA (GitHub Action) workflow, that is checked into the repository at `.github/workflows/ci.yml`,
+refers to the branch name it applies to, which is typically `main`.
+When branching off for a new major/minor release, the reference to the branch name needs to be updated,
+in order for workflows to run again on pull requests against that branch.
+
+At the very top of the file in the section `on > push > branches` and `on > pull_request > branches`,
+replace the `main` branch name with the correct branch name.

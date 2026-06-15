@@ -233,6 +233,10 @@ The following table illustrates a list of commands for various databases that ca
 |Spanner PostgreSQL
 |`./db.sh spanner_pg`
 |`./gradlew test -Pdb=spannerpgsql`
+
+|CUBRID
+|`./db.sh cubrid`
+|`./gradlew test -Pdb=cubrid`
 |===
 
 Stopping a test database

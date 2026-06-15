@@ -87,8 +87,6 @@ The plugin registers the following tasks:
 
 `generateJava`:: Generates Java entity classes from the database schema.
 `generateDao`:: Generates Data Access Object (DAO) classes.
-`generateHbm`:: Generates `hbm.xml` mapping files.
-`generateCfg`:: Generates a `hibernate.cfg.xml` configuration file.
 `runSql`:: Executes the SQL statement specified by the `sqlToRun` extension property against the database.
 
 

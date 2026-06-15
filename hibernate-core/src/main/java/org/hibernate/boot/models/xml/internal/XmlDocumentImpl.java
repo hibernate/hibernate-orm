@@ -6,8 +6,6 @@ package org.hibernate.boot.models.xml.internal;
 
 import jakarta.persistence.AccessType;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
@@ -55,8 +53,6 @@ public class XmlDocumentImpl implements XmlDocument {
 	private final List<JaxbEmbeddableInstantiatorRegistrationImpl> embeddableInstantiatorRegistrations;
 	private final Map<String, JaxbNamedHqlQueryImpl> jpaNamedQueries;
 	private final Map<String, JaxbNamedNativeQueryImpl> jpaNamedNativeQueries;
-	private final Map<String, JaxbHbmNamedQueryType> hibernateNamedQueries;
-	private final Map<String, JaxbHbmNamedNativeQueryType> hibernateNamedNativeQueries;
 	private final Map<String, JaxbNamedStoredProcedureQueryImpl> namedStoredProcedureQueries;
 
 	private XmlDocumentImpl(
@@ -76,9 +72,7 @@ public class XmlDocumentImpl implements XmlDocument {
 			List<JaxbEmbeddableInstantiatorRegistrationImpl> embeddableInstantiatorRegistrations,
 			Map<String, JaxbNamedHqlQueryImpl> jpaNamedQueries,
 			Map<String, JaxbNamedNativeQueryImpl> jpaNamedNativeQueries,
-			Map<String, JaxbNamedStoredProcedureQueryImpl> namedStoredProcedureQueries,
-			Map<String, JaxbHbmNamedQueryType> hibernateNamedQueries,
-			Map<String, JaxbHbmNamedNativeQueryType> hibernateNamedNativeQueries) {
+			Map<String, JaxbNamedStoredProcedureQueryImpl> namedStoredProcedureQueries) {
 		this.origin = origin;
 		this.root = root;
 		this.defaults = defaults;
@@ -96,8 +90,6 @@ public class XmlDocumentImpl implements XmlDocument {
 		this.jpaNamedQueries = jpaNamedQueries;
 		this.jpaNamedNativeQueries = jpaNamedNativeQueries;
 		this.namedStoredProcedureQueries = namedStoredProcedureQueries;
-		this.hibernateNamedQueries = hibernateNamedQueries;
-		this.hibernateNamedNativeQueries = hibernateNamedNativeQueries;
 	}
 
 	@Override
@@ -178,16 +170,6 @@ public class XmlDocumentImpl implements XmlDocument {
 	@Override
 	public Map<String, JaxbNamedNativeQueryImpl> getJpaNamedNativeQueries() {
 		return jpaNamedNativeQueries;
-	}
-
-	@Override
-	public Map<String, JaxbHbmNamedQueryType> getHibernateNamedQueries() {
-		return hibernateNamedQueries;
-	}
-
-	@Override
-	public Map<String, JaxbHbmNamedNativeQueryType> getHibernateNamedNativeQueries() {
-		return hibernateNamedNativeQueries;
 	}
 
 	@Override
@@ -288,10 +270,7 @@ public class XmlDocumentImpl implements XmlDocument {
 				jaxbRoot.getEmbeddableInstantiatorRegistrations(),
 				toNamedQueryMap( jaxbRoot.getNamedQueries() ),
 				toNamedNativeQueryMap( jaxbRoot.getNamedNativeQueries() ),
-				toNamedProcedureQueryMap( jaxbRoot.getNamedProcedureQueries() ),
-				// not sure what's up with the Hibernate-specific named query nodes, but they are not in the root mapping
-				Collections.emptyMap(),
-				Collections.emptyMap()
+				toNamedProcedureQueryMap( jaxbRoot.getNamedProcedureQueries() )
 		);
 	}
 

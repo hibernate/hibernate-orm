@@ -7,8 +7,7 @@ package org.hibernate.boot.xsd;
 import org.hibernate.Internal;
 
 /**
- * Support for XSD handling related to Hibernate's `hbm.xml` and
- * JPA's `orm.xml`.
+ * Support for XSD handling related to Hibernate's extended `orm.xml` and JPA's `orm.xml`.
  *
  * @author Steve Ebersole
  */
@@ -87,18 +86,6 @@ public class MappingXsdSupport {
 			"https://jakarta.ee/xml/ns/persistence/orm"
 	);
 
-	public static final XsdDescriptor hbmXml = LocalXsdResolver.buildXsdDescriptor(
-			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd",
-			"4.0",
-			"http://www.hibernate.org/xsd/orm/hbm"
-	);
-
-	public static final XsdDescriptor hibernateMappingXml = LocalXsdResolver.buildXsdDescriptor(
-			"org/hibernate/hibernate-mapping-4.0.xsd",
-			"4.0",
-			"http://www.hibernate.org/xsd/hibernate-mapping"
-	);
-
 	private MappingXsdSupport() {
 		//Do not construct new instances
 	}
@@ -112,39 +99,17 @@ public class MappingXsdSupport {
 	}
 
 	public XsdDescriptor jpaXsd(String version) {
-		switch ( version ) {
-			case "1.0": {
-				return jpa10;
-			}
-			case "2.0": {
-				return jpa20;
-			}
-			case "2.1": {
-				return jpa21;
-			}
-			case "2.2": {
-				return jpa22;
-			}
-			case "3.0:": {
-				return jpa30;
-			}
-			case "3.1:": {
-				return jpa31;
-			}
-			case "3.2:": {
-				return jpa32;
-			}
-			case "4.0": {
-				return jpa40;
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized JPA orm.xml XSD version : `" + version + "`" );
-			}
-		}
-	}
-
-	public XsdDescriptor hbmXsd() {
-		return hbmXml;
+		return switch ( version ) {
+			case "1.0" -> jpa10;
+			case "2.0" -> jpa20;
+			case "2.1" -> jpa21;
+			case "2.2" -> jpa22;
+			case "3.0:" -> jpa30;
+			case "3.1:" -> jpa31;
+			case "3.2:" -> jpa32;
+			case "4.0" -> jpa40;
+			default -> throw new IllegalArgumentException( "Unrecognized JPA orm.xml XSD version : `" + version + "`" );
+		};
 	}
 
 }

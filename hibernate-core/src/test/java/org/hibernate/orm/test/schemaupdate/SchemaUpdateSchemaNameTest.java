@@ -45,10 +45,7 @@ public class SchemaUpdateSchemaNameTest {
 		try {
 			final Configuration cfg = buildConfiguration( SimpleFirst.class );
 			ssr = ServiceRegistryUtil.applySettings(
-							new StandardServiceRegistryBuilder(
-									new BootstrapServiceRegistryBuilder().build(),
-									cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml()
-							)
+							new StandardServiceRegistryBuilder( new BootstrapServiceRegistryBuilder().build() )
 					)
 					.applySettings( cfg.getProperties() )
 					.build();
@@ -69,10 +66,7 @@ public class SchemaUpdateSchemaNameTest {
 
 			// Build Standard Service Registry
 			ssr = ServiceRegistryUtil.applySettings(
-							new StandardServiceRegistryBuilder(
-									new BootstrapServiceRegistryBuilder().build(),
-									cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml()
-							)
+							new StandardServiceRegistryBuilder( new BootstrapServiceRegistryBuilder().build() )
 					)
 					.applySettings( cfg.getProperties() )
 					.build();
@@ -106,10 +100,7 @@ public class SchemaUpdateSchemaNameTest {
 		try {
 			final Configuration cfg = buildConfiguration( SimpleNext.class );
 			ssr = ServiceRegistryUtil.applySettings(
-							new StandardServiceRegistryBuilder(
-									new BootstrapServiceRegistryBuilder().build(),
-									cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml()
-							)
+							new StandardServiceRegistryBuilder( new BootstrapServiceRegistryBuilder().build() )
 					)
 					.applySettings( cfg.getProperties() )
 					.build();

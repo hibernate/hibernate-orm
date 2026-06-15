@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.cfg;
 
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -63,6 +64,6 @@ public class CfgFilePropertyTest {
 		thread.start();
 		thread.join();
 
-		assertThat( exceptionHolder.get() ).isNull();
+		assertThat( exceptionHolder.get() ).isInstanceOf( PersistenceException.class );
 	}
 }

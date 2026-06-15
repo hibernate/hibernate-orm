@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.action.queue.internal.support.ActionQueueFactoryServiceInitiator;
-import org.hibernate.boot.cfgxml.internal.CfgXmlAccessServiceInitiator;
 import org.hibernate.boot.internal.DefaultSessionFactoryBuilderInitiator;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
@@ -73,9 +72,6 @@ public final class StandardServiceInitiators {
 
 		// ProxyFactoryFactory
 		serviceInitiators.add( ProxyFactoryFactoryInitiator.INSTANCE );
-
-		// CfgXmlAccessService
-		serviceInitiators.add( CfgXmlAccessServiceInitiator.INSTANCE );
 
 		// ConfigurationService
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );

@@ -312,14 +312,6 @@ public interface BootLogging extends BasicLogger {
 	void badServiceRegistry();
 
 	@LogMessage(level = DEBUG)
-	@Message(id = 160201, value = "Unable to close cfg.xml resource stream")
-	void unableToCloseCfgXmlResourceStream(@Cause Throwable e);
-
-	@LogMessage(level = DEBUG)
-	@Message(id = 160202, value = "Unable to close cfg.xml URL stream")
-	void unableToCloseCfgXmlUrlStream(@Cause Throwable e);
-
-	@LogMessage(level = DEBUG)
 	@Message(id = 160203, value = "Unable to close properties file stream [%s]")
 	void unableToClosePropertiesFileStream(String path, @Cause Throwable e);
 
@@ -388,16 +380,6 @@ public interface BootLogging extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(id = 160229, value = "Named strategy map did not exist on call to unregister")
 	void namedStrategyMapDidNotExistOnUnregister();
-
-	// LoadedConfig
-
-	@LogMessage(level = DEBUG)
-	@Message(id = 160230, value = "Listener [%s] defined as part of a group also defined event type")
-	void listenerDefinedAlsoDefinedEventType(String listenerClass);
-
-	@LogMessage(level = DEBUG)
-	@Message(id = 160231, value = "More than one cfg.xml file attempted to supply SessionFactory name: [%s], [%s].  Keeping initially discovered one [%s]")
-	void moreThanOneCfgXmlSuppliedSessionFactoryName(String first, String second, String keeping);
 
 	// HBM binding
 

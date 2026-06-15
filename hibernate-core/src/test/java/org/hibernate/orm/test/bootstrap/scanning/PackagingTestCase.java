@@ -383,9 +383,6 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "cfgxmlpar/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml" );
-		archive.addAsResource( "cfgxmlpar/org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml", path );
-
 		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;

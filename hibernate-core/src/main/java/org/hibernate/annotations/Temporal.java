@@ -119,8 +119,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @apiNote
  * {@linkplain jakarta.persistence.SecondaryTable Secondary tables} and
- * {@linkplain org.hibernate.boot.model.source.spi.InheritanceType#JOINED
- * joined inheritance mappings} are not supported for temporal entities.
+ * joined inheritance mappings are not supported for temporal entities.
  *
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
  * @see org.hibernate.engine.creation.CommonBuilder#atChangeset(Object)

@@ -412,7 +412,9 @@ public class SchemaExport {
 		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
 
 		if ( commandLineArgs.cfgXmlFile != null ) {
-			ssrBuilder.configure( commandLineArgs.cfgXmlFile );
+			throw new UnsupportedOperationException(
+					"Legacy hibernate.cfg.xml bootstrap is no longer supported; use --properties and mapping files"
+			);
 		}
 
 		Properties properties = new Properties();

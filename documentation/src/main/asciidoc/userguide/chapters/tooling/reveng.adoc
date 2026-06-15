@@ -16,8 +16,6 @@ The following artifacts can be generated from a database schema:
 
 Java entity classes:: Annotated Jakarta Persistence entity classes.
 Data Access Objects (DAOs):: DAO classes providing basic CRUD operations.
-`hbm.xml` mapping files:: Hibernate XML mapping files.
-`hibernate.cfg.xml`:: A configuration file listing the generated mappings.
 DDL scripts:: SQL schema creation and drop scripts.
 HTML documentation:: An HTML report describing the database schema.
 Custom FreeMarker templates:: User-defined templates for arbitrary code generation.

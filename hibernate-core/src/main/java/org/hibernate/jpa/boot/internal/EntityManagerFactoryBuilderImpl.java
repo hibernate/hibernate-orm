@@ -17,7 +17,6 @@ import org.hibernate.boot.CacheRegionDefinition.CacheRegionType;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -190,7 +189,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			applyScanning( cfg, metadataSources, standardServiceRegistry );
 			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
 			applyMetadataBuilderContributor();
-			setupMappingReferences( metadataSources );
 			managedResources =
 					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
 			setupValidation();
@@ -233,10 +231,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		mergedSettings.getConfigurationValues().put( PERSISTENCE_UNIT_NAME, cfg.name() );
 
 		// see if the persistence.xml settings named a Hibernate config file
-		final String cfgXmlResourceName = getCfgXmlResourceName( Collections.emptyMap(), mergedSettings );
-		if ( isNotEmpty( cfgXmlResourceName ) ) {
-			processHibernateConfigXmlResources( standardRegistryBuilder, mergedSettings, cfgXmlResourceName );
-		}
+		checkUnsupportedCfgXmlSetting( Collections.emptyMap(), mergedSettings );
 
 		normalizeSettings( null, null, mergedSettings );
 
@@ -329,7 +324,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			applyMappingResources( metadataSources );
 			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
 			applyMetadataBuilderContributor();
-			setupMappingReferences( metadataSources );
 			managedResources =
 					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
 			setupValidation();
@@ -371,22 +365,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( getBoolean( FLUSH_BEFORE_COMPLETION, config ) ) {
 			JPA_LOGGER.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
 			config.put( FLUSH_BEFORE_COMPLETION, String.valueOf(false) );
-		}
-	}
-
-	private void setupMappingReferences(MetadataSources metadataSources) {
-		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
-		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
-		final var aggregatedConfig =
-				standardServiceRegistry.requireService( CfgXmlAccessService.class )
-						.getAggregatedConfig();
-		if ( aggregatedConfig != null ) {
-			final var mappingReferences = aggregatedConfig.getMappingReferences();
-			if ( mappingReferences != null ) {
-				for ( var mappingReference : mappingReferences ) {
-					mappingReference.apply( metadataSources );
-				}
-			}
 		}
 	}
 
@@ -675,10 +653,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		mergedSettings.processPersistenceUnitDescriptorProperties( persistenceUnit );
 
 		// see if the persistence.xml settings named a Hibernate config file
-		final String cfgXmlResourceName = getCfgXmlResourceName( integrationSettings, mergedSettings );
-		if ( isNotEmpty( cfgXmlResourceName ) ) {
-			processHibernateConfigXmlResources( registryBuilder, mergedSettings, cfgXmlResourceName );
-		}
+		checkUnsupportedCfgXmlSetting( integrationSettings, mergedSettings );
 
 		normalizeSettings( persistenceUnit, integrationSettings, mergedSettings );
 
@@ -724,12 +699,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private static String getCfgXmlResourceName(Map<String, Object> integrationSettings, MergedSettings mergedSettings) {
+	private static void checkUnsupportedCfgXmlSetting(Map<String, Object> integrationSettings, MergedSettings mergedSettings) {
 		final String cfgXmlResourceName = (String) mergedSettings.getConfigurationValues().remove( CFG_XML_FILE );
-		return isEmpty( cfgXmlResourceName )
-				// see if integration settings named a Hibernate config file
-				? (String) integrationSettings.get( CFG_XML_FILE )
-				: cfgXmlResourceName;
+		if ( isNotEmpty( cfgXmlResourceName )
+				|| integrationSettings != null && integrationSettings.containsKey( CFG_XML_FILE ) ) {
+			throw new PersistenceException(
+					"Legacy hibernate.cfg.xml bootstrap is no longer supported; use META-INF/persistence.xml"
+			);
+		}
 	}
 
 	/**
@@ -1385,17 +1362,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				JPA_NON_JTA_DATASOURCE,
 				JAKARTA_NON_JTA_DATASOURCE
 		);
-	}
-
-	private void processHibernateConfigXmlResources(
-			StandardServiceRegistryBuilder serviceRegistryBuilder,
-			MergedSettings mergedSettings,
-			String cfgXmlResourceName) {
-		final var loadedConfig =
-				serviceRegistryBuilder.getConfigLoader()
-						.loadConfigXmlResource( cfgXmlResourceName );
-		mergedSettings.processHibernateConfigXmlResources( loadedConfig );
-		serviceRegistryBuilder.getAggregatedCfgXml().merge( loadedConfig );
 	}
 
 	private CacheRegionDefinition parseCacheRegionDefinitionEntry(

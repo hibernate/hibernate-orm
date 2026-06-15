@@ -150,17 +150,8 @@ xjc {
     outputDirectory = project.jaxbTargetDir
 
     schemas {
-        cfg {
-            xsdFile = 'src/main/resources/org/hibernate/xsd/cfg/legacy-configuration-4.0.xsd'
-            xjcBindingFile = 'src/main/xjb/hbm-configuration-bindings.xjb'
-        }
-        hbm {
-            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd' )
-            xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
-            xjcPlugins('inheritance', 'simplify')
-        }
         configuration {
-            xsdFile = file( 'src/main/resources/org/hibernate/xsd/cfg/configuration-8.0.xsd' )
+            xsdFile = file( 'src/main/resources/org/hibernate/jpa/persistence_4_0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/configuration-bindings.xjb' )
             xjcPlugins('inheritance', 'simplify')
         }

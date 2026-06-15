@@ -240,7 +240,6 @@ For reverse engineering from a database, use `<jdbcconfiguration>`:
 +
 --
 `propertyfile`;; Path to a properties file containing JDBC connection settings.
-`configurationfile`;; Path to a `hibernate.cfg.xml` file.
 `packagename`;; The default Java package name for generated classes.
 `reversestrategy`;; Fully qualified class name of a custom reverse engineering strategy.
 `revengfile`;; Path containing reverse engineering configuration XML file(s) for customizing schema selection and type mappings.
@@ -251,7 +250,6 @@ For reverse engineering from a database, use `<jdbcconfiguration>`:
 
 Other configuration elements are also available for non-JDBC scenarios:
 
-`<configuration>`:: Uses a `hibernate.cfg.xml` and/or HBM mapping files as input.
 `<jpaconfiguration>`:: Uses a JPA `persistence.xml` as input.
 
 
@@ -265,7 +263,6 @@ Each exporter supports a `destdir` attribute to override the output directory.
 `<hbm2hbmxml>`:: Generates `hbm.xml` mapping files.
 `<hbm2dao>`:: Generates Data Access Object (DAO) classes.
 `<hbm2ddl>`:: Generates DDL scripts (schema creation/drop).
-`<hbm2cfgxml>`:: Generates a `hibernate.cfg.xml` configuration file.
 `<hbm2doc>`:: Generates HTML documentation of the database schema.
 `<hbmtemplate>`:: Runs a custom FreeMarker template for user-defined code generation.
 `<query>`:: Executes HQL queries against the configured metadata.

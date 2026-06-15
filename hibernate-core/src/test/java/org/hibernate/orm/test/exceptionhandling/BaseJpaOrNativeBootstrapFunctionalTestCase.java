@@ -128,8 +128,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 		var properties = new Properties();
 		properties.putAll( configuration.getProperties() );
 		resolvePlaceHolders( properties );
-		var loadedConfig = configuration.getStandardServiceRegistryBuilder().getAggregatedCfgXml();
-		var registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, loadedConfig )
+		var registryBuilder = new StandardServiceRegistryBuilder( bootRegistry )
 						.applySettings( properties );
 		ServiceRegistryUtil.applySettings( registryBuilder );
 		return (ServiceRegistryImplementor) registryBuilder.build();

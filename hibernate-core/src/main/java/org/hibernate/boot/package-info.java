@@ -19,8 +19,6 @@
  * <pre>
  * StandardServiceRegistry standardRegistry =
  *         new StandardServiceRegistryBuilder()
- *                 // supply a configuration
- *                 .configure("org/hibernate/example/hibernate.cfg.xml")
  *                 // set a configuration property
  *                 .applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
  *                 .build();

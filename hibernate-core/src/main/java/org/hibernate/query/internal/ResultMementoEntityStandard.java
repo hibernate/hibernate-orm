@@ -28,7 +28,6 @@ import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 ///
 /// @see org.hibernate.query.NativeQuery#addEntity
 /// @see org.hibernate.query.NativeQuery#addRoot
-/// @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType
 ///
 /// @author Steve Ebersole
 public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMemento.Parent {

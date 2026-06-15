@@ -41,7 +41,7 @@ An entity class may be a `static` inner class.
 
 [TIP]
 ====
-The requirement for a default constructor is relaxed when the <<bytecode-enhancer,bytecode enhancer>> is used.
+These requirements are relaxed when the <<bytecode-enhancer,bytecode enhancer>> is used.
 ====
 
 Every entity class must be annotated `@Entity`.
@@ -76,7 +76,7 @@ When XML-based mappings are used, the `<entity>` element is used to declare an e
 Since the `orm.xml` mapping file format defined by the JPA specification was modelled closely on the annotation-based mappings, it's usually easy to go back and forth between the two options.
 ====
 
-We won't have much more to say about XML-based mappings in this Short Guide, since it's not our preferred way to do things.
+We won't have much more to say about XML-based mappings in this guide, since it's not our preferred way to do things.
 
 .*Read more: "Dynamic" models*
 [%collapsible]
@@ -98,7 +98,7 @@ Envers makes use of maps to represent its _versioned model_ of the data.
 [[access-type]]
 === Access types
 
-Each entity class has a default _access type_, either:
+Each entity class has an _access type_, either:
 
 - direct _field access_, or
 - _property access_.
@@ -115,7 +115,7 @@ Today, however, field access is _much_ more common.
 [NOTE]
 // .Explicit access type
 ====
-The default access type may be specified explicitly using the `@Access` annotation, but we strongly discourage this, since it's ugly and never necessary.
+The access type may be specified explicitly using the `@Access` annotation, but we strongly discourage this, since it's ugly and never necessary.
 ====
 
 [IMPORTANT]
@@ -1694,7 +1694,7 @@ create table Event_daysOfWeek (
 Which is fine, but it's still a mapping we prefer to avoid.
 
 [%unbreakable]
-[WARNING]
+[CAUTION]
 // .This is not what we would do
 ====
 `@ElementCollection` is one of our least-favorite features of JPA.
@@ -1713,45 +1713,46 @@ Most likely, we'll realize that we need to add a separate entity after all.
 So this mapping isn't very robust in the face of minor changes to our data model.
 ====
 
-[CAUTION]
-====
-Consider the following very simple mapping:
-[source,java]
-----
-@ElementCollection
-Set<String> topics;
-----
-Hibernate would generate the following DDL:
-[source,sql]
-----
-create table Book_topics (
-    Book_isbn varchar(255) not null,
-    topics varchar(255)
-)
-----
-Here, there's no `not null` constraint on one of the columns.
-As a result, Hibernate cannot add a primary key to the table.
-This is not a great data model.
-
-We can fix this problem with a `@Column` annotation:
-[source,java]
-----
-@ElementCollection
-@Column(nullable=false)
-Set<String> topics;
-----
-Now the generated DDL looks a lot better:
-[source,sql]
-----
-create table Book_topics (
-    Book_isbn varchar(255) not null,
-    topics varchar(255) not null,
-    primary key (Book_isbn, topics)
-)
-----
-Of course, with this mapping we can't have `null` as an element of our `Set`.
-But we can't think of a good reason why you might want that or what it would even mean for a set to contain null.
-====
+// [CAUTION]
+// ====
+// Consider the following very simple mapping:
+// [source,java]
+// ----
+// @ElementCollection
+// Set<String> topics;
+// ----
+// Hibernate would generate the following DDL:
+// [source,sql]
+// ----
+// create table Book_topics (
+//     Book_isbn varchar(255) not null,
+//     topics varchar(255)
+//     unique (Book_isbn, topics)
+// )
+// ----
+// Here, there's no `not null` constraint on one of the columns.
+// As a result, Hibernate cannot add a proper primary key to the table.
+// This is not a great data model.
+//
+// We can fix this problem with a `@Column` annotation:
+// [source,java]
+// ----
+// @ElementCollection
+// @Column(nullable=false)
+// Set<String> topics;
+// ----
+// Now the generated DDL looks better:
+// [source,sql]
+// ----
+// create table Book_topics (
+//     Book_isbn varchar(255) not null,
+//     topics varchar(255) not null,
+//     primary key (Book_isbn, topics)
+// )
+// ----
+// Of course, with this mapping we can't have `null` as an element of our `Set`.
+// But we can't think of a good reason why you might want that or what it would even mean for a set to contain null.
+// ====
 
 There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun you'll shoot your foot with.
 

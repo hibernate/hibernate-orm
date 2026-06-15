@@ -284,7 +284,7 @@ Both batch fetching and subselect fetching are disabled by default, but we may e
 
 | `hibernate.default_batch_fetch_size`
 | A sensible batch size `>1` to enable batch fetching
-| link:{doc-javadoc-url}/org/hibernate/BatchSize.html[`new BatchSize(10)`] | `new BatchSize(10)`
+| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.FetchBatchSize.html[`new FetchBatchSize(10)`] | `new BatchSize(10)`
 // | `@Fetch(batchSize=10)`, `@BatchSize(10)`
 | `hibernate.use_subselect_fetch`
 | `true` to enable subselect fetching
@@ -297,11 +297,11 @@ One alternative is to enable batch or subselect fetching in a given session, usi
 
 [source,java]
 ----
-import org.hibernate.BatchSize;
+import org.hibernate.SessionCreationOption.FetchBatchSize;
 ...
 var entityManager =
         // create a session with batch fetching enabled
-        entityManagerFactory.createEntityManager(new BatchSize(5));
+        entityManagerFactory.createEntityManager(new FetchBatchSize(5));
 ----
 [source,java]
 ----

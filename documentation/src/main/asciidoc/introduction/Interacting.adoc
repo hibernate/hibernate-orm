@@ -141,7 +141,7 @@ JPA 4 _session creation options_ let us provide some information controlling the
 [source,java]
 ----
 EntityManager entityManager =
-        entityManagerFactory.createEntityManager(new BatchSize(20),
+        entityManagerFactory.createEntityManager(new FetchBatchSize(20),
                                                  ReadOnlyMode.READ_ONLY,
                                                  CacheStoreMode.BYPASS);
 ----

@@ -41,7 +41,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.type.TimeZoneStorageStrategy;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -591,17 +590,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		private static String getFactoryName(SessionFactoryImplementor factory) {
-			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
-			if ( factoryName == null ) {
-				final var cfgXmlAccessService =
-						factory.getServiceRegistry()
-								.requireService( CfgXmlAccessService.class );
-				final var aggregatedConfig = cfgXmlAccessService.getAggregatedConfig();
-				return aggregatedConfig == null ? null : aggregatedConfig.getSessionFactoryName();
-			}
-			else {
-				return factoryName;
-			}
+			return factory.getSessionFactoryOptions().getSessionFactoryName();
 		}
 
 		private void unsetSessionFactory(SessionFactory factory) {

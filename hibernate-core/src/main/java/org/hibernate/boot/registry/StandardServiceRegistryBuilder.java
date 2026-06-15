@@ -14,7 +14,6 @@ import java.util.Properties;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
-import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
@@ -26,8 +25,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.ServiceContributor;
-
-import static org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KEY;
 
 /**
  * Builder for standard {@link ServiceRegistry} instances.
@@ -46,30 +43,14 @@ public class StandardServiceRegistryBuilder {
 	 * <p>
 	 * Intended only for use from
 	 * {@link org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl}.
-	 * <p>
-	 * In particular, we ignore properties found in {@code cfg.xml} files.
-	 * {@code EntityManagerFactoryBuilderImpl} collects these properties later.
 	 *
 	 * @see org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl
 	 */
 	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		return new StandardServiceRegistryBuilder(
 				bootstrapServiceRegistry,
-				new HashMap<>(),
-				new LoadedConfig( null ) {
-					@Override
-					protected void addConfigurationValues(Map<String,Object> configurationValues) {
-						// here, do nothing
-					}
-				}
-		) {
-			@Override
-			public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
-				getAggregatedCfgXml().merge( loadedConfig );
-				// super also collects the properties - here we skip that part
-				return this;
-			}
-		};
+				new HashMap<>()
+		);
 	}
 
 	/**
@@ -85,7 +66,6 @@ public class StandardServiceRegistryBuilder {
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final ConfigLoader configLoader;
-	private final LoadedConfig aggregatedCfgXml;
 
 	/**
 	 * Create a default builder.
@@ -100,7 +80,10 @@ public class StandardServiceRegistryBuilder {
 	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
 	 */
 	public StandardServiceRegistryBuilder(BootstrapServiceRegistry bootstrapServiceRegistry) {
-		this( bootstrapServiceRegistry, LoadedConfig.baseline() );
+		this.settings = PropertiesHelper.map( Environment.getProperties() );
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
+		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
+		this.initiators = standardInitiatorList();
 	}
 
 	/**
@@ -113,12 +96,10 @@ public class StandardServiceRegistryBuilder {
 	 */
 	protected StandardServiceRegistryBuilder(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
-			Map<String,Object> settings,
-			LoadedConfig loadedConfig) {
+			Map<String,Object> settings) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
 		this.settings = settings;
-		this.aggregatedCfgXml = loadedConfig;
 		this.initiators = standardInitiatorList();
 	}
 
@@ -132,39 +113,15 @@ public class StandardServiceRegistryBuilder {
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			Map<String,Object> settings,
 			ConfigLoader loader,
-			LoadedConfig loadedConfig,
 			List<StandardServiceInitiator<?>> initiators) {
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 		this.configLoader = loader;
 		this.settings = settings;
-		this.aggregatedCfgXml = loadedConfig;
 		this.initiators = initiators;
-	}
-
-	/**
-	 * Create a builder with the specified bootstrap services.
-	 *
-	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
-	 */
-	public StandardServiceRegistryBuilder(
-			BootstrapServiceRegistry bootstrapServiceRegistry,
-			LoadedConfig loadedConfigBaseline) {
-		this.settings = PropertiesHelper.map( Environment.getProperties() );
-		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
-		this.configLoader = new ConfigLoader( bootstrapServiceRegistry );
-		this.aggregatedCfgXml = loadedConfigBaseline;
-		this.initiators = standardInitiatorList();
 	}
 
 	public ConfigLoader getConfigLoader() {
 		return configLoader;
-	}
-
-	/**
-	 * Intended for internal testing use only!!
-	 */
-	public LoadedConfig getAggregatedCfgXml() {
-		return aggregatedCfgXml;
 	}
 
 	/**
@@ -228,7 +185,7 @@ public class StandardServiceRegistryBuilder {
 	 * @see #loadProperties(String)
 	 */
 	public StandardServiceRegistryBuilder configure() {
-		return configure( DEFAULT_CFG_RESOURCE_NAME );
+		throw unsupportedCfgXml();
 	}
 
 	/**
@@ -239,22 +196,21 @@ public class StandardServiceRegistryBuilder {
 	 * @return this, for method chaining
 	 */
 	public StandardServiceRegistryBuilder configure(String resourceName) {
-		return configure( configLoader.loadConfigXmlResource( resourceName ) );
+		throw unsupportedCfgXml();
 	}
 
 	public StandardServiceRegistryBuilder configure(File configurationFile) {
-		return configure( configLoader.loadConfigXmlFile( configurationFile ) );
+		throw unsupportedCfgXml();
 	}
 
 	public StandardServiceRegistryBuilder configure(URL url) {
-		return configure( configLoader.loadConfigXmlUrl( url ) );
+		throw unsupportedCfgXml();
 	}
 
-	public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
-		aggregatedCfgXml.merge( loadedConfig );
-		settings.putAll( loadedConfig.getConfigurationValues() );
-
-		return this;
+	private static UnsupportedOperationException unsupportedCfgXml() {
+		return new UnsupportedOperationException(
+				"Legacy hibernate.cfg.xml bootstrap is no longer supported; use META-INF/persistence.xml"
+		);
 	}
 
 	/**
@@ -361,7 +317,6 @@ public class StandardServiceRegistryBuilder {
 		applyServiceContributors();
 
 		final Map<String,Object> settingsCopy = new HashMap<>( settings );
-		settingsCopy.put( LOADED_CONFIG_KEY, aggregatedCfgXml );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
 		return StandardServiceRegistryImpl.create(

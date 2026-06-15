@@ -4,7 +4,6 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -60,16 +59,6 @@ class SessionFactorySettings {
 		final String sessionFactoryName = options.getSessionFactoryName();
 		if ( sessionFactoryName != null ) {
 			return sessionFactoryName;
-		}
-
-		final var loadedConfig =
-				serviceRegistry.requireService( CfgXmlAccessService.class )
-						.getAggregatedConfig();
-		if ( loadedConfig != null ) {
-			final String nameFromAggregation = loadedConfig.getSessionFactoryName();
-			if ( nameFromAggregation != null ) {
-				return nameFromAggregation;
-			}
 		}
 
 		return serviceRegistry.requireService( ConfigurationService.class )

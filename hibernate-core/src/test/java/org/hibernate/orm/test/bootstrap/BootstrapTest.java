@@ -367,7 +367,7 @@ public class BootstrapTest {
 			{
 				//tag::bootstrap-native-SessionFactory-example[]
 				StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-					.configure("org/hibernate/example/hibernate.cfg.xml")
+					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
 				Metadata metadata = new MetadataSources(standardRegistry)
@@ -388,7 +388,7 @@ public class BootstrapTest {
 			{
 				//tag::bootstrap-native-SessionFactoryBuilder-example[]
 				StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-						.configure("org/hibernate/example/hibernate.cfg.xml")
+						.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 						.build();
 
 				Metadata metadata = new MetadataSources(standardRegistry)

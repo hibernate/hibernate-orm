@@ -22,7 +22,6 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
@@ -147,23 +146,10 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			contributor.contribute( sources );
 		}
 
-		// todo : not so sure this is needed anymore.
-		//		these should be set during the StandardServiceRegistryBuilder.configure call
-		applyCfgXmlValues( serviceRegistry.requireService( CfgXmlAccessService.class ) );
-
 		for ( var contributor :
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderInitializer.class ) ) {
 			contributor.contribute( this, serviceRegistry );
-		}
-	}
-
-	private void applyCfgXmlValues(CfgXmlAccessService service) {
-		final var aggregatedConfig = service.getAggregatedConfig();
-		if ( aggregatedConfig != null ) {
-			for ( var cacheRegionDefinition : aggregatedConfig.getCacheRegionDefinitions() ) {
-				applyCacheRegionDefinition( cacheRegionDefinition );
-			}
 		}
 	}
 
@@ -414,18 +400,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataImplementor build() {
-		final var aggregatedConfig =
-				options.serviceRegistry.requireService( CfgXmlAccessService.class )
-						.getAggregatedConfig();
-		if ( aggregatedConfig != null ) {
-			final var mappingReferences = aggregatedConfig.getMappingReferences();
-			if ( mappingReferences != null ) {
-				for ( var mappingReference : mappingReferences ) {
-					mappingReference.apply( sources );
-				}
-			}
-		}
-
 		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
 	}
 

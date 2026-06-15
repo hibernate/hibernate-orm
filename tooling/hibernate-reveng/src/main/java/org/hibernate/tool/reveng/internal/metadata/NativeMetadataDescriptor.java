@@ -19,6 +19,8 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
 	private final Properties properties = new Properties();
 	private MetadataSources metadataSources = null;
 	private final StandardServiceRegistryBuilder ssrb;
+	private static final String CFG_XML_UNSUPPORTED_MESSAGE =
+			"Legacy hibernate.cfg.xml bootstrap is no longer supported; use properties and mapping files";
 
 	public NativeMetadataDescriptor(
 			File cfgXmlFile,
@@ -27,7 +29,7 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 		ssrb = new StandardServiceRegistryBuilder(bsr);
 		if (cfgXmlFile != null) {
-			ssrb.configure(cfgXmlFile);
+			throw new UnsupportedOperationException( CFG_XML_UNSUPPORTED_MESSAGE );
 		}
 		if (properties != null) {
 			this.properties.putAll(properties);

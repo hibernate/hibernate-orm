@@ -4,9 +4,8 @@
  */
 package org.hibernate.tool.ant;
 
+import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Path;
-import org.hibernate.boot.cfgxml.internal.ConfigLoader;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.tool.reveng.api.metadata.MetadataConstants;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
@@ -15,7 +14,6 @@ import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Properties;
 
 
@@ -102,19 +100,15 @@ public class JDBCConfigurationTask extends ConfigurationTask {
 		detectOptimisticLock = b;
 	}
 
-	private Map<String, Object> loadCfgXmlFile() {
-		return new ConfigLoader(new BootstrapServiceRegistryBuilder().build())
-				.loadConfigXmlFile(getConfigurationFile())
-				.getConfigurationValues();
-	}
-
 	private Properties loadProperties() {
 		Properties result = new Properties();
 		if (getPropertyFile() != null) {
 			result.putAll(loadPropertiesFile());
 		}
 		if (getConfigurationFile() != null) {
-			result.putAll(loadCfgXmlFile());
+			throw new BuildException(
+					"Legacy hibernate.cfg.xml bootstrap is no longer supported; use a property file"
+			);
 		}
 		return result;
 	}

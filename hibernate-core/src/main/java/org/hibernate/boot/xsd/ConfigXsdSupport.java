@@ -7,8 +7,7 @@ package org.hibernate.boot.xsd;
 import org.hibernate.Internal;
 
 /**
- * Support for XSD handling related to Hibernate's `cfg.xml` and
- * JPA's `persistence.xml`.
+ * Support for XSD handling related to JPA's `persistence.xml`.
  * The implementation attempts to not load XsdDescriptor instances which are not
  * necessary and favours memory efficiency over CPU efficiency, as this is expected
  * to be used only during bootstrap.
@@ -21,14 +20,14 @@ import org.hibernate.Internal;
 public class ConfigXsdSupport {
 
 	public static XsdDescriptor latestDescriptor() {
-		return _80();
+		return getJPA40();
 	}
 
 	/**
 	 * Needs synchronization on any access.
 	 * Custom keys:
-	 * 0: cfgXml
-	 * 1: configurationXML
+	 * 0: unused
+	 * 1: unused
 	 * 2: JPA 1.0
 	 * 3: JPA 2.0
 	 * 4: JPA 2.1
@@ -36,7 +35,7 @@ public class ConfigXsdSupport {
 	 * 6: Jakarta Persistence 3.0
 	 * 7: Jakarta Persistence 3.1
 	 * 8: Jakarta Persistence 3.2
-	 * 9: configurationXML 8.0 (JPA 4.0)
+	 * 9: unused
 	 * 10: Jakarta Persistence 4.0
 	 */
 	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[11];
@@ -50,7 +49,7 @@ public class ConfigXsdSupport {
 		//		NOTE:
 		// 			- JPA 1.0 and 2.0 share the same namespace URI
 		// 			- JPA 2.1 and 2.2 share the same namespace URI
-		return !configurationXsd().getNamespaceUri().equals( uri );
+		return !getJPA40().getNamespaceUri().equals( uri );
 
 	}
 
@@ -86,36 +85,8 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	public static XsdDescriptor cfgXsd() {
-		final int index = 0;
-		synchronized ( xsdCache ) {
-			XsdDescriptor cfgXml = xsdCache[index];
-			if ( cfgXml == null ) {
-				cfgXml = LocalXsdResolver.buildXsdDescriptor(
-						"org/hibernate/xsd/cfg/legacy-configuration-4.0.xsd",
-						"4.0" ,
-						"http://www.hibernate.org/xsd/orm/cfg"
-				);
-				xsdCache[index] = cfgXml;
-			}
-			return cfgXml;
-		}
-	}
-
 	public static XsdDescriptor configurationXsd() {
-		final int index = 1;
-		synchronized ( xsdCache ) {
-			XsdDescriptor cfgXml = xsdCache[index];
-			if ( cfgXml == null ) {
-				cfgXml = LocalXsdResolver.buildXsdDescriptor(
-						"org/hibernate/xsd/cfg/configuration-8.0.xsd",
-						"8.0" ,
-						"http://www.hibernate.org/xsd/orm/configuration"
-				);
-				xsdCache[index] = cfgXml;
-			}
-			return cfgXml;
-		}
+		return getJPA40();
 	}
 
 	public static XsdDescriptor getJPA10() {
@@ -243,22 +214,6 @@ public class ConfigXsdSupport {
 				xsdCache[index] = jpa40;
 			}
 			return jpa40;
-		}
-	}
-
-	public static XsdDescriptor _80() {
-		final int index = 9;
-		synchronized ( xsdCache ) {
-			XsdDescriptor xsd = xsdCache[index];
-			if ( xsd == null ) {
-				xsd = LocalXsdResolver.buildXsdDescriptor(
-						"org/hibernate/xsd/cfg/configuration-8.0.xsd",
-						"8.0" ,
-						"http://www.hibernate.org/xsd/orm/configuration"
-				);
-				xsdCache[index] = xsd;
-			}
-			return xsd;
 		}
 	}
 

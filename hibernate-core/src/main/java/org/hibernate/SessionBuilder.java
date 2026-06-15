@@ -11,6 +11,8 @@ import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -180,7 +182,19 @@ public interface SessionBuilder extends CommonBuilder {
 
 	@Override
 	@Nonnull
+	SessionBuilder jdbcBatchSize(int batchSize);
+
+	@Override
+	@Nonnull
 	SessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
+
+	@Override
+	@Nonnull
+	SessionBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	@Override
+	@Nonnull
+	SessionBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
 
 	/**
 	 * Add one or more {@link SessionEventListener} instances to the list of

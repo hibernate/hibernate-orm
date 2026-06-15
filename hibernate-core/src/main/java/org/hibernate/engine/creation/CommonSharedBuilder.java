@@ -6,6 +6,8 @@ package org.hibernate.engine.creation;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -13,6 +15,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -79,7 +82,7 @@ public interface CommonSharedBuilder extends CommonBuilder {
 
 	@Override
 	@Nonnull
-	CommonBuilder connection(@Nonnull Connection connection);
+	CommonSharedBuilder connection(@Nonnull Connection connection);
 
 	@Override
 	@Nonnull
@@ -87,5 +90,25 @@ public interface CommonSharedBuilder extends CommonBuilder {
 
 	@Override
 	@Nonnull
+	CommonSharedBuilder jdbcBatchSize(int batchSize);
+
+	@Override
+	@Nonnull
+	CommonSharedBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	@Override
+	@Nonnull
+	CommonSharedBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
+
+	@Override
+	@Nonnull
 	CommonSharedBuilder jdbcTimeZone(@Nullable TimeZone timeZone);
+
+	@Override
+	@Nonnull
+	CommonSharedBuilder asOf(@Nullable Instant instant);
+
+	@Override
+	@Nonnull
+	CommonSharedBuilder atChangeset(@Nullable Object changesetId);
 }

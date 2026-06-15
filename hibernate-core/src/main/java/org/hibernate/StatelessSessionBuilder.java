@@ -11,6 +11,8 @@ import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -46,6 +48,18 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 
 	@Override
 	@Nonnull
+	StatelessSessionBuilder interceptor(@Nullable Interceptor interceptor);
+
+	@Override
+	@Nonnull
+	StatelessSessionBuilder noInterceptor();
+
+	@Override
+	@Nonnull
+	StatelessSessionBuilder noSessionInterceptorCreation();
+
+	@Override
+	@Nonnull
 	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	@Incubating
@@ -56,11 +70,28 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	@Incubating
 	@Override
 	@Nonnull
+	StatelessSessionBuilder jdbcBatchSize(int batchSize);
+
+	@Incubating
+	@Override
+	@Nonnull
 	StatelessSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
 	@Nonnull
+	StatelessSessionBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	@Override
+	@Nonnull
+	StatelessSessionBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
+
+	@Override
+	@Nonnull
 	StatelessSessionBuilder statementInspector(@Nullable UnaryOperator<String> operator);
+
+	@Override
+	@Nonnull
+	StatelessSessionBuilder noStatementInspector();
 
 	@Override
 	@Nonnull

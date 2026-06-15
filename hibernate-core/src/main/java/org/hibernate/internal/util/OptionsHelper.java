@@ -74,8 +74,8 @@ public final class OptionsHelper {
 		else if ( option instanceof SessionCreationOption.JdbcBatchSize jdbcBatchSize ) {
 			options.jdbcBatchSize( jdbcBatchSize.batchSize() );
 		}
-		else if ( option instanceof SessionCreationOption.BulkSelect bulkSelect ) {
-			options.subselectFetchEnabled( bulkSelect == SessionCreationOption.BulkSelect.ENABLED );
+		else if ( option instanceof SessionCreationOption.PreferredFetchMethod preferredFetchMethod ) {
+			options.subselectFetchEnabled( preferredFetchMethod == SessionCreationOption.PreferredFetchMethod.BY_SUBQUERY );
 		}
 		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
 			options.tenantIdentifier( tenantId.value() );
@@ -155,8 +155,8 @@ public final class OptionsHelper {
 		else if ( option instanceof SessionCreationOption.FetchBatchSize fetchBatchSize ) {
 			options.defaultBatchFetchSize( fetchBatchSize.batchSize() );
 		}
-		else if ( option instanceof SessionCreationOption.BulkSelect bulkSelect ) {
-			options.subselectFetchEnabled( bulkSelect == SessionCreationOption.BulkSelect.ENABLED );
+		else if ( option instanceof SessionCreationOption.PreferredFetchMethod preferredFetchMethod ) {
+			options.subselectFetchEnabled( preferredFetchMethod == SessionCreationOption.PreferredFetchMethod.BY_SUBQUERY );
 		}
 		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
 			options.tenantIdentifier( tenantId.value() );

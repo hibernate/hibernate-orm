@@ -8945,7 +8945,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								joined = joined || profileFetch.getMethod() == FetchStyle.JOIN;
 								if ( profileFetch.getMethod() == FetchStyle.SUBSELECT ) {
 									registerFetchOptions( fetchablePath,
-											FetchOptions.of( null, null, null, FetchMethod.BULK_SELECT ) );
+											FetchOptions.of( null, null, null, FetchMethod.BY_SUBQUERY ) );
 								}
 								if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
 									explicitFetch = true;

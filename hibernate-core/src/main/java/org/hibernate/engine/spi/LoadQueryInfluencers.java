@@ -421,7 +421,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public boolean effectiveSubselectFetchEnabled(CollectionPersister persister) {
 		return subselectFetchEnabled
-			|| fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT
+			|| fetchOptions.fetchMethod() == FetchMethod.BY_SUBQUERY
 			|| persister.isSubselectLoadable()
 			|| isSubselectFetchEnabledInProfile( persister );
 	}
@@ -519,7 +519,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private static boolean hasDirectBulkSelectNode(GraphImplementor<?> graph) {
 		for ( var node : graph.getNodes().values() ) {
 			if ( node.getFetchType() != FetchType.LAZY
-					&& node.getOptions().contains( FetchMethod.BULK_SELECT ) ) {
+					&& node.getOptions().contains( FetchMethod.BY_SUBQUERY ) ) {
 				return true;
 			}
 		}

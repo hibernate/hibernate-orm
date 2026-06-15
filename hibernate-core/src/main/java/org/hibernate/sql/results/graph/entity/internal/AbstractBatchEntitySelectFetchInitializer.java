@@ -91,7 +91,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 	protected abstract void registerResolutionListener(Data data);
 
 	protected boolean isSubselectFetch() {
-		return fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT
+		return fetchOptions.fetchMethod() == FetchMethod.BY_SUBQUERY
 			|| toOneMapping.getMappedFetchOptions().getStyle() == FetchStyle.SUBSELECT;
 	}
 

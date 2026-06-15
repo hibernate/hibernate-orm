@@ -62,7 +62,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var book = session.find( graph, 1L );
 
 			assertThat( book ).isNotNull();
@@ -82,7 +82,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var book = session.get( graph, 1L );
 
 			assertThat( Hibernate.isInitialized( book.author ) ).isTrue();
@@ -138,7 +138,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Author.class );
 			graph.addAttributeNode( Author_.books )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var author = session.find( graph, 1L );
 
 			assertThat( author ).isNotNull();
@@ -160,7 +160,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Author.class );
 			graph.addAttributeNode( Author_.books )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var author = session.get( graph, 1L );
 
 			assertThat( Hibernate.isInitialized( author.books ) ).isTrue();
@@ -222,7 +222,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Author.class );
 			graph.addAttributeNode( Author_.books )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var authors =
 					session.createQuery("from GraphFetchMethodAuthor a order by a.id" )
 							.withEntityGraph( graph )
@@ -268,7 +268,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Author.class );
 			graph.addAttributeNode( Author_.books )
-					.addOption( FetchMethod.BULK_SELECT );
+					.addOption( FetchMethod.BY_SUBQUERY );
 			final var authors =
 					session.createQuery("from GraphFetchMethodAuthor a order by a.id")
 							.withEntityGraph( graph )
@@ -291,7 +291,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Author.class );
 			graph.addAttributeNode( Author_.books )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var criteriaBuilder = session.getCriteriaBuilder();
 			final var criteriaQuery = criteriaBuilder.createQuery( Author.class );
 			final var author = criteriaQuery.from( Author.class );
@@ -322,7 +322,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Author.class );
 			graph.addAttributeNode( Author_.books )
-					.addOption( FetchMethod.BULK_SELECT );
+					.addOption( FetchMethod.BY_SUBQUERY );
 			final var criteriaBuilder = session.getCriteriaBuilder();
 			final var criteriaQuery = criteriaBuilder.createQuery( Author.class );
 			final var author = criteriaQuery.from( Author.class );
@@ -350,7 +350,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var books =
 					session.createQuery("from GraphFetchMethodBook b order by b.id")
 							.withEntityGraph( graph )
@@ -376,7 +376,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
-					.addOption( FetchMethod.BULK_SELECT );
+					.addOption( FetchMethod.BY_SUBQUERY );
 			final var books =
 					session.createQuery("from GraphFetchMethodBook b order by b.id")
 							.withEntityGraph( graph )
@@ -399,7 +399,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
-					.addOption( FetchMethod.SELECT );
+					.addOption( FetchMethod.BY_ID );
 			final var criteriaBuilder = session.getCriteriaBuilder();
 			final var criteriaQuery = criteriaBuilder.createQuery( Book.class );
 			final var book = criteriaQuery.from( Book.class );
@@ -430,7 +430,7 @@ class EntityGraphFetchMethodTest {
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.author )
-					.addOption( FetchMethod.BULK_SELECT );
+					.addOption( FetchMethod.BY_SUBQUERY );
 			final var criteriaBuilder = session.getCriteriaBuilder();
 			final var criteriaQuery = criteriaBuilder.createQuery( Book.class );
 			final var book = criteriaQuery.from( Book.class );

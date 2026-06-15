@@ -50,7 +50,7 @@ dependencies {
 
     testImplementation libs.jakarta.validation
     testImplementation libs.jakarta.concurrency
-    testImplementation libs.test.dataTckCdiApi
+    testImplementation libs.jakarta.cdi
 
     // Arquillian/ShrinkWrap APIs needed for TCK classes
     // (TCK test classes use @Deployment with RUNTIME retention, StandaloneExtension extends ArquillianExtension)

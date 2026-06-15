@@ -10,11 +10,11 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.internal.SessionFactoryObserverFactory;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.pipeline.internal.settings.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.ServiceRegistry;
 
 /// Builds a runtime SessionFactoryImplementor from resolved boot products.
@@ -87,18 +87,23 @@ public class SessionFactoryBuilder {
 			);
 		}
 		if ( resolvedMetadata.metadata() instanceof MetadataImpl metadata ) {
-			final var options = SessionFactoryOptionsAdapter.create(
-					sessionFactorySettings,
-					builtInObservers( metadata ),
-					additionalObservers
+			final var constructionSettings = sessionFactorySettings.withSessionFactoryObservers(
+					sessionFactoryObservers( sessionFactorySettings, metadata, additionalObservers )
 			);
-			if ( options.getServiceRegistry() != sessionFactorySettings.serviceRegistry() ) {
+			final var identity = SessionFactoryConstructionIdentity.resolve( constructionSettings );
+			final var options = SessionFactoryOptionsAdapter.create(
+					constructionSettings,
+					identity
+			);
+			if ( options.getServiceRegistry() != constructionSettings.serviceRegistry() ) {
 				throw new IllegalStateException( "SessionFactoryOptions adapter used the wrong service registry" );
 			}
 			final var metadataBuildingContext = resolvedMetadata.bindingState().getMetadataBuildingContext();
 			metadata.getTypeConfiguration().scope( metadataBuildingContext );
-			return new SessionFactoryImpl(
+			return SessionFactoryConstructionCoordinator.buildSessionFactory(
 					metadata,
+					constructionSettings,
+					identity,
 					options,
 					metadata.getBootstrapContext()
 			);
@@ -110,5 +115,29 @@ public class SessionFactoryBuilder {
 
 	private static SessionFactoryObserver[] builtInObservers(MetadataImpl metadata) {
 		return SessionFactoryObserverFactory.createObservers( metadata );
+	}
+
+	private static SessionFactoryObserver[] sessionFactoryObservers(
+			ResolvedSessionFactorySettings sessionFactorySettings,
+			MetadataImpl metadata,
+			SessionFactoryObserver[] additionalObservers) {
+		return concat(
+				concat( builtInObservers( metadata ), sessionFactorySettings.sessionFactoryObservers() ),
+				additionalObservers
+		);
+	}
+
+	private static SessionFactoryObserver[] concat(
+			SessionFactoryObserver[] first,
+			SessionFactoryObserver[] second) {
+		if ( first.length == 0 ) {
+			return second.clone();
+		}
+		if ( second.length == 0 ) {
+			return first.clone();
+		}
+		final var combined = java.util.Arrays.copyOf( first, first.length + second.length );
+		System.arraycopy( second, 0, combined, first.length, second.length );
+		return combined;
 	}
 }

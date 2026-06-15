@@ -18,7 +18,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.audit.AuditStrategy;
-import org.hibernate.boot.pipeline.internal.settings.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -118,8 +118,8 @@ public class SessionFactoryOptionsCollector {
 				settings.configurationValues(),
 				settings.jpaBootstrap(),
 				settings.serviceRegistry(),
-				settings.uuid(),
 				sessionFactoryName != null ? sessionFactoryName : settings.sessionFactoryName(),
+				settings.sessionFactoryJndiName(),
 				sessionFactoryNameAsJndiName != null
 						? sessionFactoryNameAsJndiName
 						: settings.sessionFactoryNameAlsoJndiName(),

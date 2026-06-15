@@ -36,7 +36,9 @@ import org.hibernate.UnknownFilterException;
 import org.hibernate.action.queue.spi.ActionQueueFactory;
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.internal.support.ActionQueueFactoryService;
-import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.boot.pipeline.internal.SessionFactoryRuntimePreparation;
+import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -208,7 +210,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient CurrentSessionContext currentSessionContext;
 
 	private final transient Map<String, FilterDefinition> filters;
-	private final transient Collection<FilterDefinition> autoEnabledFilters = new ArrayList<>();
+	private final transient Collection<FilterDefinition> autoEnabledFilters;
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
 	private final transient EventListenerGroups eventListenerGroups;
@@ -240,14 +242,37 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
+		this(
+				bootMetamodel,
+				options,
+				bootstrapContext,
+				null,
+				null,
+				SessionFactoryRuntimePreparation.prepare( bootMetamodel, options, bootstrapContext )
+		);
+	}
+
+	public SessionFactoryImpl(
+			final MetadataImplementor bootMetamodel,
+			final SessionFactoryOptions options,
+			final BootstrapContext bootstrapContext,
+			final SessionFactoryRuntimePreparation preparation) {
+		this( bootMetamodel, options, bootstrapContext, null, null, preparation );
+	}
+
+	public SessionFactoryImpl(
+			final MetadataImplementor bootMetamodel,
+			final SessionFactoryOptions options,
+			final BootstrapContext bootstrapContext,
+			final ResolvedSessionFactorySettings resolvedSettings,
+			final SessionFactoryConstructionIdentity identity,
+			final SessionFactoryRuntimePreparation preparation) {
 		SESSION_FACTORY_LOGGER.buildingSessionFactory();
-		typeConfiguration = bootstrapContext.getTypeConfiguration();
+		typeConfiguration = preparation.typeConfiguration();
 
 		sessionFactoryOptions = options;
 
-		statementObserver = options.getStatementObserver() == null
-				? IgnoredStatementObserver.IGNORE
-				: options.getStatementObserver();
+		statementObserver = statementObserver( resolvedSettings, options );
 
 		serviceRegistry = getServiceRegistry( options, this );
 		eventEngine = new EventEngine( options, serviceRegistry );
@@ -256,9 +281,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		bootMetamodel.initSessionFactory( this );
 
-		name = getSessionFactoryName( options, serviceRegistry );
-		jndiName = determineJndiName( name, options, serviceRegistry );
-		uuid = options.getUuid();
+		name = identity == null ? getSessionFactoryName( options, serviceRegistry ) : identity.name();
+		jndiName = identity == null ? determineJndiName( name, options, serviceRegistry ) : identity.jndiName();
+		uuid = identity == null ? options.getUuid() : identity.uuid();
 
 		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
@@ -271,19 +296,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
-		for ( var sessionFactoryObserver : options.getSessionFactoryObservers() ) {
+		for ( var sessionFactoryObserver : sessionFactoryObservers( resolvedSettings, options ) ) {
 			observerChain.addObserver( sessionFactoryObserver );
 		}
 
-		filters = new HashMap<>( bootMetamodel.getFilterDefinitions() );
-
-		tenantIdentifierJavaType = tenantIdentifierType( options );
-
-		for ( var filter : filters.values() ) {
-			if ( filter.isAutoEnabled() ) {
-				autoEnabledFilters.add( filter );
-			}
-		}
+		filters = preparation.filterDefinitions();
+		autoEnabledFilters = preparation.autoEnabledFilters();
+		tenantIdentifierJavaType = preparation.tenantIdentifierJavaType();
 
 		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
@@ -387,18 +406,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		SESSION_FACTORY_LOGGER.instantiatedFactory( uuid );
 	}
 
-	private JavaType<Object> tenantIdentifierType(SessionFactoryOptions options) {
-		final var tenantFilter = filters.get( TenantIdBinder.FILTER_NAME );
-		if ( tenantFilter == null ) {
-			return options.getDefaultTenantIdentifierJavaType();
-		}
-		else {
-			final var jdbcMapping = tenantFilter.getParameterJdbcMapping( TenantIdBinder.PARAMETER_NAME );
-			assert jdbcMapping != null;
-			//NOTE: this is completely unsound
-			//noinspection unchecked
-			return (JavaType<Object>) jdbcMapping.getJavaTypeDescriptor();
-		}
+	private static StatementObserver statementObserver(
+			ResolvedSessionFactorySettings settings,
+			SessionFactoryOptions options) {
+		final var statementObserver = settings == null ? options.getStatementObserver() : settings.statementObserver();
+		return statementObserver == null ? IgnoredStatementObserver.IGNORE : statementObserver;
+	}
+
+	private static SessionFactoryObserver[] sessionFactoryObservers(
+			ResolvedSessionFactorySettings settings,
+			SessionFactoryOptions options) {
+		return settings == null ? options.getSessionFactoryObservers() : settings.sessionFactoryObservers();
 	}
 
 	private EventMonitor loadEventMonitor() {

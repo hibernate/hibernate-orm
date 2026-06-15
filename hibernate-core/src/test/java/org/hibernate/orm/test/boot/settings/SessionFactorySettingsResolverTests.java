@@ -36,6 +36,7 @@ public class SessionFactorySettingsResolverTests {
 		final var configurationValues = new LinkedHashMap<String, Object>();
 		configurationValues.put( "hibernate.example", "original" );
 		configurationValues.put( PersistenceSettings.SESSION_FACTORY_NAME, "example-factory" );
+		configurationValues.put( PersistenceSettings.SESSION_FACTORY_JNDI_NAME, "java:hibernate/example-factory" );
 		configurationValues.put( PersistenceSettings.SESSION_FACTORY_NAME_IS_JNDI, false );
 		configurationValues.put( MappingSettings.DEFAULT_CATALOG, "test_catalog" );
 		configurationValues.put( MappingSettings.DEFAULT_SCHEMA, "test_schema" );
@@ -70,8 +71,8 @@ public class SessionFactorySettingsResolverTests {
 		assertThat( sessionFactorySettings.configurationValues() )
 				.containsEntry( "hibernate.example", "original" );
 		assertThat( sessionFactorySettings.serviceRegistry() ).isSameAs( registryScope.getRegistry() );
-		assertThat( sessionFactorySettings.uuid() ).isNotBlank();
 		assertThat( sessionFactorySettings.sessionFactoryName() ).isEqualTo( "example-factory" );
+		assertThat( sessionFactorySettings.sessionFactoryJndiName() ).isEqualTo( "java:hibernate/example-factory" );
 		assertThat( sessionFactorySettings.sessionFactoryNameAlsoJndiName() ).isFalse();
 		assertThat( sessionFactorySettings.interceptor() ).isSameAs( interceptor );
 		assertThat( sessionFactorySettings.sessionFactoryObservers() ).containsExactly( observer );
@@ -117,7 +118,7 @@ public class SessionFactorySettingsResolverTests {
 
 		final var options = SessionFactoryOptionsAdapter.create( settings );
 
-		assertThat( options.getUuid() ).isEqualTo( settings.uuid() );
+		assertThat( options.getUuid() ).isNotBlank();
 		assertThat( options.getServiceRegistry() ).isSameAs( registryScope.getRegistry() );
 		assertThat( options.isJpaBootstrap() ).isTrue();
 		assertThat( options.getSessionFactoryName() ).isEqualTo( "adapter-test" );

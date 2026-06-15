@@ -11,7 +11,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.pipeline.internal.settings.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 
 /// **Temporary** adapter from the PoC's resolved factory settings to ORM's legacy
@@ -30,31 +31,41 @@ public final class SessionFactoryOptionsAdapter {
 	}
 
 	public static SessionFactoryOptions create(ResolvedSessionFactorySettings settings) {
-		return create( settings, new SessionFactoryObserver[0] );
+		return create( settings, SessionFactoryConstructionIdentity.resolve( settings ) );
 	}
 
 	public static SessionFactoryOptions create(
 			ResolvedSessionFactorySettings settings,
+			SessionFactoryConstructionIdentity identity) {
+		return create( settings, identity, new SessionFactoryObserver[0] );
+	}
+
+	public static SessionFactoryOptions create(
+			ResolvedSessionFactorySettings settings,
+			SessionFactoryConstructionIdentity identity,
 			SessionFactoryObserver[] builtInObservers) {
-		return create( settings, builtInObservers, new SessionFactoryObserver[0] );
+		return create( settings, identity, builtInObservers, new SessionFactoryObserver[0] );
 	}
 
 	public static SessionFactoryOptions create(
 			ResolvedSessionFactorySettings settings,
+			SessionFactoryConstructionIdentity identity,
 			SessionFactoryObserver[] builtInObservers,
 			SessionFactoryObserver[] additionalObservers) {
 		Objects.requireNonNull( settings );
+		Objects.requireNonNull( identity );
 		Objects.requireNonNull( builtInObservers );
 		Objects.requireNonNull( additionalObservers );
 		return (SessionFactoryOptions) Proxy.newProxyInstance(
 				SessionFactoryOptions.class.getClassLoader(),
 				new Class<?>[] { SessionFactoryOptions.class },
-				new Handler( settings, builtInObservers.clone(), additionalObservers.clone() )
+				new Handler( settings, identity, builtInObservers.clone(), additionalObservers.clone() )
 		);
 	}
 
 	private record Handler(
 			ResolvedSessionFactorySettings settings,
+			SessionFactoryConstructionIdentity identity,
 			SessionFactoryObserver[] builtInObservers,
 			SessionFactoryObserver[] additionalObservers) implements InvocationHandler {
 		@Override
@@ -69,9 +80,9 @@ public final class SessionFactoryOptionsAdapter {
 					case "equals" -> {
 						return proxy == args[0];
 					}
-				}
+			}
 			return switch ( method.getName() ) {
-				case "getUuid" -> settings.uuid();
+				case "getUuid" -> identity.uuid();
 				case "getServiceRegistry" -> settings.serviceRegistry();
 				case "isJpaBootstrap" -> settings.jpaBootstrap();
 				case "getSessionFactoryName" -> settings.sessionFactoryName();
@@ -165,7 +176,7 @@ public final class SessionFactoryOptionsAdapter {
 
 		@Override
 		public String toString() {
-			return "SessionFactoryOptionsAdapter[" + settings.uuid() + "]";
+			return "SessionFactoryOptionsAdapter[" + identity.uuid() + "]";
 		}
 
 		private SessionFactoryObserver[] sessionFactoryObservers() {

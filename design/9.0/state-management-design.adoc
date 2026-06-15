@@ -1,0 +1,460 @@
+= State Management Design
+:toc:
+
+This note describes a possible ORM 9 design direction for temporal history,
+audit logging, changelog entities, and related state-management mappings in the
+boot-model pipeline.
+
+The immediate trigger is the remaining annotation-coverage bucket for
+`@Temporal`, `@Audited`, and `@Changelog`, but the larger concern is architectural.
+These annotations do not merely decorate an existing property or table.  They
+create auxiliary columns and tables, change primary-key and foreign-key behavior,
+register changeset services, and feed runtime mappings used by query filtering,
+mutation decomposition, and audit APIs.
+
+If ORM 9 replaces `MetamodelBuildingProcess` with the new pipeline, then state
+management should become an explicit pipeline product rather than a set of
+side-effects hidden inside entity and collection binding.
+
+== Scope
+
+This note covers Hibernate state-management annotations and their runtime
+effects:
+
+* `@Temporal`
+* `@Temporal.HistoryTable`
+* `@Temporal.HistoryPartitioning`
+* `@Temporal.Excluded`
+* `@Audited`
+* `@Audited.Table`
+* `@Audited.SecondaryTable`
+* `@Audited.SecondaryTables`
+* `@Audited.CollectionTable`
+* `@Audited.Excluded`
+* `@Changelog`
+* `@Changelog.ChangesetId`
+* `@Changelog.Timestamp`
+* `@Changelog.ModifiedEntities`
+
+JPA `jakarta.persistence.Temporal` is out of scope for this note.  It is a basic
+type precision annotation and is already handled by the normal value binder.
+
+`@SoftDelete` is related because it also uses the `Stateful` mapping contract,
+but it is not the focus of this design.  It may become a useful comparison point
+when refining the common state-management model.
+
+== Current Legacy Shape
+
+The legacy binder treats state management as side-effects during entity and
+collection binding.
+
+For temporal mappings:
+
+[source]
+----
+@Temporal
+    -> TemporalHelper.bindTemporalColumns(...)
+    -> auxiliary row-start / row-end columns
+    -> optional history table
+    -> optional table partitioning
+    -> state-management strategy class
+    -> runtime TemporalMapping
+----
+
+For audited mappings:
+
+[source]
+----
+@Audited
+    -> AuditHelper.bindAuditTable(...)
+    -> audit table / secondary audit tables / collection audit table
+    -> changeset and modification-type columns
+    -> optional invalidating changeset column
+    -> state-management strategy class
+    -> runtime AuditMapping
+----
+
+For changelog entities:
+
+[source]
+----
+@Changelog
+    -> validate @ChangesetId / @Timestamp / @ModifiedEntities
+    -> register ChangelogSupplier as changeset id supplier
+    -> audit API can resolve changeset metadata
+----
+
+Important legacy participants include:
+
+* `org.hibernate.boot.model.internal.TemporalHelper`
+* `org.hibernate.boot.model.internal.AuditHelper`
+* `org.hibernate.mapping.Stateful`
+* `org.hibernate.mapping.Property#isTemporalExcluded`
+* `org.hibernate.mapping.Property#isAuditedExcluded`
+* `org.hibernate.metamodel.mapping.TemporalMapping`
+* `org.hibernate.metamodel.mapping.AuditMapping`
+* `org.hibernate.temporal.spi.ChangesetCoordinator`
+* `org.hibernate.audit.spi.AuditWorkQueue`
+* state-management mutation/decomposition support
+
+This model works, but it spreads state-management intent across annotations,
+table mutations, auxiliary columns, state-management strategy classes, settings,
+services, and runtime mappings.
+
+== Design Goals
+
+State management should be explicit in both boot and runtime models.
+
+The design should:
+
+* distinguish ordinary entity/collection mapping from state-managed mapping
+  early in the pipeline;
+* collect temporal, audit, changelog, and exclusion metadata before mutating
+  tables;
+* avoid hiding table and primary-key changes inside ad hoc helper calls;
+* model state-managed entities and collections through the same conceptual
+  contract;
+* make changelog discovery and changeset-supplier registration a named bootstrap
+  product;
+* keep temporal and audit related, but not pretend they are the same feature;
+* expose enough runtime metadata for query filtering, mutation decomposition,
+  audit loading, and DDL generation without reverse-engineering boot side
+  effects.
+
+== Proposed Pipeline Products
+
+The pipeline should produce explicit state-management metadata before final
+metadata publication.
+
+Conceptually:
+
+[source]
+----
+CategorizedDomainModel
+    -> StateManagementContributions
+    -> ResolvedStateManagement
+    -> ResolvedMetadata
+    -> RuntimeStateManagementMappings
+----
+
+`StateManagementContributions` would collect source-level intent:
+
+* state-managed entity declarations;
+* state-managed collection declarations;
+* audit table overrides;
+* temporal history table and partitioning overrides;
+* property exclusions;
+* changelog entity declarations;
+* changelog marker properties.
+
+`ResolvedStateManagement` would validate and normalize that intent:
+
+* choose temporal table strategy;
+* choose audit strategy;
+* resolve effective package/type/member annotations;
+* validate unsupported combinations;
+* validate that only one changelog entity exists;
+* validate required changelog marker properties;
+* choose changeset identifier Java/JDBC type;
+* decide auxiliary table and column names before table mutation.
+
+`ResolvedMetadata` would then apply the normalized state-management plan to
+`org.hibernate.mapping` or its ORM 9 replacement.
+
+== Proposed Boot Model
+
+State management should be represented as a descriptor attached to stateful
+mapping targets.
+
+Possible shape:
+
+[source,java]
+----
+interface StateManagementDescriptor {
+    StateManagementKind kind();
+}
+
+enum StateManagementKind {
+    NONE,
+    TEMPORAL,
+    AUDITED,
+    SOFT_DELETE
+}
+
+interface TemporalStateManagementDescriptor extends StateManagementDescriptor {
+    String rowStartColumnName();
+    String rowEndColumnName();
+    TemporalTableStrategy tableStrategy();
+    HistoryTableDescriptor historyTable();
+    HistoryPartitioningDescriptor partitioning();
+}
+
+interface AuditStateManagementDescriptor extends StateManagementDescriptor {
+    AuditStrategy auditStrategy();
+    AuditTableDescriptor primaryAuditTable();
+    List<AuditTableDescriptor> secondaryAuditTables();
+    AuditTableDescriptor collectionAuditTable();
+    String changesetIdColumnName();
+    String modificationTypeColumnName();
+    String invalidatingChangesetIdColumnName();
+}
+----
+
+The exact type names are placeholders.  The important point is that table
+mutation should consume an explicit plan, not rediscover annotation details while
+binding each target.
+
+The existing `Stateful` contract can be used as a compatibility bridge, but it
+should not be the only representation of state-management intent.  `Stateful`
+currently stores the state-management type, auxiliary table, auxiliary columns,
+primary-key flags, and partitioning flags.  That is useful metadata, but it is
+closer to the applied mapping result than the normalized source plan.
+
+== Changelog Model
+
+`@Changelog` deserves a separate bootstrap product.
+
+It is not an entity decoration in the same sense as `@Audited` or `@Temporal`.
+It declares a special entity whose mapped properties become changeset metadata
+and whose existence may configure the changeset identifier supplier.
+
+Possible shape:
+
+[source,java]
+----
+interface ChangelogDescriptor {
+    String entityName();
+    String changesetIdPropertyName();
+    String timestampPropertyName();
+    String modifiedEntitiesPropertyName();
+    Class<? extends ChangesetListener> listenerType();
+}
+----
+
+The pipeline should:
+
+* discover all `@Changelog` declarations;
+* fail if more than one changelog entity is present;
+* validate that required marker properties exist;
+* validate that marker properties are mapped in compatible ways;
+* register the resulting `ChangelogSupplier` or equivalent changeset service
+  after the changelog entity mapping is known;
+* expose changelog metadata to audit runtime services.
+
+This may still use second-pass validation while the mapping model is transitional,
+but the conceptual product should be explicit.
+
+== Source Roles
+
+State-management annotations apply at multiple levels:
+
+* package;
+* entity type;
+* collection attribute;
+* basic/association/embedded attribute;
+* changelog entity type;
+* changelog marker property.
+
+Package and type annotations establish defaults.  Attribute annotations may
+enable collection-level state management or exclude a property from a state
+management strategy.
+
+The pipeline should therefore avoid treating these annotations as isolated
+attribute binders.  It should resolve effective state-management metadata across
+package, type, and member scopes before applying table changes.
+
+== Binder Shape
+
+The binder should have a dedicated state-management phase.
+
+Current transitional shape:
+
+[source]
+----
+bind entity or collection
+    -> detect @Temporal / @Audited locally
+    -> mutate tables immediately
+    -> register second-pass validation
+----
+
+Desired shape:
+
+[source]
+----
+collect state-management contributions
+    -> resolve settings and effective annotations
+    -> validate state-management model
+    -> apply auxiliary columns/tables/keys
+    -> publish runtime state-management descriptors
+----
+
+In the current pipeline this likely maps to:
+
+* entity metadata phase for entity-level temporal/audit/changelog declarations;
+* attribute/property creation for exclusion flags;
+* collection binding or collection-shape phase for collection-level temporal and
+  audit declarations;
+* a later table-key/state-management phase for history-table primary keys,
+  audit-table foreign keys, and changelog validation.
+
+The existing `TemporalHelper` and `AuditHelper` can be used as a bridge, but the
+bridge should be isolated behind new-pipeline state-management binders rather
+than called opportunistically from general entity and collection code.
+
+== Runtime Model Direction
+
+Runtime should expose state-management mappings directly.
+
+Temporal runtime metadata already exists as `TemporalMapping`, and audit runtime
+metadata already exists as `AuditMapping`.  The design question is whether ORM 9
+should introduce a common runtime state-management boundary above them.
+
+Possible shape:
+
+[source,java]
+----
+interface RuntimeStateManagementMapping {
+    StateManagementKind kind();
+}
+
+interface RuntimeTemporalMapping extends RuntimeStateManagementMapping {
+    SelectableMapping rowStart();
+    SelectableMapping rowEnd();
+    TemporalRestrictionProducer restrictionProducer();
+}
+
+interface RuntimeAuditMapping extends RuntimeStateManagementMapping {
+    AuditTableMapping auditTable(String originalTableName);
+    AuditEntityLoader entityLoader();
+}
+----
+
+The goal is not to erase the differences between temporal and audit.  The goal
+is to make the runtime boundary explicit enough that query filtering, mutation
+decomposition, audit APIs, and DDL generation can consume state-management
+metadata without depending on scattered boot-model side effects.
+
+== Settings and Services
+
+State management depends on settings and services:
+
+* `hibernate.temporal.table_strategy`
+* `hibernate.temporal.use_server_transaction_timestamps`
+* `hibernate.temporal.changeset_id_supplier`
+* `hibernate.audit.strategy`
+* `ChangesetCoordinator`
+* `ChangesetIdentifierSupplier`
+* `ChangelogSupplier`
+
+The new pipeline should resolve these settings before state-management metadata
+is applied.  A changelog entity may also contribute or replace the effective
+changeset identifier supplier, so changelog discovery must be part of the
+settings/service story rather than a hidden side-effect of entity binding.
+
+== Transitional Strategy
+
+The implementation should be incremental.
+
+1. Register descriptors for `@Audited`, `@Audited.*`, `@Changelog`, and
+   `@Changelog.*` so the new model layer can see the annotations.
+2. Add a state-management binder facade in the new pipeline.
+3. Initially delegate entity-level `@Temporal` to `TemporalHelper` as a bridge,
+   with mapping-state tests for auxiliary columns, history table, partitioning,
+   and primary-key behavior.
+4. Bind `@Temporal.Excluded` onto `Property#isTemporalExcluded`.
+5. Add collection-level temporal support using the same bridge.
+6. Add `@Audited` support for root entities, including audit table columns and
+   runtime mapping creation.
+7. Bind `@Audited.Excluded` onto `Property#isAuditedExcluded`.
+8. Add audited secondary tables, collection audit tables, and one-to-many audit
+   table cases.
+9. Add changelog discovery, validation, and changeset supplier registration.
+10. Replace helper-driven side effects with explicit resolved state-management
+    descriptors where the mapping model permits it.
+
+Each bridge slice should record which legacy helper behavior it relies on and
+which part should eventually move into a first-class pipeline product.
+
+== Open Questions
+
+How much commonality should exist between temporal, audit, changelog, and soft
+delete state management?
+
+There is obvious overlap around state-managed targets, auxiliary structures,
+settings, services, and runtime mutation behavior.  There is also real feature
+specificity.  A shared contract may be useful, but the design needs to avoid
+flattening temporal and audit into an abstraction that hides their differences.
+
+Where should state-management descriptors live?
+
+Possible options include storing descriptors directly on existing mapping
+contracts, storing them beside the mapping contracts and projecting into
+`Stateful` for compatibility, or adding parallel state to the mapping model
+during the transition away from `MetamodelBuildingProcess`.
+
+What should replace `Stateful` long term?
+
+`Stateful` is the current bridge for temporal, audit, and soft-delete runtime
+behavior.  It might remain as the common mapping contract, or it might become a
+compatibility projection of a more explicit state-management model.
+
+Where is the correct phase boundary for table mutation?
+
+Temporal and audit support mutate tables, columns, primary keys, foreign keys,
+and auxiliary table metadata.  The pipeline needs a named phase boundary for
+that work, but it is not yet clear how much should happen during entity and
+collection binding versus a later state-management/table-finalization phase.
+
+How should changelog discovery affect changeset type resolution?
+
+`@Changelog` can determine the changeset identifier type used by temporal and
+audit auxiliary columns.  The design needs to decide whether this is resolved
+through an explicit state-management product, a second-pass compatibility hook,
+or some other phase-driven mechanism.
+
+How should package-level state-management annotations be represented?
+
+Package annotations may act as defaults for type and member state-management
+metadata.  The design needs to decide whether package-level annotations are
+resolved during source collection, categorization, state-management resolution,
+or low-level binding.
+
+How should exclusions be modeled?
+
+`@Temporal.Excluded` and `@Audited.Excluded` are participation decisions for a
+state-management plan, but the legacy mapping model exposes them as flags on
+`Property`.  The new pipeline needs to decide whether exclusions belong to the
+resolved state-management model, the property mapping, or both during
+transition.
+
+Which runtime consumers should read explicit state-management metadata?
+
+Query filtering, mutation decomposition, audit loading, DDL generation, and
+schema tooling may all need state-management information.  The design needs to
+identify which consumers should use explicit runtime descriptors and which
+should continue to consume applied mapping structures.
+
+How should interactions be audited?
+
+Inheritance, secondary tables, collection tables, filters, soft delete,
+generated values, dynamic update, custom SQL, and dialect-specific temporal
+support all interact with state management.  The design needs a parity plan for
+these combinations without turning the first implementation slice into a full
+runtime redesign.
+
+== Near-Term Work
+
+Near-term work should proceed in conservative parity slices:
+
+* add annotation descriptors for audit and changelog annotations;
+* prove entity-level `@Temporal` binding in the new pipeline;
+* prove `@Temporal.Excluded`;
+* prove collection-level `@Temporal`;
+* prove basic `@Audited` root entity support;
+* prove `@Audited.Excluded`;
+* prove audit table overrides and secondary-table audit support;
+* prove audited collection support;
+* prove `@Changelog` discovery and supplier registration.
+
+Focused tests should assert `org.hibernate.mapping` state and runtime mapping
+state, not only successful bootstrap.

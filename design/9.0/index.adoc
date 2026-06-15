@@ -38,6 +38,17 @@ Update this document when a concrete slice is started, completed, or reshaped.
 It is the right place for current status, next steps, constructor dependency
 audits, and compatibility pressure points.
 
+link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`]
+
+This is the focused design note for the final factory-construction phase.  It
+describes the target split between public builder customization, a service-loaded
+custom factory producer, prepared runtime construction products, and a slimmer
+`SessionFactoryImpl` constructor.
+
+Use this document when reasoning about custom `SessionFactory` implementations,
+the replacement for builder-factory extension points, and which work should move
+out of the `SessionFactoryImpl` constructor.
+
 link:orm-bootstrap-direction.adoc[`orm-bootstrap-direction.adoc`]
 
 This is a historical direction note from the early PoC.  It explains why the

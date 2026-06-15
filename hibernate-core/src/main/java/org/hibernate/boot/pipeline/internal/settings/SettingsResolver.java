@@ -6,6 +6,7 @@ package org.hibernate.boot.pipeline.internal.settings;
 
 import java.util.Map;
 
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.service.ServiceRegistry;

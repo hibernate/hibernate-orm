@@ -10,7 +10,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
-import org.hibernate.boot.pipeline.internal.settings.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.service.ServiceRegistry;
 
 /// Resolved inputs for one-shot SessionFactory bootstrap.

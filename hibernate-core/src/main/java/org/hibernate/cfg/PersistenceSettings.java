@@ -9,6 +9,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
+import org.hibernate.boot.pipeline.spi.SessionFactoryProducer;
 import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 
@@ -194,6 +195,21 @@ public interface PersistenceSettings {
 	 * @see org.hibernate.boot.SessionFactoryBuilder#addSessionFactoryObservers(SessionFactoryObserver...)
 	 */
 	String SESSION_FACTORY_OBSERVER = "hibernate.session_factory_observer";
+
+	/**
+	 * Names the service-loaded {@link SessionFactoryProducer} to use when creating
+	 * the {@link SessionFactory}.
+	 * <p>
+	 * When this setting is not specified, Hibernate uses its default factory
+	 * producer if no custom producers are discovered, uses the single custom
+	 * producer if exactly one is discovered, and fails if multiple custom
+	 * producers are discovered.
+	 *
+	 * @see SessionFactoryProducer#getProducerName()
+	 *
+	 * @since 9.0
+	 */
+	String SESSION_FACTORY_PRODUCER = "hibernate.session_factory_producer";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

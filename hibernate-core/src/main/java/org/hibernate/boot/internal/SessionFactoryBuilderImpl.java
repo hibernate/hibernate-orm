@@ -37,7 +37,7 @@ import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
 
-import static org.hibernate.internal.SessionFactoryRegistry.instantiateSessionFactory;
+import static org.hibernate.boot.pipeline.internal.SessionFactoryConstructionCoordinator.buildSessionFactory;
 
 /**
  * @author Gail Badner
@@ -491,7 +491,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 					metadata.getMetadataBuildingOptions().getServiceRegistry()
 			);
 		}
-		return instantiateSessionFactory( metadata, buildSessionFactoryOptions(), bootstrapContext );
+		return buildSessionFactory( metadata, buildSessionFactoryOptions(), bootstrapContext );
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.cfg.BytecodeSettings;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
@@ -53,7 +54,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 
 import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
-import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
 
 /// Projects resolved bootstrap settings into settings needed for SessionFactory
 /// construction.
@@ -90,21 +90,21 @@ public class SessionFactorySettingsResolver {
 				configurationValues,
 				bootstrapSettings.jpaBootstrap(),
 				standardServiceRegistry,
-				generateLocalObjectUuid(),
-					asString( configurationValues.get( PersistenceSettings.SESSION_FACTORY_NAME ) ),
-					asBoolean( configurationValues.get( PersistenceSettings.SESSION_FACTORY_NAME_IS_JNDI ), true ),
-					resolveStatementObserver( configurationValues ),
-					resolveStatementInspector( configurationValues, standardServiceRegistry ),
-					CacheMode.NORMAL,
-					resolvePhysicalConnectionHandlingMode( configurationValues, standardServiceRegistry ),
-					resolveJdbcTimeZone( configurationValues ),
-					asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
-					asBoolean( configurationValues.get( TransactionSettings.AUTO_CLOSE_SESSION ), false ),
-					asBoolean( configurationValues.get( org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK ), false ),
-					resolveBidirectionalAssociationManagementEnabled( configurationValues ),
-					resolveInterceptor( configurationValues, standardServiceRegistry ),
-					resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),
-					resolveValidatorFactoryReference( configurationValues ),
+				asString( configurationValues.get( PersistenceSettings.SESSION_FACTORY_NAME ) ),
+				asString( configurationValues.get( PersistenceSettings.SESSION_FACTORY_JNDI_NAME ) ),
+				asBoolean( configurationValues.get( PersistenceSettings.SESSION_FACTORY_NAME_IS_JNDI ), true ),
+				resolveStatementObserver( configurationValues ),
+				resolveStatementInspector( configurationValues, standardServiceRegistry ),
+				CacheMode.NORMAL,
+				resolvePhysicalConnectionHandlingMode( configurationValues, standardServiceRegistry ),
+				resolveJdbcTimeZone( configurationValues ),
+				asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
+				asBoolean( configurationValues.get( TransactionSettings.AUTO_CLOSE_SESSION ), false ),
+				asBoolean( configurationValues.get( org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK ), false ),
+				resolveBidirectionalAssociationManagementEnabled( configurationValues ),
+				resolveInterceptor( configurationValues, standardServiceRegistry ),
+				resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),
+				resolveValidatorFactoryReference( configurationValues ),
 				cacheSettings.secondLevelCacheEnabled(),
 				cacheSettings.queryCacheEnabled(),
 				cacheSettings.queryCacheLayout(),

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.pipeline.internal.settings;
+package org.hibernate.boot.pipeline.spi;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -56,11 +56,11 @@ public record ResolvedSessionFactorySettings(
 		/// The standard service registry used for factory-service construction.
 		StandardServiceRegistry serviceRegistry,
 
-		/// The UUID assigned to the SessionFactory being built.
-		String uuid,
-
 		/// Explicit SessionFactory name, if one was configured.
 		String sessionFactoryName,
+
+		/// Explicit JNDI name for binding the SessionFactory, if one was configured.
+		String sessionFactoryJndiName,
 
 		/// Whether the SessionFactory name should also be treated as a JNDI name.
 		Boolean sessionFactoryNameAlsoJndiName,
@@ -217,7 +217,6 @@ public record ResolvedSessionFactorySettings(
 				Objects.requireNonNull( configurationValues )
 			) );
 			Objects.requireNonNull( serviceRegistry );
-			Objects.requireNonNull( uuid );
 			customSqlFunctionMap = Collections.unmodifiableMap( new LinkedHashMap<>(
 					Objects.requireNonNull( customSqlFunctionMap )
 			) );
@@ -234,5 +233,64 @@ public record ResolvedSessionFactorySettings(
 	@Override
 	public SessionFactoryObserver[] sessionFactoryObservers() {
 		return sessionFactoryObservers.clone();
+	}
+
+	public ResolvedSessionFactorySettings withSessionFactoryObservers(SessionFactoryObserver[] sessionFactoryObservers) {
+		return new ResolvedSessionFactorySettings(
+				configurationValues,
+				jpaBootstrap,
+				serviceRegistry,
+				sessionFactoryName,
+				sessionFactoryJndiName,
+				sessionFactoryNameAlsoJndiName,
+				statementObserver,
+				statementInspector,
+				initialSessionCacheMode,
+				physicalConnectionHandlingMode,
+				jdbcTimeZone,
+				flushBeforeCompletionEnabled,
+				autoCloseSessionEnabled,
+				identifierRollbackEnabled,
+				bidirectionalAssociationManagementEnabled,
+				interceptor,
+				sessionFactoryObservers,
+				validatorFactoryReference,
+				secondLevelCacheEnabled,
+				queryCacheEnabled,
+				queryCacheLayout,
+				timestampsCacheFactory,
+				cacheRegionPrefix,
+				minimalPutsEnabled,
+				structuredCacheEntriesEnabled,
+				directReferenceCacheEntriesEnabled,
+				autoEvictCollectionCache,
+				customSqlFunctionMap,
+				customSqmFunctionRegistry,
+				customHqlTranslator,
+				customSqmTranslatorFactory,
+				customSqmMultiTableMutationStrategy,
+				customSqmMultiTableInsertStrategy,
+				jpaCompliance,
+				criteriaValueHandlingMode,
+				immutableEntityUpdateQueryHandlingMode,
+				jsonFunctionsEnabled,
+				xmlFunctionsEnabled,
+				portableIntegerDivisionEnabled,
+				nativeJdbcParametersIgnored,
+				namedQueryStartupCheckingEnabled,
+				collectionsInDefaultFetchGroupEnabled,
+				jpaCallbacksEnabled,
+				defaultBatchFetchSize,
+				maximumFetchDepth,
+				subselectFetchEnabled,
+				commentsEnabled,
+				temporalTableStrategy,
+				auditStrategy,
+				multiTenancyEnabled,
+				currentTenantIdentifierResolver,
+				defaultTenantIdentifierJavaType,
+				defaultCatalog,
+				defaultSchema
+		);
 	}
 }

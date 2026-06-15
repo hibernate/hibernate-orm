@@ -235,6 +235,7 @@ import static org.hibernate.query.common.TemporalUnit.TIMEZONE_MINUTE;
 import static org.hibernate.query.common.TemporalUnit.WEEK_OF_MONTH;
 import static org.hibernate.query.common.TemporalUnit.WEEK_OF_YEAR;
 import static org.hibernate.query.hql.internal.SqmTreeCreationHelper.handleRootAsCrossJoin;
+import static org.hibernate.query.sqm.internal.SqmUtil.failIfSafeModeEnabled;
 import static org.hibernate.query.sqm.internal.SqmUtil.resolveExpressibleJavaTypeClass;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.forClassInstantiation;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.forListInstantiation;
@@ -303,6 +304,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final SqmCreationOptions creationOptions;
 	private final SqmCreationContext creationContext;
 	private final String query;
+	private final boolean safeModeEnabled;
 
 	private final Stack<DotIdentifierConsumer> dotIdentifierConsumerStack;
 
@@ -379,6 +381,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 		this.query = query;
+		this.safeModeEnabled = creationOptions.isSafeModeEnabled();
 		this.dotIdentifierConsumerStack = new StandardStack<>(
 				new BasicDotIdentifierConsumer( this )
 		);
@@ -4577,6 +4580,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final var returnableType = returnType( ctx.castTarget() );
 		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( functionName );
 		if ( functionTemplate == null ) {
+			failIfSafeModeEnabled( safeModeEnabled, functionName, query );
 			functionTemplate = new NamedSqmFunctionDescriptor(
 					functionName,
 					true,
@@ -4584,6 +4588,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					StandardFunctionReturnTypeResolvers.invariant(returnableType),
 					null
 			);
+		}
+		else if ( safeModeEnabled && "sql".equals( functionName ) ) {
+			failIfSafeModeEnabled( safeModeEnabled, functionName, query );
 		}
 		return functionTemplate.generateSqmExpression(
 				functionArguments,
@@ -4594,6 +4601,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitColumnFunction(HqlParser.ColumnFunctionContext ctx) {
+		failIfSafeModeEnabled( safeModeEnabled, "column", query );
 		final String columnName = toName( ctx.jpaNonstandardFunctionName() );
 		final var semanticPathPart = visitPath( ctx.path() );
 		final var resultType = returnType( ctx.castTarget() );
@@ -4677,6 +4685,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String functionName = getFunctionName( ctx );
 		final var functionTemplate = getFunctionDescriptor( functionName );
 		if ( functionTemplate == null ) {
+			failIfSafeModeEnabled( safeModeEnabled, functionName, query );
 			return new NamedSqmFunctionDescriptor(
 					functionName,
 					true,
@@ -4692,6 +4701,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 		else {
+			if ( safeModeEnabled && "sql".equals( functionName ) ) {
+				failIfSafeModeEnabled( safeModeEnabled, functionName, query );
+			}
 			final var functionKind = functionTemplate.getFunctionKind();
 			if ( ctx.filterClause() != null && functionKind == FunctionKind.NORMAL ) {
 				throw new SemanticException( "'FILTER' clause is illegal for non-aggregate function: "

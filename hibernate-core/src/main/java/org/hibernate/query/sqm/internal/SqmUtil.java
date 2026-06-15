@@ -43,6 +43,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.QueryTypeMismatchException;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -1401,5 +1402,18 @@ public class SqmUtil {
 				yield unmodifiableSet( parameterExpressions );
 			}
 		};
+	}
+
+	/**
+	 * Throws a {@link SemanticException} if safe mode is enabled and the function is not allowed.
+	 *
+	 * @param safeModeEnabled whether safe mode is enabled
+	 * @param functionName the name of the function to validate (will be converted to lowercase)
+	 * @throws SemanticException if safe mode is enabled
+	 */
+	public static void failIfSafeModeEnabled(boolean safeModeEnabled, String functionName, @Nullable String queryString) {
+		if ( safeModeEnabled ) {
+			throw new SemanticException( "Function [" + functionName.toLowerCase() + "] is not allowed in safe mode", queryString );
+		}
 	}
 }

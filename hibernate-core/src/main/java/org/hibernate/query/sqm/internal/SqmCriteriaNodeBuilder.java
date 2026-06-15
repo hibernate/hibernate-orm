@@ -183,6 +183,7 @@ import static java.util.Collections.emptyList;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
+import static org.hibernate.query.sqm.internal.SqmUtil.failIfSafeModeEnabled;
 import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.classInstantiation;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.listInstantiation;
@@ -208,6 +209,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private final transient ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	private final transient BindingContext bindingContext;
 	private final transient ServiceRegistry serviceRegistry;
+	private final transient boolean safeModeEnabled;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
@@ -224,6 +226,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			BindingContext bindingContext,
 			ServiceRegistry serviceRegistry) {
 		this.queryEngine = queryEngine;
+		this.safeModeEnabled = options.isSafeModeEnabled();
 		this.uuid = uuid;
 		this.name = name;
 		this.jpaCompliance = options.getJpaCompliance();
@@ -2415,6 +2418,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private <T> SqmFunctionDescriptor getFunctionTemplate(String name, BasicType<T> resultType) {
 		final var functionTemplate = getFunctionDescriptor( name );
 		if ( functionTemplate == null ) {
+			failIfSafeModeEnabled( safeModeEnabled, name, null );
 			return new NamedSqmFunctionDescriptor(
 					name,
 					true,
@@ -2424,6 +2428,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			);
 		}
 		else {
+			if ( safeModeEnabled && "sql".equals( name ) ) {
+				failIfSafeModeEnabled( safeModeEnabled, name, null );
+			}
 			return functionTemplate;
 		}
 	}
@@ -3634,6 +3641,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <T> SqmFunction<T> sql(String pattern, Class<T> type, Expression<?>... arguments) {
+		failIfSafeModeEnabled( safeModeEnabled, "sql", null );
 		final List<SqmExpression<?>> sqmArguments = new ArrayList<>( expressionList( arguments ) );
 		sqmArguments.add( 0, literal( pattern ) );
 		return getFunctionDescriptor( "sql" ).generateSqmExpression(

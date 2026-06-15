@@ -604,4 +604,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public LockOptions getDefaultLockOptions() {
 		return delegate.getDefaultLockOptions();
 	}
+
+	@Override
+	public boolean isSafeModeEnabled() { return delegate.isSafeModeEnabled(); }
 }

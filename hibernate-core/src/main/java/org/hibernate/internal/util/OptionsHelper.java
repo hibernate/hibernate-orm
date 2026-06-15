@@ -28,6 +28,7 @@ import org.hibernate.engine.creation.internal.options.StatefulOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
+import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.QueryOption;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.spi.QueryOptions;
@@ -235,6 +236,9 @@ public final class OptionsHelper {
 			selectionQuery.setCacheable( true );
 			selectionQuery.setCacheRegion( resultSetCache.region() );
 		}
+		else if ( option instanceof QueryOption.JdbcFetchSize jdbcFetchSize ) {
+			selectionQuery.setFetchSize( jdbcFetchSize.fetchSize() );
+		}
 		else if ( option instanceof QueryOption.Comment comment ) {
 			selectionQuery.setComment( comment.comment() );
 		}
@@ -268,6 +272,11 @@ public final class OptionsHelper {
 			options.add( new QueryOption.ResultSetCache( queryOptions.getResultCacheRegionName() ) );
 		}
 
+		final Integer fetchSize = queryOptions.getFetchSize();
+		if ( fetchSize != null ) {
+			options.add( new QueryOption.JdbcFetchSize( fetchSize ) );
+		}
+
 		final String comment = queryOptions.getComment();
 		if ( comment != null ) {
 			options.add( new QueryOption.Comment( comment ) );
@@ -289,6 +298,9 @@ public final class OptionsHelper {
 		else if ( option instanceof QueryFlushMode queryFlushMode ) {
 			statement.setQueryFlushMode( queryFlushMode );
 		}
+		else if ( option instanceof QueryOption.Comment comment ) {
+			( (CommonQueryContract) statement ).setComment( comment.comment() );
+		}
 	}
 
 	public static Set<Statement.Option> getStatementOptions(QueryOptions queryOptions) {
@@ -297,6 +309,10 @@ public final class OptionsHelper {
 		final var queryFlushMode = queryFlushModeFromFlushMode( queryOptions.getFlushMode() );
 		if ( queryFlushMode != null && queryFlushMode != QueryFlushMode.DEFAULT ) {
 			options.add( queryFlushMode );
+		}
+		final String comment = queryOptions.getComment();
+		if ( comment != null ) {
+			options.add( new QueryOption.Comment( comment ) );
 		}
 		return options;
 	}

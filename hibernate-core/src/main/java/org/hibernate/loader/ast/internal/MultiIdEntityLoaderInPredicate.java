@@ -26,6 +26,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import static java.lang.Boolean.TRUE;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.engine.spi.SubselectFetch.createRegistrationHandler;
 import static org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelect;
@@ -169,6 +170,9 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 
 	private List<T> performSingleMultiLoad(Object id, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		final Object entity = getLoadable().getEntityPersister().load( id, null, lockOptions, session );
+		if ( entity == null ) {
+			return emptyList();
+		}
 		@SuppressWarnings("unchecked") T loaded = (T) entity;
 		return singletonList( loaded );
 	}

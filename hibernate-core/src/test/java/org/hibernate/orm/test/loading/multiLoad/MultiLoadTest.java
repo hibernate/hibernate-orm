@@ -425,6 +425,41 @@ public class MultiLoadTest {
 	}
 
 	@Test
+	@JiraKey( value = "HHH-20515" )
+	public void testFindMultipleWithManagedEntityFromSecondLevelCache(SessionFactoryScope scope) {
+		scope.getSessionFactory().getCache().evictAll();
+
+		final Statistics statistics = scope.getSessionFactory().getStatistics();
+
+		scope.inTransaction(session -> {
+			assertNotNull( session.find( SimpleEntity.class, 2 ) );
+			assertNotNull( session.find( SimpleEntity.class, 3 ) );
+		} );
+
+		statistics.clear();
+
+		scope.inTransaction(session -> {
+			SimpleEntity entity = session.find( SimpleEntity.class, 2 );
+			assertEquals( "Entity #2", entity.getText() );
+			entity.setText( "updated" );
+
+			statistics.clear();
+
+			final List<SimpleEntity> entities = session.findMultiple(
+					SimpleEntity.class,
+					List.of( 2, 3 ),
+					CacheMode.NORMAL
+			);
+
+			assertEquals( 2, entities.size() );
+			assertSame( entity, entities.get( 0 ) );
+			assertEquals( "updated", entities.get( 0 ).getText() );
+			assertEquals( "Entity #3", entities.get( 1 ).getText() );
+			assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
+		} );
+	}
+
+	@Test
 	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping">
+    <class name="JoinedSubclassBase" table="js_base">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <joined-subclass name="JoinedSubclassChild" table="js_child">
+            <key column="base_id"/>
+            <property name="detail"/>
+        </joined-subclass>
+    </class>
+</hibernate-mapping>

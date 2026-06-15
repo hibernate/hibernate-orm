@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.Statement;
 import org.hibernate.CacheMode;
@@ -34,11 +35,17 @@ public interface QueryOption {
 	/// be explicitly enabled by setting the configuration property
 	/// {@value org.hibernate.cfg.CacheSettings#USE_QUERY_CACHE}.
 	///
-	/// @param region The second-level cache region to use
-	record ResultSetCache(String region) implements TypedQuery.Option {
-		public ResultSetCache {
-			requireNonNull(region, "Region must be specified");
-		}
+	/// @param region The second-level cache region to use, or `null` for
+	///               the default query cache region
+	record ResultSetCache(@Nullable String region) implements TypedQuery.Option {
+	}
+
+	/// Specifies the JDBC fetch size to use for the query.
+	///
+	/// @param fetchSize The JDBC fetch size
+	///
+	/// @see SelectionQuery#setFetchSize(int)
+	record JdbcFetchSize(int fetchSize) implements TypedQuery.Option {
 	}
 
 	/// Specifies a comment for the SQL query.
@@ -53,7 +60,7 @@ public interface QueryOption {
 	/// @param comment The text of the comment
 	record Comment(String comment) implements TypedQuery.Option, Statement.Option {
 		public Comment {
-			requireNonNull(comment, "Comment must be specified");
+			requireNonNull(comment, "Comment text must be specified");
 		}
 	}
 }

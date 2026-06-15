@@ -102,9 +102,15 @@ public non-sealed class Set extends Collection {
 						}
 					}
 				}
-				final var key = useUniqueKey
-						? new UniqueKey( collectionTable )
-						: new PrimaryKey( collectionTable );
+				final Constraint key;
+				if ( useUniqueKey ) {
+					final var uniqueKey = new UniqueKey( collectionTable );
+					uniqueKey.setNullsNotDistinct( true );
+					key = uniqueKey;
+				}
+				else {
+					key = new PrimaryKey( collectionTable );
+				}
 				key.addColumns( getKey() );
 				for ( var selectable : getElement().getSelectables() ) {
 					if ( selectable instanceof Column column ) {

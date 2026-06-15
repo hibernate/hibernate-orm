@@ -77,6 +77,22 @@ public class EntityHandlerOptionTests {
 	@Test
 	@DomainModel(annotatedClasses = EntityHandlerOptionTests.TestEntity.class)
 	@SessionFactory
+	void testJdbcBatchSizeSession(SessionFactoryScope factoryScope) {
+		var sf = factoryScope.getSessionFactory();
+
+		try (var em = sf.createEntityManager()) {
+			assertThat( em.getJdbcBatchSize() ).isNull();
+		}
+
+		try (var em = sf.createEntityManager( new SessionCreationOption.JdbcBatchSize( 10 ) )) {
+			assertThat( em.getJdbcBatchSize() ).isEqualTo( 10 );
+			assertThat( em.unwrap( SessionImplementor.class ).getConfiguredJdbcBatchSize() ).isEqualTo( 10 );
+		}
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = EntityHandlerOptionTests.TestEntity.class)
+	@SessionFactory
 	void testFetchBatchSizeStateless(SessionFactoryScope factoryScope) {
 		var sf = factoryScope.getSessionFactory();
 		final int defaultBatchFetchSize = sf.getSessionFactoryOptions().getDefaultBatchFetchSize();

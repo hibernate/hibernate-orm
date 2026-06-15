@@ -115,9 +115,11 @@ Most JDBC drivers accommodate this usage pattern by _not_ setting a default fetc
 However, there are a couple of exceptions to this and for the offending drivers you should probably override the default fetch size using the following configuration property.
 
 .Default JDBC fetch size
-[%breakable,cols="37,~"]
+[%autowidth.stretch]
 |===
-| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#STATEMENT_FETCH_SIZE[`hibernate.jdbc.fetch_size`] | The default JDBC fetch size
+| Configuration property name | Purpose | Alternative option
+
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#STATEMENT_FETCH_SIZE[`hibernate.jdbc.fetch_size`] | The default JDBC fetch size  | link:{doc-javadoc-url}/org/hibernate/query/QueryOption.JdbcFetchSize.html[JdbcFetchSize]
 |===
 
 The default fetch size can be overridden for a given query by using the link:{doc-javadoc-url}/org/hibernate/query/QueryOption.JdbcFetchSize.html[`JdbcFetchSize`] option, but this is rarely necessary.
@@ -145,9 +147,9 @@ All we need to do is set a single property:
 .Enabling JDBC batching
 [%autowidth.stretch]
 |===
-| Configuration property name | Purpose | Alternative
+| Configuration property name | Purpose | Alternative option
 
-| link:{doc-javadoc-url}/org/hibernate/cfg/BatchSettings.html#STATEMENT_BATCH_SIZE[`hibernate.jdbc.batch_size`] | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
+| link:{doc-javadoc-url}/org/hibernate/cfg/BatchSettings.html#STATEMENT_BATCH_SIZE[`hibernate.jdbc.batch_size`] | Maximum batch size for SQL statement batching | link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.JdbcBatchSize.html[JdbcBatchSize]
 |===
 
 To confirm that statement batching is working, enable ``TRACE``-level logging for the category `org.hibernate.orm.jdbc.batch`.
@@ -284,7 +286,7 @@ Both batch fetching and subselect fetching are disabled by default, but we may e
 
 | `hibernate.default_batch_fetch_size`
 | A sensible batch size `>1` to enable batch fetching
-| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.FetchBatchSize.html[`new FetchBatchSize(10)`] | `new BatchSize(10)`
+| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.FetchBatchSize.html[`FetchBatchSize`] | `BatchSize`
 // | `@Fetch(batchSize=10)`, `@BatchSize(10)`
 | `hibernate.use_subselect_fetch`
 | `true` to enable subselect fetching
@@ -1034,10 +1036,7 @@ A stateless session:
 
 There are some advantages to this model.
 In particular, the absence of a persistence context means that we can safely perform bulk-processing tasks without allocating huge quantities of memory.
-Use of a stateless session alleviates the need to call:
-
-- `clear()` or `detach()` to perform first-level cache management, and
-- `setCacheStoreMode()` and `setCacheRetrieveMode()` to bypass interaction with the second-level cache.
+Use of a stateless session alleviates the need to call `clear()` or `detach()` to perform first-level cache management.
 
 [%unbreakable]
 [TIP]
@@ -1072,7 +1071,7 @@ Therefore, the `get()`, `find()`, `lock()`, and `refresh()` methods accept a lin
 Here's the simplest way to execute a `select ... for update` in Hibernate:
 
 [source,java]
-Book book = session.find(Book.class, isbn, LockMode.PESSIMISTIC_WRITE);
+Book book = session.get(Book.class, isbn, LockMode.PESSIMISTIC_WRITE);
 
 We can also link:{doc-javadoc-url}/org/hibernate/query/SelectionQuery.html#setLockMode(jakarta.persistence.LockModeType)[specify] a `LockMode` for a query.
 

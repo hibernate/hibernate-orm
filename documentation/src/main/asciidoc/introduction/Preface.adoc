@@ -28,9 +28,9 @@ Taken together, these enhancements yielded a level of compile-time type safety--
 ****
 ====
 
-Hibernate ORM and https://hibernate.org/reactive/[Hibernate Reactive] are core components of https://quarkus.io[Quarkus 3], the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
+// Hibernate ORM and https://hibernate.org/reactive/[Hibernate Reactive] are core components of https://quarkus.io[Quarkus 3], the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
 
-Unfortunately, all this work also obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
+Recent rapid evolution has obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
 Indeed, the changes in JPA 4 required significant rewriting of even this document.
 
 This guide is an up-to-date, high-level discussion of the current feature set and recommended usage.

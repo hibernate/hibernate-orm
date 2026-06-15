@@ -7,9 +7,10 @@ description = 'Integration for Micrometer metrics into Hibernate as a metrics co
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libs.micrometer
+    compileOnly libs.micrometer
 
     testImplementation project( ':hibernate-testing' )
+    testImplementation libs.micrometer
 
     testAnnotationProcessor project( ':hibernate-processor' )
     testCompileOnly libs.jakarta.annotation

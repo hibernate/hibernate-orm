@@ -65,6 +65,17 @@ The `DataTckExtension` (which extends Weld's JUnit extension) handles:
 * Registering repository implementations as CDI beans
 * Providing persistence unit/context/agent factories to Weld
 
+== Adding new TCK test classes
+
+When the TCK adds new test classes, create a wrapper in `runner.test` that extends the TCK class
+and annotates it with `@DataTck`. A few tips:
+
+* Check which entity classes and repositories a new test uses (`@Inject` fields point to repository interfaces, those reference entities)
+* If the `_Repo` implements a `$` companion interface (it shouldn't but just in case), that companion must be committed as a source file
+under `src/test/java/ee/` (run the https://github.com/jakartaredhat/hibernate-data-tck/tree/main/tools[jakarta.data-tools] and copy from its output)
+* Check the output of `./gradlew :hibernate-tck-data-runner:checkMissingTckWrappers` to find any missing tests.
+Note, that signature and any no-sql test are ignored on purpose.
+
 == Challenge exclusions
 
 To exclude (challenge) a test, add its pattern to `@ExcludeClassNamePatterns`

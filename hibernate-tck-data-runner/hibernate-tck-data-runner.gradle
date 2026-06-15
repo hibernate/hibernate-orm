@@ -80,8 +80,49 @@ def extractTckSources = tasks.register('extractTckSources', Copy) {
 // Add extracted TCK sources as a test source directory
 sourceSets.test.java.srcDir layout.buildDirectory.dir("tck-sources")
 
-tasks.named('compileTestJava') {
+
+// TCK test classes intentionally not wrapped in the runner
+def ignoredTckTests = [
+        // because we are not working with non-jpa entities here:
+        'ee.jakarta.tck.data.standalone.nosql.example.NoSQLEntityTests',
+        // well... because it's a signature nonsense test:
+        'ee.jakarta.tck.data.standalone.signature.SignatureTests',
+].toSet()
+
+// Warn about @Standalone TCK test classes that don't have a wrapper in our runner
+def checkMissingWrappers = tasks.register('checkMissingTckWrappers') {
     dependsOn extractTckSources
+    doLast {
+        def tckSourcesDir = layout.buildDirectory.dir("tck-sources").get().asFile
+        def wrappersDir = sourceSets.test.java.srcDirs.collect {
+            new File(it, "org/hibernate/orm/jakarta/data/tck/runner/test")
+        }.find { it.isDirectory() }
+        def existingWrappers = (wrappersDir.listFiles() ?: []).collectMany { file ->
+            def m = file.text =~ /\s++extends\s++(\w++)/
+            m ? [m[0][1]] : []
+        }.toSet()
+
+        def missing = []
+        fileTree(tckSourcesDir).matching { include '**/*.java' }.each { file ->
+            if (file.text.contains('@Standalone')) {
+                def fqcn = tckSourcesDir.toPath().relativize(file.toPath()).toString()
+                        .replace('/', '.').replace('.java', '')
+                def className = file.name.replace('.java', '')
+                if (!existingWrappers.contains(className) && !ignoredTckTests.contains(fqcn)) {
+                    missing << fqcn
+                }
+            }
+        }
+        if (!missing.isEmpty()) {
+            logger.warn("WARNING: The following @Standalone TCK test classes have no wrapper in the runner:")
+            missing.each { logger.warn("  - ${it}") }
+            logger.warn("Create a Standalone<Name> wrapper class or add to ignoredTckTests.")
+        }
+    }
+}
+
+tasks.named('compileTestJava') {
+    dependsOn extractTckSources, checkMissingWrappers
     options.compilerArgs += [
             '-parameters',
             '-AjakartaDataSortCompliance=true'

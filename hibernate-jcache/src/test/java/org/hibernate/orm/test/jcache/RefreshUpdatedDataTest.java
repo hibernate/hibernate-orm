@@ -31,7 +31,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.tool.schema.Action;
 
@@ -54,8 +53,7 @@ public class RefreshUpdatedDataTest {
 	@BeforeEach
 	@SuppressWarnings("unused")
 	public void acquireResources() {
-		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder()
-				.configure( "hibernate-config/hibernate.cfg.xml" );
+		final StandardServiceRegistryBuilder ssrb = TestHelper.getStandardServiceRegistryBuilder();
 
 		if ( H2Dialect.class.equals( DialectContext.getDialect().getClass() ) ) {
 			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
@@ -64,7 +62,6 @@ public class RefreshUpdatedDataTest {
 
 
 		serviceRegistry = ssrb
-				.configure( "hibernate-config/hibernate.cfg.xml" )
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
 				.build();
 

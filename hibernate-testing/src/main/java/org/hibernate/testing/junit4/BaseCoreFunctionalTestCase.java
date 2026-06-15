@@ -21,7 +21,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
-import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -294,10 +293,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			final Properties properties = new Properties();
 			properties.putAll( configuration.getProperties() );
 			resolvePlaceHolders( properties );
-			final LoadedConfig loadedConfig =
-					configuration.getStandardServiceRegistryBuilder().getAggregatedCfgXml();
 			final StandardServiceRegistryBuilder registryBuilder =
-					new StandardServiceRegistryBuilder( bootRegistry, loadedConfig )
+					new StandardServiceRegistryBuilder( bootRegistry )
 							.applySettings( properties );
 			ServiceRegistryUtil.applySettings( registryBuilder );
 			prepareBasicRegistryBuilder( registryBuilder );

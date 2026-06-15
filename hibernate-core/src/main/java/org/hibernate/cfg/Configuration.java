@@ -379,12 +379,11 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in an application resource named
-	 * {@code hibernate.cfg.xml}.
+	 * Unsupported legacy cfg.xml bootstrap entry point.
 	 *
 	 * @return {@code this} for method chaining
 	 *
-	 * @throws HibernateException Generally indicates we cannot find {@code hibernate.cfg.xml}
+	 * @throws UnsupportedOperationException Always, since {@code hibernate.cfg.xml} is no longer supported
 	 *
 	 * @see #configure(String)
 	 */
@@ -393,15 +392,13 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application resource.
-	 * <p>
-	 * The format of the resource is defined by {@code hibernate-configuration-3.0.dtd}.
+	 * Unsupported legacy cfg.xml bootstrap entry point.
 	 *
 	 * @param resource The resource to use
 	 *
 	 * @return {@code this} for method chaining
 	 *
-	 * @throws HibernateException Generally indicates we cannot find the named resource
+	 * @throws UnsupportedOperationException Always, since {@code hibernate.cfg.xml} is no longer supported
 	 */
 	public Configuration configure(String resource) throws HibernateException {
 		standardServiceRegistryBuilder.configure( resource );
@@ -420,15 +417,13 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given document.
-	 * <p>
-	 * The format of the document is defined by {@code hibernate-configuration-3.0.dtd}.
+	 * Unsupported legacy cfg.xml bootstrap entry point.
 	 *
 	 * @param url URL from which you wish to load the configuration
 	 *
 	 * @return {@code this} for method chaining
 	 *
-	 * @throws HibernateException Generally indicates a problem access the url
+	 * @throws UnsupportedOperationException Always, since {@code hibernate.cfg.xml} is no longer supported
 	 */
 	public Configuration configure(URL url) throws HibernateException {
 		standardServiceRegistryBuilder.configure( url );
@@ -437,15 +432,13 @@ public class Configuration {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application file.
-	 * <p>
-	 * The format of the file is defined by {@code hibernate-configuration-3.0.dtd}.
+	 * Unsupported legacy cfg.xml bootstrap entry point.
 	 *
 	 * @param configFile File from which you wish to load the configuration
 	 *
 	 * @return {@code this} for method chaining
 	 *
-	 * @throws HibernateException Generally indicates a problem access the file
+	 * @throws UnsupportedOperationException Always, since {@code hibernate.cfg.xml} is no longer supported
 	 */
 	public Configuration configure(File configFile) throws HibernateException {
 		standardServiceRegistryBuilder.configure( configFile );

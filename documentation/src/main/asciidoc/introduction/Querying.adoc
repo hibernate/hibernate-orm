@@ -390,19 +390,19 @@ When all else fails, and sometimes even before that, we're left with the option 
 
 HQL is a powerful language that helps reduce the verbosity of SQL, and significantly increases the portability of queries between databases.
 But ultimately, the true value of ORM is not in avoiding SQL, but in alleviating the pain involved in dealing with SQL result sets once we get them back to our Java program.
-As we said <<introduction,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
+As we said <<orm-or-sql,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
 
 .Executing SQL
 [%breakable,cols="10,36,14,~"]
 |===
 | Kind | `EntityHandler` method | Interface | Execution method
 
-| Selection |  `createNativeQuery(String,Class)` | `TypedQuery` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Selection |  `createNativeQuery(String,Class)`, `createNativeQuery(String,ResultSetMapping)` | `TypedQuery` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
 | Mutation | `createNativeStatement(String)` | `Statement` | `execute()`
-| Stored procedure | `createStoredProcedureQuery(String)` | `StoredProcedureQuery` | `execute()`
+| Stored procedure | `createStoredProcedureQuery(String)`, `createStoredProcedureQuery(String,Class...)` | `StoredProcedureQuery` | Various options (see Javadoc)
 |===
 
-For the most simple cases, Hibernate can infer the shape of the result set:
+For the most simple cases, Hibernate can infer the shape of the result set from the query result type we provide:
 
 [source, java]
 ----
@@ -418,8 +418,44 @@ String title =
 ----
 
 However, in general, there isn't enough information in the JDBC `ResultSetMetaData` to infer the mapping of columns to entity objects.
-So for more complicated cases, you'll need to use the `@SqlResultSetMapping` annotation to define a named mapping, and pass the name to `createNativeQuery()`.
-This gets fairly messy, so we don't want to hurt your eyes by showing you an example of it.
+So for more complicated cases, we need to provide a JPA 4 `ResultSetMapping`.
+There are two ways to do this:
+
+- use the `@SqlResultSetMapping` annotation to define a named mapping, and pass the name or static metamodel reference to `createNativeQuery()`, or
+- use the new `ResultSetMapping` framework to express the result set mapping in programmatic code.
+
+The first option gets fairly messy, so we don't want to hurt your eyes by showing you an example of it.
+The second option is more elegant:
+
+[source,java]
+----
+import static jakarta.persistence.sql.ResultSetMapping.*;
+...
+var authorMapping =
+         // mapping for the Author entity
+         entity(Author.class,
+				// mapping for a fields of Author
+                field(Author_.ssn, "auth_ssn"),
+				field(Author_.deceased, "auth_dead"),
+				// mapping for an embedded object
+                embedded(Author_.name,
+						 // mappings for fields of Name embeddable
+                         field(Name_.first, "auth_first_name"),
+                         field(Name_.last, "auth_last_name")));
+var authors =
+        session.createNativeQuery(
+                        """
+                        select ssn as auth_ssn,
+                               dead as auth_dead,
+                               fname as auth_first_name,
+                               lname as auth_last_name
+                        from authors
+                        """,
+                        authorMapping)
+               .getResultList();
+----
+
+Thanks to the use of the static metamodel, this code is very type safe.
 
 // By default, Hibernate doesn't flush the session before execution of a native query.
 // That's because the session is unaware of which modifications held in memory would affect the results of the query.
@@ -456,10 +492,10 @@ This gets fairly messy, so we don't want to hurt your eyes by showing you an exa
 //                    .getResultList();
 // ----
 
-[TIP]
-====
-We can call stored procedures using `createStoredProcedureQuery()`.
-====
+// [TIP]
+// ====
+// We can call stored procedures using `createStoredProcedureQuery()`.
+// ====
 
 [[restrictions-and-ordering]]
 === Restrictions and ordering

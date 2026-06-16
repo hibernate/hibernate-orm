@@ -96,7 +96,7 @@ public interface SessionCreationOption {
 	/// @see Session#setFetchBatchSize(int)
 	/// @see org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE
 	record FetchBatchSize(int batchSize)
-			implements EntityManager.CreationOption, EntityAgent.CreationOption {
+			implements EntityManager.CreationOption {
 	}
 
 	/// Enables or disables the use of [subselect fetching][FetchMethod#BY_SUBQUERY].
@@ -104,7 +104,7 @@ public interface SessionCreationOption {
 	/// @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
 	/// @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
 	enum PreferredFetchMethod
-			implements EntityManager.CreationOption, EntityAgent.CreationOption {
+			implements EntityManager.CreationOption {
 		/// Enables [subselect fetching][FetchMethod#BY_SUBQUERY]
 		BY_SUBQUERY,
 		/// Disables [subselect fetching][FetchMethod#BY_SUBQUERY]

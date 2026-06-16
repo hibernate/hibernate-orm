@@ -32,6 +32,7 @@ Actually, the problem that object/relational mapping solves has been mischaracte
 
 Therefore, the principal task of object/relational mapping is to _renormalize the data after reading it from the database_. This need exists even if the classes in our program are identical to the database tables.
 
+[[orm-or-sql]]
 [TIP]
 // .ORM or SQL?
 ====

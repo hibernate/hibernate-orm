@@ -23,6 +23,7 @@ import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -51,6 +52,15 @@ public class DynamicModelTests {
 	@DomainModel(xmlMappings = "mappings/models/dynamic/dynamic-simple.xml")
 	void testSimpleDynamicModel2(DomainModelScope modelScope) {
 		assertThat( modelScope.getDomainModel().getEntityBinding( "SimpleEntity" ) ).isNotNull();
+	}
+
+	@Test
+	@DomainModel(xmlMappings = "mappings/models/dynamic/dynamic-collection.xml")
+	@JiraKey("HHH-20573")
+	void testDynamicModelWithCollections(DomainModelScope modelScope) {
+		final var entityBinding = modelScope.getDomainModel().getEntityBinding( "DynamicCollectionEntity" );
+		assertThat( entityBinding ).isNotNull();
+		assertThat( entityBinding.getProperty( "children" ) ).isNotNull();
 	}
 
 	@Test

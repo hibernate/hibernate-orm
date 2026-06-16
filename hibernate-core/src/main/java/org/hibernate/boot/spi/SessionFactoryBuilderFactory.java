@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.service.JavaServiceLoadable;
 
@@ -12,8 +13,11 @@ import org.hibernate.service.JavaServiceLoadable;
  * is built. Intended as a "discoverable service" ({@link java.util.ServiceLoader}). There can
  * be at most one implementation discovered that returns a non-null {@link SessionFactoryBuilder}.
  *
+ * @apiNote This will be removed in 9.0.
+ *
  * @author Steve Ebersole
  */
+@Remove
 @JavaServiceLoadable
 public interface SessionFactoryBuilderFactory {
 	/**

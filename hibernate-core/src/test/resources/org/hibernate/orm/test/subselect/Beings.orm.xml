@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.subselect</package>
+
+    <entity class="Human" metadata-complete="true" access="FIELD">
+        <table name="humans"/>
+        <attributes>
+            <id name="id">
+                <column name="bid"/>
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="enhanced-sequence">
+                    <parameter name="sequence_name" value="Being_SEQ"/>
+                </generic-generator>
+            </id>
+            <basic name="name" optional="false"/>
+            <basic name="sex" optional="false"/>
+            <basic name="address"/>
+            <basic name="heightInches">
+                <column name="height_centimeters" nullable="false">
+                    <read>height_centimeters / 2.54E0</read>
+                    <write>? * 2.54E0</write>
+                </column>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="Alien" metadata-complete="true" access="FIELD">
+        <table name="aliens"/>
+        <attributes>
+            <id name="id">
+                <column name="bid"/>
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="enhanced-sequence">
+                    <parameter name="sequence_name" value="Being_SEQ"/>
+                </generic-generator>
+            </id>
+            <basic name="identity" optional="false">
+                <column name="ident"/>
+            </basic>
+            <basic name="planet"/>
+            <basic name="species" optional="false"/>
+            <basic name="heightInches">
+                <column name="height_centimeters" nullable="false">
+                    <read>height_centimeters / 2.54E0</read>
+                    <write>? * 2.54E0</write>
+                </column>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="Being" metadata-complete="true" access="FIELD">
+        <table-expression>
+            select bid, name as ident, address as loc, 'human' as species, height_centimeters
+            from humans
+            union
+            select bid, ident, planet as loc, species, height_centimeters
+            from aliens
+        </table-expression>
+        <synchronize table="humans"/>
+        <synchronize table="aliens"/>
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <column name="bid"/>
+                <generated-value generator="being-id-generator"/>
+                <generic-generator name="being-id-generator" class="enhanced-sequence"/>
+            </id>
+            <basic name="identity">
+                <column name="ident"/>
+            </basic>
+            <basic name="location">
+                <column name="loc"/>
+            </basic>
+            <basic name="species"/>
+            <basic name="heightInches">
+                <column name="height_centimeters" nullable="false">
+                    <read>height_centimeters / 2.54E0</read>
+                </column>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>

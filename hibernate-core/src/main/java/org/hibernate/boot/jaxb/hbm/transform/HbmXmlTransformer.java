@@ -1122,7 +1122,7 @@ public class HbmXmlTransformer {
 			String tableName) {
 		if ( tableName != null
 				&& currentBaseTable != null
-				&& currentBaseTable.isPhysicalTable()
+				&& ( currentBaseTable.isPhysicalTable() || currentBaseTable.isSubselect() )
 				&& currentBaseTable.getName().equals( tableName ) ) {
 			tableName = null;
 		}

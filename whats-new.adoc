@@ -64,9 +64,8 @@ hibernate.flush.queue.type=legacy
 [[procedure-outputs]]
 == Improvements to ProcedureCall
 
-A number of improvements and additions have been made to
+In addition to the <<jpa4>> API enhancements to `StoredProcedureQuery`, a number of improvements and additions have been made to Hibernate's
 `ProcedureCall`, `ProcedureOutputs` and `Output`.
-
 
 [[procedure-outputs-casting]]
 === Output Casting
@@ -94,8 +93,6 @@ List<Region> regions = outputs.getCurrent()
         .getResultList();
 ----
 
-
-
 [[procedure-outputs-mapping]]
 === ResultSet Mapping
 
@@ -117,22 +114,6 @@ List<Initiative> initiatives =  outputs.getCurrent()
         .getResultList();
 ----
 
-[[get-ref-option]]
-== getReference() by Natural Id
-
-8.0 adds the ability to get a reference (`Session#getReference`) based on an entity's natural-id via
-a new overload -
-
-[source,java]
-----
-var isbn = ...;
-var book = session.getReference(Book.class, isbn, NATURAL);
-----
-
-[[StatementObserver]]
-== StatementObserver
-
-8.0 introduces the new `StatementObserver` contract, allowing observation of all JDBC statements Hibernate performs.
 
 [[row-level-security]]
 == Discriminator-Based Multi-Tenancy and Row-Level Security
@@ -143,21 +124,28 @@ In this release, row-level security is already supported on PostgreSQL, Db2, SQL
 
 
 [[session-open]]
-== Session and StatelessSession Options
+== Session and Query Options
 
-One use of <<jpa4>> features is the ability to open and configure a `Session` or `StatelessSession` with Hibernate-specific options directly from the Jakarta Persistence API.
+<<jpa4>> features the ability to specify type safe vendor-specific options directly from the Jakarta Persistence API.
 
-`EntityManager.CreationOption` and `EntityAgent.CreationOption` define options which are applicable during creation of the `Session` or `StatelessSession` and which are in effect for its lifecycle.  Hibernate supports the following creation options -
+=== Session Creation Options
+
+Implementations of `EntityManager.CreationOption` and `EntityAgent.CreationOption` define options specified during creation of the stateful or stateless session.  Hibernate supports the following creation options:
 
 * `org.hibernate.SessionCreationOption.TenantId`
 * `org.hibernate.SessionCreationOption.EffectiveChangeset`
 * `org.hibernate.SessionCreationOption.EffectiveAt`
+* `org.hibernate.SessionCreationOption.EnabledFilter`
+* `org.hibernate.SessionCreationOption.FetchBatchSize`
+* `org.hibernate.SessionCreationOption.PreferredFetchMethod`
+* `org.hibernate.SessionCreationOption.JdbcBatchSize`
 * `org.hibernate.StatementObserver` (see <<StatementObserver>>)
 * `org.hibernate.Interceptor`
+* `jakarta.persistence.SynchronizationType`
 
-NOTE: `Session` may also be created with a `org.hibernate.SessionCreationOption.SubselectFetchMode`.
+=== Session Options
 
-`EntityManager.Option` and `EntityAgent.Option` define configuration values which are mutable throughout the `Session` or `StatelessSession` lifecycle, though they may also be used as creation options -
+Implementations of `EntityManager.Option` and `EntityAgent.Option` define settings which are mutable throughout the lifetime of the session or stateless session, though they may also be used as creation options:
 
 * `org.hibernate.CacheMode`
 * `jakarta.persistence.CacheStoreMode`
@@ -166,6 +154,7 @@ NOTE: `Session` may also be created with a `org.hibernate.SessionCreationOption.
 * `jakarta.persistence.FlushModeType`
 * `org.hibernate.BatchSize`
 * `org.hibernate.ReadOnlyMode`
+* `org.hibernate.EnabledFetchProfile`
 
 E.g.
 
@@ -177,6 +166,38 @@ var entityManager = entityManagerFactory.createEntityManager(
 		ReadOnlyMode.READ_ONLY
 );
 ----
+
+=== Query Options
+
+Finally, implementations of `TypedQuery.Option` and `Statement.Option` define settings affecting the execution of queries and statements:
+
+* `org.hibernate.query.QueryOption.ResultSetCache`
+* `org.hibernate.query.QueryOption.JdbcFetchSize`
+* `org.hibernate.query.QueryOption.Comment`
+* `org.hibernate.EnabledFetchProfile`
+* `org.hibernate.ReadOnlyMode`
+* `org.hibernate.CacheMode`
+* `jakarta.persistence.CacheStoreMode`
+* `jakarta.persistence.CacheRetrieveMode`
+* `jakarta.persistence.QueryFlushMode`
+* `jakarta.persistence.LockModeType`
+* `jakarta.persistence.PessimisticLockScope`
+
+[[get-ref-option]]
+== getReference() by Natural Id
+
+8.0 adds the ability to get a reference (`Session#getReference`) based on the natural id of an entity.
+
+[source,java]
+----
+var isbn = ...;
+var book = session.getReference(Book.class, isbn, KeyType.NATURAL);
+----
+
+[[StatementObserver]]
+== StatementObserver
+
+8.0 introduces the new `StatementObserver` contract, allowing observation of all JDBC statements Hibernate performs.
 
 [[safe-mode]]
 == Safe Mode Validator
@@ -211,14 +232,14 @@ Uninitialized lazy inverse collections are not initialized solely for bidirectio
 
 NOTE: The deprecated bytecode-enhancement setting `hibernate.enhancer.enableAssociationManagement=true` is also recognized as an alias when the new setting is not specified, making migration to the runtime model straightforward.
 
-[[bulk-select]]
-== Bulk Select (Subselect) Fetching
+[[subselect-fetching]]
+== Subselect Fetching
 
-The following major enhancements were made to _bulk select fetching_ (what we previously called "subselect" fetching).
+The following major enhancements were made to subselect fetching.
 
 - To-one associations are now eligible for bulk select fetching. Previously, only many-valued associations could be fetched in bulk.
 
-- `FetchMethod` was introduced as a JPA 4 `FetchOption` enumerating the basic fetching methods `SELECT`, `JOIN`, and `BULK_SELECT`. To request bulk select fetching for an `AttributeNode` of an `EntityGraph`, call `node.addOption(FetchMethod.BULK_SELECT)`.
+- `FetchMethod` was introduced as a JPA 4 `FetchOption` enumerating the basic fetching methods `BY_ID`, `JOIN`, and `BY_SUBQUERY`. To request bulk select fetching for an `AttributeNode` of an `EntityGraph`, call `node.addOption(FetchMethod.BY_SUBQUERY)`.
 +
 Note that batch fetching may be requested using the standard JPA 4 fetch option `BatchSize`.
 

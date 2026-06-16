@@ -207,13 +207,14 @@ The API for `ProcedureCall` and `ProcedureOutputs` has been redesigned for a num
 [[FindMultipleOption]]
 === FindMultipleOption
 
-The 3 enums which are implementors of `org.hibernate.FindMultipleOption` have been moved as inner enums of `org.hibernate.FindMultipleOption` itself :
+The four enums which are implementors of `org.hibernate.FindMultipleOption` have been moved as inner enums of `org.hibernate.FindMultipleOption` itself :
 
 * `org.hibernate.OrderingMode` -> `org.hibernate.FindMultipleOption.OrderingMode`
 * `org.hibernate.SessionCheckMode` -> `org.hibernate.FindMultipleOption.SessionCheckMode`
 * `org.hibernate.RemovalsMode` -> `org.hibernate.FindMultipleOption.RemovalsMode`
+* `org.hibernate.BatchSize` -> `org.hibernate.FindMultipleOption.BatchSize`
 
-These enums were previously incubating.
+These enums were previously incubating, except for `org.hibernate.BatchSize` which is now marked as deprecated.
 
 
 [[generic-generator]]

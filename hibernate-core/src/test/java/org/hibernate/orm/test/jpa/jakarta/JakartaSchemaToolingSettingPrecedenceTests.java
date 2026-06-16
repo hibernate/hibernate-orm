@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Make sure {@code `jakarta.persistence.*`} settings have function precedence over
- * the legacy {@link `javax.persistence.*`} counterparts
+ * the legacy {@code `javax.persistence.*`} counterparts
  *
  * @author Steve Ebersole
  */

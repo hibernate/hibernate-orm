@@ -10,6 +10,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
@@ -39,7 +40,10 @@ import jakarta.persistence.criteria.Nulls;
  * @since 5.0
  *
  * @see Metadata#getSessionFactoryBuilder()
+ *
+ * @apiNote This will be removed in 9.0.
  */
+@Remove
 public interface SessionFactoryBuilder {
 	/**
 	 * Specifies a Bean Validation {@link jakarta.validation.ValidatorFactory}.

@@ -1,0 +1,25 @@
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <entity name="DynamicCollectionEntity" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="native"/>
+                <target>Long</target>
+            </id>
+            <one-to-many name="children" target-entity="DynamicCollectionEntity" fetch="LAZY"
+                         classification="LIST">
+                <order-column name="child_order"/>
+                <join-table name="entity_children">
+                    <join-column name="entity_id"/>
+                    <inverse-join-column name="child_id"/>
+                </join-table>
+            </one-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>

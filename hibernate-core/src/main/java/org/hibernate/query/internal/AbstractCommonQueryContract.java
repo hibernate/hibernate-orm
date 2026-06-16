@@ -1727,12 +1727,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	protected void afterQuery(boolean success) {
 		afterQuery();
-
-		final var session = getSession();
-		if ( !session.isTransactionInProgress() ) {
-			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
-		}
-		session.afterOperation( success );
+		getSession().afterOperation( success );
 	}
 
 	protected void afterQuery() {

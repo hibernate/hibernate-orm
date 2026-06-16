@@ -64,6 +64,20 @@ public class DynamicModelTests {
 	}
 
 	@Test
+	@DomainModel(xmlMappings = "mappings/models/dynamic/dynamic-collection-with-package.xml")
+	@JiraKey( "HHH-20574" )
+	void testDynamicModelTargetEntityNotPackageQualified(DomainModelScope modelScope) {
+		final var parentBinding = modelScope.getDomainModel().getEntityBinding( "DynamicParent" );
+		assertThat( parentBinding ).isNotNull();
+		assertThat( parentBinding.getProperty( "partner" ) ).isNotNull();
+		assertThat( parentBinding.getProperty( "children" ) ).isNotNull();
+
+		final var childBinding = modelScope.getDomainModel().getEntityBinding( "DynamicChild" );
+		assertThat( childBinding ).isNotNull();
+		assertThat( childBinding.getProperty( "parent" ) ).isNotNull();
+	}
+
+	@Test
 	@ServiceRegistry
 	void testSimpleDynamicModel(ServiceRegistryScope registryScope) {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()

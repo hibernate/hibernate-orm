@@ -82,7 +82,6 @@ The deprecated `Session.replicate()` methods and the associated `ReplicationMode
 There is no direct replacement.
 For some import or overwrite workflows, consider `StatelessSession#upsert(Object)`.
 
-
 [[stateless]]
 === StatelessSession
 
@@ -94,9 +93,6 @@ Hibernate's `StatelessSession` now implements `EntityAgent`.
 * `fetch()` - `EntityAgent` defines that the fetched value be returned, whereas `StatelessSession` has historically defined a `void` return type.
 
 In both cases, `StatelessSession` has been changed to match the `EntityAgent` signatures.
-
-
-
 
 [[query-api]]
 === Query API
@@ -120,7 +116,6 @@ Another impact is that `@NamedQuery` and `@NamedNativeQuery` (as well as Hiberna
 * `@NamedStatement` - A `MutationQuery` defined using HQL/JPQL
 * `@NamedNativeQuery` - A `SelectionQuery` defined using native SQL
 * `@NamedNativeStatement` - A `MutationQuery` defined using native SQL
-
 
 [[transform-removal]]
 === Removal of `org.hibernate.transform` package
@@ -169,7 +164,6 @@ query.setTupleTransformer( (tuple, aliases) -> {
 } );
 ----
 
-
 [[timeout]]
 === Query and Transaction Timeouts
 
@@ -179,7 +173,6 @@ Starting in 3.2, Jakarta Persistence added a new `Timeout` class which helps all
 Originally this new `Timeout` type was not exposed on any API directly, so there was no impact from an API perspective.
 However, this has changed a bit in 4.0 where `Timeout` *is* now exposed on certain APIs.
 This causes a signature conflict with a few of Hibernate API methods; as part of fixing those conflicts, it was decided to change all exposures of timeout in Hibernate APIs to use `Timeout` as this helps clarify these confusions.
-
 
 [[graph-attr-node]]
 === AttributeNode Subgraphs
@@ -216,13 +209,16 @@ The four enums which are implementors of `org.hibernate.FindMultipleOption` have
 
 These enums were previously incubating, except for `org.hibernate.BatchSize` which is now marked as deprecated.
 
-
 [[generic-generator]]
 === `@GenericGenerator`
 
 The `@GenericGenerator` annotation was deprecated in Hibernate 6.5.
 Instead of removing it completely, we have modernized it and reversed its deprecation.
 Code still using `@GenericGenerator` must adapt to its reworked definition.
+
+=== Deprecated OptimisticLock Annotation
+
+The venerable `@OptimisticLock` annotation was deprecated in favor of the new JPA-standard `@ExcludedFromVersioning` annotation.
 
 
 [[hibernate-processor]]

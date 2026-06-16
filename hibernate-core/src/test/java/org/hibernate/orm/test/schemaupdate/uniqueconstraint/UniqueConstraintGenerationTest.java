@@ -37,7 +37,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
-@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.orm.xml")
 public class UniqueConstraintGenerationTest {
 
 	@Test

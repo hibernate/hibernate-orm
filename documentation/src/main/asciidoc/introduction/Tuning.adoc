@@ -290,7 +290,7 @@ Both batch fetching and subselect fetching are disabled by default, but we may e
 // | `@Fetch(batchSize=10)`, `@BatchSize(10)`
 | `hibernate.use_subselect_fetch`
 | `true` to enable subselect fetching
-| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.BulkSelect.html[`BulkSelect.ENABLED`] | link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BULK_SELECT[`FetchMethod.BULK_SELECT`]
+| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.PreferredFetchMethod.html[`PreferredFetchMethod.BY_SUBQUERY`] | link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BY_SUBQUERY[`FetchMethod.BY_SUBQUERY`]
 // | `@Fetch(SUBSELECT)`
 |===
 
@@ -307,11 +307,11 @@ var entityManager =
 ----
 [source,java]
 ----
-import org.hibernate.SessionCreationOption.BulkSelect;
+import org.hibernate.SessionCreationOption.PreferredFetchMethod;
 ...
 var entityManager =
         // create a session with subselect fetching enabled
-        entityManagerFactory.createEntityManager(BulkSelect.ENABLED);
+        entityManagerFactory.createEntityManager(PreferredFetchMethod.BY_SUBQUERY);
 ----
 
 // [source,java]
@@ -343,12 +343,12 @@ import org.hibernate.FetchMethod;
 ....
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addAttributeNode(Book_.authors)
-     .addOption(FetchMethod.BULK_SELECT);
+     .addOption(FetchMethod.BY_SUBQUERY);
 Book book = entityManager.find(graph, bookId);
 ----
 
-Note that link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BULK_SELECT[`FetchMethod.BULK_SELECT`] has the same effect as `FetchMethod.SELECT`, except after execution of a HQL or criteria query.
-But after query execution, `BULK_SELECT` is able to much more efficiently fetch associations.
+Note that link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BY_SUBQUERY[`FetchMethod.BY_SUBQUERY`] has the same effect as `FetchMethod.BY_ID`, except after execution of a HQL or criteria query.
+But after query execution, `BY_SUBQUERY` is able to much more efficiently fetch associations.
 
 
 // [%unbreakable]

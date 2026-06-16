@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.SessionCreationOption;
+import org.hibernate.SessionCreationOption.PreferredFetchMethod;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -158,7 +159,7 @@ public class EntityHandlerOptionTests {
 			assertThat(em.isSubselectFetchingEnabled()).isFalse();
 		}
 
-		try (var em = sf.createEntityManager(SessionCreationOption.BulkSelect.ENABLED)) {
+		try (var em = sf.createEntityManager( PreferredFetchMethod.BY_SUBQUERY )) {
 			assertThat(em.isSubselectFetchingEnabled()).isTrue();
 		}
 	}

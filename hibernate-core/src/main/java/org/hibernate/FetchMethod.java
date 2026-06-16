@@ -33,6 +33,7 @@ import org.hibernate.annotations.Cache;
  *
  * @since 8.0
  */
+@Incubating
 public enum FetchMethod implements FetchOption {
 	/**
 	 * Use a secondary select to load a single associated entity or
@@ -59,7 +60,7 @@ public enum FetchMethod implements FetchOption {
 	 * when it is almost certain that the associated data will be
 	 * available in the second-level cache.
 	 */
-	SELECT,
+	BY_ID,
 
 	/**
 	 * Use an outer join to load all instances of the related entity
@@ -96,5 +97,5 @@ public enum FetchMethod implements FetchOption {
 	 *     re-execution of the initial query within a SQL subselect.
 	 * </ul>
 	 */
-	BULK_SELECT
+	BY_SUBQUERY
 }

@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
+import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
@@ -37,7 +38,10 @@ import jakarta.persistence.criteria.Nulls;
  *
  * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
  *            to a specialization of {@link MetadataBuilderImplementor}.
+ *
+ * @apiNote This will be removed in 9.0.
  */
+@Remove
 public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionFactoryBuilder> implements SessionFactoryBuilder {
 	private final SessionFactoryBuilder delegate;
 

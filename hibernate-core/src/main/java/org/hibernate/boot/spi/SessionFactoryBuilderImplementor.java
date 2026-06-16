@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.SessionFactoryBuilder;
 
 /**
@@ -11,7 +12,10 @@ import org.hibernate.boot.SessionFactoryBuilder;
  * implementors of {@link SessionFactoryBuilderFactory}.
  *
  * @author Steve Ebersole
+ *
+ * @apiNote This will be removed in 9.0.
  */
+@Remove
 public interface SessionFactoryBuilderImplementor extends SessionFactoryBuilder {
 
 	/**

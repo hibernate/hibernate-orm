@@ -349,13 +349,17 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 		final var modelClassDetails = memberDetails.isArray() ? memberDetails.getElementType() : typeDetails;
 		if ( modelClassDetails != null ) {
-			final var basicClass = modelClassDetails.determineRawClass().toJavaClass();
-			final var registeredUserTypeImpl =
-					getMetadataCollector().findRegisteredUserType( basicClass );
-			if ( registeredUserTypeImpl != null ) {
-				this.explicitCustomType = registeredUserTypeImpl;
-				this.explicitLocalCustomTypeParams = emptyMap();
-				return true;
+			final var rawClass = modelClassDetails.determineRawClass();
+			// skip toJavaClass() for dynamic models (no backing Java class)
+			if ( rawClass.isRealClass() ) {
+				final var basicClass = rawClass.toJavaClass();
+				final var registeredUserTypeImpl =
+						getMetadataCollector().findRegisteredUserType( basicClass );
+				if ( registeredUserTypeImpl != null ) {
+					this.explicitCustomType = registeredUserTypeImpl;
+					this.explicitLocalCustomTypeParams = emptyMap();
+					return true;
+				}
 			}
 		}
 		return false;

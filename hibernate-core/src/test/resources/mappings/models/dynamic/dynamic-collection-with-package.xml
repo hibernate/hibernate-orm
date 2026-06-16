@@ -1,0 +1,41 @@
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <package>org.hibernate.orm.test.boot.models.xml.dynamic</package>
+
+    <entity name="DynamicParent" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <target>Long</target>
+                <generated-value generator="parent-id-gen"/>
+                <generic-generator name="parent-id-gen" class="increment"/>
+            </id>
+            <basic name="name">
+                <target>String</target>
+            </basic>
+            <many-to-one name="partner" target-entity="DynamicParent"/>
+            <one-to-many name="children" target-entity="DynamicChild" mapped-by="parent"
+                         classification="SET"/>
+        </attributes>
+    </entity>
+
+    <entity name="DynamicChild" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <target>Long</target>
+                <generated-value generator="child-id-gen"/>
+                <generic-generator name="child-id-gen" class="increment"/>
+            </id>
+            <basic name="label">
+                <target>String</target>
+            </basic>
+            <many-to-one name="parent" target-entity="DynamicParent">
+                <join-column name="parent_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

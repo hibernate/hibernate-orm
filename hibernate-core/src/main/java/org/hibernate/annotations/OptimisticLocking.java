@@ -32,8 +32,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * root entity, since the optimistic lock checking strategy is inherited
  * by entity subclasses.
  * <p>
- * To exclude a particular attribute from optimistic locking, annotate the
- * attribute {@link OptimisticLock @OptimisticLock(excluded=true)}. Then:
+ * To exclude a particular attribute from optimistic locking, annotate it as
+ * {@link jakarta.persistence.ExcludedFromVersioning @ExcludedFromVersioning}.
+ * Then:
  * <ul>
  * <li>changes to that attribute will never trigger a version increment, and
  * <li>the attribute will not be included in the list of fields checked fields

@@ -21,7 +21,10 @@ import java.lang.annotation.Target;
  * the version to be incremented.
  *
  * @author Logi Ragnarsson
+ *
+ * @deprecated Use {@link jakarta.persistence.ExcludedFromVersioning}.
  */
+@Deprecated(since = "8.0", forRemoval = true)
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OptimisticLock {

@@ -99,16 +99,16 @@ public interface SessionCreationOption {
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 	}
 
-	/// Enables or disables the use of [bulk select][FetchMethod#BULK_SELECT] fetching.
+	/// Enables or disables the use of [subselect fetching][FetchMethod#BY_SUBQUERY].
 	///
 	/// @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
 	/// @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
-	enum BulkSelect
+	enum PreferredFetchMethod
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {
-		/// Enables subselect fetching.
-		ENABLED,
-		/// Disables subselect fetching.
-		DISABLED
+		/// Enables [subselect fetching][FetchMethod#BY_SUBQUERY]
+		BY_SUBQUERY,
+		/// Disables [subselect fetching][FetchMethod#BY_SUBQUERY]
+		BY_ID
 	}
 
 	/**

@@ -8,6 +8,7 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.Statement;
 import org.hibernate.CacheMode;
+import org.hibernate.Incubating;
 
 import static java.util.Objects.requireNonNull;
 
@@ -22,6 +23,7 @@ import static java.util.Objects.requireNonNull;
 ///
 /// @since 8.0
 /// @author Gavin King
+@Incubating
 public interface QueryOption {
 
 	/// Specifies that the query result set should be cached in the given

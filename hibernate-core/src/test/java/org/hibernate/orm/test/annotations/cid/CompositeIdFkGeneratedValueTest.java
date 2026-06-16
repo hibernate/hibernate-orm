@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@link GenerationType#AUTO} since there are known complications with some {@link Dialect}s (e.g.
  * {@link SQLServerDialect}) and the {@link GenerationType#IDENTITY}
  *
- * @author Jason Pyeron <support@pdinc.us>
+ * @author Jason Pyeron &lt;support&#64;pdinc.us&gt;
  * @see <a href='https://hibernate.atlassian.net/browse/HHH-10956'>HHH-10956</a> Persisting partially-generated
  * composite Ids fails
  * @see <a href='https://hibernate.atlassian.net/browse/HHH-9662'>HHH-9662</a> a related and blocking bug for

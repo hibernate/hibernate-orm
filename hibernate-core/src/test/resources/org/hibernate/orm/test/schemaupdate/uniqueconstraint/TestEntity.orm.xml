@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity name="TestEntity" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id">
+                <target>Long</target>
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="native"/>
+            </id>
+            <one-to-many name="children" target-entity="TestEntity" fetch="LAZY"
+                         classification="LIST">
+                <order-column name="order"/>
+                <join-table name="test_entity_children">
+                    <join-column name="entity_id"/>
+                    <foreign-key name="fk_entity"/>
+                    <inverse-join-column name="child" unique="true"/>
+                    <inverse-foreign-key name="fk_entity_children"/>
+                </join-table>
+            </one-to-many>
+            <element-collection name="items" target-class="java.lang.String" fetch="LAZY"
+                                classification="SET">
+                <column name="item" unique="true"/>
+                <collection-table name="test_entity_item">
+                    <join-column name="entity_id"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+</entity-mappings>

@@ -17,6 +17,8 @@ import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
@@ -57,8 +59,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		@Setting(name = FORMAT_SQL, value = "false"),
 		@Setting(name = SHOW_SQL, value = "true")
 })
-@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/uniqueconstraint/TestEntity.orm.xml")
+@SessionFactory
 public class UniqueConstraintDropTest {
+
+	@Test
+	public void testIt(SessionFactoryScope scope){
+		scope.inTransaction(
+				session -> {
+					session.find( "TestEntity", 1L );
+				}
+		);
+	}
 
 	@Test
 	@JiraKey(value = "HHH-11236")

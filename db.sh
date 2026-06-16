@@ -84,12 +84,16 @@ compose_up() {
 }
 
 compose_down() {
+  if [[ -n "$REMOVE_ORPHANS" ]]; then
     for project in $($CONTAINER_CLI compose ls -q 2>/dev/null | grep "^${COMPOSE_PROJECT}"); do
         $CONTAINER_CLI compose -p "$project" down -v 2>/dev/null || true
     done
     if [[ -n "$1" ]]; then
         $CONTAINER_CLI rm -f "$1" 2>/dev/null || true
     fi
+  else
+    echo 'INFO: Not stopping any previously started containers. To stop them run db.sh without passing -k to it.'
+  fi
 }
 
 compose_wait() {

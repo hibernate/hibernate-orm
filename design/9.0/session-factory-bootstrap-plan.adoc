@@ -30,8 +30,8 @@ Those inputs are not independent.  They are all products of bootstrap settings,
 service-registry construction, source discovery, model categorization, and boot
 model binding.
 
-The PoC should make those products explicit rather than recreating the current
-inline flow from `EntityManagerFactoryBuilderImpl` and `MetadataBuildingProcess`.
+The PoC should make those products explicit rather than recreating the previous
+inline JPA bootstrap flow and `MetadataBuildingProcess` handoff.
 
 == Some Assumptions
 
@@ -56,8 +56,7 @@ First, a few assumptions we will be working under...
 == Current Bootstrap Entry-Point Status
 
 This branch has moved the main JPA provider entry points onto
-`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap`, but several older
-paths remain deliberately alive.
+`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap`.
 
 === Canonical Path On This Branch
 
@@ -83,90 +82,29 @@ for:
 * `generateSchema(PersistenceConfiguration)`
 
 This means the normal JPA SE, JPA EE/container, and
-`PersistenceConfiguration` provider paths are no longer routed through
-`EntityManagerFactoryBuilderImpl`.
+`PersistenceConfiguration` provider paths use the pipeline directly.
 
-=== Remaining EntityManagerFactoryBuilder / Bootstrap Usage
+=== Removed JPA Builder Facade Status
 
-The following uses of `EntityManagerFactoryBuilder`,
-`EntityManagerFactoryBuilderImpl`, or `org.hibernate.jpa.boot.spi.Bootstrap`
-remain and need separate treatment.
+The old public two-phase JPA builder facade has been removed on this branch.
+The remaining use cases were retargeted as narrower pipeline operations:
 
-[cols="2,3,3,2", options="header"]
-|===
-| Area
-| Current use
-| Why it remains
-| Likely next action
+* EMF/SF creation uses `SessionFactoryBootstrap.build(...)`.
+* Schema generation uses `SessionFactoryBootstrap.generateSchema(...)`.
+* Metadata inspection uses `SessionFactoryBootstrap.resolveMetadata(...)`.
+* Merged-setting assertions use `SettingsResolver` products.
+* Integrator-provider and metadata-builder-contributor symbolic names live on
+  `org.hibernate.jpa.boot.spi.JpaSettings`.
 
-| `org.hibernate.jpa.boot.spi.Bootstrap`
-| Public static facade returning `EntityManagerFactoryBuilderImpl` for
-  `PersistenceUnitDescriptor`, `PersistenceUnitInfo`, persistence.xml `URL`,
-  and supplied class-loading variants.
-| Public SPI compatibility.  Integrations and tests may still call these
-  overloads directly.
-| Deprecate once `SessionFactoryBootstrap` and any replacement customization
-  hooks cover the documented use cases.
-
-| `HibernatePersistenceProvider`
-| Protected `getEntityManagerFactoryBuilder(...)` methods still delegate to
-  `Bootstrap`.
-| Integration compatibility.  These protected methods may be overridden or used
-  by downstream integrations even though the provider's public methods no
-  longer call them for normal EMF creation.
-| Audit known overrides, then either route through the new facade where possible
-  or deprecate with a replacement.
-
-| `hibernate-testing` JPA helpers
-| `EntityManagerFactoryBasedFunctionalTest` and `EntityManagerFactoryExtension`
-  still create EMFs through `Bootstrap#getEntityManagerFactoryBuilder(...).build()`.
-| Test infrastructure predates the new facade and still exercises JPA-style
-  descriptor bootstrap, integration settings, and extension-managed scopes.
-| Convert to `SessionFactoryBootstrap.build(PersistenceUnitDescriptor, Map)`
-  unless a test genuinely needs builder-specific behavior.
-
-| Tests asserting builder metadata or implementation details
-| Tests such as configuration-object/naming-strategy/cache-mode/bootstrap
-  checks cast to `EntityManagerFactoryBuilderImpl` or call `builder.metadata()`.
-| These tests assert legacy builder behavior, merged setting behavior,
-  metadata-builder contributor behavior, warning behavior, or pre-build metadata
-  state.
-| Split into tests of the specific product or behavior: settings resolution,
-  metadata resolution, contributor application, warning emission, or legacy SPI
-  compatibility.  Do not preserve general two-phase bootstrap for these tests.
-
-| Constants on `EntityManagerFactoryBuilderImpl`
-| Tests and annotations still refer to constants such as integrator-provider and
-  metadata-builder-contributor setting names.
-| The constants are currently the public names for integration settings, even if
-  the implementation class should stop being the conceptual owner.
-| Move setting-name ownership to a neutral settings/API type before retiring the
-  implementation class.
-|===
+There is intentionally no replacement JPA builder.  Custom factory creation is
+handled by the SessionFactory construction pipeline and producer selection hook.
 
 === Two-Phase Bootstrap Status
 
-The remaining two-phase shape is the legacy JPA builder SPI:
-
-[source,java]
-----
-EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder(...);
-MetadataImplementor metadata = builder.metadata();
-EntityManagerFactory emf = builder.build();
-----
-
-That pattern remains only because some compatibility tests and SPIs still expose
-or assert pre-build metadata.  The plan is to replace those cases with narrower
-product builders or assertions:
-
-* use `MetadataResolver` when the test needs finalized metadata;
-* use `SettingsResolver` when the test needs complete settings-bucket
-  resolution, or the focused phase resolver when testing one bucket
-  specifically;
-* use source-contribution helpers when the test needs mapping/source discovery;
-* keep explicit legacy-SPI tests for `Bootstrap` and
-  `EntityManagerFactoryBuilder` until those APIs are formally deprecated or
-  removed.
+The old need for a two-phase JPA `EntityManagerFactory` build is gone.  Tests
+which need to assert intermediate products should build the specific product
+under test, such as metadata, source contributions, or resolved settings,
+instead of preserving a general two-phase SessionFactory bootstrap.
 
 === Other SessionFactory Build Paths Still In Use
 
@@ -350,26 +288,20 @@ signal is narrower than the original boot-model breakage.
   `cfg.xml` a source model for the new descriptor path.
 
 | Extended persistence-unit source descriptors
-| `PersistenceUnitOverridesTests` `cfg.xml` cases
-| The legacy builder treated `hibernate.cfg_xml_file` as a JPA bootstrap
-  baseline, including settings, mapping references, and cache declarations.  The
-  new canonical descriptor path should not depend on `cfg.xml` or on
+| Source-model replacement work
+| The canonical descriptor path no longer depends on `cfg.xml` or on
   `StandardServiceRegistryBuilder#getAggregatedCfgXml()`.
-| Keep `cfg.xml` as legacy/native coverage through `Configuration` and the old
-  builder while those APIs remain.  Define an extended persistence-unit
-  descriptor model for the supported replacement: managed classes, packages,
-  mapping XML, query imports, cache declarations, auxiliary database objects,
-  and similar source-level contributions.
+| Define explicit persistence-unit descriptor model features for managed
+  classes, packages, mapping XML, query imports, cache declarations, auxiliary
+  database objects, and similar source-level contributions.
 
-| Settings-backed managed-class/source contributions
+| Descriptor-backed managed-class/source contributions
 | `InterceptorTest`, `JpaSchemaGeneratorTest`
-| Some descriptor-based tests pass managed classes through settings such as
-  `AvailableSettings.LOADED_CLASSES`, but the new path can still reach runtime
-  with an `UnknownEntityTypeException`.
-| Teach the descriptor entry-point path or source-contribution resolver to
-  incorporate settings-backed source contributions, including loaded classes and
-  any analogous package, mapping XML, or import settings that the legacy builder
-  honored.
+| Descriptor-based tests now pass managed classes and mapping XML through the
+  persistence-unit descriptor instead of settings-backed source contribution
+  side channels.
+| Keep source contributions descriptor-driven.  Add explicit descriptor model
+  features for any remaining source types needed by tests or tooling.
 
 | Schema-generation script behavior
 | `SchemaScriptFileGenerationTest`, `JpaSchemaGenerator*`

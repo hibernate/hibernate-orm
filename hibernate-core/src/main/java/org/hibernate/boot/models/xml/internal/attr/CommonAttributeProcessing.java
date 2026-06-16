@@ -42,6 +42,10 @@ public class CommonAttributeProcessing {
 			AccessType accessType,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
+		if ( accessType == null ) {
+			return;
+		}
+
 		final AccessJpaAnnotation accessAnn = (AccessJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ACCESS,
 				xmlDocumentContext.getModelBuildingContext()

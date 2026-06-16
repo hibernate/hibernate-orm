@@ -13,24 +13,26 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.StatementObserver;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionRequest;
 import org.hibernate.boot.pipeline.spi.SessionFactoryProducer;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
-import org.hibernate.boot.spi.AbstractDelegatingSessionFactoryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
-import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -61,11 +63,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SessionFactoryProducerTests {
 	private static final AtomicReference<SessionFactoryConstructionRequest> PRODUCER_REQUEST = new AtomicReference<>();
 	private static final AtomicReference<String> PRODUCER_NAME = new AtomicReference<>();
+	private static final AtomicBoolean RECORDING_INTEGRATED = new AtomicBoolean();
+	private static final AtomicBoolean RECORDING_DISINTEGRATED = new AtomicBoolean();
+	private static final AtomicBoolean FAILING_INTEGRATED = new AtomicBoolean();
+	private static final AtomicBoolean FAILING_DISINTEGRATED = new AtomicBoolean();
 
 	@BeforeEach
 	void resetProducerState() {
 		PRODUCER_REQUEST.set( null );
 		PRODUCER_NAME.set( null );
+		RECORDING_INTEGRATED.set( false );
+		RECORDING_DISINTEGRATED.set( false );
+		FAILING_INTEGRATED.set( false );
+		FAILING_DISINTEGRATED.set( false );
 	}
 
 	@Test
@@ -159,37 +169,21 @@ class SessionFactoryProducerTests {
 	}
 
 	@Test
-	@BootstrapServiceRegistry(javaServices = {
-			@JavaService(
-					role = SessionFactoryBuilderFactory.class,
-					impl = NamingSessionFactoryBuilderFactory.class
-			),
-			@JavaService(
-					role = SessionFactoryProducer.class,
-					impl = CustomSessionFactoryProducer.class
-			)
-	})
-	void builderFactoryCustomizationsReachProducerRequest(ServiceRegistryScope registryScope) {
-		try (SessionFactory sessionFactory = buildMetadata( registryScope )
-				.getSessionFactoryBuilder()
-				.build()) {
-			assertThat( sessionFactory ).isInstanceOf( MarkerSessionFactory.class );
-		}
-
-		final var request = PRODUCER_REQUEST.get();
-		assertThat( request ).isNotNull();
-		assertThat( request.getOptions().getSessionFactoryName() ).isEqualTo( "producer-builder-factory" );
-	}
-
-	@Test
-	void preparedSessionFactoryObserversAreHonored(ServiceRegistryScope registryScope) {
+	void preparedOptionsBridgeObserversAreHonored(ServiceRegistryScope registryScope) {
 		final var observer = new RecordingSessionFactoryObserver();
+		final StatementObserver statementObserver = (sql, batchPosition) -> {
+		};
+			final var optionsCollector = new SessionFactoryOptionsCollector();
+			optionsCollector.addSessionFactoryObservers( observer );
+			optionsCollector.applyStatementObserver( statementObserver );
 
-		try (SessionFactory sessionFactory = buildMetadata( registryScope )
-				.getSessionFactoryBuilder()
-				.addSessionFactoryObservers( observer )
-				.build()) {
+			try (SessionFactory sessionFactory = SessionFactoryPipeline.build(
+					buildMetadata( registryScope ),
+					optionsCollector
+			)) {
 			assertThat( sessionFactory ).isInstanceOf( SessionFactoryImplementor.class );
+			assertThat( sessionFactory.unwrap( SessionFactoryImplementor.class ).getStatementObserver() )
+					.isSameAs( statementObserver );
 			assertThat( observer.created.get() ).isTrue();
 			assertThat( observer.closed.get() ).isFalse();
 		}
@@ -215,6 +209,33 @@ class SessionFactoryProducerTests {
 			assertThat( sessionFactoryImplementor.getTenantIdentifierJavaType().getJavaTypeClass() )
 					.isEqualTo( String.class );
 		}
+	}
+
+	@Test
+	@BootstrapServiceRegistry(integrators = RecordingIntegrator.class)
+	void integratorDisintegratesOnClose(ServiceRegistryScope registryScope) {
+		try (SessionFactory ignored = buildMetadata( registryScope ).buildSessionFactory()) {
+			assertThat( RECORDING_INTEGRATED.get() ).isTrue();
+			assertThat( RECORDING_DISINTEGRATED.get() ).isFalse();
+		}
+
+		assertThat( RECORDING_DISINTEGRATED.get() ).isTrue();
+	}
+
+	@Test
+	@BootstrapServiceRegistry(integrators = {
+			RecordingIntegrator.class,
+			FailingIntegrator.class
+	})
+	void startupFailureDisintegratesOnlySuccessfullyIntegratedIntegrators(ServiceRegistryScope registryScope) {
+		assertThatThrownBy( () -> buildMetadata( registryScope ).buildSessionFactory() )
+				.isInstanceOf( RuntimeException.class )
+				.hasMessageContaining( "failing integrator" );
+
+		assertThat( RECORDING_INTEGRATED.get() ).isTrue();
+		assertThat( RECORDING_DISINTEGRATED.get() ).isTrue();
+		assertThat( FAILING_INTEGRATED.get() ).isTrue();
+		assertThat( FAILING_DISINTEGRATED.get() ).isFalse();
 	}
 
 	private static MetadataImplementor buildMetadata(ServiceRegistryScope registryScope) {
@@ -259,28 +280,6 @@ class SessionFactoryProducerTests {
 		}
 	}
 
-	public static class NamingSessionFactoryBuilderFactory implements SessionFactoryBuilderFactory {
-		@Override
-		public SessionFactoryBuilder getSessionFactoryBuilder(
-				MetadataImplementor metadata,
-				SessionFactoryBuilderImplementor defaultBuilder) {
-			return new NamingSessionFactoryBuilder( defaultBuilder );
-		}
-	}
-
-	private static class NamingSessionFactoryBuilder
-			extends AbstractDelegatingSessionFactoryBuilder<NamingSessionFactoryBuilder> {
-		private NamingSessionFactoryBuilder(SessionFactoryBuilderImplementor delegate) {
-			super( delegate );
-			delegate.applyName( "producer-builder-factory" );
-		}
-
-		@Override
-		protected NamingSessionFactoryBuilder getThis() {
-			return this;
-		}
-	}
-
 	private static class RecordingSessionFactoryObserver implements SessionFactoryObserver {
 		private final AtomicBoolean created = new AtomicBoolean();
 		private final AtomicBoolean closed = new AtomicBoolean();
@@ -293,6 +292,41 @@ class SessionFactoryProducerTests {
 		@Override
 		public void sessionFactoryClosed(SessionFactory factory) {
 			closed.set( true );
+		}
+	}
+
+	public static class RecordingIntegrator implements Integrator {
+		@Override
+		public void integrate(
+				Metadata metadata,
+				BootstrapContext bootstrapContext,
+				SessionFactoryImplementor sessionFactory) {
+			RECORDING_INTEGRATED.set( true );
+		}
+
+		@Override
+		public void disintegrate(
+				SessionFactoryImplementor sessionFactory,
+				SessionFactoryServiceRegistry serviceRegistry) {
+			RECORDING_DISINTEGRATED.set( true );
+		}
+	}
+
+	public static class FailingIntegrator implements Integrator {
+		@Override
+		public void integrate(
+				Metadata metadata,
+				BootstrapContext bootstrapContext,
+				SessionFactoryImplementor sessionFactory) {
+			FAILING_INTEGRATED.set( true );
+			throw new RuntimeException( "failing integrator" );
+		}
+
+		@Override
+		public void disintegrate(
+				SessionFactoryImplementor sessionFactory,
+				SessionFactoryServiceRegistry serviceRegistry) {
+			FAILING_DISINTEGRATED.set( true );
 		}
 	}
 

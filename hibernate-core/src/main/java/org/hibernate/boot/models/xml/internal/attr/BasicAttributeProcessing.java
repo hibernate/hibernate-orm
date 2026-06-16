@@ -48,7 +48,7 @@ public class BasicAttributeProcessing {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbBasic.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbBasic, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbBasic, memberDetails, basicAnn, xmlDocumentContext );
 		applyOptionality( jaxbBasic, basicAnn, xmlDocumentContext );

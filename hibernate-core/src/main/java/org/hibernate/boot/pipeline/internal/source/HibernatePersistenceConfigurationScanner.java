@@ -28,8 +28,9 @@ import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
-/// Scanning support for Hibernate's programmatic persistence configuration.
+/// Scanning support for persistence-unit source declarations.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -66,6 +67,24 @@ class HibernatePersistenceConfigurationScanner {
 		return scanner.scan( boundaries );
 	}
 
+	@Nonnull
+	static ScanningResult performScanning(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			ResolvedBootstrapSettings bootstrapSettings,
+			ClassLoaderService classLoaderService) {
+		final URL[] boundaries = collectUrls( persistenceUnitDescriptor );
+		if ( boundaries == null ) {
+			return ScanningResult.NONE;
+		}
+
+		final Map<String, Object> configurationValues = bootstrapSettings.configurationValues();
+		final var archiveDescriptorFactory = determineArchiveDescriptorFactory( configurationValues, classLoaderService );
+		final var scanningContext = new ScanningContextImpl( archiveDescriptorFactory, configurationValues );
+		final ScanningProvider scanningProvider = determineScanningProvider( configurationValues, classLoaderService );
+		final Scanner scanner = scanningProvider.builderScanner( scanningContext );
+		return scanner.scan( boundaries );
+	}
+
 	private static URL[] collectUrls(HibernatePersistenceConfiguration cfg) {
 		if ( cfg.rootUrl() == null && CollectionHelper.isEmpty( cfg.jarFileUrls() ) ) {
 			return null;
@@ -84,6 +103,18 @@ class HibernatePersistenceConfigurationScanner {
 			combined.addAll( jarFileUrls );
 		}
 		return combined;
+	}
+
+	private static URL[] collectUrls(PersistenceUnitDescriptor persistenceUnitDescriptor) {
+		final URL rootUrl = persistenceUnitDescriptor.isExcludeUnlistedClasses()
+				? null
+				: persistenceUnitDescriptor.getPersistenceUnitRootUrl();
+		final List<URL> jarFileUrls = persistenceUnitDescriptor.getJarFileUrls();
+		if ( rootUrl == null && CollectionHelper.isEmpty( jarFileUrls ) ) {
+			return null;
+		}
+
+		return combinedUrls( rootUrl, jarFileUrls ).toArray( new URL[0] );
 	}
 
 	private static ScanningProvider determineScanningProvider(

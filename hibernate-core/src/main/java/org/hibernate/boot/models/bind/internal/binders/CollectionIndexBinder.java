@@ -199,6 +199,7 @@ class CollectionIndexBinder {
 		final ComponentSource source = ComponentSource.mapKey(
 				collectionSource.member(),
 				componentMapKey.componentType(),
+				ownerType.getAccessType(),
 				bindingContext
 		);
 		final Component component = new Component( bindingState.getMetadataBuildingContext(), collection );

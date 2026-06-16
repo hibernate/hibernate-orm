@@ -12,7 +12,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -72,9 +71,7 @@ public class PropertiesTest {
 				final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( build );
 
 				final Metadata metadata = metadataBuilder.build();
-				final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-
-				final SessionFactory sessionFactory = sessionFactoryBuilder.build();
+				final SessionFactory sessionFactory = metadata.buildSessionFactory();
 				sessionFactory.close();
 			}
 		}

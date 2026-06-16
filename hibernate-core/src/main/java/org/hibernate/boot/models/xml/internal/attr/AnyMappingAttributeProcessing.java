@@ -66,7 +66,7 @@ public class AnyMappingAttributeProcessing {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbHbmAnyMapping.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbHbmAnyMapping, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbHbmAnyMapping, memberDetails, anyAnn, xmlDocumentContext );
 		applyOptionality( jaxbHbmAnyMapping, anyAnn, xmlDocumentContext );

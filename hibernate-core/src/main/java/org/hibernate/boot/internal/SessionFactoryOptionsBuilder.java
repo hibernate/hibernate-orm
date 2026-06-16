@@ -117,12 +117,11 @@ import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbLegacyXmlFor
 import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbXmlFormatMapperOrNull;
 
 /**
- * In-flight state of {@link SessionFactoryOptions} during {@link org.hibernate.boot.SessionFactoryBuilder}
- * processing.
+ * In-flight state of {@link SessionFactoryOptions} during factory construction.
  * <p>
- * The intention is that {@code SessionFactoryBuilder} internally creates and populates this builder, which
- * is then used to construct the {@code SessionFactoryOptions} as part of building the {@code SessionFactory}
- * from {@link org.hibernate.boot.SessionFactoryBuilder#build}.
+ * The bootstrap pipeline creates and populates this builder, which is then used
+ * to construct the {@code SessionFactoryOptions} as part of building the
+ * {@code SessionFactory}.
  *
  * @author Steve Ebersole
  */

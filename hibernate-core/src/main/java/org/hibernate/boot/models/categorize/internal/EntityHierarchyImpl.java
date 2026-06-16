@@ -203,21 +203,28 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			HierarchyTypeVisitor typeVisitor) {
 		typeVisitor.visitType( type, superType, this, hierarchyRelation );
 
-		final HierarchyRelation nextRelation;
-		if ( hierarchyRelation == HierarchyRelation.SUPER ) {
-			if ( type == getRoot().getSuperType() ) {
-				// the next iteration will be the root
+		type.forEachSubType( subType -> {
+			final HierarchyRelation nextRelation;
+			if ( sameClass( subType.getClassDetails(), getRoot().getClassDetails() ) ) {
 				nextRelation = HierarchyRelation.ROOT;
 			}
-			else {
+			else if ( hierarchyRelation == HierarchyRelation.SUPER ) {
 				nextRelation = HierarchyRelation.SUPER;
 			}
-		}
-		else {
-			nextRelation = HierarchyRelation.SUB;
+			else {
+				nextRelation = HierarchyRelation.SUB;
+			}
+			forEachType( subType, type, nextRelation, typeVisitor );
+		} );
+	}
+
+	private static boolean sameClass(ClassDetails one, ClassDetails another) {
+		if ( one == another ) {
+			return true;
 		}
 
-		type.forEachSubType( subType -> forEachType( subType, type, nextRelation, typeVisitor ) );
+		final String oneClassName = one.getClassName();
+		return oneClassName != null && oneClassName.equals( another.getClassName() );
 	}
 
 	@Override

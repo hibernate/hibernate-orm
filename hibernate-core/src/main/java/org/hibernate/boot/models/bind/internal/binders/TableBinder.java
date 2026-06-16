@@ -344,13 +344,13 @@ public class TableBinder {
 		);
 
 		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
-				logicalSchemaName == null ? null : logicalSchemaName.getCanonicalName(),
-				logicalCatalogName == null  ? null : logicalCatalogName.getCanonicalName(),
-				logicalName.getCanonicalName(),
+				explicitSchemaName( tableSource, logicalSchemaName ),
+				explicitCatalogName( tableSource, logicalCatalogName ),
+				tableSource.nonEmptyName() != null ? logicalName.getText() : logicalName.getCanonicalName(),
 				null,
 				type.isAbstract(),
 				bindingState.getMetadataBuildingContext(),
-				false
+				tableSource.nonEmptyName() != null
 		);
 
 		applyComment( binding, tableSource );
@@ -473,13 +473,13 @@ public class TableBinder {
 		);
 
 		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
-				toCanonicalName( logicalSchemaName ),
-				toCanonicalName( logicalCatalogName ),
-				logicalName.getCanonicalName(),
+				explicitSchemaName( tableSource, logicalSchemaName ),
+				explicitCatalogName( tableSource, logicalCatalogName ),
+				tableSource != null && tableSource.nonEmptyName() != null ? logicalName.getText() : logicalName.getCanonicalName(),
 				null,
 				isAbstract,
 				bindingState.getMetadataBuildingContext(),
-				false
+				tableSource != null && tableSource.nonEmptyName() != null
 		);
 
 			applyComment( binding, tableSource );
@@ -495,6 +495,18 @@ public class TableBinder {
 				physicalNamingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
 				binding
 		);
+	}
+
+	private String explicitSchemaName(TableSource tableSource, Identifier logicalSchemaName) {
+		return tableSource != null && tableSource.schema() != null && !tableSource.schema().isEmpty()
+				? tableSource.schema()
+				: toCanonicalName( logicalSchemaName );
+	}
+
+	private String explicitCatalogName(TableSource tableSource, Identifier logicalCatalogName) {
+		return tableSource != null && tableSource.catalog() != null && !tableSource.catalog().isEmpty()
+				? tableSource.catalog()
+				: toCanonicalName( logicalCatalogName );
 	}
 
 	private Identifier determineCollectionTableLogicalName(
@@ -601,13 +613,13 @@ public class TableBinder {
 		);
 
 		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
-				toCanonicalName( schemaName ),
-				toCanonicalName( catalogName ),
-				logicalName.getCanonicalName(),
+				explicitSchemaName( tableSource, schemaName ),
+				explicitCatalogName( tableSource, catalogName ),
+				tableSource.nonEmptyName() != null ? logicalName.getText() : logicalName.getCanonicalName(),
 				null,
 				false,
 				bindingState.getMetadataBuildingContext(),
-				false
+				tableSource.nonEmptyName() != null
 		);
 
 		applyComment( binding, tableSource );

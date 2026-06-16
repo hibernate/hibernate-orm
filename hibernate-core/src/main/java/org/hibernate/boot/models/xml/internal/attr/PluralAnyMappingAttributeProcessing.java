@@ -47,7 +47,7 @@ public class PluralAnyMappingAttributeProcessing {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbHbmManyToAny.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbHbmManyToAny, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbHbmManyToAny, memberDetails, manyToAnyAnn, xmlDocumentContext );
 		applyOptimisticLock( jaxbHbmManyToAny, memberDetails, xmlDocumentContext );

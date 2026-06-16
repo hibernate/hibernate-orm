@@ -29,6 +29,7 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.boot.models.bind.internal.binders.CascadeBinder;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
@@ -40,6 +41,9 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Fetch;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -146,6 +150,9 @@ public record CollectionSource(
 		/// The `@JoinTable` annotation declared on an association-valued plural member.
 		JoinTable joinTable,
 
+		/// The path adjustment targeting this collection member directly.
+		AttributeOverride attributeOverride,
+
 		/// The models context used to resolve repeatable annotations.
 		ModelsContext modelsContext) {
 	/// Source-level plural mapping nature.
@@ -170,49 +177,89 @@ public record CollectionSource(
 	/// upstream mapping model stores source facts directly instead of asking each binder
 	/// to inspect Java collection classes and annotations independently.
 	public static CollectionSource elementCollection(MemberDetails member, ModelsContext modelsContext) {
+		return elementCollection( member, null, null, modelsContext );
+	}
+
+	/// Creates a collection source for an element collection member, including owner-level
+	/// adjustments that target an inherited collection member directly.
+	public static CollectionSource elementCollection(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			ModelsContext modelsContext) {
 		final CollectionClassification classification = determineClassification( member );
+		final AssociationOverride associationOverride = locateAssociationOverride(
+				member,
+				ownerType,
+				hierarchyRootType,
+				modelsContext
+		);
 
 		return new CollectionSource(
 				Nature.ELEMENT_COLLECTION,
 				classification,
 				member,
 				member.getElementType(),
-				classification.toJpaClassification() == jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP
-						? member.getMapKeyType()
-						: null,
+					classification.toJpaClassification() == jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP
+							? member.getMapKeyType()
+							: null,
 				member.getDirectAnnotationUsage( CollectionTable.class ),
-				null,
+				associationOverride == null ? member.getDirectAnnotationUsage( JoinTable.class ) : associationOverride.joinTable(),
+				locateAttributeOverride( member, ownerType, hierarchyRootType, modelsContext ),
 				modelsContext
 		);
 	}
 
 	/// Creates a collection source for an owning many-to-many association member.
 	public static CollectionSource manyToMany(MemberDetails member, ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_MANY, member, modelsContext );
+		return association( Nature.MANY_TO_MANY, member, modelsContext, null );
+	}
+
+	/// Creates a collection source for an owning many-to-many association member,
+	/// applying an association override from an enclosing component path.
+	public static CollectionSource manyToMany(
+			MemberDetails member,
+			AssociationOverride associationOverride,
+			ModelsContext modelsContext) {
+		return association( Nature.MANY_TO_MANY, member, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member.
 	public static CollectionSource oneToMany(MemberDetails member, ModelsContext modelsContext) {
-		return association( Nature.ONE_TO_MANY, member, modelsContext );
+		return association( Nature.ONE_TO_MANY, member, modelsContext, null );
+	}
+
+	/// Creates a collection source for an owning one-to-many association member,
+	/// applying an association override from an enclosing component path.
+	public static CollectionSource oneToMany(
+			MemberDetails member,
+			AssociationOverride associationOverride,
+			ModelsContext modelsContext) {
+		return association( Nature.ONE_TO_MANY, member, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for a heterogeneous many-to-any association member.
 	public static CollectionSource manyToAny(MemberDetails member, ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_ANY, member, modelsContext );
+		return association( Nature.MANY_TO_ANY, member, modelsContext, null );
 	}
 
-	private static CollectionSource association(Nature nature, MemberDetails member, ModelsContext modelsContext) {
+	private static CollectionSource association(
+			Nature nature,
+			MemberDetails member,
+			ModelsContext modelsContext,
+			AssociationOverride associationOverride) {
 		final CollectionSource source = elementCollection( member, modelsContext );
 		return new CollectionSource(
 				nature,
 				source.classification,
 				source.member,
-				source.elementType,
-				source.mapKeyType,
-				null,
-				member.getDirectAnnotationUsage( JoinTable.class ),
-				modelsContext
-		);
+					source.elementType,
+					source.mapKeyType,
+					null,
+					associationOverride == null ? member.getDirectAnnotationUsage( JoinTable.class ) : associationOverride.joinTable(),
+					source.attributeOverride,
+					modelsContext
+			);
 	}
 
 	private static CollectionClassification determineClassification(MemberDetails member) {
@@ -246,6 +293,65 @@ public record CollectionSource(
 			return CollectionClassification.MAP;
 		}
 		return CollectionClassification.BAG;
+	}
+
+	private static AttributeOverride locateAttributeOverride(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			ModelsContext modelsContext) {
+		AttributeOverride result = null;
+		for ( ClassDetails type : ownerTypeChain( ownerType, hierarchyRootType ) ) {
+			for ( AttributeOverride override : type.getRepeatedAnnotationUsages( AttributeOverride.class, modelsContext ) ) {
+				if ( member.resolveAttributeName().equals( override.name() ) ) {
+					result = override;
+				}
+			}
+		}
+		return result;
+	}
+
+	private static AssociationOverride locateAssociationOverride(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			ModelsContext modelsContext) {
+		AssociationOverride result = null;
+		for ( ClassDetails type : ownerTypeChain( ownerType, hierarchyRootType ) ) {
+			for ( AssociationOverride override : type.getRepeatedAnnotationUsages( AssociationOverride.class, modelsContext ) ) {
+				if ( member.resolveAttributeName().equals( override.name() ) ) {
+					result = override;
+				}
+			}
+		}
+		return result;
+	}
+
+	private static List<ClassDetails> ownerTypeChain(ClassDetails ownerType, ClassDetails hierarchyRootType) {
+		if ( ownerType == null ) {
+			return List.of();
+		}
+
+		final ArrayList<ClassDetails> chain = new ArrayList<>();
+		ClassDetails current = ownerType;
+		while ( current != null && current != ClassDetails.OBJECT_CLASS_DETAILS ) {
+			chain.add( 0, current );
+			if ( sameClass( current, hierarchyRootType ) ) {
+				break;
+			}
+			current = current.getSuperClass();
+		}
+		return chain;
+	}
+
+	private static boolean sameClass(ClassDetails one, ClassDetails another) {
+		return one != null && another != null && one.getClassName().equals( another.getClassName() );
+	}
+
+	public Column elementColumn() {
+		return attributeOverride == null
+				? member.getDirectAnnotationUsage( Column.class )
+				: attributeOverride.column();
 	}
 
 	private static boolean isIdentifierBag(MemberDetails member) {
@@ -445,6 +551,14 @@ public record CollectionSource(
 	/// object because these columns are source-level instructions for how the collection
 	/// table joins back to its owner.
 	public List<JoinColumn> joinColumns() {
+		if ( joinTable != null ) {
+			if ( joinTable.joinColumns().length == 0 ) {
+				return List.of();
+			}
+			final ArrayList<JoinColumn> result = new ArrayList<>( joinTable.joinColumns().length );
+			result.addAll( Arrays.asList( joinTable.joinColumns() ) );
+			return result;
+		}
 		if ( collectionTable == null ) {
 			return List.of();
 		}

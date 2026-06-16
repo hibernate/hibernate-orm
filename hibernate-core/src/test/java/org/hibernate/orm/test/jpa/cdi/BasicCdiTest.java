@@ -63,8 +63,7 @@ public class BasicCdiTest {
 				sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
 						.addAnnotatedClass( MyEntity.class )
 						.buildMetadata()
-						.getSessionFactoryBuilder()
-						.build();
+						.buildSessionFactory();
 			}
 			catch ( Exception e ) {
 				StandardServiceRegistryBuilder.destroy( ssr );

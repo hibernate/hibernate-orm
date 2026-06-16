@@ -4,12 +4,11 @@
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
-import jakarta.persistence.EntityManagerFactory;
 import java.util.Map;
 
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.orm.test.jpa.MyNamingStrategy;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 
@@ -35,26 +34,19 @@ public class NamingStrategyConfigurationTest {
 			PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
 			Map<String, Object> settings = ServiceRegistryUtil.createBaseSettings();
 			settings.put( AvailableSettings.PHYSICAL_NAMING_STRATEGY, MyNamingStrategy.class.getName() );
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
-					adapter,
+			try (var metadataBootstrap = SessionFactoryBootstrap.resolveMetadata(
+					new PersistenceUnitInfoDescriptor( adapter ),
 					settings
-			);
-			final EntityManagerFactory emf = builder.build();
-			try {
+			)) {
 				assertEquals(
 						MyNamingStrategy.class.getName(),
-						builder.getConfigurationValues().get( AvailableSettings.PHYSICAL_NAMING_STRATEGY )
+						metadataBootstrap.configurationValues().get( AvailableSettings.PHYSICAL_NAMING_STRATEGY )
 				);
 
 				assertTyping(
 						MyNamingStrategy.class,
-						builder.getMetadata().getMetadataBuildingOptions().getPhysicalNamingStrategy()
+						metadataBootstrap.metadata().getMetadataBuildingOptions().getPhysicalNamingStrategy()
 				);
-			}
-			finally {
-				if ( emf != null ) {
-					emf.close();
-				}
 			}
 		}
 	}

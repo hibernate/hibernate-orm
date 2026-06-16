@@ -113,8 +113,7 @@ public class HibernateSearchDelayedCdiSupportTest {
 					try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
 							.addAnnotatedClass( TheEntity.class )
 							.buildMetadata()
-							.getSessionFactoryBuilder()
-							.build()) {
+							.buildSessionFactory()) {
 						// Here, the HibernateSearchSimulatedIntegrator has just been integrated and has requested beans
 						// See HibernateSearchSimulatedIntegrator for a detailed list of requested beans
 

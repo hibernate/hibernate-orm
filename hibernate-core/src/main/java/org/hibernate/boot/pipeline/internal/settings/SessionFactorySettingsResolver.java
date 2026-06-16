@@ -38,7 +38,7 @@ import org.hibernate.cfg.TransactionSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.jpa.internal.JpaComplianceImpl;
+import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
@@ -267,19 +267,12 @@ public class SessionFactorySettingsResolver {
 					);
 		}
 
-		private static JpaCompliance resolveJpaCompliance(ResolvedBootstrapSettings bootstrapSettings) {
-		return new JpaComplianceImpl(
-					false,
-					false,
-					false,
-					bootstrapSettings.jpaBootstrap(),
-					bootstrapSettings.jpaBootstrap(),
-					bootstrapSettings.jpaBootstrap(),
-					bootstrapSettings.jpaBootstrap(),
-					bootstrapSettings.jpaBootstrap(),
-					bootstrapSettings.jpaBootstrap()
-			);
-		}
+	private static JpaCompliance resolveJpaCompliance(ResolvedBootstrapSettings bootstrapSettings) {
+		return new MutableJpaComplianceImpl(
+				bootstrapSettings.configurationValues(),
+				bootstrapSettings.jpaBootstrap()
+		);
+	}
 
 	private static TemporalTableStrategy resolveTemporalTableStrategy(
 			Map<String, Object> configurationValues,

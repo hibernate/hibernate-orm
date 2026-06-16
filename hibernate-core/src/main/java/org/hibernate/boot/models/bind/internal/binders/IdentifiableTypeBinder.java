@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
@@ -97,6 +98,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	protected void prepareBinding(ModelBinders modelBinders) {
 		final var primaryTable = getTable();
 		final var managedType = getManagedType();
+		final PersistentClass attributeOwnerBinding = resolveAttributeOwnerBinding();
 
 		managedType.forEachAttribute( (index, attributeMetadata) -> {
 			if ( managedType.getHierarchy().getIdMapping().contains( attributeMetadata )
@@ -106,13 +108,16 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 					|| managedType.getHierarchy().getTenantIdAttribute() == attributeMetadata ) {
 				return;
 			}
+			if ( overridesSuperAttribute( attributeMetadata ) ) {
+				return;
+			}
 
-			final var attributeBinder = new AttributeBinder(
-					managedType,
-					getTypeBinding() instanceof PersistentClass persistentClass ? persistentClass : null,
-					attributeMetadata,
-					primaryTable,
-					modelBinders,
+				final var attributeBinder = new AttributeBinder(
+						managedType,
+						attributeOwnerBinding,
+						attributeMetadata,
+						primaryTable,
+						modelBinders,
 					getBindingState(),
 					getOptions(),
 					getBindingContext()
@@ -123,23 +128,49 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 			attributeBinders.add( attributeBinder );
 			final Table attributeTable = value.getTable();
-			if ( attributeTable == primaryTable || value instanceof org.hibernate.mapping.Collection ) {
-				addDeclaredProperty( property );
-			}
-			else {
-				final Join join = findJoin( attributeTable );
-				join.addProperty( property );
-			}
-			CustomMappingBinder.callAttributeBinders(
-					attributeMetadata.getMember(),
-					getTypeBinding() instanceof PersistentClass persistentClass ? persistentClass : null,
-					property,
-					getBindingState(),
-					getBindingContext()
+				if ( attributeTable == primaryTable || value instanceof org.hibernate.mapping.Collection ) {
+					addDeclaredProperty( property );
+				}
+				else {
+					final Join join = findJoin( attributeOwnerBinding, attributeTable );
+					join.addProperty( property );
+				}
+				CustomMappingBinder.callAttributeBinders(
+						attributeMetadata.getMember(),
+						attributeOwnerBinding,
+						property,
+						getBindingState(),
+						getBindingContext()
 			);
 		} );
 
 		super.prepareBinding( modelBinders );
+	}
+
+	private boolean overridesSuperAttribute(AttributeMetadata attributeMetadata) {
+		if ( superType == null || superType.findAttribute( attributeMetadata.getName() ) == null ) {
+			return false;
+		}
+		return attributeMetadata.getMember()
+				.getDeclaringType()
+				.getClassName()
+				.equals( getManagedType().getClassDetails().getClassName() );
+	}
+
+	private PersistentClass resolveAttributeOwnerBinding() {
+		if ( getTypeBinding() instanceof PersistentClass persistentClass ) {
+			return persistentClass;
+		}
+
+		final EntityTypeBinder superEntityBinder = getSuperEntityBinder();
+		if ( superEntityBinder != null ) {
+			return superEntityBinder.getTypeBinding();
+		}
+
+		final EntityTypeBinder rootEntityBinder = (EntityTypeBinder) getBindingState().getTypeBinder(
+				getManagedType().getHierarchy().getRoot().getClassDetails()
+		);
+		return rootEntityBinder == null ? null : rootEntityBinder.getTypeBinding();
 	}
 
 	private void addDeclaredProperty(Property property) {
@@ -155,8 +186,8 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		}
 	}
 
-	private Join findJoin(Table attributeTable) {
-		final List<Join> joins = ( (PersistentClass) getTypeBinding() ).getJoinClosure();
+	private Join findJoin(PersistentClass attributeOwnerBinding, Table attributeTable) {
+		final List<Join> joins = attributeOwnerBinding.getJoinClosure();
 		for ( int i = 0; i < joins.size(); i++ ) {
 			if ( joins.get( i ).getTable() == attributeTable ) {
 				return joins.get( i );

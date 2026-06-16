@@ -576,7 +576,6 @@ public interface SharedSessionContractImplementor
 	 * @since 5.2
 	 *
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
 	@Nullable
 	default Integer getConfiguredJdbcBatchSize() {

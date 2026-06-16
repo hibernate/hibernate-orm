@@ -162,11 +162,33 @@ public class AvailableResourcesTests {
 		assertThat( modelSources.managedClassDetails() ).hasSize( 1 );
 		assertThat( modelSources.packageDetails() ).hasSize( 1 );
 		assertThat( modelSources.xmlMappings() ).hasSize( 1 );
+		assertThat( modelSources.includeUnlistedPersistentSuperclasses() ).isTrue();
+	}
+
+	@Test
+	void testPersistenceUnitInfoExcludeUnlistedDisablesPersistentSuperclassCompletion(ServiceRegistryScope registryScope) {
+		var buildingContext = new MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
+
+		var pui = new PersistenceUnitInfoAdapter();
+		pui.excludeUnlistedClasses = true;
+		pui.managedClassNames.add( SimpleEntity.class.getName() );
+
+		var puiWrapper = new PersistenceUnitInfoDescriptor( pui );
+		var modelSources = AvailableResources.from(
+				puiWrapper,
+				new AvailableResourcesContext(
+						buildingContext.getBootstrapContext().getModelsContext(),
+						buildingContext.getBootstrapContext().getServiceRegistry()
+				)
+		);
+
+		assertThat( modelSources.includeUnlistedPersistentSuperclasses() ).isFalse();
 	}
 
 	private static class PersistenceUnitInfoAdapter extends org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter {
 		private final List<String> managedClassNames = new ArrayList<>();
 		private final List<String> mappingFiles = new ArrayList<>();
+		private boolean excludeUnlistedClasses;
 
 		@Override
 		public List<String> getMappingFileNames() {
@@ -176,6 +198,11 @@ public class AvailableResourcesTests {
 		@Override
 		public List<String> getManagedClassNames() {
 			return managedClassNames;
+		}
+
+		@Override
+		public boolean excludeUnlistedClasses() {
+			return excludeUnlistedClasses;
 		}
 	}
 }

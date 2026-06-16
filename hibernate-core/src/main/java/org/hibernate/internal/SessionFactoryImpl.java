@@ -35,8 +35,10 @@ import org.hibernate.StatementObserver;
 import org.hibernate.UnknownFilterException;
 import org.hibernate.action.queue.spi.ActionQueueFactory;
 import org.hibernate.action.queue.spi.PlanningOptions;
-import org.hibernate.action.queue.internal.support.ActionQueueFactoryService;
+import org.hibernate.boot.pipeline.internal.SessionFactoryConstructionPreparation;
+import org.hibernate.boot.pipeline.internal.SessionFactoryIntegratorPreparation;
 import org.hibernate.boot.pipeline.internal.SessionFactoryRuntimePreparation;
+import org.hibernate.boot.pipeline.internal.SessionFactoryServicePreparation;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -55,7 +57,6 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.creation.internal.SessionBuilderImpl;
 import org.hibernate.engine.creation.internal.StatelessSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.options.StatefulOptions;
@@ -71,7 +72,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -80,8 +80,6 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.generator.Generator;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
@@ -116,7 +114,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -148,7 +145,6 @@ import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
-import static org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory.buildPlanningOptions;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGER;
@@ -175,7 +171,8 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  *           that the class is not only thread-safe, but also highly concurrent.
  *           Synchronization must be used extremely sparingly.
  *
- * @see SessFacBo
+ * @see org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
+ *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Chris Cranford
@@ -242,14 +239,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
-		this(
+		this( SessionFactoryConstructionPreparation.prepare(
 				bootMetamodel,
 				options,
-				bootstrapContext,
-				null,
-				null,
-				SessionFactoryRuntimePreparation.prepare( bootMetamodel, options, bootstrapContext )
-		);
+				bootstrapContext
+		) );
 	}
 
 	public SessionFactoryImpl(
@@ -257,7 +251,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext,
 			final SessionFactoryRuntimePreparation preparation) {
-		this( bootMetamodel, options, bootstrapContext, null, null, preparation );
+		this( new SessionFactoryConstructionPreparation(
+				bootMetamodel,
+				null,
+				null,
+				options,
+				bootstrapContext,
+				preparation
+		) );
 	}
 
 	public SessionFactoryImpl(
@@ -267,17 +268,34 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final ResolvedSessionFactorySettings resolvedSettings,
 			final SessionFactoryConstructionIdentity identity,
 			final SessionFactoryRuntimePreparation preparation) {
+		this( new SessionFactoryConstructionPreparation(
+				bootMetamodel,
+				resolvedSettings,
+				identity,
+				options,
+				bootstrapContext,
+				preparation
+		) );
+	}
+
+	public SessionFactoryImpl(final SessionFactoryConstructionPreparation constructionPreparation) {
+		final var bootMetamodel = constructionPreparation.metadata();
+		final var options = constructionPreparation.options();
+		final var bootstrapContext = constructionPreparation.bootstrapContext();
+		final var identity = constructionPreparation.identity();
+		final var preparation = constructionPreparation.runtimePreparation();
+
 		SESSION_FACTORY_LOGGER.buildingSessionFactory();
 		typeConfiguration = preparation.typeConfiguration();
 
 		sessionFactoryOptions = options;
 
-		statementObserver = statementObserver( resolvedSettings, options );
+		statementObserver = preparation.statementObserver();
 
-		serviceRegistry = getServiceRegistry( options, this );
-		eventEngine = new EventEngine( options, serviceRegistry );
-
-		graphPlanningOptions = buildPlanningOptions( serviceRegistry.requireService( ConfigurationService.class ) );
+		final var servicePreparation = SessionFactoryServicePreparation.prepare( options, this );
+		serviceRegistry = servicePreparation.serviceRegistry();
+		eventEngine = servicePreparation.eventEngine();
+		graphPlanningOptions = servicePreparation.graphPlanningOptions();
 
 		bootMetamodel.initSessionFactory( this );
 
@@ -285,18 +303,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		jndiName = identity == null ? determineJndiName( name, options, serviceRegistry ) : identity.jndiName();
 		uuid = identity == null ? options.getUuid() : identity.uuid();
 
-		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
+		jdbcServices = servicePreparation.jdbcServices();
 
 		settings = getMaskedSettings( options, serviceRegistry );
 		SESSION_FACTORY_LOGGER.instantiatingFactory( uuid, settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
-		cacheAccess = serviceRegistry.getService( CacheImplementor.class );
+		cacheAccess = servicePreparation.cacheAccess();
 
 		jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
-		for ( var sessionFactoryObserver : sessionFactoryObservers( resolvedSettings, options ) ) {
+		for ( var sessionFactoryObserver : preparation.sessionFactoryObservers() ) {
 			observerChain.addObserver( sessionFactoryObserver );
 		}
 
@@ -308,15 +326,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 
 		// used for initializing the MappingMetamodelImpl
-		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		jdbcValuesMappingProducerProvider = serviceRegistry.requireService( JdbcValuesMappingProducerProvider.class );
+		classLoaderService = servicePreparation.classLoaderService();
+		jdbcValuesMappingProducerProvider = servicePreparation.jdbcValuesMappingProducerProvider();
 
-		changesetCoordinator = serviceRegistry.requireService( ChangesetCoordinator.class );
+		changesetCoordinator = servicePreparation.changesetCoordinator();
 
-		final var integratorObserver = new IntegratorObserver();
-		observerChain.addObserver( integratorObserver );
+		final var integratorPreparation = new SessionFactoryIntegratorPreparation( this, serviceRegistry );
+		observerChain.addObserver( integratorPreparation );
 		try {
-			integrate( bootMetamodel, bootstrapContext, integratorObserver );
+			integratorPreparation.integrate( bootMetamodel, bootstrapContext );
 
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
@@ -358,21 +376,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			currentSessionContext = buildCurrentSessionContext();
 
-			// cache references to some "hot" services:
-			transactionCoordinatorBuilder = serviceRegistry.requireService( TransactionCoordinatorBuilder.class );
-			entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
-			parameterMarkerStrategy = serviceRegistry.requireService( ParameterMarkerStrategy.class );
-			batchBuilder = serviceRegistry.requireService( BatchBuilder.class );
-			managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-
-			final boolean multiTenancyEnabled = options.isMultiTenancyEnabled();
-			connectionProvider =
-					multiTenancyEnabled ? null : serviceRegistry.requireService( ConnectionProvider.class );
-			multiTenantConnectionProvider =
-					multiTenancyEnabled ? serviceRegistry.requireService( MultiTenantConnectionProvider.class ) : null;
-
-			eventMonitor = loadEventMonitor();
-
+			transactionCoordinatorBuilder = servicePreparation.transactionCoordinatorBuilder();
+			entityCopyObserverFactory = servicePreparation.entityCopyObserverFactory();
+			parameterMarkerStrategy = servicePreparation.parameterMarkerStrategy();
+			batchBuilder = servicePreparation.batchBuilder();
+			managedBeanRegistry = servicePreparation.managedBeanRegistry();
+			connectionProvider = servicePreparation.connectionProvider();
+			multiTenantConnectionProvider = servicePreparation.multiTenantConnectionProvider();
+			eventMonitor = servicePreparation.eventMonitor();
+			// EventListenerGroups resolves listener services through the factory
+			// service registry, which currently calls back to getEventEngine().
+			// Keep it after the eventEngine field has been assigned until that
+			// incomplete-factory interaction is removed.
 			eventListenerGroups = new EventListenerGroups( serviceRegistry );
 
 			// re-scope the TypeConfiguration to this SessionFactory,
@@ -386,13 +401,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				jpaMetamodel.populateStaticMetamodelResultSetMappings( bootMetamodel, this );
 			}
 
-			actionQueueFactory = serviceRegistry.requireService( ActionQueueFactoryService.class )
-					.buildActionQueueFactory( this );
+			actionQueueFactory = servicePreparation.actionQueueFactoryService().buildActionQueueFactory( this );
 
 			observerChain.sessionFactoryCreated( this );
 		}
 		catch ( Exception e ) {
-			disintegrate( e, integratorObserver );
+			integratorPreparation.disintegrate( e );
 
 			try {
 				close();
@@ -406,24 +420,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		SESSION_FACTORY_LOGGER.instantiatedFactory( uuid );
 	}
 
-	private static StatementObserver statementObserver(
-			ResolvedSessionFactorySettings settings,
-			SessionFactoryOptions options) {
-		final var statementObserver = settings == null ? options.getStatementObserver() : settings.statementObserver();
-		return statementObserver == null ? IgnoredStatementObserver.IGNORE : statementObserver;
-	}
-
-	private static SessionFactoryObserver[] sessionFactoryObservers(
-			ResolvedSessionFactorySettings settings,
-			SessionFactoryOptions options) {
-		return settings == null ? options.getSessionFactoryObservers() : settings.sessionFactoryObservers();
-	}
-
-	private EventMonitor loadEventMonitor() {
-		final var eventMonitors = classLoaderService.loadJavaServices( EventMonitor.class );
-		return eventMonitors.isEmpty() ? new EmptyEventMonitor() : eventMonitors.iterator().next();
-	}
-
 	private static SqlStringGenerationContext createSqlStringGenerationContext(
 			MetadataImplementor bootMetamodel,
 			SessionFactoryOptions options,
@@ -434,16 +430,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				options.getDefaultCatalog(),
 				options.getDefaultSchema()
 		);
-	}
-
-	private static SessionFactoryServiceRegistry getServiceRegistry(
-			SessionFactoryOptions options,
-			SessionFactoryImplementor self) {
-		return options.getServiceRegistry()
-				.requireService( SessionFactoryServiceRegistryFactory.class )
-				// it is not great how we pass a reference to
-				// an incompletely-initialized instance here:
-				.buildServiceRegistry( self, options );
 	}
 
 	@Override
@@ -531,37 +517,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	public PlanningOptions getGraphPlanningOptions() {
 		return graphPlanningOptions;
 	}
-
-	class IntegratorObserver implements SessionFactoryObserver {
-		private final ArrayList<Integrator> integrators = new ArrayList<>();
-		@Override
-		public void sessionFactoryClosed(SessionFactory factory) {
-			for ( var integrator : integrators ) {
-				integrator.disintegrate( SessionFactoryImpl.this, SessionFactoryImpl.this.serviceRegistry );
-			}
-			integrators.clear();
-		}
-	}
-
-	private void integrate(MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext, IntegratorObserver integratorObserver) {
-		for ( var integrator : serviceRegistry.requireService( IntegratorService.class ).getIntegrators() ) {
-			integrator.integrate( bootMetamodel, bootstrapContext, this );
-			integratorObserver.integrators.add( integrator );
-		}
-	}
-
-	private void disintegrate(Exception startupException, IntegratorObserver integratorObserver) {
-		for ( var integrator : integratorObserver.integrators ) {
-			try {
-				integrator.disintegrate( this, serviceRegistry );
-			}
-			catch (Throwable ex) {
-				startupException.addSuppressed( ex );
-			}
-		}
-		integratorObserver.integrators.clear();
-	}
-
 
 	private SessionBuilderImplementor createDefaultSessionOpenOptionsIfPossible() {
 		final var tenantIdResolver = getCurrentTenantIdentifierResolver();

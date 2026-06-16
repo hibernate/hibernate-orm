@@ -105,6 +105,10 @@ public abstract class AbstractIdentifiableTypeMetadata
 	}
 
 	private boolean processSubclass(ClassDetails subClassDetails, HierarchyMetadataCollector metadataCollector) {
+		if ( !metadataCollector.shouldProcessSubType( getClassDetails(), subClassDetails ) ) {
+			return true;
+		}
+
 		final AbstractIdentifiableTypeMetadata subTypeMetadata;
 		if ( CategorizationHelper.isEntity( subClassDetails ) ) {
 			subTypeMetadata = new EntityTypeMetadataImpl(

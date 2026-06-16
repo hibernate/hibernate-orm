@@ -90,19 +90,20 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			return;
 		}
 
-		final AccessType attributeAccessType = access.value();
+		final String attributeName = memberDetails.resolveAttributeName();
+		if ( attributeName == null ) {
+			return;
+		}
 
-		if ( ( attributeAccessType == AccessType.FIELD && !memberDetails.isField() )
-				|| ( attributeAccessType == AccessType.PROPERTY && memberDetails.isField() ) ) {
+		if ( !memberDetails.isPersistable() ) {
 			return;
 		}
 
 		if ( transiencyChecker.apply( memberDetails ) ) {
-			// the field is @Transient
 			return;
 		}
 
-		memberConsumer.accept( memberDetails.resolveAttributeName(), memberDetails );
+		memberConsumer.accept( attributeName, memberDetails );
 	}
 
 	private void processClassLevelAccess(

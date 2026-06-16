@@ -13,7 +13,7 @@ import org.hibernate.StatementObserver;
 import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
 import org.hibernate.boot.pipeline.internal.MetadataResolver;
 import org.hibernate.boot.pipeline.internal.ResolvedMetadata;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBuilder;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
@@ -67,7 +67,7 @@ class SessionFactoryBootstrapPipelineTest {
 				registryScope.getRegistry()
 		);
 
-		try (var sessionFactory = new SessionFactoryBuilder().build(
+		try (var sessionFactory = SessionFactoryPipeline.build(
 				sessionFactorySettings,
 				resolvedMetadata,
 				registryScope.getRegistry()
@@ -105,7 +105,7 @@ class SessionFactoryBootstrapPipelineTest {
 				registryScope.getRegistry()
 		);
 
-		try (var sessionFactory = new SessionFactoryBuilder().build(
+		try (var sessionFactory = SessionFactoryPipeline.build(
 				sessionFactorySettings,
 				resolvedMetadata,
 				registryScope.getRegistry()
@@ -140,7 +140,7 @@ class SessionFactoryBootstrapPipelineTest {
 				registryScope.getRegistry()
 		);
 
-		try (var sessionFactory = new SessionFactoryBuilder().build(
+		try (var sessionFactory = SessionFactoryPipeline.build(
 				sessionFactorySettings,
 				resolvedMetadata,
 				registryScope.getRegistry(),

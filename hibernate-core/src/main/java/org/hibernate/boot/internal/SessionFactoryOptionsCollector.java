@@ -36,8 +36,7 @@ import org.hibernate.type.format.FormatMapper;
 import jakarta.persistence.criteria.Nulls;
 
 /**
- * Collects public {@link org.hibernate.boot.SessionFactoryBuilder}
- * customizations as named bootstrap state.
+ * Collects factory customizations as named bootstrap state.
  * <p>
  * During the transition to the new bootstrap pipeline this collector can still
  * apply the collected values to {@link SessionFactoryOptionsBuilder}.  The

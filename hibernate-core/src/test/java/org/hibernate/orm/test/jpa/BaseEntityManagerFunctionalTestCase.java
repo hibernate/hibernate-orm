@@ -86,14 +86,29 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new TestingPersistenceUnitDescriptorImpl(
+				getClass().getSimpleName(),
+				Arrays.stream( getAnnotatedClasses() ).map( Class::getName ).toList(),
+				Arrays.asList( getEjb3DD() )
+		);
 	}
 
 	public static class TestingPersistenceUnitDescriptorImpl implements PersistenceUnitDescriptor {
 		private final String name;
+		private final List<String> managedClassNames;
+		private final List<String> mappingFileNames;
 
 		public TestingPersistenceUnitDescriptorImpl(String name) {
+			this( name, List.of(), List.of() );
+		}
+
+		public TestingPersistenceUnitDescriptorImpl(
+				String name,
+				List<String> managedClassNames,
+				List<String> mappingFileNames) {
 			this.name = name;
+			this.managedClassNames = List.copyOf( managedClassNames );
+			this.mappingFileNames = List.copyOf( mappingFileNames );
 		}
 
 		@Override
@@ -143,17 +158,17 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 		@Override
 		public List<String> getManagedClassNames() {
-			return List.of();
+			return managedClassNames;
 		}
 
 		@Override
 		public List<String> getAllClassNames() {
-			return List.of();
+			return getManagedClassNames();
 		}
 
 		@Override
 		public List<String> getMappingFileNames() {
-			return List.of();
+			return mappingFileNames;
 		}
 
 		@Override
@@ -199,7 +214,6 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	protected Map<String,Object> buildSettings() {
 		final Map<String,Object> settings = getConfig();
-		addMappings( settings );
 		if ( createSchema() ) {
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
@@ -208,37 +222,17 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return settings;
 	}
 
-	protected void addMappings(Map<String,Object> settings) {
-		final String[] mappings = getMappings();
-		if ( mappings != null ) {
-			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
-		}
-	}
-
-	protected static final String[] NO_MAPPINGS = new String[0];
-
-	protected String[] getMappings() {
-		return NO_MAPPINGS;
-	}
-
 	protected Map<String,Object> getConfig() {
 		final Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
 
 		config.put( AvailableSettings.CLASSLOADERS, getClass().getClassLoader() );
 
-		List<Class<?>> classes = new ArrayList<>( Arrays.asList( getAnnotatedClasses() ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		for ( Map.Entry<Class<?>, String> entry : getCachedClasses().entrySet() ) {
 			config.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
 		}
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
 			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
 		}
-		if ( getEjb3DD().length > 0 ) {
-			config.put( AvailableSettings.ORM_XML_FILES,
-					new ArrayList<>( Arrays.asList( getEjb3DD() ) ) );
-		}
-
 		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );

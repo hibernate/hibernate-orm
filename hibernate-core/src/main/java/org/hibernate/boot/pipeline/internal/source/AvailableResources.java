@@ -39,8 +39,16 @@ import java.util.Map;
 public record AvailableResources(
 		Collection<ClassDetails> managedClassDetails,
 		Collection<ClassDetails> packageDetails,
-		Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings)
+		Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings,
+		boolean includeUnlistedPersistentSuperclasses)
 		implements org.hibernate.boot.models.AvailableResources {
+
+	public AvailableResources(
+			Collection<ClassDetails> managedClassDetails,
+			Collection<ClassDetails> packageDetails,
+			Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings) {
+		this( managedClassDetails, packageDetails, xmlMappings, true );
+	}
 
 	@Nonnull
 	public Collection<ClassDetails> managedClassDetails() {
@@ -130,7 +138,12 @@ public record AvailableResources(
 			} );
 		}
 
-		return new AvailableResources( managedClassDetails, packageDetailsList, xmlBindings );
+		return new AvailableResources(
+				managedClassDetails,
+				packageDetailsList,
+				xmlBindings,
+				!persistenceUnitDescriptor.isExcludeUnlistedClasses()
+		);
 	}
 
 	/// Creates available resources from Hibernate's JPA
@@ -247,7 +260,8 @@ public record AvailableResources(
 		return new AvailableResources(
 				managedClassDetails,
 				packageDetailsList,
-				xmlBindings
+				xmlBindings,
+				sourceContributions.includeUnlistedPersistentSuperclasses()
 		);
 	}
 

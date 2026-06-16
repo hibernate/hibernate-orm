@@ -4,14 +4,11 @@
  */
 package org.hibernate.boot.models.categorize.internal;
 
-import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.annotation.Nonnull;
 import org.hibernate.boot.models.AccessTypeDeterminationException;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.CategorizationContext;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -24,6 +21,8 @@ import org.hibernate.models.spi.MethodDetails;
 
 import java.util.List;
 import java.util.Set;
+
+import jakarta.persistence.Entity;
 
 /// Builds [EntityHierarchy] references from
 /// {@linkplain ClassDetailsRegistry#forEachClassDetails managed classes}.
@@ -51,6 +50,9 @@ public class EntityHierarchyBuilder {
 		final Set<EntityHierarchy> hierarchies = CollectionHelper.setOfSize( rootEntities.size() );
 
 		rootEntities.forEach( (rootEntity) -> {
+			if ( hasEntitySuperType( rootEntity, inheritanceState ) ) {
+				return;
+			}
 			final AccessType defaultAccessType = determineDefaultAccessTypeForHierarchy( rootEntity );
 			hierarchies.add( new EntityHierarchyImpl(
 					rootEntity,
@@ -63,6 +65,19 @@ public class EntityHierarchyBuilder {
 		} );
 
 		return hierarchies;
+	}
+
+	private boolean hasEntitySuperType(
+			ClassDetails classDetails,
+			ManagedTypeInheritanceState inheritanceState) {
+		ClassDetails superType = inheritanceState.getSuperType( classDetails );
+		while ( superType != null ) {
+			if ( CategorizationHelper.isEntity( superType ) ) {
+				return true;
+			}
+			superType = inheritanceState.getSuperType( superType );
+		}
+		return false;
 	}
 
 	private Set<EntityHierarchy> process(ManagedTypeInheritanceState inheritanceState) {
@@ -81,29 +96,24 @@ public class EntityHierarchyBuilder {
 
 		ClassDetails current = rootEntityType;
 		while ( current != null ) {
-			// look for `@Access` on the class
-			final Access accessAnnotation = current.getDirectAnnotationUsage( JpaAnnotations.ACCESS );
-			if ( accessAnnotation == null ) {
-				var inclusiveMember = findDefaultedMember( current );
-				if ( inclusiveMember == null ) {
-					current = current.getSuperClass();
-					continue;
-				}
-
-				if ( inclusiveMember.getKind() == AnnotationTarget.Kind.FIELD ) {
-					return AccessType.FIELD;
-				}
-				else if ( inclusiveMember.getKind() == AnnotationTarget.Kind.METHOD
-						&& inclusiveMember.asMethodDetails().getMethodKind() == MethodDetails.MethodKind.GETTER ) {
-					return AccessType.PROPERTY;
-				}
-				else {
-					// this should never happen because of the nature of the checks in findDefaultedMember()...
-					throw new AccessTypeDeterminationException( rootEntityType );
-				}
+			var inclusiveMember = findDefaultedMember( current );
+			if ( inclusiveMember == null ) {
+				current = current.getSuperClass();
+				continue;
 			}
 
-			current = current.getSuperClass();
+			if ( inclusiveMember.getKind() == AnnotationTarget.Kind.FIELD ) {
+				return AccessType.FIELD;
+			}
+			else if ( inclusiveMember.getKind() == AnnotationTarget.Kind.METHOD
+					&& inclusiveMember.asMethodDetails().getMethodKind() == MethodDetails.MethodKind.GETTER ) {
+				return AccessType.PROPERTY;
+			}
+			else {
+				// this should never happen because of the nature of the checks in findDefaultedMember()...
+				throw new AccessTypeDeterminationException( rootEntityType );
+			}
+
 		}
 
 		return modelContext.getEffectiveMappingDefaults().getDefaultPropertyAccessType();

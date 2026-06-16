@@ -36,10 +36,9 @@
  * Subpackages define a range of SPIs.
  * <ul>
  * <li>The subpackage {@link org.hibernate.jpa.boot.spi} contains the SPI of
- *     this persistence provider, including legacy SPI used to
- *     {@linkplain org.hibernate.jpa.boot.spi.Bootstrap bootstrap} the JPA
- *     provider, and interfaces which may be implemented to contribute extensions
- *     during of the bootstrap process.
+ *     this persistence provider, including symbolic setting names and
+ *     interfaces which may be implemented to contribute extensions during the
+ *     bootstrap process.
  * <li>The package {@link org.hibernate.jpa.event.spi org.hibernate.jpa.event}
  *     implements support for JPA entity lifecycle callback methods and
  *     {@linkplain jakarta.persistence.EntityListeners entity listeners}.

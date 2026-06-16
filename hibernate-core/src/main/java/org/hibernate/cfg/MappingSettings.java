@@ -15,7 +15,6 @@ import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
-import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
@@ -325,7 +324,6 @@ public interface MappingSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJsonFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
@@ -344,7 +342,6 @@ public interface MappingSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0.1
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyXmlFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";

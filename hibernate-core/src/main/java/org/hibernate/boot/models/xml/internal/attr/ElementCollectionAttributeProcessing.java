@@ -72,7 +72,7 @@ public class ElementCollectionAttributeProcessing {
 				xmlDocumentContext
 		);
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbElementCollection.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbElementCollection, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbElementCollection, memberDetails, elementCollectionUsage, xmlDocumentContext );
 		applyOptimisticLock( jaxbElementCollection, memberDetails, xmlDocumentContext );

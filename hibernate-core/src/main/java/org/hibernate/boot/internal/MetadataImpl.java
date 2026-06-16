@@ -16,7 +16,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -31,9 +30,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
-import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -56,8 +52,8 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static java.lang.String.join;
 import static java.util.Collections.emptySet;
+import static org.hibernate.boot.pipeline.internal.SessionFactoryPipeline.build;
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -154,50 +150,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return bootstrapContext.getFunctionRegistry();
 	}
 
-	@Override
-	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final var defaultBuilder = getFactoryBuilder();
-		SessionFactoryBuilder builder = null;
-		List<String> activeFactoryNames = null;
-		for ( var discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
-			final SessionFactoryBuilder returnedBuilder =
-					discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
-			if ( returnedBuilder != null ) {
-				if ( activeFactoryNames == null ) {
-					activeFactoryNames = new ArrayList<>();
-				}
-				activeFactoryNames.add( discoveredBuilderFactory.getClass().getName() );
-				builder = returnedBuilder;
-			}
-		}
-
-		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
-			throw new HibernateException(
-					"Multiple active SessionFactoryBuilderFactory definitions were discovered: " +
-							join( ", ", activeFactoryNames )
-			);
-		}
-
-		return builder == null ? defaultBuilder : builder;
-	}
-
-	private Iterable<SessionFactoryBuilderFactory> getSessionFactoryBuilderFactories() {
-		return getClassLoaderService().loadJavaServices( SessionFactoryBuilderFactory.class );
-	}
-
-	private SessionFactoryBuilderImplementor getFactoryBuilder() {
-		return metadataBuildingOptions.getServiceRegistry()
-				.requireService( SessionFactoryBuilderService.class )
-				.createSessionFactoryBuilder( this, bootstrapContext );
-	}
-
 	private ClassLoaderService getClassLoaderService() {
 		return metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
 	}
 
 	@Override
 	public SessionFactoryImplementor buildSessionFactory() {
-		return (SessionFactoryImplementor) getSessionFactoryBuilder().build();
+		return build( this, new SessionFactoryOptionsCollector() );
 	}
 
 	@Override

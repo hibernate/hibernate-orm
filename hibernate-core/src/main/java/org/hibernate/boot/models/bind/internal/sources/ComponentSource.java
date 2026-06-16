@@ -4,20 +4,30 @@
  */
 package org.hibernate.boot.models.bind.internal.sources;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TargetEmbeddable;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.bind.spi.BindingContext;
+import org.hibernate.boot.models.categorize.internal.StandardPersistentAttributeMemberResolver;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.MappedSuperclass;
 
 /// Source-model facts for an [org.hibernate.mapping.Component].
 ///
@@ -81,11 +91,20 @@ public record ComponentSource(
 		/// The embeddable/component class whose persistable members are being bound.
 		ClassDetails componentType,
 
-		/// Path-keyed mapping adjustments scoped to [#sourceMember()].
-		///
-		/// This is `null` for source shapes that do not currently expose path-based
-		/// adjustment annotations through a member.
-		PathAdjustmentCollector pathAdjustments) {
+	/// Path-keyed mapping adjustments scoped to [#sourceMember()].
+	///
+	/// This is `null` for source shapes that do not currently expose path-based
+	/// adjustment annotations through a member.
+	PathAdjustmentCollector pathAdjustments,
+
+	/// The default access type inherited from the owning managed type.
+	AccessType defaultAccessType,
+
+	/// Dot-separated attribute path prefix for this component source.
+	String pathPrefix,
+
+	/// Dot-separated owner-relative path prefix for implicit naming.
+	String namingPathPrefix) {
 	/// Source-level component role.
 	public enum Kind {
 		/// A normal embedded/component-valued attribute.
@@ -110,7 +129,29 @@ public record ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
 				resolveEmbeddableType( member, bindingContext, false ),
-				new PathAdjustmentCollector( member, bindingContext )
+				new PathAdjustmentCollector( member, bindingContext ),
+				fallbackAccessType( member ),
+				"",
+				member.resolveAttributeName() + "."
+		);
+	}
+
+	/// Creates a source for a normal embedded attribute, including owner-type
+	/// path adjustments such as `@AttributeOverride(name = "home.city", ...)`.
+	public static ComponentSource embeddedAttribute(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
+		return new ComponentSource(
+				Kind.EMBEDDED_ATTRIBUTE,
+				member,
+				resolveEmbeddableType( member, bindingContext, false ),
+				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
+				defaultAccessType,
+				"",
+				member.resolveAttributeName() + "."
 		);
 	}
 
@@ -119,20 +160,26 @@ public record ComponentSource(
 	/// This currently only carries the component type.  If upstream stores source-model
 	/// facts directly on mapping objects, identifier component sources should likely retain
 	/// the identifier member or key-mapping metadata as well.
-	public static ComponentSource embeddedIdentifier(ClassDetails componentType) {
-		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, null );
+	public static ComponentSource embeddedIdentifier(ClassDetails componentType, AccessType defaultAccessType) {
+		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, null, defaultAccessType, "", "" );
 	}
 
 	/// Creates a source for an embeddable collection element.
 	///
 	/// The source member is the plural collection member, while the component type is the
 	/// collection element type.
-	public static ComponentSource collectionElement(MemberDetails member, BindingContext bindingContext) {
+	public static ComponentSource collectionElement(
+			MemberDetails member,
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
 		return new ComponentSource(
 				Kind.COLLECTION_ELEMENT,
 				member,
 				resolveEmbeddableType( member, bindingContext, true ),
-				new PathAdjustmentCollector( member, bindingContext )
+				new PathAdjustmentCollector( member, bindingContext ),
+				defaultAccessType,
+				"",
+				member.resolveAttributeName() + "."
 		);
 	}
 
@@ -140,13 +187,93 @@ public record ComponentSource(
 	public static ComponentSource mapKey(
 			MemberDetails member,
 			ClassDetails componentType,
+			AccessType defaultAccessType,
 			BindingContext bindingContext) {
 		return new ComponentSource(
 				Kind.MAP_KEY,
 				member,
 				componentType,
-				new PathAdjustmentCollector( member, bindingContext )
+				new PathAdjustmentCollector( member, bindingContext ),
+				defaultAccessType,
+				"",
+				member.resolveAttributeName() + ".key."
 		);
+	}
+
+	public List<ComponentMember> members() {
+		final Map<String, ComponentMember> members = new LinkedHashMap<>();
+		collectMembers( componentType, members );
+		return new ArrayList<>( members.values() );
+	}
+
+	public ComponentSource nested(ComponentMember member, BindingContext bindingContext) {
+		final ClassDetails nestedComponentType = resolveEmbeddableType( member.member(), bindingContext, false );
+		return new ComponentSource(
+				kind,
+				member.member(),
+				nestedComponentType,
+				pathAdjustments,
+				defaultAccessType,
+				member.path() + ".",
+				member.fullPath() + "."
+		);
+	}
+
+	public record ComponentMember(
+			MemberDetails member,
+			AttributePath relativePath,
+			String path,
+			AttributePath namingPath,
+			String fullPath,
+			ClassDetails declaringType) {
+		public String attributeName() {
+			return member.resolveAttributeName();
+		}
+	}
+
+	private void collectMembers(ClassDetails componentClass, Map<String, ComponentMember> members) {
+		final ClassDetails superClass = componentClass.getSuperClass();
+		if ( isPersistentComponentSuperType( superClass ) ) {
+			collectMembers( superClass, members );
+		}
+
+		final List<MemberDetails> localMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+				componentClass,
+				determineAccessType( componentClass ),
+				(memberDetails) -> {
+				},
+				null
+		);
+		for ( MemberDetails localMember : localMembers ) {
+			final String attributeName = localMember.resolveAttributeName();
+			final String path = pathPrefix + attributeName;
+			final String fullPath = namingPathPrefix + attributeName;
+			members.put( attributeName, new ComponentMember(
+					localMember,
+					AttributePath.parse( path ),
+					path,
+					AttributePath.parse( fullPath ),
+					fullPath,
+					componentClass
+			) );
+		}
+	}
+
+	private AccessType determineAccessType(ClassDetails componentClass) {
+		final Access access = componentClass.getDirectAnnotationUsage( Access.class );
+		return access == null ? defaultAccessType : access.value();
+	}
+
+	private static boolean isPersistentComponentSuperType(ClassDetails superClass) {
+		return superClass != null
+				&& superClass != ClassDetails.OBJECT_CLASS_DETAILS
+				&& ( superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
+					|| superClass.hasDirectAnnotationUsage( Embeddable.class ) );
+	}
+
+	private static AccessType fallbackAccessType(MemberDetails member) {
+		final Access access = member.getDeclaringType().getDirectAnnotationUsage( Access.class );
+		return access == null ? AccessType.FIELD : access.value();
 	}
 
 	public static ClassDetails resolveEmbeddableType(

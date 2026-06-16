@@ -108,6 +108,8 @@ public class DomainModelCategorizer {
 				mappingDefaults
 		);
 
+		xmlProcessingResult.apply();
+
 		allKnownClassNames.forEach( (className) -> {
 			final ClassDetails classDetails = mutableClassDetailsRegistry.resolveClassDetails( className );
 			modelCategorizationCollector.apply( classDetails );
@@ -116,8 +118,6 @@ public class DomainModelCategorizer {
 			final ClassDetails classDetails = mutableClassDetailsRegistry.resolveClassDetails( className );
 			modelCategorizationCollector.apply( classDetails );
 		} );
-
-		xmlProcessingResult.apply();
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,7 +144,10 @@ public class DomainModelCategorizer {
 		);
 
 		final ManagedTypeInheritanceState inheritanceState = new ManagedTypeInheritanceState(
-				modelCategorizationCollector.getSourcePersistentTypes()
+				modelCategorizationCollector.getSourcePersistentTypes(),
+				availableResources.includeUnlistedPersistentSuperclasses()
+						? ManagedTypeInheritanceState.MissingPersistentSuperclassHandling.WARN_AND_USE
+						: ManagedTypeInheritanceState.MissingPersistentSuperclassHandling.EXCEPTION
 		);
 		final Set<EntityHierarchy> entityHierarchies = createEntityHierarchies(
 				inheritanceState,

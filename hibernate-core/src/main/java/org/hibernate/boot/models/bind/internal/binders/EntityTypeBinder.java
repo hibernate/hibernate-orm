@@ -202,8 +202,10 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	public void bindTables() {
 		if ( binding instanceof TableOwner ) {
 			final var primaryTable = modelBinders.getTableBinder().bindPrimaryTable( getManagedType(), getHierarchyRelation() );
-			final var table = primaryTable.binding();
-			( (TableOwner) binding ).setTable( table );
+			if ( primaryTable != null ) {
+				final var table = primaryTable.binding();
+				( (TableOwner) binding ).setTable( table );
+			}
 		}
 
 		final var secondaryTables = modelBinders.getTableBinder().bindSecondaryTables( this );
@@ -218,7 +220,15 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		final IdentifiableTypeBinder superTypeBinder = getSuperTypeBinder();
 		final EntityTypeBinder superEntityBinder = getSuperEntityBinder();
 		if ( binding instanceof RootClass rootClass ) {
-			assert superEntityBinder == null;
+			assert superEntityBinder == null
+					: "Root entity `%s` with relation `%s` in hierarchy root `%s` / absolute root `%s` resolved entity super `%s`"
+							.formatted(
+									binding.getEntityName(),
+									getHierarchyRelation(),
+									getManagedType().getHierarchy().getRoot().getClassDetails().getName(),
+									getManagedType().getHierarchy().getAbsoluteRoot().getClassDetails().getName(),
+									superEntityBinder.getTypeBinding().getEntityName()
+							);
 
 			if ( superTypeBinder != null ) {
 				rootClass.setSuperMappedSuperclass( (MappedSuperclass) superTypeBinder.getTypeBinding() );
@@ -789,7 +799,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		if ( ann == null ) {
 			final Type resolvedJavaType = discriminatorMapping.resolve().getRelationalJavaType().getJavaType();
 			if ( resolvedJavaType == String.class ) {
-				typeBinding.setDiscriminatorValue( typeBinding.getEntityName() );
+				typeBinding.setDiscriminatorValue( typeBinding.getJpaEntityName() );
 			}
 			else {
 				typeBinding.setDiscriminatorValue( Integer.toString( typeBinding.getSubclassId() ) );
@@ -1004,6 +1014,10 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void processCustomSql(ClassDetails classDetails) {
+		if ( binding.getTable() == null ) {
+			return;
+		}
+
 		final String primaryTableName = binding.getTable().getName();
 		SQLInsert sqlInsert = resolveCustomSqlAnnotation(
 				classDetails,

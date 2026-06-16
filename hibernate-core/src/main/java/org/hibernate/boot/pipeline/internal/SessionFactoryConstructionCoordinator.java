@@ -137,33 +137,15 @@ public final class SessionFactoryConstructionCoordinator {
 	}
 
 	private static SessionFactoryImplementor buildDefaultSessionFactory(SessionFactoryConstructionState state) {
-		final var preparation = SessionFactoryRuntimePreparation.prepare(
-				state.metadata(),
-				state.resolvedSettings(),
-				state.bootstrapContext()
-		);
-		return new SessionFactoryImpl(
-				state.metadata(),
-				state.options(),
-				state.bootstrapContext(),
-				state.resolvedSettings(),
-				state.identity(),
-				preparation
-		);
+		return new SessionFactoryImpl( SessionFactoryConstructionPreparation.prepare( state ) );
 	}
 
 	private static SessionFactoryImplementor buildDefaultSessionFactory(ConstructionRequest request) {
-		final var preparation = SessionFactoryRuntimePreparation.prepare(
+		return new SessionFactoryImpl( SessionFactoryConstructionPreparation.prepare(
 				request.metadata,
 				request.options,
 				request.bootstrapContext
-		);
-		return new SessionFactoryImpl(
-				request.metadata,
-				request.options,
-				request.bootstrapContext,
-				preparation
-		);
+		) );
 	}
 
 	private static class ConstructionRequest implements SessionFactoryConstructionRequest {

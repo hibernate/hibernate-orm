@@ -93,6 +93,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "getInitialSessionCacheMode" -> settings.initialSessionCacheMode();
 				case "getInitialSessionFlushMode" -> org.hibernate.FlushMode.AUTO;
 				case "getDefaultLockOptions" -> org.hibernate.LockOptions.NONE;
+				case "getDefaultNullPrecedence" -> jakarta.persistence.criteria.Nulls.NONE;
 				case "getDefaultSessionProperties" -> java.util.Collections.emptyMap();
 				case "getPhysicalConnectionHandlingMode" -> settings.physicalConnectionHandlingMode();
 				case "getJdbcTimeZone" -> settings.jdbcTimeZone();

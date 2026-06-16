@@ -13,7 +13,6 @@ import java.io.Serializable;
  * {@value org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER}.
  *
  * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER
- * @see org.hibernate.boot.SessionFactoryBuilder#addSessionFactoryObservers(SessionFactoryObserver...)
  *
  * @author Steve Ebersole
  */

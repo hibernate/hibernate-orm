@@ -145,9 +145,10 @@ public class IdentifierBinder {
 			RootClass typeBinding) {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
-		idValue.setEmbedded( true );
+		idValue.setEmbedded( false );
 		idValue.setComponentClassName( aggregatedKeyMapping.getKeyType().getClassName() );
 		idValue.setTable( table );
+		idValue.setTypeUsingReflection( type.getClassDetails().getClassName(), aggregatedKeyMapping.getAttributeName() );
 		typeBinding.setIdentifier( idValue );
 		typeBinding.setEmbeddedIdentifier( true );
 
@@ -192,7 +193,7 @@ public class IdentifierBinder {
 			RootClass typeBinding) {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
-		idValue.setEmbedded( false );
+		idValue.setEmbedded( true );
 		idValue.setComponentClassName( idMapping.getIdClassType().getClassName() );
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
@@ -398,7 +399,7 @@ public class IdentifierBinder {
 		return new ComponentBinder( modelBinders, state, options, context ).bindBasicProperties(
 				type,
 				typeBinding,
-				ComponentSource.embeddedIdentifier( embeddableType ),
+				ComponentSource.embeddedIdentifier( embeddableType, type.getAccessType() ),
 				idValue,
 				table,
 				(member, column) -> table.getPrimaryKey().addColumn( column ),

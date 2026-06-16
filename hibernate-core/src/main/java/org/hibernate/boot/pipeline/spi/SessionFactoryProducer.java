@@ -23,7 +23,7 @@ public interface SessionFactoryProducer {
 	/// The unique name used to select this producer when multiple producers are
 	/// available.
 	///
-	/// @see PersistenceSettings.SESSION_FACTORY_PRODUCER
+	/// @see PersistenceSettings#SESSION_FACTORY_PRODUCER
 	String getProducerName();
 
 	/// Produce the SessionFactory from the given request.

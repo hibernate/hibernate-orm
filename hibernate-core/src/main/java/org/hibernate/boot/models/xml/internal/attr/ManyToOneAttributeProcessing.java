@@ -53,7 +53,7 @@ public class ManyToOneAttributeProcessing {
 				xmlDocumentContext
 		);
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbManyToOne.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbManyToOne, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbManyToOne, memberDetails, manyToOneAnn, xmlDocumentContext );
 		applyOptionality( jaxbManyToOne, manyToOneAnn, xmlDocumentContext );

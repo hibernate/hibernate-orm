@@ -10,6 +10,7 @@ import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.models.bind.internal.BindingContextImpl;
 import org.hibernate.boot.models.bind.internal.BindingOptionsImpl;
 import org.hibernate.boot.models.bind.internal.BindingStateImpl;
@@ -23,6 +24,7 @@ import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -31,6 +33,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.jpa.boot.spi.JpaSettings.METADATA_BUILDER_CONTRIBUTOR;
 
 /// Resolves ORM boot metadata from source contributions and resolved settings.
 ///
@@ -187,6 +191,7 @@ public class MetadataResolver {
 			ResolvedMappingSettings mappingSettings,
 			AvailableResources availableResources,
 			MetadataCustomizations metadataCustomizations) {
+		applyBootstrapContextConverters( metadataBuildingContext );
 		final CategorizedDomainModel categorizedDomainModel = categorize(
 				availableResources,
 				metadataBuildingContext
@@ -256,6 +261,12 @@ public class MetadataResolver {
 		return bindingState;
 	}
 
+	private static void applyBootstrapContextConverters(MetadataBuildingContext metadataBuildingContext) {
+		metadataBuildingContext.getBootstrapContext()
+				.getAttributeConverters()
+				.forEach( metadataBuildingContext.getMetadataCollector()::addAttributeConverter );
+	}
+
 	private static MetadataImplementor finalizeMetadata(MetadataBuildingContext metadataBuildingContext) {
 //		final MetadataImplementor metadata = metadataBuildingContext.getMetadataCollector();
 //		metadata.orderColumns( false );
@@ -284,6 +295,7 @@ public class MetadataResolver {
 		metadataCustomizations
 				.functionContributors()
 				.forEach( metadataBuilder::applyFunctions );
+		applyMetadataBuilderContributor( bootstrapSettings, serviceRegistry, metadataBuilder );
 
 		final var bootstrapContext = metadataBuilder.getBootstrapContext();
 		if ( bootstrapSettings.jpaBootstrap() ) {
@@ -302,6 +314,27 @@ public class MetadataResolver {
 						metadataCollector.getPersistenceUnitMetadata()
 				)
 		);
+	}
+
+	private static void applyMetadataBuilderContributor(
+			ResolvedBootstrapSettings bootstrapSettings,
+			ServiceRegistry serviceRegistry,
+			MetadataBuilderImpl metadataBuilder) {
+		final var setting = bootstrapSettings.configurationValues().get( METADATA_BUILDER_CONTRIBUTOR );
+		if ( setting == null ) {
+			return;
+		}
+		if ( !( setting instanceof MetadataBuilderContributor )
+				&& !( setting instanceof Class<?> )
+				&& !( setting instanceof String ) ) {
+			throw new IllegalArgumentException(
+					"The provided hibernate.metadata_builder_contributor setting value [%s] is not supported"
+							.formatted( setting )
+			);
+		}
+		serviceRegistry.requireService( StrategySelector.class )
+				.resolveStrategy( MetadataBuilderContributor.class, setting )
+				.contribute( metadataBuilder );
 	}
 
 	private static void applyTypeContributions(MetadataBuildingContext metadataBuildingContext) {

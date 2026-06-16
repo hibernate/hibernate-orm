@@ -88,12 +88,12 @@ Current branch status:
   `HibernatePersistenceProvider#createEntityManagerFactory(String, Map)`,
   `createContainerEntityManagerFactory(PersistenceUnitInfo, Map)`, and their
   schema-generation counterparts goes through this facade.
-* `Bootstrap.getEntityManagerFactoryBuilder(...)` still returns the legacy
-  `EntityManagerFactoryBuilderImpl` so callers that need the old two-phase
-  builder methods are not forced onto the one-shot path yet.
-* Descriptor-based archive scanning and container class-transformer push still
-  need explicit integration into the shared pipeline before the legacy builder
-  can be removed.
+* The old JPA two-phase builder facade has been removed.  Metadata-only callers
+  use `SessionFactoryBootstrap.resolveMetadata(...)`; schema tooling uses
+  `SessionFactoryBootstrap.generateSchema(...)`; factory creation uses
+  `SessionFactoryBootstrap.build(...)`.
+* Descriptor-based archive scanning and container class-transformer push are
+  integrated into the shared pipeline.
 
 === Current Entry-Point Map
 
@@ -119,31 +119,20 @@ The public `jakarta.persistence.spi.PersistenceProvider` methods implemented by
 +
 These are the canonical JPA runtime paths for this branch.
 
-Legacy JPA builder facade::
-`org.hibernate.jpa.boot.spi.Bootstrap` and
-`org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder` still exist as a
-legacy SPI facade.  `Bootstrap#getEntityManagerFactoryBuilder(...)` still
-creates `EntityManagerFactoryBuilderImpl`.
+JPA pipeline operations::
+The removed two-phase JPA builder facade is not replaced by another builder.
+The supported operations are explicit pipeline calls:
 +
-This is no longer the path used by the main JPA provider entry points listed
-above, but it remains in production code for compatibility:
+* `SessionFactoryBootstrap.build(...)` for EMF/SF creation.
+* `SessionFactoryBootstrap.generateSchema(...)` for schema tooling.
+* `SessionFactoryBootstrap.resolveMetadata(...)` for metadata inspection.
+* `SettingsResolver` products for tests or tooling that assert resolved setting
+  behavior.
 +
-* `HibernatePersistenceProvider` still exposes protected
-  `getEntityManagerFactoryBuilder(...)` methods which delegate to
-  `Bootstrap`.  These methods may be overridden or called by integrations, so
-  they cannot be removed merely because the provider's public entry points have
-  moved.
-* `org.hibernate.jpa.boot.spi.Bootstrap` is still a public SPI entry point and
-  still has overloads for `PersistenceUnitDescriptor`, `PersistenceUnitInfo`,
-  `URL` plus persistence-unit name, and supplied class-loading services.
-* `EntityManagerFactoryBuilderImpl` still owns compatibility behavior for
-  builder-specific hooks and tests around merged settings, metadata-builder
-  contributors, integrator-provider settings, cache-mode warnings, and direct
-  metadata inspection.
-+
-The design target is to retire this facade as the canonical path, not to delete
-it before its compatibility surface has been audited and either migrated or
-explicitly deprecated.
+Symbolic JPA integration setting names live on
+`org.hibernate.jpa.boot.spi.JpaSettings`.  Custom factory creation is handled by
+the SessionFactory construction producer hook, including named producer
+selection.
 
 Native Hibernate entry points::
 Native bootstrap remains a first-class public API and still uses the existing
@@ -311,13 +300,10 @@ The old need for a two-phase JPA `EntityManagerFactory` build is gone.  This
 branch no longer has active `SessionFactoryBootstrap.prepare(...)` or
 `PreparedSessionFactoryBootstrap` call sites.
 +
-Remaining two-phase behavior is therefore legacy builder behavior:
-`EntityManagerFactoryBuilder#metadata()` exposes metadata before
-`EntityManagerFactoryBuilder#build()`.  Current remaining uses are mostly tests
-and compatibility SPI checks, not the provider's public runtime entry points.
-When tests need to assert intermediate products, they should prefer building the
-specific product under test, such as metadata, source contributions, or resolved
-settings, instead of preserving a general two-phase SessionFactory bootstrap.
+When tests or tooling need to assert intermediate products, they should prefer
+building the specific product under test, such as metadata, source
+contributions, or resolved settings, instead of preserving a general two-phase
+SessionFactory bootstrap.
 
 === Current Test Signal
 

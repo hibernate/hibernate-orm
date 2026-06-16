@@ -43,6 +43,7 @@ import org.hibernate.annotations.AnyKeyJdbcTypeCode;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.naming.Identifier;
@@ -52,6 +53,7 @@ import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.bind.spi.TableReference;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
@@ -132,17 +134,45 @@ public class BasicValueBinder {
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final Convert conversion = source.conversion();
-		if ( conversion == null || conversion.disableConversion() ) {
+		if ( conversion != null && conversion.disableConversion() ) {
 			return;
 		}
 
-		validateConversionAttributeName( source, conversion );
+		if ( conversion != null ) {
+			validateConversionAttributeName( source, conversion );
 
-		//noinspection unchecked
-		final Class<AttributeConverter<?, ?>> javaClass = (Class<AttributeConverter<?, ?>>) conversion.converter();
-		basicValue.setJpaAttributeConverterDescriptor(
-				new RegisteredConversion( source.javaType(), javaClass, false ).getConverterDescriptor()
+			//noinspection unchecked
+			final Class<AttributeConverter<?, ?>> javaClass = (Class<AttributeConverter<?, ?>>) conversion.converter();
+			basicValue.setJpaAttributeConverterDescriptor(
+					new RegisteredConversion( source.javaType(), javaClass, false ).getConverterDescriptor()
+			);
+			return;
+		}
+
+		final ConverterDescriptor<?, ?> autoApplyConverter = resolveAutoApplyConverter(
+				source,
+				bindingState.getMetadataBuildingContext()
 		);
+		if ( autoApplyConverter != null ) {
+			basicValue.setJpaAttributeConverterDescriptor( autoApplyConverter );
+		}
+	}
+
+	private static ConverterDescriptor<?, ?> resolveAutoApplyConverter(
+			BasicValueSource source,
+			MetadataBuildingContext metadataBuildingContext) {
+		final var autoApplyHandler = metadataBuildingContext.getMetadataCollector()
+				.getConverterRegistry()
+				.getAttributeConverterAutoApplyHandler();
+		return switch ( source.kind() ) {
+			case ATTRIBUTE, EMBEDDABLE_MEMBER, IDENTIFIER ->
+					autoApplyHandler.findAutoApplyConverterForAttribute( source.member(), metadataBuildingContext );
+			case COLLECTION_ELEMENT ->
+					autoApplyHandler.findAutoApplyConverterForCollectionElement( source.member(), metadataBuildingContext );
+			case MAP_KEY ->
+					autoApplyHandler.findAutoApplyConverterForMapKey( source.member(), metadataBuildingContext );
+			default -> null;
+		};
 	}
 
 	private static void bindGeneratedColumn(BasicValueSource source, BasicValue basicValue) {

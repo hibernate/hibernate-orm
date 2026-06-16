@@ -155,6 +155,7 @@ public class ManagedTypeProcessor {
 				classDetails,
 				jaxbEntity,
 				classAccessType,
+				classAccessType,
 				memberAdjuster,
 				jaxbRoot,
 				xmlDocumentContext
@@ -190,13 +191,14 @@ public class ManagedTypeProcessor {
 	private static void processEntityMetadata(
 			MutableClassDetails classDetails,
 			JaxbEntityImpl jaxbEntity,
+			AccessType classAccessAnnotationType,
 			AccessType classAccessType,
 			AttributeProcessor.MemberAdjuster memberAdjuster,
 			JaxbEntityMappingsImpl jaxbRoot,
 			XmlDocumentContext xmlDocumentContext) {
 		XmlAnnotationHelper.applyEntity( jaxbEntity, classDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyInheritance( jaxbEntity, classDetails, xmlDocumentContext );
-		applyAccessAnnotation( classAccessType, classDetails, xmlDocumentContext );
+		applyAccessAnnotation( classAccessAnnotationType, classDetails, xmlDocumentContext );
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
 		applyFetchProfileAnnotation( jaxbEntity, classDetails, xmlDocumentContext );
 
@@ -384,6 +386,10 @@ public class ManagedTypeProcessor {
 			AccessType accessType,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
+		if ( accessType == null ) {
+			return;
+		}
+
 		final var annotationUsage =
 				(AccessJpaAnnotation)
 						target.applyAnnotationUsage( JpaAnnotations.ACCESS,
@@ -484,15 +490,18 @@ public class ManagedTypeProcessor {
 					getMutableClassDetails( xmlDocumentContext,
 							XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity ) );
 
-			final var classAccessType = coalesceSuppliedValues(
+			final var explicitXmlAccessType = coalesceSuppliedValues(
 					// look on this <entity/>
 					jaxbEntity::getAccess,
 					// look on the root <entity/>
 					jaxbRoot::getAccess,
+					// look for an XML document default access
+					() -> xmlDocumentContext.getXmlDocument().getDefaults().getAccessType()
+			);
+			final var classAccessType = coalesceSuppliedValues(
+					() -> explicitXmlAccessType,
 					// look for @Access on the entity class
 					() -> determineAccessTypeFromClassAnnotations( classDetails ),
-					// look for a default (PU metadata default) access
-					xmlDocumentContext.getEffectiveDefaults()::getDefaultPropertyAccessType,
 					// look at @Id/@EmbeddedId
 					() -> determineAccessTypeFromClassMembers( classDetails ),
 					// fallback to PROPERTY
@@ -503,6 +512,7 @@ public class ManagedTypeProcessor {
 			processEntityMetadata(
 					classDetails,
 					jaxbEntity,
+					explicitXmlAccessType,
 					classAccessType,
 					ManagedTypeProcessor::adjustNonDynamicTypeMember,
 					jaxbRoot,

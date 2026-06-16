@@ -52,7 +52,7 @@ public class EmbeddedAttributeProcessing {
 			targetAnn.value( determineTargetName( jaxbEmbedded.getTarget(), xmlDocumentContext ) );
 		}
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbEmbedded.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbEmbedded, memberDetails, xmlDocumentContext );
 		applyOptimisticLock( jaxbEmbedded, memberDetails, xmlDocumentContext );
 

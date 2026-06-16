@@ -6,9 +6,10 @@ package org.hibernate.boot.models.categorize.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,7 +95,7 @@ public class ManagedTypeInheritanceState {
 		}
 
 		persistentTypes.forEach( (persistentType) -> {
-			if ( isEntity( persistentType ) && !hasPersistentEntitySuperType( persistentType ) ) {
+			if ( isEntity( persistentType ) && !hasVisibleEntitySuperType( persistentType ) ) {
 				rootEntities.add( persistentType );
 			}
 		} );
@@ -117,7 +118,18 @@ public class ManagedTypeInheritanceState {
 	/// not visible are handled while this state is built according to
 	/// {@link MissingPersistentSuperclassHandling}.
 	public ClassDetails getSuperType(ClassDetails classDetails) {
-		return superTypes.get( classDetails );
+		final ClassDetails superType = superTypes.get( classDetails );
+		if ( superType != null ) {
+			return superType;
+		}
+
+		for ( Map.Entry<ClassDetails, ClassDetails> entry : superTypes.entrySet() ) {
+			if ( sameClass( entry.getKey(), classDetails ) ) {
+				return entry.getValue();
+			}
+		}
+
+		return null;
 	}
 
 	/// Visits the direct visible persistent subtypes of {@code classDetails}.
@@ -125,17 +137,33 @@ public class ManagedTypeInheritanceState {
 	/// "Direct" here is relative to the visible managed type graph, not necessarily to
 	/// Java's immediate superclass relationship.
 	public void forEachSubType(ClassDetails classDetails, Consumer<ClassDetails> consumer) {
-		subTypes.getOrDefault( classDetails, Collections.emptySet() ).forEach( consumer );
+		final Set<ClassDetails> directSubTypes = subTypes.get( classDetails );
+		if ( directSubTypes != null ) {
+			directSubTypes.forEach( consumer );
+			return;
+		}
+
+		for ( Map.Entry<ClassDetails, Set<ClassDetails>> entry : subTypes.entrySet() ) {
+			if ( sameClass( entry.getKey(), classDetails ) ) {
+				entry.getValue().forEach( consumer );
+				return;
+			}
+		}
 	}
 
 	private static Set<ClassDetails> collectPersistentTypes(Collection<ClassDetails> sourceTypes) {
-		final Set<ClassDetails> persistentTypes = setOfSize( sourceTypes.size() );
+		final Map<String, ClassDetails> persistentTypes = new LinkedHashMap<>( sourceTypes.size() );
 		sourceTypes.forEach( (sourceType) -> {
 			if ( isEntity( sourceType ) || isMappedSuperclass( sourceType ) ) {
-				persistentTypes.add( sourceType );
+				persistentTypes.putIfAbsent( typeKey( sourceType ), sourceType );
 			}
 		} );
-		return persistentTypes;
+		return new LinkedHashSet<>( persistentTypes.values() );
+	}
+
+	private static String typeKey(ClassDetails classDetails) {
+		final String className = classDetails.getClassName();
+		return className == null ? classDetails.getName() : className;
 	}
 
 	private ClassDetails findNearestPersistentSuperType(
@@ -143,8 +171,9 @@ public class ManagedTypeInheritanceState {
 			List<ClassDetails> persistentTypesToProcess) {
 		ClassDetails current = classDetails.getSuperClass();
 		while ( current != null ) {
-			if ( persistentTypes.contains( current ) ) {
-				return current;
+			final ClassDetails existingPersistentType = findPersistentType( current );
+			if ( existingPersistentType != null ) {
+				return existingPersistentType;
 			}
 			if ( isEntity( current ) || isMappedSuperclass( current ) ) {
 				switch ( missingPersistentSuperclassHandling ) {
@@ -172,6 +201,21 @@ public class ManagedTypeInheritanceState {
 		return null;
 	}
 
+	private ClassDetails findPersistentType(ClassDetails candidate) {
+		for ( ClassDetails persistentType : persistentTypes ) {
+			if ( sameClass( persistentType, candidate ) ) {
+				return persistentType;
+			}
+		}
+		return null;
+	}
+
+	private static boolean sameClass(ClassDetails one, ClassDetails another) {
+		return one == another
+				|| typeKey( one ).equals( typeKey( another ) )
+				|| one.getName().equals( another.getName() );
+	}
+
 	private static String missingPersistentSuperclassMessage(
 			ClassDetails persistentSuperType,
 			ClassDetails classDetails) {
@@ -181,7 +225,7 @@ public class ManagedTypeInheritanceState {
 		);
 	}
 
-	private boolean hasPersistentEntitySuperType(ClassDetails classDetails) {
+	private boolean hasVisibleEntitySuperType(ClassDetails classDetails) {
 		ClassDetails current = getSuperType( classDetails );
 		while ( current != null ) {
 			if ( isEntity( current ) ) {

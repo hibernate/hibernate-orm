@@ -58,11 +58,12 @@ public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
 	}
 
 	public void addDocument(Binding<JaxbEntityMappingsImpl> binding) {
+		final JaxbEntityMappingsImpl jaxbRoot = binding.getRoot();
+		persistenceUnitMetadata.apply( jaxbRoot.getPersistenceUnitMetadata() );
+
 		final XmlDocumentImpl xmlDocument = XmlDocumentImpl.consume( binding, persistenceUnitMetadata );
 		documents.add( xmlDocument );
 
-		final JaxbEntityMappingsImpl jaxbRoot = binding.getRoot();
-		persistenceUnitMetadata.apply( jaxbRoot.getPersistenceUnitMetadata() );
 		jaxbRoot.getEmbeddables().forEach( (jaxbEmbeddable) -> {
 			if ( StringHelper.isNotEmpty( jaxbEmbeddable.getClazz() ) ) {
 				managedClasses.add( XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEmbeddable ) );

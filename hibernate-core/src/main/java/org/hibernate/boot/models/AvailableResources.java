@@ -27,4 +27,14 @@ public interface AvailableResources {
 	Collection<ClassDetails> packageDetails();
 
 	Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings();
+
+	/// Whether categorization may pull in persistent supertypes reachable from
+	/// the listed model classes but not themselves listed in the available
+	/// resources.
+	///
+	/// This is enabled by default for native/programmatic bootstraps, but disabled
+	/// for persistence units with `exclude-unlisted-classes=true`.
+	default boolean includeUnlistedPersistentSuperclasses() {
+		return true;
+	}
 }

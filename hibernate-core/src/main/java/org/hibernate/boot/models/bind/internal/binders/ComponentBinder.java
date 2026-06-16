@@ -8,11 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
@@ -21,20 +22,25 @@ import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.models.AttributeNature;
+import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.AssociationOverride;
-import jakarta.persistence.Convert;
+import jakarta.persistence.Basic;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinTable;
 
@@ -89,14 +95,9 @@ public class ComponentBinder {
 		final List<Column> columns = bindProperties(
 				ownerType,
 				ownerBinding,
-				source.componentType(),
+				source,
 				component,
 				table,
-				"",
-				source::columnSource,
-				source::conversion,
-				(path, member) -> source.associationOverride( path ),
-				source.kind(),
 				null,
 				columnNamingPatterns( component ),
 				columnConsumer,
@@ -108,50 +109,12 @@ public class ComponentBinder {
 		return columns;
 	}
 
-	List<Column> bindBasicProperties(
-			IdentifiableTypeMetadata ownerType,
-			PersistentClass ownerBinding,
-			ClassDetails componentType,
-			Component component,
-			Table table,
-			BiFunction<String, MemberDetails, ColumnSource> columnSourceResolver,
-			BiFunction<String, MemberDetails, Convert> conversionResolver,
-			BiFunction<String, MemberDetails, AssociationOverride> associationOverrideResolver,
-			BiConsumer<MemberDetails, Column> columnConsumer,
-			boolean uniqueByDefault,
-			boolean nullableByDefault,
-			boolean updatable) {
-		return bindProperties(
-				ownerType,
-				ownerBinding,
-				componentType,
-				component,
-				table,
-				"",
-				columnSourceResolver,
-				conversionResolver,
-				associationOverrideResolver,
-				ComponentSource.Kind.EMBEDDED_ATTRIBUTE,
-				null,
-				columnNamingPatterns( component ),
-				columnConsumer,
-				uniqueByDefault,
-				nullableByDefault,
-				updatable
-		);
-	}
-
 	private List<Column> bindProperties(
 			IdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			ClassDetails componentType,
+			ComponentSource source,
 			Component component,
 			Table table,
-			String pathPrefix,
-			BiFunction<String, MemberDetails, ColumnSource> columnSourceResolver,
-			BiFunction<String, MemberDetails, Convert> conversionResolver,
-			BiFunction<String, MemberDetails, AssociationOverride> associationOverrideResolver,
-			ComponentSource.Kind componentKind,
 			List<Column> identifierColumns,
 			List<String> columnNamingPatterns,
 			BiConsumer<MemberDetails, Column> columnConsumer,
@@ -160,28 +123,49 @@ public class ComponentBinder {
 			boolean updatable) {
 		final List<Column> columns = new ArrayList<>();
 		final List<Column> associationIdentifierColumns =
-				componentKind == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
+				source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
 						? columns
 						: identifierColumns;
-		componentType.forEachPersistableMember( (member) -> {
-			validateMember( member );
-			final String attributeName = member.resolveAttributeName();
-			final String memberPath = pathPrefix + attributeName;
+		final List<ComponentSource.ComponentMember> members = source.members();
+		for ( int i = 0; i < members.size(); i++ ) {
+			final ComponentSource.ComponentMember componentMember = members.get( i );
+			final MemberDetails member = componentMember.member();
+			final String attributeName = componentMember.attributeName();
+			final String memberPath = componentMember.path();
 			if ( member.hasDirectAnnotationUsage( org.hibernate.annotations.Parent.class ) ) {
 				component.setParentProperty( attributeName );
-				return;
+				continue;
+			}
+
+			if ( isPluralMember( member ) ) {
+				final Property property = new Property();
+				property.setName( attributeName );
+				bindPropertyAccessor( member, property );
+				final Collection collection = bindPluralMember(
+						ownerType,
+						ownerBinding,
+						member,
+						componentMember.fullPath(),
+						source.associationOverride( memberPath ),
+						property
+				);
+				property.setValue( collection );
+				property.setOptional( true );
+				component.addProperty( property );
+				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				continue;
 			}
 
 			if ( isToOneMember( member ) ) {
 				final Property property = new Property();
 				property.setName( attributeName );
 				bindPropertyAccessor( member, property );
-				final AssociationOverride associationOverride = associationOverrideResolver.apply( memberPath, member );
-				final var manyToOne = componentKind == ComponentSource.Kind.EMBEDDED_IDENTIFIER
+				final AssociationOverride associationOverride = source.associationOverride( memberPath );
+				final var manyToOne = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
 						? bindAssociationIdentifierMember(
 								ownerType,
 								ownerBinding,
-								componentType,
+								source.componentType(),
 								attributeName,
 								member,
 								property,
@@ -192,7 +176,7 @@ public class ComponentBinder {
 						: ToOneAttributeBinder.bindToOne(
 								ownerType,
 								ownerBinding,
-								componentType.getClassName(),
+								source.componentType().getClassName(),
 								attributeName,
 								member,
 								property,
@@ -206,19 +190,19 @@ public class ComponentBinder {
 				property.setValue( manyToOne );
 				component.addProperty( property );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
 				columns.addAll( manyToOne.getColumns() );
-				return;
+				continue;
 			}
 
 			if ( isEmbeddedMember( member ) ) {
 				validateNestedEmbeddedTablePlacement( member );
-				final ClassDetails nestedComponentType = ComponentSource.resolveEmbeddableType( member, context, false );
+				final ComponentSource nestedSource = source.nested( componentMember, context );
 				final Component nestedComponent = new Component( state.getMetadataBuildingContext(), component );
-				nestedComponent.setEmbedded( true );
-				nestedComponent.setComponentClassName( nestedComponentType.getClassName() );
+				nestedComponent.setComponentClassName( nestedSource.componentType().getClassName() );
 				nestedComponent.setTable( table );
-				nestedComponent.setTypeUsingReflection( componentType.getClassName(), attributeName );
-				applyComponentCustomizations( nestedComponent, member, nestedComponentType );
+				nestedComponent.setTypeUsingReflection( source.componentType().getClassName(), attributeName );
+				applyComponentCustomizations( nestedComponent, member, nestedSource.componentType() );
 				applyColumnNamingPattern( nestedComponent, member );
 
 				final Property property = createProperty( attributeName, nestedComponent, member );
@@ -227,14 +211,9 @@ public class ComponentBinder {
 				columns.addAll( bindProperties(
 						ownerType,
 						ownerBinding,
-						nestedComponentType,
+						nestedSource,
 						nestedComponent,
 						table,
-						memberPath + ".",
-						columnSourceResolver,
-						conversionResolver,
-						associationOverrideResolver,
-						componentKind,
 						associationIdentifierColumns,
 						extendColumnNamingPatterns( columnNamingPatterns, nestedComponent ),
 						columnConsumer,
@@ -242,22 +221,41 @@ public class ComponentBinder {
 						nullableByDefault,
 						updatable
 				) );
-				return;
+				continue;
 			}
 
 			final BasicValue basicValue = createBasicValue( table );
 			final Property property = createProperty( attributeName, basicValue, member );
+			final org.hibernate.annotations.Formula formula = member.getDirectAnnotationUsage( org.hibernate.annotations.Formula.class );
+			if ( formula != null ) {
+				basicValue.addFormula( new org.hibernate.mapping.Formula( formula.value() ) );
+				property.setOptional( true );
+				property.setInsertable( false );
+				property.setUpdatable( false );
+				BasicValueBinder.bindBasicValue(
+						BasicValueSource.embeddableMember( member, source.conversion( memberPath, member ) ),
+						property,
+						basicValue,
+						options,
+						state,
+						context
+				);
+				component.addProperty( property );
+				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				continue;
+			}
 			final Column column = bindColumn(
-					() -> attributeName,
+					() -> implicitBasicColumnName( source, componentMember ),
 					basicValue,
-					columnSourceResolver.apply( memberPath, member ),
+					source.columnSource( memberPath, member ),
 					columnNamingPatterns,
 					uniqueByDefault,
 					nullableByDefault,
 					updatable
 			);
+			applyBasicOptionality( member, property, column );
 			BasicValueBinder.bindBasicValue(
-					BasicValueSource.embeddableMember( member, conversionResolver.apply( memberPath, member ) ),
+					BasicValueSource.embeddableMember( member, source.conversion( memberPath, member ) ),
 					property,
 					basicValue,
 					options,
@@ -268,9 +266,30 @@ public class ComponentBinder {
 			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 			columnConsumer.accept( member, column );
 			columns.add( column );
-		} );
-		CustomMappingBinder.callTypeBinders( componentType, component, state, context );
+		}
+		CustomMappingBinder.callTypeBinders( source.componentType(), component, state, context );
 		return columns;
+	}
+
+	private String implicitBasicColumnName(ComponentSource source, ComponentSource.ComponentMember member) {
+		return context.getImplicitNamingStrategy()
+				.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
+					@Override
+					public AttributePath getAttributePath() {
+						return member.namingPath();
+					}
+
+					@Override
+					public boolean isCollectionElement() {
+						return source.kind() == ComponentSource.Kind.COLLECTION_ELEMENT;
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return state.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
 	}
 
 	private static void applyComponentCustomizations(
@@ -363,15 +382,77 @@ public class ComponentBinder {
 		return value;
 	}
 
-	private void validateMember(MemberDetails member) {
-		if ( member.isPlural()
+	private Collection bindPluralMember(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			MemberDetails member,
+			String memberPath,
+			AssociationOverride associationOverride,
+			Property property) {
+		final AttributeMetadata attributeMetadata = new ComponentAttributeMetadata(
+				member.resolveAttributeName(),
+				determinePluralNature( member ),
+				member
+		);
+		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class ) ) {
+			return new ElementCollectionAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					options,
+					state,
+					context,
+					memberPath
+			).bind( property );
+		}
+		if ( member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class ) ) {
+			return new PluralAssociationAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					options,
+					state,
+					context,
+					memberPath,
+					associationOverride
+			).bindOneToMany( property );
+		}
+		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class ) ) {
+			return new PluralAssociationAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					options,
+					state,
+					context,
+					memberPath,
+					associationOverride
+			).bindManyToMany( property );
+		}
+		throw new UnsupportedOperationException( "Unsupported plural embeddable member - " + member.getName() );
+	}
+
+	private AttributeNature determinePluralNature(MemberDetails member) {
+		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class ) ) {
+			return AttributeNature.ELEMENT_COLLECTION;
+		}
+		if ( member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class ) ) {
+			return AttributeNature.ONE_TO_MANY;
+		}
+		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class ) ) {
+			return AttributeNature.MANY_TO_MANY;
+		}
+		throw new UnsupportedOperationException( "Unsupported plural embeddable member - " + member.getName() );
+	}
+
+	private boolean isPluralMember(MemberDetails member) {
+		return member.isPlural()
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class )
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class )
-				|| member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class ) ) {
-			throw new UnsupportedOperationException(
-					"Only basic embeddable members are supported for now - " + member.getName()
-			);
-		}
+				|| member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class );
 	}
 
 	private boolean isEmbeddedMember(MemberDetails member) {
@@ -409,6 +490,14 @@ public class ComponentBinder {
 		return property;
 	}
 
+	private void applyBasicOptionality(MemberDetails member, Property property, Column column) {
+		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
+		final boolean optionalByType = member.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		final boolean optionalByBasic = basic == null || basic.optional();
+		final boolean optionalByColumn = column == null || column.isNullable();
+		property.setOptional( optionalByType && optionalByBasic && optionalByColumn );
+	}
+
 	private Column bindColumn(
 			java.util.function.Supplier<String> implicitName,
 			BasicValue basicValue,
@@ -425,7 +514,28 @@ public class ComponentBinder {
 		);
 		column.setName( applyColumnNamingPatterns( column.getName(), columnNamingPatterns ) );
 		basicValue.addColumn( column, true, updatable );
+		basicValue.getTable().addColumn( column );
 		return column;
+	}
+
+	private record ComponentAttributeMetadata(
+			String name,
+			AttributeNature nature,
+			MemberDetails member) implements AttributeMetadata {
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public AttributeNature getNature() {
+			return nature;
+		}
+
+		@Override
+		public MemberDetails getMember() {
+			return member;
+		}
 	}
 
 	private static void applyColumnNamingPattern(Component component, MemberDetails sourceMember) {

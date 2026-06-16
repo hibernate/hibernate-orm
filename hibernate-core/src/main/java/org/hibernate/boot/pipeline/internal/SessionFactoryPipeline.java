@@ -7,24 +7,26 @@ package org.hibernate.boot.pipeline.internal;
 import java.util.Objects;
 
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.MetadataImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.internal.SessionFactoryObserverFactory;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 /// Builds a runtime SessionFactoryImplementor from resolved boot products.
-/// This is the gross target after metadata resolution.  Unlike settings and
-/// metadata, the final product is not a "resolved" description; it is the runtime
-/// [SessionFactoryImplementor] itself.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class SessionFactoryBuilder {
+public class SessionFactoryPipeline {
 	/**
 	 * Build a SessionFactoryImplementor from the resolved bootstrap settings root.
 	 *
@@ -37,11 +39,67 @@ public class SessionFactoryBuilder {
 	public static SessionFactoryImplementor build(
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMetadata resolvedMetadata,
-			ServiceRegistry serviceRegistry) {
+			StandardServiceRegistry serviceRegistry) {
 		return build(
 				SettingsResolver.resolveSessionFactorySettings( bootstrapSettings, serviceRegistry ),
 				resolvedMetadata,
 				serviceRegistry
+		);
+	}
+
+	/// Build a SessionFactoryImplementor from finalized legacy Metadata and
+	/// collected factory customizations.
+	public static SessionFactoryImplementor build(
+			Metadata metadata,
+			SessionFactoryOptionsCollector optionsCollector) {
+		if ( metadata instanceof MetadataImplementor metadataImplementor ) {
+			return build( metadataImplementor, optionsCollector );
+		}
+		throw new IllegalArgumentException(
+				"SessionFactory construction requires MetadataImplementor"
+		);
+	}
+
+	/// Build a SessionFactoryImplementor from finalized legacy Metadata and
+	/// collected factory customizations.
+	public static SessionFactoryImplementor build(
+			MetadataImplementor metadata,
+			SessionFactoryOptionsCollector optionsCollector) {
+		final var unwrappedMetadata = unwrapMetadata( metadata );
+		return build( unwrappedMetadata, unwrappedMetadata.getMetadataBuildingOptions().getServiceRegistry(), optionsCollector );
+	}
+
+	/// Build a SessionFactoryImplementor from finalized legacy Metadata, an
+	/// explicit factory service registry, and collected factory customizations.
+	public static SessionFactoryImplementor build(
+			MetadataImplementor metadata,
+			StandardServiceRegistry serviceRegistry,
+			SessionFactoryOptionsCollector optionsCollector) {
+		final var unwrappedMetadata = unwrapMetadata( metadata );
+		final var optionsBuilder = new SessionFactoryOptionsBuilder(
+				serviceRegistry,
+				unwrappedMetadata.getBootstrapContext()
+		);
+		optionsBuilder.addSessionFactoryObservers( SessionFactoryObserverFactory.createObservers( unwrappedMetadata ) );
+		if ( unwrappedMetadata.getSqlFunctionMap() != null ) {
+			unwrappedMetadata.getSqlFunctionMap().forEach( optionsBuilder::applySqlFunction );
+		}
+		return SessionFactoryConstructionCoordinator.buildSessionFactory(
+				unwrappedMetadata,
+				optionsCollector.buildOptions( optionsBuilder ),
+				unwrappedMetadata.getBootstrapContext()
+		);
+	}
+
+	private static MetadataImpl unwrapMetadata(MetadataImplementor metadata) {
+		if ( metadata instanceof ResolvedMetadataImplementor resolvedMetadata ) {
+			return unwrapMetadata( resolvedMetadata.getResolvedMetadata().metadata() );
+		}
+		if ( metadata instanceof MetadataImpl metadataImpl ) {
+			return metadataImpl;
+		}
+		throw new IllegalArgumentException(
+				"SessionFactory construction requires metadata exposing its BootstrapContext"
 		);
 	}
 
@@ -80,8 +138,7 @@ public class SessionFactoryBuilder {
 		Objects.requireNonNull( sessionFactorySettings );
 		Objects.requireNonNull( resolvedMetadata );
 		Objects.requireNonNull( serviceRegistry );
-		if ( resolvedMetadata.metadata() instanceof InFlightMetadataCollector metadataCollector ) {
-			metadataCollector.getBootstrapContext();
+		if ( resolvedMetadata.metadata() instanceof InFlightMetadataCollector ) {
 			throw new IllegalArgumentException(
 					"SessionFactory construction requires finalized metadata, not an in-flight collector"
 			);
@@ -136,8 +193,9 @@ public class SessionFactoryBuilder {
 		if ( second.length == 0 ) {
 			return first.clone();
 		}
-		final var combined = java.util.Arrays.copyOf( first, first.length + second.length );
-		System.arraycopy( second, 0, combined, first.length, second.length );
-		return combined;
+		final var result = new SessionFactoryObserver[first.length + second.length];
+		System.arraycopy( first, 0, result, 0, first.length );
+		System.arraycopy( second, 0, result, first.length, second.length );
+		return result;
 	}
 }

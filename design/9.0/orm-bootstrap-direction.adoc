@@ -2,7 +2,7 @@
 :toc:
 
 This note captures the proposed direction for using this PoC to replace and simplify large parts of ORM bootstrap,
-especially the JPA path through `EntityManagerFactoryBuilderImpl`.
+especially the former inline JPA bootstrap path.
 
 [NOTE]
 ====
@@ -16,7 +16,7 @@ link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`].
 
 == Current ORM Shape
 
-From the JPA side, `EntityManagerFactoryBuilderImpl` currently handles several phases inline:
+From the JPA side, the old inline bootstrap path handled several phases inline:
 
 * Merge persistence-unit, integration, `hibernate.properties`, and cfg.xml settings into `MergedSettings`
 * Build the `BootstrapServiceRegistry`
@@ -87,7 +87,7 @@ Settings should remain separate from source resources.
 
 == Source Collection
 
-Extract JPA source collection from `EntityManagerFactoryBuilderImpl` and avoid routing through `MetadataSources`
+Extract JPA source collection from the old inline bootstrap path and avoid routing through `MetadataSources`
 as the primary abstraction.
 
 Inputs:
@@ -95,7 +95,6 @@ Inputs:
 * persistence-unit class names
 * mapping file names
 * standard `META-INF/orm.xml`
-* [.line-through]#explicit `HBM_XML_FILES`#
 * scanner results
 * loaded classes
 * packages
@@ -189,7 +188,6 @@ Inputs:
 * persistence unit class names
 * mapping file names
 * standard META-INF/orm.xml
-* [.line-through]#explicit HBM_XML_FILES#
 * scanner results
 * loaded classes
 * packages
@@ -299,7 +297,7 @@ source/categorization work was first isolated.
 The original test target was:
 
 * Given JPA bootstrap inputs, the PoC derives the same available classes, packages, XML, and global registrations
-  that ORM currently derives through `EntityManagerFactoryBuilderImpl` and `ManagedResources`
+  that ORM previously derived through the old inline bootstrap path and `ManagedResources`
 
 That established the source/categorization replacement boundary before the PoC
 moved on to binder and SessionFactory integration.

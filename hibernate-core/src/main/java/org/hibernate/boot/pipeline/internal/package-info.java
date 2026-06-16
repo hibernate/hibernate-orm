@@ -19,7 +19,7 @@
  * turns resolved settings, source contributions, and a service registry into
  * {@link org.hibernate.boot.pipeline.internal.ResolvedMetadata} by running source
  * resource creation, categorization, binding, metadata registration, ordering,
- * and validation in order.  {@link org.hibernate.boot.pipeline.internal.SessionFactoryBuilder}
+ * and validation in order.  {@link org.hibernate.boot.pipeline.internal.SessionFactoryPipeline}
  * is the next gross target and will own construction of the runtime
  * SessionFactory from resolved metadata and factory settings.
  *

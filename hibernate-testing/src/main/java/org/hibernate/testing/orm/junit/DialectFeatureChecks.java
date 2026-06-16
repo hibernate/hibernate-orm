@@ -9,7 +9,6 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.FunctionContributions;
@@ -2065,11 +2064,6 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public Map<String, Join> getJoins(String entityName) {
 			return Map.of();
-		}
-
-		@Override
-		public SessionFactoryBuilder getSessionFactoryBuilder() {
-			return null;
 		}
 
 		@Override

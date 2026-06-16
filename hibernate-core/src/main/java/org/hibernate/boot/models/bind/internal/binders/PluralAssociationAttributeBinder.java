@@ -32,6 +32,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.AssociationOverride;
 
 /// Binds association-valued plural attributes.
 ///
@@ -52,6 +53,8 @@ class PluralAssociationAttributeBinder {
 	private final BindingOptions bindingOptions;
 	private final BindingState bindingState;
 	private final BindingContext bindingContext;
+	private final String collectionRolePath;
+	private final AssociationOverride associationOverride;
 
 	PluralAssociationAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
@@ -61,6 +64,51 @@ class PluralAssociationAttributeBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				attributeMetadata.getName(),
+				null
+		);
+	}
+
+	PluralAssociationAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				collectionRolePath,
+				null
+		);
+	}
+
+	PluralAssociationAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath,
+			AssociationOverride associationOverride) {
 		this.ownerType = ownerType;
 		this.ownerBinding = ownerBinding;
 		this.attributeMetadata = attributeMetadata;
@@ -68,11 +116,14 @@ class PluralAssociationAttributeBinder {
 		this.bindingOptions = bindingOptions;
 		this.bindingState = bindingState;
 		this.bindingContext = bindingContext;
+		this.collectionRolePath = collectionRolePath;
+		this.associationOverride = associationOverride;
 	}
 
 	Collection bindManyToMany(Property property) {
 		final CollectionSource source = CollectionSource.manyToMany(
 				attributeMetadata.getMember(),
+				associationOverride,
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		final ManyToMany manyToMany = source.manyToMany();
@@ -85,6 +136,7 @@ class PluralAssociationAttributeBinder {
 	Collection bindOneToMany(Property property) {
 		final CollectionSource source = CollectionSource.oneToMany(
 				attributeMetadata.getMember(),
+				associationOverride,
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		final OneToMany oneToMany = source.oneToMany();
@@ -105,12 +157,15 @@ class PluralAssociationAttributeBinder {
 	private Collection bindInverseManyToMany(CollectionSource source, String mappedBy, Property property) {
 		final ClassDetails targetClassDetails = resolveTargetClassDetails( source );
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + attributeMetadata.getName() );
+		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setInverse( true );
 		collection.setMappedByProperty( mappedBy );
 		collection.setMutable( true );
 		collection.setOptimisticLocked( true );
-		collection.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		collection.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
 
@@ -130,12 +185,15 @@ class PluralAssociationAttributeBinder {
 	private Collection bindInverseOneToMany(CollectionSource source, String mappedBy, Property property) {
 		final ClassDetails targetClassDetails = resolveTargetClassDetails( source );
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + attributeMetadata.getName() );
+		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setInverse( true );
 		collection.setMappedByProperty( mappedBy );
 		collection.setMutable( true );
 		collection.setOptimisticLocked( true );
-		collection.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		collection.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
 
@@ -166,12 +224,15 @@ class PluralAssociationAttributeBinder {
 				.binding();
 
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + attributeMetadata.getName() );
+		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
 		collection.setMutable( true );
 		collection.setOptimisticLocked( true );
-		collection.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		collection.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
 
@@ -246,12 +307,15 @@ class PluralAssociationAttributeBinder {
 						.binding();
 
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + attributeMetadata.getName() );
+		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
 		collection.setMutable( true );
 		collection.setOptimisticLocked( true );
-		collection.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		collection.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 
 		final AnySource anySource = AnySource.createManyToAny( source, bindingContext, bindingState );
@@ -345,7 +409,10 @@ class PluralAssociationAttributeBinder {
 		element.setReferencedEntityName( target.entityName() );
 		element.setReferenceToPrimaryKey( referenceToPrimaryKey );
 		element.setTypeName( target.entityName() );
-		element.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		element.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
 		applyOnDelete( element );
 
 		bindJoinColumns(

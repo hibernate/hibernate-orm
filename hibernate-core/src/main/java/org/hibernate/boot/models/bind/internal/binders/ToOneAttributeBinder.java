@@ -95,11 +95,12 @@ class ToOneAttributeBinder {
 
 	Value bind(Property property) {
 		final MemberDetails member = attributeMetadata.getMember();
+		final AssociationOverride associationOverride = locateAssociationOverride();
 		final ToOneSource source = ToOneSource.create(
 				member,
 				ownerType.getClassDetails().getClassName(),
 				attributeMetadata.getName(),
-				null,
+				associationOverride,
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		if ( source.isInverseOneToOne() ) {
@@ -119,6 +120,34 @@ class ToOneAttributeBinder {
 				bindingState,
 				bindingContext
 		);
+	}
+
+	private AssociationOverride locateAssociationOverride() {
+		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final String attributeName = attributeMetadata.getName();
+		AssociationOverride result = locateAssociationOverride( ownerType.getHierarchy().getRoot().getClassDetails(), attributeName, modelsContext );
+		if ( ownerType.getClassDetails() != ownerType.getHierarchy().getRoot().getClassDetails() ) {
+			final AssociationOverride ownerOverride = locateAssociationOverride( ownerType.getClassDetails(), attributeName, modelsContext );
+			if ( ownerOverride != null ) {
+				result = ownerOverride;
+			}
+		}
+		return result;
+	}
+
+	private static AssociationOverride locateAssociationOverride(
+			ClassDetails type,
+			String attributeName,
+			org.hibernate.models.spi.ModelsContext modelsContext) {
+		if ( type == null ) {
+			return null;
+		}
+		for ( AssociationOverride override : type.getRepeatedAnnotationUsages( AssociationOverride.class, modelsContext ) ) {
+			if ( attributeName.equals( override.name() ) ) {
+				return override;
+			}
+		}
+		return null;
 	}
 
 	static ManyToOne bindToOne(
@@ -226,6 +255,7 @@ class ToOneAttributeBinder {
 					valueJoinColumns,
 					value,
 					target,
+					associationTable,
 					referenceToPrimaryKey,
 					logicalOneToOne,
 					optional,
@@ -363,6 +393,7 @@ class ToOneAttributeBinder {
 			List<JoinColumnOrFormulaSource> joinColumnAnns,
 			ManyToOne value,
 			TargetEntityBinding target,
+			Table table,
 			boolean referenceToPrimaryKey,
 			boolean uniqueByDefault,
 			boolean optional,
@@ -402,6 +433,7 @@ class ToOneAttributeBinder {
 			if ( !optional ) {
 				column.setNullable( false );
 			}
+			table.addColumn( column );
 			value.addColumn( column );
 		}
 	}

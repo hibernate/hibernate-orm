@@ -10,6 +10,7 @@ import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -55,7 +56,7 @@ class InversePluralAssociationBinder {
 			);
 		}
 
-		final Property owningProperty = targetTypeBinder.getTypeBinding().getProperty( inverseBinding.mappedBy() );
+		final Property owningProperty = resolveMappedByProperty( targetTypeBinder, inverseBinding.mappedBy() );
 		if ( !( owningProperty.getValue() instanceof Collection owningCollection ) ) {
 			throw new MappingException(
 					"Inverse plural association mappedBy did not name a collection-valued owning attribute - "
@@ -95,7 +96,7 @@ class InversePluralAssociationBinder {
 
 	private void bindInverseOneToMany(InversePluralAssociationBinding inverseBinding) {
 		final EntityTypeBinder targetTypeBinder = resolveTargetTypeBinder( inverseBinding );
-		final Property owningProperty = targetTypeBinder.getTypeBinding().getProperty( inverseBinding.mappedBy() );
+		final Property owningProperty = resolveMappedByProperty( targetTypeBinder, inverseBinding.mappedBy() );
 		final Value owningValue = owningProperty.getValue();
 		if ( !( owningValue instanceof ManyToOne owningToOne ) ) {
 			throw new MappingException(
@@ -294,6 +295,25 @@ class InversePluralAssociationBinder {
 			);
 		}
 		return targetTypeBinder;
+	}
+
+	private Property resolveMappedByProperty(EntityTypeBinder targetTypeBinder, String mappedBy) {
+		if ( mappedBy.indexOf( '.' ) < 0 ) {
+			return targetTypeBinder.getTypeBinding().getProperty( mappedBy );
+		}
+
+		final String[] path = mappedBy.split( "\\." );
+		Property property = targetTypeBinder.getTypeBinding().getProperty( path[0] );
+		for ( int i = 1; i < path.length; i++ ) {
+			if ( !( property.getValue() instanceof Component component ) ) {
+				throw new MappingException(
+						"Inverse plural association mappedBy path did not name an embedded attribute before `"
+								+ path[i] + "` - " + mappedBy
+				);
+			}
+			property = component.getProperty( path[i] );
+		}
+		return property;
 	}
 
 	private Column copyColumn(Table table, Column source, boolean unique) {

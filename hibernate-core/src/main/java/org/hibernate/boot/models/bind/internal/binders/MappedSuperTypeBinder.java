@@ -14,6 +14,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
+import org.hibernate.boot.models.categorize.spi.ManagedTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 
 /// Binder for a mapped-superclass type.
@@ -37,17 +38,21 @@ import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 /// @since 9.0
 /// @author Steve Ebersole
 public class MappedSuperTypeBinder extends IdentifiableTypeBinder
-		implements TypeBindingPhase.TypeSkeleton {
+		implements TypeBindingPhase.TypeSkeleton,
+				TypeBindingPhase.Members {
 	private final MappedSuperclass binding;
+	private final ModelBinders modelBinders;
 
 	public MappedSuperTypeBinder(
 			MappedSuperclassTypeMetadata type,
 			IdentifiableTypeMetadata superType,
 			EntityHierarchy.HierarchyRelation hierarchyRelation,
+			ModelBinders modelBinders,
 			BindingState state,
 			BindingOptions options,
 			BindingContext bindingContext) {
 		super( type, superType, hierarchyRelation, state, options, bindingContext );
+		this.modelBinders = modelBinders;
 
 		final IdentifiableTypeBinder superTypeBinder = getSuperTypeBinder();
 		final EntityTypeBinder superEntityBinder = getSuperEntityBinder();
@@ -71,6 +76,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		}
 
 		this.binding = new MappedSuperclass( superMappedSuper, superEntity, getTable() );
+		this.binding.setMappedClass( type.getClassDetails().toJavaClass() );
 	}
 
 	/// Publish the mapped-superclass skeleton for downstream binders.
@@ -92,14 +98,35 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		return binding;
 	}
 
+	public void bindMembers() {
+		prepareBinding( modelBinders );
+		propagateDeclaredPropertiesToEntitySubtypes( getManagedType() );
+	}
+
+	private void propagateDeclaredPropertiesToEntitySubtypes(IdentifiableTypeMetadata type) {
+		type.forEachSubType( (subType) -> {
+			final var typeBinder = (IdentifiableTypeBinder) getBindingState().getTypeBinder( subType.getClassDetails() );
+			if ( subType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
+				final var entityBinding = (PersistentClass) typeBinder.getTypeBinding();
+				binding.getDeclaredProperties().forEach( entityBinding::addMappedSuperclassProperty );
+			}
+			else {
+				propagateDeclaredPropertiesToEntitySubtypes( subType );
+			}
+		} );
+	}
+
 	@Override
 	public Table getTable() {
 		final var superEntityBinder = getSuperEntityBinder();
-		if ( superEntityBinder == null ) {
-			return null;
+		if ( superEntityBinder != null ) {
+			return superEntityBinder.getTypeBinding().getTable();
 		}
 
-		return superEntityBinder.getTypeBinding().getTable();
+		final var rootEntityBinder = (EntityTypeBinder) getBindingState().getTypeBinder(
+				getManagedType().getHierarchy().getRoot().getClassDetails()
+		);
+		return rootEntityBinder == null ? null : rootEntityBinder.getTypeBinding().getTable();
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import jakarta.persistence.Access;
@@ -132,6 +133,7 @@ public class AttributeBinder {
 					bindingContext
 			).bind( binding );
 			binding.setValue( collectionValue );
+			binding.setOptional( true );
 			attributeTable = collectionValue.getCollectionTable();
 		}
 		else if ( attributeMetadata.getNature() == MANY_TO_MANY ) {
@@ -145,6 +147,7 @@ public class AttributeBinder {
 					bindingContext
 			).bindManyToMany( binding );
 			binding.setValue( collectionValue );
+			binding.setOptional( true );
 			attributeTable = collectionValue.getCollectionTable();
 		}
 		else if ( attributeMetadata.getNature() == ONE_TO_MANY ) {
@@ -158,6 +161,7 @@ public class AttributeBinder {
 					bindingContext
 			).bindOneToMany( binding );
 			binding.setValue( collectionValue );
+			binding.setOptional( true );
 			attributeTable = collectionValue.getCollectionTable();
 		}
 		else if ( attributeMetadata.getNature() == ANY ) {
@@ -184,6 +188,7 @@ public class AttributeBinder {
 					bindingContext
 			).bindManyToAny( binding );
 			binding.setValue( collectionValue );
+			binding.setOptional( true );
 			attributeTable = collectionValue.getCollectionTable();
 		}
 		else {
@@ -236,7 +241,8 @@ public class AttributeBinder {
 		bindMutability( member, binding, basicValue, bindingOptions, bindingState, bindingContext );
 		bindOptimisticLocking( member, binding, basicValue, bindingOptions, bindingState, bindingContext );
 
-		processColumn( member, binding, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
+		final var column = processColumn( member, binding, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
+		applyBasicOptionality( member, binding, column );
 		applyBasicFetch( member, binding );
 		binding.setLob( member.hasDirectAnnotationUsage( Lob.class ) );
 
@@ -250,6 +256,17 @@ public class AttributeBinder {
 		);
 
 		return basicValue;
+	}
+
+	private static void applyBasicOptionality(
+			MemberDetails member,
+			Property property,
+			org.hibernate.mapping.Column column) {
+		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
+		final boolean optionalByType = member.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		final boolean optionalByBasic = basic == null || basic.optional();
+		final boolean optionalByColumn = column == null || column.isNullable();
+		property.setOptional( optionalByType && optionalByBasic && optionalByColumn );
 	}
 
 	private static void applyBasicFetch(MemberDetails member, Property property) {

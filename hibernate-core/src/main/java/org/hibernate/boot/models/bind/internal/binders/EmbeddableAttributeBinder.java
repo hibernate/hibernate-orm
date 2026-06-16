@@ -69,14 +69,19 @@ class EmbeddableAttributeBinder {
 
 	Component bind(Property property) {
 		final MemberDetails member = attributeMetadata.getMember();
-		componentSource = ComponentSource.embeddedAttribute( member, bindingContext );
+		componentSource = ComponentSource.embeddedAttribute(
+				member,
+				bindingContext.getClassDetailsRegistry().resolveClassDetails( ownerBinding.getClassName() ),
+				ownerType.getHierarchy().getRoot().getClassDetails(),
+				ownerType.getAccessType(),
+				bindingContext
+		);
 		final Table componentTable = resolveComponentTable( member );
 		final Component component = new Component(
 				bindingState.getMetadataBuildingContext(),
 				componentTable,
 				ownerBinding
 		);
-		component.setEmbedded( true );
 		component.setComponentClassName( componentSource.componentType().getClassName() );
 		component.setTable( componentTable );
 		component.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
@@ -100,7 +105,7 @@ class EmbeddableAttributeBinder {
 
 	private Table resolveComponentTable(MemberDetails attributeMember) {
 		final Table[] result = { resolveExplicitEmbeddedTable( attributeMember ) };
-		visitColumnSources( componentSource.componentType(), "", (path, member) -> {
+		visitColumnSources( componentSource, (path, member) -> {
 			if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToOne.class )
 					|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToOne.class ) ) {
 				ToOneAttributeBinder.resolveJoinColumns( member, resolveAssociationOverride( path, member ) ).forEach( (joinColumn) -> {
@@ -161,22 +166,20 @@ class EmbeddableAttributeBinder {
 	}
 
 	private void visitColumnSources(
-			org.hibernate.models.spi.ClassDetails componentType,
-			String pathPrefix,
+			ComponentSource source,
 			java.util.function.BiConsumer<String, MemberDetails> consumer) {
-		componentType.forEachPersistableMember( (member) -> {
-			final String attributeName = member.resolveAttributeName();
-			final String path = pathPrefix + attributeName;
+		for ( ComponentSource.ComponentMember componentMember : source.members() ) {
+			final MemberDetails member = componentMember.member();
 			final org.hibernate.models.spi.ClassDetails nestedComponentType =
 					ComponentSource.resolveEmbeddableType( member, bindingContext, false );
 			if ( member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
 					|| nestedComponentType.hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
-				visitColumnSources( nestedComponentType, path + ".", consumer );
+				visitColumnSources( source.nested( componentMember, bindingContext ), consumer );
 			}
 			else {
-				consumer.accept( path, member );
+				consumer.accept( componentMember.path(), member );
 			}
-		} );
+		}
 	}
 
 	private ColumnSource resolveColumnSource(String memberPath, MemberDetails member) {

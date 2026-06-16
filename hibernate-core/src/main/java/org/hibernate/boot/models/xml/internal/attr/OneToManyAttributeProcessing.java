@@ -94,7 +94,7 @@ public class OneToManyAttributeProcessing {
 		);
 
 		if ( jaxbOneToMany != null ) {
-			applyAccess( accessType, memberDetails, xmlDocumentContext );
+			applyAccess( jaxbOneToMany.getAccess(), memberDetails, xmlDocumentContext );
 			applyAttributeAccessor( jaxbOneToMany, memberDetails, xmlDocumentContext );
 			applyFetching( jaxbOneToMany, memberDetails, oneToManyAnn, xmlDocumentContext );
 			applyOptimisticLock( jaxbOneToMany, memberDetails, xmlDocumentContext );

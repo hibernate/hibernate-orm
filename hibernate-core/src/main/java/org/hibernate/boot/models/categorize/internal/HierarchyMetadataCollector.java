@@ -196,7 +196,7 @@ public class HierarchyMetadataCollector {
 
 		final ClassDetails classDetails = typeMetadata.getClassDetails();
 
-		if ( classDetails == rootEntityClassDetails ) {
+		if ( sameClass( classDetails, rootEntityClassDetails ) ) {
 			rootEntityMetadata = (EntityTypeMetadata) typeMetadata;
 			belowRootEntity = true;
 		}
@@ -240,6 +240,36 @@ public class HierarchyMetadataCollector {
 				}
 			} );
 		}
+	}
+
+	public boolean shouldProcessSubType(ClassDetails baseClassDetails, ClassDetails subClassDetails) {
+		if ( sameClass( baseClassDetails, rootEntityClassDetails )
+				|| hasSuperType( baseClassDetails, rootEntityClassDetails ) ) {
+			return true;
+		}
+
+		return sameClass( subClassDetails, rootEntityClassDetails )
+				|| hasSuperType( rootEntityClassDetails, subClassDetails );
+	}
+
+	private boolean hasSuperType(ClassDetails classDetails, ClassDetails possibleSuperType) {
+		ClassDetails current = classDetails.getSuperClass();
+		while ( current != null ) {
+			if ( sameClass( current, possibleSuperType ) ) {
+				return true;
+			}
+			current = current.getSuperClass();
+		}
+		return false;
+	}
+
+	private static boolean sameClass(ClassDetails one, ClassDetails another) {
+		if ( one == another ) {
+			return true;
+		}
+
+		final String oneClassName = one.getClassName();
+		return oneClassName != null && oneClassName.equals( another.getClassName() );
 	}
 
 	private <A extends Annotation> A applyLocalAnnotation(Class<A> annotationType, ClassDetails classDetails, A currentValue) {

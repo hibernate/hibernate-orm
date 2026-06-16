@@ -7,6 +7,7 @@ package org.hibernate.boot.pipeline.internal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceException;
@@ -61,7 +62,7 @@ import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 /// may use it directly.
 ///
 /// @see MetadataResolver
-/// @see SessionFactoryBuilder
+/// @see SessionFactoryPipeline
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -223,6 +224,57 @@ public class SessionFactoryBootstrap {
 		}
 	}
 
+	/// Resolve metadata from a persistence-unit descriptor and integration settings.
+	///
+	/// The returned metadata is suitable for metadata-only callers and retains
+	/// the resolved metadata product so later SessionFactory construction can
+	/// continue through the pipeline-aware path.
+	public static MetadataBootstrap resolveMetadata(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map<?, ?> integrationSettings) {
+		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor );
+		StandardServiceRegistry standardServiceRegistry = null;
+		try {
+			final var bootstrapRequest = createEntryPointBootstrapRequest(
+					persistenceUnitDescriptor,
+					integrationSettings,
+					bootstrapServiceRegistry
+			);
+			standardServiceRegistry = bootstrapRequest.standardServiceRegistry();
+			final var resolvedMetadata = MetadataResolver.resolve(
+					bootstrapRequest.bootstrapSettings(),
+					bootstrapRequest.mappingSettings(),
+					bootstrapRequest.sourceContributions(),
+					standardServiceRegistry
+			);
+			final var serviceRegistryCloser = new OwnedServiceRegistryCloser(
+					(ServiceRegistryImplementor) standardServiceRegistry
+			);
+			return new MetadataBootstrap(
+					new ResolvedMetadataImplementor(
+							bootstrapRequest.bootstrapSettings(),
+							resolvedMetadata,
+							serviceRegistryCloser
+					),
+					bootstrapRequest.bootstrapSettings().configurationValues(),
+					serviceRegistryCloser
+			);
+		}
+		catch (Exception e) {
+			if ( standardServiceRegistry != null ) {
+				StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+			}
+			else {
+				bootstrapServiceRegistry.close();
+			}
+			throw new PersistenceException(
+					"Unable to resolve Hibernate metadata  [persistence unit: "
+							+ persistenceUnitDescriptor.getName() + "] ",
+					e
+			);
+		}
+	}
+
 	/// Build a [SessionFactoryImplementor] from fully resolved bootstrap
 	/// inputs.
 	///
@@ -230,7 +282,7 @@ public class SessionFactoryBootstrap {
 	/// overloads after they have resolved settings, collected source
 	/// contributions, and created the service registry.  It resolves metadata and
 	/// then delegates final runtime factory creation to
-	/// [SessionFactoryBuilder].
+	/// [SessionFactoryPipeline].
 	///
 	/// @param request resolved inputs for SessionFactory bootstrap
 	///
@@ -244,7 +296,7 @@ public class SessionFactoryBootstrap {
 				request.metadataCustomizations(),
 				request.serviceRegistry()
 		);
-		return SessionFactoryBuilder.build(
+		return SessionFactoryPipeline.build(
 				request.sessionFactorySettings(),
 				resolvedMetadata,
 				request.serviceRegistry(),
@@ -341,7 +393,11 @@ public class SessionFactoryBootstrap {
 				bootstrapSettings,
 				mappingSettings,
 				standardServiceRegistry,
-				MappingSourceContributions.from( persistenceUnitDescriptor )
+				MappingSourceContributions.from(
+						persistenceUnitDescriptor,
+						bootstrapSettings,
+						standardServiceRegistry.requireService( ClassLoaderService.class )
+				)
 		);
 	}
 
@@ -438,13 +494,37 @@ public class SessionFactoryBootstrap {
 		@Override
 		public void sessionFactoryClosed(SessionFactory sessionFactory) {
 			final var factoryImplementor = (SessionFactoryImplementor) sessionFactory;
-			final var serviceRegistry = factoryImplementor.getServiceRegistry();
+			close( factoryImplementor.getServiceRegistry() );
+		}
+
+		private void close(ServiceRegistryImplementor serviceRegistry) {
 			serviceRegistry.destroy();
 			final var basicRegistry =
 					(ServiceRegistryImplementor)
 							serviceRegistry.getParentServiceRegistry();
 			if ( basicRegistry != null ) {
 				basicRegistry.destroy();
+			}
+		}
+	}
+
+	private static class OwnedServiceRegistryCloser implements SessionFactoryObserver, Runnable {
+		private final ServiceRegistryImplementor serviceRegistry;
+		private final AtomicBoolean closed = new AtomicBoolean();
+
+		private OwnedServiceRegistryCloser(ServiceRegistryImplementor serviceRegistry) {
+			this.serviceRegistry = serviceRegistry;
+		}
+
+		@Override
+		public void sessionFactoryClosed(SessionFactory sessionFactory) {
+			run();
+		}
+
+		@Override
+		public void run() {
+			if ( closed.compareAndSet( false, true ) ) {
+				ServiceRegistryCloser.INSTANCE.close( serviceRegistry );
 			}
 		}
 	}

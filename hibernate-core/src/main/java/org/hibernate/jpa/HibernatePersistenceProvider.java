@@ -21,8 +21,6 @@ import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.internal.TransformerTracker;
@@ -35,7 +33,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.HashMap;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
@@ -66,7 +63,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		JPA_LOGGER.startingCreateEntityManagerFactory( persistenceUnitName );
 		final var persistenceUnitDescriptor = getPersistenceUnitDescriptorOrNull( persistenceUnitName, map );
 		if ( persistenceUnitDescriptor == null ) {
-			JPA_LOGGER.couldNotObtainEmfBuilder("null");
+			JPA_LOGGER.couldNotObtainPersistenceUnit("null");
 			return null;
 		}
 		else {
@@ -75,36 +72,6 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 					wrap( map )
 			);
 		}
-	}
-
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
-			String persistenceUnitName, Map<?,?> properties) {
-		return getEntityManagerFactoryBuilderOrNull(
-				persistenceUnitName,
-				properties,
-				null,
-				null
-		);
-	}
-
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
-			String persistenceUnitName,
-			Map<?,?> properties,
-			@Nullable ClassLoader providedClassLoader,
-			@Nullable ClassLoaderService providedClassLoaderService) {
-		final var persistenceUnitDescriptor = getPersistenceUnitDescriptorOrNull(
-				persistenceUnitName,
-				properties,
-				providedClassLoader,
-				providedClassLoaderService
-		);
-		if ( persistenceUnitDescriptor == null ) {
-			return null;
-		}
-		final var integration = wrap( properties );
-		return providedClassLoaderService == null
-				? getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoader )
-				: getEntityManagerFactoryBuilder( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
 
 	private PersistenceUnitDescriptor getPersistenceUnitDescriptorOrNull(
@@ -123,7 +90,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			Map<?,?> properties,
 			@Nullable ClassLoader providedClassLoader,
 			@Nullable ClassLoaderService providedClassLoaderService) {
-		JPA_LOGGER.attemptingToObtainEmfBuilder( persistenceUnitName );
+		JPA_LOGGER.attemptingToLocatePersistenceUnit( persistenceUnitName );
 		final var integration = wrap( properties );
 		final var units = locatePersistenceUnits( integration, providedClassLoader, providedClassLoaderService );
 		JPA_LOGGER.locatedAndParsedPersistenceUnits( units.size() );
@@ -235,7 +202,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		JPA_LOGGER.startingGenerateSchema( persistenceUnitName );
 		final var persistenceUnitDescriptor = getPersistenceUnitDescriptorOrNull( persistenceUnitName, map );
 		if ( persistenceUnitDescriptor == null ) {
-			JPA_LOGGER.couldNotObtainEmfBuilder("false");
+			JPA_LOGGER.couldNotObtainPersistenceUnit("false");
 			return false;
 		}
 		else {
@@ -252,38 +219,6 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		JPA_LOGGER.startingGenerateSchema( persistenceConfiguration.name() );
 		org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.generateSchema( persistenceConfiguration );
 		return true;
-	}
-
-	private static Map<String, Object> settingsMap(Map<?, ?> integration) {
-		final Map<String, Object> result = new HashMap<>();
-		integration.forEach( (key, value) -> {
-			// ignore non-string keys
-			if (key instanceof String string) {
-				result.put( string, value );
-			}
-		} );
-		return result;
-	}
-
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
-			PersistenceUnitInfo info, Map<?,?> integration) {
-		return Bootstrap.getEntityManagerFactoryBuilder( info, settingsMap( integration ) );
-	}
-
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map<?,?> integration,
-			ClassLoader providedClassLoader) {
-		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor,
-				settingsMap( integration ), providedClassLoader );
-	}
-
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map<?,?> integration,
-			ClassLoaderService providedClassLoaderService) {
-		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor,
-				settingsMap( integration ), providedClassLoaderService );
 	}
 
 	@Override @Nonnull

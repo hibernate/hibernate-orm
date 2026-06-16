@@ -45,7 +45,7 @@ public class EmbeddedIdAttributeProcessing {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbEmbeddedId.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbEmbeddedId, memberDetails, xmlDocumentContext );
 
 		if ( StringHelper.isNotEmpty( jaxbEmbeddedId.getTarget() ) ) {

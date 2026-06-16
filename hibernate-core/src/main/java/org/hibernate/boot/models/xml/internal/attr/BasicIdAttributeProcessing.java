@@ -47,7 +47,7 @@ public class BasicIdAttributeProcessing {
 		basicAnn.fetch( FetchType.EAGER );
 		basicAnn.optional( false );
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbId.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbId, memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyColumn( jaxbId.getColumn(), memberDetails, xmlDocumentContext );

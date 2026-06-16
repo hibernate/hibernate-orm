@@ -5,7 +5,9 @@
 package org.hibernate.boot.models.bind.spi;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import jakarta.persistence.FetchType;
@@ -134,9 +136,13 @@ public class BindingCoordinator {
 
 	private void coordinateModelBindings() {
 		final List<ManagedTypeBinder> binders = new ArrayList<>();
+		final Set<String> boundTypeNames = new HashSet<>();
 		categorizedDomainModel.forEachEntityHierarchy( (index, hierarchy) -> {
 			hierarchy.forEachType( (type, superType, entityHierarchy, relation) -> {
-				binders.add( createIdentifiableTypeBinder( type, superType, entityHierarchy, relation ) );
+				if ( type.getManagedTypeKind() != ManagedTypeMetadata.Kind.ENTITY
+						|| boundTypeNames.add( type.getClassDetails().getClassName() ) ) {
+					binders.add( createIdentifiableTypeBinder( type, superType, entityHierarchy, relation ) );
+				}
 			} );
 		} );
 
@@ -214,6 +220,7 @@ public class BindingCoordinator {
 					(MappedSuperclassTypeMetadata) type,
 					superType,
 					relation,
+					modelBinders,
 					bindingState,
 					bindingOptions,
 					bindingContext

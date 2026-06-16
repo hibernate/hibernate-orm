@@ -4,12 +4,12 @@
  */
 
 /**
- * Legacy SPI used to {@linkplain org.hibernate.jpa.boot.spi.Bootstrap initiate}
- * and {@linkplain org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder control}
- * the JPA bootstrap process, along with SPI interfaces allowing certain sorts of
- * extensions to be contributed during the bootstrap process.
+ * SPI settings and contracts used by Hibernate while acting as a JPA
+ * persistence provider.
  * <p>
- * One-shot bootstrap entry points should use
+ * This package includes symbolic setting names, contributor contracts, and
+ * provider-specific extension points consumed by the bootstrap pipeline.
+ * One-shot bootstrap entry points use
  * {@link org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap}.
  *
  * @author Steve Ebersole

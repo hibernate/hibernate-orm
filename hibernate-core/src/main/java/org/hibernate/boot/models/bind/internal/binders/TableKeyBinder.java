@@ -7,6 +7,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
@@ -158,9 +159,12 @@ public class TableKeyBinder {
 			}
 
 			final Table table = collectionTableBinding.collection().getCollectionTable();
-			final Index index = table.getOrCreateIndex( indexAnn.name() );
+			final String indexName = StringHelper.isEmpty( indexAnn.name() )
+					? "idx_" + table.getName() + "_" + Integer.toHexString( indexAnn.columnList().hashCode() )
+					: indexAnn.name();
+			final Index index = table.getOrCreateIndex( indexName );
 			index.setTable( table );
-			index.setName( indexAnn.name() );
+			index.setName( indexName );
 			index.setUnique( indexAnn.unique() );
 			if ( StringHelper.isNotEmpty( indexAnn.options() ) ) {
 				index.setOptions( indexAnn.options() );
@@ -216,13 +220,11 @@ public class TableKeyBinder {
 		);
 		for ( int i = 0; i < identifierBinding.columns().size(); i++ ) {
 			final Column identifierColumn = identifierBinding.columns().get( i );
-			key.addColumn(
-					orderedJoinColumns.isEmpty()
-							? copyKeyColumn( identifierColumn )
-							: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) ),
-					true,
-					false
-			);
+			final Column keyColumn = orderedJoinColumns.isEmpty()
+					? copyKeyColumn( identifierColumn )
+					: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) );
+			table.addColumn( keyColumn );
+			key.addColumn( keyColumn, true, false );
 		}
 		return key;
 	}
@@ -294,7 +296,7 @@ public class TableKeyBinder {
 				identifierBinding.value()
 		);
 		key.setNullable( false );
-		key.setUpdateable( false );
+		key.setUpdateable( true );
 
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				collectionTableBinding.joinColumns(),
@@ -305,12 +307,21 @@ public class TableKeyBinder {
 		for ( int i = 0; i < identifierBinding.columns().size(); i++ ) {
 			final Column identifierColumn = identifierBinding.columns().get( i );
 			key.addColumn(
-					bindKeyColumn( table, identifierColumn, orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i ) ),
+					bindKeyColumn(
+							table,
+							identifierColumn,
+							orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i ),
+							() -> implicitCollectionKeyColumnName( identifierColumn )
+					),
 					true,
 					false
 			);
 		}
 		return key;
+	}
+
+	private String implicitCollectionKeyColumnName(Column identifierColumn) {
+		return entityBinder.getTypeBinding().getJpaEntityName().toLowerCase( Locale.ROOT ) + "_" + identifierColumn.getName();
 	}
 
 	private Column copyKeyColumn(Column source) {
@@ -326,9 +337,17 @@ public class TableKeyBinder {
 	}
 
 	private Column bindKeyColumn(Table table, Column identifierColumn, jakarta.persistence.JoinColumn joinColumn) {
+		return bindKeyColumn( table, identifierColumn, joinColumn, identifierColumn::getName );
+	}
+
+	private Column bindKeyColumn(
+			Table table,
+			Column identifierColumn,
+			jakarta.persistence.JoinColumn joinColumn,
+			java.util.function.Supplier<String> implicitName) {
 		final Column result = ColumnBinder.bindColumn(
 				ColumnSource.from( joinColumn ),
-				identifierColumn::getName,
+				implicitName,
 				false,
 				false
 		);

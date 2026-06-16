@@ -92,7 +92,7 @@ public class OneToOneAttributeProcessing {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		applyAccess( accessType, memberDetails, xmlDocumentContext );
+		applyAccess( jaxbOneToOne.getAccess(), memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbOneToOne, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbOneToOne, memberDetails, annotation, xmlDocumentContext );
 		applyOptionality( jaxbOneToOne, annotation, xmlDocumentContext );

@@ -4,9 +4,6 @@
  */
 package org.hibernate.boot.models.categorize.internal;
 
-import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.model.source.spi.AttributeRole;
-import org.hibernate.boot.model.source.spi.NaturalIdMutability;
 import org.hibernate.boot.models.categorize.spi.AllMemberConsumer;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.CategorizationContext;
@@ -32,32 +29,11 @@ public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata
 	private final ClassDetails classDetails;
 	private final CategorizationContext modelContext;
 
-	private final AttributePath attributePathBase;
-	private final AttributeRole attributeRoleBase;
-
 	/// This form is intended for construction of the root of an entity hierarchy
 	/// and its mapped-superclasses
 	public AbstractManagedTypeMetadata(ClassDetails classDetails, CategorizationContext modelContext) {
 		this.classDetails = classDetails;
 		this.modelContext = modelContext;
-		this.attributeRoleBase = new AttributeRole( classDetails.getName() );
-		this.attributePathBase = new AttributePath();
-	}
-
-	/// This form is used to create Embedded references
-	///
-	/// @param classDetails The Embeddable descriptor
-	/// @param attributeRoleBase The base for the roles of attributes created *from* here
-	/// @param attributePathBase The base for the paths of attributes created *from* here
-	public AbstractManagedTypeMetadata(
-			ClassDetails classDetails,
-			AttributeRole attributeRoleBase,
-			AttributePath attributePathBase,
-			CategorizationContext modelContext) {
-		this.classDetails = classDetails;
-		this.modelContext = modelContext;
-		this.attributeRoleBase = attributeRoleBase;
-		this.attributePathBase = attributePathBase;
 	}
 
 	public ClassDetails getClassDetails() {
@@ -155,9 +131,5 @@ public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata
 
 	public boolean canAttributesBeUpdatable() {
 		return true;
-	}
-
-	public NaturalIdMutability getContainerNaturalIdMutability() {
-		return NaturalIdMutability.NOT_NATURAL_ID;
 	}
 }

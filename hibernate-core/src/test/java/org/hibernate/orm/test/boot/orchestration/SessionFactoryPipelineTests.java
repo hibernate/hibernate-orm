@@ -12,7 +12,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
 import org.hibernate.boot.pipeline.internal.MetadataResolver;
 import org.hibernate.boot.pipeline.internal.ResolvedMetadata;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBuilder;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.pipeline.internal.ResolvedMetadataImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @ServiceRegistry
-public class SessionFactoryBuilderTests {
+public class SessionFactoryPipelineTests {
 	@Test
 	void hibernateBootstrapBuildsSessionFactoryWithProvidedRegistry(ServiceRegistryScope registryScope) {
 		try (var sessionFactory = HibernateBootstrap.create( registryScope.getRegistry() )
@@ -114,7 +114,7 @@ public class SessionFactoryBuilderTests {
 				registryScope.getRegistry()
 		);
 
-		try (var sessionFactory = SessionFactoryBuilder.build(
+		try (var sessionFactory = SessionFactoryPipeline.build(
 				sessionFactorySettings,
 				resolvedMetadata,
 				registryScope.getRegistry()
@@ -151,7 +151,7 @@ public class SessionFactoryBuilderTests {
 				registryScope.getRegistry()
 		);
 
-		try (var sessionFactory = SessionFactoryBuilder.build(
+		try (var sessionFactory = SessionFactoryPipeline.build(
 				sessionFactorySettings,
 				resolvedMetadata,
 				registryScope.getRegistry()

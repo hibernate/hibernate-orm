@@ -6,6 +6,7 @@ package org.hibernate.boot.pipeline.internal.source;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -20,6 +21,8 @@ import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import jakarta.persistence.PersistenceConfiguration;
+
+import static org.hibernate.internal.util.StringHelper.qualifier;
 
 /// Mapping-source contributions collected from a bootstrap entry point.
 ///
@@ -43,14 +46,18 @@ public record MappingSourceContributions(
 		/// metadata.
 		List<String> packageNames,
 
-		/// XML mapping resources explicitly contributed by the entry point.
-		List<String> mappingResources,
+	/// XML mapping resources explicitly contributed by the entry point.
+	List<String> mappingResources,
 
 	/// XML mapping files discovered during archive scanning.
 	List<URI> mappingFileUris,
 
-	/// XML mapping files explicitly contributed by URL.
-	List<URL> mappingFileUrls) {
+		/// XML mapping files explicitly contributed by URL.
+		List<URL> mappingFileUrls,
+
+		/// Whether categorization may use persistent supertypes reachable from
+	/// contributed classes but not themselves contributed.
+	boolean includeUnlistedPersistentSuperclasses) {
 
 	public MappingSourceContributions {
 		managedClasses = managedClasses == null ? List.of() : List.copyOf( managedClasses );
@@ -83,13 +90,25 @@ public record MappingSourceContributions(
 			Collection<String> mappingResources,
 			Collection<URI> mappingFileUris,
 			Collection<URL> mappingFileUrls) {
+		this( managedClasses, managedClassNames, packageNames, mappingResources, mappingFileUris, mappingFileUrls, true );
+	}
+
+	public MappingSourceContributions(
+			Collection<Class<?>> managedClasses,
+			Collection<String> managedClassNames,
+			Collection<String> packageNames,
+			Collection<String> mappingResources,
+			Collection<URI> mappingFileUris,
+			Collection<URL> mappingFileUrls,
+			boolean includeUnlistedPersistentSuperclasses) {
 		this(
 				managedClasses == null ? List.of() : List.copyOf( managedClasses ),
 				managedClassNames == null ? List.of() : List.copyOf( managedClassNames ),
 				packageNames == null ? List.of() : List.copyOf( packageNames ),
 				mappingResources == null ? List.of() : List.copyOf( mappingResources ),
 				mappingFileUris == null ? List.of() : List.copyOf( mappingFileUris ),
-				mappingFileUrls == null ? List.of() : List.copyOf( mappingFileUrls )
+				mappingFileUrls == null ? List.of() : List.copyOf( mappingFileUrls ),
+				includeUnlistedPersistentSuperclasses
 		);
 	}
 
@@ -129,13 +148,49 @@ public record MappingSourceContributions(
 	/// Adapts Hibernate's persistence-unit descriptor abstraction to neutral
 	/// source contributions.
 	public static MappingSourceContributions from(PersistenceUnitDescriptor persistenceUnitDescriptor) {
+		return from( persistenceUnitDescriptor, null, null );
+	}
+
+	/// Adapts Hibernate's persistence-unit descriptor abstraction to neutral
+	/// source contributions.
+	public static MappingSourceContributions from(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			ResolvedBootstrapSettings bootstrapSettings,
+			ClassLoaderService classLoaderService) {
+		final var managedClassNames = new ArrayList<String>();
+		final var packageNames = new ArrayList<String>();
+		for ( var className : persistenceUnitDescriptor.getAllClassNames() ) {
+			if ( className.endsWith( ".package-info" ) ) {
+				packageNames.add( qualifier( className ) );
+			}
+			else {
+				managedClassNames.add( className );
+			}
+		}
+		final var scanningResult = classLoaderService == null || bootstrapSettings == null
+				? ScanningResult.NONE
+				: HibernatePersistenceConfigurationScanner.performScanning(
+						persistenceUnitDescriptor,
+						bootstrapSettings,
+						classLoaderService
+				);
+		managedClassNames.addAll( scanningResult.discoveredClasses() );
+		packageNames.addAll( scanningResult.discoveredPackages() );
+
+		final var mappingResources = new ArrayList<>( persistenceUnitDescriptor.getMappingFileNames() );
+
+		final var mappingFileUrls = classLoaderService == null
+				? List.<URL>of()
+				: classLoaderService.locateResources( "META-INF/orm.xml" );
+
 		return new MappingSourceContributions(
 				List.of(),
-				persistenceUnitDescriptor.getAllClassNames(),
-				List.of(),
-				persistenceUnitDescriptor.getMappingFileNames(),
-				List.of(),
-				List.of()
+				managedClassNames,
+				packageNames,
+				mappingResources,
+				scanningResult.mappingFiles(),
+				mappingFileUrls,
+				!persistenceUnitDescriptor.isExcludeUnlistedClasses()
 		);
 	}
 

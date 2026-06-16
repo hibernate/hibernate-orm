@@ -13,7 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Imported;
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -331,16 +330,6 @@ public class InFlightMetadataCollectorImpl
 			Class<?> embeddableClass,
 			Supplier<DiscriminatorType<?>> supplier) {
 		return embeddableDiscriminatorTypesMap.computeIfAbsent( embeddableClass, k -> supplier.get() );
-	}
-
-	@Override
-	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		throw new UnsupportedOperationException(
-				"""
-				You should not be building a SessionFactory from an in-flight metadata collector; \
-				and of course we should better segment this in the API :)
-				"""
-		);
 	}
 
 	@Override
@@ -891,7 +880,7 @@ public class InFlightMetadataCollectorImpl
 			MetadataBuildingContext buildingContext,
 			boolean isExplicit) {
 		final var database = getDatabase();
-		final var namespace = locateNamespace( schemaName, catalogName, database );
+		final var namespace = locateNamespace( schemaName, catalogName, database, isExplicit );
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
 		final Identifier logicalName = name == null ? null : database.toIdentifier( name, isExplicit );
@@ -920,6 +909,17 @@ public class InFlightMetadataCollectorImpl
 
 	private static Namespace locateNamespace(String schemaName, String catalogName, Database database) {
 		return database.locateNamespace( database.toIdentifier( catalogName ), database.toIdentifier( schemaName ) );
+	}
+
+	private static Namespace locateNamespace(
+			String schemaName,
+			String catalogName,
+			Database database,
+			boolean isExplicit) {
+		return database.locateNamespace(
+				database.toIdentifier( catalogName, isExplicit ),
+				database.toIdentifier( schemaName, isExplicit )
+		);
 	}
 
 	@Override

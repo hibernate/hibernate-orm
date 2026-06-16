@@ -7,9 +7,9 @@ package org.hibernate.orm.test.mapping.collections;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.MapKeyJavaType;
@@ -68,17 +68,15 @@ public class MapKeyTypeTest extends EntityManagerFactoryBasedFunctionalTest {
 		try {
 			Map<String, Object> settings = buildSettings();
 			settings.put(
-				AvailableSettings.LOADED_CLASSES,
-				Collections.singletonList(
-					Person.class
-				)
-			);
-			settings.put(
 					AvailableSettings.HBM2DDL_AUTO,
 					"none"
 			);
 			entityManagerFactory =  SessionFactoryBootstrap.build(
-					new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
+					new TestingPersistenceUnitDescriptorImpl(
+							getClass().getSimpleName(),
+							List.of( Person.class.getName() ),
+							List.of()
+					),
 					settings
 			).unwrap(SessionFactoryImplementor.class);
 

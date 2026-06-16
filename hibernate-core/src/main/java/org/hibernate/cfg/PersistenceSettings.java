@@ -6,7 +6,6 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
-import org.hibernate.SessionFactoryObserver;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.boot.pipeline.spi.SessionFactoryProducer;
@@ -68,7 +67,6 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SESSION_FACTORY_JNDI_NAME
 	 * @see org.hibernate.internal.SessionFactoryRegistry
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
 	 */
 	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
@@ -80,7 +78,6 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
 	 *
 	 * @since 7.0
 	 */
@@ -97,7 +94,6 @@ public interface PersistenceSettings {
 	 * not want JNDI to be used.
 	 *
 	 * @see #SESSION_FACTORY_NAME
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNameAsJndiName(boolean)
 	 *
 	 * @settingDefault {@code true} if {@link SessionFactory#getName()} comes from
 	 * {@value #SESSION_FACTORY_NAME}; {@code false} if there is no {@link SessionFactory#getName()}
@@ -191,8 +187,6 @@ public interface PersistenceSettings {
 	/**
 	 * Specifies a class which implements {@link org.hibernate.SessionFactoryObserver} and has
 	 * a constructor with no parameters.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#addSessionFactoryObservers(SessionFactoryObserver...)
 	 */
 	String SESSION_FACTORY_OBSERVER = "hibernate.session_factory_observer";
 

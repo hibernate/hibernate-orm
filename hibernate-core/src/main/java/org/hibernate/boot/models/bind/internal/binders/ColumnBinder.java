@@ -78,7 +78,8 @@ public class ColumnBinder {
 		result.setNullable( columnSource == null ? nullableByDefault : columnSource.nullable( nullableByDefault ) );
 		result.setSqlType( columnSource == null ? null : StringHelper.nullIfEmpty( columnSource.columnDefinition() ) );
 		result.setLength( columnSource == null ? lengthByDefault : columnSource.length( lengthByDefault ) );
-		result.setPrecision( columnSource == null ? precisionByDefault : columnSource.precision( precisionByDefault ) );
+		final int precision = columnSource == null ? precisionByDefault : columnSource.precision( precisionByDefault );
+		result.setPrecision( precision > 0 ? precision : null );
 		result.setScale( columnSource == null ? scaleByDefault : columnSource.scale( scaleByDefault ) );
 		applyCheckConstraints( result, columnSource );
 		return result;

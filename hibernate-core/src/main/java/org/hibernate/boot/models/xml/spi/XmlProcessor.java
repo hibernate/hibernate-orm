@@ -56,7 +56,7 @@ public class XmlProcessor {
 					xmlOverlay.addEmbeddableOverride(
 							new OverrideTuple<>( jaxbRoot, xmlDocumentContext, jaxbEmbeddable ) );
 				}
-			} );
+				} );
 
 			jaxbRoot.getMappedSuperclasses().forEach( jaxbMappedSuperclass -> {
 				if ( xmlMappingsGloballyComplete || jaxbMappedSuperclass.isMetadataComplete() == Boolean.TRUE ) {
@@ -68,7 +68,7 @@ public class XmlProcessor {
 					xmlOverlay.addMappedSuperclassesOverride(
 							new OverrideTuple<>( jaxbRoot, xmlDocumentContext, jaxbMappedSuperclass ) );
 				}
-			});
+				});
 
 			jaxbRoot.getEntities().forEach( jaxbEntity -> {
 				if ( xmlMappingsGloballyComplete || jaxbEntity.isMetadataComplete() == Boolean.TRUE ) {

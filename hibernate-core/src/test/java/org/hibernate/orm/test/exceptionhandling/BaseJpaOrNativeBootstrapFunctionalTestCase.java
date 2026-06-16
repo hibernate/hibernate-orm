@@ -25,6 +25,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -95,11 +96,18 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 		log.trace( "Building EntityManagerFactory" );
 
 		final Map<String, Object> properties = PropertiesHelper.map( buildProperties() );
-		properties.put( AvailableSettings.LOADED_CLASSES, List.of( getAnnotatedClasses() ) );
 		ServiceRegistryUtil.applySettings( properties );
 
 		sessionFactory = org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
-				.build( new PersistenceUnitDescriptorAdapter(), properties )
+				.build(
+						new PersistenceUnitDescriptorAdapter() {
+							@Override
+							public List<String> getManagedClassNames() {
+								return Arrays.stream( getAnnotatedClasses() ).map( Class::getName ).toList();
+							}
+						},
+						properties
+				)
 				.unwrap( SessionFactoryImplementor.class );
 
 		serviceRegistry = (StandardServiceRegistryImpl) sessionFactory.getServiceRegistry().getParentServiceRegistry();

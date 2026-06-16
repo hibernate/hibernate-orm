@@ -44,7 +44,7 @@ public class SchemaUpdateArrayPropertiesTest {
 		// Then update the existing table
 		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		// Verify a query works as expected
-		try (final SessionFactory sf = metadata.getSessionFactoryBuilder().build()) {
+		try (final SessionFactory sf = metadata.buildSessionFactory()) {
 			try (Session session = sf.openSession()) {
 				assertThat( session.find( TestEntity.class, 1 ) ).isNull();
 			}
@@ -61,7 +61,7 @@ public class SchemaUpdateArrayPropertiesTest {
 		// Update should create the schema and all necessary types
 		new SchemaUpdate().execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		// Verify a query works as expected
-		try (final SessionFactory sf = metadata.getSessionFactoryBuilder().build()) {
+		try (final SessionFactory sf = metadata.buildSessionFactory()) {
 			try (Session session = sf.openSession()) {
 				assertThat( session.find( TestEntity.class, 1 ) ).isNull();
 			}

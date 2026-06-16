@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/subselect/Beings.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/subselect/Beings.orm.xml")
 @SessionFactory
 @SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner requires explicit UNION ALL or UNION DISTINCT" )
 public class SubselectTest {

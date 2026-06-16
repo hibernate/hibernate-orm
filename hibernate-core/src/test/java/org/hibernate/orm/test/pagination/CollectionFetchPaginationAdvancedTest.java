@@ -40,10 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pagination-with-collection-fetch where the root entity uses
- * {@link SecondaryTable @SecondaryTable} or {@link Inheritance(strategy=JOINED)
- * joined inheritance}. Both shapes attach extra {@code TableReferenceJoin}s to
- * the root {@code TableGroup}, so the rewrite has to absorb those tables'
- * columns into the inner derived table — and for joined inheritance the outer
+ * {@link SecondaryTable @SecondaryTable} or
+ * {@link Inheritance @Inheritance(strategy=JOINED) joined inheritance}.
+ * Both shapes attach extra {@code TableReferenceJoin}s to the root
+ * {@code TableGroup}, so the rewrite has to absorb those tables' columns into
+ * the inner derived table — and for joined inheritance the outer
  * SELECT contains a CASE-based discriminator whose internal column references
  * also need rewriting.
  */

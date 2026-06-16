@@ -102,7 +102,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *         {@linkplain org.hibernate.testing.orm.junit.DomainModel} or
  *         {@linkplain org.hibernate.testing.orm.junit.SessionFactory} because of the
  *         need to dynamically create these based on the {@linkplain #options() catalog/schema parameters}.
- *         So instead we use {@linkplain ServiceRegistryProducer,
+ *         So instead we use {@linkplain ServiceRegistryProducer},
  *         {@linkplain DomainModelProducer} and {@linkplain SessionFactoryProducer} while
  *         still using the extensions to leverage lifecycle.
  *     </li>

@@ -251,6 +251,37 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	public void testSubselectEntityTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/subselect-entity/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl viewEntity = transformed.getEntities().stream()
+					.filter( e -> "SubselectView".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( viewEntity.getTableExpression() )
+					.as( "Subselect entity should have a table-expression" )
+					.isNotNull();
+			assertThat( viewEntity.getTableExpression() ).contains( "select id, name, value from base_table" );
+			assertThat( viewEntity.getTable() )
+					.as( "Subselect entity should not have a regular table" )
+					.isNull();
+			assertThat( viewEntity.getSynchronizeTables() ).hasSize( 1 );
+			assertThat( viewEntity.getSynchronizeTables().get( 0 ).getTable() ).isEqualTo( "base_table" );
+			assertThat( viewEntity.isMutable() ).isFalse();
+
+			for ( JaxbBasicImpl basic : viewEntity.getAttributes().getBasicAttributes() ) {
+				if ( basic.getColumn() != null ) {
+					assertThat( basic.getColumn().getTable() )
+							.as( "Column for property '%s' should not have a table attribute on a subselect entity", basic.getName() )
+							.isNull();
+				}
+			}
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

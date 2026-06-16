@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping">
+    <class name="SubselectBase" table="base_table">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <property name="value"/>
+    </class>
+
+    <class name="SubselectView" mutable="false">
+        <subselect>select id, name, value from base_table</subselect>
+        <synchronize table="base_table"/>
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <property name="value" column="value"/>
+    </class>
+</hibernate-mapping>

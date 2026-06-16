@@ -44,7 +44,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	@Override
-	public PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+	public @Nonnull PhysicalConnectionHandlingMode getConnectionHandlingMode() {
 		return IMMEDIATE_ACQUISITION_AND_HOLD;
 	}
 

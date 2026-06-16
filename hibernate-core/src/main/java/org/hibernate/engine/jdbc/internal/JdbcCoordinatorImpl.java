@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -328,12 +327,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		final var connectionReleaseMode = connectionReleaseMode();
+		final var connectionReleaseMode = getLogicalConnection().resolvedConnectionReleaseMode();
 		if ( TRACE_ENABLED ) {
 			JDBC_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
-			if ( ! releasesEnabled ) {
+			if ( !releasesEnabled ) {
 				JDBC_LOGGER.skippingAggressiveRelease( "manually disabled" );
 			}
 			else if ( hasRegisteredResources() ) {
@@ -363,16 +362,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransaction() {
 		transactionTimeOutInstant = -1;
-		switch ( connectionReleaseMode() ) {
+		switch ( logicalConnection.resolvedConnectionReleaseMode() ) {
 			case AFTER_STATEMENT:
 			case AFTER_TRANSACTION:
 			case BEFORE_TRANSACTION_COMPLETION:
 				logicalConnection.afterTransaction();
 		}
-	}
-
-	private ConnectionReleaseMode connectionReleaseMode() {
-		return getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
 	}
 
 	private boolean hasRegisteredResources() {

@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
 
+import jakarta.annotation.Nonnull;
+import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.Incubating;
 import org.hibernate.resource.jdbc.LogicalConnection;
 
 /**
@@ -25,7 +28,13 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 */
 	Connection getPhysicalConnection();
 
+	@Nonnull
 	PhysicalConnectionHandlingMode getConnectionHandlingMode();
+
+	@Incubating
+	default @Nonnull ConnectionReleaseMode resolvedConnectionReleaseMode() {
+		return getConnectionHandlingMode().getReleaseMode();
+	}
 
 	/**
 	 * Notification indicating a JDBC statement has been executed, to trigger

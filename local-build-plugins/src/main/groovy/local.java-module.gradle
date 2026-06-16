@@ -156,16 +156,16 @@ tasks.withType( JavaCompile ).configureEach {
     options.fork = true
     options.forkOptions.memoryMaximumSize = '896m'
 
-    options.compilerArgs += [
+    options.compilerArgs.addAll( [
             // Limit observable modules to prevent accidental dependency on java.desktop (HHH-20148) and other non essential modules
             '--limit-modules', 'java.base,java.compiler,java.instrument,java.management,java.naming,java.rmi,java.sql,java.transaction.xa,java.xml,jdk.compiler,jdk.jfr,java.sql.rowset',
             // disable adding @Generated annotation in the logger impls to make
             // the logging annotation processor create the same sources each time.
             "-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
-    ]
+    ] )
 
     if (System.getProperty('APT_DEBUG', 'false') == 'true') {
-        options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099']
+        options.forkOptions.jvmArgs.addAll(['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099'])
     }
 }
 
@@ -205,16 +205,16 @@ tasks.withType( Test.class ).configureEach { test ->
     test.useJUnitPlatform()
 
     // Byteman needs this property to be set, https://developer.jboss.org/thread/274997
-    test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
+    test.jvmArgs.addAll(["-Djdk.attach.allowAttachSelf=true"])
 
     test.jvmArgumentProviders.add(
             new HeapDumpPathProvider( path: project.layout.buildDirectory.dir("OOM-dump") )
     )
 
-    test.jvmArgs += [
+    test.jvmArgs.addAll([
             '-XX:+HeapDumpOnOutOfMemoryError',
             '-XX:MetaspaceSize=256M'
-    ]
+    ])
 
     test.maxHeapSize = '3G'
 
@@ -222,7 +222,7 @@ tasks.withType( Test.class ).configureEach { test ->
     test.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
     test.systemProperties['hibernate.test.validatefailureexpected'] = true
     test.systemProperties['hibernate.highlight_sql'] = false
-    test.systemProperties += providers.systemPropertiesPrefixedBy("hibernate.").get()
+    test.systemProperties.putAll( providers.systemPropertiesPrefixedBy("hibernate.") )
 
     test.enableAssertions = true
 

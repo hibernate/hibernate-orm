@@ -191,10 +191,10 @@ tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 
 compileTestJava {
-	options.compilerArgs += [
+	options.compilerArgs.addAll( [
 			"-proc:none",
 			"-AsuppressJakartaDataMetamodel=true"
-	]
+	] )
 }
 
 compileIntegrationTestJava {

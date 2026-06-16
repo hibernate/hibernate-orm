@@ -252,7 +252,7 @@ artifacts {
 }
 
 compileTestJava {
-    options.compilerArgs += [ "-AsuppressJakartaDataMetamodel=true" ]
+    options.compilerArgs.addAll( [ "-AsuppressJakartaDataMetamodel=true" ] )
 }
 
 tasks.register( "generateAnnotationClasses", JavaCompile ) {

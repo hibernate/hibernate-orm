@@ -179,7 +179,8 @@ public class JavaModulePlugin implements Plugin<Project> {
 		ForkOptions forOptions = compileTask
 				.getOptions()
 				.getForkOptions();
-		final List<String> mergedArgs = new ArrayList<>( forOptions.getJvmArgs() );
+		// getJvmArgs() now returns ListProperty<String>; resolve it to seed the merged list
+		final List<String> mergedArgs = new ArrayList<>( forOptions.getJvmArgs().get() );
 		Collections.addAll( mergedArgs, newArgs );
 		forOptions.setJvmArgs( mergedArgs );
 	}

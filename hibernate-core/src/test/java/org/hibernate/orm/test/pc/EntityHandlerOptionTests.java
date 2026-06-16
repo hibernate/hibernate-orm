@@ -102,11 +102,6 @@ public class EntityHandlerOptionTests {
 			assertThat( em.unwrap( StatelessSessionImplementor.class ).getLoadQueryInfluencers().getBatchSize() )
 					.isEqualTo( defaultBatchFetchSize );
 		}
-
-		try (var em = sf.createEntityAgent( new SessionCreationOption.FetchBatchSize( 10 ) )) {
-			assertThat( em.unwrap( StatelessSessionImplementor.class ).getLoadQueryInfluencers().getBatchSize() )
-					.isEqualTo( 10 );
-		}
 	}
 
 	@Test

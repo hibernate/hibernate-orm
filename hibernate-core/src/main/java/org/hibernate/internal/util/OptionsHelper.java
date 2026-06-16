@@ -152,12 +152,6 @@ public final class OptionsHelper {
 		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 			options.cacheRetrieveMode( cacheRetrieveMode );
 		}
-		else if ( option instanceof SessionCreationOption.FetchBatchSize fetchBatchSize ) {
-			options.defaultBatchFetchSize( fetchBatchSize.batchSize() );
-		}
-		else if ( option instanceof SessionCreationOption.PreferredFetchMethod preferredFetchMethod ) {
-			options.subselectFetchEnabled( preferredFetchMethod == SessionCreationOption.PreferredFetchMethod.BY_SUBQUERY );
-		}
 		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
 			options.tenantIdentifier( tenantId.value() );
 		}

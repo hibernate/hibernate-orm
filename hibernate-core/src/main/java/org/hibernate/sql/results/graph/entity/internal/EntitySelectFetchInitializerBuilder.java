@@ -120,7 +120,7 @@ public class EntitySelectFetchInitializerBuilder {
 		if ( batchSize != null && batchSize <= 1 ) {
 			return NONE;
 		}
-		else if ( fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT
+		else if ( fetchOptions.fetchMethod() == FetchMethod.BY_SUBQUERY
 				|| fetchedAttribute.getMappedFetchOptions().getStyle() == FetchStyle.SUBSELECT ) {
 			return BATCH_LOAD;
 		}

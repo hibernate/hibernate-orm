@@ -480,12 +480,14 @@ LocalDateTime lastUpdated;
 
 Almost every entity which is frequently updated should have a version attribute.
 
+The `@ExcludedFromVersioning` annotation lets us selectively exclude a certain field from optimistic locking, so that modifications to the annotated field do not result in a version increment.
+
 [TIP]
 // .Optimistic locking in Hibernate
 ====
 If an entity doesn't have a version number, which often happens when mapping legacy data, we can still do optimistic locking.
 The link:{doc-javadoc-url}org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
-And the link:{doc-javadoc-url}org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation lets us selectively exclude certain fields from optimistic locking.
+And the `@ExcludedFromVersioning` annotation lets us selectively exclude certain fields from validation.
 ====
 
 The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.

@@ -352,6 +352,44 @@ bootstrapping and supply the root and/or non-root URLs.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[jdbc-resource-release-autocommit]]
+=== JDBC resource release in autocommit mode
+
+When no transaction is active (autocommit), Hibernate now correctly releases the connection after statement
+execution if the configured `ConnectionReleaseMode` is set to `AFTER_TRANSACTION`.
+Previously, with `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` connection handling mode, JDBC resources
+and the physical connection were held until an explicit call to `afterTransaction()` or closing the session,
+even though in autocommit mode each statement is effectively its own transaction.
+
+This change ensures that JDBC connections are promptly returned to the pool after each statement when there
+is no active transaction, preventing potential resource leaks.
+
+As a consequence, accessing LOB locators (i.e. `java.sql.Blob` or `java.sql.Clob` typed attributes) outside of
+an active transaction will no longer work and result in an exception on most dialects.
+Previously this appeared to work only because the connection happened to remain open; however, there were no
+transactional isolation guarantees — the data read from the LOB could have already been modified by another
+transaction.
+
+Note that this only affects entity attributes mapped as `java.sql.Blob` or `java.sql.Clob`, since these types
+rely on a JDBC locator that requires a live connection. Attributes mapped as `byte[]` or `String` are always
+eagerly materialized when the result set is read, and are not affected by this change. Similarly, some dialects
+that always use materialized LOB access are also unaffected.
+
+Applications that use `Blob` or `Clob` typed attributes must access them within an active transaction:
+
+[source,java]
+----
+// Before (assuming no active transaction, may have accidentally worked, but with no isolation guarantees):
+session.get(MyEntity.class, id);
+entity.getData().getBinaryStream(); // may now fail — connection already released
+
+// After (correct):
+session.getTransaction().begin();
+session.get(MyEntity.class, id);
+entity.getData().getBinaryStream(); // works — connection held by the transaction
+session.getTransaction().commit();
+----
+
 
 [[validation-ddl-influence]]
 === Jakarta Validation DDL influence enabled by default

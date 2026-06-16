@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Convenience base class for custom implementors of {@link SessionFactoryBuilderImplementor}, using delegation
  *
@@ -11,7 +13,10 @@ package org.hibernate.boot.spi;
  *
  * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
  *            to a specialization of {@link MetadataBuilderImplementor}.
+ *
+ * @apiNote This will be removed in 9.0.
  */
+@Remove
 public abstract class AbstractDelegatingSessionFactoryBuilderImplementor<T extends SessionFactoryBuilderImplementor>
 		extends AbstractDelegatingSessionFactoryBuilder<T> implements SessionFactoryBuilderImplementor {
 

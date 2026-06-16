@@ -118,6 +118,7 @@ import org.hibernate.boot.models.annotations.internal.SecondaryRowsAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
 import org.hibernate.boot.models.annotations.internal.SynchronizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
@@ -959,6 +960,19 @@ public class XmlAnnotationHelper {
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			tableAnn.apply( jaxbTable, xmlDocumentContext );
+		}
+	}
+
+	public static void applySubselect(
+			String tableExpression,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( isNotEmpty( tableExpression ) ) {
+			final SubselectAnnotation subselectAnn = (SubselectAnnotation) target.applyAnnotationUsage(
+					HibernateAnnotations.SUBSELECT,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			subselectAnn.value( tableExpression.trim() );
 		}
 	}
 

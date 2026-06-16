@@ -67,7 +67,7 @@ class InflaterInputStreamBlobTest {
 				}
 		);
 
-		scope.inStatelessSession( session -> {
+		scope.inStatelessTransaction( session -> {
 			final var entity = session.get( TestEntity.class, 1L );
 			try {
 				final var blob = entity.getData();

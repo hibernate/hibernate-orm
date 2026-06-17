@@ -779,7 +779,7 @@ public class SqmQueryImpl<R>
 		if ( isCacheable() ) {
 			hints.put( HINT_CACHEABLE, true );
 			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
-			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
+			putIfNotNull( hints, HINT_CACHE_MODE, queryOptions.getCacheMode() );
 
 			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
 			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
@@ -889,7 +889,7 @@ public class SqmQueryImpl<R>
 					getQueryOptions().getLimit().getMaxRows(),
 					isCacheable(),
 					getCacheRegion(),
-					getCacheMode(),
+					getQueryOptions().getCacheMode(),
 					getQueryOptions().getFlushMode(),
 					isReadOnly(),
 					getLockOptions(),
@@ -909,7 +909,7 @@ public class SqmQueryImpl<R>
 					getQueryOptions().getLimit().getMaxRows(),
 					isCacheable(),
 					getCacheRegion(),
-					getCacheMode(),
+					getQueryOptions().getCacheMode(),
 					getQueryOptions().getFlushMode(),
 					isReadOnly(),
 					getLockOptions(),

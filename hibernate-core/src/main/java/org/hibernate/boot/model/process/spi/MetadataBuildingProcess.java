@@ -422,18 +422,6 @@ public class MetadataBuildingProcess {
 						modelsContext
 				);
 
-		final var rootMappingDefaults =
-				new RootMappingDefaults( optionDefaults,
-						aggregatedPersistenceUnitMetadata );
-		final var xmlProcessingResult = XmlProcessor.processXml(
-				xmlPreProcessingResult,
-				aggregatedPersistenceUnitMetadata,
-				modelCategorizationCollector::apply,
-				modelsContext,
-				bootstrapContext,
-				rootMappingDefaults
-		);
-
 		final HashSet<String> categorizedClassNames = new HashSet<>();
 		// apply known classes
 		allKnownClassNames.forEach( className -> {
@@ -443,6 +431,19 @@ public class MetadataBuildingProcess {
 						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		} );
+
+		final var rootMappingDefaults =
+				new RootMappingDefaults( optionDefaults, aggregatedPersistenceUnitMetadata );
+		final var xmlProcessingResult = XmlProcessor.processXml(
+				xmlPreProcessingResult,
+				aggregatedPersistenceUnitMetadata,
+				modelCategorizationCollector::apply,
+				modelsContext,
+				bootstrapContext,
+				rootMappingDefaults
+		);
+
+
 		// apply known "names" - generally this handles dynamic models
 		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
 			if ( categorizedClassNames.add( mappedName ) ) {

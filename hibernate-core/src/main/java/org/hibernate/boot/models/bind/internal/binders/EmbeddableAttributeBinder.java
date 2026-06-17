@@ -76,7 +76,7 @@ class EmbeddableAttributeBinder {
 		final MemberDetails member = attributeMetadata.getMember();
 		componentSource = ComponentSource.embeddedAttribute(
 				member,
-				bindingContext.getClassDetailsRegistry().resolveClassDetails( ownerBinding.getClassName() ),
+				ownerType.getClassDetails(),
 				ownerType.getHierarchy().getRoot().getClassDetails(),
 				ownerType.getAccessType(),
 				bindingContext
@@ -104,8 +104,6 @@ class EmbeddableAttributeBinder {
 				true,
 				true
 		);
-		registerGenericComponent( component );
-
 		property.setOptional( true );
 		return component;
 	}
@@ -156,22 +154,6 @@ class EmbeddableAttributeBinder {
 			}
 		}
 		return false;
-	}
-
-	private void registerGenericComponent(Component component) {
-		if ( !component.isGeneric()
-				|| component.getPropertySpan() == 0
-				|| bindingState.getMetadataBuildingContext()
-						.getMetadataCollector()
-						.getGenericComponent( component.getComponentClass() ) != null ) {
-			return;
-		}
-
-		final Component genericComponent = component.copy();
-		genericComponent.setGeneric( false );
-		bindingState.getMetadataBuildingContext()
-				.getMetadataCollector()
-				.registerGenericComponent( genericComponent );
 	}
 
 	private Table resolveComponentTable(MemberDetails attributeMember) {

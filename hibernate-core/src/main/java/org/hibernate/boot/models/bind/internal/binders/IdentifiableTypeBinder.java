@@ -6,7 +6,9 @@ package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
+import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -20,6 +22,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
@@ -96,68 +99,128 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	@Override
 	protected void prepareBinding(ModelBinders modelBinders) {
-		final var primaryTable = getTable();
-		final var managedType = getManagedType();
-		final PersistentClass attributeOwnerBinding = resolveAttributeOwnerBinding();
+		bindDeclaredAttributes(
+				modelBinders,
+				getManagedType(),
+				getManagedType(),
+				resolveAttributeOwnerBinding(),
+				getTable(),
+				this::addDeclaredProperty
+		);
 
-		managedType.forEachAttribute( (index, attributeMetadata) -> {
-			if ( managedType.getHierarchy().getIdMapping().contains( attributeMetadata )
+		super.prepareBinding( modelBinders );
+	}
+
+	protected void bindDeclaredAttributes(
+			ModelBinders modelBinders,
+			IdentifiableTypeMetadata sourceType,
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass attributeOwnerBinding,
+			Table primaryTable,
+			Consumer<Property> propertyConsumer) {
+		bindDeclaredAttributes( modelBinders, sourceType, ownerType, attributeOwnerBinding, primaryTable, propertyConsumer, true );
+	}
+
+	protected void bindDeclaredAttributes(
+			ModelBinders modelBinders,
+			IdentifiableTypeMetadata sourceType,
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass attributeOwnerBinding,
+			Table primaryTable,
+			Consumer<Property> propertyConsumer,
+			boolean includePluralAttributes) {
+		sourceType.forEachAttribute( (index, attributeMetadata) -> {
+			if ( sourceType.getHierarchy().getIdMapping().contains( attributeMetadata )
 					|| attributeMetadata.getMember().hasDirectAnnotationUsage( Id.class )
 					|| attributeMetadata.getMember().hasDirectAnnotationUsage( EmbeddedId.class )
-					|| managedType.getHierarchy().getVersionAttribute() == attributeMetadata
-					|| managedType.getHierarchy().getTenantIdAttribute() == attributeMetadata ) {
+					|| sourceType.getHierarchy().getVersionAttribute() == attributeMetadata
+					|| sourceType.getHierarchy().getTenantIdAttribute() == attributeMetadata ) {
 				return;
 			}
-			if ( overridesSuperAttribute( attributeMetadata ) ) {
+			if ( !includePluralAttributes && isPlural( attributeMetadata.getNature() ) ) {
+				return;
+			}
+			if ( overridesSuperAttribute( sourceType, attributeMetadata ) ) {
 				return;
 			}
 
-				final var attributeBinder = new AttributeBinder(
-						managedType,
-						attributeOwnerBinding,
-						attributeMetadata,
-						primaryTable,
-						modelBinders,
+			final var attributeBinder = new AttributeBinder(
+					ownerType,
+					attributeOwnerBinding,
+					attributeMetadata,
+					primaryTable,
+					modelBinders,
 					getBindingState(),
 					getOptions(),
 					getBindingContext()
 			);
 
 			final var property = attributeBinder.getBinding();
+			applyGenericPropertyMarkers( sourceType, ownerType, attributeMetadata, property );
 			final var value = property.getValue();
 
 			attributeBinders.add( attributeBinder );
 			final Table attributeTable = value.getTable();
-				if ( attributeTable == primaryTable || value instanceof org.hibernate.mapping.Collection ) {
-					addDeclaredProperty( property );
-				}
-				else {
-					final Join join = findJoin( attributeOwnerBinding, attributeTable );
-					join.addProperty( property );
-				}
-				CustomMappingBinder.callAttributeBinders(
-						attributeMetadata.getMember(),
-						attributeOwnerBinding,
-						property,
-						getBindingState(),
-						getBindingContext()
+			if ( attributeTable == primaryTable || value instanceof org.hibernate.mapping.Collection ) {
+				propertyConsumer.accept( property );
+			}
+			else {
+				final Join join = findJoin( attributeOwnerBinding, attributeTable );
+				join.addProperty( property );
+			}
+			CustomMappingBinder.callAttributeBinders(
+					attributeMetadata.getMember(),
+					attributeOwnerBinding,
+					property,
+					getBindingState(),
+					getBindingContext()
 			);
 		} );
-
-		super.prepareBinding( modelBinders );
 	}
 
-	private boolean overridesSuperAttribute(AttributeMetadata attributeMetadata) {
-		if ( superType == null || superType.findAttribute( attributeMetadata.getName() ) == null ) {
+	private boolean isPlural(AttributeNature nature) {
+		return nature == AttributeNature.ELEMENT_COLLECTION
+			|| nature == AttributeNature.MANY_TO_MANY
+			|| nature == AttributeNature.ONE_TO_MANY
+			|| nature == AttributeNature.MANY_TO_ANY;
+	}
+
+	private void applyGenericPropertyMarkers(
+			IdentifiableTypeMetadata sourceType,
+			IdentifiableTypeMetadata ownerType,
+			AttributeMetadata attributeMetadata,
+			Property property) {
+		final TypeDetails declaredType = attributeMetadata.getMember().getType();
+		if ( declaredType.isResolved() ) {
+			return;
+		}
+
+		if ( sourceType.getClassDetails().getName().equals( ownerType.getClassDetails().getName() ) ) {
+			property.setGeneric( true );
+			property.setReturnedClassName( declaredType.getName() );
+		}
+		else {
+			final TypeDetails resolvedType = attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() );
+			property.setGeneric( false );
+			property.setGenericSpecialization( true );
+			property.setReturnedClassName( resolvedType.getName() );
+		}
+	}
+
+	private boolean overridesSuperAttribute(
+			IdentifiableTypeMetadata sourceType,
+			AttributeMetadata attributeMetadata) {
+		final var sourceSuperType = sourceType.getSuperType();
+		if ( sourceSuperType == null || sourceSuperType.findAttribute( attributeMetadata.getName() ) == null ) {
 			return false;
 		}
 		return attributeMetadata.getMember()
 				.getDeclaringType()
 				.getClassName()
-				.equals( getManagedType().getClassDetails().getClassName() );
+				.equals( sourceType.getClassDetails().getClassName() );
 	}
 
-	private PersistentClass resolveAttributeOwnerBinding() {
+	protected PersistentClass resolveAttributeOwnerBinding() {
 		if ( getTypeBinding() instanceof PersistentClass persistentClass ) {
 			return persistentClass;
 		}

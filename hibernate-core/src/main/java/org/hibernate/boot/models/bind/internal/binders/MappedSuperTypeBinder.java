@@ -100,7 +100,15 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	public void bindMembers() {
-		prepareBinding( modelBinders );
+		bindDeclaredAttributes(
+				modelBinders,
+				getManagedType(),
+				getManagedType(),
+				resolveAttributeOwnerBinding(),
+				new Table( "orm", getManagedType().getClassDetails().getName() + "#mapped-superclass" ),
+				binding::addDeclaredProperty,
+				false
+		);
 		applyDeclaredPropertiesToNearestEntityConsumers( getManagedType() );
 	}
 
@@ -110,10 +118,16 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			if ( subType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
 				final var entityBinding = (PersistentClass) typeBinder.getTypeBinding();
 				// Transitional contribution-lite bridge: until PersistentClass derives inherited mapped-superclass
-				// state by traversing applied contributions, flatten each declared property only into the nearest
+				// state by traversing applied contributions, bind each declared property only into the nearest
 				// consuming entity.  Entity subclasses then inherit it through the normal entity closure.
-				binding.getDeclaredProperties()
-						.forEach( (property) -> applyMappedSuperclassProperty( property, entityBinding ) );
+				bindDeclaredAttributes(
+						modelBinders,
+						getManagedType(),
+						(EntityTypeMetadata) subType,
+						entityBinding,
+						entityBinding.getTable(),
+						(property) -> applyMappedSuperclassProperty( property, entityBinding )
+				);
 			}
 			else {
 				applyDeclaredPropertiesToNearestEntityConsumers( subType );
@@ -126,7 +140,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			return;
 		}
 
-		entityBinding.addMappedSuperclassProperty( property.copy() );
+		entityBinding.addMappedSuperclassProperty( property );
 	}
 
 	private boolean hasDeclaredProperty(PersistentClass entityBinding, String propertyName) {

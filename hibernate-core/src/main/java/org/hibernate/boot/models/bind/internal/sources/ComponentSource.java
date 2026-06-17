@@ -153,8 +153,8 @@ public record ComponentSource(
 		return new ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
-				resolveEmbeddableType( member, bindingContext, false ),
-				member.getType(),
+				resolveEmbeddableType( member, ownerType, bindingContext ),
+				member.resolveRelativeType( ownerType ),
 				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
 				defaultAccessType,
 				"",
@@ -397,6 +397,19 @@ public record ComponentSource(
 		return collectionElement
 				? member.getElementType().determineRawClass()
 				: member.getType().determineRawClass();
+	}
+
+	private static ClassDetails resolveEmbeddableType(
+			MemberDetails member,
+			ClassDetails ownerType,
+			BindingContext bindingContext) {
+		final TargetEmbeddable targetEmbeddable = resolveTargetEmbeddable( member, false );
+		if ( targetEmbeddable != null ) {
+			return bindingContext.getClassDetailsRegistry()
+					.resolveClassDetails( targetEmbeddable.value().getName() );
+		}
+
+		return member.resolveRelativeType( ownerType ).determineRawClass();
 	}
 
 	private static TargetEmbeddable resolveTargetEmbeddable(MemberDetails member, boolean collectionElement) {

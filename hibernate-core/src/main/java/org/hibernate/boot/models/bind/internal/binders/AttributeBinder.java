@@ -38,6 +38,7 @@ import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
 
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.models.AttributeNature.ANY;
 import static org.hibernate.boot.models.AttributeNature.BASIC;
 import static org.hibernate.boot.models.AttributeNature.EMBEDDED;
@@ -120,6 +121,11 @@ public class AttributeBinder {
 					bindingContext
 			).bind( binding );
 			binding.setValue( componentValue );
+			handleGenericComponentProperty(
+					binding,
+					attributeMetadata.getMember(),
+					bindingState.getMetadataBuildingContext()
+			);
 			attributeTable = componentValue.getTable();
 		}
 		else if ( attributeMetadata.getNature() == ELEMENT_COLLECTION ) {

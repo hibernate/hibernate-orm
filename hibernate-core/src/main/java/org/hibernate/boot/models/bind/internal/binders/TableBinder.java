@@ -13,6 +13,7 @@ import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.View;
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -93,7 +94,9 @@ public class TableBinder {
 		this.jdbcEnvironment = bindingContext.getServiceRegistry().getService( JdbcEnvironment.class );
 	}
 
-	public TableReference bindPrimaryTable(EntityTypeMetadata type, EntityHierarchy.HierarchyRelation hierarchyRelation) {
+	public TableReference bindPrimaryTable(EntityTypeBinder entityBinder) {
+		final EntityTypeMetadata type = entityBinder.getManagedType();
+		final EntityHierarchy.HierarchyRelation hierarchyRelation = entityBinder.getHierarchyRelation();
 		final ClassDetails typeClassDetails = type.getClassDetails();
 		final jakarta.persistence.Table tableAnn = typeClassDetails.getDirectAnnotationUsage( jakarta.persistence.Table.class );
 		final JoinTable joinTableAnn = typeClassDetails.getDirectAnnotationUsage( JoinTable.class );
@@ -122,7 +125,7 @@ public class TableBinder {
 				tableReference = bindPhysicalTable( type, TableSource.from( tableAnn ), true, viewAnn );
 			}
 			else {
-				tableReference = bindUnionTable( type, TableSource.from( tableAnn ) );
+				tableReference = bindUnionTable( entityBinder, TableSource.from( tableAnn ) );
 			}
 		}
 		else if ( type.getHierarchy().getInheritanceType() == InheritanceType.SINGLE_TABLE ) {
@@ -165,11 +168,20 @@ public class TableBinder {
 	}
 
 	private TableReference bindUnionTable(
-			EntityTypeMetadata type,
+			EntityTypeBinder entityBinder,
 			TableSource tableSource) {
-		assert type.getSuperType() != null;
+		final EntityTypeMetadata type = entityBinder.getManagedType();
+		final EntityTypeBinder superEntityBinder = entityBinder.getSuperEntityBinder();
+		if ( superEntityBinder == null ) {
+			throw new MappingException( "Unable to resolve super entity table for table-per-class entity - "
+					+ type.getEntityName() );
+		}
 
-		final TableReference superTypeTable = bindingState.getTableByOwner( type.getSuperType() );
+		final TableReference superTypeTable = bindingState.getTableByOwner( superEntityBinder.getManagedType() );
+		if ( superTypeTable == null ) {
+			throw new MappingException( "Unable to resolve super entity table for table-per-class entity - "
+					+ type.getEntityName() + " : " + superEntityBinder.getManagedType().getEntityName() );
+		}
 		final Table unionBaseTable = superTypeTable.binding();
 
 		final Identifier logicalName = determineLogicalName( type, tableSource );

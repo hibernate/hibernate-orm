@@ -221,8 +221,14 @@ public class MappingMetamodelImpl
 	private void registerEmbeddableMappingType(MetadataImplementor bootModel) {
 		bootModel.visitRegisteredComponents(
 				composite -> {
+					if ( composite.isGeneric() ) {
+						return;
+					}
 					final var compositeType = (ComponentType) composite.getType();
 					final var mappingModelPart = compositeType.getMappingModelPart();
+					if ( mappingModelPart == null ) {
+						return;
+					}
 					embeddableValuedModelPart.put( mappingModelPart.getNavigableRole(), mappingModelPart );
 				}
 		);

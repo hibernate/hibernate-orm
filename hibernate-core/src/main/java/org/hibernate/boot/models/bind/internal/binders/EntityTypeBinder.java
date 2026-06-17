@@ -201,7 +201,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// does not bind identifier columns or table foreign keys.
 	public void bindTables() {
 		if ( binding instanceof TableOwner ) {
-			final var primaryTable = modelBinders.getTableBinder().bindPrimaryTable( getManagedType(), getHierarchyRelation() );
+			final var primaryTable = modelBinders.getTableBinder().bindPrimaryTable( this );
 			if ( primaryTable != null ) {
 				final var table = primaryTable.binding();
 				( (TableOwner) binding ).setTable( table );

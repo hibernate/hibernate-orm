@@ -50,6 +50,20 @@ public interface XmlDocumentContext {
 		}
 	}
 
+	/**
+	 * Resolve a target entity name, checking for dynamic entities first.
+	 * Dynamic entities are registered by entity-name without a backing Java class,
+	 * so they must not be package-qualified.
+	 */
+	default String resolveTargetEntityName(String specifiedName) {
+		final var classDetailsRegistry = getModelBuildingContext().getClassDetailsRegistry();
+		final var classDetails = classDetailsRegistry.findClassDetails( specifiedName );
+		if ( classDetails != null && !classDetails.isRealClass() ) {
+			return specifiedName;
+		}
+		return resolveClassName( specifiedName );
+	}
+
 	default String resolveClassName(String specifiedName) {
 		final SimpleTypeInterpretation simpleTypeInterpretation = SimpleTypeInterpretation.interpret( specifiedName );
 		if ( simpleTypeInterpretation != null ) {

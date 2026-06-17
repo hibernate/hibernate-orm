@@ -116,12 +116,6 @@ public class OneToManyAttributeProcessing {
 			OneToManyJpaAnnotation oneToManyAnn,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		// todo (7.0) : we need a distinction here between hbm.xml target and orm.xml target-entity
-		//		- for orm.xml target-entity we should apply the package name, if one
-		//		- for hbm.xml target we should not since it could refer to a dynamic mapping
-		//
-		// todo (7.0) : also, should we ever use `@ManyToOne#targetEntity`?
-		//  	or just always use Hibernate's `@Target`?
 		final String targetEntityName = jaxbOneToMany.getTargetEntity();
 		if ( StringHelper.isEmpty( targetEntityName ) ) {
 			return;
@@ -130,6 +124,6 @@ public class OneToManyAttributeProcessing {
 				XmlAnnotations.TARGET,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		annotation.value( xmlDocumentContext.resolveClassName( targetEntityName ) );
+		annotation.value( xmlDocumentContext.resolveTargetEntityName( targetEntityName ) );
 	}
 }

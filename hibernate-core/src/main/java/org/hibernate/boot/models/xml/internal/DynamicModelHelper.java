@@ -657,6 +657,7 @@ public class DynamicModelHelper {
 			final ModelsContext modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
 			final ClassDetails memberTypeClassDetails = ModelsHelper.resolveClassDetails(
 					target,
+					xmlDocumentContext,
 					modelsContext.getClassDetailsRegistry(),
 					() -> new DynamicClassDetails( target, modelsContext )
 			);
@@ -680,6 +681,7 @@ public class DynamicModelHelper {
 			final var modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
 			final var classDetails = ModelsHelper.resolveClassDetails(
 					target,
+					xmlDocumentContext,
 					modelsContext.getClassDetailsRegistry(),
 					() -> new DynamicClassDetails(
 							target,

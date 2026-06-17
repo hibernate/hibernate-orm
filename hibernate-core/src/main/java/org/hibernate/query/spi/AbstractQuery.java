@@ -358,7 +358,7 @@ public abstract class AbstractQuery<R>
 		putIfNotNull( hints, HINT_FLUSH_MODE,  getQueryOptions().getFlushMode() );
 
 		if ( getCacheMode() != null ) {
-			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
+			putIfNotNull( hints, HINT_CACHE_MODE, getQueryOptions().getCacheMode() );
 			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
 			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );

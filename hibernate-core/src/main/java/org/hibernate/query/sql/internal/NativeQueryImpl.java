@@ -605,7 +605,7 @@ public class NativeQueryImpl<R>
 				querySpaces,
 				isCacheable(),
 				getCacheRegion(),
-				getCacheMode(),
+				options.getCacheMode(),
 				options.getFlushMode(),
 				isReadOnly(),
 				getTimeout(),

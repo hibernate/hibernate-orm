@@ -177,9 +177,10 @@ Partial HTML-report observations:
   Progress note: `isUnownedAssociationTransientCheck` is now part of
   `ResolvedSessionFactorySettings` and exposed through
   `SessionFactoryOptionsAdapter`.
-* 51 report pages mention categorization/availability failures involving
-  `DomainModelCategorizationCollector`, `AvailableResources`, or "not included"
-  source-policy text.  These remain high-signal boot-model guardrails.
+* The earlier parser count for categorization/source availability was too broad.
+  It mixed true source-policy failures with much more common inheritance and
+  binding-state failures, such as missing table context after categorization
+  already succeeded.
 * Only a small number of pages in this partial run mention table-reference
   lookup failures, which suggests the earlier inheritance registration work
   reduced the most obvious `UnknownTableReferenceException` shape in this
@@ -201,13 +202,26 @@ Directional bucket snapshot from the partial HTML report:
 `SessionFactoryOptionsAdapter`.  This direct adapter gap is addressed; rerun the
 guardrail to see the next failure shape for these tests.
 
-| Source/categorization availability
-| 51 direct hits
-| Cascade circle enhancement tests, `DuplicateTest`,
-`MultipleEmbeddedGenericsTest`, `EmbeddableWithGenericAndMappedSuperClassTest`,
-`IdClassTest`, and lazy-proxy tests mention
-`DomainModelCategorizationCollector`, `AvailableResources`, or source
-availability policy text.
+| Inheritance categorization/binding/table context
+| large, count requires clean rerun
+| The strongest current signal.  `EmbeddableWithGenericAndMappedSuperClassTest`
+is an example: categorization has enough type information to proceed, but
+table-per-class binding tries to use a mapped-superclass supertype as though it
+had a `TableReference`, leading to a null `superTypeTable`.
+
+| Composite-id / IdClass / derived-id binding
+| large, count requires clean rerun
+| The second strongest current signal.  Earlier reports and focused failures
+point at inherited id declarations, IdClass state from mapped superclasses,
+association-valued/composite ids, and late identifier/foreign-key resolution.
+
+| Source-policy availability
+| unclear; likely smaller
+| True source-policy failures are the subset where `AvailableResources` rejects
+a needed persistent superclass or related source because it is not listed and
+the source policy does not allow automatic completion.  No large current bucket
+has been proven here; do not confuse this with missing binding state after
+categorization.
 
 | Collections/indexes/map keys
 | about 110 parsed pages
@@ -253,9 +267,13 @@ Updated guardrail interpretation:
   `isUnownedAssociationTransientCheck` has been burned down.  Rerun broad or
   focused guardrails before assigning the previously hidden action-queue tests
   to a binding/runtime bucket.
-* Keep source/categorization availability as the highest-signal binding bucket
-  from this fresh run.  The failures overlap with cascade-circle, generic
-  embeddable, id-class, and enhancement/lazy proxy tests.
+* Treat inheritance categorization/binding/table context as the primary next
+  bucket, and composite-id/IdClass/derived-id handling as the second major
+  bucket.
+* Keep `AvailableResources` source-policy failures narrow: only failures caused
+  by `exclude-unlisted-classes=true` or equivalent source-policy rejection
+  belong there.  Failures such as a null supertype table reference belong in
+  inheritance/table-context handling.
 * Continue treating broad query/entity-graph and bytecode/lazy buckets as
   symptom buckets until focused reruns show whether they fail during
   SessionFactory construction, metadata export, or actual runtime execution.

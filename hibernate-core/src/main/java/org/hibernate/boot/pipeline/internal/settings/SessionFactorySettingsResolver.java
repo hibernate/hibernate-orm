@@ -54,6 +54,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 
 import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
+import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
 
 /// Projects resolved bootstrap settings into settings needed for SessionFactory
 /// construction.
@@ -102,6 +103,10 @@ public class SessionFactorySettingsResolver {
 				asBoolean( configurationValues.get( TransactionSettings.AUTO_CLOSE_SESSION ), false ),
 				asBoolean( configurationValues.get( org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK ), false ),
 				asBoolean( configurationValues.get( TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS ), false ),
+				asBoolean(
+						configurationValues.get( UNOWNED_ASSOCIATION_TRANSIENT_CHECK ),
+						bootstrapSettings.jpaBootstrap()
+				),
 				resolveBidirectionalAssociationManagementEnabled( configurationValues ),
 				resolveInterceptor( configurationValues, standardServiceRegistry ),
 				resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),

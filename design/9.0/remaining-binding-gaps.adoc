@@ -144,7 +144,127 @@ in the way this pipeline needs.
 question.
 |===
 
-== Full-Suite Failure Snapshot: 2026-06-17
+== Core Guardrail Attempt: 2026-06-17
+
+Fresh guardrail command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test
+----
+
+Status:
+
+* The core-only run produced a large amount of failure output, then stopped
+  making progress during the final test tail/reporting phase.
+* The run was interrupted manually after the Gradle wrapper and active test
+  executor appeared stalled.
+* Normal XML report finalization did not complete; only a handful of JUnit XML
+  files were present under `hibernate-core/target/test-results/test`.
+* The Gradle HTML report tree was partially available and was mined for
+  failure pages.  Treat the counts below as directional guardrail data, not as a
+  complete suite census.
+
+Partial HTML-report observations:
+
+* 346 leaf-ish failure pages were parsed from
+  `hibernate-core/target/reports/tests/test`.
+* 42 report pages mention `SessionFactoryOptions method not resolved by the
+  minimal adapter`, all currently for
+  `isUnownedAssociationTransientCheck`.  This is construction/settings handoff
+  noise that should be burned down before over-interpreting broad runtime
+  buckets.
+  Progress note: `isUnownedAssociationTransientCheck` is now part of
+  `ResolvedSessionFactorySettings` and exposed through
+  `SessionFactoryOptionsAdapter`.
+* 51 report pages mention categorization/availability failures involving
+  `DomainModelCategorizationCollector`, `AvailableResources`, or "not included"
+  source-policy text.  These remain high-signal boot-model guardrails.
+* Only a small number of pages in this partial run mention table-reference
+  lookup failures, which suggests the earlier inheritance registration work
+  reduced the most obvious `UnknownTableReferenceException` shape in this
+  sample.  This does not close the inheritance bucket.
+
+Directional bucket snapshot from the partial HTML report:
+
+[cols="1,1,3", options="header"]
+|===
+| Bucket
+| Parsed failures
+| Representative signals
+
+| Transitional settings adapter / unsupported runtime option
+| 42 direct hits
+| `DeleteCascadeTest`, `InsertWithAssociationsTest`,
+`JoinFormulaNativeQueryTest`; all mention missing
+`isUnownedAssociationTransientCheck` on the minimal
+`SessionFactoryOptionsAdapter`.  This direct adapter gap is addressed; rerun the
+guardrail to see the next failure shape for these tests.
+
+| Source/categorization availability
+| 51 direct hits
+| Cascade circle enhancement tests, `DuplicateTest`,
+`MultipleEmbeddedGenericsTest`, `EmbeddableWithGenericAndMappedSuperClassTest`,
+`IdClassTest`, and lazy-proxy tests mention
+`DomainModelCategorizationCollector`, `AvailableResources`, or source
+availability policy text.
+
+| Collections/indexes/map keys
+| about 110 parsed pages
+| `ListOfStringTest`, `ListOfByteArrayTest`, `SetAsBasicTest`,
+collection validation/order tests, and plural association tests.  The exact
+count is heuristic because package/test names overlap with runtime tests.
+
+| Bytecode/enhancement/proxy/lazy runtime
+| about 198 parsed pages
+| Many pages are enhancement variants or lazy/proxy runtime tests, but this
+bucket also absorbs downstream construction failures in the partial parser.
+Use focused reruns before treating these as bytecode defects.
+
+| Identifiers/derived ids/generators
+| about 7 parsed pages
+| `CompositeIdTypeMismatchTest`, `NonNullableCircularDependencyCascadeTest`,
+natural-id fetch-profile/entity-graph assertions, and unnamed generator
+assertions.
+
+| Inheritance/discriminator/table-reference
+| about 5 parsed pages
+| History-table joined inheritance assertions, subclass insert-ordering, and
+`DiscriminatorOptionsTest`.  This sample has fewer table-reference lookup
+failures than the older full snapshot, but inheritance remains open.
+
+| Query/criteria/entity-graph runtime
+| about 4 parsed pages
+| Fetch-profile/entity-graph assertion failures.  These still need sampling to
+separate named-object binding gaps from runtime fetch behavior.
+
+| Component/embeddable/access/override
+| about 1 parsed page
+| `InvalidAnnotatedClassTypesTest`.  The focused component and embeddable
+guardrails are currently more informative than this partial broad-run bucket.
+|===
+
+Updated guardrail interpretation:
+
+* Keep the focused mapped-superclass and embeddable inheritance tests as commit
+  guardrails; they are now more reliable than the interrupted broad run for the
+  recent binding work.
+* The minimal `SessionFactoryOptionsAdapter` gap for
+  `isUnownedAssociationTransientCheck` has been burned down.  Rerun broad or
+  focused guardrails before assigning the previously hidden action-queue tests
+  to a binding/runtime bucket.
+* Keep source/categorization availability as the highest-signal binding bucket
+  from this fresh run.  The failures overlap with cascade-circle, generic
+  embeddable, id-class, and enhancement/lazy proxy tests.
+* Continue treating broad query/entity-graph and bytecode/lazy buckets as
+  symptom buckets until focused reruns show whether they fail during
+  SessionFactory construction, metadata export, or actual runtime execution.
+
+== Historical Full-Suite Failure Snapshot: 2026-06-17
+
+This snapshot is retained as a broader failure corpus from an earlier run.  It
+contains complete core XML-report counts from that attempt, but it should not be
+confused with the newer interrupted core guardrail attempt above.
 
 Broad command:
 

@@ -133,6 +133,7 @@ public class SessionFactoryOptionsCollector {
 				lazyInitializationOutsideTransaction != null
 						? lazyInitializationOutsideTransaction
 						: settings.initializeLazyStateOutsideTransactionsEnabled(),
+				settings.unownedAssociationTransientCheck(),
 				settings.bidirectionalAssociationManagementEnabled(),
 				interceptor != null ? interceptor : settings.interceptor(),
 				collectSessionFactoryObservers( settings ),

@@ -106,6 +106,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "isIdentifierRollbackEnabled" -> settings.identifierRollbackEnabled();
 				case "isInitializeLazyStateOutsideTransactionsEnabled" ->
 						settings.initializeLazyStateOutsideTransactionsEnabled();
+				case "isUnownedAssociationTransientCheck" -> settings.unownedAssociationTransientCheck();
 				case "isBidirectionalAssociationManagementEnabled" -> settings.bidirectionalAssociationManagementEnabled();
 				case "getInterceptor" -> settings.interceptor();
 				case "getStatelessInterceptorImplementorSupplier" -> null;

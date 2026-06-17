@@ -92,6 +92,9 @@ public record ResolvedSessionFactorySettings(
 		/// Whether lazy state may be initialized outside an active transaction.
 		boolean initializeLazyStateOutsideTransactionsEnabled,
 
+		/// Whether unowned associations are checked for transient references during cascading.
+		boolean unownedAssociationTransientCheck,
+
 		/// Whether flush-time bidirectional association management is enabled.
 		boolean bidirectionalAssociationManagementEnabled,
 
@@ -255,6 +258,7 @@ public record ResolvedSessionFactorySettings(
 				autoCloseSessionEnabled,
 				identifierRollbackEnabled,
 				initializeLazyStateOutsideTransactionsEnabled,
+				unownedAssociationTransientCheck,
 				bidirectionalAssociationManagementEnabled,
 				interceptor,
 				sessionFactoryObservers,

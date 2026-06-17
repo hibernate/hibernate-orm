@@ -1,163 +1,739 @@
-= Still Missing From Model Building
+= Remaining Model-Binding Gaps
 :toc:
 
-This document tracks known remaining gaps in the ORM 9 model-building prototype:
-source discovery, annotation/XML categorization, phased binding, and production
-of `org.hibernate.mapping` metadata.
+This document tracks remaining gaps in the ORM 9 boot-model path: source
+collection, XML processing, categorization, phased binding, and production of
+`org.hibernate.mapping` metadata.
 
-The intent is to keep model-building implementation gaps separate from broader
-ORM integration notes.  Some items here may eventually imply mapping-model API
-changes, but they first need a clear local prototype story.
+The baseline for this audit is the legacy
+`org.hibernate.boot.model.process.spi.MetadataBuildingProcess` pipeline:
 
-NOTE: This gap analysis is based on an older version of ORM code, probably even pre-8.0.  The analysis will need to be performed again.
+* `ManagedResources` preparation;
+* XML pre-processing;
+* metadata-complete XML application;
+* annotation categorization;
+* XML overlay application;
+* global registrations;
+* entity hierarchy binding;
+* second-pass processing for collections, associations, identifiers, queries,
+  secondary tables, table keys, and foreign keys;
+* additional mapping contributions;
+* final metadata validation/exportable processing.
 
-See also `annotation-coverage.adoc` for the broader audit of runtime annotations
-declared in `jakarta.persistence` and `org.hibernate.annotations`, including
-`DialectOverride`.
+The new pipeline has clearer products and phases, but the remaining risks are
+not just missing single annotations.  Most test-fix cycles have exposed
+composition gaps: XML plus categorization, mapped-superclass plus table context,
+embeddables plus path overrides, collections plus map-key/list-index state, and
+association targets plus late foreign-key creation.
 
-== Annotation and XML Coverage
+See also:
 
-These are annotation and XML coverage items that have not yet been promoted into
-a focused implementation note, an explicit binder gap above, or focused tests.
+* `annotation-coverage.adoc` for annotation-level descriptor/source/binding
+  coverage.
+* `new-contributor-model-binding-guide.adoc` for the current source,
+  categorization, and binding flow.
+* `orm-integration-notes.adoc` for mapping-model changes suggested by the
+  phased binder.
+* `mapped-superclass-model-design.adoc` for the longer-term mapped-superclass
+  model.
+* `aggregate-mapping-design.adoc` for aggregate/UDT work.
 
-Coverage audit:
+== Status Definitions
+
+`source-confirmed gap`::
+The current source contains an explicit unsupported branch, or a known missing
+behavior is visible from the implementation.
+
+`composition parity gap`::
+Individual annotations or binders exist, but old-pipeline combinations are not
+yet proven or have recently failed in focused tests.
+
+`test-only gap`::
+Binding support appears present, but no focused mapping-state test proves the
+behavior.
+
+`intentional removal`::
+Legacy behavior is not expected to survive ORM 9.
+
+`deferred design area`::
+The behavior should not be completed as an isolated binder patch because it
+depends on a broader model or runtime design.
+
+== Source-Confirmed Gaps
+
+These are the highest-signal items because the current source still contains
+explicit unsupported branches or TODO-level behavior in the new pipeline.
 
 [cols="1,1,3", options="header"]
 |===
-| Item
+| Area
 | Status
 | Notes
 
-| `@OnDelete`
-| Covered
-| Applied to to-one values, plural association element values, and collection
-table owner keys.
+| Inverse `@OneToOne` edge cases
+| source-confirmed gap
+| Normal member-level inverse one-to-one binding has a dedicated path, but
+component helper paths still reject inverse one-to-one association identifiers,
+and `InverseToOneAssociationBinder` still rejects `mappedBy` through a joined
+table.
 
-| `@Parent`
-| Covered
-| Component binding records the parent-property name and skips physical value
-binding for the parent-reference member.
+| Embedded-id association identifiers with `@JoinTable`
+| source-confirmed gap
+| `ComponentBinder` rejects association identifiers in embedded ids when the
+association uses a join table.  It also rejects inverse one-to-one association
+identifiers.
 
-| `@PartitionKey`
-| Covered
-| Basic-value binding marks the value as a partition key.
+| IdClass identifier attributes beyond basic/to-one
+| source-confirmed gap
+| `IdentifierBinder` only handles basic and to-one id attributes for IdClass.
+Any remaining plural, component, or special association id shape needs either
+explicit support or an ORM 9 rejection decision.
 
-| `@RowId`
-| Covered
-| Primary table binding applies the table row-id value.
+| `@MapsId` over unsupported identifier value shapes
+| source-confirmed gap
+| `DerivedIdentifierBinder` supports basic, component, and to-one identifier
+parts.  Other identifier value shapes still fail explicitly.
 
-| `@TimeZoneStorage`
-| Binding support present; test-only gap
-| Basic-value binding applies the storage strategy, but focused mapping-state
-assertions are still needed in the new pipeline tests.
+| Plural members inside embeddables
+| source-confirmed gap
+| `ComponentBinder` supports plural embeddable members only for the currently
+implemented element-collection / many-to-many paths.  Unsupported plural member
+shapes still throw.
 
-| `@TimeZoneColumn`
-| Binding support present; test-only gap
-| Basic-value binding applies the time-zone column name, SQL type, table, and
-insert/update flags, but focused mapping-state assertions are still needed in
-the new pipeline tests.
+| Entity-valued map keys
+| source-confirmed gap
+| `CollectionIndexBinder` still has unsupported paths for entity-valued map keys
+requiring `@MapKeyJoinColumn` support.
 
-| `@CreationTimestamp`
-| Covered
-| Basic attribute binding installs a value generator.
+| `@MapKey(name)` for non-basic target properties
+| source-confirmed gap
+| `CollectionIndexBinder` currently implements property map keys for basic target
+properties.  Component-valued, association-valued, or otherwise complex target
+properties need parity decisions.
 
-| `@UpdateTimestamp`
-| Covered
-| Basic attribute binding installs a value generator.
+| Implicit `@MapKey`
+| source-confirmed gap
+| Implicit map-key binding is only implemented for entity-valued map elements.
+Other map element shapes need coverage or explicit rejection.
 
-| generated values
-| Covered
-| Basic attribute binding installs value generators for `@ValueGenerationType`
-annotations and applies `@GeneratedColumn` generated-as DDL.
+| Inverse map-valued `@ManyToMany`
+| source-confirmed gap
+| `InversePluralAssociationBinder` handles basic and to-one owning map keys, but
+still rejects other inverse map-key shapes.
 
-| `@Struct`
-| Intentionally deferred
-| Nice-to-have ORM 9 coverage; needs a dedicated aggregate/UDT binding note.
+| `@Any` key inference
+| source-confirmed gap
+| `AnyValueBinder` requires `@AnyKeyJavaClass` unless explicit discriminator
+target mappings allow key type inference.  Inference is limited to basic target
+identifiers with matching Java types.
 
-| `@View`
-| Metadata coverage present; test/binder verification needed
-| Categorization records synchronized table names and table binding has view
-table-reference support.  Needs focused tests before marking closed.
+| Column/table `options`
+| source-confirmed gap
+| `ColumnBinder` still throws for column options instead of applying them.  Table
+options should be checked at the same time because `TableSource` carries them.
 
-| hierarchical package metadata
-| Design question
-| Open question: should mappings defined on package `com.acme` apply to
-`com.acme.model`?  If so, should `PackageDetails` expose its parent package?
+| Constructor-level `@Instantiator`
+| source-confirmed gap
+| `annotation-coverage.adoc` still lists `@Instantiator` as a binding gap.
+Hibernate Models does not currently expose constructor-target annotation binding
+in the way this pipeline needs.
 
-| `@LazyGroup` in XSD
-| Covered
-| Mapping XSD and XML source processing create `@LazyGroup`; focused XML test
-verifies the annotation model.
-
-| `@ListIndexBase` in XSD
-| Covered
-| Mapping XSD and XML source processing create `@ListIndexBase`; focused XML
-test verifies the annotation model.
-
-| `@Mutability` in XSD
-| Covered
-| Mapping XSD and XML source processing create `@Mutability`; focused XML test
-verifies the annotation model.
-
-| `@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` for secondary tables in XSD
-| Covered
-| Secondary-table XML custom SQL creates table-scoped repeatable
-`@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` usages; focused XML test verifies
-the annotation model.
-
-| `<mapped-superclass/>` support in dynamic models
-| XML-source gap
-| XML processing explicitly leaves this as an open dynamic-model question.
-
-| `@Abstract`
-| XML/dynamic covered; test-only gap
-| XML-only descriptor exists.
-
-| `@Extends`
-| XML/dynamic covered; test-only gap
-| XML-only descriptor exists.
-
-| `@CollectionClassification`
-| XML/dynamic covered
-| XML-only descriptor, XSD, XML processing, and dynamic-model tests exist.
-
-| `@Target`
-| XML/dynamic covered
-| XML-only descriptor and XML attribute processing exist; this is distinct from
-deprecated `org.hibernate.annotations.Target`.
+| Dynamic XML mapped-superclass
+| source-confirmed gap
+| XML processing still leaves `<mapped-superclass/>` in dynamic models as an open
+question.
 |===
 
-== Removed Annotation Vestiges
+== Full-Suite Failure Snapshot: 2026-06-17
 
-`@SelectBeforeUpdate` was removed as a Hibernate annotation and should not be
-treated as an annotation coverage item for the new pipeline.
+Broad command:
 
-Remaining vestiges are legacy/XML/runtime mapping contracts:
+[source,bash]
+----
+./gradlew test
+----
 
-* `org.hibernate.mapping.PersistentClass#setSelectBeforeUpdate(boolean)` and
-  `hasSelectBeforeUpdate()`
-* `org.hibernate.boot.jaxb.mapping.spi.JaxbEntity#isSelectBeforeUpdate()`
-* `org.hibernate.boot.jaxb.hbm.spi.EntityInfo#isSelectBeforeUpdate()`
-* `org.hibernate.boot.model.source.spi.EntitySource#isSelectBeforeUpdate()`
-* persister/runtime reads of the resulting mapping flag
+Core-only command:
 
-Parity/removal plan:
+[source,bash]
+----
+./gradlew :hibernate-core:test
+----
 
-1. Audit whether JPA `orm.xml` should retain any `select-before-update`
-   vocabulary.  If not, remove it from mapping XSD/JAXB processing rather than
-   carrying it into the new source model.
-2. Treat HBM `select-before-update` as legacy-only.  If HBM support is removed
-   from the ORM 9 boot-model path, remove the HBM source contract vestige as
-   part of that cleanup.
-3. After XML/HBM source decisions are settled, remove or deprecate the
-   `PersistentClass` flag and persister plumbing if no supported source can
-   set it.
-4. Until then, do not add new categorization/binding support for a removed
-   annotation; any remaining work belongs to XML/source compatibility or
-   mapping-model cleanup.
+Broad-run status:
 
-Done:
+* The run was attempted as a broad full-suite pass.
+* Completed XML reports were available for several modules and are grouped
+  below.
+* The broad run stalled while `hibernate-core:test` was still active, so it was
+  stopped and replaced by a core-only run for exact core failure data.
 
-* `@SecondaryRow`
-* `@SoftDelete`
-* `@TenantId`
+Core-only status:
+
+* `:hibernate-core:test` completed test execution enough to report
+  `12,795 tests completed, 3,689 failed, 1,460 skipped`.
+* The task then failed with `Java heap space` while completing the Gradle test
+  executor.
+* The `hibernate-core/target/test-results` XML reports contained all `3,689`
+  failures and are the source for the core bucket counts below.
+
+Completed XML report failure counts:
+
+[cols="1,1,3", options="header"]
+|===
+| Module/task
+| Failures
+| Dominant bucket
+
+| `hibernate-jcache:test`
+| 24
+| Cache/natural-id/region metadata and `SessionFactoryOptionsAdapter` gaps.
+
+| `hibernate-jfr:test`
+| 2
+| Cache-event fallout from missing/incorrect cache region metadata.
+
+| `hibernate-tck-runner:test`
+| 1
+| Harness shutdown fallout; not enough signal for a binding bucket.
+
+| `tooling/hibernate-ant:legacyTest`
+| 1
+| JPA persistence-unit/property override handling.
+
+| `tooling/hibernate-assistant:test`
+| 3
+| Mapped-superclass and joined-inheritance mapping-model export.
+
+| `tooling/hibernate-reveng:test`
+| 4
+| Reverse-engineering fallout: composite to-one binding, reserved identifier SQL,
+and cache/lazy lint expectations.
+
+| `tooling/metamodel-generator:dataIntegrationTest`
+| 39
+| Named-query registration/lookup for generated repository methods.
+|===
+
+Core failure counts by coarse bucket:
+
+[cols="1,1,3", options="header"]
+|===
+| Bucket
+| Failures
+| Representative tests
+
+| Inheritance/table-reference resolution
+| 686
+| `TablePerClassInheritanceWithAbstractRootTest`,
+`JoinedSubclassTest`, `UnionSubclassTest`, `JpaAliasTests`,
+`AttributeJoinWithJoinedInheritanceTest`.
+
+| Query/criteria/entity-graph runtime
+| 561
+| `LoadFetchGraphWithEagerSelfReferencingEagerToOneTest`,
+`QueryTest`, `ResultsShapeTests`, `QueryHintEntityGraphTest`,
+`EntityJoinWithJoinedInheritanceTest`.  This is mostly a symptom bucket, not a
+primary binding bucket; a follow-up sample of query/criteria/entity-graph
+failures showed many SessionFactory build failures, settings-adapter failures,
+and table-reference failures, with only a small named-query subset.
+
+| Collections/indexes/map keys
+| 512
+| `DefaultNamingCollectionElementTest`,
+`ImprovedNamingCollectionElementTest`, `ElementCollectionMapTest`,
+`MapIssueTest`, `IndexedCollectionTest`.
+
+| Transitional settings adapter / unsupported runtime option
+| 285
+| `DeleteCascadeTest`, `InsertWithAssociationsTest`,
+`SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest`,
+`ProcedureParameterTests`, `ExplicitLockingTest`.
+
+| Type/converter/aggregate value mapping
+| 237
+| `MatchingDuplicateRegistrationTests`, `EnumeratedAndGenericsTest`,
+`JsonEmbeddableArrayTest`, `CompositeUserTypeTests`,
+`WrapperArrayHandlingLegacyTests`.
+
+| Action queue / temporal / audit state management
+| 223
+| `InsertDecomposerTest`, `UpdateDecomposerTest`, `HistoryTableDecomposerTest`,
+`AuditEntityTest`, `ChangelogAnnotationTest`.
+
+| Component/embeddable/access/override
+| 155
+| `GenericEmbeddedPropertyMappedSuperclassTest`,
+`EmbeddableInheritanceMappedSuperclassAndGenericsTest`,
+`EmbeddableWithOneToMany_HHH_11302_xml_Test`,
+`RecordNestedEmbeddedWithASecondaryTableTest`.
+
+| Schema/table/column/generator metadata
+| 141
+| `ManyToOneReferencedColumnNameTest`, `CommentTest`, `CommentsTest`,
+`SequenceGeneratorOptionsTest`, `Jpa4TableAndIndexDdlTest`.
+
+| Bytecode/enhancement fallout
+| 125
+| `DirtyTrackingCollectionNotInDefaultFetchGroupTest`,
+`DeepInheritanceWithNonEntitiesProxyTest`, `ManyToOnePropertyAccessByFieldTest`,
+`LazyGroupWithInheritanceAllowProxyTest`.
+
+| Identifiers and derived ids
+| 120
+| `IdClassWithOneAttributeTest`, `CompositeIdFkGeneratedValueTest`,
+`IdManyToOneTest`, `DefaultedMapsIdTest`, `MapsEmbeddedIdTest`.
+
+| Cache/natural-id/filter metadata
+| 56
+| `CachedMutableNaturalIdNonStrictReadWriteTest`, `CacheAnnotationTests`,
+`InheritedNaturalIdTest`, `BasicHibernateAnnotationsTest`.
+
+| JPA transaction/lock/settings runtime
+| 37
+| `BatchAndLockTest`, `LockTest`, `GetTransactionTest`,
+`EntityManagerSerializationTest`.
+
+| XML/source handling
+| 9
+| `AttributeOverrideColumnTransformTests`, `OrmXmlIndexTest`,
+`Ejb3XmlTest`, `SimpleXmlOverriddenTest`, `XmlDefinedNamespaceTests`.
+
+| Other/unclassified
+| 542
+| Mixed assertion failures and downstream runtime failures that should be
+reclassified after the large metadata/binding buckets shrink.
+|===
+
+=== Failure Bucket Mapping
+
+[cols="1,3,3", options="header"]
+|===
+| Bucket
+| Representative failures
+| Existing section to burn down
+
+| XML/source and persistence-unit settings
+| `tooling/hibernate-ant:legacyTest`
+`org.hibernate.tool.ant.JPAPropertyOverridesPUnit.TestCase#testJPAPUnit`
+| <<XML and Source Handling>>
+
+| Named-query registration and generated repository metadata
+| `tooling/metamodel-generator:dataIntegrationTest`
+`BookRepositoryTest`, `CatalogTest`, `RecordProjectionTest`,
+`SharedInterfaceTest`, `ThisQueryTest`; all fail with missing named queries such
+as `No query named '...#countAll()'`.  In core, the named-query subset is much
+smaller and represented by `Jpa4StaticQueryRegistrationTest`.
+| <<Global Metadata and Named Objects>>
+
+| Cache, natural-id, and region metadata
+| `hibernate-jcache:test` `CacheableNaturalIdTest`,
+`SecondLevelCacheTest`, `DomainDataRegionTest`, `HibernateCacheTest`,
+`MissingCacheStrategyTest`, `StorageAccessTest`; `hibernate-jfr:test`
+`EntityInsertCachePutEventTests`, `EntityUpdateCachePutEventTests`.
+| <<Global Metadata and Named Objects>>
+
+| Transitional `SessionFactoryOptionsAdapter` gaps
+| `hibernate-jcache:test` `NonStrictReadWriteCacheTest`,
+`HibernateCacheTest`, `RefreshUpdatedDataTest` fail on
+`SessionFactoryOptions method not resolved by the minimal adapter:
+isUnownedAssociationTransientCheck`.  Core reports also include adapter and
+unsupported-option failures in action-queue, lock, procedure, query, and
+criteria tests.
+| Legacy baseline: <<Legacy Baseline Responsibilities>> final metadata cleanup
+and constructor/settings handoff.
+
+| Mapped-superclass and inheritance mapping-model export
+| `tooling/hibernate-assistant:test`
+`MetamodelJsonSerializerTest#testMappedSuperclasses`,
+`MetamodelJsonSerializerTest#testStandardDomainModelInheritance`,
+`ResultsJsonSerializerTest#initializationError`.
+| <<Categorization and Inheritance>>
+
+| Composite to-one / association target binding
+| `tooling/hibernate-reveng:test`
+`org.hibernate.tool.reveng.jdbc2cfg.OneToOne.TestCase#testGenerateAnnotatedClassesAndReadable`
+fails with composite to-one join column count mismatch.
+| <<Associations and Foreign Keys>>
+
+| Inheritance table-reference resolution
+| Core reports contain the largest classified bucket here, including
+`TablePerClassInheritanceWithAbstractRootTest`, `JoinedSubclassTest`,
+`UnionSubclassTest`, `JoinedInheritanceEagerTest`, `JpaAliasTests`,
+`AttributeJoinWithJoinedInheritanceTest`, and many
+`UnknownTableReferenceException` failures.
++
+Progress note: the first burn-down slice restored new-binder registration of
+`Subclass` mappings with their entity supertype.  This removed the
+`UnknownTableReferenceException` shape from a focused inheritance rerun, while
+leaving other inheritance failures in separate buckets such as duplicate column
+mapping, embeddable inheritance, and unsupported association/index paths.
+| <<Categorization and Inheritance>> and <<Table, Column, and Schema Details>>
+
+| Component/embeddable inheritance and overrides
+| Core reports include `GenericEmbeddedPropertyMappedSuperclassTest`,
+`EmbeddableInheritanceMappedSuperclassAndGenericsTest`,
+`EmbeddableWithOneToMany_HHH_11302_xml_Test`,
+`DirtyCheckingWithEmbeddableNonVisibleGenericExtendsSerializableMappedSuperclassTest`,
+and `RecordNestedEmbeddedWithASecondaryTableTest`.
+| <<Component, Override, and Access Binding>>
+
+| Identifier and derived-id behavior
+| Core reports include `IdClassWithOneAttributeTest`,
+`CompositeIdFkGeneratedValueTest`, `IdManyToOneTest`,
+`DefaultedMapsIdTest`, `MapsEmbeddedIdTest`,
+`CompositeIdGenerationTypeTest`, and `RecordEmbeddedIdGeneratedValueTest`.
+| <<Identifiers and Derived Identifiers>>
+
+| Collections, list/index, and plural association behavior
+| Core reports include `DefaultNamingCollectionElementTest`,
+`ImprovedNamingCollectionElementTest`, `ElementCollectionMapTest`,
+`MapIssueTest`, `IndexedCollectionTest`, `TernaryTest`, and
+`OneToManyMapEntityKeyMappedByTest`.
+| <<Collections, Indexes, and Map Keys>>
+
+| Converter/custom type/value-source behavior
+| Core reports include `MatchingDuplicateRegistrationTests`,
+`EnumeratedAndGenericsTest`, `JsonEmbeddableArrayTest`,
+`JsonWithArrayEmbeddableTest`, `CompositeUserTypeTests`,
+and `WrapperArrayHandlingLegacyTests`.
+| <<Global Metadata and Named Objects>> and <<Aggregate and Advanced Value Mapping>>
+
+| JPA settings, lock, transaction, and EntityManager behavior
+| Core reports include `BatchAndLockTest`, `LockTest`,
+`ExplicitLockingTest`, `GetTransactionTest`, and
+`EntityManagerSerializationTest`.
+These are not automatically binding gaps; investigate after the adapter/settings
+and metadata buckets are reduced.
+| Not a primary binding bucket yet; likely construction/settings/runtime fallout.
+
+| Audit/changelog state-management fallout
+| Core reports include `AuditEntityTest`, `AuditManyToManyTest`,
+`ChangelogAnnotationTest`, `TemporalEntityTest`,
+`TemporalEntityHistoryTest`, and action-queue decomposer tests.
+| <<Intentional Removals and Deferred Areas>>
+|===
+
+== Legacy Baseline Responsibilities
+
+The old `MetadataBuildingProcess` provides a checklist for remaining pipeline
+parity.  A slice is not complete merely because a binder exists; it is complete
+when the equivalent old-pipeline responsibility has either moved into the new
+pipeline, been intentionally removed, or been documented as deferred.
+
+[cols="1,3,3", options="header"]
+|===
+| Legacy responsibility
+| New-pipeline location
+| Remaining audit question
+
+| Source inventory from `ManagedResources`
+| `AvailableResources` and `MappingSourceContributions`
+| Verify every supported entry point feeds the same normalized source facts:
+managed classes, package metadata, mapping files, converters, query imports, and
+additional contributions.  Removed cfg.xml/HBM/loaded-class setting support
+should stay removed.
+
+| XML pre-processing
+| `XmlPreProcessor` called from `DomainModelCategorizer`
+| Verify XML is fully ignored when XML mapping is disabled and that mapping-file
+classes discovered from XML participate in categorization before hierarchy
+building.
+
+| Metadata-complete XML
+| `XmlProcessor.processXml(...)`
+| Verify metadata-complete XML adds/replaces annotation usages before
+categorization sees managed type roles, ids, attributes, callbacks, and package
+defaults.
+
+| XML overlays
+| `XmlProcessingResult.apply()`
+| Verify overlay XML is applied before ordinary class categorization and before
+`ManagedTypeInheritanceState` is created.
+
+| Superclass discovery
+| `ManagedTypeInheritanceState`
+| Verify JPA `exclude-unlisted-classes` behavior for automatically pulled-in
+persistent superclasses: default should include undeclared persistent
+superclasses; excluded units should fail instead of silently using them.
+
+| Global registrations
+| `BindingCoordinator.coordinateGlobalBindings()`
+| Verify all old global side effects are represented: generators, converters,
+types, named queries, result-set mappings, entity graphs, fetch profiles,
+database objects, filters, imports, event listeners/callbacks.
+
+| Entity hierarchy binding
+| `EntityHierarchy`, `EntityTypeBinder`, `MappedSuperTypeBinder`
+| Verify inheritance strategy, root/absolute-root handling, mapped-superclass
+state, subclass tables, discriminator state, and secondary table state across
+mixed entity/mapped-superclass chains.
+
+| Second-pass queues
+| Typed binding phases in `BindingCoordinator`
+| Verify every old second-pass category has an equivalent typed phase or explicit
+removal: collection second pass, to-one FK second pass, secondary table second
+pass, joined-subclass FK, discriminator second pass, fetch override second pass,
+query/result-set mapping second pass, generator resolver second pass, aggregate
+component second pass, and exportable/key creation.
+
+| Additional mapping contributions
+| Metadata resolver / pipeline handoff
+| Verify `AdditionalMappingContributor` equivalents still contribute classes,
+class details, XML mappings, tables, sequences, and auxiliary database objects
+at the correct point.  This is especially important after removing old builder
+facades.
+
+| Final metadata cleanup
+| Metadata finalization path
+| Verify unique property refs, delayed property refs, natural-id unique keys,
+foreign keys, collection keys, imports, named objects, and exportable producers
+are complete before runtime construction.
+|===
+
+== Composition Parity Buckets
+
+These buckets are where the remaining failures are most likely to appear.  The
+presence of individual annotation coverage is useful, but not sufficient to
+close these.
+
+=== XML and Source Handling
+
+Open parity questions:
+
+* XML-disabled mode must not parse, class-load, or apply mapping XML.
+* Metadata-complete XML should create the persistent-type role before
+  categorization.
+* XML overlays should mutate the Hibernate Models annotation view before
+  categorization and member binding.
+* XML access defaults and class/member `@Access` overlays need parity with
+  annotation access resolution.
+* Package metadata from explicit packages and XML defaults should be visible to
+  categorization and binding.
+* Additional mapping contributions need an audited new-pipeline insertion point.
+
+Recent related failures around XML not adding `@Entity` and bad XML being read
+when XML mappings were disabled belong to this bucket.
+
+=== Categorization and Inheritance
+
+Open parity questions:
+
+* `ManagedTypeInheritanceState` should continue deduplicating equivalent
+  `ClassDetails` by class name, not object identity.
+* Persistent superclasses automatically pulled into categorization should obey
+  the source policy represented by `AvailableResources#includeUnlistedPersistentSuperclasses()`.
+* Entity/mapped-superclass relation enum determination should be correct before
+  binders decide root/subclass/mapped-superclass behavior.
+* Mapped-superclasses above a root entity may need hierarchy-specific mapping
+  contributions because their table context comes from the root entity.
+* Shared mapped-superclasses across multiple hierarchies need coverage for
+  table-specific columns, secondary-table routing, callbacks/listeners, and
+  property closure behavior.
++
+Progress note: the contribution-lite bridge applies mapped-superclass declared
+properties only to nearest consuming entity boundaries, using separate property
+copies for each consumer.  This addresses ownership/over-propagation symptoms
+without completing the full descriptor/contribution split.
++
+Progress note: the single-table sibling shared-column case represented by the
+`e_title` transient-override tests is addressed by applying basic `@Column`
+`insertable`/`updatable` flags to both the `Property` and its `BasicValue`
+selectable flags during binding.  The remaining
+`EmbeddableInheritanceMappedSuperclassAndGenericsTest` failure is an embeddable
+inheritance/generics metamodel gap, not a duplicate-column validation failure.
+* Joined, single-table, and table-per-class inheritance need combination tests
+  with secondary tables, discriminators, mapped superclasses, and generated ids.
+
+The longer-term modeling problem is covered by
+`mapped-superclass-model-design.adoc`; until that design is implemented, this
+bucket should remain open even if focused tests pass.
+
+=== Component, Override, and Access Binding
+
+Open parity questions:
+
+* Component member discovery must remain superclass-first and access-aware.
+* Owner-type path adjustments should be collected least-specific to
+  most-specific, with member-level overrides last.
+* Attribute overrides, association overrides, and conversion overrides must work
+  through nested embeddables, inherited embeddables, mapped-superclass
+  component members, collection elements, map keys, and embedded ids.
+* Implicit nested column names should always route through the configured
+  `ImplicitNamingStrategy`.
+* XML access handling and attribute-level `@Access` validation are still
+  follow-up areas.
+* `@Parent`, `@EmbeddedColumnNaming`, `@EmbeddedTable`, custom component types,
+  custom instantiators, and aggregate components need combination coverage.
+
+This is the bucket that has repeatedly exposed failures in embedded inheritance,
+mapped-superclass overrides, plural embeddables, and nested override tests.
+
+=== Identifiers and Derived Identifiers
+
+Open parity questions:
+
+* Basic id, embedded id, IdClass, association-valued id, and derived id paths
+  need combination coverage across inheritance, mapped-superclasses,
+  embeddables, quoted identifiers, property refs, and composite target ids.
+* `@MapsId` should be tested for whole-id, named-id-part, nested embeddable,
+  IdClass scalar part, and association-valued-id combinations.
+* Identifier generator resolution should be audited against the old
+  generator-resolver second passes.
+* IdClass non-basic/non-to-one id attributes need an explicit ORM 9 support or
+  rejection decision.
+* Embedded-id association identifiers with join tables are not implemented.
+
+=== Associations and Foreign Keys
+
+Open parity questions:
+
+* Owning to-one, inverse one-to-one, to-one join tables, primary-key join
+  columns, join formulas, property refs, not-found, and optionality should be
+  tested in combinations rather than as isolated annotations.
+* Association targets that reference non-primary-key properties must remain a
+  typed late phase, not an eager member-binding lookup.
+* Unique property reference side effects are still a collector side channel and
+  should be audited after property-ref work.
+* Foreign-key metadata from `@JoinColumn`, `@JoinTable`,
+  `@CollectionTable`, `@MapKeyJoinColumn`, and secondary tables should survive
+  until the late FK phase.
+* Case/quoting-sensitive identifier matching should use `Identifier#matches(...)`
+  semantics wherever logical table/column matching is performed.
+
+=== Collections, Indexes, and Map Keys
+
+Open parity questions:
+
+* `List` without `@OrderColumn` should retain LIST semantics with inferred
+  order-column defaults, unless explicitly mapped as `@Bag`.
+* Basic, embeddable, entity, any-valued, many-to-any, and plural-association
+  collection elements need coverage across bags, sets, lists, arrays, maps, and
+  id-bags.
+* Basic map keys, entity map keys, property map keys, embeddable map keys,
+  borrowed map keys, `@MapKeyClass`, `@MapKeyColumn`, `@MapKeyJoinColumn`,
+  `@MapKeyEnumerated`, `@MapKeyTemporal`, and Hibernate map-key type overrides
+  need combination coverage.
+* Inverse map-valued associations need more parity coverage, especially
+  non-basic/non-to-one owning map keys.
+* Sort, order-by, SQL-order, filters, join-table filters, where/restriction,
+  collection custom SQL, collection cache, collection type, and collection id
+  need cross-feature tests.
+
+=== Global Metadata and Named Objects
+
+Open parity questions:
+
+* Named queries, native queries, named mutation statements, stored procedures,
+  SQL result-set mappings, query cache layout, imports, and named entity graphs
+  should be verified through metadata finalization and runtime use where
+  possible.
+* Fetch profiles and member-level fetch-profile overrides should be tested with
+  inherited attributes and XML-sourced mappings.
+* Filter definitions, auto-enabled filters, parameter type inference, entity
+  filters, collection filters, and join-table filters need runtime-adjacent
+  coverage.
+* Global type registrations, converter registrations, Java/JDBC type
+  registrations, custom user types, composite user types, collection types, and
+  embeddable instantiators should be verified through both annotation and XML
+  source paths.
+
+=== Table, Column, and Schema Details
+
+Open parity questions:
+
+* Primary, secondary, joined-subclass, union-subclass, association, and
+  collection tables need identifier matching that respects quoted identifiers.
+* Column options are not implemented; table options should be audited.
+* Unique constraints, indexes, checks, comments, row ids, partition keys,
+  generated columns, column transformers, formulas, nationalized/time-zone
+  columns, temporal/enum/lob handling, and custom DDL fragments need
+  combination coverage.
+* Table-key creation and FK creation should remain split and ordered: table keys
+  first, physical FK customization later.
+* Exportable database objects and auxiliary objects need coverage through schema
+  generation.
+
+=== Aggregate and Advanced Value Mapping
+
+Open parity questions:
+
+* `@Struct` remains deferred to aggregate/UDT design.
+* Aggregate embeddables, arrays of aggregate values, JSON/XML aggregate storage,
+  nested aggregate components, and aggregate validation should be handled under
+  `aggregate-mapping-design.adoc`.
+* `@Any` and `@ManyToAny` support exists but has source-confirmed limits around
+  key inference and non-basic target identifiers.
+
+== Test-Only Gaps To Keep Visible
+
+These items appear implemented but should stay visible until focused
+mapping-state tests prove the behavior in the new pipeline:
+
+* `@TimeZoneStorage`
+* `@TimeZoneColumn`
+* `@View`
+* XML/dynamic `@Abstract`
+* XML/dynamic `@Extends`
+* hierarchical package metadata, especially whether metadata from `com.acme`
+  should apply to `com.acme.model`
+
+== Intentional Removals and Deferred Areas
+
+These should not be rediscovered as binder gaps unless the ORM 9 scope changes:
+
+* cfg.xml support;
+* HBM XML support;
+* `AvailableSettings.LOADED_CLASSES`;
+* `AvailableSettings.ORM_XML_FILES`;
+* `AvailableSettings.HBM_XML_FILES`;
+* `AvailableSettings.CFG_XML_FILE`;
+* public `EntityManagerFactoryBuilder`;
+* public `SessionFactoryBuilder`;
+* `@SelectBeforeUpdate` as a Hibernate annotation;
+* broader state-management/audit support for `Audited`, `Changelog`, and
+  related annotations.
+
+Remaining XML/runtime vestiges of removed features should be cleaned up in their
+own slices rather than silently reintroduced through the new pipeline.
+
+== Suggested Verification Slices
+
+Use these as burn-down buckets instead of waiting for broad suite failures.
+
+1. XML/source parity:
+   `XMLMappingDisabledTest`, HBM-not-found removal/transformation tests that
+   still exercise XML annotation creation, metadata-complete entity tests,
+   overlay XML tests, package-default tests.
+
+2. Categorization/inheritance:
+   mapped-superclass override tests, access hierarchy tests, joined-subclass
+   tests, table-per-class tests, shared mapped-superclass tests,
+   `exclude-unlisted-classes` tests.
+
+3. Components/overrides:
+   embedded inheritance tests, nested attribute/association override tests,
+   plural embeddable tests, collection-element embeddable tests, embedded-id
+   override tests, custom implicit naming strategy tests.
+
+4. Identifiers:
+   IdClass tests, embedded-id tests, association-id tests, derived-id tests,
+   quoted identifier variants, composite target-id variants.
+
+5. Associations:
+   to-one join-column/join-table tests, inverse one-to-one tests, property-ref
+   tests, join-formula tests, primary-key-join-column tests, not-found tests,
+   FK customization tests.
+
+6. Collections:
+   list/index tests, map-key tests, inverse map-valued association tests,
+   id-bag tests, many-to-any tests, sort/order/filter/custom-SQL/cache tests.
+
+7. Global metadata:
+   named query/result-set/entity-graph/fetch-profile/filter/type-registration
+   tests, including XML-sourced variants.
+
+8. Schema/exportables:
+   secondary table keys, collection table keys, joined-subclass keys, auxiliary
+   database objects, unique/index/check/comment/options, schema-generation
+   tests.

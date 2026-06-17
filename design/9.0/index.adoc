@@ -93,6 +93,18 @@ Use this document when changing mapped-superclass binding, `PersistentClass`
 inheritance links, property closure behavior, or table/override handling for
 mapped-superclass attributes.
 
+link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+
+This is the design note for reshaping embeddable inheritance and generic
+embeddable binding around declaration-versus-application products.  It extends
+the mapped-superclass contribution idea to `Component`/embeddable mappings,
+where source role, type-variable substitution, path overrides, table/storage
+context, and polymorphic discriminator state belong to the consuming path.
+
+Use this document when changing `ComponentSource`, `ComponentBinder`,
+polymorphic embeddable discriminator handling, generic embeddable type
+resolution, or mapped-superclass members inherited by embeddables.
+
 link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`]
 
 This is the model-building backlog.  It tracks known gaps in source discovery,

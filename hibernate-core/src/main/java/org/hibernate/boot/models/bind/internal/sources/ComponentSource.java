@@ -18,6 +18,8 @@ import org.hibernate.boot.models.categorize.internal.StandardPersistentAttribute
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.models.spi.TypeVariableScope;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -89,8 +91,10 @@ public record ComponentSource(
 		/// component type.
 		MemberDetails sourceMember,
 
-		/// The embeddable/component class whose persistable members are being bound.
-		ClassDetails componentType,
+	/// The embeddable/component class whose persistable members are being bound.
+	ClassDetails componentType,
+
+	TypeVariableScope typeVariableScope,
 
 	/// Path-keyed mapping adjustments scoped to [#sourceMember()].
 	///
@@ -130,6 +134,7 @@ public record ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
 				resolveEmbeddableType( member, bindingContext, false ),
+				member.getType(),
 				new PathAdjustmentCollector( member, bindingContext ),
 				fallbackAccessType( member ),
 				"",
@@ -149,6 +154,7 @@ public record ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
 				resolveEmbeddableType( member, bindingContext, false ),
+				member.getType(),
 				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
 				defaultAccessType,
 				"",
@@ -162,7 +168,7 @@ public record ComponentSource(
 	/// facts directly on mapping objects, identifier component sources should likely retain
 	/// the identifier member or key-mapping metadata as well.
 	public static ComponentSource embeddedIdentifier(ClassDetails componentType, AccessType defaultAccessType) {
-		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, null, defaultAccessType, "", "" );
+		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, componentType, null, defaultAccessType, "", "" );
 	}
 
 	public static ComponentSource embeddedIdentifier(
@@ -174,6 +180,7 @@ public record ComponentSource(
 				Kind.EMBEDDED_IDENTIFIER,
 				member,
 				componentType,
+				member.getType(),
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
 				"",
@@ -193,6 +200,7 @@ public record ComponentSource(
 				Kind.COLLECTION_ELEMENT,
 				member,
 				resolveEmbeddableType( member, bindingContext, true ),
+				member.getElementType(),
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
 				"",
@@ -210,6 +218,7 @@ public record ComponentSource(
 				Kind.MAP_KEY,
 				member,
 				componentType,
+				member.getMapKeyType(),
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
 				"",
@@ -226,12 +235,23 @@ public record ComponentSource(
 		return new ArrayList<>( members.values() );
 	}
 
+	public List<ComponentMember> subclassMembers(BindingContext bindingContext) {
+		final List<ComponentMember> members = new ArrayList<>();
+		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
+			if ( isSubtypeOf( embeddableType, componentType ) ) {
+				collectLocalMembers( embeddableType, embeddableType, members );
+			}
+		} );
+		return members;
+	}
+
 	public ComponentSource nested(ComponentMember member, BindingContext bindingContext) {
 		final ClassDetails nestedComponentType = resolveEmbeddableType( member.member(), bindingContext, false );
 		return new ComponentSource(
 				kind,
 				member.member(),
 				nestedComponentType,
+				member.member().resolveRelativeType( typeVariableScope ),
 				pathAdjustments,
 				defaultAccessType,
 				member.path() + ".",
@@ -241,6 +261,7 @@ public record ComponentSource(
 
 	public record ComponentMember(
 			MemberDetails member,
+			TypeDetails type,
 			AttributePath relativePath,
 			String path,
 			AttributePath namingPath,
@@ -257,19 +278,26 @@ public record ComponentSource(
 			collectMembers( superClass, members );
 		}
 
-		final List<MemberDetails> localMembers = StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
-				componentClass,
-				determineAccessType( componentClass ),
-				(memberDetails) -> {
-				},
-				null
-		);
+		final List<MemberDetails> localMembers = resolveLocalMembers( componentClass );
+		final ClassDetails declaringType = componentClass.hasDirectAnnotationUsage( MappedSuperclass.class )
+				? componentType
+				: componentClass;
 		for ( MemberDetails localMember : localMembers ) {
+			addMember( localMember, typeVariableScope, declaringType, members );
+		}
+	}
+
+	private void collectLocalMembers(
+			ClassDetails componentClass,
+			TypeVariableScope localTypeVariableScope,
+			List<ComponentMember> members) {
+		for ( MemberDetails localMember : resolveLocalMembers( componentClass ) ) {
 			final String attributeName = localMember.resolveAttributeName();
 			final String path = pathPrefix + attributeName;
 			final String fullPath = namingPathPrefix + attributeName;
-			members.put( attributeName, new ComponentMember(
+			members.add( new ComponentMember(
 					localMember,
+					localMember.resolveRelativeType( localTypeVariableScope ),
 					AttributePath.parse( path ),
 					path,
 					AttributePath.parse( fullPath ),
@@ -279,16 +307,57 @@ public record ComponentSource(
 		}
 	}
 
+	private List<MemberDetails> resolveLocalMembers(ClassDetails componentClass) {
+		return StandardPersistentAttributeMemberResolver.INSTANCE.resolveAttributesMembers(
+				componentClass,
+				determineAccessType( componentClass ),
+				(memberDetails) -> {
+				},
+				null
+		);
+	}
+
+	private static boolean isSubtypeOf(ClassDetails subtype, ClassDetails supertype) {
+		for ( ClassDetails candidate = subtype.getSuperClass(); candidate != null; candidate = candidate.getSuperClass() ) {
+			if ( candidate.getName().equals( supertype.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void addMember(
+			MemberDetails localMember,
+			TypeVariableScope localTypeVariableScope,
+			ClassDetails declaringType,
+			Map<String, ComponentMember> members) {
+		final String attributeName = localMember.resolveAttributeName();
+		final TypeDetails memberType = localMember.resolveRelativeType( localTypeVariableScope );
+		final String path = pathPrefix + attributeName;
+		final String fullPath = namingPathPrefix + attributeName;
+		members.put( attributeName, new ComponentMember(
+				localMember,
+				memberType,
+				AttributePath.parse( path ),
+				path,
+				AttributePath.parse( fullPath ),
+				fullPath,
+				declaringType
+		) );
+	}
+
 	private void collectPlainIdentifierClassMembers(ClassDetails componentClass, Map<String, ComponentMember> members) {
 		for ( MemberDetails field : componentClass.getFields() ) {
 			final String attributeName = field.resolveAttributeName();
 			if ( attributeName == null || !field.isPersistable() || field.hasDirectAnnotationUsage( Transient.class ) ) {
 				continue;
 			}
+			final TypeDetails fieldType = field.resolveRelativeType( typeVariableScope );
 			final String path = pathPrefix + attributeName;
 			final String fullPath = namingPathPrefix + attributeName;
 			members.put( attributeName, new ComponentMember(
 					field,
+					fieldType,
 					AttributePath.parse( path ),
 					path,
 					AttributePath.parse( fullPath ),

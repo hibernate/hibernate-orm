@@ -381,7 +381,11 @@ public class AttributeBinder {
 			basicValue.setTable( tableByName.binding() );
 		}
 
-		basicValue.addColumn( column );
+		final boolean insertable = columnAnn == null || columnAnn.insertable();
+		final boolean updatable = columnAnn == null || columnAnn.updatable();
+		property.setInsertable( insertable );
+		property.setUpdatable( updatable );
+		basicValue.addColumn( column, insertable, updatable );
 		basicValue.getTable().addColumn( column );
 
 		return column;

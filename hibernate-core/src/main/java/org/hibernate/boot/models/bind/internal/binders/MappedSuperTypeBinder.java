@@ -7,15 +7,16 @@ package org.hibernate.boot.models.bind.internal.binders;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.ManagedTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
 
 /// Binder for a mapped-superclass type.
 ///
@@ -100,20 +101,41 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 	public void bindMembers() {
 		prepareBinding( modelBinders );
-		propagateDeclaredPropertiesToEntitySubtypes( getManagedType() );
+		applyDeclaredPropertiesToNearestEntityConsumers( getManagedType() );
 	}
 
-	private void propagateDeclaredPropertiesToEntitySubtypes(IdentifiableTypeMetadata type) {
+	private void applyDeclaredPropertiesToNearestEntityConsumers(IdentifiableTypeMetadata type) {
 		type.forEachSubType( (subType) -> {
 			final var typeBinder = (IdentifiableTypeBinder) getBindingState().getTypeBinder( subType.getClassDetails() );
 			if ( subType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
 				final var entityBinding = (PersistentClass) typeBinder.getTypeBinding();
-				binding.getDeclaredProperties().forEach( entityBinding::addMappedSuperclassProperty );
+				// Transitional contribution-lite bridge: until PersistentClass derives inherited mapped-superclass
+				// state by traversing applied contributions, flatten each declared property only into the nearest
+				// consuming entity.  Entity subclasses then inherit it through the normal entity closure.
+				binding.getDeclaredProperties()
+						.forEach( (property) -> applyMappedSuperclassProperty( property, entityBinding ) );
 			}
 			else {
-				propagateDeclaredPropertiesToEntitySubtypes( subType );
+				applyDeclaredPropertiesToNearestEntityConsumers( subType );
 			}
 		} );
+	}
+
+	private void applyMappedSuperclassProperty(Property property, PersistentClass entityBinding) {
+		if ( hasDeclaredProperty( entityBinding, property.getName() ) ) {
+			return;
+		}
+
+		entityBinding.addMappedSuperclassProperty( property.copy() );
+	}
+
+	private boolean hasDeclaredProperty(PersistentClass entityBinding, String propertyName) {
+		for ( var declaredProperty : entityBinding.getDeclaredProperties() ) {
+			if ( propertyName.equals( declaredProperty.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

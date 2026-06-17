@@ -4,6 +4,9 @@
 This note captures the ORM 9 design direction for representing
 `@MappedSuperclass` in the Hibernate mapping model.
 
+For embeddable-specific inheritance and embedding-site application, see
+link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`].
+
 The immediate pressure comes from the boot-model binder, but the problem is not
 just binder mechanics.  The existing `org.hibernate.mapping.MappedSuperclass`
 shape blurs type declaration, hierarchy-specific contribution, table context,
@@ -184,6 +187,106 @@ reason about:
 * mapped-superclass attributes using secondary-table annotations;
 * attribute and association overrides that target nested inherited paths.
 
+== Runtime Model Handoff
+
+The contribution model should also describe the handoff from boot-time
+`PersistentClass` / `MappedSuperclass` state into the runtime entity and domain
+models.
+
+Today runtime model creation mostly consumes flattened `PersistentClass`
+closures and the legacy `MappedSuperclass` side object.  Important consumers
+include:
+
+* entity persister construction, which reads `PersistentClass` inheritance,
+  property closure, discriminator, table, identifier, version, and subclass
+  state;
+* `MetadataContext`, which creates JPA-domain entity and mapped-superclass
+  types from `PersistentClass` and `MappedSuperclass`;
+* `AttributeFactory`, which resolves attributes for entity and mapped-superclass
+  domain types from flattened properties and their hosting `PersistentClass`;
+* runtime mapping creation, which expects property order, table ownership,
+  identifier/version state, and inherited property visibility to already be
+  resolved on the legacy mapping model.
+
+That conversion currently makes the flattened compatibility model look
+authoritative.  Inherited mapped-superclass properties copied into
+`PersistentClass` obscure several facts:
+
+* which mapped-superclass declaration introduced the property;
+* which hierarchy-specific contribution applied it;
+* which root entity table or secondary table supplied the table context;
+* which override or converter was applied at the consuming hierarchy;
+* whether the same mapped-superclass declaration was applied separately to
+  multiple unrelated entity roots;
+* where identifier, version, lifecycle callback, and listener state originated.
+
+The target handoff should make contribution traversal the semantic input and
+flattened `PersistentClass` property closures a compatibility view:
+
+[source]
+----
+PersistentClass
+        + MappedSuperclassContribution(s)
+        -> PersistentClassCompatibilityView
+        -> RuntimeEntityMappingPlan
+        -> EntityPersister / EntityMappingType / JPA domain types
+----
+
+`RuntimeEntityMappingPlan` is a placeholder name.  The important point is the
+boundary: runtime model creation should eventually receive a resolved applied
+inheritance plan instead of rediscovering mapped-superclass ownership from
+copied properties.
+
+In the short term, the plan can be implemented as an adapter over existing
+`PersistentClass` plus contribution metadata.  For example, the adapter can
+answer:
+
+* declared entity properties versus applied mapped-superclass properties;
+* the contribution that owns each applied property;
+* the table or secondary table resolved for each property;
+* identifier, version, and natural-id state with origin information;
+* lifecycle callbacks and listeners after contribution traversal;
+* property closure order expected by existing persisters and runtime mappings.
+
+=== Runtime Ownership Rules
+
+The runtime handoff should preserve these ownership rules:
+
+* declaration facts come from `MappedSuperclassDescriptor`;
+* table, column, override, converter, identifier, and version application facts
+  come from `MappedSuperclassContribution`;
+* flattened entity property closures are derived from entity declarations,
+  mapped-superclass contributions, and entity supertype traversal;
+* runtime consumers should not need to know whether a property was copied into a
+  `PersistentClass` for compatibility;
+* a mapped-superclass declaration shared by two entity roots produces separate
+  runtime applied-property state for each root.
+
+These rules should make entity persister construction, JPA-domain type
+construction, callback/listener handling, dirty checking, and schema/exportable
+generation consume the same applied model.
+
+=== Transitional Runtime Shape
+
+During migration, `PersistentClass` remains the object passed into most runtime
+creation code.
+
+The transitional requirement is that every contribution fact needed by runtime
+creation must either:
+
+* be visible through existing flattened `PersistentClass` APIs; or
+* be available through a contribution-aware adapter keyed by the
+  `PersistentClass` or entity hierarchy.
+
+The preferred direction is:
+
+1. keep flattened property closure APIs as compatibility views;
+2. add contribution-aware origin/table/override metadata beside those views;
+3. migrate runtime consumers from direct closure interpretation to the adapter
+   when touching them;
+4. remove eager mapped-superclass property copying only after runtime consumers
+   can derive the same closure from contributions.
+
 == Binder Direction
 
 The boot-model binder should bind mapped-superclass state in terms of
@@ -214,14 +317,22 @@ A conservative migration path:
 
 1. Treat existing `org.hibernate.mapping.MappedSuperclass` instances as
    applied, hierarchy-scoped bindings rather than global declarations.
++
+Status: in progress.  The first contribution-lite bridge keeps the existing
+flattened `PersistentClass` compatibility view, but applies mapped-superclass
+declared properties only to the nearest consuming entity boundary and uses
+separate `Property` copies per consuming entity.
 2. Stop assuming `Class<?> -> MappedSuperclass` is necessarily one-to-one in the
    long term.
 3. Introduce a contribution-style internal wrapper or adapter around the current
    `MappedSuperclass` before changing all downstream consumers.
 4. Replace eager property copying into `PersistentClass` with explicit
    contribution traversal for new code paths.
-5. Keep legacy flattened property views for existing runtime/model consumers.
-6. Later introduce a true `MappedSuperclassDescriptor` if source/type-level
+5. Add a runtime adapter over `PersistentClass` plus contribution metadata so
+   persister/domain-type/runtime-mapping creation can consume applied
+   contribution facts directly.
+6. Keep legacy flattened property views for existing runtime/model consumers.
+7. Later introduce a true `MappedSuperclassDescriptor` if source/type-level
    declaration state needs to survive independently of contributions.
 
 This lets the binder move toward the right ownership model while preserving the
@@ -239,3 +350,9 @@ legacy mapping APIs that expect flattened property closures.
   declaration is applied to multiple hierarchies?
 * Can `IdentifiableTypeClass#getSubTypes()` become meaningful once the model has
   explicit contribution/application nodes?
+* Should contribution-aware runtime state be stored on `PersistentClass`,
+  registered per entity hierarchy, or produced by a separate runtime-model
+  preparation phase?
+* Which runtime consumer should move first: JPA-domain type creation, entity
+  persister construction, schema/exportable generation, or callback/listener
+  assembly?

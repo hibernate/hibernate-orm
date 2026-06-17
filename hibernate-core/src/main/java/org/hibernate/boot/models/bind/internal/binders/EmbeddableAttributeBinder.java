@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.models.bind.internal.binders;
 
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.Identifier;
@@ -16,15 +20,16 @@ import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Convert;
-
-import java.util.Locale;
+import jakarta.persistence.DiscriminatorValue;
 
 /// Binds component-valued singular attributes.
 ///
@@ -85,6 +90,7 @@ class EmbeddableAttributeBinder {
 		component.setComponentClassName( componentSource.componentType().getClassName() );
 		component.setTable( componentTable );
 		component.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		bindDiscriminator( component, componentTable );
 
 		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
 				ownerType,
@@ -98,9 +104,74 @@ class EmbeddableAttributeBinder {
 				true,
 				true
 		);
+		registerGenericComponent( component );
 
 		property.setOptional( true );
 		return component;
+	}
+
+	private void bindDiscriminator(Component component, Table componentTable) {
+		final Map<Object, String> discriminatorValues = new LinkedHashMap<>();
+		final Map<String, String> subclassToSuperclass = new LinkedHashMap<>();
+		collectDiscriminatorValue( componentSource.componentType(), discriminatorValues );
+		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
+			if ( isSubtypeOf( embeddableType, componentSource.componentType() ) ) {
+				collectDiscriminatorValue( embeddableType, discriminatorValues );
+				subclassToSuperclass.put( embeddableType.getName(), embeddableType.getSuperClass().getName() );
+			}
+		} );
+		if ( discriminatorValues.size() <= 1 ) {
+			return;
+		}
+
+		final BasicValue discriminator = new BasicValue( bindingState.getMetadataBuildingContext(), componentTable );
+		discriminator.setTable( componentTable );
+		discriminator.setImplicitJavaTypeAccess( typeConfiguration -> String.class );
+		discriminator.setTypeName( String.class.getName() );
+		final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+				null,
+				() -> attributeMetadata.getName() + "_DTYPE",
+				false,
+				true
+		);
+		componentTable.addColumn( column );
+		discriminator.addColumn( column, true, true );
+		component.setDiscriminator( discriminator );
+		component.setDiscriminatorValues( discriminatorValues );
+		component.setSubclassToSuperclass( subclassToSuperclass );
+	}
+
+	private static void collectDiscriminatorValue(ClassDetails embeddableType, Map<Object, String> discriminatorValues) {
+		final DiscriminatorValue discriminatorValue = embeddableType.getDirectAnnotationUsage( DiscriminatorValue.class );
+		final String value = discriminatorValue == null || StringHelper.isBlank( discriminatorValue.value() )
+				? StringHelper.unqualify( embeddableType.getName() )
+				: discriminatorValue.value();
+		discriminatorValues.put( value, embeddableType.getName().intern() );
+	}
+
+	private static boolean isSubtypeOf(ClassDetails subtype, ClassDetails supertype) {
+		for ( ClassDetails candidate = subtype.getSuperClass(); candidate != null; candidate = candidate.getSuperClass() ) {
+			if ( candidate.getName().equals( supertype.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void registerGenericComponent(Component component) {
+		if ( !component.isGeneric()
+				|| component.getPropertySpan() == 0
+				|| bindingState.getMetadataBuildingContext()
+						.getMetadataCollector()
+						.getGenericComponent( component.getComponentClass() ) != null ) {
+			return;
+		}
+
+		final Component genericComponent = component.copy();
+		genericComponent.setGeneric( false );
+		bindingState.getMetadataBuildingContext()
+				.getMetadataCollector()
+				.registerGenericComponent( genericComponent );
 	}
 
 	private Table resolveComponentTable(MemberDetails attributeMember) {

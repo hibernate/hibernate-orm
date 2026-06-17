@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.spi;
 
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
@@ -28,6 +29,8 @@ public interface BindingContext {
 
 	/// Persistence-unit scoped registrations collected during categorization.
 	GlobalRegistrations getGlobalRegistrations();
+
+	CategorizedDomainModel getCategorizedDomainModel();
 
 	/// Registry used to resolve model class descriptors while binding.
 	default ClassDetailsRegistry getClassDetailsRegistry() {

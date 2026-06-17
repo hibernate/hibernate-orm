@@ -126,7 +126,10 @@ public class ComponentBinder {
 				source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
 						? columns
 						: identifierColumns;
-		final List<ComponentSource.ComponentMember> members = source.members();
+		final List<ComponentSource.ComponentMember> members = new ArrayList<>( source.members() );
+		if ( component.isPolymorphic() ) {
+			members.addAll( source.subclassMembers( context ) );
+		}
 		for ( int i = 0; i < members.size(); i++ ) {
 			final ComponentSource.ComponentMember componentMember = members.get( i );
 			final MemberDetails member = componentMember.member();
@@ -151,7 +154,7 @@ public class ComponentBinder {
 				);
 				property.setValue( collection );
 				property.setOptional( true );
-				component.addProperty( property );
+				component.addProperty( property, componentMember.declaringType() );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				continue;
 			}
@@ -188,7 +191,7 @@ public class ComponentBinder {
 								context
 						);
 				property.setValue( manyToOne );
-				component.addProperty( property );
+				component.addProperty( property, componentMember.declaringType() );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
 				columns.addAll( manyToOne.getColumns() );
@@ -206,7 +209,7 @@ public class ComponentBinder {
 				applyColumnNamingPattern( nestedComponent, member );
 
 				final Property property = createProperty( attributeName, nestedComponent, member );
-				component.addProperty( property );
+				component.addProperty( property, componentMember.declaringType() );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				columns.addAll( bindProperties(
 						ownerType,
@@ -240,7 +243,7 @@ public class ComponentBinder {
 						state,
 						context
 				);
-				component.addProperty( property );
+				component.addProperty( property, componentMember.declaringType() );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				continue;
 			}
@@ -253,16 +256,16 @@ public class ComponentBinder {
 					nullableByDefault,
 					updatable
 			);
-			applyBasicOptionality( member, property, column );
+			applyBasicOptionality( member, componentMember.type(), property, column );
 			BasicValueBinder.bindBasicValue(
-					BasicValueSource.embeddableMember( member, source.conversion( memberPath, member ) ),
+					BasicValueSource.embeddableMember( member, componentMember.type(), source.conversion( memberPath, member ) ),
 					property,
 					basicValue,
 					options,
 					state,
 					context
 			);
-			component.addProperty( property );
+			component.addProperty( property, componentMember.declaringType() );
 			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 			columnConsumer.accept( member, column );
 			columns.add( column );
@@ -501,9 +504,9 @@ public class ComponentBinder {
 		return property;
 	}
 
-	private void applyBasicOptionality(MemberDetails member, Property property, Column column) {
+	private void applyBasicOptionality(MemberDetails member, TypeDetails memberType, Property property, Column column) {
 		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
-		final boolean optionalByType = member.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		final boolean optionalByType = memberType.getTypeKind() != TypeDetails.Kind.PRIMITIVE;
 		final boolean optionalByBasic = basic == null || basic.optional();
 		final boolean optionalByColumn = column == null || column.isNullable();
 		property.setOptional( optionalByType && optionalByBasic && optionalByColumn );

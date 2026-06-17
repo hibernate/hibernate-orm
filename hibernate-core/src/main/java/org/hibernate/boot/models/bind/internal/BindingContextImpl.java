@@ -24,6 +24,7 @@ import jakarta.persistence.SharedCacheMode;
 /// @since 9.0
 /// @author Steve Ebersole
 public class BindingContextImpl implements BindingContext {
+	private final CategorizedDomainModel categorizedDomainModel;
 	private final GlobalRegistrations globalRegistrations;
 
 	private final ImplicitNamingStrategy implicitNamingStrategy;
@@ -33,6 +34,7 @@ public class BindingContextImpl implements BindingContext {
 
 	public BindingContextImpl(CategorizedDomainModel categorizedDomainModel, BootstrapContext bootstrapContext) {
 		this(
+				categorizedDomainModel,
 				categorizedDomainModel.getGlobalRegistrations(),
 				bootstrapContext.getMetadataBuildingOptions().getImplicitNamingStrategy(),
 				bootstrapContext.getMetadataBuildingOptions().getPhysicalNamingStrategy(),
@@ -42,11 +44,13 @@ public class BindingContextImpl implements BindingContext {
 	}
 
 	public BindingContextImpl(
+			CategorizedDomainModel categorizedDomainModel,
 			GlobalRegistrations globalRegistrations,
 			ImplicitNamingStrategy implicitNamingStrategy,
 			PhysicalNamingStrategy physicalNamingStrategy,
 			SharedCacheMode sharedCacheMode,
 			BootstrapContext bootstrapContext) {
+		this.categorizedDomainModel = categorizedDomainModel;
 		this.implicitNamingStrategy = implicitNamingStrategy;
 		this.physicalNamingStrategy = physicalNamingStrategy;
 		this.bootstrapContext = bootstrapContext;
@@ -62,6 +66,11 @@ public class BindingContextImpl implements BindingContext {
 	@Override
 	public GlobalRegistrations getGlobalRegistrations() {
 		return globalRegistrations;
+	}
+
+	@Override
+	public CategorizedDomainModel getCategorizedDomainModel() {
+		return categorizedDomainModel;
 	}
 
 	@Override

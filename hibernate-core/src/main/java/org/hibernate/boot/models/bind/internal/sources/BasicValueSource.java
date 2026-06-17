@@ -202,6 +202,10 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.EMBEDDABLE_MEMBER, member, member.getType(), null, conversion );
 	}
 
+	public static BasicValueSource embeddableMember(MemberDetails member, TypeDetails type, Convert conversion) {
+		return new BasicValueSource( Kind.EMBEDDABLE_MEMBER, member, type, null, conversion );
+	}
+
 	/// Creates a source for the basic value side of an element collection.
 	public static BasicValueSource collectionElement(MemberDetails member) {
 		return new BasicValueSource( Kind.COLLECTION_ELEMENT, member, member.getElementType(), null, directConversion( member ) );

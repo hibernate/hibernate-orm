@@ -236,13 +236,18 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 		else {
 			final Subclass subclass = (Subclass) binding;
+			final PersistentClass superEntity = superEntityBinder.getTypeBinding();
 
 			if ( (superTypeBinder == superEntityBinder && superTypeBinder != null) ) {
 				// the super is an entity
-				subclass.setSuperclass( superEntityBinder.getTypeBinding() );
+				subclass.setSuperclass( superEntity );
 			}
 			else if ( superTypeBinder != null ) {
 				subclass.setSuperMappedSuperclass( (MappedSuperclass) superTypeBinder.getTypeBinding() );
+			}
+
+			if ( !superEntity.getDirectSubclasses().contains( subclass ) ) {
+				superEntity.addSubclass( subclass );
 			}
 		}
 	}

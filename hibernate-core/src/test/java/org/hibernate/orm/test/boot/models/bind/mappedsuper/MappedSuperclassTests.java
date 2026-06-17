@@ -12,6 +12,7 @@ import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchyRoot;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchySuper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -20,6 +21,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Version;
@@ -81,5 +83,138 @@ public class MappedSuperclassTests {
 				HierarchyRoot.class,
 				HierarchySuper.class
 		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void appliesMappedSuperclassPropertiesToNearestEntityConsumer(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final PersistentClass rootBinding = metadataCollector.getEntityBinding( RootConsumer.class.getName() );
+					final PersistentClass leafBinding = metadataCollector.getEntityBinding( LeafConsumer.class.getName() );
+
+					assertThat( countLocalProperties( rootBinding, "rootCode" ) ).isEqualTo( 1 );
+					assertThat( countLocalProperties( leafBinding, "rootCode" ) ).isEqualTo( 0 );
+					assertThat( countClosureProperties( leafBinding, "rootCode" ) ).isEqualTo( 1 );
+				},
+				scope.getRegistry(),
+				RootContribution.class,
+				RootConsumer.class,
+				LeafConsumer.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void appliesMappedSuperclassBetweenEntitiesToNearestSubclassEntity(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final PersistentClass rootBinding = metadataCollector.getEntityBinding( EntityBeforeContribution.class.getName() );
+					final PersistentClass appliedBinding = metadataCollector.getEntityBinding( EntityAfterContribution.class.getName() );
+					final PersistentClass leafBinding = metadataCollector.getEntityBinding( EntityAfterContributionLeaf.class.getName() );
+
+					assertThat( countLocalProperties( rootBinding, "nestedCode" ) ).isEqualTo( 0 );
+					assertThat( countLocalProperties( appliedBinding, "nestedCode" ) ).isEqualTo( 1 );
+					assertThat( countLocalProperties( leafBinding, "nestedCode" ) ).isEqualTo( 0 );
+					assertThat( countClosureProperties( leafBinding, "nestedCode" ) ).isEqualTo( 1 );
+				},
+				scope.getRegistry(),
+				EntityBeforeContribution.class,
+				ContributionBetweenEntities.class,
+				EntityAfterContribution.class,
+				EntityAfterContributionLeaf.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void sharedMappedSuperclassUsesSeparateAppliedPropertyCopies(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final PersistentClass firstRootBinding = metadataCollector.getEntityBinding( FirstSharedRoot.class.getName() );
+					final PersistentClass secondRootBinding = metadataCollector.getEntityBinding( SecondSharedRoot.class.getName() );
+					final Property firstAppliedProperty = localProperty( firstRootBinding, "sharedCode" );
+					final Property secondAppliedProperty = localProperty( secondRootBinding, "sharedCode" );
+
+					assertThat( firstAppliedProperty ).isNotNull();
+					assertThat( secondAppliedProperty ).isNotNull();
+					assertThat( firstAppliedProperty ).isNotSameAs( secondAppliedProperty );
+				},
+				scope.getRegistry(),
+				SharedContribution.class,
+				FirstSharedRoot.class,
+				SecondSharedRoot.class
+		);
+	}
+
+	private static long countLocalProperties(PersistentClass binding, String propertyName) {
+		return binding.getProperties().stream()
+				.filter( (property) -> propertyName.equals( property.getName() ) )
+				.count();
+	}
+
+	private static long countClosureProperties(PersistentClass binding, String propertyName) {
+		return binding.getPropertyClosure().stream()
+				.filter( (property) -> propertyName.equals( property.getName() ) )
+				.count();
+	}
+
+	private static Property localProperty(PersistentClass binding, String propertyName) {
+		return binding.getProperties().stream()
+				.filter( (property) -> propertyName.equals( property.getName() ) )
+				.findFirst()
+				.orElse( null );
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class RootContribution {
+		@Id
+		private Integer id;
+		private String rootCode;
+	}
+
+	@Entity
+	public static class RootConsumer extends RootContribution {
+	}
+
+	@Entity
+	public static class LeafConsumer extends RootConsumer {
+	}
+
+	@Entity
+	public static class EntityBeforeContribution {
+		@Id
+		private Integer id;
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class ContributionBetweenEntities extends EntityBeforeContribution {
+		private String nestedCode;
+	}
+
+	@Entity
+	public static class EntityAfterContribution extends ContributionBetweenEntities {
+	}
+
+	@Entity
+	public static class EntityAfterContributionLeaf extends EntityAfterContribution {
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class SharedContribution {
+		@Id
+		private Integer id;
+		private String sharedCode;
+	}
+
+	@Entity
+	public static class FirstSharedRoot extends SharedContribution {
+	}
+
+	@Entity
+	public static class SecondSharedRoot extends SharedContribution {
 	}
 }

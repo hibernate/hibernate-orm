@@ -415,7 +415,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override @SuppressWarnings("removal")
 	@Nonnull
 	public CacheMode getCacheMode() {
-		return queryOptions.getCacheMode();
+		return super.getCacheMode();
 	}
 
 	@Override @SuppressWarnings("removal")

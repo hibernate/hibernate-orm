@@ -7,6 +7,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.PreDeleteHandling;
 import org.hibernate.action.queue.spi.decompose.entity.PostDeleteHandling;
+import org.hibernate.action.queue.spi.decompose.entity.CancelledInsertPostDeleteHandling;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.spi.MutationKind;
@@ -102,6 +103,11 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 		final Object version = action.getVersion();
 		final Object[] state = action.getState();
 
+		if ( decompositionContext != null && decompositionContext.isBeingInsertedInCurrentFlush( action.getInstance() ) ) {
+			operationConsumer.accept( createCancelledDeleteCallbackCarrier( ordinalBase, action ) );
+			return;
+		}
+
 		final Object naturalIdValues = DeleteNaturalIdHandling.removeLocalResolution( action, session );
 
 		final DeleteCacheHandling.CacheLock cacheLock = DeleteCacheHandling.lockItem( action, session );
@@ -113,11 +119,6 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 				naturalIdValues,
 				preDeleteHandling
 		);
-
-		if ( decompositionContext != null && decompositionContext.isBeingInsertedInCurrentFlush( action.getInstance() ) ) {
-			operationConsumer.accept( createNoOpDeleteCallbackCarrier( ordinalBase, preDeleteHandling, postDeleteHandling ) );
-			return;
-		}
 
 		final EntityMutationPlanContributor.DeleteContext context = new EntityMutationPlanContributor.DeleteContext(
 				entityPersister,
@@ -253,6 +254,16 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 		);
 		operation.setPreExecutionCallback( preDeleteHandling );
 		return operation;
+	}
+
+	private FlushOperation createCancelledDeleteCallbackCarrier(
+			int ordinalBase,
+			EntityDeleteAction action) {
+		return DecompositionSupport.createNoOpCallbackCarrier(
+				entityPersister.getIdentifierTableDescriptor(),
+				ordinalBase * 1_000,
+				new CancelledInsertPostDeleteHandling( action )
+		);
 	}
 
 	private static int[] getUpdatedAttributeIndexesForDeletedEntity(

@@ -10,7 +10,9 @@ import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.RelationTargetNotFoundAction;
+import org.hibernate.envers.configuration.internal.ClassesAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesHolder;
+import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
@@ -23,6 +25,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.OneToOnePrimaryKey
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.mapping.OneToOne;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
@@ -159,14 +162,14 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 		);
 	}
 
-	private static void checkMappedByAudited(
+	private void checkMappedByAudited(
 			String entityName,
 			String associationName,
 			String referencedEntityName,
 			String referencedPropertyName,
 			AuditedPropertiesHolder propertiesHolder) {
 		final var split = referencedPropertyName.split( "\\.", 2 );
-		final var auditingData = propertiesHolder.getPropertyAuditingData( split[0] );
+		final var auditingData = resolveAuditedProperty( propertiesHolder, split[0] );
 		if ( auditingData == null ) {
 			throw new EnversMappingException( String.format(
 					Locale.ROOT,
@@ -182,6 +185,29 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 			// mapped by is a nested component property
 			checkMappedByAudited( entityName, associationName, referencedEntityName, split[1], (ComponentAuditingData) auditingData );
 		}
+	}
+
+	private PropertyAuditingData resolveAuditedProperty(AuditedPropertiesHolder propertiesHolder, String propertyName) {
+		PropertyAuditingData auditingData = propertiesHolder.getPropertyAuditingData( propertyName );
+		if ( auditingData != null ) {
+			return auditingData;
+		}
+
+		if ( propertiesHolder instanceof ClassAuditingData classAuditingData ) {
+			final ClassesAuditingData classesAuditingData = getMetadataBuildingContext().getClassesAuditingData();
+			PersistentClass superclass = classAuditingData.getPersistentClass().getSuperclass();
+			while ( superclass != null ) {
+				auditingData = classesAuditingData
+						.getClassAuditingData( superclass.getEntityName() )
+						.getPropertyAuditingData( propertyName );
+				if ( auditingData != null ) {
+					return auditingData;
+				}
+				superclass = superclass.getSuperclass();
+			}
+		}
+
+		return null;
 	}
 
 	void addOneToOnePrimaryKeyJoinColumn(

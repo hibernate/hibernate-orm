@@ -25,18 +25,17 @@ domain-model products, metadata production, and the eventual SessionFactory
 handoff.
 
 Update this document when the target design changes.  Avoid using it as a work
-log; detailed implementation notes belong in the plan.
+log; current implementation notes belong in the status document.
 
-link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`]
+link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`]
 
-This is the ongoing implementation plan and work log for the SessionFactory
-bootstrap slice.  It works backward from the current `SessionFactoryImpl`
-constructor boundary and records what each compatibility adapter or phase needs
-to prove before the new pipeline can replace legacy bootstrap paths.
+This is the compact current-status note for the SessionFactory bootstrap slice.
+It records the active entry points, removed surfaces, compatibility bridges,
+remaining gaps, and next useful slices.
 
-Update this document when a concrete slice is started, completed, or reshaped.
-It is the right place for current status, next steps, constructor dependency
-audits, and compatibility pressure points.
+Update this document when a concrete slice is started, completed, or reshaped,
+but keep it short.  Detailed constructor and compatibility audits should be
+recreated only when a new migration slice needs them.
 
 link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`]
 
@@ -83,6 +82,17 @@ storage, collection key / primary-key / foreign-key creation, table-key FK
 metadata, source-model facts on mapping values, property-ref target resolution,
 and derived identifier phase ordering.
 
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+
+This is the design note for reshaping `@MappedSuperclass` in the Hibernate
+mapping model.  It separates mapped-superclass declarations from
+hierarchy-specific contributions, avoids copied inherited properties as the
+primary model, and makes table context explicit on the consuming hierarchy.
+
+Use this document when changing mapped-superclass binding, `PersistentClass`
+inheritance links, property closure behavior, or table/override handling for
+mapped-superclass attributes.
+
 link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`]
 
 This is the model-building backlog.  It tracks known gaps in source discovery,
@@ -120,7 +130,7 @@ If the question is "what should the final bootstrap architecture look like?",
 start with `session-factory-bootstrap-design.adoc`.
 
 If the question is "what are we doing next in this branch?", start with
-`session-factory-bootstrap-plan.adoc`.
+`session-factory-bootstrap-status.adoc`.
 
 If the question is "why did the PoC take this shape?", read
 `orm-bootstrap-direction.adoc`.
@@ -130,6 +140,9 @@ If the question is "how does the model-binding pipeline work?", read
 
 If the question is "what ORM mapping API change would make this cleaner?", use
 `orm-integration-notes.adoc`.
+
+If the question is "how should mapped superclasses be represented in the mapping
+model?", use `mapped-superclass-model-design.adoc`.
 
 If the question is "how should aggregate embeddables be modeled long-term?", use
 `aggregate-mapping-design.adoc`.

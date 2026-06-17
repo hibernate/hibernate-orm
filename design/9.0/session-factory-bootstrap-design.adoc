@@ -5,8 +5,8 @@ This note describes the intended end-state design for building a
 `SessionFactory` / `EntityManagerFactory` with the boot-model pipeline.
 
 It is deliberately separate from
-link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`],
-which is now the ongoing PoC work log and gap tracker.
+link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`],
+which tracks current implementation status and next slices.
 
 == Design Goal
 
@@ -28,10 +28,8 @@ The design goal is not necessarily to preserve these constructor inputs forever.
 The goal is to make the products represented by these inputs explicit, testable,
 and replaceable one slice at a time.
 
-However, at the moment there is so much entanglement and technical debt involved in each of these
-inputs that a new design has not yet shaken lose.
-See link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`] as mentioned above for
-explanations of why.
+Current implementation progress and remaining gaps are tracked in
+link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`].
 
 
 == Top-Level Flow
@@ -139,34 +137,36 @@ Native bootstrap remains a first-class public API and still uses the existing
 ORM boot contracts:
 +
 * `org.hibernate.cfg.Configuration#buildSessionFactory(...)` gathers mappings
-  and convenience registrations, builds `Metadata`, obtains
-  `Metadata#getSessionFactoryBuilder()`, applies `Configuration`-level factory
-  customizations, and calls `SessionFactoryBuilder#build()`.
-* `org.hibernate.boot.Metadata#buildSessionFactory()` is a convenience for
-  `metadata.getSessionFactoryBuilder().build()`.
-* `org.hibernate.boot.Metadata#getSessionFactoryBuilder()` returns the public
-  `org.hibernate.boot.SessionFactoryBuilder`, with
-  `SessionFactoryBuilderFactory` service-provider customization still honored.
+  and convenience registrations, builds `Metadata`, collects
+  `Configuration`-level factory customizations into a
+  `SessionFactoryOptionsCollector`, and calls `SessionFactoryPipeline`.
+* `org.hibernate.boot.Metadata#buildSessionFactory()` is a temporary bridge
+  into `SessionFactoryPipeline`.
+* `org.hibernate.boot.Metadata#getSessionFactoryBuilder()` and the public
+  `org.hibernate.boot.SessionFactoryBuilder` surface have been removed.
 * Hibernate's test infrastructure and many native tests build factories through
-  `Metadata`, `Configuration`, or the public `SessionFactoryBuilder` in order
+  `Metadata` or `Configuration` in order
   to exercise native-specific customizers such as interceptors, tenant
   resolvers, statement inspectors, entity-name resolvers, auxiliary database
-  objects, type/function contributors, and builder-factory replacement.
+  objects, and type/function contributors.
 +
 These APIs are not simply aliases for JPA bootstrap.  They are part of the
 native Hibernate programming model.  The new orchestration pipeline should
 eventually be able to serve them, but that requires preserving the public
-builder customization points or providing a credible replacement.
+customization capabilities or providing a credible replacement.
 +
 Current branch status:
 +
-* The public native `org.hibernate.boot.SessionFactoryBuilder` still owns the
-  public factory-customization API and `SessionFactoryBuilderFactory`
-  replacement contract.
+* The public native `org.hibernate.boot.SessionFactoryBuilder`,
+  `SessionFactoryBuilderFactory`, `SessionFactoryBuilderService`, and default
+  builder implementation have been removed.
 * Native metadata production now routes through `MetadataResolver` for the
   default `MetadataBuilderImpl` path.  The returned `MetadataImplementor` is an
   internal view over `ResolvedMetadata`, so `Metadata -> SessionFactory` can
   reuse the categorized model and binding state instead of rebuilding them.
+* `Configuration#buildSessionFactory(...)` remains as a compatibility adapter,
+  but its final factory customization state is collected in
+  `SessionFactoryOptionsCollector` and passed to `SessionFactoryPipeline`.
 * The new pipeline should not accept finalized `MetadataImplementor`, legacy
   `SessionFactoryOptions`, or legacy `BootstrapContext` as native-entry
   handoff products.  That would move the compatibility shapes into the pipeline
@@ -183,24 +183,20 @@ Design direction:
   replacement path covers its supported convenience methods, should be
   deprecated in favor of `PersistenceConfiguration` /
   `HibernatePersistenceConfiguration`.
-* Native bootstrap through `MetadataSources`, `Metadata`, and the public
-  `org.hibernate.boot.SessionFactoryBuilder` should likewise converge on the
-  shared orchestration pipeline.  These APIs should not be deprecated until the
-  pipeline has an explicit replacement story for native source contribution,
-  metadata inspection, and public builder customization points.
+* Native bootstrap through `MetadataSources` and `Metadata` should likewise
+  converge on the shared orchestration pipeline.  These APIs should not be
+  deprecated until the pipeline has an explicit replacement story for native
+  source contribution, metadata inspection, and factory customization points.
 * Native source migration currently uses
   `AvailableResources.from(MetadataSources, AvailableResourcesContext)` because
   `MetadataSources` may contain already-bound XML mappings.  After XML source
   handling is changed to retain declarations, this can move toward
   `MappingSourceContributions`.
-* Public `SessionFactoryBuilder` migration should make builder customizations
-  produce a resolved/request object consumed by the new factory-build phase.  It
-  should not pass legacy `SessionFactoryOptions` into the orchestration API.
 
 ==== Replacement Native Workflow
 
 The replacement native workflow should preserve the useful shape of
-`Configuration -> MetadataSources -> MetadataBuilder -> Metadata -> SessionFactoryBuilder`
+`Configuration -> MetadataSources -> MetadataBuilder -> Metadata -> SessionFactory`
 without cloning the old contracts.
 
 The target workflow is:
@@ -255,8 +251,8 @@ need metadata inspection before building a factory, expose that as a view over
 `ResolvedMetadata` rather than making the legacy `Metadata` contract the
 primary pipeline product.
 
-The factory build request is the replacement for the public
-`SessionFactoryBuilder`.  It should collect runtime factory customizations into
+The factory build request is the replacement for the old public staged factory
+builder role.  It should collect runtime factory customizations into
 `ResolvedSessionFactorySettings` or a narrower factory-build request.  The
 request should be consumed by the SessionFactory construction phase, not by
 materializing legacy `SessionFactoryOptions` as the design target.
@@ -269,9 +265,10 @@ categorization and binding are not rebuilt.
 
 ==== Deprecation Preconditions
 
-Deprecating `MetadataSources`, `MetadataBuilder`, `Metadata`, and the public
-`SessionFactoryBuilder` should happen only after the replacement native
-workflow is concrete enough to be named in deprecation messages.
+Deprecating `MetadataSources`, `MetadataBuilder`, and `Metadata` should happen
+only after the replacement native workflow is concrete enough to be named in
+deprecation messages.  The public `SessionFactoryBuilder` surface has already
+been removed on this branch.
 
 Before deprecation, the branch should satisfy these conditions:
 
@@ -287,12 +284,12 @@ Before deprecation, the branch should satisfy these conditions:
   `ResolvedMetadata`.
 * `Metadata -> SessionFactory` continues to reuse the same `ResolvedMetadata`
   product, including the categorized model and binding state.
-* Public `SessionFactoryBuilder` customizations are collected into a
-  factory-build request or resolved settings product before construction.
+* Factory customizations are collected into a factory-build request or resolved
+  settings product before construction.
 * `Configuration` and legacy JPA builder facades adapt to the new workflow or
   have explicit deprecation guidance for unsupported compatibility behavior.
 * Tests cover both direct one-shot bootstrap and staged native bootstrap through
-  source collection, metadata resolution, metadata inspection, builder
+  source collection, metadata resolution, metadata inspection, factory
   customization, and factory construction.
 
 Two-phase bootstrap::
@@ -308,26 +305,21 @@ SessionFactory bootstrap.
 === Current Test Signal
 
 The remaining red tests on this branch are not currently pointing at a broad
-boot-model or native bootstrap failure.  The boot-model binding, XML, source,
-and categorization slices are green after fixing table-comment binding to use
-the concrete table sources rather than the internal mutable `Commentable`
-annotation contract.  Representative native bootstrap tests through
-`Configuration`, `Metadata#getSessionFactoryBuilder()`, and the public
-`org.hibernate.boot.SessionFactoryBuilder` are also green.
+boot-model or native bootstrap failure.  Representative native bootstrap tests
+through `Configuration`, `Metadata#buildSessionFactory()`, and the pipeline
+construction path are the useful control signal.
 
 The active gap signal is concentrated in the JPA provider paths that now route
 through `SessionFactoryBootstrap`:
 
 * provider exception wrapping parity;
 * persistence-unit setting precedence parity;
-* extended persistence-unit source descriptors to replace legacy `cfg.xml`
-  pressure;
-* settings-backed managed-class/source contributions;
+* descriptor-backed source contribution parity now that legacy `cfg.xml` support
+  has been removed;
 * schema-generation script handling.
 
-Those buckets are tracked in detail in
-link:session-factory-bootstrap-plan.adoc#current-failure-buckets[the current
-failure-bucket section of the plan].
+Those buckets are tracked in
+link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`].
 
 == Settings Model
 
@@ -437,9 +429,9 @@ registry are usable by runtime factory construction.
 
 == SessionFactory Target
 
-`SessionFactoryBuilder` owns only the runtime factory target:
+The SessionFactory construction phase owns only the runtime factory target:
 
-.SessionFactoryBuilder
+.SessionFactory construction
 [source]
 ----
 ResolvedSessionFactorySettings

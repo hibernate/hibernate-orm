@@ -434,7 +434,11 @@ class ToOneAttributeBinder {
 				column.setNullable( false );
 			}
 			table.addColumn( column );
-			value.addColumn( column );
+			value.addColumn(
+					column,
+					joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().insertable(),
+					joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().updatable()
+			);
 		}
 	}
 
@@ -494,7 +498,7 @@ class ToOneAttributeBinder {
 
 	private static Column findTargetColumn(List<Column> targetColumns, String columnName) {
 		for ( Column targetColumn : targetColumns ) {
-			if ( targetColumn.getName().equals( columnName ) ) {
+			if ( targetColumn.getName().equalsIgnoreCase( columnName ) ) {
 				return targetColumn;
 			}
 		}
@@ -555,7 +559,7 @@ class ToOneAttributeBinder {
 			String ownerClassName,
 			String propertyName) {
 		for ( JoinColumn joinColumn : joinColumns ) {
-			if ( targetColumn.getName().equals( joinColumn.referencedColumnName() ) ) {
+			if ( targetColumn.getName().equalsIgnoreCase( joinColumn.referencedColumnName() ) ) {
 				return joinColumn;
 			}
 		}
@@ -572,7 +576,7 @@ class ToOneAttributeBinder {
 			String ownerClassName,
 			String propertyName) {
 		for ( JoinColumnOrFormulaSource joinColumn : joinColumns ) {
-			if ( targetColumn.getName().equals( joinColumn.referencedColumnName() ) ) {
+			if ( targetColumn.getName().equalsIgnoreCase( joinColumn.referencedColumnName() ) ) {
 				return joinColumn;
 			}
 		}

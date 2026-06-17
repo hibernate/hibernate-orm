@@ -71,7 +71,7 @@ class AssociationTargetBinder {
 								+ associationTargetBinding.role()
 				);
 			}
-			result.add( referencedColumnName );
+			result.add( referencedColumnName.toLowerCase( java.util.Locale.ROOT ) );
 		}
 		return result;
 	}
@@ -79,7 +79,7 @@ class AssociationTargetBinder {
 	private List<String> columnNames(List<Column> columns) {
 		final List<String> result = new ArrayList<>( columns.size() );
 		for ( Column column : columns ) {
-			result.add( column.getName() );
+			result.add( column.getName().toLowerCase( java.util.Locale.ROOT ) );
 		}
 		return result;
 	}

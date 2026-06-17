@@ -144,6 +144,10 @@ public class HierarchyMetadataCollector {
 			return new AggregatedKeyMappingImpl( idAttribute );
 		}
 
+		if ( idAttribute.getNature() == AttributeNature.TO_ONE ) {
+			return new NonAggregatedKeyMappingImpl( List.of( idAttribute ), null );
+		}
+
 		throw new ModelsException(
 				String.format(
 						Locale.ROOT,

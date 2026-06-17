@@ -16,6 +16,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
+import org.hibernate.metamodel.CollectionClassification;
 
 import jakarta.persistence.FetchType;
 
@@ -35,6 +36,7 @@ public class BindingOptionsImpl implements BindingOptions {
 	private final boolean createImplicitDiscriminatorsForJoinedInheritance;
 	private final boolean ignoreExplicitDiscriminatorsForJoinedInheritance;
 	private final FetchType defaultToOneFetchType;
+	private final CollectionClassification defaultListSemantics;
 
 	public BindingOptionsImpl(MetadataBuildingContext metadataBuildingContext) {
 		this(
@@ -101,6 +103,9 @@ public class BindingOptionsImpl implements BindingOptions {
 		this.createImplicitDiscriminatorsForJoinedInheritance = createImplicitDiscriminatorsForJoinedInheritance;
 		this.ignoreExplicitDiscriminatorsForJoinedInheritance = ignoreExplicitDiscriminatorsForJoinedInheritance;
 		this.defaultToOneFetchType = defaultToOneFetchType;
+		this.defaultListSemantics = metadataBuildingContext.getBuildingOptions()
+				.getMappingDefaults()
+				.getImplicitListClassification();
 	}
 
 	public static <A extends Annotation> Identifier toIdentifier(
@@ -126,6 +131,7 @@ public class BindingOptionsImpl implements BindingOptions {
 		this.createImplicitDiscriminatorsForJoinedInheritance = false;
 		this.ignoreExplicitDiscriminatorsForJoinedInheritance = false;
 		this.defaultToOneFetchType = FetchType.EAGER;
+		this.defaultListSemantics = CollectionClassification.LIST;
 	}
 
 	@Override
@@ -156,5 +162,10 @@ public class BindingOptionsImpl implements BindingOptions {
 	@Override
 	public FetchType getDefaultToOneFetchType() {
 		return defaultToOneFetchType;
+	}
+
+	@Override
+	public CollectionClassification getDefaultListSemantics() {
+		return defaultListSemantics;
 	}
 }

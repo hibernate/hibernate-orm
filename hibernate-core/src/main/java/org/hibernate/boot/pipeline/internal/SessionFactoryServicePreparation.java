@@ -6,7 +6,6 @@ package org.hibernate.boot.pipeline.internal;
 
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.internal.support.ActionQueueFactoryService;
-import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -42,7 +41,6 @@ public record SessionFactoryServicePreparation(
 		EventEngine eventEngine,
 		PlanningOptions graphPlanningOptions,
 		JdbcServices jdbcServices,
-		CacheImplementor cacheAccess,
 		ClassLoaderService classLoaderService,
 		JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider,
 		ChangesetCoordinator changesetCoordinator,
@@ -71,7 +69,6 @@ public record SessionFactoryServicePreparation(
 				new EventEngine( options, serviceRegistry ),
 				buildPlanningOptions( serviceRegistry.requireService( ConfigurationService.class ) ),
 				serviceRegistry.requireService( JdbcServices.class ),
-				serviceRegistry.getService( CacheImplementor.class ),
 				classLoaderService,
 				serviceRegistry.requireService( JdbcValuesMappingProducerProvider.class ),
 				serviceRegistry.requireService( ChangesetCoordinator.class ),

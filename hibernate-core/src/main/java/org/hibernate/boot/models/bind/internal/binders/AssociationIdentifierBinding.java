@@ -32,6 +32,7 @@ public record AssociationIdentifierBinding(
 		PersistentClass ownerBinding,
 		Property property,
 		ToOne value,
+		org.hibernate.mapping.Value identifierValue,
 		EntityTypeBinder targetTypeBinder,
 		List<JoinColumn> joinColumns,
 		ForeignKeySource foreignKeySource,

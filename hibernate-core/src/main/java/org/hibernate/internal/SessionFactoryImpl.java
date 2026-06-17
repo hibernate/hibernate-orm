@@ -310,7 +310,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
-		cacheAccess = servicePreparation.cacheAccess();
+		cacheAccess = serviceRegistry.getService( CacheImplementor.class );
 
 		jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 

@@ -11,7 +11,7 @@ This is an early, historical direction note.
 The distilled current target is captured in
 link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`],
 and ongoing implementation status lives in
-link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`].
+link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`].
 ====
 
 == Current ORM Shape

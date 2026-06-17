@@ -18,6 +18,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.PersistenceSettings;
+import org.hibernate.cfg.TransactionSettings;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -124,7 +125,10 @@ class SessionFactoryBootstrapPipelineTest {
 		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
 				.statementObserver( statementObserver )
 				.managedClass( PipelineEntity.class );
-		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration, Map.of() );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
+				persistenceConfiguration,
+				Map.of( TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" )
+		);
 		final var mappingSettings = SettingsResolver.resolveMappingSettings(
 				bootstrapSettings,
 				persistenceConfiguration.defaultToOneFetchType()
@@ -147,6 +151,8 @@ class SessionFactoryBootstrapPipelineTest {
 				sessionFactoryObserver
 		)) {
 			assertThat( sessionFactory.getStatementObserver() ).isSameAs( statementObserver );
+			assertThat( sessionFactory.getSessionFactoryOptions()
+					.isInitializeLazyStateOutsideTransactionsEnabled() ).isTrue();
 			assertThat( sessionFactoryObserver.created.get() ).isTrue();
 			assertThat( sessionFactoryObserver.closed.get() ).isFalse();
 		}

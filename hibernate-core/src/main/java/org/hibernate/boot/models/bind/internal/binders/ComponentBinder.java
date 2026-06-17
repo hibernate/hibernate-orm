@@ -195,7 +195,7 @@ public class ComponentBinder {
 				continue;
 			}
 
-			if ( isEmbeddedMember( member ) ) {
+			if ( isEmbeddedMember( member ) || isImplicitEmbeddedIdentifierMember( source, member ) ) {
 				validateNestedEmbeddedTablePlacement( member );
 				final ComponentSource nestedSource = source.nested( componentMember, context );
 				final Component nestedComponent = new Component( state.getMetadataBuildingContext(), component );
@@ -374,6 +374,7 @@ public class ComponentBinder {
 				ownerBinding,
 				property,
 				value,
+				null,
 				targetTypeBinder,
 				source.valueJoinColumns( null ),
 				source.valueForeignKeySource( null ),
@@ -458,6 +459,16 @@ public class ComponentBinder {
 	private boolean isEmbeddedMember(MemberDetails member) {
 		return member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
 				|| member.getType().determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class );
+	}
+
+	private boolean isImplicitEmbeddedIdentifierMember(ComponentSource source, MemberDetails member) {
+		if ( source.kind() != ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
+			return false;
+		}
+		final ClassDetails memberType = member.getType().determineRawClass();
+		return !memberType.isPrimitive()
+				&& !memberType.isEnum()
+				&& !memberType.getClassName().startsWith( "java." );
 	}
 
 	private boolean isToOneMember(MemberDetails member) {

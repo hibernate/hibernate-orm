@@ -130,6 +130,9 @@ public class SessionFactoryOptionsCollector {
 				autoFlushing != null ? autoFlushing : settings.flushBeforeCompletionEnabled(),
 				autoClosing != null ? autoClosing : settings.autoCloseSessionEnabled(),
 				identifierRollbackSupport != null ? identifierRollbackSupport : settings.identifierRollbackEnabled(),
+				lazyInitializationOutsideTransaction != null
+						? lazyInitializationOutsideTransaction
+						: settings.initializeLazyStateOutsideTransactionsEnabled(),
 				settings.bidirectionalAssociationManagementEnabled(),
 				interceptor != null ? interceptor : settings.interceptor(),
 				collectSessionFactoryObservers( settings ),

@@ -28,6 +28,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 
 /// Source-model facts for an [org.hibernate.mapping.Component].
 ///
@@ -164,6 +165,22 @@ public record ComponentSource(
 		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, null, defaultAccessType, "", "" );
 	}
 
+	public static ComponentSource embeddedIdentifier(
+			MemberDetails member,
+			ClassDetails componentType,
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
+		return new ComponentSource(
+				Kind.EMBEDDED_IDENTIFIER,
+				member,
+				componentType,
+				new PathAdjustmentCollector( member, bindingContext ),
+				defaultAccessType,
+				"",
+				""
+		);
+	}
+
 	/// Creates a source for an embeddable collection element.
 	///
 	/// The source member is the plural collection member, while the component type is the
@@ -203,6 +220,9 @@ public record ComponentSource(
 	public List<ComponentMember> members() {
 		final Map<String, ComponentMember> members = new LinkedHashMap<>();
 		collectMembers( componentType, members );
+		if ( members.isEmpty() && kind == Kind.EMBEDDED_IDENTIFIER ) {
+			collectPlainIdentifierClassMembers( componentType, members );
+		}
 		return new ArrayList<>( members.values() );
 	}
 
@@ -250,6 +270,25 @@ public record ComponentSource(
 			final String fullPath = namingPathPrefix + attributeName;
 			members.put( attributeName, new ComponentMember(
 					localMember,
+					AttributePath.parse( path ),
+					path,
+					AttributePath.parse( fullPath ),
+					fullPath,
+					componentClass
+			) );
+		}
+	}
+
+	private void collectPlainIdentifierClassMembers(ClassDetails componentClass, Map<String, ComponentMember> members) {
+		for ( MemberDetails field : componentClass.getFields() ) {
+			final String attributeName = field.resolveAttributeName();
+			if ( attributeName == null || !field.isPersistable() || field.hasDirectAnnotationUsage( Transient.class ) ) {
+				continue;
+			}
+			final String path = pathPrefix + attributeName;
+			final String fullPath = namingPathPrefix + attributeName;
+			members.put( attributeName, new ComponentMember(
+					field,
 					AttributePath.parse( path ),
 					path,
 					AttributePath.parse( fullPath ),

@@ -355,8 +355,8 @@ not the main pipeline product.
 
 == Current Progress
 
-The first seam is implemented, and the first internal runtime-preparation slice
-has started.
+The first seam is implemented, and the initial runtime/service/integrator
+preparation slices are in place.
 
 Implemented pieces:
 
@@ -736,5 +736,6 @@ Focused tests should prove:
   exists?
 * Which integration callbacks must run before runtime metamodel creation, and
   which can run after?
-* What is the exact setting name and registration contract for named
-  `SessionFactoryProducer` selection?
+* What later replacement should remove `SessionFactoryOptions` from
+  `SessionFactoryConstructionRequest` while still giving custom producers the
+  public factory settings they need?

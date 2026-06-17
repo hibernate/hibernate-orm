@@ -89,6 +89,9 @@ public record ResolvedSessionFactorySettings(
 		/// Whether identifiers should be reset on delete.
 		boolean identifierRollbackEnabled,
 
+		/// Whether lazy state may be initialized outside an active transaction.
+		boolean initializeLazyStateOutsideTransactionsEnabled,
+
 		/// Whether flush-time bidirectional association management is enabled.
 		boolean bidirectionalAssociationManagementEnabled,
 
@@ -251,6 +254,7 @@ public record ResolvedSessionFactorySettings(
 				flushBeforeCompletionEnabled,
 				autoCloseSessionEnabled,
 				identifierRollbackEnabled,
+				initializeLazyStateOutsideTransactionsEnabled,
 				bidirectionalAssociationManagementEnabled,
 				interceptor,
 				sessionFactoryObservers,

@@ -101,6 +101,7 @@ public class SessionFactorySettingsResolver {
 				asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
 				asBoolean( configurationValues.get( TransactionSettings.AUTO_CLOSE_SESSION ), false ),
 				asBoolean( configurationValues.get( org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK ), false ),
+				asBoolean( configurationValues.get( TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS ), false ),
 				resolveBidirectionalAssociationManagementEnabled( configurationValues ),
 				resolveInterceptor( configurationValues, standardServiceRegistry ),
 				resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),

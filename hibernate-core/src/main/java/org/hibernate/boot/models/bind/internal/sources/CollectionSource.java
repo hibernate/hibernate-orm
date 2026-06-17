@@ -176,8 +176,11 @@ public record CollectionSource(
 	/// That is exactly the sort of logic that becomes easier to reason about if the
 	/// upstream mapping model stores source facts directly instead of asking each binder
 	/// to inspect Java collection classes and annotations independently.
-	public static CollectionSource elementCollection(MemberDetails member, ModelsContext modelsContext) {
-		return elementCollection( member, null, null, modelsContext );
+	public static CollectionSource elementCollection(
+			MemberDetails member,
+			CollectionClassification defaultListSemantics,
+			ModelsContext modelsContext) {
+		return elementCollection( member, null, null, defaultListSemantics, modelsContext );
 	}
 
 	/// Creates a collection source for an element collection member, including owner-level
@@ -186,8 +189,9 @@ public record CollectionSource(
 			MemberDetails member,
 			ClassDetails ownerType,
 			ClassDetails hierarchyRootType,
+			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		final CollectionClassification classification = determineClassification( member );
+		final CollectionClassification classification = determineClassification( member, defaultListSemantics );
 		final AssociationOverride associationOverride = locateAssociationOverride(
 				member,
 				ownerType,
@@ -211,8 +215,11 @@ public record CollectionSource(
 	}
 
 	/// Creates a collection source for an owning many-to-many association member.
-	public static CollectionSource manyToMany(MemberDetails member, ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_MANY, member, modelsContext, null );
+	public static CollectionSource manyToMany(
+			MemberDetails member,
+			CollectionClassification defaultListSemantics,
+			ModelsContext modelsContext) {
+		return association( Nature.MANY_TO_MANY, member, defaultListSemantics, modelsContext, null );
 	}
 
 	/// Creates a collection source for an owning many-to-many association member,
@@ -220,13 +227,17 @@ public record CollectionSource(
 	public static CollectionSource manyToMany(
 			MemberDetails member,
 			AssociationOverride associationOverride,
+			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_MANY, member, modelsContext, associationOverride );
+		return association( Nature.MANY_TO_MANY, member, defaultListSemantics, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member.
-	public static CollectionSource oneToMany(MemberDetails member, ModelsContext modelsContext) {
-		return association( Nature.ONE_TO_MANY, member, modelsContext, null );
+	public static CollectionSource oneToMany(
+			MemberDetails member,
+			CollectionClassification defaultListSemantics,
+			ModelsContext modelsContext) {
+		return association( Nature.ONE_TO_MANY, member, defaultListSemantics, modelsContext, null );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member,
@@ -234,21 +245,26 @@ public record CollectionSource(
 	public static CollectionSource oneToMany(
 			MemberDetails member,
 			AssociationOverride associationOverride,
+			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return association( Nature.ONE_TO_MANY, member, modelsContext, associationOverride );
+		return association( Nature.ONE_TO_MANY, member, defaultListSemantics, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for a heterogeneous many-to-any association member.
-	public static CollectionSource manyToAny(MemberDetails member, ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_ANY, member, modelsContext, null );
+	public static CollectionSource manyToAny(
+			MemberDetails member,
+			CollectionClassification defaultListSemantics,
+			ModelsContext modelsContext) {
+		return association( Nature.MANY_TO_ANY, member, defaultListSemantics, modelsContext, null );
 	}
 
 	private static CollectionSource association(
 			Nature nature,
 			MemberDetails member,
+			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext,
 			AssociationOverride associationOverride) {
-		final CollectionSource source = elementCollection( member, modelsContext );
+		final CollectionSource source = elementCollection( member, defaultListSemantics, modelsContext );
 		return new CollectionSource(
 				nature,
 				source.classification,
@@ -262,7 +278,9 @@ public record CollectionSource(
 			);
 	}
 
-	private static CollectionClassification determineClassification(MemberDetails member) {
+	private static CollectionClassification determineClassification(
+			MemberDetails member,
+			CollectionClassification defaultListSemantics) {
 		final Class<?> collectionType = member.getType().determineRawClass().toJavaClass();
 		if ( collectionType.isArray() ) {
 			return CollectionClassification.ARRAY;
@@ -281,7 +299,7 @@ public record CollectionSource(
 		}
 		if ( java.util.List.class.isAssignableFrom( collectionType )
 				&& !member.hasDirectAnnotationUsage( Bag.class ) ) {
-			return CollectionClassification.LIST;
+			return defaultListSemantics == null ? CollectionClassification.LIST : defaultListSemantics;
 		}
 		if ( java.util.Map.class.isAssignableFrom( collectionType ) ) {
 			if ( isSorted( member, collectionType ) ) {

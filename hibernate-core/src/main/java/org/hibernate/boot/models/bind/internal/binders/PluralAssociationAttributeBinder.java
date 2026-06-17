@@ -124,6 +124,7 @@ class PluralAssociationAttributeBinder {
 		final CollectionSource source = CollectionSource.manyToMany(
 				attributeMetadata.getMember(),
 				associationOverride,
+				bindingOptions.getDefaultListSemantics(),
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		final ManyToMany manyToMany = source.manyToMany();
@@ -137,6 +138,7 @@ class PluralAssociationAttributeBinder {
 		final CollectionSource source = CollectionSource.oneToMany(
 				attributeMetadata.getMember(),
 				associationOverride,
+				bindingOptions.getDefaultListSemantics(),
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		final OneToMany oneToMany = source.oneToMany();
@@ -149,6 +151,7 @@ class PluralAssociationAttributeBinder {
 	Collection bindManyToAny(Property property) {
 		final CollectionSource source = CollectionSource.manyToAny(
 				attributeMetadata.getMember(),
+				bindingOptions.getDefaultListSemantics(),
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		return bindManyToAny( source, property );

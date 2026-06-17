@@ -12,6 +12,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
@@ -118,6 +119,9 @@ class InversePluralAssociationBinder {
 		final Collection inverseCollection = inverseBinding.collection();
 		final Table collectionTable = owningToOne.getTable();
 		inverseCollection.setCollectionTable( collectionTable );
+		if ( !owningToOne.isReferenceToPrimaryKey() ) {
+			inverseCollection.setReferencedPropertyName( owningToOne.getReferencedPropertyName() );
+		}
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningToOne ) );
 		inverseCollection.setElement( createOneToManyElement( inverseBinding, targetTypeBinder ) );
 		bindInverseOneToManyIndex( inverseBinding, targetTypeBinder, inverseCollection );
@@ -141,7 +145,11 @@ class InversePluralAssociationBinder {
 		final DependantValue key = new DependantValue(
 				bindingState.getMetadataBuildingContext(),
 				collectionTable,
-				identifierBinding.value()
+				owningElement.isReferenceToPrimaryKey()
+						? identifierBinding.value()
+						: (KeyValue) inverseBinding.ownerBinding()
+								.getReferencedProperty( owningElement.getReferencedPropertyName() )
+								.getValue()
 		);
 		key.setNullable( false );
 		key.setUpdateable( false );
@@ -206,14 +214,26 @@ class InversePluralAssociationBinder {
 			InversePluralAssociationBinding inverseBinding,
 			EntityTypeBinder targetTypeBinder,
 			Collection inverseCollection) {
+		final CollectionSource source = CollectionSource.oneToMany(
+				inverseBinding.attributeMetadata().getMember(),
+				entityBinder.getOptions().getDefaultListSemantics(),
+				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+		);
+		if ( inverseCollection instanceof IndexedCollection indexedCollection ) {
+			CollectionIndexBinder.bindListIndex(
+					source,
+					indexedCollection,
+					inverseCollection.getCollectionTable(),
+					entityBinder.getOptions(),
+					bindingState,
+					entityBinder.getBindingContext()
+			);
+			return;
+		}
 		if ( !( inverseCollection instanceof org.hibernate.mapping.Map inverseMap ) ) {
 			return;
 		}
 
-		final CollectionSource source = CollectionSource.oneToMany(
-				inverseBinding.attributeMetadata().getMember(),
-				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
-		);
 		final MapKey mapKey = source.mapKey();
 		final Value mapKeyValue = mapKey == null || mapKey.name().isEmpty()
 				? targetTypeBinder.getTypeBinding().getIdentifier()

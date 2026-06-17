@@ -27,6 +27,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -279,6 +280,38 @@ public class HbmTransformationJaxbTests {
 							.isNull();
 				}
 			}
+		} );
+	}
+
+	@Test
+	public void testUnmappedPropertiesAreTransient(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/unmapped-property/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl entity = transformed.getEntities().stream()
+					.filter( e -> e.getClazz() != null && e.getClazz().endsWith( "UnmappedPropEntity" ) )
+					.findFirst()
+					.orElseThrow();
+
+			final var attributes = entity.getAttributes();
+
+			assertThat( attributes.getIdAttributes() )
+					.extracting( JaxbIdImpl::getName )
+					.contains( "id" );
+
+			assertThat( attributes.getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.contains( "name", "anotherCompositeName" )
+					.doesNotContain( "compositeName" );
+
+			final var transients = attributes.getTransients();
+
+			assertThat( transients )
+					.extracting( JaxbTransientImpl::getName )
+					.as( "Unmapped field 'unmappedRef' should be marked as transient" )
+					.contains( "unmappedRef" )
+					.as( "compositeName has no backing field and access is field — should not be transient" )
+					.doesNotContain( "compositeName" )
+					.as( "Mapped properties should not be marked as transient" )
+					.doesNotContain( "id", "name", "anotherCompositeName" );
 		} );
 	}
 

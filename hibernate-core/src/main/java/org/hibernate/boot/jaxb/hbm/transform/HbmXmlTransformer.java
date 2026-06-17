@@ -8,9 +8,11 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
@@ -1278,8 +1280,84 @@ public class HbmXmlTransformer {
 
 			transferJoins( (JaxbHbmRootEntityType) hbmEntity, mappingEntity, bootEntityInfo );
 		}
+		transferTransients( bootEntityInfo, mappingEntity );
 	}
 
+	private void transferTransients(EntityTypeInfo entityInfo, JaxbEntityImpl mappingEntity) {
+		final var persistentClass = entityInfo.getPersistentClass();
+		final var className = persistentClass.getClassName();
+		if ( className == null ) {
+			return;
+		}
+
+		final Set<String> mappedPropertyNames = new HashSet<>();
+		for ( var property : persistentClass.getProperties() ) {
+			mappedPropertyNames.add( property.getName() );
+		}
+		if ( persistentClass.getIdentifierProperty() != null ) {
+			mappedPropertyNames.add( persistentClass.getIdentifierProperty().getName() );
+		}
+		if ( persistentClass instanceof RootClass rootClass && rootClass.getVersion() != null ) {
+			mappedPropertyNames.add( rootClass.getVersion().getName() );
+		}
+
+		try {
+			final var javaClass = persistentClass.getMappedClass();
+			if ( javaClass == null ) {
+				return;
+			}
+
+			final Set<String> transientNames = new HashSet<>();
+
+			if ( "field".equals( hbmXmlBinding.getRoot().getDefaultAccess().toLowerCase( Locale.ROOT ) ) ) {
+				for ( var field : javaClass.getDeclaredFields() ) {
+					final String fieldName = field.getName();
+					if ( !mappedPropertyNames.contains( fieldName ) ) {
+						transientNames.add( fieldName );
+					}
+				}
+			}
+			else {
+				final var setterNames = new HashSet<>();
+				for ( var method : javaClass.getMethods() ) {
+					if ( method.getParameterCount() == 1
+							&& method.getName().startsWith( "set" ) && method.getName().length() > 3 ) {
+						setterNames.add( org.hibernate.internal.util.StringHelper.decapitalize( method.getName().substring( 3 ) ) );
+					}
+				}
+
+				for ( var method : javaClass.getMethods() ) {
+					final String methodName = method.getName();
+					if ( method.getParameterCount() != 0 ) {
+						continue;
+					}
+					String propertyName = null;
+					if ( methodName.startsWith( "get" ) && methodName.length() > 3 ) {
+						propertyName = org.hibernate.internal.util.StringHelper.decapitalize( methodName.substring( 3 ) );
+					}
+					else if ( methodName.startsWith( "is" ) && methodName.length() > 2
+							&& ( method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class ) ) {
+						propertyName = org.hibernate.internal.util.StringHelper.decapitalize( methodName.substring( 2 ) );
+					}
+					if ( propertyName != null
+							&& setterNames.contains( propertyName )
+							&& !mappedPropertyNames.contains( propertyName )
+							&& !propertyName.equals( "class" ) ) {
+						transientNames.add( propertyName );
+					}
+				}
+			}
+
+			for ( var name : transientNames ) {
+				final var transientMapping = new JaxbTransientImpl();
+				transientMapping.setName( name );
+				mappingEntity.getAttributes().getTransients().add( transientMapping );
+			}
+		}
+		catch (Exception e) {
+			// if we can't load the class, skip transient generation
+		}
+	}
 
 	private void transferBaseEntityAttributes(
 			EntityInfo hbmEntity,

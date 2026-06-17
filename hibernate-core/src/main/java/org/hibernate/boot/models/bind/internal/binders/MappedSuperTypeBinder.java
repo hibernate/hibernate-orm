@@ -107,6 +107,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				resolveAttributeOwnerBinding(),
 				new Table( "orm", getManagedType().getClassDetails().getName() + "#mapped-superclass" ),
 				binding::addDeclaredProperty,
+				true,
 				false
 		);
 		applyDeclaredPropertiesToNearestEntityConsumers( getManagedType() );

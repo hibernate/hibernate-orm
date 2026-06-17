@@ -81,6 +81,29 @@ public class AttributeBinder {
 			BindingState bindingState,
 			BindingOptions bindingOptions,
 			BindingContext bindingContext) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				primaryTable,
+				modelBinders,
+				bindingState,
+				bindingOptions,
+				bindingContext,
+				true
+		);
+	}
+
+	public AttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			Table primaryTable,
+			ModelBinders modelBinders,
+			BindingState bindingState,
+			BindingOptions bindingOptions,
+			BindingContext bindingContext,
+			boolean registerCollectionBindings) {
 		this.attributeMetadata = attributeMetadata;
 		this.bindingState = bindingState;
 		this.bindingOptions = bindingOptions;
@@ -101,11 +124,11 @@ public class AttributeBinder {
 					ownerBinding,
 					attributeMetadata,
 					primaryTable,
-					modelBinders,
-					bindingOptions,
-					bindingState,
-					bindingContext
-			).bind( binding );
+						modelBinders,
+						bindingOptions,
+						bindingState,
+						bindingContext
+				).bind( binding );
 			binding.setValue( toOneValue );
 			attributeTable = toOneValue.getTable();
 		}
@@ -133,11 +156,13 @@ public class AttributeBinder {
 					ownerType,
 					ownerBinding,
 					attributeMetadata,
-					modelBinders,
-					bindingOptions,
-					bindingState,
-					bindingContext
-			).bind( binding );
+						modelBinders,
+						bindingOptions,
+						bindingState,
+						bindingContext,
+						attributeMetadata.getName(),
+						registerCollectionBindings
+				).bind( binding );
 			binding.setValue( collectionValue );
 			binding.setOptional( true );
 			attributeTable = collectionValue.getCollectionTable();
@@ -150,7 +175,10 @@ public class AttributeBinder {
 					modelBinders,
 					bindingOptions,
 					bindingState,
-					bindingContext
+					bindingContext,
+					attributeMetadata.getName(),
+					null,
+					registerCollectionBindings
 			).bindManyToMany( binding );
 			binding.setValue( collectionValue );
 			binding.setOptional( true );
@@ -164,7 +192,10 @@ public class AttributeBinder {
 					modelBinders,
 					bindingOptions,
 					bindingState,
-					bindingContext
+					bindingContext,
+					attributeMetadata.getName(),
+					null,
+					registerCollectionBindings
 			).bindOneToMany( binding );
 			binding.setValue( collectionValue );
 			binding.setOptional( true );
@@ -191,7 +222,10 @@ public class AttributeBinder {
 					modelBinders,
 					bindingOptions,
 					bindingState,
-					bindingContext
+					bindingContext,
+					attributeMetadata.getName(),
+					null,
+					registerCollectionBindings
 			).bindManyToAny( binding );
 			binding.setValue( collectionValue );
 			binding.setOptional( true );

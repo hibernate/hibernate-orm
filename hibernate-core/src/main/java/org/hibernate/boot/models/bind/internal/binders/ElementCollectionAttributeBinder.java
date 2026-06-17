@@ -59,6 +59,7 @@ class ElementCollectionAttributeBinder {
 	private final BindingState bindingState;
 	private final BindingContext bindingContext;
 	private final String collectionRolePath;
+	private final boolean registerCollectionBindings;
 
 	ElementCollectionAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
@@ -76,7 +77,8 @@ class ElementCollectionAttributeBinder {
 				bindingOptions,
 				bindingState,
 				bindingContext,
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				true
 		);
 	}
 
@@ -89,6 +91,29 @@ class ElementCollectionAttributeBinder {
 			BindingState bindingState,
 			BindingContext bindingContext,
 			String collectionRolePath) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				collectionRolePath,
+				true
+		);
+	}
+
+	ElementCollectionAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath,
+			boolean registerCollectionBindings) {
 		this.ownerType = ownerType;
 		this.ownerBinding = ownerBinding;
 		this.attributeMetadata = attributeMetadata;
@@ -97,6 +122,7 @@ class ElementCollectionAttributeBinder {
 		this.bindingState = bindingState;
 		this.bindingContext = bindingContext;
 		this.collectionRolePath = collectionRolePath;
+		this.registerCollectionBindings = registerCollectionBindings;
 	}
 
 		Collection bind(Property property) {
@@ -108,7 +134,7 @@ class ElementCollectionAttributeBinder {
 					bindingContext.getBootstrapContext().getModelsContext()
 			);
 			final CollectionTable collectionTable = source.collectionTable();
-			final Table table = bindCollectionTable( source );
+			final Table table = registerCollectionBindings ? bindCollectionTable( source ) : createDeclarationOnlyTable();
 		final Collection collection = createCollection( source );
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
@@ -171,6 +197,7 @@ class ElementCollectionAttributeBinder {
 							+ ownerType.getClassDetails().getClassName()
 			);
 		}
+		if ( registerCollectionBindings ) {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
 					collection,
 					joinColumns,
@@ -179,8 +206,13 @@ class ElementCollectionAttributeBinder {
 					uniqueConstraints( source ),
 					indexes( source )
 			) );
-		bindingState.addCollectionBinding( collection );
+			bindingState.addCollectionBinding( collection );
+		}
 		return collection;
+	}
+
+	private Table createDeclarationOnlyTable() {
+		return new Table( "orm", ownerBinding.getEntityName() + "." + collectionRolePath + "#mapped-superclass" );
 	}
 
 	private Collection createCollection(CollectionSource source) {

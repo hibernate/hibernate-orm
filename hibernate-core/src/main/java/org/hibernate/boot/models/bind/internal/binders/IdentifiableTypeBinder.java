@@ -129,6 +129,27 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			Table primaryTable,
 			Consumer<Property> propertyConsumer,
 			boolean includePluralAttributes) {
+		bindDeclaredAttributes(
+				modelBinders,
+				sourceType,
+				ownerType,
+				attributeOwnerBinding,
+				primaryTable,
+				propertyConsumer,
+				includePluralAttributes,
+				true
+		);
+	}
+
+	protected void bindDeclaredAttributes(
+			ModelBinders modelBinders,
+			IdentifiableTypeMetadata sourceType,
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass attributeOwnerBinding,
+			Table primaryTable,
+			Consumer<Property> propertyConsumer,
+			boolean includePluralAttributes,
+			boolean registerCollectionBindings) {
 		sourceType.forEachAttribute( (index, attributeMetadata) -> {
 			if ( sourceType.getHierarchy().getIdMapping().contains( attributeMetadata )
 					|| attributeMetadata.getMember().hasDirectAnnotationUsage( Id.class )
@@ -152,7 +173,8 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 					modelBinders,
 					getBindingState(),
 					getOptions(),
-					getBindingContext()
+					getBindingContext(),
+					registerCollectionBindings
 			);
 
 			final var property = attributeBinder.getBinding();

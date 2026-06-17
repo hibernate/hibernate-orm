@@ -366,6 +366,7 @@ public class ComponentBinder {
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
 		value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
+		ToOneAttributeBinder.applyFetchMode( source, value );
 		if ( source.isLogicalOneToOne() ) {
 			value.markAsLogicalOneToOne();
 		}

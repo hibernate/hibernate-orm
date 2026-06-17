@@ -347,7 +347,7 @@ class ToOneAttributeBinder {
 		}
 	}
 
-	private static void applyFetchMode(ToOneSource source, ManyToOne value) {
+	static void applyFetchMode(ToOneSource source, ManyToOne value) {
 		final org.hibernate.annotations.Fetch fetch = source.hibernateFetch();
 		if ( fetch == null ) {
 			value.setFetchStyle( value.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN );

@@ -257,9 +257,13 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// Examples include cacheability, filters, and JPA callback definitions.
 	public void bindEntityMetadata() {
 		final ClassDetails classDetails = getManagedType().getClassDetails();
+		final PersistentClass typeBinding = getTypeBinding();
+		typeBinding.setAbstract( classDetails.isAbstract() );
+		typeBinding.setLazy( true );
+		typeBinding.setProxyInterfaceName( classDetails.getName() );
 		processRowManagement( getManagedType(), getTypeBinding() );
-		processConcreteProxy( classDetails, getTypeBinding() );
-		processNaturalIdClass( classDetails, getTypeBinding(), getBindingContext() );
+		processConcreteProxy( classDetails, typeBinding );
+		processNaturalIdClass( classDetails, typeBinding, getBindingContext() );
 		processCaching( classDetails, getBindingState(), getBindingContext() );
 		processQueryCacheLayout( classDetails );
 		processCustomSql( classDetails );

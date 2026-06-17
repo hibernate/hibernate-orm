@@ -99,7 +99,7 @@ class AssociationIdentifierBinder {
 			final Column column = ColumnBinder.bindColumn(
 					org.hibernate.boot.models.bind.internal.sources.ColumnSource.from( joinColumn ),
 					() -> associationIdentifierBinding.property().getName() + "_" + targetColumnName,
-					true,
+					false,
 					false
 			);
 			associationIdentifierBinding.ownerBinding().getTable().addColumn( column );

@@ -438,6 +438,7 @@ public class IdentifierBinder {
 		manyToOne.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		manyToOne.setTypeUsingReflection( type.getClassDetails().getClassName(), idAttribute.getName() );
 		manyToOne.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
+		ToOneAttributeBinder.applyFetchMode( source, manyToOne );
 		if ( source.isLogicalOneToOne() ) {
 			manyToOne.markAsLogicalOneToOne();
 		}
@@ -589,7 +590,7 @@ public class IdentifierBinder {
 				idValue,
 				table,
 				(member, column) -> table.getPrimaryKey().addColumn( column ),
-				true,
+				false,
 				false,
 				false
 		);

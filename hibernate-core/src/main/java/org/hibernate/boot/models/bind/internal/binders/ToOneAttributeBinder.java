@@ -41,6 +41,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.FetchType;
 import jakarta.persistence.AssociationOverride;
@@ -164,12 +165,44 @@ class ToOneAttributeBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		return bindToOne(
+				ownerType,
+				ownerBinding,
+				ownerClassName,
+				propertyName,
+				member,
+				null,
+				property,
+				primaryTable,
+				associationOverride,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
+	}
+
+	static ManyToOne bindToOne(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			String ownerClassName,
+			String propertyName,
+			MemberDetails member,
+			TypeDetails resolvedType,
+			Property property,
+			Table primaryTable,
+			AssociationOverride associationOverride,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		final ToOneSource source = ToOneSource.create(
 				member,
 				ownerClassName,
 				propertyName,
 				associationOverride,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getBootstrapContext().getModelsContext(),
+				resolvedType
 		);
 		if ( source.isInverseOneToOne() ) {
 			throw new UnsupportedOperationException( "Inverse @OneToOne is not yet implemented" );

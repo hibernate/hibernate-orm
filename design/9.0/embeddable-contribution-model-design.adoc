@@ -72,6 +72,9 @@ EmbeddableDescriptor
 
 EmbeddableContribution
     -> applies one descriptor to one consuming component path
+
+ComponentMapping
+    -> materialization-facing binding product for one applied contribution
 ----
 
 The names are intentionally parallel to:
@@ -128,6 +131,40 @@ component path:
 This contribution may be duplicated for the same descriptor when the same
 embeddable Java type is consumed at multiple paths.
 
+=== ComponentMapping
+
+`ComponentMapping` is a placeholder name for the product sitting between an
+applied contribution and the legacy `org.hibernate.mapping.Component`.
+
+It may become `Component` itself if `Component` is reshaped enough, but the safer
+design assumption is that it starts as a binding product or compatibility view.
+The important point is ownership: source/path decisions should be represented by
+one component-mapping object before individual binders create `Property`,
+`Value`, table, column, discriminator, and runtime compatibility state.
+
+The component mapping should directly retain:
+
+* source `MemberDetails`, when the component is declared by a member;
+* component `ClassDetails`;
+* source role/kind;
+* resolved `TypeVariableScope` for this component use;
+* path-aware override and conversion model;
+* owner-relative and full component paths used for override lookup and implicit
+  naming;
+* ordered applied-member descriptors, including inherited embeddable and
+  mapped-superclass members;
+* nested component source facts, so nested generic embeddables are not resolved
+  from erased reflection types;
+* storage/table context;
+* subtype and discriminator source facts for polymorphic embeddables;
+* enough state to materialize the legacy `Component` without binder-specific
+  override/conversion lambdas.
+
+This is the design-level version of the current `ComponentSource` direction.
+`ComponentSource` is already accumulating these facts for the boot-model binder,
+but it should be treated as a transitional source/context object rather than the
+final public or runtime mapping model.
+
 == MappedSuperclass Relationship
 
 Mapped-superclass declarations above embeddables should use the same
@@ -165,6 +202,7 @@ The target flow is:
 source annotations / XML
         -> EmbeddableDescriptor
         -> EmbeddableContribution
+        -> ComponentMapping
         -> Component
         -> runtime embeddable mapping
 ----
@@ -178,7 +216,14 @@ During migration, `Component` may still carry:
 * aggregate storage state.
 
 But new binding code should prefer to derive those details from an
-`EmbeddableContribution` and then materialize the legacy `Component`.
+`EmbeddableContribution` or `ComponentMapping` and then materialize the legacy
+`Component`.
+
+This distinction matters because `Component` is still consumed by a broad legacy
+surface.  Pushing every new source fact directly into `Component` keeps the
+model ambiguous.  A component-mapping product lets binding code centralize
+source, path, generic, and override decisions while keeping `Component` as a
+stable compatibility carrier.
 
 == Runtime Model Handoff
 
@@ -315,6 +360,20 @@ are different.  The descriptor should retain the generic declaration.  Each
 contribution should carry the resolved `TypeVariableScope` and expose applied
 member descriptors with substituted `TypeDetails`.
 
+Recent binder fixes reinforced two specific rules:
+
+* member classification must use the applied member `TypeDetails`, not
+  `MemberDetails#getType()` alone, because a generic embeddable member may erase
+  to `Object` while the consuming contribution resolves it to an embeddable or
+  association target;
+* nested component creation must carry the resolved member type into the nested
+  component source, otherwise nested generic embeddables are resolved from the
+  raw declaration instead of the applied usage.
+
+Those rules belong in the contribution/component-mapping product.  Binders
+should consume already-resolved applied member descriptors and should not repeat
+generic type-variable interpretation locally.
+
 == Source Roles
 
 The same embeddable declaration may be applied through different source roles.
@@ -343,6 +402,9 @@ Current transitional behavior:
 
 * `ComponentSource` records component role, source member, component type,
   generic type scope, path adjustments, and member descriptors;
+* `ComponentSource` also performs superclass-first member discovery for
+  embeddable and mapped-superclass members and resolves member `TypeDetails`
+  against the component-use `TypeVariableScope`;
 * `ComponentBinder` consumes `ComponentSource` and materializes `Property`,
   `BasicValue`, `Component`, to-one, and collection mappings;
 * `EmbeddableAttributeBinder` creates discriminator state directly on
@@ -356,6 +418,9 @@ Target behavior:
   contribution traversal;
 * generic substitution, path overrides, implicit naming inputs, and source role
   are resolved by the contribution;
+* component-mapping/application state retains the source member, component type,
+  role, path-aware override/conversion model, path state, and applied member
+  descriptors;
 * a materializer turns the contribution into a legacy `Component`;
 * runtime metamodel creation can later consume contribution data directly.
 
@@ -367,20 +432,23 @@ A conservative migration path:
 
 1. Rename or wrap `ComponentSource` as an internal embeddable contribution-like
    product.
-2. Move polymorphic discriminator source resolution from
+2. Introduce a `ComponentMapping`-like materialization product, or explicitly
+   make the wrapped `ComponentSource` play that role, before reshaping
+   `org.hibernate.mapping.Component`.
+3. Move polymorphic discriminator source resolution from
    `EmbeddableAttributeBinder` into that product.
-3. Move subtype discovery and subtype-local member descriptors into the product.
-4. Move mapped-superclass-above-embeddable application into an explicit applied
+4. Move subtype discovery and subtype-local member descriptors into the product.
+5. Move mapped-superclass-above-embeddable application into an explicit applied
    contribution step.
-5. Keep `ComponentBinder` focused on materializing legacy mapping objects.
-6. Add a `Component` materializer or factory that accepts the contribution and
+6. Keep `ComponentBinder` focused on materializing legacy mapping objects.
+7. Add a `Component` materializer or factory that accepts the contribution and
    owns the `Component` compatibility shape.
-7. Add a runtime adapter over `Component` plus contribution metadata so
+8. Add a runtime adapter over `Component` plus contribution metadata so
    `EmbeddableMappingTypeImpl` and related classes can consume applied
    contribution facts directly.
-8. Later introduce a true `EmbeddableDescriptor` if categorization needs to
+9. Later introduce a true `EmbeddableDescriptor` if categorization needs to
    retain declaration-level embeddable state independently from contributions.
-9. Later teach runtime metamodel creation to consume contribution data directly
+10. Later teach runtime metamodel creation to consume contribution data directly
    where it currently reverse-engineers subtype, discriminator, and declaring
    class state from `Component`.
 

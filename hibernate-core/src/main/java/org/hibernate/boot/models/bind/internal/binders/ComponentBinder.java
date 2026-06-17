@@ -199,6 +199,7 @@ public class ComponentBinder {
 								source.componentType(),
 								attributeName,
 								member,
+								componentMember.type(),
 								property,
 								table,
 								associationOverride,
@@ -210,6 +211,7 @@ public class ComponentBinder {
 								source.componentType().getClassName(),
 								attributeName,
 								member,
+								componentMember.type(),
 								property,
 								table,
 								associationOverride,
@@ -226,7 +228,8 @@ public class ComponentBinder {
 				continue;
 			}
 
-			if ( isEmbeddedMember( member ) || isImplicitEmbeddedIdentifierMember( source, member ) ) {
+			if ( isEmbeddedMember( member, componentMember.type() )
+					|| isImplicitEmbeddedIdentifierMember( source, componentMember.type() ) ) {
 				validateNestedEmbeddedTablePlacement( member );
 				final ComponentSource nestedSource = source.nested( componentMember, context );
 				final Component nestedComponent = new Component( state.getMetadataBuildingContext(), component );
@@ -353,6 +356,7 @@ public class ComponentBinder {
 			ClassDetails componentType,
 			String attributeName,
 			MemberDetails member,
+			TypeDetails memberType,
 			Property property,
 			Table table,
 			AssociationOverride associationOverride,
@@ -362,7 +366,8 @@ public class ComponentBinder {
 				componentType.getClassName(),
 				attributeName,
 				associationOverride,
-				context.getBootstrapContext().getModelsContext()
+				context.getBootstrapContext().getModelsContext(),
+				memberType
 		);
 		if ( source.isInverseOneToOne() ) {
 			throw new UnsupportedOperationException(
@@ -493,19 +498,19 @@ public class ComponentBinder {
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class );
 	}
 
-	private boolean isEmbeddedMember(MemberDetails member) {
+	private boolean isEmbeddedMember(MemberDetails member, TypeDetails memberType) {
 		return member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
-				|| member.getType().determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class );
+				|| memberType.determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class );
 	}
 
-	private boolean isImplicitEmbeddedIdentifierMember(ComponentSource source, MemberDetails member) {
+	private boolean isImplicitEmbeddedIdentifierMember(ComponentSource source, TypeDetails memberType) {
 		if ( source.kind() != ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
 			return false;
 		}
-		final ClassDetails memberType = member.getType().determineRawClass();
-		return !memberType.isPrimitive()
-				&& !memberType.isEnum()
-				&& !memberType.getClassName().startsWith( "java." );
+		final ClassDetails memberClass = memberType.determineRawClass();
+		return !memberClass.isPrimitive()
+				&& !memberClass.isEnum()
+				&& !memberClass.getClassName().startsWith( "java." );
 	}
 
 	private boolean isToOneMember(MemberDetails member) {

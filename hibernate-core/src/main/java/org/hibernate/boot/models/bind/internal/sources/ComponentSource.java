@@ -77,8 +77,8 @@ import jakarta.persistence.Transient;
 /// That would make nested embeddables and collection-element embeddables much easier to
 /// bind uniformly.
 ///
-/// @since 9.0
 /// @author Steve Ebersole
+/// @since 9.0
 public record ComponentSource(
 		/// The role this component plays relative to its source.
 		Kind kind,
@@ -91,25 +91,35 @@ public record ComponentSource(
 		/// component type.
 		MemberDetails sourceMember,
 
-	/// The embeddable/component class whose persistable members are being bound.
-	ClassDetails componentType,
+		/// The embeddable/component class whose persistable members are being bound.
+		ClassDetails componentType,
 
-	TypeVariableScope typeVariableScope,
+		/// Type-variable resolution scope for members of [#componentType()].
+		///
+		/// This is the scope in which generic member types should be interpreted for this
+		/// particular component use.  It may differ from the raw component class when an
+		/// embeddable or mapped-superclass member is inherited through a parameterized
+		/// type, for example when `Embeddable<T>#value` is consumed as `String`.  Member
+		/// discovery and nested component binding use this scope so association targets,
+		/// implicit embedded members, and nested embeddable types are resolved from the
+		/// applied component usage rather than from erased reflection types.
+		TypeVariableScope typeVariableScope,
 
-	/// Path-keyed mapping adjustments scoped to [#sourceMember()].
-	///
-	/// This is `null` for source shapes that do not currently expose path-based
-	/// adjustment annotations through a member.
-	PathAdjustmentCollector pathAdjustments,
+		/// Path-keyed mapping adjustments scoped to [#sourceMember()].
+		///
+		/// This is `null` for source shapes that do not currently expose path-based
+		/// adjustment annotations through a member.
+		PathAdjustmentCollector pathAdjustments,
 
-	/// The default access type inherited from the owning managed type.
-	AccessType defaultAccessType,
+		/// The default access type inherited from the owning managed type.
+		AccessType defaultAccessType,
 
-	/// Dot-separated attribute path prefix for this component source.
-	String pathPrefix,
+		/// Dot-separated attribute path prefix for this component source.
+		String pathPrefix,
 
-	/// Dot-separated owner-relative path prefix for implicit naming.
-	String namingPathPrefix) {
+		/// Dot-separated owner-relative path prefix for implicit naming.
+		String namingPathPrefix) {
+
 	/// Source-level component role.
 	public enum Kind {
 		/// A normal embedded/component-valued attribute.
@@ -168,7 +178,8 @@ public record ComponentSource(
 	/// facts directly on mapping objects, identifier component sources should likely retain
 	/// the identifier member or key-mapping metadata as well.
 	public static ComponentSource embeddedIdentifier(ClassDetails componentType, AccessType defaultAccessType) {
-		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, componentType, null, defaultAccessType, "", "" );
+		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, componentType, null,
+				defaultAccessType, "", "" );
 	}
 
 	public static ComponentSource embeddedIdentifier(
@@ -255,7 +266,7 @@ public record ComponentSource(
 	}
 
 	public ComponentSource nested(ComponentMember member, BindingContext bindingContext) {
-		final ClassDetails nestedComponentType = resolveEmbeddableType( member.member(), bindingContext, false );
+		final ClassDetails nestedComponentType = resolveEmbeddableType( member, bindingContext );
 		return new ComponentSource(
 				kind,
 				member.member(),
@@ -266,6 +277,15 @@ public record ComponentSource(
 				member.path() + ".",
 				member.fullPath() + "."
 		);
+	}
+
+	private static ClassDetails resolveEmbeddableType(ComponentMember member, BindingContext bindingContext) {
+		final TargetEmbeddable targetEmbeddable = resolveTargetEmbeddable( member.member(), false );
+		if ( targetEmbeddable != null ) {
+			return bindingContext.getClassDetailsRegistry()
+					.resolveClassDetails( targetEmbeddable.value().getName() );
+		}
+		return member.type().determineRawClass();
 	}
 
 	public record ComponentMember(
@@ -358,7 +378,8 @@ public record ComponentSource(
 	private void collectPlainIdentifierClassMembers(ClassDetails componentClass, Map<String, ComponentMember> members) {
 		for ( MemberDetails field : componentClass.getFields() ) {
 			final String attributeName = field.resolveAttributeName();
-			if ( attributeName == null || !field.isPersistable() || field.hasDirectAnnotationUsage( Transient.class ) ) {
+			if ( attributeName == null || !field.isPersistable() || field.hasDirectAnnotationUsage(
+					Transient.class ) ) {
 				continue;
 			}
 			final TypeDetails fieldType = field.resolveRelativeType( typeVariableScope );
@@ -383,9 +404,9 @@ public record ComponentSource(
 
 	private static boolean isPersistentComponentSuperType(ClassDetails superClass) {
 		return superClass != null
-				&& superClass != ClassDetails.OBJECT_CLASS_DETAILS
-				&& ( superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
-					|| superClass.hasDirectAnnotationUsage( Embeddable.class ) );
+			   && superClass != ClassDetails.OBJECT_CLASS_DETAILS
+			   && (superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
+				   || superClass.hasDirectAnnotationUsage( Embeddable.class ));
 	}
 
 	private static AccessType fallbackAccessType(MemberDetails member) {
@@ -425,7 +446,7 @@ public record ComponentSource(
 		final TargetEmbeddable memberAnnotation = member.getDirectAnnotationUsage( TargetEmbeddable.class );
 		if ( memberAnnotation != null ) {
 			final boolean allowed = member.hasDirectAnnotationUsage( Embedded.class )
-					|| member.hasDirectAnnotationUsage( ElementCollection.class );
+									|| member.hasDirectAnnotationUsage( ElementCollection.class );
 			if ( !allowed ) {
 				throw new MappingException( String.format(
 						Locale.ROOT,

@@ -24,6 +24,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.CascadeType;
@@ -106,7 +107,10 @@ public record ToOneSource(
 		AssociationOverride associationOverride,
 
 		/// The models context used to resolve repeatable annotations.
-		ModelsContext modelsContext) {
+		ModelsContext modelsContext,
+
+		/// Resolved source type for generic association members.
+		TypeDetails resolvedType) {
 	/// Creates a source from a member and optional path-based association override.
 	public static ToOneSource create(
 			MemberDetails member,
@@ -114,6 +118,16 @@ public record ToOneSource(
 			String propertyName,
 			AssociationOverride associationOverride,
 			ModelsContext modelsContext) {
+		return create( member, ownerClassName, propertyName, associationOverride, modelsContext, null );
+	}
+
+	public static ToOneSource create(
+			MemberDetails member,
+			String ownerClassName,
+			String propertyName,
+			AssociationOverride associationOverride,
+			ModelsContext modelsContext,
+			TypeDetails resolvedType) {
 		return new ToOneSource(
 				member,
 				ownerClassName,
@@ -121,7 +135,8 @@ public record ToOneSource(
 				member.getDirectAnnotationUsage( jakarta.persistence.ManyToOne.class ),
 				member.getDirectAnnotationUsage( OneToOne.class ),
 				associationOverride,
-				modelsContext
+				modelsContext,
+				resolvedType
 		);
 	}
 
@@ -208,7 +223,7 @@ public record ToOneSource(
 		if ( oneToOne != null && oneToOne.targetEntity() != void.class ) {
 			return bindingContext.getClassDetailsRegistry().resolveClassDetails( oneToOne.targetEntity().getName() );
 		}
-		return member.getType().determineRawClass();
+		return resolvedType == null ? member.getType().determineRawClass() : resolvedType.determineRawClass();
 	}
 
 	/// Resolves the source join table, considering association overrides first.

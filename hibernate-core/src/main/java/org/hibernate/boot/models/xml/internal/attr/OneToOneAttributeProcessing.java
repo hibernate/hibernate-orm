@@ -120,9 +120,6 @@ public class OneToOneAttributeProcessing {
 			JaxbOneToOneImpl jaxbOneToOne,
 			OneToOneJpaAnnotation oneToOneAnn,
 			XmlDocumentContext xmlDocumentContext) {
-		// todo (7.0) : we need a distinction here between hbm.xml target and orm.xml target-entity
-		//		- for orm.xml target-entity we should apply the package name, if one
-		//		- for hbm.xml target we should not since it could refer to a dynamic mapping
 		final String targetEntityName = jaxbOneToOne.getTargetEntity();
 		if ( StringHelper.isEmpty( targetEntityName ) ) {
 			return;
@@ -132,7 +129,7 @@ public class OneToOneAttributeProcessing {
 				XmlAnnotations.TARGET,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		annotation.value( xmlDocumentContext.resolveClassName( targetEntityName ) );
+		annotation.value( xmlDocumentContext.resolveTargetEntityName( targetEntityName ) );
 	}
 
 }

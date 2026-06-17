@@ -9,7 +9,9 @@ import java.sql.Clob;
 import java.sql.NClob;
 import java.util.function.Supplier;
 
+import org.hibernate.HibernateException;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
@@ -64,5 +66,19 @@ public class ModelsHelper {
 					.addClassDetails( className, classDetails );
 			return classDetails;
 		}
+	}
+
+	public static ClassDetails resolveClassDetails(
+			String className,
+			XmlDocumentContext xmlDocumentContext,
+			ClassDetailsRegistry classDetailsRegistry,
+			Supplier<ClassDetails> classDetailsSupplier) {
+		try {
+			return xmlDocumentContext.resolveJavaType( className );
+		}
+		catch (HibernateException e) {
+			//ignore
+		}
+		return resolveClassDetails( className, classDetailsRegistry, classDetailsSupplier );
 	}
 }

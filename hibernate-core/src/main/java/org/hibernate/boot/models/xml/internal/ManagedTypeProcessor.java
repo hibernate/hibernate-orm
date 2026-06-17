@@ -96,6 +96,7 @@ public class ManagedTypeProcessor {
 			classAccessType = AccessType.FIELD;
 			classDetails = (MutableClassDetails) ModelsHelper.resolveClassDetails(
 					jaxbEntity.getName(),
+					xmlDocumentContext,
 					classDetailsRegistry,
 					() -> {
 						final ClassDetails superClass;
@@ -672,6 +673,7 @@ public class ManagedTypeProcessor {
 			// no class == dynamic...
 			classDetails = (MutableClassDetails) ModelsHelper.resolveClassDetails(
 					jaxbEmbeddable.getName(),
+					xmlDocumentContext,
 					classDetailsRegistry,
 					() -> new DynamicClassDetails( jaxbEmbeddable.getName(),
 							xmlDocumentContext.getModelBuildingContext() )

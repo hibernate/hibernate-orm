@@ -9,6 +9,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.internal.AntlrBasedSQLFormatterImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @ServiceRegistry
 public class AntlrBasedSQLFormatterTest {
 
+	private static final Logger LOG = Logger.getLogger( AntlrBasedSQLFormatterTest.class );
+
 	private static final String FIXTURE_SEP = "@@@@ FIXTURE @@@@";
 	private static final String EXPECTED_SEP = "=== EXPECTED ===";
 	private static final String SQL_SEP = "=== SQL ===";
@@ -49,7 +52,14 @@ public class AntlrBasedSQLFormatterTest {
 	public void testSelectedDmlFixture() {
 		final String id = "";
 		if ( !id.isBlank() ) {
-			dmlFixtures.get( id ).verify();
+			final SqlFixture fixture = dmlFixtures.get( id );
+			if ( fixture != null ) {
+				fixture.verify();
+			}
+			else {
+				// Could be commented out
+				LOG.warnf( "Fixture \"%s\" not found", id );
+			}
 		}
 	}
 
@@ -102,7 +112,8 @@ public class AntlrBasedSQLFormatterTest {
 			// remove ID_SEP and its newline
 			final String id = idsql[0].substring(ID_SEP.length() + 1).trim();
 
-			if ( !(id.isBlank() || sql.isBlank() || expected.isBlank()) ) {
+			// Allow ignoring a fixture by commenting out its ID
+			if ( !(id.isBlank() || id.startsWith( "--" ) || sql.isBlank() || expected.isBlank()) ) {
 				testFixtures.put( id, new SqlFixture( id, sql, expected ) );
 			}
 		}

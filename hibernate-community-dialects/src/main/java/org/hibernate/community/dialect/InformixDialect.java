@@ -343,6 +343,7 @@ public class InformixDialect extends Dialect {
 		functionFactory.substringFromFor();
 		functionFactory.trim2();
 		functionFactory.space();
+		functionFactory.repeat_replaceSpace();
 		functionFactory.reverse();
 		functionFactory.octetLength();
 		functionFactory.degrees();

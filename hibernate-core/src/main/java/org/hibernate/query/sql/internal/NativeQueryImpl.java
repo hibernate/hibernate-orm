@@ -1608,7 +1608,7 @@ public class NativeQueryImpl<R>
 	@Nonnull
 	public NativeQueryImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		errorIfNotSelectForSure();
-		queryOptions.setCacheRetrieveMode( cacheRetrieveMode );
+		super.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
 
@@ -1616,7 +1616,7 @@ public class NativeQueryImpl<R>
 	@Nonnull
 	public NativeQueryImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		errorIfNotSelectForSure();
-		queryOptions.setCacheStoreMode( cacheStoreMode );
+		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 

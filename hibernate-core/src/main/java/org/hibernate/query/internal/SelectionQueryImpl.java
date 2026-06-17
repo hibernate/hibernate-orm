@@ -524,12 +524,6 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public CacheMode getCacheMode() {
-		return queryOptions.getCacheMode();
-	}
-
-	@Override
-	@Nonnull
 	public SelectionQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode) {
 		queryOptions.setCacheMode( cacheMode );
 		return this;
@@ -538,26 +532,28 @@ public class SelectionQueryImpl<R>
 	@Override
 	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
-		return queryOptions.getCacheRetrieveMode();
+		final var mode = queryOptions.getCacheRetrieveMode();
+		return mode != null ? mode : getCacheMode().getJpaRetrieveMode();
 	}
 
 	@Override
 	@Nonnull
 	public SelectionQueryImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
-		queryOptions.setCacheRetrieveMode( cacheRetrieveMode );
+		super.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
 
 	@Override
 	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
-		return queryOptions.getCacheStoreMode();
+		final var mode = queryOptions.getCacheStoreMode();
+		return mode != null ? mode : getCacheMode().getJpaStoreMode();
 	}
 
 	@Override
 	@Nonnull
 	public SelectionQueryImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
-		queryOptions.setCacheStoreMode( cacheStoreMode );
+		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 

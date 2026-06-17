@@ -105,6 +105,17 @@ Use this document when changing `ComponentSource`, `ComponentBinder`,
 polymorphic embeddable discriminator handling, generic embeddable type
 resolution, or mapped-superclass members inherited by embeddables.
 
+link:column-order-resolution-design.adoc[`column-order-resolution-design.adoc`]
+
+This is the design note for moving column/selectable ordering away from early
+boot metadata mutation and toward explicit source-to-runtime order projections.
+It covers composite foreign keys, nested embedded identifiers, quoted identifier
+matching, and the migration path for existing `Value` sorting behavior.
+
+Use this document when changing association column ordering, `ToOne` /
+`DependantValue` sorting, runtime FK descriptor creation, or binding-state
+storage for local-to-referenced column correspondence.
+
 link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`]
 
 This is the model-building backlog.  It tracks known gaps in source discovery,
@@ -158,6 +169,9 @@ model?", use `mapped-superclass-model-design.adoc`.
 
 If the question is "how should aggregate embeddables be modeled long-term?", use
 `aggregate-mapping-design.adoc`.
+
+If the question is "when should boot columns be sorted?", use
+`column-order-resolution-design.adoc`.
 
 If the question is "what mapping support is still missing?", use
 `remaining-binding-gaps.adoc`.

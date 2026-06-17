@@ -36,6 +36,9 @@ See also:
   phased binder.
 * `mapped-superclass-model-design.adoc` for the longer-term mapped-superclass
   model.
+* `column-order-resolution-design.adoc` for the longer-term direction on
+  preserving source column facts and resolving runtime selectable order without
+  relying on early destructive sorting.
 * `aggregate-mapping-design.adoc` for aggregate/UDT work.
 
 == Status Definitions

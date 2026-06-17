@@ -14,6 +14,7 @@ import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Index;
@@ -115,6 +116,7 @@ public class TableKeyBinder {
 		key.setOnDeleteAction( collectionTableBinding.onDeleteAction() );
 		collectionTableBinding.collection().setKey( key );
 		collectionTableBinding.collection().createPrimaryKeyIfNeeded();
+		createOneToManyBackref( collectionTableBinding, key );
 		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
 				entityBinder.getTypeBinding(),
 				key,
@@ -123,6 +125,36 @@ public class TableKeyBinder {
 		) );
 		applyUniqueConstraints( collectionTableBinding );
 		applyIndexes( collectionTableBinding );
+	}
+
+	private void createOneToManyBackref(CollectionTableBinding collectionTableBinding, DependantValue key) {
+		if ( collectionTableBinding.collection().isInverse()
+				|| key.isNullable()
+				|| !( collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany oneToMany ) ) {
+			return;
+		}
+		final var referencedEntity = bindingState.getMetadataBuildingContext()
+				.getMetadataCollector()
+				.getEntityBinding( oneToMany.getReferencedEntityName() );
+		if ( referencedEntity == null ) {
+			return;
+		}
+		if ( referencedEntity.getKey().getColumns().containsAll( key.getColumns() ) ) {
+			return;
+		}
+		final Backref backref = new Backref();
+		backref.setName(
+				"_" + collectionTableBinding.collection().getRole()
+						+ "_" + key.getColumns().get( 0 ).getName()
+						+ "Backref"
+		);
+		backref.setOptional( true );
+		backref.setUpdatable( false );
+		backref.setSelectable( false );
+		backref.setCollectionRole( collectionTableBinding.collection().getRole() );
+		backref.setEntityName( collectionTableBinding.collection().getOwner().getEntityName() );
+		backref.setValue( key );
+		referencedEntity.addProperty( backref );
 	}
 
 	private void applyUniqueConstraints(CollectionTableBinding collectionTableBinding) {
@@ -307,6 +339,7 @@ public class TableKeyBinder {
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				collectionTableBinding.collection().getRole()
 		);
+		final boolean updateable = collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany;
 		for ( int i = 0; i < identifierBinding.columns().size(); i++ ) {
 			final Column identifierColumn = identifierBinding.columns().get( i );
 			key.addColumn(
@@ -317,7 +350,7 @@ public class TableKeyBinder {
 							() -> implicitCollectionKeyColumnName( identifierColumn )
 					),
 					true,
-					false
+					updateable
 			);
 		}
 		return key;

@@ -38,6 +38,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -48,6 +49,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.Transient;
 
 import static jakarta.persistence.GenerationType.AUTO;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindPropertyAccessor;
 
 /// Binds the root identifier shape for an entity hierarchy.
@@ -146,10 +148,11 @@ public class IdentifierBinder {
 			Table table,
 			EntityTypeMetadata type,
 			RootClass typeBinding) {
+		final ClassDetails keyType = resolveAggregatedIdentifierKeyType( aggregatedKeyMapping, type );
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
 		idValue.setEmbedded( false );
-		idValue.setComponentClassName( aggregatedKeyMapping.getKeyType().getClassName() );
+		idValue.setComponentClassName( keyType.getClassName() );
 		idValue.setTable( table );
 		idValue.setTypeUsingReflection( type.getClassDetails().getClassName(), aggregatedKeyMapping.getAttributeName() );
 		typeBinding.setIdentifier( idValue );
@@ -173,10 +176,16 @@ public class IdentifierBinder {
 		final List<org.hibernate.mapping.Column> columns = bindComponentIdentifierProperties(
 				type,
 				typeBinding,
-				aggregatedKeyMapping.getKeyType(),
+				keyType,
+				resolveAggregatedIdentifierType( aggregatedKeyMapping, type ),
 				aggregatedKeyMapping.getAttribute().getMember(),
 				idValue,
 				table
+		);
+		handleGenericComponentProperty(
+				idProperty,
+				aggregatedKeyMapping.getAttribute().getMember(),
+				state.getMetadataBuildingContext()
 		);
 
 		return new IdentifierBinding(
@@ -188,6 +197,23 @@ public class IdentifierBinder {
 				table,
 				columns
 		);
+	}
+
+	private ClassDetails resolveAggregatedIdentifierKeyType(
+			AggregatedKeyMapping aggregatedKeyMapping,
+			EntityTypeMetadata type) {
+		return aggregatedKeyMapping.getAttribute()
+				.getMember()
+				.resolveRelativeType( type.getClassDetails() )
+				.determineRawClass();
+	}
+
+	private TypeDetails resolveAggregatedIdentifierType(
+			AggregatedKeyMapping aggregatedKeyMapping,
+			EntityTypeMetadata type) {
+		return aggregatedKeyMapping.getAttribute()
+				.getMember()
+				.resolveRelativeType( type.getClassDetails() );
 	}
 
 	private IdentifierBinding bindNonAggregatedIdentifier(
@@ -552,13 +578,14 @@ public class IdentifierBinder {
 			EntityTypeMetadata type,
 			RootClass typeBinding,
 			ClassDetails embeddableType,
+			TypeDetails embeddableTypeDetails,
 			MemberDetails sourceMember,
 			Component idValue,
 			Table table) {
 		return new ComponentBinder( modelBinders, state, options, context ).bindBasicProperties(
 				type,
 				typeBinding,
-				ComponentSource.embeddedIdentifier( sourceMember, embeddableType, type.getAccessType(), context ),
+				ComponentSource.embeddedIdentifier( sourceMember, embeddableType, embeddableTypeDetails, type.getAccessType(), context ),
 				idValue,
 				table,
 				(member, column) -> table.getPrimaryKey().addColumn( column ),

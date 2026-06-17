@@ -174,6 +174,9 @@ class PluralAssociationAttributeBinder {
 		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			return bindInverseOneToMany( source, oneToMany.mappedBy(), property );
 		}
+		if ( source.joinTable() == null && !source.oneToManyJoinColumns().isEmpty() ) {
+			return bindOneToManyWithForeignKey( source, property );
+		}
 		return bindAssociation( source, true, property );
 	}
 
@@ -323,6 +326,84 @@ class PluralAssociationAttributeBinder {
 					resolveOnDeleteAction(),
 					source.joinTable() == null ? new jakarta.persistence.UniqueConstraint[0] : source.joinTable().uniqueConstraints(),
 					source.joinTable() == null ? new jakarta.persistence.Index[0] : source.joinTable().indexes()
+			) );
+			bindingState.addCollectionBinding( collection );
+		}
+		return collection;
+	}
+
+	private Collection bindOneToManyWithForeignKey(CollectionSource source, Property property) {
+		final TargetEntityBinding target = resolveTargetEntityBinding( source );
+		final Table table = registerCollectionBindings
+				? target.primaryTable()
+				: createDeclarationOnlyTable();
+
+		final Collection collection = createCollection( source );
+		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setCollectionTable( table );
+		collection.setInverse( false );
+		collection.setMutable( true );
+		collection.setOptimisticLocked( true );
+		collection.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
+		CollectionShapeBinder.apply( source, collection, bindingState );
+		applyCascade( source, property, collection );
+
+		final org.hibernate.mapping.OneToMany element = new org.hibernate.mapping.OneToMany(
+				bindingState.getMetadataBuildingContext(),
+				ownerBinding
+		);
+		element.setAssociatedClass( target.typeBinder().getTypeBinding() );
+		element.setReferencedEntityName( target.entityName() );
+		element.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
+		collection.setElement( element );
+
+		if ( collection instanceof org.hibernate.mapping.Map map ) {
+			CollectionIndexBinder.bindMapKey(
+					ownerType,
+					ownerBinding,
+					source,
+					map,
+					table,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+		}
+		else if ( collection instanceof IndexedCollection indexedCollection ) {
+			CollectionIndexBinder.bindListIndex(
+					source,
+					indexedCollection,
+					table,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+		}
+		else if ( collection instanceof IdentifierCollection identifierCollection ) {
+			CollectionIdBinder.bindCollectionId(
+					source,
+					identifierCollection,
+					table,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+		}
+		if ( registerCollectionBindings ) {
+			bindingState.addCollectionTableBinding( new CollectionTableBinding(
+					collection,
+					source.oneToManyJoinColumns(),
+					ForeignKeySource.from( source.joinTable() ),
+					resolveOnDeleteAction(),
+					new jakarta.persistence.UniqueConstraint[0],
+					new jakarta.persistence.Index[0]
 			) );
 			bindingState.addCollectionBinding( collection );
 		}

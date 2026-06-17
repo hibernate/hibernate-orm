@@ -1,0 +1,195 @@
+= Column Order Resolution Design
+:toc:
+
+This note captures the ORM 9 design direction for column ordering in boot
+metadata and runtime mapping creation.
+
+The immediate pressure comes from composite foreign keys that reference nested
+`@EmbeddedId` columns, but the underlying problem is broader: boot binding often
+mutates column order before all source facts have been consumed.
+
+For related declaration-versus-application model work, see
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+and
+link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`].
+
+== Problem Statement
+
+The legacy mapping model relies on early column sorting in several places:
+
+* `org.hibernate.mapping.ToOne#sortProperties()`;
+* `org.hibernate.mapping.DependantValue#sortProperties()`;
+* `org.hibernate.mapping.SimpleValue#sortColumns(int[])`.
+
+That sorting mutates the boot `Value` selectable list so later runtime code can
+consume selectables in the order expected by the associated `Type` or
+`ComponentType`.
+
+This is convenient, but it blurs two different concepts:
+
+* source/binding order and source intent; and
+* runtime JDBC/component traversal order.
+
+The ambiguity is especially visible for composite associations:
+
+* a local FK column name may differ from the referenced target column name;
+* `@JoinColumns` declaration order may differ from identifier property order;
+* a target identifier may be nested, such as `id.nested.name`;
+* quoted identifiers must keep strict quoted-name semantics;
+* collection keys, singular to-one associations, and one-to-many keys all need
+  the same target-side ordering answer, but currently reach it through slightly
+  different assumptions.
+
+Once boot selectables are sorted in-place, later phases often have to infer
+whether the order represents source declaration, target identifier traversal, or
+some previous compatibility mutation.
+
+== Design Goals
+
+ORM 9 should:
+
+* preserve source facts long enough for binding and runtime creation to make
+  explicit decisions;
+* avoid using mutated selectable order as the only carrier of semantic meaning;
+* represent local-to-referenced selectable correspondence explicitly for
+  associations;
+* resolve runtime JDBC/component order as a projection, not as destructive
+  mutation of source metadata;
+* preserve quoted identifier semantics by using `Identifier`-aware matching;
+* keep existing sorted boot-value behavior as a compatibility bridge during
+  migration;
+* support nested component identifiers without special-casing each association
+  shape.
+
+== Source Facts To Preserve
+
+Binding should preserve these facts separately:
+
+* local selectable list in source/binding order;
+* referenced selectable names from `referencedColumnName`, if declared;
+* target value being referenced: primary key, referenced property, or synthetic
+  property-ref component;
+* target component leaf selectable order in `ComponentType` traversal order;
+* whether the association was explicitly ordered by annotations/XML;
+* quoted/non-quoted identifier state for local and referenced names;
+* source role, such as to-one FK, one-to-many FK, collection key, embedded id,
+  derived id, or property-ref.
+
+Early sorting may still be performed for compatibility, but it should not be
+the only surviving representation of these facts.
+
+== Proposed Model
+
+Introduce an explicit column-order resolution concept.
+
+[source]
+----
+SelectableCorrespondence
+    local selectable
+    referenced selectable
+    target component leaf position
+    source role
+
+SelectableOrderResolution
+    local selectables in binding/source order
+    target selectables in runtime component order
+    local-to-target position mapping
+----
+
+The names are descriptive rather than final API names.  The important concept is
+that runtime creation asks for an order projection instead of assuming the boot
+`Value` has already been mutated into the desired order.
+
+== Resolution Rules
+
+Resolution should follow these rules:
+
+* If referenced column names are explicit, match those names against the target
+  value using `Identifier` semantics.
+* If local and target columns have the same identifier, direct matching may
+  establish the same correspondence.
+* If binding has already established a local-to-target correspondence, runtime
+  creation should consume that correspondence directly.
+* If no correspondence is available, compatibility code may fall back to the
+  legacy sorted `Value` order and `ComponentType#getOriginalPropertyOrder()`.
+* If some but not all columns can be matched, fail with a focused
+  `MappingException` that identifies the association role and the missing
+  selectable.
+* Do not introduce broad case-insensitive string matching.  Quoted `"id"` and
+  quoted `"ID"` are distinct names.
+
+== Runtime Consumption
+
+Runtime mapping creation should consume resolved order projections in the places
+that currently depend on sorted boot selectables:
+
+* singular `ToOne` foreign-key descriptors;
+* inverse and non-inverse one-to-many foreign-key descriptors;
+* collection key descriptors;
+* derived-identifier association descriptors;
+* property-ref and synthetic-component descriptors.
+
+For nested component identifiers, the target side should be flattened by walking
+the boot `Component` property graph recursively in the same order expected by
+the target `ComponentType`.
+
+== Migration Slices
+
+=== Slice 1: Local Runtime Bridge
+
+Keep existing boot sorting in place, but teach runtime FK descriptor creation to
+derive the target component leaf order when needed.
+
+This is the current low-risk bridge.  It fixes nested embedded-id referenced
+columns without changing binding semantics.
+
+=== Slice 2: Capture Correspondence During Binding
+
+When binding `@JoinColumn`, `@JoinColumns`, XML join columns, and derived-id
+associations, capture local-to-referenced selectable facts explicitly.
+
+The captured product may initially live on existing boot mapping values as an
+internal detail.  The goal is to stop relying on later reverse-engineering from
+mutated selectable order.
+
+=== Slice 3: Move Sorting To A Resolver
+
+Introduce a shared resolver used by both binding follow-up phases and runtime
+mapping creation.
+
+`ToOne#sortProperties()` and `DependantValue#sortProperties()` can then become
+compatibility callers into the resolver instead of owning the semantic model.
+
+=== Slice 4: Reduce Destructive Sorting
+
+Once runtime code consumes explicit order projections, reduce in-place
+`SimpleValue#sortColumns(int[])` usage.
+
+Compatibility APIs that expose sorted selectables may continue to return sorted
+views, but source-order and target-order should no longer be conflated.
+
+== Relationship To Contribution Models
+
+This design matches the mapped-superclass and embeddable contribution direction.
+
+Mapped-superclass and embeddable declarations should preserve type/source facts.
+Applications of those declarations to an entity hierarchy, component path, or
+association role should carry path-specific resolution state, including column
+correspondence and runtime order projections.
+
+That lets `PersistentClass`, `Component`, and legacy `Value` objects remain
+materialized compatibility artifacts while the primary model moves toward
+explicit contribution and resolution products.
+
+== Open Questions
+
+* Should selectable correspondence live directly on `ToOne` / `DependantValue`,
+  or on a smaller side-car product owned by the binding state?
+* Should the resolver expose `int[]` projections only, or richer objects with
+  local/referenced selectable pairs for diagnostics and tooling?
+* How much source-order state do existing public boot APIs need to preserve?
+* When should `SimpleValue#sortColumns(int[])` stop mutating `Column#typeIndex`
+  as a side effect?
+* Can `Identifier#matches(...)` become the common equality contract for quoted
+  versus unquoted relational-name matching across binding state maps?
+

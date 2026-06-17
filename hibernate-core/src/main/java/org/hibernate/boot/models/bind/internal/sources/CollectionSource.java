@@ -45,6 +45,7 @@ import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKey;
@@ -586,6 +587,19 @@ public record CollectionSource(
 		final ArrayList<JoinColumn> result = new ArrayList<>( collectionTable.joinColumns().length );
 		result.addAll( Arrays.asList( collectionTable.joinColumns() ) );
 		return result;
+	}
+
+	/// The foreign-key columns declared directly on a unidirectional one-to-many association.
+	public List<JoinColumn> oneToManyJoinColumns() {
+		final JoinColumns plural = member.getDirectAnnotationUsage( JoinColumns.class );
+		if ( plural != null && plural.value().length > 0 ) {
+			final ArrayList<JoinColumn> result = new ArrayList<>( plural.value().length );
+			result.addAll( Arrays.asList( plural.value() ) );
+			return result;
+		}
+
+		final JoinColumn singular = member.getDirectAnnotationUsage( JoinColumn.class );
+		return singular == null ? List.of() : List.of( singular );
 	}
 
 	/// The owning-side join columns for a join-table association.

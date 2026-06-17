@@ -176,11 +176,20 @@ public record ComponentSource(
 			ClassDetails componentType,
 			AccessType defaultAccessType,
 			BindingContext bindingContext) {
+		return embeddedIdentifier( member, componentType, member.getType(), defaultAccessType, bindingContext );
+	}
+
+	public static ComponentSource embeddedIdentifier(
+			MemberDetails member,
+			ClassDetails componentType,
+			TypeVariableScope typeVariableScope,
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
 		return new ComponentSource(
 				Kind.EMBEDDED_IDENTIFIER,
 				member,
 				componentType,
-				member.getType(),
+				typeVariableScope,
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
 				"",

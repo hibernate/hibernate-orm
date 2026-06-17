@@ -85,9 +85,6 @@ public class ManyToManyAttributeProcessing {
 			JaxbManyToManyImpl jaxbManyToMany,
 			XmlDocumentContext xmlDocumentContext,
 			MutableMemberDetails memberDetails) {
-		// todo (7.0) : we need a distinction here between hbm.xml target and orm.xml target-entity
-		//		- for orm.xml target-entity we should apply the package name, if one
-		//		- for hbm.xml target we should not since it could refer to a dynamic mapping
 		if ( StringHelper.isEmpty( jaxbManyToMany.getTargetEntity() ) ) {
 			return;
 		}
@@ -95,7 +92,7 @@ public class ManyToManyAttributeProcessing {
 				XmlAnnotations.TARGET,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		targetAnn.value( xmlDocumentContext.resolveClassName( jaxbManyToMany.getTargetEntity() ) );
+		targetAnn.value( xmlDocumentContext.resolveTargetEntityName( jaxbManyToMany.getTargetEntity() ) );
 	}
 
 	private static ManyToManyJpaAnnotation applyManyToMany(

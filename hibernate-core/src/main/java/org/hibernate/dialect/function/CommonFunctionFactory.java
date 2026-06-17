@@ -847,6 +847,15 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void repeat_replaceSpace() {
+		functionRegistry.patternDescriptorBuilder( "repeat", "replace(space(?2),' ',?1)" )
+				.setInvariantType(stringType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, INTEGER)
+				.setArgumentListSignature( "(STRING string, INTEGER times)" )
+				.register();
+	}
+
 	public void leftRight() {
 		functionRegistry.namedDescriptorBuilder( "left" )
 				.setInvariantType(stringType)

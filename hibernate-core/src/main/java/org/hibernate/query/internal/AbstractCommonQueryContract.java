@@ -65,6 +65,7 @@ import java.util.Set;
 
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
+import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -97,8 +98,9 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
+import org.hibernate.jpa.internal.util.ConfigurationHelper;
+
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
-import static org.hibernate.jpa.internal.util.ConfigurationHelper.getCacheMode;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.hibernate.query.internal.QueryArguments.areInstances;
@@ -277,18 +279,25 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return flushMode == null ? getSession().getHibernateFlushMode() : flushMode;
 	}
 
+	@Nonnull
+	protected CacheMode getCacheMode() {
+		final var cacheMode = queryOptions.getCacheMode();
+		return cacheMode != null ? cacheMode : getSession().getCacheMode();
+	}
+
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
-		return queryOptions.getCacheRetrieveMode();
+		final var mode = queryOptions.getCacheRetrieveMode();
+		return mode != null ? mode : getCacheMode().getJpaRetrieveMode();
 	}
 
 	@Override
 	@Nonnull
 	public CommonQueryContractImplementor setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		session.checkOpen();
-		queryOptions.setCacheRetrieveMode( cacheRetrieveMode );
+		queryOptions.setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
 		return this;
 	}
 
@@ -296,14 +305,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	@SuppressWarnings("removal")
 	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
-		return queryOptions.getCacheStoreMode();
+		final var mode = queryOptions.getCacheStoreMode();
+		return mode != null ? mode : getCacheMode().getJpaStoreMode();
 	}
 
 	@Override
 	@Nonnull
 	public CommonQueryContractImplementor setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		session.checkOpen();
-		queryOptions.setCacheStoreMode( cacheStoreMode );
+		queryOptions.setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 		return this;
 	}
 
@@ -611,7 +621,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applyResultCacheModeHint(String hintName, Object value) {
-		queryOptions.setCacheMode( getCacheMode( value ) );
+		queryOptions.setCacheMode( ConfigurationHelper.getCacheMode( value ) );
 	}
 
 	protected void applyResultCachingRetrieveModeHint(String hintName, Object value) {

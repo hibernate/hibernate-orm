@@ -392,7 +392,18 @@ public class SessionImpl
 			// E.g. When we are in the JTA context, the session can get closed while the
 			// transaction is still active and JTA will call the AfterCompletion itself.
 			// Hence, we don't want to clear out the action queue callbacks at this point:
+			//
+			// HHH-20583: In a container-managed JTA context the session is frequently closed
+			// during the JTA afterCompletion dispatch window -- after the transaction is no longer
+			// "active" but BEFORE Hibernate's own RegisteredSynchronization has fired (it runs as a
+			// regular synchronization, while the container closes the session from an interposed one,
+			// which the JTA contract dispatches first). In that window isTransactionActive() is
+			// already false, so this guard would force-execute and log HHH90010108, even though the
+			// pending synchronization processes these callbacks moments later. isJoined() (a
+			// RegisteredSynchronization is still registered) tells us the afterCompletion is still
+			// pending; defer to it instead of warning.
 			if ( !getTransactionCoordinator().isTransactionActive()
+					&& !getTransactionCoordinator().isJoined()
 					&& actionQueue.hasAfterTransactionActions() ) {
 				SESSION_LOGGER.closingSessionWithUnprocessedBulkOperations();
 				actionQueue.executePendingBulkOperationCleanUpActions();
@@ -422,6 +433,11 @@ public class SessionImpl
 
 	@Override
 	protected void checkBeforeClosingJdbcCoordinator() {
+		// HHH-20583: do not warn when a JTA afterCompletion is still pending (isJoined()); the
+		// registered synchronization fires shortly after this close and processes the callbacks.
+		if ( getTransactionCoordinator().isJoined() ) {
+			return;
+		}
 		final var actionQueue = getActionQueue();
 		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
 			SESSION_LOGGER.closingSharedSessionWithUnprocessedTxCompletions();

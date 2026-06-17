@@ -156,7 +156,11 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			session.asEventSource().getActionQueue().addAction( action );
 		}
 		else {
-			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
+			// HHH-20583: the process is null when there is nothing to release
+			final var process = action.getAfterTransactionCompletionProcess();
+			if ( process != null ) {
+				process.doAfterTransactionCompletion( true, session );
+			}
 		}
 	}
 
@@ -168,7 +172,11 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			session.asEventSource().getActionQueue().addAction( action );
 		}
 		else {
-			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
+			// HHH-20583: the process is null when there is nothing to release
+			final var process = action.getAfterTransactionCompletionProcess();
+			if ( process != null ) {
+				process.doAfterTransactionCompletion( true, session );
+			}
 		}
 	}
 
@@ -215,7 +223,15 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public @Nonnull AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
+	public @Nullable AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
+		// HHH-20583: a bulk operation that affects no cacheable entity/collection/natural-id has
+		// nothing to release. Returning a no-op process still gets it registered on the ActionQueue
+		// and then reported as unprocessed at session close (HHH90010101 / HHH90010108). Return null
+		// so no empty after-completion callback is registered. Query-space cache invalidation is
+		// unaffected -- that is driven by getPropertySpaces(), not by this process.
+		if ( entityCleanups.isEmpty() && collectionCleanups.isEmpty() && naturalIdCleanups.isEmpty() ) {
+			return null;
+		}
 		return new BulkOperationCleanUpAfterTransactionCompletionProcess(
 				entityCleanups,
 				collectionCleanups,

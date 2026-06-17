@@ -402,8 +402,9 @@ public class SessionImpl
 		finally {
 			// E.g. When we are in the JTA context, the session can get closed while the
 			// transaction is still active and JTA will call the AfterCompletion itself.
+			// Also, some JTA environments close the Session through a Synchronization that is executed before ours.
 			// Hence, we don't want to clear out the action queue callbacks at this point:
-			if ( !getTransactionCoordinator().isTransactionActive()
+			if ( !isJtaTransactionCompletionProcessing()
 					&& actionQueue.hasAfterTransactionActions() ) {
 				SESSION_LOGGER.closingSessionWithUnprocessedBulkOperations();
 				actionQueue.executePendingBulkOperationCleanUpActions();
@@ -431,11 +432,24 @@ public class SessionImpl
 			&& transactionCoordinator.getTransactionDriverControl().isActiveAndNoMarkedForRollback();
 	}
 
+	private boolean isJtaTransactionCompletionProcessing() {
+		final var transactionCoordinator = getTransactionCoordinator();
+		return transactionCoordinator.getTransactionCoordinatorBuilder().isJta()
+			// Our Synchronization has been registered
+				&& transactionCoordinator.isJoined()
+			// Any transaction status other than NOT_ACTIVE indicates that the synchronizations are still running
+				&& transactionCoordinator.getTransactionDriverControl().getStatus() != TransactionStatus.NOT_ACTIVE;
+	}
+
 	@Override
 	protected void checkBeforeClosingJdbcCoordinator() {
-		final var actionQueue = getActionQueue();
-		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-			SESSION_LOGGER.closingSharedSessionWithUnprocessedTxCompletions();
+		// In a JTA environment the Session is usually closed through a Synchronization, that is invoked before ours,
+		// so only check for pending actions if we're not in a JTA transaction completion processing state
+		if ( !isJtaTransactionCompletionProcessing() ) {
+			final var actionQueue = getActionQueue();
+			if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
+				SESSION_LOGGER.closingSharedSessionWithUnprocessedTxCompletions();
+			}
 		}
 	}
 

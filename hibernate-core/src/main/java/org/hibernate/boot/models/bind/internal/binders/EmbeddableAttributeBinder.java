@@ -51,6 +51,7 @@ class EmbeddableAttributeBinder {
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
 	private final BindingContext bindingContext;
+	private final boolean registerCollectionBindings;
 	private ComponentSource componentSource;
 
 	EmbeddableAttributeBinder(
@@ -62,6 +63,29 @@ class EmbeddableAttributeBinder {
 			BindingState bindingState,
 			BindingOptions bindingOptions,
 			BindingContext bindingContext) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				primaryTable,
+				modelBinders,
+				bindingState,
+				bindingOptions,
+				bindingContext,
+				true
+		);
+	}
+
+	EmbeddableAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			Table primaryTable,
+			ModelBinders modelBinders,
+			BindingState bindingState,
+			BindingOptions bindingOptions,
+			BindingContext bindingContext,
+			boolean registerCollectionBindings) {
 		this.ownerType = ownerType;
 		this.ownerBinding = ownerBinding;
 		this.attributeMetadata = attributeMetadata;
@@ -70,6 +94,7 @@ class EmbeddableAttributeBinder {
 		this.bindingState = bindingState;
 		this.bindingOptions = bindingOptions;
 		this.bindingContext = bindingContext;
+		this.registerCollectionBindings = registerCollectionBindings;
 	}
 
 	Component bind(Property property) {
@@ -102,7 +127,8 @@ class EmbeddableAttributeBinder {
 				},
 				false,
 				true,
-				true
+				true,
+				registerCollectionBindings
 		);
 		property.setOptional( true );
 		return component;

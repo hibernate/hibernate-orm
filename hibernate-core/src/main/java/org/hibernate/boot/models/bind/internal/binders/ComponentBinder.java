@@ -89,6 +89,31 @@ public class ComponentBinder {
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
 			boolean updatable) {
+		return bindBasicProperties(
+				ownerType,
+				ownerBinding,
+				source,
+				component,
+				table,
+				columnConsumer,
+				uniqueByDefault,
+				nullableByDefault,
+				updatable,
+				true
+		);
+	}
+
+	List<Column> bindBasicProperties(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			ComponentSource source,
+			Component component,
+			Table table,
+			BiConsumer<MemberDetails, Column> columnConsumer,
+			boolean uniqueByDefault,
+			boolean nullableByDefault,
+			boolean updatable,
+			boolean registerCollectionBindings) {
 		validateEmbeddedTablePlacement( source );
 		applyComponentCustomizations( component, source.sourceMember(), source.componentType() );
 		applyColumnNamingPattern( component, source.sourceMember() );
@@ -103,7 +128,8 @@ public class ComponentBinder {
 				columnConsumer,
 				uniqueByDefault,
 				nullableByDefault,
-				updatable
+				updatable,
+				registerCollectionBindings
 		);
 		AggregateComponentBinder.processAggregate( ownerBinding, source, component, table, state );
 		return columns;
@@ -120,7 +146,8 @@ public class ComponentBinder {
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
-			boolean updatable) {
+			boolean updatable,
+			boolean registerCollectionBindings) {
 		final List<Column> columns = new ArrayList<>();
 		final List<Column> associationIdentifierColumns =
 				source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
@@ -150,7 +177,8 @@ public class ComponentBinder {
 						member,
 						componentMember.fullPath(),
 						source.associationOverride( memberPath ),
-						property
+						property,
+						registerCollectionBindings
 				);
 				property.setValue( collection );
 				property.setOptional( true );
@@ -222,7 +250,8 @@ public class ComponentBinder {
 						columnConsumer,
 						uniqueByDefault,
 						nullableByDefault,
-						updatable
+						updatable,
+						registerCollectionBindings
 				) );
 				continue;
 			}
@@ -393,7 +422,8 @@ public class ComponentBinder {
 			MemberDetails member,
 			String memberPath,
 			AssociationOverride associationOverride,
-			Property property) {
+			Property property,
+			boolean registerCollectionBindings) {
 		final AttributeMetadata attributeMetadata = new ComponentAttributeMetadata(
 				member.resolveAttributeName(),
 				determinePluralNature( member ),
@@ -408,7 +438,8 @@ public class ComponentBinder {
 					options,
 					state,
 					context,
-					memberPath
+					memberPath,
+					registerCollectionBindings
 			).bind( property );
 		}
 		if ( member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class ) ) {
@@ -421,7 +452,8 @@ public class ComponentBinder {
 					state,
 					context,
 					memberPath,
-					associationOverride
+					associationOverride,
+					registerCollectionBindings
 			).bindOneToMany( property );
 		}
 		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class ) ) {
@@ -434,7 +466,8 @@ public class ComponentBinder {
 					state,
 					context,
 					memberPath,
-					associationOverride
+					associationOverride,
+					registerCollectionBindings
 			).bindManyToMany( property );
 		}
 		throw new UnsupportedOperationException( "Unsupported plural embeddable member - " + member.getName() );

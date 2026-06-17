@@ -5,8 +5,10 @@
 package org.hibernate.orm.test.boot.models.source;
 
 import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.MetadataSources;
@@ -14,9 +16,12 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.pipeline.internal.source.AvailableResources;
 import org.hibernate.boot.pipeline.internal.source.AvailableResourcesContext;
+import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningResult;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
@@ -43,6 +48,66 @@ public class AvailableResourcesTests {
 		assertThat( availableResources.managedClassDetails() ).isEmpty();
 		assertThat( availableResources.packageDetails() ).isEmpty();
 		assertThat( availableResources.xmlMappings() ).isEmpty();
+	}
+
+	@Test
+	void xmlMappingDisabledIgnoresExplicitMappingResources(ServiceRegistryScope registryScope) {
+		var buildingContext = new MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
+				Map.of( MappingSettings.XML_MAPPING_ENABLED, false )
+		);
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				jakarta.persistence.FetchType.LAZY
+		);
+
+		final var modelSources = AvailableResources.from(
+				new MappingSourceContributions(
+						List.of(),
+						List.of(),
+						List.of(),
+						List.of( "org/hibernate/orm/test/bootstrap/binding/hbm/BadMapping.xml" ),
+						List.of(),
+						List.of()
+				),
+				new AvailableResourcesContext(
+						buildingContext.getBootstrapContext().getModelsContext(),
+						buildingContext.getBootstrapContext().getServiceRegistry()
+				),
+				mappingSettings
+		);
+
+		assertThat( modelSources.xmlMappings() ).isEmpty();
+	}
+
+	@Test
+	void xmlMappingDisabledIgnoresDiscoveredMappingUrls(ServiceRegistryScope registryScope) throws Exception {
+		var buildingContext = new MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
+				Map.of( MappingSettings.XML_MAPPING_ENABLED, false )
+		);
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				jakarta.persistence.FetchType.LAZY
+		);
+
+		final var modelSources = AvailableResources.from(
+				new MappingSourceContributions(
+						List.of(),
+						List.of(),
+						List.of(),
+						List.of(),
+						List.of(),
+						List.of( URI.create( "file:/visible/META-INF/orm.xml" ).toURL() )
+				),
+				new AvailableResourcesContext(
+						buildingContext.getBootstrapContext().getModelsContext(),
+						buildingContext.getBootstrapContext().getServiceRegistry()
+				),
+				mappingSettings
+		);
+
+		assertThat( modelSources.xmlMappings() ).isEmpty();
 	}
 
 	@Test

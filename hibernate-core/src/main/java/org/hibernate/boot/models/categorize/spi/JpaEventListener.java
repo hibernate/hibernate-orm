@@ -193,6 +193,10 @@ public class JpaEventListener {
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
 			JaxbEntityListenerImpl jaxbMapping) {
+		if ( isImplicitMethodMappings( jaxbMapping ) ) {
+			return from( consumerType, listenerClassDetails );
+		}
+
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preInsertMethod = new MutableObject<>();
@@ -303,6 +307,23 @@ public class JpaEventListener {
 		errorIfEmpty( jpaEventListener );
 
 		return jpaEventListener;
+	}
+
+	private static boolean isImplicitMethodMappings(JaxbEntityListenerImpl jaxbMapping) {
+		return jaxbMapping.getPrePersist() == null
+			&& jaxbMapping.getPostPersist() == null
+			&& jaxbMapping.getPreInsert() == null
+			&& jaxbMapping.getPostInsert() == null
+			&& jaxbMapping.getPreRemove() == null
+			&& jaxbMapping.getPostRemove() == null
+			&& jaxbMapping.getPreDelete() == null
+			&& jaxbMapping.getPostDelete() == null
+			&& jaxbMapping.getPreMerge() == null
+			&& jaxbMapping.getPreUpdate() == null
+			&& jaxbMapping.getPostUpdate() == null
+			&& jaxbMapping.getPreUpsert() == null
+			&& jaxbMapping.getPostUpsert() == null
+			&& jaxbMapping.getPostLoad() == null;
 	}
 
 	private static void errorIfEmpty(JpaEventListener jpaEventListener) {

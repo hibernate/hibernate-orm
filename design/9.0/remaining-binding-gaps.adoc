@@ -270,9 +270,11 @@ Updated guardrail interpretation:
   `isUnownedAssociationTransientCheck` has been burned down.  Rerun broad or
   focused guardrails before assigning the previously hidden action-queue tests
   to a binding/runtime bucket.
-* Treat inheritance categorization/binding/table context as the primary next
-  bucket, and composite-id/IdClass/derived-id handling as the second major
-  bucket.
+* Treat inheritance categorization/binding/table context as the primary open
+  metadata bucket.  The recent composite-FK and derived-identity focused
+  guardrails are green, so the remaining identifier bucket should be narrowed to
+  IdClass/inheritance/property-ref combinations before more broad identifier
+  work is started.
 * Keep `AvailableResources` source-policy failures narrow: only failures caused
   by `exclude-unlisted-classes=true` or equivalent source-policy rejection
   belong there.  Failures such as a null supertype table reference belong in
@@ -280,6 +282,64 @@ Updated guardrail interpretation:
 * Continue treating broad query/entity-graph and bytecode/lazy buckets as
   symptom buckets until focused reruns show whether they fail during
   SessionFactory construction, metadata export, or actual runtime execution.
+
+=== Interrupted Live Refresh: 2026-06-17
+
+Refresh command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test
+----
+
+Status:
+
+* The run reached test execution and produced a large live-console failure
+  stream, including a heap dump, then stopped making progress in a late test
+  tail.  It was stopped with `./gradlew --stop`.
+* Gradle did not finalize JUnit XML reports for this attempt, and the HTML
+  report tree was not reliable enough for counts.  Treat the notes below as a
+  qualitative refresh layered on top of the historical XML snapshot, not as a
+  replacement for the counted corpus.
+* The live stream confirmed that the previous broad "source availability"
+  framing was too loose.  Many visible failures have enough source/categorized
+  type information and fail later in table context, XML overlay/application,
+  runtime mapping-model creation, or JPA/runtime behavior.
+
+Live-console buckets worth sampling next:
+
+[cols="1,3", options="header"]
+|===
+| Bucket
+| Representative live-console signals
+
+| XML overlay / XML annotation injection
+| `XmlAttributeOverrideTest` fails with `ModelsException`; JSON/XML mapping
+tests and earlier HBM-not-found transformation failures suggest XML-created
+annotations and XML-disabled filtering still need focused guardrails.
+
+| Component plus mapped-superclass table ownership
+| `MappedSuperclassComponentWithCollectionTest` fails with
+`DuplicateMappingException`; earlier focused failures around embeddable
+inheritance and mapped-superclass generics still belong here.
+
+| Entity metadata defaults / lazy-to-one runtime shape
+| Several lazy-to-one and enhancement tests fail with SQL grammar or eager
+initialization assertions.  Some direct metadata defaults were recently fixed,
+so sample these before treating the whole bucket as bytecode/enhancement.
+
+| JPA settings and closed-EntityManager behavior
+| `ConfigurationObjectSettingTest`, `JpaComplianceTests`,
+`EntityManagerClosedTest`, and transaction-joining/close-with-active-transaction
+tests fail.  This looks more like settings/runtime behavior than source
+categorization.
+
+| Runtime `UnsupportedOperationException`
+| Criteria literals, entity graphs, lock hints, native datetime discovery, JSON
+collection Java types, and non-where/query paths still hit unsupported runtime
+branches.  Keep this separate from boot-model gaps unless a focused test shows
+SessionFactory construction failure.
+|===
 
 == Historical Full-Suite Failure Snapshot: 2026-06-17
 
@@ -656,6 +716,41 @@ Open parity questions:
 Recent related failures around XML not adding `@Entity` and bad XML being read
 when XML mappings were disabled belong to this bucket.
 
+Audit note:
+
+* The intended ORM 9 XML/source process is:
+  first resolve all referenced, available `ClassDetails`; then, for
+  metadata-complete XML mappings, clear all existing annotations and apply the
+  complete XML mapping; then, for non-complete XML mappings, overlay XML mapping
+  annotations onto the resolved model; then categorize the final Hibernate
+  Models view; then bind.
+* The legacy `MetadataBuildingProcess` ordered XML work as pre-process XML,
+  process metadata-complete XML, categorize known annotation classes/names, then
+  apply overlay XML.  The new pipeline should not mechanically restore that
+  legacy order because categorization now depends on seeing XML-created
+  `@Entity`, `@MappedSuperclass`, or `@Embeddable` annotations.
+* Source-adapter behavior still needs focused guardrails.  In the main pipeline
+  path, XML mappings discovered as resources, files, or URLs are filtered by
+  `MappingSettings.XML_MAPPING_ENABLED` before binding.  The persistence-unit
+  adapter also collects visible `META-INF/orm.xml` URLs as source
+  contributions; no current failure has been tied to that broadening, but it
+  should be covered so persistence-unit mapping-file semantics stay explicit.
+* Focused XML tests should prove the full phase boundary:
+  XML-disabled resources are ignored before binding/parsing failures,
+  metadata-complete XML creates persistent roles before categorization,
+  overlay XML mutates annotations before categorization snapshots source roles,
+  and XML defaults/package metadata are visible to member/source binding.
++
+Progress note: focused source/categorization guardrails now cover disabled XML
+filtering for explicit resources and discovered URL-style resources, complete
+XML replacing existing annotations before categorization, and non-complete XML
+creating/overlaying a persistent role before categorization.
++
+Progress note: root default XML listeners with no explicitly named callback
+methods now use callback annotations declared on the listener class.  This
+restores the `XmlAttributeOverrideTest` bootstrap path and pins the implicit
+listener semantics with a focused phase-boundary guardrail.
+
 === Categorization and Inheritance
 
 Open parity questions:
@@ -842,15 +937,18 @@ own slices rather than silently reintroduced through the new pipeline.
 
 Use these as burn-down buckets instead of waiting for broad suite failures.
 
-1. XML/source parity:
-   `XMLMappingDisabledTest`, HBM-not-found removal/transformation tests that
-   still exercise XML annotation creation, metadata-complete entity tests,
-   overlay XML tests, package-default tests.
+1. XML/component parity:
+   `XmlAttributeOverrideTest`, `XMLMappingDisabledTest`, XML annotation-creation
+   tests, metadata-complete entity tests, overlay XML tests, package-default
+   tests, and XML-sourced embedded/component override tests.  This is the
+   preferred next bucket because it has focused bootstrap failures and should
+   also clarify whether XML is feeding categorization too late.
 
 2. Categorization/inheritance:
    mapped-superclass override tests, access hierarchy tests, joined-subclass
    tests, table-per-class tests, shared mapped-superclass tests,
-   `exclude-unlisted-classes` tests.
+   `exclude-unlisted-classes` tests.  Keep true source-policy failures separate
+   from later table-context failures.
 
 3. Components/overrides:
    embedded inheritance tests, nested attribute/association override tests,
@@ -858,8 +956,9 @@ Use these as burn-down buckets instead of waiting for broad suite failures.
    override tests, custom implicit naming strategy tests.
 
 4. Identifiers:
-   IdClass tests, embedded-id tests, association-id tests, derived-id tests,
-   quoted identifier variants, composite target-id variants.
+   narrow to the remaining IdClass/inheritance/property-ref tests first.
+   Composite-FK and common derived-id focused guardrails are currently green, so
+   do not reopen the whole identifier bucket without a failing focused example.
 
 5. Associations:
    to-one join-column/join-table tests, inverse one-to-one tests, property-ref

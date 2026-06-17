@@ -141,7 +141,8 @@ public class AttributeBinder {
 					modelBinders,
 					bindingState,
 					bindingOptions,
-					bindingContext
+					bindingContext,
+					registerCollectionBindings
 			).bind( binding );
 			binding.setValue( componentValue );
 			handleGenericComponentProperty(

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -87,6 +88,7 @@ class AssociationIdentifierBinder {
 		final List<JoinColumn> orderedJoinColumns = orderJoinColumns(
 				joinColumns,
 				targetColumns.columns(),
+				bindingState.getDatabase(),
 				associationIdentifierBinding.ownerBinding().getClassName(),
 				associationIdentifierBinding.property().getName()
 		);
@@ -161,7 +163,7 @@ class AssociationIdentifierBinder {
 			return TargetColumns.primaryKey( targetIdentifierBinding.columns() );
 		}
 
-		if ( ToOneAttributeBinder.referencesPrimaryKey( joinColumns, targetIdentifierBinding.columns() ) ) {
+		if ( ToOneAttributeBinder.referencesPrimaryKey( joinColumns, targetIdentifierBinding.columns(), bindingState.getDatabase() ) ) {
 			return TargetColumns.primaryKey( targetIdentifierBinding.columns() );
 		}
 		final List<String> referencedColumnNames = referencedColumnNames( joinColumns );
@@ -196,6 +198,7 @@ class AssociationIdentifierBinder {
 	private static List<JoinColumn> orderJoinColumns(
 			List<JoinColumn> joinColumns,
 			List<Column> targetColumns,
+			Database database,
 			String ownerClassName,
 			String propertyName) {
 		if ( joinColumns.isEmpty() || joinColumns.stream().noneMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) ) {
@@ -208,6 +211,7 @@ class AssociationIdentifierBinder {
 			final JoinColumn joinColumn = findJoinColumn(
 					targetColumn,
 					unmatchedJoinColumns,
+					database,
 					ownerClassName,
 					propertyName
 			);
@@ -220,10 +224,11 @@ class AssociationIdentifierBinder {
 	private static JoinColumn findJoinColumn(
 			Column targetColumn,
 			List<JoinColumn> joinColumns,
+			Database database,
 			String ownerClassName,
 			String propertyName) {
 		for ( JoinColumn joinColumn : joinColumns ) {
-			if ( targetColumn.getName().equalsIgnoreCase( joinColumn.referencedColumnName() ) ) {
+			if ( targetColumn.getNameIdentifier( database ).matches( database.toIdentifier( joinColumn.referencedColumnName() ) ) ) {
 				return joinColumn;
 			}
 		}

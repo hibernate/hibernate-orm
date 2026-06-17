@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -49,10 +51,10 @@ class AssociationTargetBinder {
 	}
 
 	private Property resolveReferencedProperty(AssociationTargetBinding associationTargetBinding) {
-		final List<String> referencedColumnNames = referencedColumnNames( associationTargetBinding );
+		final List<Identifier> referencedColumnNames = referencedColumnNames( associationTargetBinding );
 		for ( Property property : associationTargetBinding.targetTypeBinder().getTypeBinding().getProperties() ) {
 			if ( property.getValue() instanceof BasicValue basicValue
-					&& columnNames( basicValue.getColumns() ).equals( referencedColumnNames ) ) {
+					&& columnNamesMatch( basicValue.getColumns(), referencedColumnNames ) ) {
 				return property;
 			}
 		}
@@ -62,8 +64,9 @@ class AssociationTargetBinder {
 		);
 	}
 
-	private List<String> referencedColumnNames(AssociationTargetBinding associationTargetBinding) {
-		final List<String> result = new ArrayList<>( associationTargetBinding.referencedColumnNames().size() );
+	private List<Identifier> referencedColumnNames(AssociationTargetBinding associationTargetBinding) {
+		final List<Identifier> result = new ArrayList<>( associationTargetBinding.referencedColumnNames().size() );
+		final Database database = entityBinder.getBindingState().getDatabase();
 		for ( String referencedColumnName : associationTargetBinding.referencedColumnNames() ) {
 			if ( StringHelper.isEmpty( referencedColumnName ) ) {
 				throw new MappingException(
@@ -71,16 +74,21 @@ class AssociationTargetBinder {
 								+ associationTargetBinding.role()
 				);
 			}
-			result.add( referencedColumnName.toLowerCase( java.util.Locale.ROOT ) );
+			result.add( database.toIdentifier( referencedColumnName ) );
 		}
 		return result;
 	}
 
-	private List<String> columnNames(List<Column> columns) {
-		final List<String> result = new ArrayList<>( columns.size() );
-		for ( Column column : columns ) {
-			result.add( column.getName().toLowerCase( java.util.Locale.ROOT ) );
+	private boolean columnNamesMatch(List<Column> columns, List<Identifier> referencedColumnNames) {
+		if ( columns.size() != referencedColumnNames.size() ) {
+			return false;
 		}
-		return result;
+		final Database database = entityBinder.getBindingState().getDatabase();
+		for ( int i = 0; i < columns.size(); i++ ) {
+			if ( !columns.get( i ).getNameIdentifier( database ).matches( referencedColumnNames.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

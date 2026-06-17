@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.id.ForeignGenerator;
@@ -143,7 +144,7 @@ class DerivedIdentifierBinder {
 		final java.util.ArrayList<Column> orderedColumns = new java.util.ArrayList<>( targetColumns.size() );
 		final java.util.ArrayList<Column> unmatchedColumns = new java.util.ArrayList<>( identifierColumns );
 		for ( Column targetColumn : targetColumns ) {
-			final Column identifierColumn = findColumn( unmatchedColumns, targetColumn.getName() );
+			final Column identifierColumn = findColumn( unmatchedColumns, targetColumn );
 			if ( identifierColumn == null ) {
 				return identifierColumns;
 			}
@@ -153,9 +154,10 @@ class DerivedIdentifierBinder {
 		return orderedColumns;
 	}
 
-	private Column findColumn(List<Column> columns, String columnName) {
+	private Column findColumn(List<Column> columns, Column targetColumn) {
 		for ( Column column : columns ) {
-			if ( column.getName().equalsIgnoreCase( columnName ) ) {
+			if ( column.getNameIdentifier( bindingState.getDatabase() )
+					.matches( targetColumn.getNameIdentifier( bindingState.getDatabase() ) ) ) {
 				return column;
 			}
 		}
@@ -178,6 +180,7 @@ class DerivedIdentifierBinder {
 		final List<JoinColumn> orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				joinColumns,
 				targetColumns,
+				bindingState.getDatabase(),
 				derivedIdentifierBinding.ownerBinding().getClassName(),
 				derivedIdentifierBinding.property().getName()
 		);
@@ -246,8 +249,11 @@ class DerivedIdentifierBinder {
 		final List<String> referencedColumnNames = ToOneAttributeBinder.referencedColumnNames(
 				derivedIdentifierBinding.joinColumns()
 		);
+		final List<Identifier> referencedColumnIdentifiers = referencedColumnNames.stream()
+				.map( bindingState.getDatabase()::toIdentifier )
+				.toList();
 		for ( Property property : derivedIdentifierBinding.targetTypeBinder().getTypeBinding().getProperties() ) {
-			if ( columnNames( property.getValue().getColumns() ).equals( referencedColumnNames ) ) {
+			if ( columnNamesMatch( property.getValue().getColumns(), referencedColumnIdentifiers ) ) {
 				return property.getValue().getColumns();
 			}
 		}
@@ -259,8 +265,16 @@ class DerivedIdentifierBinder {
 		);
 	}
 
-	private List<String> columnNames(List<Column> columns) {
-		return columns.stream().map( Column::getName ).toList();
+	private boolean columnNamesMatch(List<Column> columns, List<Identifier> referencedColumnNames) {
+		if ( columns.size() != referencedColumnNames.size() ) {
+			return false;
+		}
+		for ( int i = 0; i < columns.size(); i++ ) {
+			if ( !columns.get( i ).getNameIdentifier( bindingState.getDatabase() ).matches( referencedColumnNames.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private Value resolveIdentifierValue(
@@ -308,6 +322,7 @@ class DerivedIdentifierBinder {
 		final List<JoinColumn> orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				joinColumns,
 				targetColumns,
+				bindingState.getDatabase(),
 				derivedIdentifierBinding.ownerBinding().getClassName(),
 				derivedIdentifierBinding.property().getName()
 		);

@@ -13,6 +13,7 @@ import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.PropertyRef;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
@@ -229,7 +230,7 @@ class ToOneAttributeBinder {
 		);
 		final PropertyRef propertyRef = source.propertyRef();
 		final boolean referenceToPrimaryKey = propertyRef == null
-				&& referencesPrimaryKeySources( valueJoinColumns, target.identifierColumns() );
+				&& referencesPrimaryKeySources( valueJoinColumns, target.identifierColumns(), bindingState.getDatabase() );
 		final MapsId mapsId = member.getDirectAnnotationUsage( MapsId.class );
 		value.setReferencedEntityName( target.entityName() );
 		value.setReferenceToPrimaryKey( referenceToPrimaryKey );
@@ -257,6 +258,7 @@ class ToOneAttributeBinder {
 					target,
 					associationTable,
 					referenceToPrimaryKey,
+					bindingState.getDatabase(),
 					logicalOneToOne,
 					optional,
 					ownerClassName,
@@ -395,6 +397,7 @@ class ToOneAttributeBinder {
 			TargetEntityBinding target,
 			Table table,
 			boolean referenceToPrimaryKey,
+			Database database,
 			boolean uniqueByDefault,
 			boolean optional,
 			String ownerClassName,
@@ -409,7 +412,7 @@ class ToOneAttributeBinder {
 		}
 
 		final List<JoinColumnOrFormulaSource> orderedJoinColumns = referenceToPrimaryKey
-				? orderJoinColumnSources( joinColumnAnns, targetColumns, ownerClassName, propertyName )
+				? orderJoinColumnSources( joinColumnAnns, targetColumns, database, ownerClassName, propertyName )
 				: joinColumnAnns;
 		final int columnCount = referenceToPrimaryKey ? targetColumns.size() : joinColumnAnns.size();
 		for ( int i = 0; i < columnCount; i++ ) {
@@ -442,7 +445,7 @@ class ToOneAttributeBinder {
 		}
 	}
 
-	static boolean referencesPrimaryKey(List<JoinColumn> joinColumns, List<Column> targetColumns) {
+	static boolean referencesPrimaryKey(List<JoinColumn> joinColumns, List<Column> targetColumns, Database database) {
 		if ( joinColumns.isEmpty()
 				|| joinColumns.stream().noneMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) ) {
 			return true;
@@ -452,7 +455,7 @@ class ToOneAttributeBinder {
 		}
 		final ArrayList<Column> unmatchedTargetColumns = new ArrayList<>( targetColumns );
 		for ( JoinColumn joinColumn : joinColumns ) {
-			final Column targetColumn = findTargetColumn( unmatchedTargetColumns, joinColumn.referencedColumnName() );
+			final Column targetColumn = findTargetColumn( unmatchedTargetColumns, joinColumn.referencedColumnName(), database );
 			if ( targetColumn == null ) {
 				return false;
 			}
@@ -461,7 +464,10 @@ class ToOneAttributeBinder {
 		return unmatchedTargetColumns.isEmpty();
 	}
 
-	private static boolean referencesPrimaryKeySources(List<JoinColumnOrFormulaSource> joinColumns, List<Column> targetColumns) {
+	private static boolean referencesPrimaryKeySources(
+			List<JoinColumnOrFormulaSource> joinColumns,
+			List<Column> targetColumns,
+			Database database) {
 		if ( joinColumns.isEmpty()
 				|| joinColumns.stream().noneMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) ) {
 			return true;
@@ -471,7 +477,7 @@ class ToOneAttributeBinder {
 		}
 		final ArrayList<Column> unmatchedTargetColumns = new ArrayList<>( targetColumns );
 		for ( JoinColumnOrFormulaSource joinColumn : joinColumns ) {
-			final Column targetColumn = findTargetColumn( unmatchedTargetColumns, joinColumn.referencedColumnName() );
+			final Column targetColumn = findTargetColumn( unmatchedTargetColumns, joinColumn.referencedColumnName(), database );
 			if ( targetColumn == null ) {
 				return false;
 			}
@@ -496,9 +502,10 @@ class ToOneAttributeBinder {
 		return result;
 	}
 
-	private static Column findTargetColumn(List<Column> targetColumns, String columnName) {
+	private static Column findTargetColumn(List<Column> targetColumns, String columnName, Database database) {
+		final Identifier columnIdentifier = database.toIdentifier( columnName );
 		for ( Column targetColumn : targetColumns ) {
-			if ( targetColumn.getName().equalsIgnoreCase( columnName ) ) {
+			if ( targetColumn.getNameIdentifier( database ).matches( columnIdentifier ) ) {
 				return targetColumn;
 			}
 		}
@@ -508,6 +515,7 @@ class ToOneAttributeBinder {
 	static List<JoinColumn> orderJoinColumns(
 			List<JoinColumn> joinColumns,
 			List<Column> targetColumns,
+			Database database,
 			String ownerClassName,
 			String propertyName) {
 		if ( joinColumns.isEmpty() || joinColumns.stream().noneMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) ) {
@@ -520,6 +528,7 @@ class ToOneAttributeBinder {
 			final JoinColumn joinColumn = findJoinColumn(
 					targetColumn,
 					unmatchedJoinColumns,
+					database,
 					ownerClassName,
 					propertyName
 			);
@@ -532,6 +541,7 @@ class ToOneAttributeBinder {
 	private static List<JoinColumnOrFormulaSource> orderJoinColumnSources(
 			List<JoinColumnOrFormulaSource> joinColumns,
 			List<Column> targetColumns,
+			Database database,
 			String ownerClassName,
 			String propertyName) {
 		if ( joinColumns.isEmpty() || joinColumns.stream().noneMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) ) {
@@ -544,6 +554,7 @@ class ToOneAttributeBinder {
 			final JoinColumnOrFormulaSource joinColumn = findJoinColumnSource(
 					targetColumn,
 					unmatchedJoinColumns,
+					database,
 					ownerClassName,
 					propertyName
 			);
@@ -556,10 +567,11 @@ class ToOneAttributeBinder {
 	private static JoinColumn findJoinColumn(
 			Column targetColumn,
 			List<JoinColumn> joinColumns,
+			Database database,
 			String ownerClassName,
 			String propertyName) {
 		for ( JoinColumn joinColumn : joinColumns ) {
-			if ( targetColumn.getName().equalsIgnoreCase( joinColumn.referencedColumnName() ) ) {
+			if ( targetColumn.getNameIdentifier( database ).matches( database.toIdentifier( joinColumn.referencedColumnName() ) ) ) {
 				return joinColumn;
 			}
 		}
@@ -573,10 +585,11 @@ class ToOneAttributeBinder {
 	private static JoinColumnOrFormulaSource findJoinColumnSource(
 			Column targetColumn,
 			List<JoinColumnOrFormulaSource> joinColumns,
+			Database database,
 			String ownerClassName,
 			String propertyName) {
 		for ( JoinColumnOrFormulaSource joinColumn : joinColumns ) {
-			if ( targetColumn.getName().equalsIgnoreCase( joinColumn.referencedColumnName() ) ) {
+			if ( targetColumn.getNameIdentifier( database ).matches( database.toIdentifier( joinColumn.referencedColumnName() ) ) ) {
 				return joinColumn;
 			}
 		}

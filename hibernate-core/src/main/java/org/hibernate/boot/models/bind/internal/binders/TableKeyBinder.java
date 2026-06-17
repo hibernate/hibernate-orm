@@ -215,6 +215,7 @@ public class TableKeyBinder {
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				joinColumns,
 				identifierBinding.columns(),
+				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				table.getName()
 		);
@@ -272,6 +273,7 @@ public class TableKeyBinder {
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				associationTableBinding.joinColumns(),
 				identifierBinding.columns(),
+				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				associationTableBinding.join().getTable().getName()
 		);
@@ -301,6 +303,7 @@ public class TableKeyBinder {
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				collectionTableBinding.joinColumns(),
 				identifierBinding.columns(),
+				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				collectionTableBinding.collection().getRole()
 		);

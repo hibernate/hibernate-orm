@@ -305,6 +305,24 @@ public class Identifier implements Comparable<Identifier> {
 				: text.equalsIgnoreCase( name );
 	}
 
+	/**
+	 * Does this identifier match another identifier, preserving the semantic
+	 * distinction between quoted and unquoted names.
+	 * <p>
+	 * Quoted identifiers match only other quoted identifiers with exactly the
+	 * same text.  Unquoted identifiers match case-insensitively.
+	 */
+	public boolean matches(Identifier identifier) {
+		if ( identifier == null ) {
+			return false;
+		}
+		if ( isQuoted() || identifier.isQuoted() ) {
+			return isQuoted() == identifier.isQuoted()
+				&& text.equals( identifier.text );
+		}
+		return text.equalsIgnoreCase( identifier.text );
+	}
+
 	@Override
 	public int hashCode() {
 		return isQuoted

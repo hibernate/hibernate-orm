@@ -407,7 +407,8 @@ class PluralAssociationAttributeBinder {
 		final List<JoinColumn> inverseJoinColumns = source.associationInverseJoinColumns();
 		final boolean referenceToPrimaryKey = ToOneAttributeBinder.referencesPrimaryKey(
 				inverseJoinColumns,
-				target.identifierColumns()
+				target.identifierColumns(),
+				bindingState.getDatabase()
 		);
 		element.setReferencedEntityName( target.entityName() );
 		element.setReferenceToPrimaryKey( referenceToPrimaryKey );
@@ -477,6 +478,7 @@ class PluralAssociationAttributeBinder {
 				? ToOneAttributeBinder.orderJoinColumns(
 						joinColumnAnns,
 						targetColumns,
+						bindingState.getDatabase(),
 						ownerType.getClassDetails().getClassName(),
 						propertyName
 				)

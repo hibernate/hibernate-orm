@@ -13,6 +13,8 @@ import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.action.queue.spi.decompose.entity.CancelledInsertPostDeleteHandling.basicPersistenceContextCleanup;
+
 /// Post-execution callback for entity delete actions.
 ///
 /// This handles all the finalization work that needs to happen after all table `DELETE`s
@@ -26,6 +28,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /// 	- Firing POST_DELETE event listeners
 /// 	- Updating statistics
 ///
+/// @see CancelledInsertPostDeleteHandling
 /// @see EntityDeleteAction
 ///
 /// @author Steve Ebersole
@@ -83,13 +86,7 @@ public class PostDeleteHandling implements PostExecutionCallback {
 		// exists on the database (needed for identity-column key generation), and
 		// remove it from the session cache
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final var entry = persistenceContext.removeEntry( instance );
-		if ( entry == null ) {
-			throw new AssertionFailure( "possible non-threadsafe access to session" );
-		}
-		entry.postDelete();
-		final var key = entry.getEntityKey();
-		persistenceContext.removeEntityHolder( key );
+		basicPersistenceContextCleanup( persistenceContext, instance );
 		removeCacheItem( session, cacheKey );
 		persistenceContext.getNaturalIdResolutions()
 				.removeSharedResolution( id, naturalIdValues, persister, true );

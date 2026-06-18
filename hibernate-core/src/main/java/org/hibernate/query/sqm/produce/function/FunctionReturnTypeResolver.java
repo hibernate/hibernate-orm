@@ -7,9 +7,9 @@ package org.hibernate.query.sqm.produce.function;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.sqm.sql.FakeSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.sql.spi.FakeSqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 

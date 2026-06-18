@@ -5,9 +5,9 @@
 package org.hibernate.orm.test.query.criteria;
 
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

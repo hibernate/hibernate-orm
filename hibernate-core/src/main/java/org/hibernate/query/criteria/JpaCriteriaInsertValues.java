@@ -8,13 +8,14 @@ import java.util.List;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertValuesStatement;
 
 /**
  * A representation of SqmInsertValuesStatement at the
  * {@link org.hibernate.query.criteria} level, even though JPA does
  * not define support for insert-values criteria.
  *
- * @see org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement
+ * @see SqmInsertValuesStatement
  *
  * @apiNote Incubating mainly for 2 purposes:<ul>
  *     <li>

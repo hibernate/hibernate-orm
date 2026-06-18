@@ -12,7 +12,7 @@ import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.orm.test.jpa.Wallet;
 import jakarta.persistence.QueryFlushMode;
-import org.hibernate.query.named.NamedSelectionMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;

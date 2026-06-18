@@ -34,7 +34,7 @@ import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmComparisonPredicate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;

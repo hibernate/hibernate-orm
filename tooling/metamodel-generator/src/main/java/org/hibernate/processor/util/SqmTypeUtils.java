@@ -6,8 +6,8 @@ package org.hibernate.processor.util;
 
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 

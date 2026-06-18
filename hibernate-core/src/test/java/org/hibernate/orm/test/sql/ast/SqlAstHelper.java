@@ -7,9 +7,9 @@ package org.hibernate.orm.test.sql.ast;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.internal.SelectionQueryImpl;
-import org.hibernate.query.sqm.sql.SqmTranslation;
+import org.hibernate.query.sqm.sql.spi.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 /**

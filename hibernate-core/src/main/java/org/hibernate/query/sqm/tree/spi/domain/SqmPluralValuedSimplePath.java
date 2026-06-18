@@ -1,0 +1,303 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.tree.spi.domain;
+
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.criteria.Expression;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.NotIndexedCollectionException;
+import org.hibernate.query.PathException;
+import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmBindableType;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.SqmJoinType;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.spi.expression.SqmNumericExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmNumericExpressionWrapper;
+import org.hibernate.query.sqm.tree.spi.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmMemberOfPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
+/**
+ * An SqmPath for plural attribute paths
+ *
+ * @param <C> The collection type
+ *
+ * @author Steve Ebersole
+ */
+public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> implements SqmPluralPath<C,Object> {
+	private final boolean mapAttributeAccess;
+
+	public SqmPluralValuedSimplePath(
+			NavigablePath navigablePath,
+			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			SqmPath<?> lhs,
+			NodeBuilder nodeBuilder) {
+		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder, false );
+	}
+
+	public SqmPluralValuedSimplePath(
+			NavigablePath navigablePath,
+			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			SqmPath<?> lhs,
+			@Nullable String explicitAlias,
+			NodeBuilder nodeBuilder) {
+		this( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder, false );
+	}
+
+	public SqmPluralValuedSimplePath(
+			NavigablePath navigablePath,
+			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			SqmPath<?> lhs,
+			@Nullable String explicitAlias,
+			NodeBuilder nodeBuilder,
+			boolean mapAttributeAccess) {
+		// We need to do an unchecked cast here: PluralPersistentAttribute implements path source with
+		//  the element type, but paths generated from it must be collection-typed.
+		//noinspection unchecked
+		super( navigablePath, (SqmPathSource<C>) referencedNavigable, lhs, explicitAlias, nodeBuilder );
+		this.mapAttributeAccess = mapAttributeAccess;
+	}
+
+	@Override
+	public SqmPluralValuedSimplePath<C> copy(SqmCopyContext context) {
+		final var existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		final var lhsCopy = getLhs().copy( context );
+		final var path = context.registerCopy(
+				this,
+				new SqmPluralValuedSimplePath<>(
+						getNavigablePathCopy( lhsCopy ),
+						(SqmPluralPersistentAttribute<?,C,?>) getModel(),
+						lhsCopy,
+						getExplicitAlias(),
+						nodeBuilder(),
+						mapAttributeAccess
+				)
+		);
+		copyTo( path, context );
+		return path;
+	}
+
+	public boolean isMapAttributeAccess() {
+		return mapAttributeAccess;
+	}
+
+	public PluralPersistentAttribute<?, C, ?> getPluralAttribute() {
+		return (SqmPluralPersistentAttribute<?, C, ?>) getModel();
+	}
+
+	@Override
+	public @Nonnull JavaType<C> getJavaTypeDescriptor() {
+		return getPluralAttribute().getAttributeJavaType();
+	}
+
+	@Override
+	public <T> T accept(SemanticQueryWalker<T> walker) {
+		return walker.visitPluralValuedPath( this );
+	}
+
+	@Override
+	public SqmPath<?> resolvePathPart(
+			String name,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		// this is a reference to a collection outside the from clause
+		final var nature = CollectionPart.Nature.fromNameExact( name );
+		if ( nature == null ) {
+			throw new PathException( "Plural path '" + getNavigablePath()
+					+ "' refers to a collection and so element attribute '" + name
+					+ "' may not be referenced directly (use element() function)" );
+		}
+		final var sqmPath = get( name, true );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
+	}
+
+	@Override
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		final var pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+		final String alias = selector.toHqlString();
+		final var navigablePath =
+				getParentNavigablePath()
+						.append( getNavigablePath().getLocalName(), alias )
+						.append( CollectionPart.Nature.ELEMENT.getName() );
+		final var indexedPath = pathRegistry.findFromByPath( navigablePath );
+		if ( indexedPath != null ) {
+			return indexedPath;
+		}
+		else {
+			final var path = pathRegistry.findFromByPath( castNonNull( navigablePath.getParent() ) );
+			final var join = join( selector, path, pathRegistry, alias );
+			final var result = new SqmIndexedCollectionAccessPath<>( navigablePath, join, selector );
+			pathRegistry.register( result );
+			return result;
+		}
+	}
+
+	private @Nonnull SqmAttributeJoin<?, ?> join(
+			SqmExpression<?> selector,
+			@Nullable SqmFrom<?, ?> path,
+			SqmPathRegistry pathRegistry,
+			String alias) {
+		if ( path == null ) {
+			final SqmFrom<?, ?> parent = pathRegistry.resolveFrom( getLhs() );
+			final var join = joinAttribute( parent, alias, selector );
+			pathRegistry.register( join );
+			return join;
+		}
+		else {
+			return (SqmAttributeJoin<?, ?>) path;
+		}
+	}
+
+	private <P> @Nonnull SqmAttributeJoin<?, ?> joinAttribute(
+			SqmFrom<?, P> parent,
+			String alias,
+			SqmExpression<?> selector) {
+		final SqmExpression<?> index;
+		final SqmAttributeJoin<P, ?> join;
+		final var referencedPathSource = getReferencedPathSource();
+		if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
+			join = new SqmListJoin<>(
+					parent,
+					(SqmListPersistentAttribute<P, ?>) referencedPathSource,
+					alias,
+					SqmJoinType.INNER,
+					false,
+					nodeBuilder()
+			);
+			index = ( (SqmListJoin<?, ?>) join).index();
+		}
+		else if ( referencedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
+			join = new SqmMapJoin<>(
+					parent,
+					(SqmMapPersistentAttribute<P, ?, ?>) referencedPathSource,
+					alias,
+					SqmJoinType.INNER,
+					false,
+					nodeBuilder()
+			);
+			index = ( (SqmMapJoin<?, ?, ?>) join).key();
+		}
+		else {
+			throw new NotIndexedCollectionException( "Index operator applied to path '" + getNavigablePath()
+					+ "' which is not a list or map" );
+		}
+		join.setJoinPredicate( nodeBuilder().equal( index, selector ) );
+		parent.addSqmJoin( join );
+		return join;
+	}
+
+	@Nonnull
+	@Override
+	public SqmExpression<Class<? extends C>> type() {
+		throw new UnsupportedOperationException( "Cannot access the type of plural valued simple paths" );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends C> SqmTreatedPath<C, S> treatAs(@Nonnull Class<S> treatJavaType) {
+		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends C> SqmTreatedEntityValuedSimplePath<C, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
+		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate isEmpty() {
+		return new SqmEmptinessPredicate( this, false, nodeBuilder() );
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate isNotEmpty() {
+		return new SqmEmptinessPredicate( this, true, nodeBuilder() );
+	}
+
+	@Nonnull
+	@Override
+	public SqmNumericExpression<Integer> size() {
+		return new SqmNumericExpressionWrapper<>( new SqmCollectionSize( this, nodeBuilder() ) );
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate notContains(@Nonnull Object elem) {
+		return new SqmMemberOfPredicate( nodeBuilder().value( elem ), this, true, nodeBuilder() );
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate notContains(@Nonnull Expression elem) {
+		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, this, true, nodeBuilder() );
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate contains(@Nonnull Object elem) {
+		return new SqmMemberOfPredicate( nodeBuilder().value( elem ), this, false, nodeBuilder() );
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate contains(@Nonnull Expression elem) {
+		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, this, false, nodeBuilder() );
+	}
+
+	protected static class PluralAttributeCollectionType<C> implements SqmBindableType<C> {
+		private final JavaType<C> javaType;
+
+		public PluralAttributeCollectionType(JavaType<C> javaType) {
+			this.javaType = javaType;
+		}
+
+		@Override
+		public PersistenceType getPersistenceType() {
+			return PersistenceType.BASIC;
+		}
+
+		@Override
+		public JavaType<C> getExpressibleJavaType() {
+			return javaType;
+		}
+
+		@Override
+		public Class<C> getJavaType() {
+			return javaType.getJavaTypeClass();
+		}
+
+		@Override
+		public @Nullable SqmDomainType<C> getSqmType() {
+			return null;
+		}
+	}
+}

@@ -11,7 +11,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsArrayToString;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsArrayAgg;
 import org.hibernate.testing.orm.junit.DomainModel;

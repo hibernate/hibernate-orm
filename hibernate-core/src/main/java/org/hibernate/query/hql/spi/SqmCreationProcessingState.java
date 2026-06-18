@@ -5,7 +5,7 @@
 package org.hibernate.query.hql.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.spi.SqmQuery;
 
 /**
  * State related to SQM creation, like {@link SqmCreationState}, but specific

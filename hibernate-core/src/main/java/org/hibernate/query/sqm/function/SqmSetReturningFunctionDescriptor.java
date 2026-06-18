@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 
 /**
  * A factory for SQM nodes representing invocations of a certain

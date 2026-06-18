@@ -5,11 +5,11 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.query.sqm.SqmJoinable;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.spi.SqmJoinable;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddableDomainType;
 
 /**
  * @author Steve Ebersole

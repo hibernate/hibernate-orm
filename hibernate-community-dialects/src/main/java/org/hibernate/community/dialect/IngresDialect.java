@@ -43,10 +43,10 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableI
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.sql.SqmTranslator;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.sql.spi.SqmTranslator;
+import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
+import org.hibernate.query.sqm.sql.spi.StandardSqmTranslatorFactory;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;

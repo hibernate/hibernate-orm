@@ -7,7 +7,7 @@ package org.hibernate.query.hql.spi;
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
 
 /**
  * Models the state pertaining to the creation of a single SQM.

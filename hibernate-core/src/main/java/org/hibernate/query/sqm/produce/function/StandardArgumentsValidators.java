@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.type.BindingContext;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 
 import java.util.List;
 import java.util.Locale;

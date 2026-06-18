@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.spi;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 /**

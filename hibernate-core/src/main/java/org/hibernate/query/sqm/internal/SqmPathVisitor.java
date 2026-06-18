@@ -6,20 +6,21 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.query.sqm.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.spi.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
-import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.spi.domain.NonAggregatedCompositeSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmAnyValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.spi.from.SqmAttributeJoin;
 
 /**
- * Generic {@link org.hibernate.query.sqm.SemanticQueryWalker} that applies the provided
+ * Generic {@link SemanticQueryWalker} that applies the provided
  * {@link Consumer} to all {@link SqmPath paths} encountered during visitation.
  *
  * @author Marco Belladelli

@@ -16,7 +16,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 import org.hibernate.sql.exec.spi.Callback;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;

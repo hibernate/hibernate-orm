@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryTypeMismatchException;
-import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedQueryMemento;
 
 import java.util.List;
 

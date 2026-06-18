@@ -11,12 +11,12 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.from.SqmJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectQuery;
+import org.hibernate.query.sqm.tree.spi.select.SqmSubQuery;
 
 /**
  * Specialized consumer for processing domain model paths occurring as part

@@ -11,7 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.cfg.QuerySettings;
-import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.spi.HqlTranslator;
 import org.hibernate.testing.memory.MemoryUsageUtil;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;

@@ -37,9 +37,9 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import java.time.Instant;
 import java.util.Calendar;

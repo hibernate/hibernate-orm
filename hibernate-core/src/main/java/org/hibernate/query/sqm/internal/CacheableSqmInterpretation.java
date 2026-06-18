@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.internal;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;

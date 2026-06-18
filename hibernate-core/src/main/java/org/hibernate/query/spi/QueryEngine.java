@@ -9,11 +9,11 @@ import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
-import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.hql.spi.HqlTranslator;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
 import org.hibernate.type.BindingContext;
 
 /**

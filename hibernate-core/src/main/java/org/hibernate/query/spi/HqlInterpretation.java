@@ -5,7 +5,7 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 
 /**
  * @author Steve Ebersole

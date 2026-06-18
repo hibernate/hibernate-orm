@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmComparisonPredicate;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;

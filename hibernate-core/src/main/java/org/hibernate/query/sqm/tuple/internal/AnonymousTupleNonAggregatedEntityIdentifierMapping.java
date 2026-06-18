@@ -18,7 +18,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmExpressible;
 
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.annotation.Nullable;

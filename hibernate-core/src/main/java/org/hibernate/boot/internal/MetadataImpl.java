@@ -49,7 +49,7 @@ import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.query.named.internal.NamedObjectRepositoryImpl;
-import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.tool.schema.Action;

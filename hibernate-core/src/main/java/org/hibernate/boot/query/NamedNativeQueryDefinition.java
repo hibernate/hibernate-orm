@@ -6,7 +6,7 @@ package org.hibernate.boot.query;
 
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.named.NamedNativeQueryMemento;
+import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 
 import java.util.Set;
 

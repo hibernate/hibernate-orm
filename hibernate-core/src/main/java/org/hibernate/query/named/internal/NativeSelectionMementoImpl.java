@@ -12,7 +12,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.named.NamedNativeQueryMemento;
+import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;

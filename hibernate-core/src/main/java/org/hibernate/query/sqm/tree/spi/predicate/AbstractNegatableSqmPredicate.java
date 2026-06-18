@@ -1,0 +1,51 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.tree.spi.predicate;
+
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.spi.SqmBindableType;
+
+
+/**
+ * @author Steve Ebersole
+ */
+public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate implements SqmNegatablePredicate {
+	private boolean negated;
+
+	public AbstractNegatableSqmPredicate(NodeBuilder nodeBuilder) {
+		this( false, nodeBuilder );
+	}
+
+	public AbstractNegatableSqmPredicate(boolean negated, NodeBuilder nodeBuilder) {
+		this( nodeBuilder.getBooleanType(), negated, nodeBuilder );
+	}
+
+	public AbstractNegatableSqmPredicate(@Nullable SqmBindableType<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
+		super( type, nodeBuilder );
+		this.negated = negated;
+	}
+
+	@Override
+	public boolean isNegated() {
+		return negated;
+	}
+
+	@Override
+	public void negate() {
+		negated = !negated;
+	}
+
+	protected abstract SqmNegatablePredicate createNegatedNode();
+
+	@Nonnull
+	@Override
+	public SqmNegatablePredicate not() {
+		// in certain cases JPA required that this always return
+		// a new instance.
+		return createNegatedNode();
+	}
+}

@@ -10,8 +10,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.internal.util.cache.InternalCache;
 import org.hibernate.internal.util.cache.InternalCacheFactory;
-import org.hibernate.query.QueryLogging;
-import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.spi.HqlTranslator;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;

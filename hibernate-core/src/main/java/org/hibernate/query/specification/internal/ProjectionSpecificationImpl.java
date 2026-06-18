@@ -20,12 +20,12 @@ import org.hibernate.query.specification.ProjectionSpecification;
 import org.hibernate.query.specification.QuerySpecification;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.spi.JpaTypedQueryReference;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelection;
 
 import java.util.ArrayList;
 import java.util.List;

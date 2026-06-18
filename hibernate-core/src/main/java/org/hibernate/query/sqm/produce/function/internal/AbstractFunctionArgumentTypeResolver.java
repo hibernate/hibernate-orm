@@ -7,9 +7,9 @@ package org.hibernate.query.sqm.produce.function.internal;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
+import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
 
 import java.util.List;
 

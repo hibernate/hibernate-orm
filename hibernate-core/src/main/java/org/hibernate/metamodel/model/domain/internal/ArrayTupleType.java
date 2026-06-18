@@ -15,10 +15,10 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.sqm.SqmBindableType;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
-import org.hibernate.query.sqm.tuple.TupleType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmBindableType;
+import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
+import org.hibernate.query.sqm.tuple.spi.TupleType;
+import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 

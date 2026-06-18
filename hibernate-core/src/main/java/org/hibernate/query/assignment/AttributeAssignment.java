@@ -5,7 +5,7 @@
 package org.hibernate.query.assignment;
 
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
 /**
  * Assignment of a value to an attribute.

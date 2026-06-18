@@ -23,7 +23,7 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.MutationQuery;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.named.StatementReferenceProducer;
+import org.hibernate.query.named.spi.StatementReferenceProducer;
 
 import java.time.Instant;
 import java.util.Calendar;

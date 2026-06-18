@@ -7,7 +7,7 @@ package org.hibernate.type;
 import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.spi.SqmBindableType;
 
 /**
  * Represents a type of argument which can be bound to a positional or named

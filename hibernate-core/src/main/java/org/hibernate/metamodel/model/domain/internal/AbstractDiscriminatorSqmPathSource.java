@@ -8,8 +8,8 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;

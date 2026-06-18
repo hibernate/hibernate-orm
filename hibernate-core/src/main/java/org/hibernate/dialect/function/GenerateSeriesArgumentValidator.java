@@ -9,7 +9,7 @@ import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 
 import java.util.List;
 import java.util.Locale;

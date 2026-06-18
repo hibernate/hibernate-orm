@@ -21,7 +21,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import jakarta.persistence.QueryFlushMode;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.named.internal.HqlSelectionMementoImpl;
 
 import java.util.Map;

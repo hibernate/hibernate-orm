@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.internal;
 
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.spi.SqmQuery;
 
 /**
  * Models the state related to parsing a sqm spec.  As a "linked list" to account for

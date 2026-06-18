@@ -19,15 +19,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.NamedQueryValidationException;
 import org.hibernate.query.UnknownNamedQueryException;
-import org.hibernate.query.named.NamedMutationMemento;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.named.NamedSelectionMemento;
-import org.hibernate.query.named.StatementReferenceProducer;
-import org.hibernate.query.named.TypedQueryReferenceProducer;
+import org.hibernate.query.named.spi.NamedMutationMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
+import org.hibernate.query.named.spi.StatementReferenceProducer;
+import org.hibernate.query.named.spi.TypedQueryReferenceProducer;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.named.NamedNativeQueryMemento;
+import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.sqm.TerminalPathException;
@@ -42,7 +42,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
-import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.query.internal.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole

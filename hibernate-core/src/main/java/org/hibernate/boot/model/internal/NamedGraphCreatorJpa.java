@@ -7,7 +7,7 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.annotation.Nonnull;
-import jakarta.persistence.BatchSize;
+import jakarta.persistence.BatchFetch;
 import jakarta.persistence.FetchOption;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedGraphCreator;
@@ -335,7 +335,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 		final var options = new ArrayList<FetchOption>();
 		options.add( fetch.type() );
 		if ( fetch.batchSize() >= 0 ) {
-			options.add( new BatchSize( fetch.batchSize() ) );
+			options.add( new BatchFetch( fetch.batchSize() ) );
 		}
 		options.add( fetch.cacheStoreMode() );
 		options.add( fetch.cacheRetrieveMode() );

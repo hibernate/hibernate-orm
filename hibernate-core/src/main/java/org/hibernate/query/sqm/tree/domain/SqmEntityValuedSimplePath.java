@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -79,11 +78,5 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	@Override
 	public <S extends T> SqmTreatedEntityValuedSimplePath<T,S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return (SqmTreatedEntityValuedSimplePath<T, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
-	}
-
-	@Nonnull
-	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
-		return getTreatedPath( treatTarget );
 	}
 }

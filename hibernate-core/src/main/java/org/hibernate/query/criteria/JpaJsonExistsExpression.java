@@ -22,12 +22,24 @@ public interface JpaJsonExistsExpression extends JpaExpression<Boolean>, JpaJson
 	 */
 	JpaJsonExistsExpression passing(String parameterName, Expression<?> expression);
 
+	/**
+	 * Use the unspecified JSON error behavior.
+	 */
 	@Override
 	JpaJsonExistsExpression unspecifiedOnError();
+	/**
+	 * Use the JSON error behavior that raises an error.
+	 */
 	@Override
 	JpaJsonExistsExpression errorOnError();
+	/**
+	 * Use the JSON error behavior that returns true.
+	 */
 	@Override
 	JpaJsonExistsExpression trueOnError();
+	/**
+	 * Use the JSON error behavior that returns false.
+	 */
 	@Override
 	JpaJsonExistsExpression falseOnError();
 }

@@ -47,6 +47,9 @@ public interface JpaJsonTableFunction extends JpaJsonTableColumnsNode {
 	 */
 	JpaJsonTableFunction nullOnError();
 
+	/**
+	 * Add an ordinality column with the given name.
+	 */
 	@Override
 	JpaJsonTableFunction ordinalityColumn(String columnName);
 

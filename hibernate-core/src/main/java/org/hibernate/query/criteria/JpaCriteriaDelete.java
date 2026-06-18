@@ -18,26 +18,44 @@ import java.util.List;
  */
 public interface JpaCriteriaDelete<T> extends JpaManipulationCriteria<T>, CriteriaDelete<T> {
 
+	/**
+	 * Create the root for the target entity.
+	 */
 	@Nonnull
 	@Override
 	JpaRoot<T> from(@Nonnull Class<T> entityClass);
 
+	/**
+	 * Create the root for the target entity.
+	 */
 	@Nonnull
 	@Override
 	JpaRoot<T> from(@Nonnull EntityType<T> entity);
 
+	/**
+	 * Return the root of this criteria statement.
+	 */
 	@Nullable
 	@Override
 	JpaRoot<T> getRoot();
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaDelete<T> where(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaDelete<T> where(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaDelete<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions);

@@ -11,10 +11,16 @@ import jakarta.persistence.criteria.Expression;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.criteria.Subquery;
 import org.hibernate.Incubating;
 
 /**
+ * Represents a derived join, that is, a subquery that occurs as the
+ * target of a join in the {@code from} clause of the query.
+ *
  * @author Christian Beikov
+ *
+ * @see JpaFrom#join(Subquery)
  */
 @Incubating
 public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoin<T,T> {
@@ -26,22 +32,37 @@ public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoin<T,T> {
 	 */
 	boolean isLateral();
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Override
 	@Nonnull
 	JpaDerivedJoin<T> on(@Nullable JpaExpression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaDerivedJoin<T> on(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Override
 	@Nonnull
 	JpaDerivedJoin<T> on(@Nullable JpaPredicate... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaDerivedJoin<T> on(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaDerivedJoin<T> on(@Nonnull List<? extends Expression<Boolean>> restrictions);

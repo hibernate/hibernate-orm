@@ -36,8 +36,12 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */
-	<S extends T> JpaTreatedPath<T,S> treatAs(Class<S> treatJavaType);
+	@Nonnull
+	<S extends T> JpaTreatedPath<T,S> treatAs(@Nonnull Class<S> treatJavaType);
 
+	/**
+	 * Downcast this path to the specified subtype.
+	 */
 	@Override
 	@Nonnull
 	default <S extends T> JpaPath<S> treat(@Nonnull Class<S> treatJavaType) {
@@ -53,28 +57,46 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	/**
+	 * Return the parent path.
+	 */
 	@Nullable
 	@Override
 	default JpaPath<?> getParentPath() {
 		return getLhs();
 	}
 
+	/**
+	 * Create a path for the given attribute.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaPath<Y> get(@Nonnull SingularAttribute<? super T, Y> attribute);
 
+	/**
+	 * Create a path for the given attribute.
+	 */
 	@Nonnull
 	@Override
 	<E, C extends Collection<E>> JpaPluralExpression<C,E> get(@Nonnull PluralAttribute<? super T, C, E> collection);
 
+	/**
+	 * Create a path for the given attribute.
+	 */
 	@Nonnull
 	@Override
 	<K, V, M extends Map<K, V>> JpaPluralExpression<M,V> get(@Nonnull MapAttribute<? super T, K, V> map);
 
+	/**
+	 * Create an expression for the type of this path.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Class<? extends T>> type();
 
+	/**
+	 * Create a path for the given attribute.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaPath<Y> get(@Nonnull String attributeName);

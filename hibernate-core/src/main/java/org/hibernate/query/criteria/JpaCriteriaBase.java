@@ -12,10 +12,16 @@ import jakarta.annotation.Nullable;
  * @author Steve Ebersole
  */
 public interface JpaCriteriaBase extends CommonAbstractCriteria, JpaCriteriaNode {
+	/**
+	 * Create a subquery with the given result type.
+	 */
 	@Nonnull
 	@Override
 	<U> JpaSubQuery<U> subquery(@Nonnull Class<U> type);
 
+	/**
+	 * Return the restriction predicate.
+	 */
 	@Nullable
 	@Override
 	JpaPredicate getRestriction();

@@ -47,6 +47,9 @@ public interface JpaCteCriteria<T> extends JpaCriteriaNode {
 	 * The materialization hint for the CTE.
 	 */
 	CteMaterialization getMaterialization();
+	/**
+	 * Set the CTE materialization hint.
+	 */
 	void setMaterialization(CteMaterialization materialization);
 
 	/**
@@ -69,10 +72,16 @@ public interface JpaCteCriteria<T> extends JpaCriteriaNode {
 	@Nullable
 	String getSearchAttributeName();
 
+	/**
+	 * Define the CTE search clause.
+	 */
 	default void search(CteSearchClauseKind kind, String searchAttributeName, JpaSearchOrder... searchOrders) {
 		search( kind, searchAttributeName, Arrays.asList( searchOrders ) );
 	}
 
+	/**
+	 * Define the CTE search clause.
+	 */
 	void search(CteSearchClauseKind kind, String searchAttributeName, List<JpaSearchOrder> searchOrders);
 
 	/**
@@ -107,33 +116,57 @@ public interface JpaCteCriteria<T> extends JpaCriteriaNode {
 	@Nullable
 	Object getNoCycleValue();
 
+	/**
+	 * Define the CTE cycle clause.
+	 */
 	default void cycle(String cycleMarkAttributeName, JpaCteCriteriaAttribute... cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, null, Arrays.asList( cycleColumns ) );
 	}
 
+	/**
+	 * Define the CTE cycle clause.
+	 */
 	default void cycle(String cycleMarkAttributeName, List<JpaCteCriteriaAttribute> cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, null, true, false, cycleColumns );
 	}
 
+	/**
+	 * Define the CTE cycle clause with an explicit path attribute.
+	 */
 	default void cycleUsing(String cycleMarkAttributeName, String cyclePathAttributeName, JpaCteCriteriaAttribute... cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, cyclePathAttributeName, Arrays.asList( cycleColumns ) );
 	}
 
+	/**
+	 * Define the CTE cycle clause with an explicit path attribute.
+	 */
 	default void cycleUsing(String cycleMarkAttributeName, String cyclePathAttributeName, List<JpaCteCriteriaAttribute> cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, cyclePathAttributeName, true, false, cycleColumns );
 	}
 
+	/**
+	 * Define the CTE cycle clause.
+	 */
 	default <X> void cycle(String cycleMarkAttributeName, X cycleValue, X noCycleValue, JpaCteCriteriaAttribute... cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, null, cycleValue, noCycleValue, Arrays.asList( cycleColumns ) );
 	}
 
+	/**
+	 * Define the CTE cycle clause.
+	 */
 	default <X> void cycle(String cycleMarkAttributeName, X cycleValue, X noCycleValue, List<JpaCteCriteriaAttribute> cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, null, cycleValue, noCycleValue, cycleColumns );
 	}
 
+	/**
+	 * Define the CTE cycle clause with an explicit path attribute.
+	 */
 	default <X> void cycleUsing(String cycleMarkAttributeName, String cyclePathAttributeName, X cycleValue, X noCycleValue, JpaCteCriteriaAttribute... cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, cyclePathAttributeName, cycleValue, noCycleValue, Arrays.asList( cycleColumns ) );
 	}
 
+	/**
+	 * Define the CTE cycle clause with an explicit path attribute.
+	 */
 	<X> void cycleUsing(String cycleMarkAttributeName, String cyclePathAttributeName, X cycleValue, X noCycleValue, List<JpaCteCriteriaAttribute> cycleColumns);
 }

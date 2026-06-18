@@ -7,6 +7,7 @@ package org.hibernate.tool.ant;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.PropertySet;
+import org.hibernate.tool.reveng.api.export.Exporter;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -136,6 +137,11 @@ public class HibernateToolTaskExtendedTest {
 			@Override
 			String getName() {
 				return "build-exception-exporter";
+			}
+
+			@Override
+			public Exporter executeWithoutClose() {
+				throw new BuildException("Build failed");
 			}
 
 			@Override

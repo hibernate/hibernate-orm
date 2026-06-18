@@ -10,6 +10,7 @@ import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.reveng.test.utils.FileUtil;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
 import org.hibernate.tool.reveng.test.utils.JUnitUtil;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,13 +53,18 @@ public class TestCase {
 		Exporter javaExporter = ExporterFactory.createExporter(ExporterType.JAVA);
 		javaExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		javaExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
+		javaExporter.start();
+
+		metadataDescriptor = MetadataDescriptorFactory.createNativeDescriptor(
+				null,
+				Arrays.stream(HBM_XML_FILES).map(file -> new File(resourcesDir, file)).toArray(File[]::new),
+				metadataDescriptor.getProperties());
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.DAO);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		exporter.getProperties().setProperty("ejb3", "true");
 		exporter.getProperties().setProperty("jdk5", "true");
 		exporter.start();
-		javaExporter.start();
 	}
 
 	@Test

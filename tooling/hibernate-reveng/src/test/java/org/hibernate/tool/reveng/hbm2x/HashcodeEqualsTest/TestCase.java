@@ -14,6 +14,7 @@ import org.hibernate.tool.reveng.test.utils.FileUtil;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
 import org.hibernate.tool.reveng.test.utils.JUnitUtil;
 import org.hibernate.tool.reveng.test.utils.JavaUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -41,6 +42,8 @@ public class TestCase {
 	private DefaultArtifactCollector artifactCollector = null;
 	private MetadataDescriptor metadataDescriptor = null;
 
+	private Exporter javaExporter;
+
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "output");
@@ -49,12 +52,17 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		Exporter exporter = ExporterFactory.createExporter(ExporterType.JAVA);
-		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
+		javaExporter = ExporterFactory.createExporter(ExporterType.JAVA);
+		javaExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
+		javaExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		artifactCollector = new DefaultArtifactCollector();
-		exporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
-		exporter.start();
+		javaExporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
+		javaExporter.start(false);
+	}
+
+	@AfterEach
+	public void cleanup() {
+		javaExporter.stop();
 	}
 
 	@Test

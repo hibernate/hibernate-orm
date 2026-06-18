@@ -63,6 +63,10 @@ public class TestTemplate {
 		if (javaHome != null) {
 			args.add("-Dorg.gradle.java.home=" + javaHome);
 		}
+		if (gradleCommandLine != GRADLE_INIT_PROJECT_ARGUMENTS) {
+			// When you need to debug the plugin as part of the test, uncomment the following
+//			args.add( "-Dorg.gradle.debug=true" );
+		}
 		runner.withArguments(args);
 		runner.forwardOutput();
 		runner.withPluginClasspath();
@@ -116,6 +120,7 @@ public class TestTemplate {
 				new String(Files.readAllBytes(getGradlePropertiesFile().toPath())));
 		int pos = gradlePropertiesFileContents.indexOf("org.gradle.configuration-cache=true");
 		gradlePropertiesFileContents.insert(pos, "#");
+		gradlePropertiesFileContents.append( "org.gradle.daemon=false" );
 		Files.writeString(getGradlePropertiesFile().toPath(), gradlePropertiesFileContents.toString());
 	}
 
@@ -136,13 +141,12 @@ public class TestTemplate {
 	protected void createDatabase() throws Exception {
 		String[] sqls = getDatabaseCreationScript();
 		if ((sqls != null) && (sqls.length > 0)) {
-			Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
-			Statement statement = connection.createStatement();
-			for (String sql : sqls) {
-				statement.execute(sql);
+			try (Connection connection = DriverManager.getConnection( constructJdbcConnectionString() );
+				Statement statement = connection.createStatement()) {
+				for ( String sql : sqls ) {
+					statement.execute( sql );
+				}
 			}
-			statement.close();
-			connection.close();
 			assertTrue(getDatabaseFile().exists());
 			assertTrue(getDatabaseFile().isFile());
 		}
@@ -158,7 +162,7 @@ public class TestTemplate {
 
 	protected String constructJdbcConnectionString() {
 		String testFolderPath = getProjectDir().getAbsolutePath().replace('\\', '/') + "/database/test";
-		return "jdbc:h2:" + testFolderPath + ";AUTO_SERVER=TRUE";
+		return "jdbc:h2:file:" + testFolderPath;
 	}
 
 	protected void addH2DatabaseDependencyLine(StringBuffer gradleBuildFileContents) {

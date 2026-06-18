@@ -588,8 +588,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsRepeat implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			// Derby doesn't support the `REPEAT` function
-			return !( dialect instanceof DerbyDialect
-					|| dialect instanceof InformixDialect );
+			return !( dialect instanceof DerbyDialect );
 		}
 	}
 

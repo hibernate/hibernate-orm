@@ -27,6 +27,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -312,6 +313,27 @@ public class HbmTransformationJaxbTests {
 					.doesNotContain( "compositeName" )
 					.as( "Mapped properties should not be marked as transient" )
 					.doesNotContain( "id", "name", "anotherCompositeName" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20593" )
+	public void testCompositePkPropertyRefOneToOneTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-pk-property-ref/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl entityA = transformed.getEntities().stream()
+					.filter( e -> "EntityA".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( entityA.getAttributes().getOneToOneAttributes() ).hasSize( 1 );
+
+			final JaxbOneToOneImpl oneToOne = entityA.getAttributes().getOneToOneAttributes().get( 0 );
+			assertThat( oneToOne.getName() ).isEqualTo( "entityB" );
+			assertThat( oneToOne.getMappedBy() )
+					.as( "mapped-by should resolve to 'entityA' via property-ref on composite-PK entity" )
+					.isEqualTo( "entityA" );
 		} );
 	}
 

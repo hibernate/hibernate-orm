@@ -175,11 +175,11 @@ public class DocExporter extends AbstractExporter {
 
 				exporter.getProperties().put(TEMPLATE_NAME, "dot/entitygraph.dot.ftl");
 				exporter.getProperties().put(FILE_PATTERN, "entities/entitygraph.dot");
-				exporter.start();
+				exporter.start(false);
 
 				exporter.getProperties().put(TEMPLATE_NAME, "dot/tablegraph.dot.ftl");
 				exporter.getProperties().put(FILE_PATTERN, "tables/tablegraph.dot");
-				exporter.start();
+				exporter.start(false);
 
 
 				File entityGraphDot = new File(getOutputDirectory(), "entities/entitygraph.dot");

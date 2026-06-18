@@ -92,6 +92,12 @@ public class QueryExporterTask extends ExporterTask {
 		parent.log("Executing: [" + query + "]");
 		super.execute();
 	}
+
+	public Exporter executeWithoutClose() {
+		parent.log("Executing: [" + query + "]");
+		return super.executeWithoutClose();
+	}
+
 	public String getName() {
 		return "query (Executes queries)";
 	}

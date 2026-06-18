@@ -72,7 +72,8 @@ public interface TypeBindingPhase {
 	/// Resolve identifier attributes that are themselves associations after all
 	/// root identifier shapes are available.
 	interface AssociationIdentifiers {
-		void bindAssociationIdentifiers();
+		/// @return {@code true} when at least one pending association identifier was completed
+		boolean bindAssociationIdentifiers();
 	}
 
 	/// Bind table keys that depend on the completed root identifier shape and

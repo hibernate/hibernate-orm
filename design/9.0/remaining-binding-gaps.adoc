@@ -36,9 +36,6 @@ See also:
   phased binder.
 * `mapped-superclass-model-design.adoc` for the longer-term mapped-superclass
   model.
-* `column-order-resolution-design.adoc` for the longer-term direction on
-  preserving source column facts and resolving runtime selectable order without
-  relying on early destructive sorting.
 * `aggregate-mapping-design.adoc` for aggregate/UDT work.
 
 == Status Definitions
@@ -816,6 +813,9 @@ Open parity questions:
   IdClass scalar part, and association-valued-id combinations.
 * Identifier generator resolution should be audited against the old
   generator-resolver second passes.
+* Column-order-sensitive identifier failures should use the existing
+  correspondence-backed foreign-key/key creation path rather than adding new
+  local sorting patches.
 * IdClass non-basic/non-to-one id attributes need an explicit ORM 9 support or
   rejection decision.
 * Embedded-id association identifiers with join tables are not implemented.

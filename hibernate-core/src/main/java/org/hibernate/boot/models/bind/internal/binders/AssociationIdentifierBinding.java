@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
@@ -36,5 +37,29 @@ public record AssociationIdentifierBinding(
 		EntityTypeBinder targetTypeBinder,
 		List<JoinColumn> joinColumns,
 		ForeignKeySource foreignKeySource,
-		List<Column> identifierColumns) {
+		List<Column> identifierColumns,
+		AtomicBoolean processed) {
+	public AssociationIdentifierBinding(
+			EntityTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			Property property,
+			ToOne value,
+			org.hibernate.mapping.Value identifierValue,
+			EntityTypeBinder targetTypeBinder,
+			List<JoinColumn> joinColumns,
+			ForeignKeySource foreignKeySource,
+			List<Column> identifierColumns) {
+		this(
+				ownerType,
+				ownerBinding,
+				property,
+				value,
+				identifierValue,
+				targetTypeBinder,
+				joinColumns,
+				foreignKeySource,
+				identifierColumns,
+				new AtomicBoolean()
+		);
+	}
 }

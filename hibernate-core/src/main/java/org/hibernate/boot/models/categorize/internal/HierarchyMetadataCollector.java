@@ -136,6 +136,13 @@ public class HierarchyMetadataCollector {
 			);
 		}
 
+		if ( idClassAnnotation != null ) {
+			return new NonAggregatedKeyMappingImpl(
+					List.of( idAttribute ),
+					classDetails( idClassAnnotation.value() )
+			);
+		}
+
 		if ( idAttribute.getNature() == AttributeNature.BASIC ) {
 			return new BasicKeyMappingImpl( idAttribute );
 		}

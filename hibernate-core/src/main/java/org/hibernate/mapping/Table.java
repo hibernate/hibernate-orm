@@ -45,8 +45,6 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
  * @author Gavin King
  */
 public class Table implements Serializable, ContributableDatabaseObject {
-	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
-
 	private final String contributor;
 
 	private Identifier catalog;
@@ -583,7 +581,22 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			String keyDefinition,
 			String options,
 			List<Column> referencedColumns) {
-		final var key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
+		return createForeignKey(
+				keyName,
+				new ForeignKeyColumnMappings( toForeignKeyColumnMappings( keyColumns, referencedColumns ) ),
+				referencedEntityName,
+				keyDefinition,
+				options
+		);
+	}
+
+	public ForeignKey createForeignKey(
+			String keyName,
+			ForeignKeyColumnMappings columnMappings,
+			String referencedEntityName,
+			String keyDefinition,
+			String options) {
+		final var key = new ForeignKeyKey( columnMappings.mappings(), referencedEntityName );
 
 		ForeignKey foreignKey = foreignKeys.get( key );
 		if ( foreignKey == null ) {
@@ -591,12 +604,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
 			foreignKey.setOptions( options );
-			for ( var keyColumn : keyColumns ) {
-				foreignKey.addColumn( keyColumn );
+			for ( var columnMapping : columnMappings.mappings() ) {
+				foreignKey.addColumn( columnMapping.column() );
 			}
 
-			// null referencedColumns means a reference to primary key
-			if ( referencedColumns != null ) {
+			// null referenced columns mean a reference to the primary key
+			final List<Column> referencedColumns = referencedColumns( columnMappings.mappings() );
+			if ( !referencedColumns.isEmpty() ) {
 				foreignKey.addReferencedColumns( referencedColumns );
 			}
 
@@ -612,6 +626,41 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 
 		return foreignKey;
+	}
+
+	private List<ForeignKeyColumnMapping> toForeignKeyColumnMappings(
+			List<Column> keyColumns,
+			List<Column> referencedColumns) {
+		if ( referencedColumns == null ) {
+			return keyColumns.stream()
+					.map( (keyColumn) -> new ForeignKeyColumnMapping( keyColumn, null ) )
+					.toList();
+		}
+		if ( keyColumns.size() != referencedColumns.size() ) {
+			throw new MappingException(
+					"Foreign key column count did not match referenced column count for table " + getName()
+			);
+		}
+		final ArrayList<ForeignKeyColumnMapping> result = new ArrayList<>( keyColumns.size() );
+		for ( int i = 0; i < keyColumns.size(); i++ ) {
+			result.add( new ForeignKeyColumnMapping( keyColumns.get( i ), referencedColumns.get( i ) ) );
+		}
+		return result;
+	}
+
+	private List<Column> referencedColumns(List<ForeignKeyColumnMapping> columnMappings) {
+		if ( columnMappings.stream().noneMatch( (columnMapping) -> columnMapping.referencedColumn() != null ) ) {
+			return emptyList();
+		}
+		if ( columnMappings.stream().anyMatch( (columnMapping) -> columnMapping.referencedColumn() == null ) ) {
+			throw new MappingException(
+					"Foreign key column mappings for table " + getName()
+							+ " must either all reference primary-key columns or all reference explicit columns"
+			);
+		}
+		return columnMappings.stream()
+				.map( ForeignKeyColumnMapping::referencedColumn )
+				.toList();
 	}
 
 	/**
@@ -749,28 +798,25 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		this.viewQuery = viewQuery;
 	}
 
-	private record ForeignKeyKey(Column[] columns, String referencedClassName, Column[] referencedColumns)
+	private record ForeignKeyKey(ForeignKeyColumnMapping[] columnMappings, String referencedClassName)
 			implements Serializable {
 		private ForeignKeyKey {
-			Objects.requireNonNull( columns );
+			Objects.requireNonNull( columnMappings );
 			Objects.requireNonNull( referencedClassName );
 		}
-		private ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
-			this( columns.toArray( EMPTY_COLUMN_ARRAY ),
-					referencedClassName,
-					referencedColumns == null
-							? EMPTY_COLUMN_ARRAY
-							: referencedColumns.toArray( EMPTY_COLUMN_ARRAY ) );
+
+		private ForeignKeyKey(List<ForeignKeyColumnMapping> columnMappings, String referencedClassName) {
+			this( columnMappings.toArray( ForeignKeyColumnMapping[]::new ), referencedClassName );
 		}
 
 		public int hashCode() {
-			return Arrays.hashCode( columns ) + Arrays.hashCode( referencedColumns );
+			return Objects.hash( referencedClassName, Arrays.hashCode( columnMappings ) );
 		}
 
 		public boolean equals(Object other) {
 			return other instanceof ForeignKeyKey foreignKeyKey
-				&& Arrays.equals( foreignKeyKey.columns, columns )
-				&& Arrays.equals( foreignKeyKey.referencedColumns, referencedColumns );
+				&& Objects.equals( foreignKeyKey.referencedClassName, referencedClassName )
+				&& Arrays.equals( foreignKeyKey.columnMappings, columnMappings );
 		}
 	}
 

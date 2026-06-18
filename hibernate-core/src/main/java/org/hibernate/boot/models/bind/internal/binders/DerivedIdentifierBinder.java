@@ -117,6 +117,23 @@ class DerivedIdentifierBinder {
 			derivedIdentifierBinding.value().addColumn( identifierColumn, false, false );
 		}
 		derivedIdentifierBinding.property().setOptional( false );
+		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
+				derivedIdentifierBinding.ownerBinding(),
+				derivedIdentifierBinding.value(),
+				derivedIdentifierBinding.foreignKeySource(),
+				derivedIdentifierBinding.referenceToPrimaryKey()
+						? ResolvedForeignKey.from(
+								derivedIdentifierBinding.value(),
+								derivedIdentifierBinding.value().getReferencedEntityName(),
+								SelectableOrderResolver.resolveByTargetOrder(
+										derivedIdentifierBinding.value().getColumns(),
+										targetColumns,
+										derivedIdentifierBinding.ownerBinding().getEntityName()
+												+ "." + derivedIdentifierBinding.property().getName()
+								)
+						)
+						: null
+		) );
 	}
 
 	private void reorderPrimaryKeyColumns(Value identifierValue) {

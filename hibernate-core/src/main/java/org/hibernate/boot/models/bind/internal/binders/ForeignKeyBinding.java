@@ -20,5 +20,12 @@ import org.hibernate.mapping.ToOne;
 public record ForeignKeyBinding(
 		PersistentClass ownerBinding,
 		ToOne value,
-		ForeignKeySource foreignKeySource) {
+		ForeignKeySource foreignKeySource,
+		ResolvedForeignKey resolvedForeignKey) {
+	public ForeignKeyBinding(
+			PersistentClass ownerBinding,
+			ToOne value,
+			ForeignKeySource foreignKeySource) {
+		this( ownerBinding, value, foreignKeySource, null );
+	}
 }

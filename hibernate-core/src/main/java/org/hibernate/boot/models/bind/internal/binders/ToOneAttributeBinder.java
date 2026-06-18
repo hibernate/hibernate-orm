@@ -308,7 +308,8 @@ class ToOneAttributeBinder {
 					referenceToPrimaryKey,
 					mapsId.value(),
 					source.valueJoinColumns( joinTable ),
-					target.identifierColumns()
+					target.identifierColumns(),
+					source.valueForeignKeySource( joinTable )
 			) );
 		}
 		if ( propertyRef != null ) {
@@ -327,12 +328,39 @@ class ToOneAttributeBinder {
 					ownerClassName + "." + propertyName
 			) );
 		}
-		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
-				ownerBinding,
-				value,
-				source.valueForeignKeySource( joinTable )
-		) );
+		if ( mapsId == null ) {
+			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
+					ownerBinding,
+					value,
+					source.valueForeignKeySource( joinTable ),
+					resolvePrimaryKeyForeignKey(
+							value,
+							target.identifierColumns(),
+							referenceToPrimaryKey,
+							ownerClassName + "." + propertyName
+					)
+			) );
+		}
 		return value;
+	}
+
+	private static ResolvedForeignKey resolvePrimaryKeyForeignKey(
+			ManyToOne value,
+			List<Column> targetIdentifierColumns,
+			boolean referenceToPrimaryKey,
+			String sourceRole) {
+		if ( !referenceToPrimaryKey || !value.isConstrained() ) {
+			return null;
+		}
+		return ResolvedForeignKey.from(
+				value,
+				value.getReferencedEntityName(),
+				SelectableOrderResolver.resolveByTargetOrder(
+						value.getColumns(),
+						targetIdentifierColumns,
+						sourceRole
+				)
+		);
 	}
 
 	private OneToOne bindInverseOneToOne(ToOneSource source, Property property) {
@@ -762,7 +790,7 @@ class ToOneAttributeBinder {
 				targetTypeBinder.getTypeBinding().getEntityName(),
 				targetTypeBinder,
 				targetTypeBinder.getManagedType(),
-				targetTypeBinder.getTable(),
+				identifierBinding.table(),
 				identifierBinding.columns()
 		);
 	}
@@ -784,5 +812,14 @@ class ToOneAttributeBinder {
 			EntityTypeMetadata entityNaming,
 			Table primaryTable,
 			List<Column> identifierColumns) {
+		@Override
+		public List<Column> identifierColumns() {
+			if ( primaryTable.getPrimaryKey() != null
+					&& !primaryTable.getPrimaryKey().getColumns().isEmpty()
+					&& primaryTable.getPrimaryKey().getColumns().size() >= identifierColumns.size() ) {
+				return primaryTable.getPrimaryKey().getColumns();
+			}
+			return identifierColumns;
+		}
 	}
 }

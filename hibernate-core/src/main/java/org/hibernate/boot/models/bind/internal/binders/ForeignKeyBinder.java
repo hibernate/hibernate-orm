@@ -8,6 +8,7 @@ import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.ToOne;
 
 /// Creates physical foreign-key constraints for pending association and table keys.
@@ -42,6 +43,14 @@ class ForeignKeyBinder {
 
 	private void bindForeignKey(ForeignKeyBinding foreignKeyBinding) {
 		final ToOne value = foreignKeyBinding.value();
+		final ForeignKey resolvedForeignKey = createResolvedForeignKey(
+				foreignKeyBinding.resolvedForeignKey(),
+				value.getReferencedEntityName()
+		);
+		if ( resolvedForeignKey != null ) {
+			applyForeignKeySource( resolvedForeignKey, foreignKeyBinding.foreignKeySource() );
+			return;
+		}
 		if ( value.isReferenceToPrimaryKey() ) {
 			value.createForeignKey();
 		}
@@ -56,9 +65,31 @@ class ForeignKeyBinder {
 	}
 
 	private void bindTableForeignKey(TableForeignKeyBinding tableForeignKeyBinding) {
+		final ForeignKey resolvedForeignKey = createResolvedForeignKey(
+				tableForeignKeyBinding.resolvedForeignKey(),
+				tableForeignKeyBinding.referencedEntityName()
+		);
+		if ( resolvedForeignKey != null ) {
+			applyForeignKeySource( resolvedForeignKey, tableForeignKeyBinding.foreignKeySource() );
+			return;
+		}
 		final ForeignKey foreignKey = tableForeignKeyBinding.key()
 				.createForeignKeyOfEntity( tableForeignKeyBinding.referencedEntityName() );
 		applyForeignKeySource( foreignKey, tableForeignKeyBinding.foreignKeySource() );
+	}
+
+	private ForeignKey createResolvedForeignKey(ResolvedForeignKey resolvedForeignKey, String referencedEntityName) {
+		if ( resolvedForeignKey == null ) {
+			return null;
+		}
+		final PersistentClass referencedEntity = entityBinder.getBindingState()
+				.getMetadataBuildingContext()
+				.getMetadataCollector()
+				.getEntityBinding( referencedEntityName );
+		if ( referencedEntity == null ) {
+			return null;
+		}
+		return resolvedForeignKey.createForeignKey( referencedEntity );
 	}
 
 	private void applyForeignKeySource(ToOne value, ForeignKeySource foreignKeySource) {

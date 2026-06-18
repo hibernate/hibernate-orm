@@ -82,7 +82,13 @@ public class TableKeyBinder {
 				entityBinder.getTypeBinding(),
 				key,
 				entityBinder.getSuperEntityBinder().getTypeBinding().getEntityName(),
-				null
+				null,
+				resolveTableForeignKey(
+						key,
+						entityBinder.getSuperEntityBinder().getTypeBinding().getEntityName(),
+						rootIdentifierBinding,
+						joinedSubclass.getEntityName()
+				)
 		) );
 	}
 
@@ -101,7 +107,13 @@ public class TableKeyBinder {
 					entityBinder.getTypeBinding().getEntityName(),
 					associationTableBinding == null
 							? findSecondaryTableForeignKeySource( join )
-							: associationTableBinding.foreignKeySource()
+							: associationTableBinding.foreignKeySource(),
+					resolveTableForeignKey(
+							key,
+							entityBinder.getTypeBinding().getEntityName(),
+							rootIdentifierBinding,
+							entityBinder.getTypeBinding().getEntityName() + "." + join.getTable().getName()
+					)
 			) );
 		}
 	}
@@ -121,7 +133,13 @@ public class TableKeyBinder {
 				entityBinder.getTypeBinding(),
 				key,
 				entityBinder.getTypeBinding().getEntityName(),
-				collectionTableBinding.foreignKeySource()
+				collectionTableBinding.foreignKeySource(),
+				resolveTableForeignKey(
+						key,
+						entityBinder.getTypeBinding().getEntityName(),
+						rootIdentifierBinding,
+						collectionTableBinding.collection().getRole()
+				)
 		) );
 		applyUniqueConstraints( collectionTableBinding );
 		applyIndexes( collectionTableBinding );
@@ -229,6 +247,31 @@ public class TableKeyBinder {
 		return identifierBinding;
 	}
 
+	private ResolvedForeignKey resolveTableForeignKey(
+			DependantValue key,
+			String referencedEntityName,
+			IdentifierBinding identifierBinding,
+			String sourceRole) {
+		return ResolvedForeignKey.from(
+				key,
+				referencedEntityName,
+				SelectableOrderResolver.resolveByTargetOrder(
+						key.getColumns(),
+						targetIdentifierColumns( identifierBinding ),
+						sourceRole
+				)
+		);
+	}
+
+	private List<Column> targetIdentifierColumns(IdentifierBinding identifierBinding) {
+		if ( identifierBinding.table().getPrimaryKey() != null
+				&& !identifierBinding.table().getPrimaryKey().getColumns().isEmpty()
+				&& identifierBinding.table().getPrimaryKey().getColumns().size() >= identifierBinding.columns().size() ) {
+			return identifierBinding.table().getPrimaryKey().getColumns();
+		}
+		return identifierBinding.columns();
+	}
+
 	private DependantValue createDependentKeyValue(Table table, IdentifierBinding identifierBinding) {
 		return createDependentKeyValue( table, identifierBinding, List.of() );
 	}
@@ -244,15 +287,16 @@ public class TableKeyBinder {
 		);
 		key.setNullable( false );
 		key.setUpdateable( false );
+		final List<Column> targetColumns = targetIdentifierColumns( identifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				joinColumns,
-				identifierBinding.columns(),
+				targetColumns,
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				table.getName()
 		);
-		for ( int i = 0; i < identifierBinding.columns().size(); i++ ) {
-			final Column identifierColumn = identifierBinding.columns().get( i );
+		for ( int i = 0; i < targetColumns.size(); i++ ) {
+			final Column identifierColumn = targetColumns.get( i );
 			final Column keyColumn = orderedJoinColumns.isEmpty()
 					? copyKeyColumn( identifierColumn )
 					: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) );
@@ -302,15 +346,16 @@ public class TableKeyBinder {
 		key.setNullable( false );
 		key.setUpdateable( false );
 
+		final List<Column> targetColumns = targetIdentifierColumns( identifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				associationTableBinding.joinColumns(),
-				identifierBinding.columns(),
+				targetColumns,
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				associationTableBinding.join().getTable().getName()
 		);
-		for ( int i = 0; i < identifierBinding.columns().size(); i++ ) {
-			final Column identifierColumn = identifierBinding.columns().get( i );
+		for ( int i = 0; i < targetColumns.size(); i++ ) {
+			final Column identifierColumn = targetColumns.get( i );
 			key.addColumn(
 					bindKeyColumn( table, identifierColumn, orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i ) ),
 					true,
@@ -332,16 +377,17 @@ public class TableKeyBinder {
 		key.setNullable( false );
 		key.setUpdateable( true );
 
+		final List<Column> targetColumns = targetIdentifierColumns( identifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				collectionTableBinding.joinColumns(),
-				identifierBinding.columns(),
+				targetColumns,
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				collectionTableBinding.collection().getRole()
 		);
 		final boolean updateable = collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany;
-		for ( int i = 0; i < identifierBinding.columns().size(); i++ ) {
-			final Column identifierColumn = identifierBinding.columns().get( i );
+		for ( int i = 0; i < targetColumns.size(); i++ ) {
+			final Column identifierColumn = targetColumns.get( i );
 			key.addColumn(
 					bindKeyColumn(
 							table,

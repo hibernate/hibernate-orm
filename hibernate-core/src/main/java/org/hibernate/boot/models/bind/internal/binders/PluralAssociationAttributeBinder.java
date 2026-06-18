@@ -569,7 +569,19 @@ class PluralAssociationAttributeBinder {
 			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 					ownerBinding,
 					element,
-					ForeignKeySource.inverseFrom( source.joinTable() )
+					ForeignKeySource.inverseFrom( source.joinTable() ),
+					referenceToPrimaryKey && element.isConstrained()
+							? ResolvedForeignKey.from(
+									element,
+									element.getReferencedEntityName(),
+									SelectableOrderResolver.resolveByTargetOrder(
+											element.getColumns(),
+											target.identifierColumns(),
+											ownerType.getClassDetails().getClassName()
+													+ "." + attributeMetadata.getName()
+									)
+							)
+							: null
 			) );
 		}
 		return element;

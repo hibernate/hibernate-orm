@@ -22,5 +22,13 @@ public record TableForeignKeyBinding(
 		PersistentClass ownerBinding,
 		KeyValue key,
 		String referencedEntityName,
-		ForeignKeySource foreignKeySource) {
+		ForeignKeySource foreignKeySource,
+		ResolvedForeignKey resolvedForeignKey) {
+	public TableForeignKeyBinding(
+			PersistentClass ownerBinding,
+			KeyValue key,
+			String referencedEntityName,
+			ForeignKeySource foreignKeySource) {
+		this( ownerBinding, key, referencedEntityName, foreignKeySource, null );
+	}
 }

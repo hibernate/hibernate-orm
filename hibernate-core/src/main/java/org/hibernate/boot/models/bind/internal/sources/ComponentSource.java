@@ -404,9 +404,9 @@ public record ComponentSource(
 
 	private static boolean isPersistentComponentSuperType(ClassDetails superClass) {
 		return superClass != null
-			   && superClass != ClassDetails.OBJECT_CLASS_DETAILS
-			   && (superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
-				   || superClass.hasDirectAnnotationUsage( Embeddable.class ));
+			&& superClass != ClassDetails.OBJECT_CLASS_DETAILS
+			&& (superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
+				|| superClass.hasDirectAnnotationUsage( Embeddable.class ));
 	}
 
 	private static AccessType fallbackAccessType(MemberDetails member) {

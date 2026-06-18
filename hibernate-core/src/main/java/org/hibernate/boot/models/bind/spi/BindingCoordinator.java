@@ -150,7 +150,7 @@ public class BindingCoordinator {
 		runPhase( binders, TypeBindingPhase.SuperType.class, TypeBindingPhase.SuperType::bindSuperType );
 		runPhase( binders, TypeBindingPhase.EntityMetadata.class, TypeBindingPhase.EntityMetadata::bindEntityMetadata );
 		runPhase( binders, TypeBindingPhase.Identifiers.class, TypeBindingPhase.Identifiers::bindIdentifier );
-		runPhase( binders, TypeBindingPhase.AssociationIdentifiers.class, TypeBindingPhase.AssociationIdentifiers::bindAssociationIdentifiers );
+		runAssociationIdentifierPhase( binders );
 		runPhase( binders, TypeBindingPhase.Members.class, TypeBindingPhase.Members::bindMembers );
 		runPhase( binders, TypeBindingPhase.CollectionIndexes.class, TypeBindingPhase.CollectionIndexes::bindCollectionIndexes );
 		runPhase( binders, TypeBindingPhase.AssociationTargets.class, TypeBindingPhase.AssociationTargets::bindAssociationTargets );
@@ -191,6 +191,19 @@ public class BindingCoordinator {
 				phaseAction.accept( phaseType.cast( binder ) );
 			}
 		} );
+	}
+
+	private void runAssociationIdentifierPhase(List<ManagedTypeBinder> binders) {
+		boolean processedAny;
+		do {
+			processedAny = false;
+			for ( ManagedTypeBinder binder : binders ) {
+				if ( binder instanceof TypeBindingPhase.AssociationIdentifiers associationIdentifiers ) {
+					processedAny |= associationIdentifiers.bindAssociationIdentifiers();
+				}
+			}
+		}
+		while ( processedAny );
 	}
 
 

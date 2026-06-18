@@ -346,6 +346,9 @@ class InversePluralAssociationBinder {
 		result.setUnique( unique );
 		table.addColumn( result );
 		final Column canonicalColumn = table.getColumn( result );
-		return canonicalColumn == null ? result : canonicalColumn;
+		final Column column = canonicalColumn == null ? result : canonicalColumn;
+		column.setNullable( false );
+		column.setUnique( unique );
+		return column;
 	}
 }

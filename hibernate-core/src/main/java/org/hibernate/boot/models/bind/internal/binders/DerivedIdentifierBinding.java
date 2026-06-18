@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.List;
 
+import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ManyToOne;
@@ -34,5 +35,6 @@ public record DerivedIdentifierBinding(
 		boolean referenceToPrimaryKey,
 		String mapsIdAttributeName,
 		List<JoinColumn> joinColumns,
-		List<Column> targetIdentifierColumns) {
+		List<Column> targetIdentifierColumns,
+		ForeignKeySource foreignKeySource) {
 }

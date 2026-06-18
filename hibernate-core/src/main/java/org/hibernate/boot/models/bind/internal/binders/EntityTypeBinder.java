@@ -295,8 +295,8 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	/// Resolve association-valued identifier attributes after all identifiers exist.
-	public void bindAssociationIdentifiers() {
-		new AssociationIdentifierBinder( this ).bindAssociationIdentifiers();
+	public boolean bindAssociationIdentifiers() {
+		return new AssociationIdentifierBinder( this ).bindAssociationIdentifiers();
 	}
 
 	/// Resolve collection indexes that need all member properties to exist.

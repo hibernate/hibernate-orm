@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Nulls;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.SortDirection;
@@ -22,7 +23,10 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder, SqmCacheabl
 	private final SortDirection sortOrder;
 	private Nulls nullPrecedence;
 
-	public SqmSearchClauseSpecification(SqmCteTableColumn cteColumn, SortDirection sortOrder, Nulls nullPrecedence) {
+	public SqmSearchClauseSpecification(
+			@Nonnull SqmCteTableColumn cteColumn,
+			@Nonnull SortDirection sortOrder,
+			@Nonnull Nulls nullPrecedence) {
 		if ( cteColumn == null ) {
 			throw new IllegalArgumentException( "Null cte column" );
 		}
@@ -44,7 +48,8 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder, SqmCacheabl
 	}
 
 	@Override
-	public JpaSearchOrder nullPrecedence(Nulls precedence) {
+	@Nonnull
+	public JpaSearchOrder nullPrecedence(@Nonnull Nulls precedence) {
 		this.nullPrecedence = precedence;
 		return this;
 	}
@@ -66,18 +71,20 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder, SqmCacheabl
 	}
 
 	@Override
+	@Nonnull
 	public SortDirection getSortOrder() {
 		return sortOrder;
 	}
 
 	@Override
+	@Nonnull
 	public Nulls getNullPrecedence() {
 		return nullPrecedence;
 	}
 
 	@Override
-	public boolean equals(@Nullable Object o) {
-		return o instanceof SqmSearchClauseSpecification that
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmSearchClauseSpecification that
 			&& cteColumn.equals( that.cteColumn )
 			&& sortOrder == that.sortOrder
 			&& nullPrecedence == that.nullPrecedence;

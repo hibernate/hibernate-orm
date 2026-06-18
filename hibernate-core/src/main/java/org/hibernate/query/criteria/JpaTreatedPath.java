@@ -11,6 +11,9 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  * @author Steve Ebersole
  */
 public interface JpaTreatedPath<T,S extends T> extends JpaPath<S> {
+	/**
+	 * Return the treat target type.
+	 */
 	@Nonnull
 	ManagedDomainType<S> getTreatTarget();
 }

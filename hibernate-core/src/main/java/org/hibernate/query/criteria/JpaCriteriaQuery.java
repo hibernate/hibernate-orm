@@ -49,30 +49,57 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
 
+	/**
+	 * Return the query offset expression.
+	 */
 	@Nullable
 	JpaExpression<Number> getOffset();
 
+	/**
+	 * Set the query offset.
+	 */
 	@Nonnull
 	JpaCriteriaQuery<T> offset(@Nullable JpaExpression<? extends Number> offset);
 
+	/**
+	 * Set the query offset.
+	 */
 	@Nonnull
 	JpaCriteriaQuery<T> offset(@Nullable Number offset);
 
+	/**
+	 * Return the query fetch expression.
+	 */
 	@Nullable
 	JpaExpression<Number> getFetch();
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Nonnull
 	JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch);
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Nonnull
 	JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Nonnull
 	JpaCriteriaQuery<T> fetch(@Nullable Number fetch);
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Nonnull
 	JpaCriteriaQuery<T> fetch(@Nullable Number fetch, FetchClauseType fetchClauseType);
 
+	/**
+	 * Return the fetch clause type.
+	 */
 	FetchClauseType getFetchClauseType();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,74 +153,128 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutators
 
+	/**
+	 * Create a query root for the given entity type.
+	 */
 	@Nonnull
 	@Override
 	<X> JpaRoot<X> from(@Nonnull Class<X> entityClass);
 
+	/**
+	 * Create a query root for the given entity type.
+	 */
 	@Nonnull
 	@Override
 	<X> JpaRoot<X> from(@Nonnull EntityType<X> entity);
 
+	/**
+	 * Set whether duplicate query results are eliminated.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> distinct(boolean distinct);
 
+	/**
+	 * Set the query selection.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> select(@Nonnull Selection<? extends T> selection);
 
+	/**
+	 * Set the compound query selection.
+	 */
 	@Nonnull
 	@Override @Deprecated
 	JpaCriteriaQuery<T> multiselect(@Nonnull Selection<?>... selections);
 
+	/**
+	 * Set the compound query selection.
+	 */
 	@Nonnull
 	@Override @Deprecated
 	JpaCriteriaQuery<T> multiselect(@Nonnull List<Selection<?>> selectionList);
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> where(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> where(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	/**
+	 * Set the grouping expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> groupBy(@Nonnull Expression<?>... grouping);
 
+	/**
+	 * Set the grouping expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> groupBy(@Nonnull List<Expression<?>> grouping);
 
+	/**
+	 * Set the group restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> having(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the group restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> having(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the group restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	/**
+	 * Set the ordering expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> orderBy(@Nonnull Order... o);
 
+	/**
+	 * Set the ordering expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> orderBy(@Nonnull List<Order> o);
 
+	/**
+	 * Create a subquery for the given entity type.
+	 */
 	@Nonnull
 	@Override
 	<U> JpaSubQuery<U> subquery(@Nonnull EntityType<U> type);
 
+	/**
+	 * Return the criteria builder that created this query.
+	 */
 	@Nonnull
 	HibernateCriteriaBuilder getCriteriaBuilder();
 }

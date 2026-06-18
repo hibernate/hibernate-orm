@@ -16,6 +16,9 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
+	/**
+	 * Return the Java type of this tuple element.
+	 */
 	@Nullable JavaType<T> getJavaTypeDescriptor();
 
 	@Override
@@ -24,11 +27,17 @@ public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
 		return javaType == null ? null : javaType.getJavaTypeClass();
 	}
 
+	/**
+	 * Return the Java type name of this tuple element.
+	 */
 	default String getJavaTypeName() {
 		final var javaType = getJavaTypeDescriptor();
 		return javaType == null ? null : javaType.getTypeName();
 	}
 
+	/**
+	 * Return whether this tuple element has an enum Java type.
+	 */
 	default boolean isEnum() {
 		return getJavaTypeDescriptor() instanceof EnumJavaType;
 	}

@@ -11,6 +11,9 @@ import jakarta.persistence.criteria.Predicate;
  * @author Steve Ebersole
  */
 public interface JpaPredicate extends JpaBooleanExpression, Predicate {
+	/**
+	 * Return the negation of this predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate not();

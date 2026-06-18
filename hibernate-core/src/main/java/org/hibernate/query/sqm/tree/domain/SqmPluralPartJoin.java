@@ -125,7 +125,6 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	@Nonnull
 	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(

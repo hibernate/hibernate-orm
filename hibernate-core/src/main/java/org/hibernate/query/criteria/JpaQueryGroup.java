@@ -17,24 +17,39 @@ import org.hibernate.query.common.FetchClauseType;
  */
 public interface JpaQueryGroup<T> extends JpaQueryPart<T> {
 
+	/**
+	 * Return the query parts of this query group.
+	 */
 	@Nonnull
 	List<? extends JpaQueryPart<T>> getQueryParts();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	/**
+	 * Set the ordering specifications.
+	 */
 	@Override
 	@Nonnull
 	JpaQueryGroup<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications);
 
+	/**
+	 * Set the query offset.
+	 */
 	@Override
 	@Nonnull
 	JpaQueryGroup<T> setOffset(@Nonnull JpaExpression<? extends Number> offset);
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Override
 	@Nonnull
 	JpaQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch);
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Override
 	@Nonnull
 	JpaQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);

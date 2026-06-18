@@ -23,9 +23,15 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordering clause
 
+	/**
+	 * Return the ordering specifications.
+	 */
 	@Nonnull
 	List<? extends JpaOrder> getSortSpecifications();
 
+	/**
+	 * Set the ordering specifications.
+	 */
 	@Nonnull
 	JpaQueryPart<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications);
 
@@ -35,20 +41,38 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 
 	//TODO: these operations should only accept integer literals or parameters
 
+	/**
+	 * Return the query offset expression.
+	 */
 	@Nullable
 	JpaExpression<? extends Number> getOffset();
 
+	/**
+	 * Set the query offset.
+	 */
 	@Nonnull
 	JpaQueryPart<T> setOffset(JpaExpression<? extends Number> offset);
 
+	/**
+	 * Return the query fetch expression.
+	 */
 	@Nullable
 	JpaExpression<? extends Number> getFetch();
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Nonnull
 	JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch);
 
+	/**
+	 * Set the query fetch limit.
+	 */
 	@Nonnull
 	JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
+	/**
+	 * Return the fetch clause type.
+	 */
 	FetchClauseType getFetchClauseType();
 }

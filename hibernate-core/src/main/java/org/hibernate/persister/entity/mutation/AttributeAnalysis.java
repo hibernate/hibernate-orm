@@ -28,7 +28,7 @@ public interface AttributeAnalysis {
 
 	/**
 	 * Whether the attribute should be included in
-	 * optimistic locking (where-clause restriction)
+	 * optimistic locking (where clause restriction)
 	 */
 	boolean includeInLocking();
 

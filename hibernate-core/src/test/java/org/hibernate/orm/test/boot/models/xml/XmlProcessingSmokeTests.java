@@ -13,6 +13,8 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
+import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
+import org.hibernate.boot.models.spi.NamedQueryRegistration;
 import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
@@ -167,6 +169,61 @@ public class XmlProcessingSmokeTests {
 				.isEqualTo( org.hibernate.type.YesNoConverter.class );
 
 		validateFilterDefs( globalRegistrations.getFilterDefRegistrations() );
+	}
+
+	@Test
+	@ServiceRegistry
+	void testGlobalNamedQueryHints(ServiceRegistryScope scope) {
+		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
+		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
+
+		final JaxbEntityMappingsImpl xmlMapping = XmlHelper.loadMapping(
+				"mappings/models/named-query-hints.xml",
+				SIMPLE_CLASS_LOADING
+		);
+		final Binding<JaxbEntityMappingsImpl> binding = new Binding<>(
+				xmlMapping,
+				new Origin( SourceType.RESOURCE, "mappings/models/named-query-hints.xml" )
+		);
+		collectedXmlResources.addDocument( binding );
+
+		final DomainModelCategorizationCollector collector = new DomainModelCategorizationCollector(
+				new GlobalRegistrationsImpl( buildingContext, new BootstrapContextImpl() ),
+				buildingContext
+		);
+		collectedXmlResources.getDocuments().forEach( xmlDocument -> {
+			final XmlDocumentContextImpl xmlDocumentContext = new XmlDocumentContextImpl(
+					xmlDocument,
+					new RootMappingDefaults(
+							new MetadataBuilderImpl.MappingDefaultsImpl( scope.getRegistry() ),
+							collectedXmlResources.getPersistenceUnitMetadata()
+					),
+					buildingContext,
+					new BootstrapContextImpl()
+			);
+			collector.apply( xmlMapping, xmlDocumentContext );
+		} );
+
+		final GlobalRegistrationsImpl globalRegistrations = collector.getGlobalRegistrations();
+
+		final NamedQueryRegistration namedQuery = globalRegistrations.getNamedQueryRegistrations().get( "global.findAll" );
+		assertThat( namedQuery ).isNotNull();
+		assertThat( namedQuery.getQueryHints() ).containsEntry( "org.hibernate.timeout", "200" );
+
+		final NamedNativeQueryRegistration nativeQuery =
+				globalRegistrations.getNamedNativeQueryRegistrations().get( "global.findAllNative" );
+		assertThat( nativeQuery ).isNotNull();
+		assertThat( nativeQuery.getQueryHints() ).containsEntry( "org.hibernate.timeout", "300" );
+
+		assertThat( globalRegistrations.getNamedStoredProcedureQueryRegistrations().get( "global.proc" ) )
+				.isNotNull()
+				.extracting( registration -> registration.configuration().hints() )
+				.satisfies( hints -> assertThat( hints )
+						.hasSize( 1 )
+						.anySatisfy( hint -> {
+							assertThat( hint.name() ).isEqualTo( "org.hibernate.timeout" );
+							assertThat( hint.value() ).isEqualTo( "400" );
+						} ) );
 	}
 
 	private void validateFilterDefs(Map<String, FilterDefRegistration> filterDefRegistrations) {

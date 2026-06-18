@@ -57,14 +57,22 @@ public class BootModelPreprocessor {
 		if ( persistentClass instanceof RootClass rootClass ) {
 			if ( persistentClass.getIdentifierProperty() != null ) {
 				if ( persistentClass.getIdentifierProperty().getValue() instanceof Component component ) {
-					final String componentRole = rootClass.getEntityName() + "." + persistentClass.getIdentifierProperty().getName();
+					final String idPropertyName = persistentClass.getIdentifierProperty().getName();
+					final String componentRole = rootClass.getEntityName() + "." + idPropertyName;
 					buildComponentEntries( componentRole, component, transformationState );
+					registerCompositeIdMappableAttributes(
+							rootClass.getEntityName(), idPropertyName, component, transformationState
+					);
 				}
 			}
 			else {
 				assert rootClass.getIdentifier() instanceof Component;
+				final Component component = (Component) rootClass.getIdentifier();
 				final String componentRole = rootClass.getEntityName() + ".id";
-				buildComponentEntries( componentRole, (Component) rootClass.getIdentifier(), transformationState );
+				buildComponentEntries( componentRole, component, transformationState );
+				registerCompositeIdMappableAttributes(
+						rootClass.getEntityName(), "id", component, transformationState
+				);
 			}
 		}
 
@@ -117,6 +125,22 @@ public class BootModelPreprocessor {
 			// could be the target of an inverse mapping, and we will need this information for transforming to mapped-by
 			transformationState.registerMappableAttributesByColumns( entityName, property.getName(), toOne.getSelectables() );
 		}
+	}
+
+	private static void registerCompositeIdMappableAttributes(
+			String entityName,
+			String idPropertyName,
+			Component component,
+			TransformationState transformationState) {
+		component.getProperties().forEach( property -> {
+			if ( property.getValue() instanceof ToOne toOne ) {
+				transformationState.registerMappableAttributesByColumns(
+						entityName,
+						idPropertyName + "." + property.getName(),
+						toOne.getSelectables()
+				);
+			}
+		} );
 	}
 
 	private static void buildComponentEntries(

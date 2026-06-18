@@ -10,10 +10,10 @@ public class HbmLintExporter extends GenericExporter {
 
 	private static final String TEXT_REPORT_FTL = "lint/text-report.ftl";
 
-	public void start() {
+	public void start(boolean autoStop) {
 		getProperties().put(TEMPLATE_NAME, TEXT_REPORT_FTL);
 		getProperties().put(FILE_PATTERN, "hbmlint-result.txt");
-		super.start();
+		super.start(autoStop);
 	}
 	protected void setupContext() {
 		HbmLint hbmlint = HbmLint.createInstance();

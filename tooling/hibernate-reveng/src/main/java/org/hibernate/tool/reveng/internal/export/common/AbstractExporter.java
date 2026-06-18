@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.export.common;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.reveng.api.export.ArtifactCollector;
@@ -84,6 +85,10 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	}
 
 	public void start() {
+		start( true );
+	}
+
+	public void start(boolean autoStop) {
 		setTemplateHelper( new TemplateHelper() );
 		setupTemplates();
 		setupContext();
@@ -91,6 +96,18 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		cleanUpContext();
 		setTemplateHelper(null);
 		getArtifactCollector().formatFiles();
+		if (autoStop) {
+			stop();
+		}
+	}
+
+	@Override
+	public void stop() {
+		if ( metadata instanceof MetadataImplementor activeMetadata ) {
+			// Avoid keeping database connections around
+			activeMetadata.getMetadataBuildingOptions().getServiceRegistry().close();
+			metadata = null;
+		}
 	}
 
 	abstract protected void doStart();

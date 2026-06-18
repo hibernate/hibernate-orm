@@ -66,6 +66,11 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return true;
+	}
+
+	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}

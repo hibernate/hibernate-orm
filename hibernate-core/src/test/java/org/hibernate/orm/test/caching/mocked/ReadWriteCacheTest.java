@@ -15,12 +15,11 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -77,15 +76,15 @@ public class ReadWriteCacheTest {
 		scope.getSessionFactory().getCache().evictAll();
 	}
 
+	/// Other tests might look similar, but the big difference here is that the entity to check before committing is
+	/// not in the cache anymore when using `Session#remove()`, whereas it remains in the cache running a HQL/SQL delete.
+	/// This is why this test requires that writer lock don't block readers, since an in-flight transaction with locks
+	/// will block the select statement happening in the {@link TransactionInterceptor}
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class,
 			reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
-	@SkipForDialect(dialectClass = HSQLDialect.class,
-			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(dialectClass = DerbyDialect.class,
-			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class,
+			reverse = true, comment = "write locks block readers")
 	public void testDelete(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 1L;
 
@@ -158,15 +157,15 @@ public class ReadWriteCacheTest {
 		} );
 	}
 
+	/// Other tests might look similar, but the big difference here is that the entity to check before committing is
+	/// not in the cache anymore when flushing the entity, whereas it remains in the cache when running an HQL/SQL update.
+	/// This is why this test requires that writer lock don't block readers, since an in-flight transaction with locks
+	/// will block the select statement happening in the {@link TransactionInterceptor}
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class,
 			reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
-	@SkipForDialect(dialectClass = HSQLDialect.class,
-			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(dialectClass = DerbyDialect.class,
-			reason = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class,
+			reverse = true, comment = "write locks block readers")
 	public void testUpdate(SessionFactoryScope scope) throws InterruptedException {
 		bookId = 4L;
 

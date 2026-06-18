@@ -66,6 +66,11 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return true;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 		// DB2 for i doesn't allow code units: https://www.ibm.com/docs/en/i/7.1.0?topic=functions-substring

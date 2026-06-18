@@ -974,11 +974,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}

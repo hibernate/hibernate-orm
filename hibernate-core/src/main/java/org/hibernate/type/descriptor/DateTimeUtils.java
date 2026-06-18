@@ -444,11 +444,10 @@ public final class DateTimeUtils {
 		if ( precision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
 			return temporal;
 		}
-		final long factor = pow10( 9 - precision );
 		//noinspection unchecked
 		return (T) temporal.with(
 				ChronoField.NANO_OF_SECOND,
-				temporal.get( ChronoField.NANO_OF_SECOND ) / factor * factor
+				truncateToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), precision )
 		);
 	}
 
@@ -498,6 +497,11 @@ public final class DateTimeUtils {
 		final int precisionMask = pow10( 9 - precision );
 		final int nanosToRound = nano % precisionMask;
 		return nano - nanosToRound + ( nanosToRound >= ( precisionMask >> 1 ) ? precisionMask : 0 );
+	}
+
+	public static long truncateToPrecision(int nano, int precision) {
+		final long factor = pow10( 9 - precision );
+		return nano / factor * factor;
 	}
 
 	private static int pow10(int exponent) {

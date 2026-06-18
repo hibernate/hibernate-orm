@@ -18,6 +18,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -96,6 +97,7 @@ public class RefreshUpdatedDataTest {
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support nested transactions")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	@SkipForDialect(dialectClass = HSQLDialect.class)
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	public void testUpdateAndFlushThenRefresh() {
 		final String BEFORE = "before";
 

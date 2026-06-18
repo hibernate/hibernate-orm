@@ -10,6 +10,7 @@ import org.hibernate.internal.util.MutableObject;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -73,6 +74,12 @@ public class DbVersionTest {
 				"owner version not incremented" );
 	}
 
+	private Timestamp truncateToPrecision(Timestamp timestamp, int precision) {
+		final Timestamp clonedTimestamp = (Timestamp) timestamp.clone();
+		clonedTimestamp.setNanos( (int) DateTimeUtils.truncateToPrecision( clonedTimestamp.getNanos(), precision ) );
+		return clonedTimestamp;
+	}
+
 	@Test
 	public void testCollectionNoVersion(SessionFactoryScope factoryScope) throws Exception {
 		final var dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
@@ -122,6 +129,6 @@ public class DbVersionTest {
 			timestamp = new Timestamp( timestamp.getTime() );
 		}
 
-		return timestamp;
+		return truncateToPrecision( timestamp, dialect.getDefaultTimestampPrecision() );
 	}
 }

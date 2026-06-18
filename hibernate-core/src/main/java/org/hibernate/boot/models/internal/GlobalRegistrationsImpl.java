@@ -1311,6 +1311,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 			final QueryHintJpaAnnotation hint = JpaAnnotations.QUERY_HINT.createUsage( sourceModelContext );
 			hint.name( jaxbHint.getName() );
 			hint.value( jaxbHint.getValue() );
+			hints.add( hint );
 		}
 		return hints;
 	}

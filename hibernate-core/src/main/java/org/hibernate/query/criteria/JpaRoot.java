@@ -13,10 +13,16 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
  * @author Steve Ebersole
  */
 public interface JpaRoot<T> extends JpaFrom<T,T>, Root<T> {
+	/**
+	 * Return the entity model of this root.
+	 */
 	@Nonnull
 	@Override
 	EntityDomainType<T> getModel();
 
+	/**
+	 * Downcast this root to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
@@ -25,5 +31,8 @@ public interface JpaRoot<T> extends JpaFrom<T,T>, Root<T> {
 	}
 
 	// todo: deprecate and remove?
+	/**
+	 * Return the managed type of this root.
+	 */
 	EntityDomainType<T> getManagedType();
 }

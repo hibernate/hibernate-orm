@@ -22,21 +22,45 @@ public interface JpaJsonValueExpression<T> extends JpaExpression<T>, JpaJsonValu
 	 */
 	JpaJsonValueExpression<T> passing(String parameterName, Expression<?> expression);
 
+	/**
+	 * Use the unspecified JSON error behavior.
+	 */
 	@Override
 	JpaJsonValueExpression<T> unspecifiedOnError();
+	/**
+	 * Use the JSON error behavior that raises an error.
+	 */
 	@Override
 	JpaJsonValueExpression<T> errorOnError();
+	/**
+	 * Use the JSON error behavior that returns null.
+	 */
 	@Override
 	JpaJsonValueExpression<T> nullOnError();
+	/**
+	 * Use the JSON error behavior that returns the given default value.
+	 */
 	@Override
 	JpaJsonValueExpression<T> defaultOnError(Expression<?> expression);
 
+	/**
+	 * Use the unspecified JSON empty behavior.
+	 */
 	@Override
 	JpaJsonValueExpression<T> unspecifiedOnEmpty();
+	/**
+	 * Use the JSON empty behavior that raises an error.
+	 */
 	@Override
 	JpaJsonValueExpression<T> errorOnEmpty();
+	/**
+	 * Use the JSON empty behavior that returns null.
+	 */
 	@Override
 	JpaJsonValueExpression<T> nullOnEmpty();
+	/**
+	 * Use the JSON empty behavior that returns the given default value.
+	 */
 	@Override
 	JpaJsonValueExpression<T> defaultOnEmpty(Expression<?> expression);
 

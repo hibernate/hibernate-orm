@@ -89,7 +89,7 @@ public class LoaderSelectBuilder {
 	 *
 	 * @param loadable The root Loadable
 	 * @param partsToSelect Parts of the Loadable to select.  Null/empty indicates to select the Loadable itself
-	 * @param restrictedPart Part to base the where-clause restriction on
+	 * @param restrictedPart Part to base the where clause restriction on
 	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult
 	 * @param loadQueryInfluencers Any influencers (entity graph, fetch profile) to account for
 	 * @param lockOptions Pessimistic lock options to apply
@@ -214,9 +214,9 @@ public class LoaderSelectBuilder {
 	 *
 	 * @param loadable The root Loadable
 	 * @param partsToSelect Parts of the Loadable to select.  Null/empty indicates to select the Loadable itself
-	 * @param restrictedPart Part to base the where-clause restriction on
+	 * @param restrictedPart Part to base the where clause restriction on
 	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult
-	 * @param numberOfKeysToLoad How many keys should be accounted for in the where-clause restriction?
+	 * @param numberOfKeysToLoad How many keys should be accounted for in the where clause restriction?
 	 * @param loadQueryInfluencers Any influencers (entity graph, fetch profile) to account for
 	 * @param lockOptions Pessimistic lock options to apply
 	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created

@@ -16,14 +16,23 @@ import static java.util.Collections.unmodifiableList;
  * @author Steve Ebersole
  */
 public interface JpaSelection<T> extends JpaTupleElement<T>, Selection<T> {
+	/**
+	 * Return the items of this selection.
+	 */
 	List<? extends JpaSelection<?>> getSelectionItems();
 
+	/**
+	 * Return the compound selection items.
+	 */
 	@Nonnull
 	@Override
 	default List<Selection<?>> getCompoundSelectionItems() {
 		return unmodifiableList( getSelectionItems() );
 	}
 
+	/**
+	 * Assign an alias to this selection.
+	 */
 	@Nonnull
 	@Override
 	JpaSelection<T> alias(@Nonnull String name);

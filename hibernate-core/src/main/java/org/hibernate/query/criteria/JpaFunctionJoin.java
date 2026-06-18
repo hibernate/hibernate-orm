@@ -26,22 +26,37 @@ public interface JpaFunctionJoin<E> extends JpaFunctionFrom<Object, E>, JpaJoin<
 	 */
 	boolean isLateral();
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Override
 	@Nonnull
 	JpaFunctionJoin<E> on(@Nullable JpaExpression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaFunctionJoin<E> on(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Override
 	@Nonnull
 	JpaFunctionJoin<E> on(@Nullable JpaPredicate... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaFunctionJoin<E> on(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaFunctionJoin<E> on(@Nonnull List<? extends Expression<Boolean>> restrictions);

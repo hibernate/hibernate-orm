@@ -22,30 +22,51 @@ import jakarta.persistence.criteria.MapJoin;
  */
 public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJoin<O,K,V> {
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaMapJoin<O, K, V> on(@Nullable JpaExpression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaMapJoin<O, K, V> on(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Override
 	@Nonnull
 	JpaMapJoin<O, K, V> on(@Nullable JpaPredicate... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaMapJoin<O, K, V> on(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaMapJoin<O, K, V> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Override
 	@Nonnull
 	<S extends V> JpaTreatedJoin<O, V, S> treatAs(@Nonnull Class<S> treatAsType);
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
@@ -53,6 +74,9 @@ public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJo
 		return (JpaMapJoin<O, K, S>) treatAs( treatAsType );
 	}
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Override
 	@Nonnull
 	<S extends V> JpaTreatedJoin<O, V, S> treatAs(@Nonnull EntityDomainType<S> treatJavaType);

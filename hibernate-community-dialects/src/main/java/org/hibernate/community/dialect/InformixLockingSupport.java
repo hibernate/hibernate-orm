@@ -58,7 +58,7 @@ public class InformixLockingSupport implements LockingSupport, LockingSupport.Me
 
 	@Override
 	public Level getSupportedLevel() {
-		return Level.SUPPORTED;
+		return Level.EXTENDED;
 	}
 
 	@Override

@@ -643,6 +643,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "date and timestamp are not compatible")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Datetime truncation is not supported")
 	public void testDateTruncWithLocalDatetimeMinusLocalDate(SessionFactoryScope scope) {
 		scope.inTransaction( session ->
 				assertThat( session.createQuery( "select trunc(local datetime, day) - local date", Duration.class )
@@ -2267,14 +2268,22 @@ public class FunctionTests {
 	}
 
 	@Test
-	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The clock in the container likes to get skewed, so to avoid false negatives, skip the test")
+	public void testExtractFunctionEpochLocalDateTime(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					long before = Instant.now().getEpochSecond()-1;
 					long epoch = session.createQuery( "select extract(epoch from local datetime)", Long.class ).getSingleResult();
 					long after = Instant.now().getEpochSecond()+1;
 					assertThat( epoch, allOf( greaterThanOrEqualTo( before ), lessThanOrEqualTo( after ) ) );
+				}
+		);
+	}
 
+	@Test
+	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select extract(epoch from offset datetime)", Long.class).getSingleResult();
 
 					assertThat( session.createQuery("select extract(epoch from datetime 1974-03-23 12:35)", Long.class).getSingleResult(),

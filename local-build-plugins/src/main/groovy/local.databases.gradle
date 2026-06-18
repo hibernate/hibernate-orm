@@ -277,7 +277,8 @@ ext {
                     'jdbc.user'  : 'informix',
                     'jdbc.pass'  : 'in4mix',
                     // IFX_LOCK_MODE_WAIT=-1 makes Informix behave like other databases i.e. block and wait for a lock. Default behavior is nowait
-                    'jdbc.url'   : 'jdbc:informix-sqli://' + dbHost + ':9088/dev:INFORMIXSERVER=informix;user=informix;password=in4mix;DBDATE=Y4MD-;DELIMIDENT=Y;DB_LOCALE=en_US.utf8;IFX_LOCK_MODE_WAIT=-1',
+                    // IFX_ISOLATION_LEVEL=5 makes Informix behave like other MVCC databases i.e. not block readers when update/delete transaction are in-flight, but return the last committed version
+                    'jdbc.url'   : 'jdbc:informix-sqli://' + dbHost + ':9088/dev:INFORMIXSERVER=informix;user=informix;password=in4mix;DBDATE=Y4MD-;DELIMIDENT=Y;DB_LOCALE=en_US.utf8;IFX_LOCK_MODE_WAIT=-1;IFX_ISOLATION_LEVEL=5U',
                     'jdbc.datasource' : 'com.informix.jdbc.IfxDriver',
 //                        'jdbc.datasource' : 'com.informix.jdbcx.IfxDataSource',
                     'connection.init_sql' : ''

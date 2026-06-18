@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.collectionoptimisticlock">
+	<class name="Owner">
+		<id name="id" type="long">
+			<generator class="native"/>
+		</id>
+		<bag name="lockedItems" inverse="true" cascade="all">
+			<key column="locked_owner_id"/>
+			<one-to-many class="LockedItem"/>
+		</bag>
+		<bag name="unlockedItems" inverse="true" cascade="all" optimistic-lock="false">
+			<key column="unlocked_owner_id"/>
+			<one-to-many class="UnlockedItem"/>
+		</bag>
+	</class>
+	<class name="LockedItem">
+		<id name="id" type="long">
+			<generator class="native"/>
+		</id>
+		<property name="name"/>
+		<many-to-one name="owner" column="locked_owner_id"/>
+	</class>
+	<class name="UnlockedItem">
+		<id name="id" type="long">
+			<generator class="native"/>
+		</id>
+		<property name="name"/>
+		<many-to-one name="owner" column="unlocked_owner_id"/>
+	</class>
+</hibernate-mapping>

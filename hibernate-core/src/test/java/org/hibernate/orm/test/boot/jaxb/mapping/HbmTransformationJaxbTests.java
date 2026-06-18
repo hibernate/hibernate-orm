@@ -282,6 +282,37 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-20590" )
+	public void testCollectionOptimisticLockTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-optimistic-lock/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 3 );
+
+			final JaxbEntityImpl ownerEntity = transformed.getEntities().stream()
+					.filter( e -> "Owner".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( ownerEntity.getAttributes().getOneToManyAttributes() ).hasSize( 2 );
+
+			final JaxbOneToManyImpl lockedItems = ownerEntity.getAttributes().getOneToManyAttributes().stream()
+					.filter( a -> "lockedItems".equals( a.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( lockedItems.isOptimisticLock() )
+					.as( "lockedItems should have optimistic-lock=true (default)" )
+					.isTrue();
+
+			final JaxbOneToManyImpl unlockedItems = ownerEntity.getAttributes().getOneToManyAttributes().stream()
+					.filter( a -> "unlockedItems".equals( a.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( unlockedItems.isOptimisticLock() )
+					.as( "unlockedItems should have optimistic-lock=false" )
+					.isFalse();
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

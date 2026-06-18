@@ -88,7 +88,7 @@ public class InformixLockingSupport
 
 	@Override
 	public Level getSupportedLevel() {
-		return Level.SUPPORTED;
+		return Level.EXTENDED;
 	}
 
 	@Override

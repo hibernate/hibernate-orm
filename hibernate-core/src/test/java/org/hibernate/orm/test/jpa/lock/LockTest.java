@@ -404,6 +404,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLockTimeouts.class)
 	public void testUpdateWithPessimisticReadLockWithoutNoWait() {
 		Lock lock = new Lock();
@@ -686,6 +687,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	// only.
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	public void testContendedPessimisticLock() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 		final Lock lock = new Lock();

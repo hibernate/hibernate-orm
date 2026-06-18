@@ -73,6 +73,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.query.sqm.CastType;
@@ -152,6 +153,7 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
@@ -333,6 +335,9 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 			case VARCHAR:
 			case NVARCHAR:
 				return "lvarchar($l)";
+			case NCLOB:
+				// Informix has nvarchar, but no nclob. The clob type supports all characters though
+				return "clob";
 			default:
 				return super.columnType( sqlTypeCode );
 		}
@@ -757,9 +762,9 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 				// unwrap the ISAM error, if any
 				if ( exception.getCause() instanceof SQLException cause && cause != exception ) {
 					yield switch ( extractErrorCode( cause ) ) {
-						case -107, -113, -134, -143, -144, -154 ->
-							//TODO: which of these are these are really LockTimeoutExceptions
-							//      rather than the more generic LockAcquisitionException?
+						case -107, -113, -144, -154 ->
+								new LockTimeoutException( message, exception, sql );
+						case -134, -143 ->
 								new LockAcquisitionException( message, exception, sql );
 						default -> null;
 					};

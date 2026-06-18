@@ -20,7 +20,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.spi.CollectionEntry;
 
 import org.hibernate.exception.LockTimeoutException;
@@ -95,11 +94,15 @@ public class MultipleSessionCollectionTest {
 		);
 	}
 
+	/// The first transaction has a lock on the parent and the second transaction does a select for the merge call,
+	/// which runs while the first transaction still holds locks.
+	/// This is why this test requires that writer lock don't block readers
 	@Test
 	@JiraKey("HHH-9518")
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "The select triggered by the merge just hang without any exception")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The merge in the second session causes a deadlock")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class,
+			reverse = true, comment = "write locks block readers")
 	public void testCopyPersistentCollectionReferenceAfterFlush(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		Child c = new Child();

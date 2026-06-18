@@ -68,7 +68,7 @@ public class ComponentBinder {
 	private final BindingOptions options;
 	private final BindingContext context;
 
-	ComponentBinder(
+	public ComponentBinder(
 			ModelBinders modelBinders,
 			BindingState state,
 			BindingOptions options,
@@ -79,7 +79,7 @@ public class ComponentBinder {
 		this.context = context;
 	}
 
-	List<Column> bindBasicProperties(
+	public List<Column> bindBasicProperties(
 			IdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ComponentSource source,
@@ -103,7 +103,7 @@ public class ComponentBinder {
 		);
 	}
 
-	List<Column> bindBasicProperties(
+	public List<Column> bindBasicProperties(
 			IdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ComponentSource source,

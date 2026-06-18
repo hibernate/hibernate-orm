@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.models.bind.internal.binding;
+package org.hibernate.boot.models.bind.internal.model;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,51 +11,39 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.RootClass;
+import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
 
 import jakarta.annotation.Nullable;
 
 /// Mutable binding state for an entity identifier.
 ///
-/// The contribution records identifier semantics in binding order so later
-/// phases do not need to rediscover correspondence from sorted Component
-/// property lists.
+/// The contribution records the semantic identifier shape selected for an entity
+/// hierarchy: whether it uses an id class, which id representation type is
+/// involved, and which identifier attributes participate.  Attribute order is
+/// kept as a source fact because id-class extraction, derived identifiers, and
+/// selectable correspondence all need to distinguish declaration order from
+/// later projected orders.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public class IdentifierContribution {
-	private final RootClass owner;
-	private final Component identifierValue;
-	private final Component identifierMapper;
+	private final EntityTypeMetadata owner;
 	private final boolean idClass;
 	private final @Nullable ClassDetails idClassType;
 	private final List<IdentifierAttributeBinding> attributes = new ArrayList<>();
 
 	public IdentifierContribution(
-			RootClass owner,
-			Component identifierValue,
-			Component identifierMapper,
+			EntityTypeMetadata owner,
 			boolean idClass,
 			@Nullable ClassDetails idClassType) {
 		this.owner = owner;
-		this.identifierValue = identifierValue;
-		this.identifierMapper = identifierMapper;
 		this.idClass = idClass;
 		this.idClassType = idClassType;
 	}
 
-	public RootClass owner() {
+	public EntityTypeMetadata owner() {
 		return owner;
-	}
-
-	public Component identifierValue() {
-		return identifierValue;
-	}
-
-	public Component identifierMapper() {
-		return identifierMapper;
 	}
 
 	public boolean idClass() {

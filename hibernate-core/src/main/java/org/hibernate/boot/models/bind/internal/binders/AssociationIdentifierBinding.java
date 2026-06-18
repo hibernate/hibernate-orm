@@ -6,8 +6,9 @@ package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
-import org.hibernate.boot.models.bind.internal.binding.IdentifierAttributeBinding;
+import org.hibernate.boot.models.bind.internal.model.IdentifierAttributeBinding;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.mapping.Column;
@@ -37,6 +38,7 @@ public record AssociationIdentifierBinding(
 		ToOne value,
 		org.hibernate.mapping.Value identifierValue,
 		@Nullable IdentifierAttributeBinding identifierAttribute,
+		AtomicReference<org.hibernate.mapping.Value> identifierMapperValue,
 		EntityTypeBinder targetTypeBinder,
 		List<JoinColumn> joinColumns,
 		ForeignKeySource foreignKeySource,
@@ -59,10 +61,39 @@ public record AssociationIdentifierBinding(
 				value,
 				identifierValue,
 				null,
+				new AtomicReference<>(),
 				targetTypeBinder,
 				joinColumns,
 				foreignKeySource,
 				identifierColumns
+		);
+	}
+
+	public AssociationIdentifierBinding(
+			EntityTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			Property property,
+			ToOne value,
+			org.hibernate.mapping.Value identifierValue,
+			@Nullable IdentifierAttributeBinding identifierAttribute,
+			AtomicReference<org.hibernate.mapping.Value> identifierMapperValue,
+			EntityTypeBinder targetTypeBinder,
+			List<JoinColumn> joinColumns,
+			ForeignKeySource foreignKeySource,
+			List<Column> identifierColumns) {
+		this(
+				ownerType,
+				ownerBinding,
+				property,
+				value,
+				identifierValue,
+				identifierAttribute,
+				identifierMapperValue,
+				targetTypeBinder,
+				joinColumns,
+				foreignKeySource,
+				identifierColumns,
+				new AtomicBoolean()
 		);
 	}
 
@@ -84,11 +115,11 @@ public record AssociationIdentifierBinding(
 				value,
 				identifierValue,
 				identifierAttribute,
+				new AtomicReference<>(),
 				targetTypeBinder,
 				joinColumns,
 				foreignKeySource,
-				identifierColumns,
-				new AtomicBoolean()
+				identifierColumns
 		);
 	}
 }

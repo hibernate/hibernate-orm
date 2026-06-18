@@ -8,6 +8,9 @@ import java.util.Set;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.models.bind.internal.model.IdentifierExtractionKind;
+import org.hibernate.boot.models.bind.internal.view.EntityView;
+import org.hibernate.boot.models.bind.internal.view.IdentifierContributionView;
 import org.hibernate.boot.models.categorize.spi.AggregatedKeyMapping;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.BasicKeyMapping;
@@ -17,6 +20,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelCheckContext;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
@@ -70,6 +74,31 @@ public class SimpleIdTests {
 	}
 
 	@Test
+	@ServiceRegistry
+	void testSimpleIdBinding(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( BasicIdEntity.class.getName() );
+					assertThat( entityBinding.getIdentifier() ).isInstanceOf( org.hibernate.mapping.BasicValue.class );
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "id" );
+
+					final EntityView entityView = entityView( context, BasicIdEntity.class );
+					final IdentifierContributionView identifierContribution = entityView.identifierContributionView();
+					assertThat( identifierContribution ).isNotNull();
+					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "id" );
+					assertThat( identifierContribution.identifierSelectableNames() ).containsExactly( "id" );
+					assertThat( identifierContribution.attribute( "id" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
+				},
+				scope.getRegistry(),
+				BasicIdEntity.class
+		);
+	}
+
+	@Test
 	void testAggregatedId() {
 		final Set<EntityHierarchy> entityHierarchies = buildHierarchyMetadata( AggregatedIdEntity.class );
 		assertThat( entityHierarchies ).hasSize( 1 );
@@ -106,6 +135,16 @@ public class SimpleIdTests {
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "id1", "id2" );
+					final EntityView entityView = entityView( context, AggregatedIdEntity.class );
+					final IdentifierContributionView identifierContribution = entityView.identifierContributionView();
+					assertThat( identifierContribution ).isNotNull();
+					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "id1", "id2" );
+					assertThat( identifierContribution.identifierSelectableNames() )
+							.containsExactly( "id1", "id2" );
+					assertThat( identifierContribution.attribute( "id1" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
+					assertThat( identifierContribution.attribute( "id2" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
 
 					final org.hibernate.mapping.Property naturalId = entityBinding.getProperty( "naturalId" );
 					assertThat( naturalId.isNaturalIdentifier() ).isTrue();
@@ -162,6 +201,17 @@ public class SimpleIdTests {
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "id1", "id2" );
+					final IdentifierContributionView identifierContribution = identifierContribution(
+							context,
+							NonAggregatedIdEntity.class
+					);
+					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "id1", "id2" );
+					assertThat( identifierContribution.identifierSelectableNames() )
+							.containsExactly( "id1", "id2" );
+					assertThat( identifierContribution.attribute( "id1" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
+					assertThat( identifierContribution.attribute( "id2" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
 				},
 				scope.getRegistry(),
 				NonAggregatedIdEntity.class
@@ -314,6 +364,17 @@ public class SimpleIdTests {
 							.containsExactly( "parent_id" );
 					assertThat( parent.getColumnUpdateability() ).containsExactly( false );
 					assertThat( entityBinding.getTable().getForeignKeyCollection() ).hasSize( 1 );
+					final IdentifierContributionView identifierContribution = identifierContribution(
+							context,
+							AssociationIdChild.class
+					);
+					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "parent", "childId" );
+					assertThat( identifierContribution.attribute( "parent" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.ASSOCIATION_TARGET_ID );
+					assertThat( identifierContribution.attribute( "parent" ).selectableNames() )
+							.containsExactly( "parent_id" );
+					assertThat( identifierContribution.attribute( "childId" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
 				},
 				scope.getRegistry(),
 				MapsIdParent.class,
@@ -537,6 +598,17 @@ public class SimpleIdTests {
 							.containsExactly( "parent_id" );
 					assertThat( parent.getColumnInsertability() ).containsExactly( false );
 					assertThat( parent.getColumnUpdateability() ).containsExactly( false );
+					final IdentifierContributionView identifierContribution = identifierContribution(
+							context,
+							ToOneAttributeMapsIdChild.class
+					);
+					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "parentRef", "childId" );
+					assertThat( identifierContribution.attribute( "parentRef" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
+					assertThat( identifierContribution.attribute( "parentRef" ).selectableNames() )
+							.containsExactly( "parent_id" );
+					assertThat( identifierContribution.attribute( "childId" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
 				},
 				scope.getRegistry(),
 				MapsIdParent.class,
@@ -577,6 +649,74 @@ public class SimpleIdTests {
 				JoinColumnCountMismatchMapsIdChild.class
 		) ).isInstanceOf( org.hibernate.MappingException.class )
 				.hasMessageContaining( "@MapsId identifier attribute column count did not match target identifier column count" );
+	}
+
+	@Test
+	void testHorizontalBindingContractsDoNotExposeMappingModelTypes() {
+		assertNoMappingModelLeakage(
+				org.hibernate.boot.models.bind.internal.model.BootBindingModel.class,
+				org.hibernate.boot.models.bind.internal.model.ManagedTypeBinding.class,
+				org.hibernate.boot.models.bind.internal.model.EntityTypeBinding.class,
+				org.hibernate.boot.models.bind.internal.model.MappedSuperclassTypeBinding.class,
+				org.hibernate.boot.models.bind.internal.model.EmbeddableTypeBinding.class,
+				org.hibernate.boot.models.bind.internal.model.AttributeBinding.class,
+				org.hibernate.boot.models.bind.internal.model.IdentifierContribution.class,
+				org.hibernate.boot.models.bind.internal.model.IdentifierAttributeBinding.class
+		);
+	}
+
+	private static IdentifierContributionView identifierContribution(
+			DomainModelCheckContext context,
+			Class<?> entityClass) {
+		final EntityView entityView = entityView( context, entityClass );
+		final IdentifierContributionView identifierContributionView = entityView.identifierContributionView();
+		if ( identifierContributionView == null ) {
+			throw new AssertionError( "Could not locate identifier contribution for " + entityClass.getName() );
+		}
+		return identifierContributionView;
+	}
+
+	private static EntityView entityView(
+			DomainModelCheckContext context,
+			Class<?> entityClass) {
+		for ( EntityHierarchy hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
+			if ( hierarchy.getRoot().getClassDetails().getClassName().equals( entityClass.getName() ) ) {
+				final EntityView entityView = context.getBindingState().getBootBindingModel().getEntityView( hierarchy.getRoot() );
+				if ( entityView != null ) {
+					return entityView;
+				}
+			}
+		}
+		throw new AssertionError( "Could not locate entity view for " + entityClass.getName() );
+	}
+
+	private static void assertNoMappingModelLeakage(Class<?>... bindingTypes) {
+		for ( Class<?> bindingType : bindingTypes ) {
+			for ( java.lang.reflect.Field field : bindingType.getDeclaredFields() ) {
+				assertThat( isForbiddenMappingModelType( field.getType() ) )
+						.as( bindingType.getName() + "#" + field.getName() )
+						.isFalse();
+			}
+			for ( java.lang.reflect.Method method : bindingType.getDeclaredMethods() ) {
+				assertThat( isForbiddenMappingModelType( method.getReturnType() ) )
+						.as( bindingType.getName() + "#" + method.getName() )
+						.isFalse();
+				for ( Class<?> parameterType : method.getParameterTypes() ) {
+					assertThat( isForbiddenMappingModelType( parameterType ) )
+							.as( bindingType.getName() + "#" + method.getName() )
+							.isFalse();
+				}
+			}
+		}
+	}
+
+	private static boolean isForbiddenMappingModelType(Class<?> type) {
+		return type == org.hibernate.mapping.PersistentClass.class
+				|| type == org.hibernate.mapping.MappedSuperclass.class
+				|| type == org.hibernate.mapping.Component.class
+				|| type == org.hibernate.mapping.Property.class
+				|| type == org.hibernate.mapping.Value.class
+				|| type == org.hibernate.mapping.Column.class;
 	}
 
 	@Entity(name = "MapsIdParent")

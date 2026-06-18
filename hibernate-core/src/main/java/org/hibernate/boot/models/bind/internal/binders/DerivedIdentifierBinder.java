@@ -147,7 +147,7 @@ class DerivedIdentifierBinder {
 	private void reorderPrimaryKeyColumns(Value identifierValue) {
 		if ( identifierValue instanceof Component identifierComponent ) {
 			final var primaryKey = identifierComponent.getTable().getPrimaryKey();
-			if ( primaryKey != null ) {
+			if ( primaryKey != null && primaryKey.getColumns().equals( identifierComponent.getColumns() ) ) {
 				primaryKey.reorderColumns( identifierComponent.getColumns() );
 			}
 		}

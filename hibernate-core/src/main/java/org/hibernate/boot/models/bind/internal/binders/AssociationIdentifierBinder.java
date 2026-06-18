@@ -9,7 +9,9 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.models.bind.internal.views.IdentifierContributionView;
+import org.hibernate.boot.models.bind.internal.model.IdentifierAttributeBinding;
+import org.hibernate.boot.models.bind.internal.model.IdentifierContribution;
+import org.hibernate.boot.models.bind.internal.view.IdentifierContributionView;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -126,17 +128,14 @@ class AssociationIdentifierBinder {
 			);
 			associationIdentifierBinding.ownerBinding().getTable().addColumn( column );
 				associationIdentifierBinding.value().addColumn( column, true, false );
-				if ( associationIdentifierBinding.identifierAttribute() != null
-						&& associationIdentifierBinding.identifierAttribute().identifierMapperValue() != null ) {
-					addIdentifierColumn( associationIdentifierBinding.identifierAttribute().identifierMapperValue(), i, column, false );
+				if ( associationIdentifierBinding.identifierMapperValue().get() != null ) {
+					addIdentifierColumn( associationIdentifierBinding.identifierMapperValue().get(), i, column, false );
 				}
 				addIdentifierColumn( associationIdentifierBinding.identifierValue(), i, column, true );
 				associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey().addColumn( column );
 			associationIdentifierBinding.identifierColumns().add( column );
-			if ( associationIdentifierBinding.identifierAttribute() != null ) {
-				associationIdentifierBinding.identifierAttribute().addColumn( column );
-			}
 		}
+		syncIdentifierContributionSelectables( associationIdentifierBinding );
 		normalizePrimaryKeyColumnOrder( associationIdentifierBinding );
 		associationIdentifierBinding.value().setNonUpdatable();
 		( (SortableValue) associationIdentifierBinding.value() ).sortProperties();
@@ -161,22 +160,71 @@ class AssociationIdentifierBinder {
 		return true;
 	}
 
-	private void normalizePrimaryKeyColumnOrder(AssociationIdentifierBinding associationIdentifierBinding) {
-		final IdentifierContributionView identifierContribution = bindingState.getIdentifierContributionView(
+	private void syncIdentifierContributionSelectables(AssociationIdentifierBinding associationIdentifierBinding) {
+		final IdentifierContribution identifierContribution = bindingState.getIdentifierContribution(
 				associationIdentifierBinding.ownerType().getHierarchy().getRoot()
 		);
 		if ( identifierContribution == null ) {
 			return;
 		}
 
-		final List<Column> identifierColumns = identifierContribution.identifierColumns();
-		if ( identifierColumns.isEmpty() ) {
+		final IdentifierAttributeBinding attribute = identifierContribution.getAttribute(
+				associationIdentifierBinding.property().getName()
+		);
+		if ( attribute == null || !attribute.selectableNames().isEmpty() ) {
 			return;
 		}
 
-		associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey().reorderColumns( identifierColumns );
+		for ( Column column : associationIdentifierBinding.value().getColumns() ) {
+			attribute.addSelectableName( column.getName() );
+		}
+	}
+
+	private void normalizePrimaryKeyColumnOrder(AssociationIdentifierBinding associationIdentifierBinding) {
+		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+				associationIdentifierBinding.ownerType().getHierarchy().getRoot()
+		);
+		if ( identifierBinding == null || identifierBinding.columns().isEmpty() ) {
+			return;
+		}
+
+		final IdentifierContributionView identifierContribution = bindingState.getIdentifierContributionView(
+				associationIdentifierBinding.ownerType().getHierarchy().getRoot()
+		);
+		final List<Column> identifierColumns = identifierContribution == null
+				? identifierBinding.columns()
+				: orderColumnsBySelectableNames(
+						identifierBinding.columns(),
+						identifierContribution.identifierSelectableNames()
+				);
+		associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey()
+				.reorderColumns( identifierColumns );
 		associationIdentifierBinding.identifierColumns().clear();
 		associationIdentifierBinding.identifierColumns().addAll( identifierColumns );
+	}
+
+	private List<Column> orderColumnsBySelectableNames(List<Column> columns, List<String> selectableNames) {
+		if ( selectableNames.isEmpty() || columns.size() != selectableNames.size() ) {
+			return columns;
+		}
+		final ArrayList<Column> orderedColumns = new ArrayList<>( columns.size() );
+		for ( String selectableName : selectableNames ) {
+			final Column column = findColumn( columns, selectableName );
+			if ( column == null ) {
+				return columns;
+			}
+			orderedColumns.add( column );
+		}
+		return orderedColumns;
+	}
+
+	private Column findColumn(List<Column> columns, String selectableName) {
+		for ( Column column : columns ) {
+			if ( column.getName().equals( selectableName ) ) {
+				return column;
+			}
+		}
+		return null;
 	}
 
 	private boolean hasUnprocessedAssociationIdentifierBindings(

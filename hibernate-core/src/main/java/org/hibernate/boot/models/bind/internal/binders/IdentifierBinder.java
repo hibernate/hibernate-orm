@@ -9,12 +9,14 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.models.bind.internal.binding.IdentifierAttributeBinding;
-import org.hibernate.boot.models.bind.internal.binding.IdentifierContribution;
-import org.hibernate.boot.models.bind.internal.binding.IdentifierExtractionKind;
+import org.hibernate.boot.models.bind.internal.model.IdentifierAttributeBinding;
+import org.hibernate.boot.models.bind.internal.model.IdentifierContribution;
+import org.hibernate.boot.models.bind.internal.model.IdentifierExtractionKind;
+import org.hibernate.boot.models.bind.internal.materialize.IdentifierMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
@@ -89,6 +91,7 @@ public class IdentifierBinder {
 	private final BindingState state;
 	private final BindingOptions options;
 	private final BindingContext context;
+	private final IdentifierMappingMaterializer identifierMappingMaterializer;
 
 	public IdentifierBinder(
 			ModelBinders modelBinders,
@@ -99,6 +102,7 @@ public class IdentifierBinder {
 		this.state = state;
 		this.options = options;
 		this.context = context;
+		this.identifierMappingMaterializer = new IdentifierMappingMaterializer( modelBinders, state, options, context );
 	}
 
 	public static IdentifierBinding bindIdentifier(
@@ -139,24 +143,26 @@ public class IdentifierBinder {
 		final AttributeMetadata idAttribute = basicKeyMapping.getAttribute();
 		final MemberDetails idAttributeMember = idAttribute.getMember();
 
-		final BasicValue idValue = createBasicIdValue( table, idAttributeMember );
-		typeBinding.setIdentifier( idValue );
+		final IdentifierContribution identifierContribution = new IdentifierContribution(
+				typeMetadata,
+				false,
+				null
+		);
+		final IdentifierAttributeBinding attributeBinding = new IdentifierAttributeBinding(
+				idAttribute.getName(),
+				idAttributeMember,
+				idAttributeMember,
+				IdentifierExtractionKind.DIRECT
+		);
+		identifierContribution.addAttribute( attributeBinding );
+		state.addIdentifierContribution( typeMetadata, identifierContribution );
 
-		final Property idProperty = createProperty( idAttribute.getName(), idValue, idAttributeMember );
-		typeBinding.setIdentifierProperty( idProperty );
-		typeBinding.setDeclaredIdentifierProperty( idProperty );
-
-		final org.hibernate.mapping.Column column = bindIdColumn( idAttributeMember, idAttribute::getName, table, idValue );
-		CustomMappingBinder.callAttributeBinders( idAttributeMember, typeBinding, idProperty, state, context );
-
-		return new IdentifierBinding(
+		return identifierMappingMaterializer.materializeBasicIdentifier(
 				typeMetadata,
 				typeBinding,
 				basicKeyMapping,
-				idValue,
-				idProperty,
 				table,
-				List.of( column )
+				identifierContribution
 		);
 	}
 
@@ -166,53 +172,24 @@ public class IdentifierBinder {
 			EntityTypeMetadata type,
 			RootClass typeBinding) {
 		final ClassDetails keyType = resolveAggregatedIdentifierKeyType( aggregatedKeyMapping, type );
-		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
-		idValue.setKey( true );
-		idValue.setEmbedded( false );
-		idValue.setComponentClassName( keyType.getClassName() );
-		idValue.setTable( table );
-		idValue.setTypeUsingReflection( type.getClassDetails().getClassName(), aggregatedKeyMapping.getAttributeName() );
-		typeBinding.setIdentifier( idValue );
-		typeBinding.setEmbeddedIdentifier( true );
-
-		final Property idProperty = createProperty(
-				aggregatedKeyMapping.getAttributeName(),
-				idValue,
-				aggregatedKeyMapping.getAttribute().getMember()
-		);
-		typeBinding.setIdentifierProperty( idProperty );
-		typeBinding.setDeclaredIdentifierProperty( idProperty );
-		CustomMappingBinder.callAttributeBinders(
+		final ComponentSource componentSource = ComponentSource.embeddedIdentifier(
 				aggregatedKeyMapping.getAttribute().getMember(),
-				typeBinding,
-				idProperty,
-				state,
-				context
-		);
-
-		final List<org.hibernate.mapping.Column> columns = bindComponentIdentifierProperties(
-				type,
-				typeBinding,
 				keyType,
 				resolveAggregatedIdentifierType( aggregatedKeyMapping, type ),
-				aggregatedKeyMapping.getAttribute().getMember(),
-				idValue,
-				table
+				type.getAccessType(),
+				context
 		);
-		handleGenericComponentProperty(
-				idProperty,
-				aggregatedKeyMapping.getAttribute().getMember(),
-				state.getMetadataBuildingContext()
-		);
+		final IdentifierContribution identifierContribution = createAggregatedIdentifierContribution( type, componentSource );
+		state.addIdentifierContribution( type, identifierContribution );
 
-		return new IdentifierBinding(
+		return identifierMappingMaterializer.materializeAggregatedIdentifier(
 				type,
 				typeBinding,
 				aggregatedKeyMapping,
-				idValue,
-				idProperty,
 				table,
-				columns
+				keyType,
+				componentSource,
+				identifierContribution
 		);
 	}
 
@@ -242,6 +219,9 @@ public class IdentifierBinder {
 		final boolean wholeDerivedIdClass = hasWholeDerivedIdClass( idMapping );
 		if ( hasIdClass && !wholeDerivedIdClass ) {
 			validateIdClassMembers( idMapping );
+		}
+		if ( isScalarIdClass( idMapping, wholeDerivedIdClass ) ) {
+			return bindScalarIdClassIdentifier( idMapping, table, type, typeBinding );
 		}
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
@@ -284,9 +264,7 @@ public class IdentifierBinder {
 		}
 
 		final IdentifierContribution identifierContribution = new IdentifierContribution(
-				typeBinding,
-				idValue,
-				identifierMapper,
+				type,
 				hasIdClass,
 				idMapping.getIdClassType()
 		);
@@ -329,12 +307,9 @@ public class IdentifierBinder {
 						idAttribute.getName(),
 						member,
 						idClassMember,
-						basicValue,
-						idClassValue,
-						hasIdClass ? basicValue : null,
 						IdentifierExtractionKind.DIRECT
 				);
-				attributeBinding.addColumn( column );
+				attributeBinding.addSelectableName( column.getName() );
 				identifierContribution.addAttribute( attributeBinding );
 			}
 			else if ( idAttribute.getNature() == AttributeNature.EMBEDDED ) {
@@ -369,14 +344,11 @@ public class IdentifierBinder {
 						idAttribute.getName(),
 						member,
 						idClassMember,
-						null,
-						idClassComponent,
-						identifierMapperComponent,
 						IdentifierExtractionKind.DIRECT
 				);
 				for ( org.hibernate.mapping.Column column : idClassComponent.getColumns() ) {
 					columns.add( column );
-					attributeBinding.addColumn( column );
+					attributeBinding.addSelectableName( column.getName() );
 				}
 				identifierContribution.addAttribute( attributeBinding );
 			}
@@ -388,25 +360,23 @@ public class IdentifierBinder {
 						idAttribute.getName(),
 						member,
 						idClassMember,
-						null,
-						idClassValue,
-						null,
 						wholeDerivedIdClass
 								? IdentifierExtractionKind.WHOLE_TARGET_ID
 								: IdentifierExtractionKind.ASSOCIATION_TARGET_ID
 				);
 				final MemberDetails associationMember = idClassMemberIsToOne ? idClassMember : member;
+				final AtomicReference<org.hibernate.mapping.Value> identifierMapperValue = new AtomicReference<>();
 				final ToOne toOne = bindToOneIdentifier(
 						idAttribute,
 						idClassValue,
 						attributeBinding,
+						identifierMapperValue,
 						table,
 						type,
 						typeBinding,
 						columns,
 						associationMember
 				);
-				attributeBinding.setVirtualValue( toOne );
 				final Property rootProperty = createProperty( idAttribute.getName(), toOne, member );
 				applyToOneIdentifierPropertyOptions( idAttribute, type, rootProperty, associationMember );
 				if ( !hasIdClass ) {
@@ -416,7 +386,7 @@ public class IdentifierBinder {
 
 				if ( hasIdClass ) {
 					final ToOne identifierMapperToOne = (ToOne) toOne.copy();
-					attributeBinding.setIdentifierMapperValue( identifierMapperToOne );
+					identifierMapperValue.set( identifierMapperToOne );
 					final Property mapperProperty = createProperty( idAttribute.getName(), identifierMapperToOne, member );
 					mapperProperty.setInsertable( false );
 					mapperProperty.setUpdatable( false );
@@ -445,15 +415,59 @@ public class IdentifierBinder {
 			identifierContribution.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
 		}
 
-		return new IdentifierBinding(
+		return identifierMappingMaterializer.materializeIdentifierBinding(
 				type,
 				typeBinding,
 				idMapping,
 				idValue,
 				null,
 				table,
-				columns
+				columns,
+				identifierContribution
 		);
+	}
+
+	private IdentifierBinding bindScalarIdClassIdentifier(
+			NonAggregatedKeyMapping idMapping,
+			Table table,
+			EntityTypeMetadata type,
+			RootClass typeBinding) {
+		final IdentifierContribution identifierContribution = new IdentifierContribution(
+				type,
+				true,
+				idMapping.getIdClassType()
+		);
+		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+			identifierContribution.addAttribute( new IdentifierAttributeBinding(
+					idAttribute.getName(),
+					idAttribute.getMember(),
+					resolveIdClassMember( idMapping, idAttribute ),
+					IdentifierExtractionKind.DIRECT
+			) );
+		}
+		identifierContribution.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
+		state.addIdentifierContribution( type, identifierContribution );
+
+		return identifierMappingMaterializer.materializeScalarIdClassIdentifier(
+				type,
+				typeBinding,
+				idMapping,
+				table,
+				identifierContribution
+		);
+	}
+
+	private boolean isScalarIdClass(NonAggregatedKeyMapping idMapping, boolean wholeDerivedIdClass) {
+		if ( idMapping.getIdClassType() == null || wholeDerivedIdClass ) {
+			return false;
+		}
+		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+			final MemberDetails idClassMember = resolveIdClassMember( idMapping, idAttribute );
+			if ( idAttribute.getNature() != AttributeNature.BASIC || isToOneMember( idClassMember ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private boolean hasWholeDerivedIdClass(NonAggregatedKeyMapping idMapping) {
@@ -684,6 +698,7 @@ public class IdentifierBinder {
 			AttributeMetadata idAttribute,
 			org.hibernate.mapping.Value identifierValue,
 			IdentifierAttributeBinding identifierAttribute,
+			AtomicReference<org.hibernate.mapping.Value> identifierMapperValue,
 			Table table,
 			EntityTypeMetadata type,
 			RootClass typeBinding,
@@ -712,6 +727,7 @@ public class IdentifierBinder {
 					source,
 					identifierValue,
 					identifierAttribute,
+					identifierMapperValue,
 					table,
 					type,
 					typeBinding,
@@ -743,6 +759,7 @@ public class IdentifierBinder {
 				manyToOne,
 				identifierValue,
 				identifierAttribute,
+				identifierMapperValue,
 				targetTypeBinder,
 				source.valueJoinColumns( joinTable ),
 				source.valueForeignKeySource( joinTable ),
@@ -805,6 +822,7 @@ public class IdentifierBinder {
 			ToOneSource source,
 			org.hibernate.mapping.Value identifierValue,
 			IdentifierAttributeBinding identifierAttribute,
+			AtomicReference<org.hibernate.mapping.Value> identifierMapperValue,
 			Table table,
 			EntityTypeMetadata type,
 			RootClass typeBinding,
@@ -834,6 +852,7 @@ public class IdentifierBinder {
 				oneToOne,
 				identifierValue,
 				identifierAttribute,
+				identifierMapperValue,
 				targetTypeBinder,
 				List.of(),
 				source.valueForeignKeySource( null ),
@@ -904,6 +923,45 @@ public class IdentifierBinder {
 				false,
 				false
 		);
+	}
+
+	private List<org.hibernate.mapping.Column> bindComponentIdentifierProperties(
+			EntityTypeMetadata type,
+			RootClass typeBinding,
+			ComponentSource componentSource,
+			Component idValue,
+			Table table) {
+		return new ComponentBinder( modelBinders, state, options, context ).bindBasicProperties(
+				type,
+				typeBinding,
+				componentSource,
+				idValue,
+				table,
+				(member, column) -> table.getPrimaryKey().addColumn( column ),
+				false,
+				false,
+				false
+		);
+	}
+
+	private IdentifierContribution createAggregatedIdentifierContribution(
+			EntityTypeMetadata type,
+			ComponentSource componentSource) {
+		final IdentifierContribution identifierContribution = new IdentifierContribution(
+				type,
+				false,
+				null
+		);
+		for ( ComponentSource.ComponentMember componentMember : componentSource.members() ) {
+			final IdentifierAttributeBinding attributeBinding = new IdentifierAttributeBinding(
+					componentMember.attributeName(),
+					componentMember.member(),
+					componentMember.member(),
+					IdentifierExtractionKind.DIRECT
+			);
+			identifierContribution.addAttribute( attributeBinding );
+		}
+		return identifierContribution;
 	}
 
 	private BasicValue createBasicIdValue(Table table, MemberDetails member) {

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.models.bind.internal.binding;
+package org.hibernate.boot.models.bind.internal.model;
 
 /// How one semantic identifier contribution moves values between the entity
 /// virtual id shape and the public id representation.

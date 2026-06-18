@@ -10,7 +10,8 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.models.bind.internal.SecondaryTable;
-import org.hibernate.boot.models.bind.internal.binding.IdentifierContribution;
+import org.hibernate.boot.models.bind.internal.model.BootBindingModel;
+import org.hibernate.boot.models.bind.internal.model.IdentifierContribution;
 import org.hibernate.boot.models.bind.internal.binders.AssociationTargetBinding;
 import org.hibernate.boot.models.bind.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.models.bind.internal.binders.AssociationTableBinding;
@@ -24,7 +25,7 @@ import org.hibernate.boot.models.bind.internal.binders.InverseToOneAssociationBi
 import org.hibernate.boot.models.bind.internal.binders.ManagedTypeBinder;
 import org.hibernate.boot.models.bind.internal.binders.PropertyMapKeyBinding;
 import org.hibernate.boot.models.bind.internal.binders.TableForeignKeyBinding;
-import org.hibernate.boot.models.bind.internal.views.IdentifierContributionView;
+import org.hibernate.boot.models.bind.internal.view.IdentifierContributionView;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
 import org.hibernate.boot.models.categorize.spi.ManagedTypeMetadata;
@@ -73,6 +74,9 @@ public interface BindingState {
 
 	/// Type configuration used while binding values and metadata registrations.
 	TypeConfiguration getTypeConfiguration();
+
+	/// Horizontal binding model populated from categorized source facts.
+	BootBindingModel getBootBindingModel();
 
 	/// Register an entity binding with the metadata collector.
 	void addEntityBinding(PersistentClass entityBinding);
@@ -233,15 +237,18 @@ public interface BindingState {
 	IdentifierBinding getIdentifierBinding(EntityTypeMetadata rootType);
 
 	/// Register semantic identifier contribution state for an entity root.
-	void addIdentifierContribution(EntityTypeMetadata rootType, IdentifierContribution identifierContribution);
+	default void addIdentifierContribution(EntityTypeMetadata rootType, IdentifierContribution identifierContribution) {
+		getBootBindingModel().addIdentifierContribution( rootType, identifierContribution );
+	}
 
 	/// Resolve semantic identifier contribution state for an entity root.
-	IdentifierContribution getIdentifierContribution(EntityTypeMetadata rootType);
+	default IdentifierContribution getIdentifierContribution(EntityTypeMetadata rootType) {
+		return getBootBindingModel().getIdentifierContribution( rootType );
+	}
 
 	/// Resolve the finalized identifier contribution view for an entity root.
 	default IdentifierContributionView getIdentifierContributionView(EntityTypeMetadata rootType) {
-		final IdentifierContribution contribution = getIdentifierContribution( rootType );
-		return contribution == null ? null : new IdentifierContributionView( contribution );
+		return getBootBindingModel().getIdentifierContributionView( rootType );
 	}
 
 

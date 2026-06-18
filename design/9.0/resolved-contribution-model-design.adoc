@@ -431,6 +431,29 @@ source collection
 The important change is conceptual: deferred resolution should produce explicit
 semantic products before compatibility objects are treated as complete.
 
+== Immediate Migration Boundary
+
+The near-term implementation should switch from more vertical binder fixes to a
+horizontal binding-model foundation.
+
+For this foundation, new binding-model contracts are mapping-model-free.  They
+may refer to source/categorization objects, Hibernate Models members, roles,
+paths, access strategy, extraction kind, selectable names/intents, and
+correspondence products.  They must not refer to `PersistentClass`,
+`MappedSuperclass`, `Component`, `Property`, `Value`, or `Column`.
+
+Compatibility materialization remains allowed to use those legacy mapping
+objects, but only as outputs or bridge state.  The first proof is identifier
+materialization:
+
+* build identifier contribution facts before relying on legacy identifier
+  `Component` shape;
+* expose those facts through `IdentifierContributionView`;
+* let the materialization bridge create the legacy identifier, identifier mapper,
+  columns, primary key, and deferred association-id work items;
+* keep later mapped-superclass, embeddable, static metamodel, and full member
+  materialization as follow-up slices.
+
 == Migration Slices
 
 === Slice 1: Shared Guardrails And Vocabulary

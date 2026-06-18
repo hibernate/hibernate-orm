@@ -33,6 +33,8 @@ import org.hibernate.boot.model.internal.GeneratorParameters;
 import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.bind.ModelBindingLogging;
+import org.hibernate.boot.models.bind.internal.model.EntityTypeBinding;
+import org.hibernate.boot.models.bind.internal.model.MappedSuperclassTypeBinding;
 import org.hibernate.boot.models.bind.internal.binders.EntityTypeBinder;
 import org.hibernate.boot.models.bind.internal.binders.ManagedTypeBinder;
 import org.hibernate.boot.models.bind.internal.binders.MappedSuperTypeBinder;
@@ -215,6 +217,9 @@ public class BindingCoordinator {
 		processGenerators( type );
 
 		if ( type.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
+			bindingState.getBootBindingModel().addManagedTypeBinding(
+					new EntityTypeBinding( type.getClassDetails(), type.getAccessType() )
+			);
 			final EntityTypeBinder binder = new EntityTypeBinder(
 					(EntityTypeMetadata) type,
 					superType,
@@ -229,6 +234,9 @@ public class BindingCoordinator {
 		}
 		else {
 			assert type.getManagedTypeKind() == ManagedTypeMetadata.Kind.MAPPED_SUPER;
+			bindingState.getBootBindingModel().addManagedTypeBinding(
+					new MappedSuperclassTypeBinding( type.getClassDetails(), type.getAccessType() )
+			);
 			final MappedSuperTypeBinder binder = new MappedSuperTypeBinder(
 					(MappedSuperclassTypeMetadata) type,
 					superType,

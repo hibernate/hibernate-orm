@@ -25,7 +25,7 @@ import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 /**
  * Invokes user-defined mapping binders declared through Hibernate annotations.
  */
-class CustomMappingBinder {
+public class CustomMappingBinder {
 	static void callTypeBinders(
 			ClassDetails classDetails,
 			PersistentClass persistentClass,
@@ -54,7 +54,7 @@ class CustomMappingBinder {
 		}
 	}
 
-	static void callAttributeBinders(
+	public static void callAttributeBinders(
 			MemberDetails member,
 			PersistentClass persistentClass,
 			Property property,

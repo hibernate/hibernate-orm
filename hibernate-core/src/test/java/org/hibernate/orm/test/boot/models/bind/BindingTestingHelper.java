@@ -93,6 +93,11 @@ public class BindingTestingHelper {
 			public BindingStateImpl getBindingState() {
 				return bindingState;
 			}
+
+			@Override
+			public CategorizedDomainModel getCategorizedDomainModel() {
+				return categorizedDomainModel;
+			}
 		} );
 	}
 
@@ -147,6 +152,8 @@ public class BindingTestingHelper {
 		MetadataImplementor getMetadata();
 
 		BindingStateImpl getBindingState();
+
+		CategorizedDomainModel getCategorizedDomainModel();
 	}
 
 	@FunctionalInterface

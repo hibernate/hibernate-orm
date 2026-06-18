@@ -2284,7 +2284,14 @@ public class FunctionTests {
 					long epoch = session.createQuery( "select extract(epoch from local datetime)", Long.class ).getSingleResult();
 					long after = Instant.now().getEpochSecond()+1;
 					assertThat( epoch, allOf( greaterThanOrEqualTo( before ), lessThanOrEqualTo( after ) ) );
+				}
+		);
+	}
 
+	@Test
+	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select extract(epoch from offset datetime)", Long.class).getSingleResult();
 
 					assertThat( session.createQuery("select extract(epoch from datetime 1974-03-23 12:35)", Long.class).getSingleResult(),

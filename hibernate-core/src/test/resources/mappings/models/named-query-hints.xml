@@ -1,0 +1,21 @@
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <named-query name="global.findAll">
+        <query>from SimpleEntity</query>
+        <entity-graph/>
+        <hint name="org.hibernate.timeout" value="200"/>
+    </named-query>
+    <named-native-query name="global.findAllNative">
+        <query>select * from simple_entity</query>
+        <hint name="org.hibernate.timeout" value="300"/>
+    </named-native-query>
+    <named-stored-procedure-query name="global.proc" procedure-name="p1">
+        <hint name="org.hibernate.timeout" value="400"/>
+    </named-stored-procedure-query>
+</entity-mappings>

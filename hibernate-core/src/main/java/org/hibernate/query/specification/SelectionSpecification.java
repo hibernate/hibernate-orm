@@ -64,12 +64,19 @@ import java.util.List;
  *                 .setPage(currentPage)
  *                 .getResultList();
  * </pre>
+ * <p>
+ * If the query should return a projection instead of a root entity, use
+ * {@link SimpleProjectionSpecification} or {@link ProjectionSpecification} to augment
+ * the specification with a projected expression or list of projected expressions.
  *
  * @param <T> The entity type returned by the query
  *
  * @author Steve Ebersole
  *
  * @since 7.0
+ *
+ * @see ProjectionSpecification
+ * @see SimpleProjectionSpecification
  */
 @Incubating
 public interface SelectionSpecification<T> extends QuerySpecification<T> {

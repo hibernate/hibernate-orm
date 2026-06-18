@@ -13,6 +13,9 @@
                 <generated-value generator="id-generator"/>
                 <generic-generator name="id-generator" class="native"/>
             </id>
+            <basic name="name">
+                <target>String</target>
+            </basic>
             <one-to-many name="children" target-entity="TestEntity" fetch="LAZY"
                          classification="LIST">
                 <order-column name="order"/>

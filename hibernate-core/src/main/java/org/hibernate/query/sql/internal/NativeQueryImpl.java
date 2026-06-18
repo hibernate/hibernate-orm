@@ -1292,11 +1292,16 @@ public class NativeQueryImpl<R>
 		}
 
 		final String sqlString = expandParameterLists( 1 );
-		final var queryPlan = new NativeNonSelectQueryPlanImpl( sqlString, querySpaces, parameterOccurrences );
+		final var queryPlan = createNonSelectQueryPlan( sqlString, querySpaces, parameterOccurrences );
 		if ( cacheKey != null ) {
 			getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 		}
 		return queryPlan;
+	}
+
+	// Used by Hibernate Reactive to create its own instance of NonSelectQueryPlan
+	protected NonSelectQueryPlan createNonSelectQueryPlan(String sqlString, Set<String> querySpaces, List<ParameterOccurrence> parameterOccurrences) {
+		return new NativeNonSelectQueryPlanImpl( sqlString, querySpaces, parameterOccurrences );
 	}
 
 	protected NonSelectInterpretationsKey generateNonSelectInterpretationsKey() {

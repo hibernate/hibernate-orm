@@ -317,6 +317,29 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20596" )
+	public void testNonAggregatedCompositeIdKeyManyToOneTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/non-aggregate-key-many-to-one/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl detailEntity = transformed.getEntities().stream()
+					.filter( e -> "Detail".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( detailEntity.getAttributes().getManyToOneAttributes() )
+					.as( "key-many-to-one should be transformed to a many-to-one with id=true" )
+					.hasSize( 1 );
+
+			final JaxbManyToOneImpl manyToOne = detailEntity.getAttributes().getManyToOneAttributes().get( 0 );
+			assertThat( manyToOne.getName() ).isEqualTo( "master" );
+			assertThat( manyToOne.isId() )
+					.as( "many-to-one should have id=true for non-aggregated composite-id key-many-to-one" )
+					.isTrue();
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20593" )
 	public void testCompositePkPropertyRefOneToOneTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/composite-pk-property-ref/hbm.xml", scope, (transformed) -> {

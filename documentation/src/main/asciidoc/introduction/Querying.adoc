@@ -231,9 +231,16 @@ HibernateCriteriaBuilder builder =
                 entityManagerFactory.getCriteriaBuilder();
 ----
 
-The `HibernateCriteriaBuilder` extends `CriteriaBuilder` and adds many operations avalable in HQL that JPQL doesn't have.
+The `HibernateCriteriaBuilder` extends `CriteriaBuilder` and adds many operations available in HQL that JPQL doesn't have, including things like:
 
-We're ready to create a criteria query.
+- window functions,
+- common table expressions,
+- lateral joins,
+- derived tables,
+- a wide range of built-in functions,
+- and so on.
+
+We're ready to create a simple criteria query.
 
 [[criteria-query-example]]
 [source,java]

@@ -50,9 +50,9 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 	)
 	void attemptToStartAlreadyStartedCacheProvider();
 
-	@LogMessage(level = WARN)
+	@LogMessage(level = DEBUG)
 	@Message(
-			value = "Attempt to stop an already-stopped JCacheRegionFactory.",
+			value = "Attempt to stop an already-stopped RegionFactory.",
 			id = NAMESPACE + 2
 	)
 	void attemptToStopAlreadyStoppedCacheProvider();

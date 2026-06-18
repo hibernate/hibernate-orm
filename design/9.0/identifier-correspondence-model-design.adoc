@@ -1,0 +1,317 @@
+= Identifier Correspondence Model Design
+:toc:
+
+This document captures a follow-up design direction for non-aggregated
+identifiers, `@IdClass`, association-valued identifiers, and derived identity.
+It is motivated by the ORM 9 boot-model binding work, especially the JPA
+derived-identity examples where a dependent entity has one association-valued
+identifier attribute, but its `@IdClass` is the same Java type as the parent's
+identifier.
+
+Example shape:
+
+[source,java]
+----
+@Entity
+@IdClass(PersonId.class)
+class MedicalHistory {
+	@Id
+	@OneToOne
+	@JoinColumns({
+		@JoinColumn(name = "FK1", referencedColumnName = "firstName"),
+		@JoinColumn(name = "FK2", referencedColumnName = "lastName")
+	})
+	Person patient;
+}
+
+@Entity
+@IdClass(PersonId.class)
+class Person {
+	@Id String firstName;
+	@Id String lastName;
+}
+
+class PersonId {
+	String firstName;
+	String lastName;
+}
+----
+
+The existing runtime model mostly assumes a positional correspondence between:
+
+* the virtual id representation, based on the entity's identifier attributes;
+* the id-class representation, based on the `@IdClass` members;
+* the JDBC column order used by identifier values and foreign keys.
+
+That works when each virtual id attribute corresponds one-to-one with an
+id-class attribute.  It becomes strained when one virtual id attribute
+(`patient`) corresponds to the whole target identifier shape
+(`firstName`, `lastName`).
+
+== Problem
+
+The boot mapping currently has no first-class way to say:
+
+* `MedicalHistory.patient` is the virtual identifier attribute;
+* `MedicalHistory.patient` derives its identifier value from `Person`'s
+  identifier;
+* `PersonId.firstName` and `PersonId.lastName` are the public id-class
+  representation;
+* the local columns `FK1`, `FK2` correspond to the target id columns in the
+  target identifier traversal order.
+
+Without an explicit model, the binder is forced to encode this relationship
+through `Component` property order, copied `Property` instances, special
+property access strategies, or deferred foreign-key column mutation.  That is
+fragile because the runtime model then has to infer semantic correspondence from
+positional lists that do not always have the same cardinality.
+
+The immediate ORM 9 boot-model fix may still need to bind a legacy-compatible
+`org.hibernate.mapping` shape.  This document describes the more explicit model
+we should move toward.
+
+== Goals
+
+* Make identifier representation correspondence explicit instead of positional
+  by convention.
+* Support one-to-one, one-to-many, and many-to-one association-valued id parts
+  that derive from a target identifier.
+* Support `@IdClass`, `@EmbeddedId`, `@MapsId`, and association-valued id
+  attributes using the same internal language.
+* Preserve quoted identifier semantics and the selectable-order decisions made
+  by the binding layer.
+* Reduce special cases in runtime identifier extraction, identifier setting,
+  load-event handling, and result initialization.
+
+== Non-Goals
+
+* Do not change JPA API behavior.
+* Do not introduce a public API in this slice.
+* Do not require completing the mapped-superclass or embeddable contribution
+  redesign first.
+* Do not redesign all `org.hibernate.mapping.Component` usage in one step.
+
+== Proposed Product
+
+Introduce an internal boot/runtime product tentatively named
+`IdentifierPartCorrespondence`.
+
+It represents one semantic contribution to an entity identifier, not merely one
+column and not necessarily one Java member.
+
+[source,java]
+----
+record IdentifierPartCorrespondence(
+	IdentifierPart virtualPart,
+	List<IdentifierPart> idClassParts,
+	List<IdentifierPart> targetIdentifierParts,
+	SelectableOrderResolution selectableOrder,
+	IdentifierExtractionKind extractionKind,
+	String sourceRole
+) {}
+----
+
+Names are intentionally provisional.  The important part is the shape:
+
+`virtualPart`::
+The entity-side identifier part, for example `MedicalHistory.patient`.
+
+`idClassParts`::
+The public id representation parts consumed or produced for this virtual part.
+For a normal IdClass scalar, this is usually one part.  For a whole-target-id
+derived association, this can be multiple parts such as `firstName`, `lastName`.
+
+`targetIdentifierParts`::
+The referenced entity identifier parts used when the virtual part is an
+association, for example `Person.firstName`, `Person.lastName`.
+
+`selectableOrder`::
+The local/referenced column correspondence and ordering.  This should build on
+the existing selectable correspondence work rather than reconstructing order from
+independent lists.
+
+`extractionKind`::
+How values move between representations.  Initial expected values:
+
+* `DIRECT`: virtual part and id-class part are the same scalar/basic value.
+* `ASSOCIATION_TARGET_ID`: virtual association contributes the target entity id.
+* `EMBEDDED_ID_PART`: virtual part contributes one part of an embedded id.
+* `WHOLE_TARGET_ID`: virtual association contributes the whole target id
+  representation.
+
+`sourceRole`::
+A diagnostic role such as `MedicalHistory.patient`, used in exceptions and
+debugging.
+
+== Example Correspondence
+
+For the `MedicalHistory.patient` example:
+
+[source]
+----
+IdentifierPartCorrespondence(
+	virtualPart = MedicalHistory.patient,
+	idClassParts = [PersonId.firstName, PersonId.lastName],
+	targetIdentifierParts = [Person.firstName, Person.lastName],
+	selectableOrder = [
+		FK1 -> Person.firstName,
+		FK2 -> Person.lastName
+	],
+	extractionKind = WHOLE_TARGET_ID,
+	sourceRole = "MedicalHistory.patient"
+)
+----
+
+For a normal IdClass scalar:
+
+[source]
+----
+IdentifierPartCorrespondence(
+	virtualPart = Order.customerNumber,
+	idClassParts = [OrderId.customerNumber],
+	targetIdentifierParts = [],
+	selectableOrder = [customerNumber],
+	extractionKind = DIRECT,
+	sourceRole = "Order.customerNumber"
+)
+----
+
+For a normal association-valued IdClass member where the IdClass has the same
+member name and a scalar target-id type:
+
+[source]
+----
+IdentifierPartCorrespondence(
+	virtualPart = Child.parent,
+	idClassParts = [ChildId.parent],
+	targetIdentifierParts = [Parent.id],
+	selectableOrder = [parent_id -> Parent.id],
+	extractionKind = ASSOCIATION_TARGET_ID,
+	sourceRole = "Child.parent"
+)
+----
+
+== Boot Mapping Implications
+
+The binder should produce identifier correspondence while it still has source
+facts:
+
+* entity id attributes and members;
+* IdClass or embedded-id class members;
+* target entity identifier metadata;
+* explicit join column referenced names;
+* local table and column bindings;
+* source role and access strategy information.
+
+This lets the binder distinguish these cases explicitly:
+
+* same-name IdClass member;
+* association-valued IdClass member whose Java type is the target id type;
+* association-valued id whose dependent IdClass is the same type as the target
+  identifier;
+* `@MapsId` naming one embedded-id part;
+* `@MapsId` consuming the whole embedded id.
+
+The short-term bridge may still have to populate `PersistentClass#getIdentifier`
+and `PersistentClass#getIdentifierMapper`.  However, those `Component` products
+should no longer be the only semantic record of the relationship.
+
+== Runtime Mapping Implications
+
+`NonAggregatedIdentifierMapping` should consume correspondence directly instead
+of assuming that virtual-id attributes and id-class attributes have equal
+cardinality and positional order.
+
+Expected cleanup targets:
+
+* `NonAggregatedIdentifierMappingImpl#getIdentifier(...)`
+* `IdClassEmbeddable#getIdentifier(...)`
+* `IdClassEmbeddable#setIdentifier(...)`
+* `NonAggregatedIdentifierMappingInitializer`
+* derived-identity find/load handling in `DefaultLoadEventListener`
+
+The goal is not to add special cases in each runtime site.  The goal is to
+centralize conversion through correspondence:
+
+* entity instance -> id representation;
+* id representation -> entity virtual-id values;
+* JDBC row state -> id representation;
+* id representation -> entity key.
+
+== Relationship To Selectable Correspondence
+
+`IdentifierPartCorrespondence` is the Java/value-level counterpart to selectable
+correspondence.
+
+Selectable correspondence answers:
+
+* Which local column corresponds to which referenced column?
+* In what order should local and target JDBC mappings be consumed?
+
+Identifier part correspondence answers:
+
+* Which entity id part corresponds to which id-class part?
+* Does this part extract through an association target id?
+* Does one virtual part expand to multiple public id parts?
+* Which selectable-order product belongs to that semantic part?
+
+The two products should be linked, not independently inferred.
+
+== Migration Slices
+
+=== Slice 1: Document And Guard Existing Failure Shapes
+
+Add focused boot-model tests for:
+
+* dependent `@IdClass` is the same type as parent `@IdClass`;
+* dependent `@IdClass` is the same type as parent `@EmbeddedId`;
+* same-name association-valued IdClass member remains supported;
+* normal scalar IdClass remains unchanged.
+
+The tests should assert the boot mapping shape, not only functional runtime
+behavior.
+
+=== Slice 2: Add Boot Correspondence Product
+
+Introduce internal `IdentifierPartCorrespondence` and produce it from
+`IdentifierBinder`, `AssociationIdentifierBinder`, and `DerivedIdentifierBinder`
+where enough facts are already known.
+
+Keep existing mapping objects as the compatibility bridge.
+
+=== Slice 3: Consume Correspondence In Runtime Identifier Mapping
+
+Teach `NonAggregatedIdentifierMapping` and `IdClassEmbeddable` to use
+correspondence for representation conversion.
+
+This should remove the need for local cardinality assumptions such as "virtual
+id attribute `i` maps to id-class attribute `i`".
+
+=== Slice 4: Reduce Legacy Component Encoding
+
+Once runtime consumes correspondence, reduce reliance on special `Component`
+property shapes, synthetic id-class properties, and property-access tricks whose
+only job is to preserve positional compatibility.
+
+== Open Questions
+
+* Should correspondence be attached to `Component`, `PersistentClass`, or a new
+  identifier-specific boot product?
+* Should target identifier parts reference boot `Property` instances, runtime
+  `AttributeMapping` instances, or a neutral descriptor usable by both phases?
+* Can `@MapsId` and whole-target-id association ids use exactly the same
+  extraction kind, or do they need separate names for diagnostics?
+* How much of this should be modeled before the broader embeddable contribution
+  redesign?
+
+== Current Recommendation
+
+Use this design as a follow-up track.  For the immediate test failure recovery,
+prefer the smallest binder-level compatibility fix that restores the old mapping
+shape without changing runtime identifier extraction, result initialization, or
+entity-key creation.
+
+The longer-term direction should be correspondence-backed non-aggregated
+identifier mapping, because this failure is not just a missing branch in
+`IdentifierBinder`; it exposes a real ambiguity in how boot and runtime share
+identifier representation semantics.

@@ -105,6 +105,18 @@ Use this document when changing `ComponentSource`, `ComponentBinder`,
 polymorphic embeddable discriminator handling, generic embeddable type
 resolution, or mapped-superclass members inherited by embeddables.
 
+link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
+
+This is the follow-up design note for making non-aggregated identifier
+correspondence explicit across virtual id attributes, IdClass/embedded-id
+representations, target identifier parts, and selectable order.  It is motivated
+by derived identity cases where one association-valued id attribute corresponds
+to the whole target identifier shape.
+
+Use this document when changing `@IdClass`, association-valued id attributes,
+`@MapsId`, derived identity runtime conversion, or the boot/runtime handoff for
+non-aggregated identifiers.
+
 link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`]
 
 This is the model-building backlog.  It tracks known gaps in source discovery,
@@ -155,6 +167,9 @@ If the question is "what ORM mapping API change would make this cleaner?", use
 
 If the question is "how should mapped superclasses be represented in the mapping
 model?", use `mapped-superclass-model-design.adoc`.
+
+If the question is "how should derived identity and IdClass representations
+correspond?", use `identifier-correspondence-model-design.adoc`.
 
 If the question is "how should aggregate embeddables be modeled long-term?", use
 `aggregate-mapping-design.adoc`.

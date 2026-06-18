@@ -7,7 +7,6 @@ package org.hibernate.boot.models.bind.internal.binders;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;

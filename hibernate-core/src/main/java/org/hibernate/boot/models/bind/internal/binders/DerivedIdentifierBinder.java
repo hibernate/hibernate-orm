@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.List;
 import java.util.Properties;
+import java.util.Comparator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -109,13 +110,19 @@ class DerivedIdentifierBinder {
 		}
 
 		final List<Column> orderedIdentifierColumns = orderIdentifierColumns( identifierColumns, targetColumns );
+		validateJoinColumns( derivedIdentifierBinding, orderedIdentifierColumns );
 		applyIdentifierColumnOverrides( derivedIdentifierBinding, identifierValue, orderedIdentifierColumns, targetColumns );
-		validateJoinColumns( derivedIdentifierBinding, orderedIdentifierColumns, targetColumns );
+		final List<Column> runtimeIdentifierColumns = orderLocalColumnsByTargetOrder(
+				orderedIdentifierColumns,
+				targetColumns,
+				resolveTargetRuntimeColumns( derivedIdentifierBinding, targetColumns )
+		);
 		applyDerivedIdentifierGenerator( derivedIdentifierBinding, identifierValue );
 		reorderPrimaryKeyColumns( identifierBinding.value() );
-		for ( Column identifierColumn : sortedColumns( identifierValue, orderedIdentifierColumns ) ) {
+		for ( Column identifierColumn : runtimeIdentifierColumns ) {
 			derivedIdentifierBinding.value().addColumn( identifierColumn, false, false );
 		}
+		reorderAssociationColumns( derivedIdentifierBinding.value(), runtimeIdentifierColumns );
 		derivedIdentifierBinding.property().setOptional( false );
 		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 				derivedIdentifierBinding.ownerBinding(),
@@ -126,7 +133,7 @@ class DerivedIdentifierBinder {
 								derivedIdentifierBinding.value(),
 								derivedIdentifierBinding.value().getReferencedEntityName(),
 								SelectableOrderResolver.resolveByTargetOrder(
-										derivedIdentifierBinding.value().getColumns(),
+										orderedIdentifierColumns,
 										targetColumns,
 										derivedIdentifierBinding.ownerBinding().getEntityName()
 												+ "." + derivedIdentifierBinding.property().getName()
@@ -138,7 +145,6 @@ class DerivedIdentifierBinder {
 
 	private void reorderPrimaryKeyColumns(Value identifierValue) {
 		if ( identifierValue instanceof Component identifierComponent ) {
-			identifierComponent.sortProperties();
 			final var primaryKey = identifierComponent.getTable().getPrimaryKey();
 			if ( primaryKey != null ) {
 				primaryKey.reorderColumns( identifierComponent.getColumns() );
@@ -148,7 +154,6 @@ class DerivedIdentifierBinder {
 
 	private List<Column> sortedColumns(Value value, List<Column> fallbackColumns) {
 		if ( value instanceof Component component ) {
-			component.sortProperties();
 			return component.getColumns();
 		}
 		return fallbackColumns;
@@ -181,6 +186,50 @@ class DerivedIdentifierBinder {
 		return null;
 	}
 
+	private List<Column> orderLocalColumnsByTargetOrder(
+			List<Column> localColumns,
+			List<Column> targetColumns,
+			List<Column> runtimeTargetColumns) {
+		if ( localColumns.size() < 2 || targetColumns == runtimeTargetColumns ) {
+			return localColumns;
+		}
+		final java.util.ArrayList<Column> orderedColumns = new java.util.ArrayList<>( runtimeTargetColumns.size() );
+		for ( Column runtimeTargetColumn : runtimeTargetColumns ) {
+			final int targetPosition = findColumnPosition( targetColumns, runtimeTargetColumn );
+			if ( targetPosition < 0 ) {
+				return localColumns;
+			}
+			orderedColumns.add( localColumns.get( targetPosition ) );
+		}
+		return orderedColumns;
+	}
+
+	private int findColumnPosition(List<Column> columns, Column targetColumn) {
+		for ( int i = 0; i < columns.size(); i++ ) {
+			if ( columns.get( i ).getNameIdentifier( bindingState.getDatabase() )
+					.matches( targetColumn.getNameIdentifier( bindingState.getDatabase() ) ) ) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private void reorderAssociationColumns(ManyToOne value, List<Column> runtimeIdentifierColumns) {
+		final List<Column> currentColumns = value.getColumns();
+		if ( currentColumns.size() < 2 || currentColumns.equals( runtimeIdentifierColumns ) ) {
+			return;
+		}
+		final int[] targetPositions = new int[currentColumns.size()];
+		for ( int i = 0; i < currentColumns.size(); i++ ) {
+			final int targetPosition = findColumnPosition( runtimeIdentifierColumns, currentColumns.get( i ) );
+			if ( targetPosition < 0 ) {
+				return;
+			}
+			targetPositions[i] = targetPosition;
+		}
+		value.sortColumns( targetPositions );
+	}
+
 	private void applyIdentifierColumnOverrides(
 			DerivedIdentifierBinding derivedIdentifierBinding,
 			Value identifierValue,
@@ -191,7 +240,12 @@ class DerivedIdentifierBinder {
 		}
 		final List<JoinColumn> joinColumns = derivedIdentifierBinding.joinColumns();
 		if ( joinColumns.isEmpty() ) {
-			applyImplicitIdentifierColumnNames( derivedIdentifierBinding, identifierColumns, targetColumns );
+			applyImplicitIdentifierColumnNames(
+					derivedIdentifierBinding,
+					identifierColumns,
+					targetColumns,
+					identifierValue instanceof Component
+			);
 			return;
 		}
 		final List<JoinColumn> orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
@@ -215,8 +269,14 @@ class DerivedIdentifierBinder {
 	private void applyImplicitIdentifierColumnNames(
 			DerivedIdentifierBinding derivedIdentifierBinding,
 			List<Column> identifierColumns,
-			List<Column> targetColumns) {
+			List<Column> targetColumns,
+			boolean forcePrefix) {
 		for ( int i = 0; i < identifierColumns.size(); i++ ) {
+			if ( !forcePrefix
+					&& identifierColumns.get( i ).getNameIdentifier( bindingState.getDatabase() )
+					.matches( targetColumns.get( i ).getNameIdentifier( bindingState.getDatabase() ) ) ) {
+				continue;
+			}
 			renameIdentifierColumn(
 					identifierColumns.get( i ),
 					derivedIdentifierBinding.property().getName() + "_" + targetColumns.get( i ).getName()
@@ -282,6 +342,41 @@ class DerivedIdentifierBinder {
 		);
 	}
 
+	private List<Column> resolveTargetRuntimeColumns(
+			DerivedIdentifierBinding derivedIdentifierBinding,
+			List<Column> fallbackColumns) {
+		if ( derivedIdentifierBinding.referenceToPrimaryKey() ) {
+			final IdentifierBinding targetIdentifierBinding = bindingState.getIdentifierBinding(
+					derivedIdentifierBinding.targetTypeBinder().getManagedType().getHierarchy().getRoot()
+			);
+			if ( targetIdentifierBinding == null ) {
+				return fallbackColumns;
+			}
+			if ( targetIdentifierBinding.value() instanceof Component component ) {
+				return sortedComponentColumns( component );
+			}
+			return targetIdentifierBinding.columns();
+		}
+		return fallbackColumns;
+	}
+
+	private List<Column> sortedComponentColumns(Component component) {
+		final java.util.ArrayList<Column> columns = new java.util.ArrayList<>();
+		component.getProperties().stream()
+				.sorted( Comparator.comparing( Property::getName ) )
+				.forEach( property -> collectSortedComponentColumns( property.getValue(), columns ) );
+		return columns;
+	}
+
+	private void collectSortedComponentColumns(Value value, List<Column> columns) {
+		if ( value instanceof Component component ) {
+			columns.addAll( sortedComponentColumns( component ) );
+		}
+		else {
+			columns.addAll( value.getColumns() );
+		}
+	}
+
 	private boolean columnNamesMatch(List<Column> columns, List<Identifier> referencedColumnNames) {
 		if ( columns.size() != referencedColumnNames.size() ) {
 			return false;
@@ -325,8 +420,7 @@ class DerivedIdentifierBinder {
 
 	private void validateJoinColumns(
 			DerivedIdentifierBinding derivedIdentifierBinding,
-			List<Column> identifierColumns,
-			List<Column> targetColumns) {
+			List<Column> identifierColumns) {
 		final List<JoinColumn> joinColumns = derivedIdentifierBinding.joinColumns();
 		if ( !joinColumns.isEmpty() && joinColumns.size() != identifierColumns.size() ) {
 			throw new MappingException(
@@ -334,26 +428,6 @@ class DerivedIdentifierBinder {
 							+ derivedIdentifierBinding.ownerBinding().getEntityName()
 							+ "." + derivedIdentifierBinding.property().getName()
 			);
-		}
-
-		final List<JoinColumn> orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
-				joinColumns,
-				targetColumns,
-				bindingState.getDatabase(),
-				derivedIdentifierBinding.ownerBinding().getClassName(),
-				derivedIdentifierBinding.property().getName()
-		);
-		for ( int i = 0; i < orderedJoinColumns.size(); i++ ) {
-			final JoinColumn joinColumn = orderedJoinColumns.get( i );
-			if ( StringHelper.isNotEmpty( joinColumn.name() )
-					&& !identifierColumns.get( i ).getName().equals( joinColumn.name() ) ) {
-				throw new MappingException(
-						"@MapsId join column name did not match identifier attribute column name `"
-								+ identifierColumns.get( i ).getName() + "` - "
-								+ derivedIdentifierBinding.ownerBinding().getEntityName()
-								+ "." + derivedIdentifierBinding.property().getName()
-				);
-			}
 		}
 	}
 }

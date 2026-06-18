@@ -36,6 +36,9 @@ See also:
   phased binder.
 * `mapped-superclass-model-design.adoc` for the longer-term mapped-superclass
   model.
+* `identifier-correspondence-model-design.adoc` for the follow-up model for
+  non-aggregated identifier correspondence across virtual id attributes,
+  IdClass/embedded-id representations, target id parts, and selectable order.
 * `aggregate-mapping-design.adoc` for aggregate/UDT work.
 
 == Status Definitions
@@ -214,6 +217,10 @@ had a `TableReference`, leading to a null `superTypeTable`.
 | The second strongest current signal.  Earlier reports and focused failures
 point at inherited id declarations, IdClass state from mapped superclasses,
 association-valued/composite ids, and late identifier/foreign-key resolution.
+The derived-identity cases where one association-valued id attribute consumes
+the whole target identifier should be tracked against
+`identifier-correspondence-model-design.adoc` rather than patched as isolated
+runtime identifier-conversion special cases.
 
 | Source-policy availability
 | unclear; likely smaller

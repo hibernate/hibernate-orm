@@ -91,7 +91,7 @@ class AssociationIdentifierBinder {
 			associationIdentifierBinding.value().setReferenceToPrimaryKey( false );
 			if ( !( associationIdentifierBinding.value() instanceof ManyToOne manyToOne ) ) {
 				throw new MappingException(
-						"Non-primary-key association identifiers require an owning many-to-one - "
+						"Non-primary-key embedded-id association identifiers require an owning many-to-one - "
 								+ associationIdentifierBinding.ownerBinding().getClassName()
 								+ "." + associationIdentifierBinding.property().getName()
 				);
@@ -105,7 +105,6 @@ class AssociationIdentifierBinder {
 							+ "." + associationIdentifierBinding.property().getName()
 			) );
 		}
-
 		final List<JoinColumn> orderedJoinColumns = orderJoinColumns(
 				joinColumns,
 				targetColumns.columns(),
@@ -220,12 +219,26 @@ class AssociationIdentifierBinder {
 		if ( ToOneAttributeBinder.referencesPrimaryKey( joinColumns, targetIdentifierColumns, bindingState.getDatabase() ) ) {
 			return TargetColumns.primaryKey( targetIdentifierColumns );
 		}
-		final List<String> referencedColumnNames = referencedColumnNames( joinColumns );
-		final List<Column> targetColumns = new ArrayList<>( referencedColumnNames.size() );
-		for ( String referencedColumnName : referencedColumnNames ) {
-			targetColumns.add( new Column( referencedColumnName ) );
+		if ( referencesSomePrimaryKeyColumns( joinColumns, targetIdentifierColumns ) ) {
+			throw new MappingException(
+					"Association identifier join column count did not match target identifier column count - "
+							+ associationIdentifierBinding.ownerBinding().getEntityName()
+							+ "." + associationIdentifierBinding.property().getName()
+			);
 		}
-		return TargetColumns.nonPrimaryKey( targetColumns, referencedColumnNames );
+		if ( associationIdentifierBinding.ownerBinding().hasEmbeddedIdentifier() ) {
+			final List<String> referencedColumnNames = referencedColumnNames( joinColumns );
+			final List<Column> targetColumns = new ArrayList<>( referencedColumnNames.size() );
+			for ( String referencedColumnName : referencedColumnNames ) {
+				targetColumns.add( new Column( referencedColumnName ) );
+			}
+			return TargetColumns.nonPrimaryKey( targetColumns, referencedColumnNames );
+		}
+		throw new MappingException(
+				"Unable to match association identifier join column referencedColumnName to target identifier column - "
+						+ associationIdentifierBinding.ownerBinding().getClassName()
+						+ "." + associationIdentifierBinding.property().getName()
+		);
 	}
 
 	private List<Column> targetIdentifierColumns(IdentifierBinding targetIdentifierBinding) {
@@ -235,6 +248,21 @@ class AssociationIdentifierBinder {
 			return targetIdentifierBinding.table().getPrimaryKey().getColumns();
 		}
 		return targetIdentifierBinding.columns();
+	}
+
+	private boolean referencesSomePrimaryKeyColumns(List<JoinColumn> joinColumns, List<Column> targetIdentifierColumns) {
+		for ( JoinColumn joinColumn : joinColumns ) {
+			if ( StringHelper.isEmpty( joinColumn.referencedColumnName() ) ) {
+				return false;
+			}
+			for ( Column targetIdentifierColumn : targetIdentifierColumns ) {
+				if ( targetIdentifierColumn.getNameIdentifier( bindingState.getDatabase() )
+						.matches( bindingState.getDatabase().toIdentifier( joinColumn.referencedColumnName() ) ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private List<String> referencedColumnNames(List<JoinColumn> joinColumns) {

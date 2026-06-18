@@ -291,6 +291,7 @@ class ToOneAttributeBinder {
 					target,
 					associationTable,
 					referenceToPrimaryKey,
+					resolveSharedIdentifierColumns( ownerType, associationTable, bindingState ),
 					bindingState.getDatabase(),
 					logicalOneToOne,
 					optional,
@@ -458,6 +459,7 @@ class ToOneAttributeBinder {
 			TargetEntityBinding target,
 			Table table,
 			boolean referenceToPrimaryKey,
+			List<Column> sharedIdentifierColumns,
 			Database database,
 			boolean uniqueByDefault,
 			boolean optional,
@@ -498,12 +500,35 @@ class ToOneAttributeBinder {
 				column.setNullable( false );
 			}
 			table.addColumn( column );
+			final boolean sharedIdentifierColumn = isSharedIdentifierColumn( column, sharedIdentifierColumns, database );
 			value.addColumn(
 					column,
-					joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().insertable(),
-					joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().updatable()
+					!sharedIdentifierColumn
+							&& ( joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().insertable() ),
+					!sharedIdentifierColumn
+							&& ( joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().updatable() )
 			);
 		}
+	}
+
+	private static List<Column> resolveSharedIdentifierColumns(
+			IdentifiableTypeMetadata ownerType,
+			Table associationTable,
+			BindingState bindingState) {
+		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding( ownerType.getHierarchy().getRoot() );
+		if ( identifierBinding == null || identifierBinding.table() != associationTable ) {
+			return List.of();
+		}
+		return identifierBinding.columns();
+	}
+
+	private static boolean isSharedIdentifierColumn(Column column, List<Column> identifierColumns, Database database) {
+		for ( Column identifierColumn : identifierColumns ) {
+			if ( column.getNameIdentifier( database ).matches( identifierColumn.getNameIdentifier( database ) ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	static boolean referencesPrimaryKey(List<JoinColumn> joinColumns, List<Column> targetColumns, Database database) {

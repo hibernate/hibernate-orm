@@ -300,10 +300,12 @@ public class SimpleIdTests {
 					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
 							.getEntityBinding( AssociationIdChild.class.getName() );
 					final Component identifier = (Component) entityBinding.getIdentifier();
+					final Component identifierMapper = entityBinding.getIdentifierMapper();
 					final ManyToOne parent = (ManyToOne) entityBinding.getProperty( "parent" ).getValue();
 
 					assertThat( entityBinding.hasEmbeddedIdentifier() ).isFalse();
-					assertThat( identifier.getProperty( "parent" ).getValue() ).isSameAs( parent );
+					assertThat( identifier.getProperty( "parent" ).getValue() ).isInstanceOf( org.hibernate.mapping.BasicValue.class );
+					assertThat( identifierMapper.getProperty( "parent" ).getValue() ).isSameAs( parent );
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "parent_id", "child_id" );
@@ -480,12 +482,14 @@ public class SimpleIdTests {
 					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
 							.getEntityBinding( InverseOneToOneAssociationIdChild.class.getName() );
 					final Component identifier = (Component) entityBinding.getIdentifier();
+					final Component identifierMapper = entityBinding.getIdentifierMapper();
 					final org.hibernate.mapping.OneToOne parent = (org.hibernate.mapping.OneToOne)
-							identifier.getProperty( "parent" ).getValue();
+							identifierMapper.getProperty( "parent" ).getValue();
 
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "parent_parent_id", "child_id" );
+					assertThat( identifier.getProperty( "parent" ).getValue() ).isInstanceOf( org.hibernate.mapping.BasicValue.class );
 					assertThat( parent.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "parent_parent_id" );
@@ -542,15 +546,24 @@ public class SimpleIdTests {
 
 	@Test
 	@ServiceRegistry
-	void testMapsIdJoinColumnNameMismatchFails(ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> checkDomainModel(
+	void testMapsIdJoinColumnOverridesIdentifierColumnName(ServiceRegistryScope scope) {
+		checkDomainModel(
 				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( JoinColumnNameMismatchMapsIdChild.class.getName() );
+					final ManyToOne parent = (ManyToOne) entityBinding.getProperty( "parent" ).getValue();
+
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "wrong_parent_id", "child_id" );
+					assertThat( parent.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "wrong_parent_id" );
 				},
 				scope.getRegistry(),
 				MapsIdParent.class,
 				JoinColumnNameMismatchMapsIdChild.class
-		) ).isInstanceOf( org.hibernate.MappingException.class )
-				.hasMessageContaining( "@MapsId join column name did not match identifier attribute column name `parent_id`" );
+		);
 	}
 
 	@Test

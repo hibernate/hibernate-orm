@@ -6,7 +6,7 @@ import groovy.transform.Field
 @Field final String QUARKUS_JDK_VERSION = '17'
 @Field final String ORM_JDK_TOOL = "OpenJDK ${ORM_JDK_VERSION} Latest"
 @Field final String QUARKUS_JDK_TOOL = "OpenJDK ${QUARKUS_JDK_VERSION} Latest"
-@Field final String QUARKUS_BRANCH_TO_TEST = 'main'
+@Field final String QUARKUS_BRANCH_TO_TEST = '3.36'
 
 // When enabling Quarkus builds make sure to check the version/branch to test. See `QUARKUS_BRANCH_TO_TEST`.
 def ENABLE_QUARKUS_BUILDS = true

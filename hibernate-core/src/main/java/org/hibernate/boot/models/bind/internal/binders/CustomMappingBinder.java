@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.AttributeBinderType;
+import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.binder.TypeBinder;
@@ -69,7 +70,8 @@ public class CustomMappingBinder {
 				AttributeBinderType.class,
 				bindingContext.getBootstrapContext().getModelsContext()
 		) ) {
-			if ( metaAnnotated.annotationType() == TenantId.class ) {
+			if ( metaAnnotated.annotationType() == TenantId.class
+					|| metaAnnotated.annotationType() == Collate.class ) {
 				continue;
 			}
 			callAttributeBinder( metaAnnotated, metaAnnotated.annotationType(), persistentClass, property, metadataBuildingContext );

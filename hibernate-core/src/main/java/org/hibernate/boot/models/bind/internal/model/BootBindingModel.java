@@ -10,10 +10,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.models.bind.internal.view.CollationContributionView;
 import org.hibernate.boot.models.bind.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.models.bind.internal.view.EntityView;
 import org.hibernate.boot.models.bind.internal.view.IdentifierContributionView;
 import org.hibernate.boot.models.bind.internal.view.MappedSuperclassContributionView;
+import org.hibernate.boot.models.bind.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.models.bind.internal.view.TenantIdContributionView;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
@@ -35,6 +37,8 @@ public class BootBindingModel {
 	private final Map<ClassDetails, ManagedTypeBinding> managedTypeBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, IdentifierContribution> identifierContributions = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, TenantIdContribution> tenantIdContributions = new LinkedHashMap<>();
+	private final List<NaturalIdContribution> naturalIdContributions = new ArrayList<>();
+	private final List<CollationContribution> collationContributions = new ArrayList<>();
 	private final List<MappedSuperclassContribution> mappedSuperclassContributions = new ArrayList<>();
 	private final List<EmbeddableContribution> embeddableContributions = new ArrayList<>();
 
@@ -82,6 +86,58 @@ public class BootBindingModel {
 	public @Nullable TenantIdContributionView getTenantIdContributionView(EntityTypeMetadata rootType) {
 		final TenantIdContribution contribution = getTenantIdContribution( rootType );
 		return contribution == null ? null : new TenantIdContributionView( contribution );
+	}
+
+	public void addNaturalIdContribution(NaturalIdContribution contribution) {
+		naturalIdContributions.add( contribution );
+	}
+
+	public List<NaturalIdContribution> naturalIdContributions() {
+		return List.copyOf( naturalIdContributions );
+	}
+
+	public @Nullable NaturalIdContributionView getNaturalIdContributionView(
+			IdentifiableTypeMetadata owner,
+			String attributeName) {
+		final NaturalIdContribution contribution = getNaturalIdContribution( owner, attributeName );
+		return contribution == null ? null : new NaturalIdContributionView( contribution );
+	}
+
+	private @Nullable NaturalIdContribution getNaturalIdContribution(
+			IdentifiableTypeMetadata owner,
+			String attributeName) {
+		for ( NaturalIdContribution contribution : naturalIdContributions ) {
+			if ( contribution.owner() == owner && contribution.attributeName().equals( attributeName ) ) {
+				return contribution;
+			}
+		}
+		return null;
+	}
+
+	public void addCollationContribution(CollationContribution contribution) {
+		collationContributions.add( contribution );
+	}
+
+	public List<CollationContribution> collationContributions() {
+		return List.copyOf( collationContributions );
+	}
+
+	public @Nullable CollationContributionView getCollationContributionView(
+			IdentifiableTypeMetadata owner,
+			String attributePath) {
+		final CollationContribution contribution = getCollationContribution( owner, attributePath );
+		return contribution == null ? null : new CollationContributionView( contribution );
+	}
+
+	private @Nullable CollationContribution getCollationContribution(
+			IdentifiableTypeMetadata owner,
+			String attributePath) {
+		for ( CollationContribution contribution : collationContributions ) {
+			if ( contribution.owner() == owner && contribution.attributePath().equals( attributePath ) ) {
+				return contribution;
+			}
+		}
+		return null;
 	}
 
 	public void addMappedSuperclassContribution(MappedSuperclassContribution contribution) {

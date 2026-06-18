@@ -191,7 +191,19 @@ The identifier materialization bridge then creates the legacy `RootClass`,
 identifier `Value`, identifier mapper, `Property`, primary-key columns, and
 association-identifier work items from the identifier view.
 
+General attribute binding is the next bridge from isolated annotation proofs to
+the broader binding/view/materialization model.  Ordinary identifiable-type
+attributes should first be represented as internal `AttributeBinding` nodes that
+own source facts, effective access, attribute kind, role/path, and simple
+option/selectable intent.  Existing binders may still materialize legacy
+`Property`, `Value`, and `Column` objects from these views, but common
+attribute semantics such as natural-id, lazy group, and collation should be
+recorded in the binding node before materialization.
+
 == Extension Point Migration
+
+See link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
+for the focused SPI proposal.
 
 The existing `org.hibernate.binder.AttributeBinder` and
 `org.hibernate.binder.TypeBinder` contracts are real extension points, but they
@@ -201,18 +213,28 @@ the wrong semantic layer for the proposed binding/view/materialization model.
 ORM 9 should migrate the extension concept, not simply preserve the current
 mapping-object mutation contract as the long-term answer.
 
+The replacement must be a supported SPI, not an invitation for extensions to
+implement or depend on ORM's internal binding model.  Built-in annotations can
+prove the design using internal contribution/view/materialization types, but the
+public extension contract should be a stable facade over that machinery.  It
+must live in an SPI package, expose curated source and contribution targets, and
+avoid leaking internal classes such as `BootBindingModel`, binding
+contributions, contribution views, materializers, or the mutable
+`org.hibernate.mapping` compatibility objects.
+
 The target shape is:
 
 * old `AttributeBinder` / `TypeBinder` contracts remain only as compatibility
   adapters while required;
 * compatibility adapters run late enough that they can mutate materialized
   mapping objects without becoming the semantic owner of binding decisions;
-* new replacement contracts operate at the binding layer;
+* new replacement contracts operate at the binding layer through supported SPI
+  types;
 * the replacement for `AttributeBinder` is attribute-level, not
   `BasicValue`-level, and must be able to contribute semantics for basic,
   association, embedded/component, plural, `ANY`, and other attribute shapes;
 * a new binding-model-focused extension should either mutate well-defined
-  binding nodes or return structured binding contributions;
+  SPI targets or return structured binding contributions;
 * those returned/applied contributions are finalized into views and then
   materialized into `org.hibernate.mapping` like ORM-owned contributions;
 * new extension contracts must not require extension authors to directly create
@@ -244,21 +266,39 @@ EmbeddableBindingContributor
 IdentifierBindingContributor
 ----
 
-The exact names are provisional.  The important decision is the layer: new
-forms of `AttributeBinder` and `TypeBinder` should work against the binding
-model, not the mapping model.  If mutation is allowed, it should be mutation of
-declared binding nodes or contribution collections with explicit phase rules.
+The exact names are provisional.  The important decision is the layer and the
+visibility boundary: new forms of `AttributeBinder` and `TypeBinder` should work
+against supported binding SPI abstractions, not the mapping model and not the
+internal binding model.  If mutation is allowed, it should be mutation of
+declared SPI targets or contribution collections with explicit phase rules.
 Where possible, returning a structured contribution is preferable because it
 preserves ordering, origin, diagnostics, and finalization control.
 
 Built-in annotations should prove the replacement shape before it is exposed as
 public SPI.  `@TenantId` is the first proof because it is an attribute-level
 contribution with coordinated property, filter, and row-level-security effects,
-but it must not define the replacement as basic-only.  Other good candidates are
-annotations whose current behavior crosses simple property decoration, such as
-`@NaturalId`, `@Immutable`, `@SoftDelete`, and custom type/value annotations.
-The old mapping-model extension contracts can then be deprecated or removed once
-the new binding-layer contracts cover the required use cases.
+but it must not define the replacement as basic-only.  `@NaturalId` is the
+second proof: it is much closer to simple property decoration, but still records
+attribute-level semantic state that should be owned before legacy `Property`
+mutation.  Together these two cases start the "rule of three" for a replacement
+extension contract.  `@Collate` is the third proof because it decorates the
+value/selectable side of an attribute, including nested embeddable attributes,
+and therefore tests a different SPI shape than property flags or entity-level
+side effects.  The old mapping-model extension contracts can then be deprecated
+or removed once the new binding-layer contracts cover the required use cases.
+
+Therefore, the near-term implementation should keep using internal proof
+contracts.  The public SPI should be designed in the proposal, but not frozen
+until the three proof shapes are reviewed together:
+
+* `@TenantId`: complex attribute-triggered contribution with entity/model-wide
+  side effects;
+* `@NaturalId`: simple attribute semantic flag contribution;
+* `@Collate`: value/selectable decoration, including nested component paths.
+
+The public SPI target should eventually wrap the internal attribute
+binding/view layer.  It should not expose the proof contribution records
+directly.
 
 == Managed Type Bindings
 

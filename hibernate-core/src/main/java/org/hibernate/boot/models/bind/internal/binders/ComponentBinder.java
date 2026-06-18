@@ -9,16 +9,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 
+import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.models.bind.internal.materialize.CollationMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.ToOneMaterializationHelper;
+import org.hibernate.boot.models.bind.internal.model.CollationContribution;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.boot.models.bind.internal.sources.ToOneSource;
+import org.hibernate.boot.models.bind.internal.view.CollationContributionView;
 import org.hibernate.boot.models.bind.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
@@ -186,6 +190,7 @@ public class ComponentBinder {
 				property.setValue( collection );
 				property.setOptional( true );
 				component.addProperty( property, componentMember.declaringType() );
+				applyCollation( ownerType, componentMember, property );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				continue;
 			}
@@ -223,6 +228,7 @@ public class ComponentBinder {
 						);
 				property.setValue( manyToOne );
 				component.addProperty( property, componentMember.declaringType() );
+				applyCollation( ownerType, componentMember, property );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
 				columns.addAll( manyToOne.getColumns() );
@@ -243,6 +249,7 @@ public class ComponentBinder {
 
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
 				component.addProperty( property, componentMember.declaringType() );
+				applyCollation( ownerType, componentMember, property );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				columns.addAll( bindProperties(
 						ownerType,
@@ -278,6 +285,7 @@ public class ComponentBinder {
 						context
 				);
 				component.addProperty( property, componentMember.declaringType() );
+				applyCollation( ownerType, componentMember, property );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				continue;
 			}
@@ -300,6 +308,7 @@ public class ComponentBinder {
 					context
 			);
 			component.addProperty( property, componentMember.declaringType() );
+			applyCollation( ownerType, componentMember, property );
 			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 			columnConsumer.accept( member, column );
 			columns.add( column );
@@ -327,6 +336,27 @@ public class ComponentBinder {
 					}
 				} )
 				.getText();
+	}
+
+	private void applyCollation(
+			IdentifiableTypeMetadata ownerType,
+			ComponentSource.ComponentMember componentMember,
+			Property property) {
+		final var collateAnn = componentMember.member().getDirectAnnotationUsage( Collate.class );
+		if ( collateAnn == null ) {
+			return;
+		}
+		final var contribution = new CollationContribution(
+				ownerType,
+				componentMember.fullPath(),
+				componentMember.member(),
+				collateAnn.value()
+		);
+		state.getBootBindingModel().addCollationContribution( contribution );
+		new CollationMappingMaterializer().materializeCollation(
+				new CollationContributionView( contribution ),
+				property
+		);
 	}
 
 	private ManyToOne bindAssociationIdentifierMember(

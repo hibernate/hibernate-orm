@@ -159,6 +159,17 @@ support, focused tests, and known gaps for `jakarta.persistence` and
 Use this document when checking whether an annotation is visible to the new
 pipeline and whether binding support has been proven with mapping-state tests.
 
+link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
+
+This is the design note for replacing the current mapping-object-mutating
+`AttributeBinder` and `TypeBinder` extension contracts with a supported,
+capability/facet-based binding SPI.
+
+Use this document when reasoning about public extension points for custom
+annotation binding, the boundary between supported SPI and internal binding
+model products, or how built-in annotation proofs such as `@TenantId`,
+`@NaturalId`, and `@Collate` inform the eventual public contract.
+
 == How To Choose
 
 If the question is "what should the final bootstrap architecture look like?",
@@ -194,3 +205,6 @@ If the question is "what mapping support is still missing?", use
 
 If the question is "is this annotation covered by the new pipeline?", use
 `annotation-coverage.adoc`.
+
+If the question is "what should replace AttributeBinder or TypeBinder?", use
+`binding-extension-spi-design.adoc`.

@@ -34,4 +34,10 @@ public interface ManagedTypeView {
 	default List<AttributeBinding> declaredAttributes() {
 		return binding().declaredAttributes();
 	}
+
+	default List<AttributeBindingView> declaredAttributeViews() {
+		return binding().declaredAttributes().stream()
+				.map( AttributeBindingView::new )
+				.toList();
+	}
 }

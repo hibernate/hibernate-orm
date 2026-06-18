@@ -1,0 +1,317 @@
+= Binding Extension SPI Design
+:toc:
+
+This document sketches a supported replacement SPI for the existing
+`org.hibernate.binder.AttributeBinder` and `org.hibernate.binder.TypeBinder`
+contracts.
+
+The goal is not to expose ORM's internal binding model.  Built-in annotations
+such as `@TenantId`, `@NaturalId`, and `@Collate` may prove the design using
+internal contribution/view/materialization products, but the public extension
+contract must be a stable SPI facade over that machinery.
+
+== Motivation
+
+The current `AttributeBinder` and `TypeBinder` contracts allow user annotations
+to mutate `org.hibernate.mapping` objects directly:
+
+* `PersistentClass`
+* `Component`
+* `Property`
+* `Value`
+* `Column`
+
+That shape is difficult to preserve as the boot model moves toward:
+
+* source/categorization facts;
+* finalized binding model products;
+* stable views over those products;
+* compatibility materialization into `org.hibernate.mapping`.
+
+Direct mapping-object mutation also creates timing problems.  A custom binder
+can observe or mutate partially-resolved mapping objects before identifiers,
+mapped-superclass contributions, embeddable applications, table keys,
+selectable correspondence, or delayed ordering have been finalized.
+
+ORM 9 should migrate the extension concept, not the old mutation surface.
+
+== Design Principle
+
+The public SPI should be capability/facet based.
+
+It should not ask extensions to create or return Hibernate's internal
+contribution records.  Instead, ORM should expose stable targets that represent
+what the extension is allowed to affect:
+
+* attribute-level options;
+* value/type intent;
+* selectable intent;
+* association intent;
+* component/path intent;
+* plural-attribute intent;
+* containing type or metadata-wide side effects through explicit services.
+
+Internally, target mutations may become contribution records, views, pending
+work items, or direct materialization calls.  That is ORM implementation detail.
+As the binding model matures, public SPI targets should wrap stable internal
+binding/view objects such as attribute bindings, not the temporary proof records
+used by individual built-in annotations.
+
+The public SPI must not expose:
+
+* `BootBindingModel`;
+* internal `*Contribution` records;
+* internal contribution views;
+* internal materializers;
+* mutable `org.hibernate.mapping` compatibility objects as the primary contract.
+
+== Attribute Contributor Shape
+
+A possible replacement for `AttributeBinder` is:
+
+[source,java]
+----
+public interface AttributeBindingContributor<A extends Annotation> {
+	void contribute(
+			A annotation,
+			AttributeBindingTarget target,
+			BindingContributionContext context);
+}
+----
+
+The contributor receives:
+
+* the annotation instance;
+* a stable target representing the annotated attribute;
+* a context for services, diagnostics, and broader contributions.
+
+The contributor does not receive `Property`, `Value`, `Column`, `Component`, or
+`PersistentClass`.
+
+== Attribute Target Facets
+
+`AttributeBindingTarget` should expose general facets rather than concrete
+Hibernate contribution types:
+
+[source,java]
+----
+public interface AttributeBindingTarget {
+	AttributeSource source();
+	AttributeKind kind();
+
+	AttributeOptions options();
+	ValueBindingTarget value();
+	SelectableBindingTarget selectables();
+	ContainingTypeBindingTarget containingType();
+
+	Optional<PluralAttributeBindingTarget> plural();
+	Optional<AssociationBindingTarget> association();
+	Optional<ComponentBindingTarget> component();
+}
+----
+
+The exact names are provisional.  The important point is that each facet
+represents a supported capability, not a mutable mapping object.
+
+=== Attribute Options
+
+Attribute-level options cover simple semantic flags and attribute behavior:
+
+[source,java]
+----
+public interface AttributeOptions {
+	void insertable(boolean insertable);
+	void updatable(boolean updatable);
+	void optional(boolean optional);
+	void propertyAccessStrategy(Class<? extends PropertyAccessStrategy> strategy);
+	void naturalId(boolean mutable);
+}
+----
+
+This facet covers current behavior such as:
+
+* `@NaturalId`;
+* `@AttributeAccessor`;
+* simple custom binders that mark an attribute non-updatable.
+
+=== Value and Selectable Targets
+
+Value/selectable facets cover type, conversion, and column-like intent:
+
+[source,java]
+----
+public interface ValueBindingTarget {
+	void converter(AttributeConverterDescriptor converter);
+	void mutability(MutabilityPlan<?> mutabilityPlan);
+}
+
+public interface SelectableBindingTarget {
+	void forEachSelectable(Consumer<SelectableTarget> consumer);
+}
+
+public interface SelectableTarget {
+	void collation(String collation);
+	void comment(String comment);
+	void readExpression(String expression);
+	void writeExpression(String expression);
+}
+----
+
+This facet covers current behavior such as:
+
+* `@Collate`;
+* converter-like custom annotations;
+* future column/read/write-expression annotations.
+
+The SPI should avoid promising that every attribute has physical columns when
+the contribution is made.  The selectable facet may record intent against a
+logical selectable target and materialize it later.
+
+=== Shape-Specific Targets
+
+Some annotations are legal only for certain attribute kinds.  Shape-specific
+facets should make that explicit:
+
+[source,java]
+----
+public interface PluralAttributeBindingTarget {
+	void batchSize(int size);
+}
+
+public interface AssociationBindingTarget {
+	void referencedProperty(String propertyName);
+}
+
+public interface ComponentBindingTarget {
+	AttributePath path();
+}
+----
+
+For example, `@BatchSize` on an attribute should use the plural facet.  If the
+annotated attribute is not plural, ORM should throw a diagnostic tied to the
+source annotation and attribute.
+
+== Broader Contributions
+
+Some attribute annotations trigger contributions outside the attribute itself.
+`@TenantId` is the motivating example: it affects the property, the containing
+entity, metadata filter definitions, and possibly table initialization for
+row-level security.
+
+The context should expose explicit broader contribution services:
+
+[source,java]
+----
+public interface BindingContributionContext {
+	BootstrapContext bootstrapContext();
+	ServiceRegistry serviceRegistry();
+	TypeConfiguration typeConfiguration();
+
+	MetadataContributionTarget metadata();
+	EntityContributionTarget entity();
+	Diagnostics diagnostics();
+}
+----
+
+Potential broader targets:
+
+[source,java]
+----
+public interface MetadataContributionTarget {
+	void filterDefinition(FilterDefinitionContribution definition);
+}
+
+public interface EntityContributionTarget {
+	void filter(EntityFilterContribution filter);
+}
+
+public interface TableContributionTarget {
+	void initialization(TableInitializationContribution initialization);
+}
+----
+
+These should remain structured capabilities.  The SPI should not provide a
+generic "give me the mutable metadata collector" escape hatch.
+
+== Type Contributor Shape
+
+A replacement for `TypeBinder` should follow the same model:
+
+[source,java]
+----
+public interface ManagedTypeBindingContributor<A extends Annotation> {
+	void contribute(
+			A annotation,
+			ManagedTypeBindingTarget target,
+			BindingContributionContext context);
+}
+----
+
+The target can expose facets for entity, mapped-superclass, and embeddable
+capabilities:
+
+[source,java]
+----
+public interface ManagedTypeBindingTarget {
+	ManagedTypeSource source();
+	ManagedTypeKind kind();
+
+	Optional<EntityBindingTarget> entity();
+	Optional<MappedSuperclassBindingTarget> mappedSuperclass();
+	Optional<EmbeddableBindingTarget> embeddable();
+}
+----
+
+This keeps entity-only annotations and embeddable-only annotations explicit
+without exposing `PersistentClass` or `Component`.
+
+== Evidence From Internal Proofs
+
+The three internal proofs point to the capability/facet model:
+
+* `@TenantId` proves a complex attribute-triggered contribution with
+  entity/model-wide side effects.
+* `@NaturalId` proves a simple attribute semantic flag contribution.
+* `@Collate` proves value/selectable decoration, including nested component
+  paths.
+
+The important lesson is not that the public SPI should expose
+`TenantIdContribution`, `NaturalIdContribution`, or `CollationContribution`.
+Those records are internal storage/materialization details.  The lesson is that
+a contributor needs a stable attribute target with facets for the different
+things an annotation may affect.
+
+== Compatibility Plan
+
+The existing `AttributeBinder` and `TypeBinder` contracts can remain as late
+compatibility adapters while needed.
+
+Compatibility adapters should run after enough materialization has happened to
+provide the old mutable mapping objects, but they should not become the semantic
+owner for ORM-owned annotations migrated to the new path.
+
+Built-in annotations migrated to internal contributions should be skipped by the
+legacy adapter in the new pipeline to avoid double application.
+
+== Open Questions
+
+* Package name: likely an SPI package, not an internal binding package.
+* Whether contributors mutate targets directly, return structured commands, or
+  both.
+* How much source-model API to expose directly versus wrapping `hibernate-models`
+  types in ORM-specific source views.
+* How to express ordering and conflicts when multiple annotations contribute to
+  the same facet.
+* How to expose diagnostics so errors consistently name the annotation,
+  attribute path, declaring type, and contribution phase.
+* Whether a service-loaded global contributor model is also needed, separate
+  from annotation-driven contributors.
+
+== Recommendation
+
+Do not freeze the public SPI yet.
+
+Use the three internal proofs to refine the capability/facet vocabulary while
+continuing the binding/view/materialization redesign.  Introduce the public SPI
+only when the target binding model and materialization phases are stable enough
+that the facade is unlikely to leak transitional concepts.

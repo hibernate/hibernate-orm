@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.models.AttributeNature;
+import org.hibernate.boot.models.bind.internal.model.AttributeBinding;
+import org.hibernate.boot.models.bind.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.models.bind.internal.view.AttributeBindingView;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -165,10 +168,15 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				return;
 			}
 
+			final AttributeBindingView attributeBinding = createAttributeBindingView(
+					sourceType,
+					ownerType,
+					attributeMetadata
+			);
 			final var attributeBinder = new AttributeBinder(
 					ownerType,
+					attributeBinding,
 					attributeOwnerBinding,
-					attributeMetadata,
 					primaryTable,
 					modelBinders,
 					getBindingState(),
@@ -198,6 +206,40 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 					getBindingContext()
 			);
 		} );
+	}
+
+	private AttributeBindingView createAttributeBindingView(
+			IdentifiableTypeMetadata sourceType,
+			IdentifiableTypeMetadata ownerType,
+			AttributeMetadata attributeMetadata) {
+		final ManagedTypeBinding declaringTypeBinding = getBindingState()
+				.getBootBindingModel()
+				.getManagedTypeBinding( sourceType.getClassDetails() );
+		final ManagedTypeBinding ownerTypeBinding = getBindingState()
+				.getBootBindingModel()
+				.getManagedTypeBinding( ownerType.getClassDetails() );
+		if ( declaringTypeBinding == null || ownerTypeBinding == null ) {
+			throw new IllegalStateException(
+					"Managed type binding was not registered before attribute binding - "
+							+ sourceType.getClassDetails().getName()
+			);
+		}
+
+		final String attributeName = attributeMetadata.getName();
+		final AttributeBinding attributeBinding = AttributeBinding.from(
+				attributeMetadata,
+				ownerTypeBinding,
+				declaringTypeBinding,
+				attributeMetadata.getMember(),
+				sourceType.getAccessType(),
+				attributeMetadata.getNature(),
+				sourceType.getClassDetails().getName() + "." + attributeName,
+				attributeName
+		);
+		if ( sourceType == ownerType ) {
+			declaringTypeBinding.addDeclaredAttribute( attributeBinding );
+		}
+		return new AttributeBindingView( attributeBinding );
 	}
 
 	private boolean isPlural(AttributeNature nature) {

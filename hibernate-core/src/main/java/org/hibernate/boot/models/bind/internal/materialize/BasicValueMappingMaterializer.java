@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.materialize;
 
 import org.hibernate.boot.models.bind.internal.binders.BasicValueBinder;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
+import org.hibernate.boot.models.bind.internal.view.AttributeBindingView;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -21,8 +22,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
 
 import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindImplicitJavaType;
-import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindMutability;
-import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindOptimisticLocking;
 import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.processColumn;
 import static org.hibernate.boot.models.bind.internal.binders.BasicValueBinder.bindJavaType;
 import static org.hibernate.boot.models.bind.internal.binders.BasicValueBinder.bindJdbcType;
@@ -39,16 +38,14 @@ import static org.hibernate.boot.models.bind.internal.binders.BasicValueBinder.b
 /// @author Steve Ebersole
 public class BasicValueMappingMaterializer {
 	public BasicValue createAttributeBasicValue(
-			MemberDetails member,
+			AttributeBindingView attributeBinding,
 			Property property,
 			Table primaryTable,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		final MemberDetails member = attributeBinding.member();
 		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext() );
-
-		bindMutability( member, property, basicValue, bindingOptions, bindingState, bindingContext );
-		bindOptimisticLocking( member, property, basicValue, bindingOptions, bindingState, bindingContext );
 
 		final var column = processColumn( member, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
 		applyBasicOptionality( member, property, column );
@@ -63,6 +60,8 @@ public class BasicValueMappingMaterializer {
 				bindingState,
 				bindingContext
 		);
+
+		new AttributeOptionsMappingMaterializer().materializeOptions( attributeBinding, property, basicValue );
 
 		return basicValue;
 	}

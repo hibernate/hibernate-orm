@@ -8,14 +8,19 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Mutability;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.bind.internal.materialize.BasicValueMappingMaterializer;
+import org.hibernate.boot.models.bind.internal.materialize.CollationMappingMaterializer;
+import org.hibernate.boot.models.bind.internal.materialize.NaturalIdMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.models.bind.internal.model.CollationContribution;
+import org.hibernate.boot.models.bind.internal.model.NaturalIdContribution;
+import org.hibernate.boot.models.bind.internal.view.AttributeBindingView;
+import org.hibernate.boot.models.bind.internal.view.CollationContributionView;
+import org.hibernate.boot.models.bind.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
@@ -60,6 +65,8 @@ import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper
 /// @since 9.0
 /// @author Steve Ebersole
 public class AttributeBinder {
+	private final IdentifiableTypeMetadata ownerType;
+	private final AttributeBindingView attributeBinding;
 	private final AttributeMetadata attributeMetadata;
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
@@ -70,8 +77,8 @@ public class AttributeBinder {
 
 	public AttributeBinder(
 			IdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
 			Table primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
@@ -79,8 +86,8 @@ public class AttributeBinder {
 			BindingContext bindingContext) {
 		this(
 				ownerType,
+				attributeBinding,
 				ownerBinding,
-				attributeMetadata,
 				primaryTable,
 				modelBinders,
 				bindingState,
@@ -92,22 +99,24 @@ public class AttributeBinder {
 
 	public AttributeBinder(
 			IdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
 			Table primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
 			BindingContext bindingContext,
 			boolean registerCollectionBindings) {
-		this.attributeMetadata = attributeMetadata;
+		this.ownerType = ownerType;
+		this.attributeBinding = attributeBinding;
+		this.attributeMetadata = attributeBinding.attributeMetadata();
 		this.bindingState = bindingState;
 		this.bindingOptions = bindingOptions;
 		this.bindingContext = bindingContext;
 
 		this.binding = new PropertyMappingMaterializer().createProperty(
-				attributeMetadata.getName(),
-				attributeMetadata.getMember()
+				attributeBinding.attributeName(),
+				attributeBinding.member()
 		);
 
 		if ( attributeMetadata.getNature() == BASIC ) {
@@ -158,7 +167,7 @@ public class AttributeBinder {
 						bindingOptions,
 						bindingState,
 						bindingContext,
-						attributeMetadata.getName(),
+						attributeBinding.attributeName(),
 						registerCollectionBindings
 				).bind( binding );
 			binding.setValue( collectionValue );
@@ -174,7 +183,7 @@ public class AttributeBinder {
 					bindingOptions,
 					bindingState,
 					bindingContext,
-					attributeMetadata.getName(),
+					attributeBinding.attributeName(),
 					null,
 					registerCollectionBindings
 			).bindManyToMany( binding );
@@ -191,7 +200,7 @@ public class AttributeBinder {
 					bindingOptions,
 					bindingState,
 					bindingContext,
-					attributeMetadata.getName(),
+					attributeBinding.attributeName(),
 					null,
 					registerCollectionBindings
 			).bindOneToMany( binding );
@@ -221,7 +230,7 @@ public class AttributeBinder {
 					bindingOptions,
 					bindingState,
 					bindingContext,
-					attributeMetadata.getName(),
+					attributeBinding.attributeName(),
 					null,
 					registerCollectionBindings
 			).bindManyToAny( binding );
@@ -233,8 +242,9 @@ public class AttributeBinder {
 			throw new UnsupportedOperationException( "Not yet implemented" );
 		}
 
-		applyNaturalId( attributeMetadata, binding );
-		applyLazyGroup( attributeMetadata, binding );
+		applyNaturalId( binding );
+		applyCollation( binding );
+		applyLazyGroup( binding );
 	}
 
 	public Property getBinding() {
@@ -245,26 +255,50 @@ public class AttributeBinder {
 		return attributeTable;
 	}
 
-	private void applyNaturalId(AttributeMetadata attributeMetadata, Property property) {
-		final var naturalIdAnn = attributeMetadata.getMember().getDirectAnnotationUsage( NaturalId.class );
-		if ( naturalIdAnn == null ) {
+	private void applyNaturalId(Property property) {
+		if ( !attributeBinding.isNaturalId() ) {
 			return;
 		}
-		property.setNaturalIdentifier( true );
-		property.setUpdatable( naturalIdAnn.mutable() );
+		final var contribution = new NaturalIdContribution(
+				ownerType,
+				attributeBinding.attributeName(),
+				attributeBinding.member(),
+				attributeBinding.naturalIdMutable()
+		);
+		bindingState.getBootBindingModel().addNaturalIdContribution( contribution );
+		new NaturalIdMappingMaterializer().materializeNaturalId(
+				new NaturalIdContributionView( contribution ),
+				property
+		);
 	}
 
-	private void applyLazyGroup(AttributeMetadata attributeMetadata, Property property) {
-		final var lazyGroupAnn = attributeMetadata.getMember().getDirectAnnotationUsage( LazyGroup.class );
-		if ( lazyGroupAnn == null ) {
+	private void applyCollation(Property property) {
+		if ( attributeBinding.collation() == null ) {
 			return;
 		}
-		property.setLazyGroup( lazyGroupAnn.value() );
+		final var contribution = new CollationContribution(
+				ownerType,
+				attributeBinding.attributePath(),
+				attributeBinding.member(),
+				attributeBinding.collation()
+		);
+		bindingState.getBootBindingModel().addCollationContribution( contribution );
+		new CollationMappingMaterializer().materializeCollation(
+				new CollationContributionView( contribution ),
+				property
+		);
+	}
+
+	private void applyLazyGroup(Property property) {
+		if ( attributeBinding.lazyGroup() == null ) {
+			return;
+		}
+		property.setLazyGroup( attributeBinding.lazyGroup() );
 	}
 
 	private BasicValue createBasicValue(Table primaryTable) {
 		return new BasicValueMappingMaterializer().createAttributeBasicValue(
-				attributeMetadata.getMember(),
+				attributeBinding,
 				binding,
 				primaryTable,
 				bindingOptions,

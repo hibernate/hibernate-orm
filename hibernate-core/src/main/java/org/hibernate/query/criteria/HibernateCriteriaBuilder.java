@@ -97,56 +97,164 @@ import jakarta.persistence.criteria.TemporalField;
 @Incubating
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
+	/**
+	 * Create an expression that casts the given expression to the specified Java type.
+	 *
+	 * @param expression The expression to cast
+	 * @param castTargetJavaType The target Java type
+	 * @param <X> The target expression type
+	 * @param <T> The source expression type
+	 * @return the cast expression
+	 */
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
 
+	/**
+	 * Create an expression that casts the given expression to the specified cast target.
+	 *
+	 * @param expression The expression to cast
+	 * @param castTarget The cast target descriptor
+	 * @param <X> The target expression type
+	 * @param <T> The source expression type
+	 * @return the cast expression
+	 */
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget);
 
+	/**
+	 * Create a cast target for the given Java type.
+	 *
+	 * @param castTargetJavaType The target Java type
+	 * @param <X> The target type
+	 * @return the cast target descriptor
+	 */
 	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType);
 
+	/**
+	 * Create a cast target for the given Java type and SQL type length.
+	 *
+	 * @param castTargetJavaType The target Java type
+	 * @param length The SQL type length
+	 * @param <X> The target type
+	 * @return the cast target descriptor
+	 */
 	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, long length);
 
+	/**
+	 * Create a cast target for the given Java type, precision, and scale.
+	 *
+	 * @param castTargetJavaType The target Java type
+	 * @param precision The SQL type precision
+	 * @param scale The SQL type scale
+	 * @param <X> The target type
+	 * @return the cast target descriptor
+	 */
 	<X> JpaCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale);
 
+	/**
+	 * Wrap a boolean expression as a predicate.
+	 *
+	 * @param expression The boolean expression
+	 * @return the predicate representing the expression
+	 */
 	JpaPredicate wrap(Expression<Boolean> expression);
 
+	/**
+	 * Wrap boolean expressions as predicates and combine them with conjunction.
+	 *
+	 * @param expressions The boolean expressions
+	 * @return the conjunction of the wrapped predicates
+	 */
 	@SuppressWarnings("unchecked")
 	JpaPredicate wrap(Expression<Boolean>... expressions);
 
+	/**
+	 * Wrap boolean expressions as predicates and combine them with conjunction.
+	 *
+	 * @param expressions The boolean expressions
+	 * @return the conjunction of the wrapped predicates
+	 */
 	JpaPredicate wrap(BooleanExpression... expressions);
 
+	/**
+	 * Unwrap this criteria builder to a Hibernate criteria builder extension.
+	 *
+	 * @param clazz The extension type to obtain
+	 * @param <T> The extension type
+	 * @return the requested extension
+	 */
 	<T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Criteria creation
 
+	/**
+	 * Create a criteria query.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<Object> createQuery();
 
+	/**
+	 * Create a criteria query for the given result type.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaCriteriaQuery<T> createQuery(@Nonnull Class<T> resultClass);
 
+	/**
+	 * Create a tuple-valued criteria query.
+	 */
 	@Nonnull
 	@Override
 	JpaCriteriaQuery<Tuple> createTupleQuery();
 
+	/**
+	 * Create a criteria update statement for the given entity type.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaCriteriaUpdate<T> createCriteriaUpdate(@Nonnull Class<T> targetEntity);
 
+	/**
+	 * Create a criteria delete statement for the given entity type.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaCriteriaDelete<T> createCriteriaDelete(@Nonnull Class<T> targetEntity);
 
+	/**
+	 * Create a criteria insert statement which supplies explicit values.
+	 *
+	 * @param targetEntity The target entity type
+	 * @param <T> The target entity type
+	 * @return a new insert-values criteria statement
+	 */
 	<T> JpaCriteriaInsertValues<T> createCriteriaInsertValues(Class<T> targetEntity);
 
+	/**
+	 * Create a criteria insert statement which obtains inserted values from a select query.
+	 *
+	 * @param targetEntity The target entity type
+	 * @param <T> The target entity type
+	 * @return a new insert-select criteria statement
+	 */
 	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
 
+	/**
+	 * Create a row of values for an insert-values criteria statement.
+	 *
+	 * @param expressions The value expressions in row order
+	 * @return the values row
+	 */
 	@Incubating
 	JpaValues values(Expression<?>... expressions);
 
+	/**
+	 * Create a row of values for an insert-values criteria statement.
+	 *
+	 * @param expressions The value expressions in row order
+	 * @return the values row
+	 */
 	@Incubating
 	JpaValues values(List<? extends Expression<?>> expressions);
 
@@ -156,7 +264,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param hql The HQL {@code select} query
 	 * @param resultClass The result type of the query
 	 *
-	 * @return The equivalent criteria query
+	 * @return the equivalent criteria query
 	 *
 	 * @since 6.3
 	 */
@@ -165,100 +273,190 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Set operation
 
+	/**
+	 * Create a {@code union all} set operation over the given criteria queries.
+	 */
 	default <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries) {
 		return union( true, query1, queries );
 	}
 
+	/**
+	 * Create a {@code union} set operation over the given criteria queries.
+	 */
 	default <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries) {
 		return union( false, query1, queries );
 	}
 
+	/**
+	 * Create a {@code union} or {@code union all} set operation over the given criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> union(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
+	/**
+	 * Create an {@code intersect all} set operation over the given criteria queries.
+	 */
 	default <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries) {
 		return intersect( true, query1, queries );
 	}
 
+	/**
+	 * Create an {@code intersect} set operation over the given criteria queries.
+	 */
 	default <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries) {
 		return intersect( false, query1, queries );
 	}
 
+	/**
+	 * Create an {@code intersect} or {@code intersect all} set operation over the given criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> intersect(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
+	/**
+	 * Create an {@code except all} set operation over the given criteria queries.
+	 */
 	default <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries) {
 		return except( true, query1, queries );
 	}
 
+	/**
+	 * Create an {@code except} set operation over the given criteria queries.
+	 */
 	default <T> JpaCriteriaQuery<T> except(CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries) {
 		return except( false, query1, queries );
 	}
 
+	/**
+	 * Create an {@code except} or {@code except all} set operation over the given criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> except(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
+	/**
+	 * Create a {@code union} set operation over two criteria selects.
+	 */
 	@Nonnull
 	@Override
 	<T> CriteriaSelect<T> union(@Nonnull CriteriaSelect<? extends T> left, @Nonnull CriteriaSelect<? extends T> right);
 
+	/**
+	 * Create a {@code union} set operation over two criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
+	/**
+	 * Create a {@code union} set operation over the given subqueries.
+	 */
 	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return union( false, query1, queries );
 	}
 
+	/**
+	 * Create a {@code union} or {@code union all} set operation over the given subqueries.
+	 */
 	<T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
 
+	/**
+	 * Create a {@code union all} set operation over two subqueries.
+	 */
 	default <T> JpaSubQuery<T> unionAll(JpaSubQuery<? extends T> query1, JpaSubQuery<? extends T> query2) {
 		return union( true, query1, query2 );
 	}
 
+	/**
+	 * Create a {@code union all} set operation over two criteria selects.
+	 */
 	@Nonnull
 	@Override
 	<T> CriteriaSelect<T> unionAll(@Nonnull CriteriaSelect<? extends T> left, @Nonnull CriteriaSelect<? extends T> right);
 
+	/**
+	 * Create a {@code union all} set operation over two criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
+	/**
+	 * Create a {@code intersect} set operation over two criteria selects.
+	 */
 	@Nonnull
 	@Override
 	<T> CriteriaSelect<T> intersect(@Nonnull CriteriaSelect<? super T> left, @Nonnull CriteriaSelect<? super T> right);
 
+	/**
+	 * Create a {@code intersect all} set operation over two criteria selects.
+	 */
 	@Nonnull
 	@Override
 	<T> CriteriaSelect<T> intersectAll(@Nonnull CriteriaSelect<? super T> left, @Nonnull CriteriaSelect<? super T> right);
 
+	/**
+	 * Create an {@code intersect} set operation over two criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
 
+	/**
+	 * Create an {@code intersect all} set operation over two criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
 
+	/**
+	 * Create an {@code intersect all} set operation over the given subqueries.
+	 */
 	default <T> JpaSubQuery<T> intersectAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return intersect( true, query1, queries );
 	}
 
+	/**
+	 * Create an {@code intersect} set operation over the given subqueries.
+	 */
 	default <T> JpaSubQuery<T> intersect(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return intersect( false, query1, queries );
 	}
 
+	/**
+	 * Create an {@code intersect} or {@code intersect all} set operation over the given subqueries.
+	 */
 	<T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
 
+	/**
+	 * Create a {@code except} set operation over two criteria selects.
+	 */
 	@Nonnull
 	@Override
 	<T> CriteriaSelect<T> except(@Nonnull CriteriaSelect<T> left, @Nonnull CriteriaSelect<?> right);
 
+	/**
+	 * Create a {@code except all} set operation over two criteria selects.
+	 */
 	@Nonnull
 	@Override
 	<T> CriteriaSelect<T> exceptAll(@Nonnull CriteriaSelect<T> left, @Nonnull CriteriaSelect<?> right);
 
+	/**
+	 * Create an {@code except} set operation over two criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right);
 
+	/**
+	 * Create an {@code except all} set operation over two criteria queries.
+	 */
 	<T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right);
 
+	/**
+	 * Create an {@code except all} set operation over the given subqueries.
+	 */
 	default <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return except( true, query1, queries );
 	}
 
+	/**
+	 * Create an {@code except} set operation over the given subqueries.
+	 */
 	default <T> JpaSubQuery<T> except(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return except( false, query1, queries );
 	}
 
+	/**
+	 * Create an {@code except} or {@code except all} set operation over the given subqueries.
+	 */
 	<T> JpaSubQuery<T> except(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
 
 
@@ -270,8 +468,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * argument, that is, {@code 1} if its argument is
 	 * positive, {@code -1} if its argument is negative,
 	 * or {@code 0} if its argument is exactly zero.
-	 * @param x expression
-	 * @return sign
+	 * @param x The expression
+	 * @return the sign
 	 */
 	@Nonnull
 	JpaExpression<Integer> sign(@Nonnull Expression<? extends Number> x);
@@ -280,8 +478,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that returns the ceiling of its
 	 * argument, that is, the smallest integer greater than
 	 * or equal to its argument.
-	 * @param x expression
-	 * @return ceiling
+	 * @param x The expression
+	 * @return the ceiling
 	 */
 	@Nonnull
 	<N extends Number> JpaExpression<N> ceiling(@Nonnull Expression<N> x);
@@ -290,8 +488,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that returns the floor of its
 	 * argument, that is, the largest integer smaller than
 	 * or equal to its argument.
-	 * @param x expression
-	 * @return floor
+	 * @param x The expression
+	 * @return the floor
 	 */
 	@Nonnull
 	<N extends Number> JpaExpression<N> floor(@Nonnull Expression<N> x);
@@ -300,8 +498,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that returns the exponential
 	 * of its argument, that is, Euler's number <i>e</i>
 	 * raised to the power of its argument.
-	 * @param x expression
-	 * @return exponential
+	 * @param x The expression
+	 * @return the exponential
 	 */
 	@Nonnull
 	JpaExpression<Double> exp(@Nonnull Expression<? extends Number> x);
@@ -309,8 +507,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the natural logarithm
 	 * of its argument.
-	 * @param x expression
-	 * @return natural logarithm
+	 * @param x The expression
+	 * @return the natural logarithm
 	 */
 	@Nonnull
 	JpaExpression<Double> ln(@Nonnull Expression<? extends Number> x);
@@ -318,8 +516,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the first argument
 	 * raised to the power of its second argument.
-	 * @param x base
-	 * @param y exponent
+	 * @param x The base
+	 * @param y The exponent
 	 * @return the base raised to the power of the exponent
 	 */
 	@Nonnull
@@ -328,8 +526,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the first argument
 	 * raised to the power of its second argument.
-	 * @param x base
-	 * @param y exponent
+	 * @param x The base
+	 * @param y The exponent
 	 * @return the base raised to the power of the exponent
 	 */
 	@Nonnull
@@ -339,8 +537,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that returns the first argument
 	 * rounded to the number of decimal places given by the
 	 * second argument.
-	 * @param x base
-	 * @param n number of decimal places
+	 * @param x The base
+	 * @param n The number of decimal places
 	 * @return the rounded value
 	 */
 	@Nonnull
@@ -350,29 +548,29 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that returns the first argument
 	 * truncated to the number of decimal places given by the
 	 * second argument.
-	 * @param x base
-	 * @param n number of decimal places
+	 * @param x The base
+	 * @param n The number of decimal places
 	 * @return the truncated value
 	 */
 	<T extends Number> JpaExpression<T> truncate(Expression<T> x, Integer n);
 
 	/**
 	 *  Create expression to return current local date.
-	 *  @return expression for current date
+	 * @return the expression for the current date
 	 */
 	@Nonnull
 	JpaExpression<java.time.LocalDate> localDate();
 
 	/**
 	 *  Create expression to return current local datetime.
-	 *  @return expression for current timestamp
+	 * @return the expression for the current timestamp
 	 */
 	@Nonnull
 	JpaExpression<java.time.LocalDateTime> localDateTime();
 
 	/**
 	 *  Create expression to return current local time.
-	 *  @return expression for current time
+	 * @return the expression for the current time
 	 */
 	@Nonnull
 	JpaExpression<java.time.LocalTime> localTime();
@@ -380,40 +578,82 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Paths
 
+	/**
+	 * Create an expression representing the identifier of the given path.
+	 *
+	 * @param path The entity path
+	 * @return the identifier expression
+	 */
 	JpaExpression<?> id(Path<?> path);
 
+	/**
+	 * Create an expression representing the version of the given path.
+	 *
+	 * @param path The entity path
+	 * @return the version expression
+	 */
 	JpaExpression<?> version(Path<?> path);
 
+	/**
+	 * Create an expression representing the foreign key of the given association path.
+	 *
+	 * @param path The association path
+	 * @return the foreign-key expression
+	 */
 	JpaExpression<?> fk(Path<?> path);
 
+	/**
+	 * Downcast the given path to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, T extends X> JpaPath<T> treat(@Nonnull Path<X> path, @Nonnull Class<T> type);
 
+	/**
+	 * Downcast the given root to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, T extends X> JpaRoot<T> treat(@Nonnull Root<X> root, @Nonnull Class<T> type);
 
+	/**
+	 * Downcast the given from element to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, Y, T extends Y> JpaFrom<X, T> treat(@Nonnull From<X, Y> from, @Nonnull Class<T> type);
 
+	/**
+	 * Downcast the given join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, T, V extends T> JpaJoin<X, V> treat(@Nonnull Join<X, T> join, @Nonnull Class<V> type);
 
+	/**
+	 * Downcast the given collection join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, T, E extends T> JpaCollectionJoin<X, E> treat(@Nonnull CollectionJoin<X, T> join, @Nonnull Class<E> type);
 
+	/**
+	 * Downcast the given set join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, T, E extends T> JpaSetJoin<X, E> treat(@Nonnull SetJoin<X, T> join, @Nonnull Class<E> type);
 
+	/**
+	 * Downcast the given list join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, T, E extends T> JpaListJoin<X, E> treat(@Nonnull ListJoin<X, T> join, @Nonnull Class<E> type);
 
+	/**
+	 * Downcast the given map join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	<X, K, T, V extends T> JpaMapJoin<X, K, V> treat(@Nonnull MapJoin<X, K, T> join, @Nonnull Class<V> type);
@@ -423,66 +663,129 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Selections
 
+	/**
+	 * Create a compound selection using the specified result type constructor.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaCompoundSelection<Y> construct(@Nonnull Class<Y> resultClass, @Nonnull Selection<?>... selections);
+
+	/**
+	 * Create a compound selection whose arguments are supplied as a list.
+	 *
+	 * @param resultClass The compound selection result type
+	 * @param arguments The selection arguments
+	 * @param <Y> The result type
+	 * @return the compound selection
+	 */
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments);
 
+	/**
+	 * Create a tuple-valued compound selection.
+	 */
 	@Nonnull
 	@Override
 	JpaCompoundSelection<Tuple> tuple(@Nonnull Selection<?>... selections);
+
+	/**
+	 * Create a tuple-valued compound selection from a list of selections.
+	 */
 	@Nonnull
 	JpaCompoundSelection<Tuple> tuple(@Nonnull List<Selection<?>> selections);
 
+	/**
+	 * Create an array-valued compound selection.
+	 */
 	@Nonnull
 	@Override
 	JpaCompoundSelection<Object[]> array(@Nonnull Selection<?>... selections);
+
+	/**
+	 * Create an array-valued compound selection from a list of selections.
+	 */
 	@Nonnull
 	JpaCompoundSelection<Object[]> array(@Nonnull List<Selection<?>> selections);
 
+	/**
+	 * Create an array-valued compound selection with the given result array type.
+	 */
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
+
+	/**
+	 * Create an array-valued compound selection with the given result array type.
+	 */
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends Selection<?>> selections);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
 
+	/**
+	 * Create an aggregate expression returning the average of numeric values.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<Double> avg(@Nonnull Expression<N> argument);
 
+	/**
+	 * Create an expression returning a numeric sum.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> sum(@Nonnull Expression<N> argument);
 
+	/**
+	 * Create an aggregate expression returning the sum as a Long.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Long> sumAsLong(@Nonnull Expression<Integer> argument);
 
+	/**
+	 * Create an aggregate expression returning the sum as a Double.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Double> sumAsDouble(@Nonnull Expression<Float> argument);
 
+	/**
+	 * Create an aggregate expression returning the maximum numeric value.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> max(@Nonnull Expression<N> argument);
 
+	/**
+	 * Create an aggregate expression returning the minimum numeric value.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> min(@Nonnull Expression<N> argument);
 
+	/**
+	 * Create an aggregate expression returning the greatest comparable value.
+	 */
 	@Nonnull
 	@Override
 	<X extends Comparable<? super X>> JpaExpression<X> greatest(@Nonnull Expression<X> argument);
 
+	/**
+	 * Create an aggregate expression returning the least comparable value.
+	 */
 	@Nonnull
 	@Override
 	<X extends Comparable<? super X>> JpaExpression<X> least(@Nonnull Expression<X> argument);
 
+	/**
+	 * Create an aggregate expression returning a row count.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Long> count(@Nonnull Expression<?> argument);
 
+	/**
+	 * Create an aggregate expression returning the count of distinct values.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Long> countDistinct(@Nonnull Expression<?> x);
@@ -492,74 +795,128 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	JpaExpression<Long> count();
 
+	/**
+	 * Create an expression returning the arithmetic negation of its argument.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> neg(@Nonnull Expression<N> x);
 
+	/**
+	 * Create an expression returning the absolute value of its argument.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> abs(@Nonnull Expression<N> x);
 
+	/**
+	 * Create an expression returning a numeric sum.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> sum(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y);
 
+	/**
+	 * Create an expression returning a numeric sum.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> sum(@Nonnull Expression<? extends N> x, N y);
 
+	/**
+	 * Create an expression returning a numeric sum.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> sum(N x, @Nonnull Expression<? extends N> y);
 
+	/**
+	 * Create an expression returning a numeric product.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> prod(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y);
 
+	/**
+	 * Create an expression returning a numeric product.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> prod(@Nonnull Expression<? extends N> x, N y);
 
+	/**
+	 * Create an expression returning a numeric product.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> prod(N x, @Nonnull Expression<? extends N> y);
 
+	/**
+	 * Create an expression returning a numeric difference.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> diff(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y);
 
+	/**
+	 * Create an expression returning a numeric difference.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> diff(@Nonnull Expression<? extends N> x, N y);
 
+	/**
+	 * Create an expression returning a numeric difference.
+	 */
 	@Nonnull
 	@Override
 	<N extends Number> JpaExpression<N> diff(N x, @Nonnull Expression<? extends N> y);
 
+	/**
+	 * Create an expression returning a numeric quotient.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Number> quot(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y);
 
+	/**
+	 * Create an expression returning a numeric quotient.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Number> quot(@Nonnull Expression<? extends Number> x, Number y);
 
+	/**
+	 * Create an expression returning a numeric quotient.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Number> quot(Number x, @Nonnull Expression<? extends Number> y);
 
+	/**
+	 * Create an expression returning the remainder of integer division.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Integer> mod(@Nonnull Expression<Integer> x, @Nonnull Expression<Integer> y);
 
+	/**
+	 * Create an expression returning the remainder of integer division.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Integer> mod(@Nonnull Expression<Integer> x, Integer y);
 
+	/**
+	 * Create an expression returning the remainder of integer division.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Integer> mod(Integer x, @Nonnull Expression<Integer> y);
 
+	/**
+	 * Create an expression returning the square root of its argument.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Double> sqrt(@Nonnull Expression<? extends Number> x);
@@ -615,8 +972,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
 	 * Convert a {@link Duration} to a numeric magnitude in the given units.
-	 * @param unit a choice of temporal granularity
-	 * @param duration the duration in a "unit-free" form
+	 * @param unit The temporal granularity
+	 * @param duration The duration in a "unit-free" form
 	 * @return the magnitude of the duration measured in the given units
 	 * @since 6.3
 	 */
@@ -685,50 +1042,89 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	<T extends Temporal> JpaExpression<T> subtractDuration(T datetime, Expression<Duration> duration);
 
+	/**
+	 * Create an expression converted to Long.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Long> toLong(@Nonnull Expression<? extends Number> number);
 
+	/**
+	 * Create an expression converted to Integer.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Integer> toInteger(@Nonnull Expression<? extends Number> number);
 
+	/**
+	 * Create an expression converted to Float.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Float> toFloat(@Nonnull Expression<? extends Number> number);
 
+	/**
+	 * Create an expression converted to Double.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<Double> toDouble(@Nonnull Expression<? extends Number> number);
 
+	/**
+	 * Create an expression converted to BigDecimal.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<BigDecimal> toBigDecimal(@Nonnull Expression<? extends Number> number);
 
+	/**
+	 * Create an expression converted to BigInteger.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<BigInteger> toBigInteger(@Nonnull Expression<? extends Number> number);
 
+	/**
+	 * Create an expression converted to String.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<String> toString(@Nonnull Expression<Character> character);
 
+	/**
+	 * Create a literal expression for the given value.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaExpression<T> literal(@Nonnull T value);
 
+	/**
+	 * Create literal expressions for each of the given values.
+	 */
 	<T> List<? extends JpaExpression<T>> literals(T... values);
 
+	/**
+	 * Create literal expressions for each value in the given list.
+	 */
 	<T> List<? extends JpaExpression<T>> literals(List<T> values);
 
+	/**
+	 * Create a null literal expression of the given type.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaExpression<T> nullLiteral(@Nonnull Class<T> resultClass);
 
+	/**
+	 * Create a parameter expression.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaParameterExpression<T> parameter(@Nonnull Class<T> paramClass);
 
+	/**
+	 * Create a parameter expression.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaParameterExpression<T> parameter(@Nonnull Class<T> paramClass, @Nonnull String name);
@@ -736,8 +1132,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a multivalued parameter accepting multiple arguments
 	 * packaged together as a {@link List}.
-	 * @param paramClass the type of each argument to the parameter
-	 * @param <T> the type of each argument to the parameter
+	 * @param paramClass The type of each argument to the parameter
+	 * @param <T> The type of each argument to the parameter
 	 * @since 7.0
 	 */
 	<T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass);
@@ -745,35 +1141,56 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a multivalued parameter accepting multiple arguments
 	 * packaged together as a {@link List}.
-	 * @param paramClass the type of each argument to the parameter
-	 * @param name the parameter name
-	 * @param <T> the type of each argument to the parameter
+	 * @param paramClass The type of each argument to the parameter
+	 * @param name The parameter name
+	 * @param <T> The type of each argument to the parameter
 	 * @since 7.0
 	 */
 	<T> JpaParameterExpression<List<T>> listParameter(Class<T> paramClass, String name);
 
+	/**
+	 * Create a string concatenation expression.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<String> concat(@Nonnull Expression<String> x, @Nonnull Expression<String> y);
 
+	/**
+	 * Create a string concatenation expression.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<String> concat(@Nonnull Expression<String> x, @Nonnull String y);
 
+	/**
+	 * Create a string concatenation expression.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<String> concat(@Nonnull String x, @Nonnull Expression<String> y);
 
+	/**
+	 * Create an expression that concatenates two string literals.
+	 */
 	JpaExpression<String> concat(String x, String y);
 
+	/**
+	 * Create a substring expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> substring(@Nonnull Expression<String> x, @Nonnull Expression<Integer> from);
 
+	/**
+	 * Create a substring expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> substring(@Nonnull Expression<String> x, int from);
 
+	/**
+	 * Create a substring expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> substring(
@@ -781,54 +1198,93 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			@Nonnull Expression<Integer> from,
 			@Nonnull Expression<Integer> len);
 
+	/**
+	 * Create a substring expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> substring(@Nonnull Expression<String> x, int from, int len);
 
+	/**
+	 * Create a trim expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> trim(@Nonnull Expression<String> x);
 
+	/**
+	 * Create a trim expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> trim(@Nonnull Trimspec ts, @Nonnull Expression<String> x);
 
+	/**
+	 * Create a trim expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> trim(@Nonnull Expression<Character> t, @Nonnull Expression<String> x);
 
+	/**
+	 * Create a trim expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> trim(@Nonnull Trimspec ts, @Nonnull Expression<Character> t, @Nonnull Expression<String> x);
 
+	/**
+	 * Create a trim expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> trim(char t, @Nonnull Expression<String> x);
 
+	/**
+	 * Create a trim expression.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> trim(@Nonnull Trimspec ts, char t, @Nonnull Expression<String> x);
 
+	/**
+	 * Create an expression returning a lowercase string.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> lower(@Nonnull Expression<String> x);
 
+	/**
+	 * Create an expression returning an uppercase string.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<String> upper(@Nonnull Expression<String> x);
 
+	/**
+	 * Create an expression returning the length of a string.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Integer> length(@Nonnull Expression<String> x);
 
+	/**
+	 * Create an expression returning the position of a substring.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Integer> locate(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern);
 
+	/**
+	 * Create an expression returning the position of a substring.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Integer> locate(@Nonnull Expression<String> x, @Nonnull String pattern);
 
+	/**
+	 * Create an expression returning the position of a substring.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Integer> locate(
@@ -836,84 +1292,150 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			@Nonnull Expression<String> pattern,
 			@Nonnull Expression<Integer> from);
 
+	/**
+	 * Create an expression returning the position of a substring.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Integer> locate(@Nonnull Expression<String> x, @Nonnull String pattern, int from);
 
+	/**
+	 * Create an expression for the current SQL date.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Date> currentDate();
 
+	/**
+	 * Create an expression for the current SQL time.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Time> currentTime();
 
+	/**
+	 * Create an expression for the current SQL timestamp.
+	 */
 	@Nonnull
 	@Override
 	JpaFunction<Timestamp> currentTimestamp();
 
+	/**
+	 * Create an expression for the current instant.
+	 */
 	JpaFunction<Instant> currentInstant();
 
+	/**
+	 * Create an expression invoking a database function.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaFunction<T> function(@Nonnull String name, @Nonnull Class<T> type, @Nonnull Expression<?>... args);
 
+	/**
+	 * Create an {@code all} quantified expression over a subquery.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaExpression<Y> all(@Nonnull Subquery<Y> subquery);
 
+	/**
+	 * Create a {@code some} quantified expression over a subquery.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaExpression<Y> some(@Nonnull Subquery<Y> subquery);
 
+	/**
+	 * Create an {@code any} quantified expression over a subquery.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaExpression<Y> any(@Nonnull Subquery<Y> subquery);
 
+	/**
+	 * Create an expression representing the indexes of the given list.
+	 */
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
+	/**
+	 * Create an expression for a Java value, using the configured value handling mode.
+	 */
 	<T> JpaExpression<T> value(@Nullable T value);
 
+	/**
+	 * Create an expression returning the size of a collection.
+	 */
 	@Nonnull
 	@Override
 	<C extends Collection<?>> JpaExpression<Integer> size(@Nonnull Expression<C> collection);
 
+	/**
+	 * Create an expression returning the size of a collection.
+	 */
 	@Nonnull
 	@Override
 	<C extends Collection<?>> JpaExpression<Integer> size(@Nonnull C collection);
 
+	/**
+	 * Create a coalesce expression.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaCoalesce<T> coalesce();
 
+	/**
+	 * Create a coalesce expression.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, @Nonnull Expression<? extends Y> y);
 
+	/**
+	 * Create a coalesce expression.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, Y y);
 
+	/**
+	 * Create a nullif expression.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaExpression<Y> nullif(@Nonnull Expression<Y> x, @Nonnull Expression<?> y);
 
+	/**
+	 * Create a nullif expression.
+	 */
 	@Nonnull
 	@Override
 	<Y> JpaExpression<Y> nullif(@Nonnull Expression<Y> x, Y y);
 
+	/**
+	 * Create a simple case expression.
+	 */
 	@Nonnull
 	@Override
 	<C, R> JpaSimpleCase<C, R> selectCase(@Nonnull Expression<? extends C> expression);
 
+	/**
+	 * Create a case expression with the given result type.
+	 */
 	@Nonnull
 	@Override
 	<C, R> JpaSimpleCase<C, R> selectCase(@Nonnull Expression<? extends C> expression, @Nonnull Class<R> resultType);
 
+	/**
+	 * Create a searched case expression.
+	 */
 	@Nonnull
 	@Override
 	<R> JpaSearchedCase<R> selectCase();
 
+	/**
+	 * Create a case expression with the given result type.
+	 */
 	@Nonnull
 	@Override
 	<R> JpaSearchedCase<R> selectCase(@Nonnull Class<R> resultType);
@@ -923,14 +1445,23 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// Predicates
 
 
+	/**
+	 * Create a conjunction predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate and(@Nonnull Expression<Boolean> x, @Nonnull Expression<Boolean> y);
 
+	/**
+	 * Create a conjunction predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate and(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Create a conjunction predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate and(@Nonnull List<? extends Expression<Boolean>> restrictions);
@@ -942,14 +1473,23 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Deprecated
 	JpaPredicate and(Predicate... restrictions);
 
+	/**
+	 * Create a disjunction predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate or(@Nonnull Expression<Boolean> x, @Nonnull Expression<Boolean> y);
 
+	/**
+	 * Create a disjunction predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate or(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Create a disjunction predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate or(@Nonnull List<? extends Expression<Boolean>> restrictions);
@@ -961,98 +1501,170 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Deprecated
 	JpaPredicate or(Predicate... restrictions);
 
+	/**
+	 * Create a negated predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate not(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Create a predicate that is always true.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate conjunction();
 
+	/**
+	 * Create a predicate that is always false.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate disjunction();
 
+	/**
+	 * Create a predicate testing whether an expression is true.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate isTrue(@Nonnull Expression<Boolean> x);
 
+	/**
+	 * Create a predicate testing whether an expression is false.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate isFalse(@Nonnull Expression<Boolean> x);
 
+	/**
+	 * Create a predicate testing whether an expression is null.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate isNull(@Nonnull Expression<?> x);
 
+	/**
+	 * Create a predicate testing whether an expression is not null.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate isNotNull(@Nonnull Expression<?> x);
 
+	/**
+	 * Create an equality predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate equal(@Nonnull Expression<?> x, @Nonnull Expression<?> y);
 
+	/**
+	 * Create an equality predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate equal(@Nonnull Expression<?> x, Object y);
 
+	/**
+	 * Create an inequality predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notEqual(@Nonnull Expression<?> x, @Nonnull Expression<?> y);
 
+	/**
+	 * Create an inequality predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notEqual(@Nonnull Expression<?> x, Object y);
 
+	/**
+	 * Create a predicate testing whether two expressions are distinct, treating nulls as comparable values.
+	 */
 	JpaPredicate distinctFrom(Expression<?> x, Expression<?> y);
 
+	/**
+	 * Create a predicate testing whether an expression and a value are distinct, treating nulls as comparable values.
+	 */
 	JpaPredicate distinctFrom(Expression<?> x, Object y);
 
+	/**
+	 * Create a predicate testing whether two expressions are not distinct, treating nulls as comparable values.
+	 */
 	JpaPredicate notDistinctFrom(Expression<?> x, Expression<?> y);
 
+	/**
+	 * Create a predicate testing whether an expression and a value are not distinct, treating nulls as comparable values.
+	 */
 	JpaPredicate notDistinctFrom(Expression<?> x, Object y);
 
+	/**
+	 * Create a greater-than predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate greaterThan(
 			@Nonnull Expression<? extends Y> x,
 			@Nonnull Expression<? extends Y> y);
 
+	/**
+	 * Create a greater-than predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate greaterThan(@Nonnull Expression<? extends Y> x, Y y);
 
+	/**
+	 * Create a greater-than-or-equal predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate greaterThanOrEqualTo(
 			@Nonnull Expression<? extends Y> x,
 			@Nonnull Expression<? extends Y> y);
 
+	/**
+	 * Create a greater-than-or-equal predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate greaterThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y);
 
+	/**
+	 * Create a less-than predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate lessThan(
 			@Nonnull Expression<? extends Y> x,
 			@Nonnull Expression<? extends Y> y);
 
+	/**
+	 * Create a less-than predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate lessThan(@Nonnull Expression<? extends Y> x, Y y);
 
+	/**
+	 * Create a less-than-or-equal predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate lessThanOrEqualTo(
 			@Nonnull Expression<? extends Y> x,
 			@Nonnull Expression<? extends Y> y);
 
+	/**
+	 * Create a less-than-or-equal predicate for comparable expressions.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate lessThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y);
 
+	/**
+	 * Create a predicate testing whether a value is between two bounds.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate between(
@@ -1060,10 +1672,16 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			@Nonnull Expression<? extends Y> lower,
 			@Nonnull Expression<? extends Y> upper);
 
+	/**
+	 * Create a predicate testing whether a value is between two bounds.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate between(@Nonnull Expression<? extends Y> value, Y lower, Y upper);
 
+	/**
+	 * Create a predicate testing whether a value is between two bounds.
+	 */
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate between(
@@ -1071,154 +1689,295 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			@Nonnull Expression<? extends Y> lower,
 			@Nonnull Expression<? extends Y> upper);
 
+	/**
+	 * Create a greater-than predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate gt(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y);
 
+	/**
+	 * Create a greater-than predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate gt(@Nonnull Expression<? extends Number> x, Number y);
 
+	/**
+	 * Create a greater-than-or-equal predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate ge(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y);
 
+	/**
+	 * Create a greater-than-or-equal predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate ge(@Nonnull Expression<? extends Number> x, Number y);
 
+	/**
+	 * Create a less-than predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate lt(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y);
 
+	/**
+	 * Create a less-than predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate lt(@Nonnull Expression<? extends Number> x, Number y);
 
+	/**
+	 * Create a less-than-or-equal predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate le(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y);
 
+	/**
+	 * Create a less-than-or-equal predicate for numeric expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate le(@Nonnull Expression<? extends Number> x, Number y);
 
+	/**
+	 * Create a predicate testing whether a collection is empty.
+	 */
 	@Nonnull
 	@Override
 	<C extends Collection<?>> JpaPredicate isEmpty(@Nonnull Expression<C> collection);
 
+	/**
+	 * Create a predicate testing whether a collection is not empty.
+	 */
 	@Nonnull
 	@Override
 	<C extends Collection<?>> JpaPredicate isNotEmpty(@Nonnull Expression<C> collection);
 
+	/**
+	 * Create a predicate testing whether an element is a member of a collection.
+	 */
 	@Nonnull
 	@Override
 	<E, C extends Collection<E>> JpaPredicate isMember(@Nonnull Expression<E> elem, @Nonnull Expression<C> collection);
 
+	/**
+	 * Create a predicate testing whether an element is a member of a collection.
+	 */
 	@Nonnull
 	@Override
 	<E, C extends Collection<E>> JpaPredicate isMember(E elem, @Nonnull Expression<C> collection);
 
+	/**
+	 * Create a predicate testing whether an element is not a member of a collection.
+	 */
 	@Nonnull
 	@Override
 	<E, C extends Collection<E>> JpaPredicate isNotMember(@Nonnull Expression<E> elem, @Nonnull Expression<C> collection);
 
+	/**
+	 * Create a predicate testing whether an element is not a member of a collection.
+	 */
 	@Nonnull
 	@Override
 	<E, C extends Collection<E>> JpaPredicate isNotMember(E elem, @Nonnull Expression<C> collection);
 
+	/**
+	 * Create a {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate like(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern);
 
+	/**
+	 * Create a {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate like(@Nonnull Expression<String> x, @Nonnull String pattern);
 
+	/**
+	 * Create a {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate like(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<Character> escapeChar);
 
+	/**
+	 * Create a {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate like(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, char escapeChar);
 
+	/**
+	 * Create a {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate like(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<Character> escapeChar);
 
+	/**
+	 * Create a {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate like(@Nonnull Expression<String> x, @Nonnull String pattern, char escapeChar);
 
+	/**
+	 * Create a case-insensitive {@code like} predicate.
+	 */
 	JpaPredicate ilike(Expression<String> x, Expression<String> pattern);
 
+	/**
+	 * Create a case-insensitive {@code like} predicate.
+	 */
 	JpaPredicate ilike(Expression<String> x, String pattern);
 
+	/**
+	 * Create a case-insensitive {@code like} predicate with an escape character expression.
+	 */
 	JpaPredicate ilike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar);
 
+	/**
+	 * Create a case-insensitive {@code like} predicate with an escape character.
+	 */
 	JpaPredicate ilike(Expression<String> x, Expression<String> pattern, char escapeChar);
 
+	/**
+	 * Create a case-insensitive {@code like} predicate with an escape character expression.
+	 */
 	JpaPredicate ilike(Expression<String> x, String pattern, Expression<Character> escapeChar);
 
+	/**
+	 * Create a case-insensitive {@code like} predicate with an escape character.
+	 */
 	JpaPredicate ilike(Expression<String> x, String pattern, char escapeChar);
 
+	/**
+	 * Create a negated {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern);
 
+	/**
+	 * Create a negated {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern);
 
+	/**
+	 * Create a negated {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<Character> escapeChar);
 
+	/**
+	 * Create a negated {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, char escapeChar);
 
+	/**
+	 * Create a negated {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<Character> escapeChar);
 
+	/**
+	 * Create a negated {@code like} predicate.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern, char escapeChar);
 
+	/**
+	 * Create a negated case-insensitive {@code like} predicate.
+	 */
 	JpaPredicate notIlike(Expression<String> x, Expression<String> pattern);
 
+	/**
+	 * Create a negated case-insensitive {@code like} predicate.
+	 */
 	JpaPredicate notIlike(Expression<String> x, String pattern);
 
+	/**
+	 * Create a negated case-insensitive {@code like} predicate with an escape character expression.
+	 */
 	JpaPredicate notIlike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar);
 
+	/**
+	 * Create a negated case-insensitive {@code like} predicate with an escape character.
+	 */
 	JpaPredicate notIlike(Expression<String> x, Expression<String> pattern, char escapeChar);
 
+	/**
+	 * Create a negated case-insensitive {@code like} predicate with an escape character expression.
+	 */
 	JpaPredicate notIlike(Expression<String> x, String pattern, Expression<Character> escapeChar);
 
+	/**
+	 * Create a negated case-insensitive {@code like} predicate with an escape character.
+	 */
 	JpaPredicate notIlike(Expression<String> x, String pattern, char escapeChar);
 
+	/**
+	 * Create a predicate testing whether a string expression matches a regular expression.
+	 */
 	JpaPredicate likeRegexp(Expression<String> x, String pattern);
 
+	/**
+	 * Create a case-insensitive predicate testing whether a string expression matches a regular expression.
+	 */
 	JpaPredicate ilikeRegexp(Expression<String> x, String pattern);
 
+	/**
+	 * Create a negated predicate testing whether a string expression matches a regular expression.
+	 */
 	JpaPredicate notLikeRegexp(Expression<String> x, String pattern);
 
+	/**
+	 * Create a negated case-insensitive predicate testing whether a string expression matches a regular expression.
+	 */
 	JpaPredicate notIlikeRegexp(Expression<String> x, String pattern);
 
+	/**
+	 * Create an {@code in} predicate builder for the given expression.
+	 */
 	@Nonnull
 	@Override
 	<T> JpaInPredicate<T> in(@Nonnull Expression<? extends T> expression);
 
+	/**
+	 * Create an {@code in} predicate with expression values.
+	 */
 	@SuppressWarnings("unchecked")
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values);
 
+	/**
+	 * Create an {@code in} predicate with literal values.
+	 */
 	@SuppressWarnings("unchecked")
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression, T... values);
 
+	/**
+	 * Create an {@code in} predicate with values supplied as a collection.
+	 */
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression, Collection<T> values);
 
+	/**
+	 * Create a predicate testing whether a subquery returns results.
+	 */
 	@Nonnull
 	@Override
 	JpaPredicate exists(@Nonnull Subquery<?> subquery);
@@ -1229,10 +1988,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @apiNote Due to type-erasure we cannot name this the same as
 	 *          {@link CriteriaBuilder#isEmpty}.
 	 *
-	 * @param mapExpression The expression resolving to a Map which we
-	 * want to check for emptiness
+	 * @param mapExpression The map expression to check for emptiness
 	 *
-	 * @return is-empty predicate
+	 * @return the is-empty predicate
 	 */
 	<M extends Map<?,?>> JpaPredicate isMapEmpty(JpaExpression<M> mapExpression);
 
@@ -1242,10 +2000,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @apiNote Due to type-erasure we cannot name this the same as
 	 *          {@link CriteriaBuilder#isNotEmpty}
 	 *
-	 * @param mapExpression The expression resolving to a Map which we
-	 * want to check for non-emptiness
+	 * @param mapExpression The map expression to check for non-emptiness
 	 *
-	 * @return is-not-empty predicate
+	 * @return the is-not-empty predicate
 	 */
 	<M extends Map<?,?>> JpaPredicate isMapNotEmpty(JpaExpression<M> mapExpression);
 
@@ -1255,19 +2012,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @apiNote Due to type-erasure we cannot name this the same as
 	 *          {@link CriteriaBuilder#size}
 	 *
-	 * @param mapExpression The expression resolving to a Map for which we
-	 * want to know the size
+	 * @param mapExpression The map expression for which to calculate the size
 	 *
-	 * @return size expression
+	 * @return the size expression
 	 */
 	<M extends Map<?,?>> JpaExpression<Integer> mapSize(JpaExpression<M> mapExpression);
 
 	/**
 	 * Create an expression that tests the size of a map.
 	 *
-	 * @param map The Map for which we want to know the size
+	 * @param map The map for which to calculate the size
 	 *
-	 * @return size expression
+	 * @return the size expression
 	 */
 	<M extends Map<?, ?>> JpaExpression<Integer> mapSize(M map);
 
@@ -1276,95 +2032,113 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// Ordering
 
 
+	/**
+	 * Create an ordering for the given sort expression.
+	 */
 	JpaOrder sort(JpaExpression<?> sortExpression);
 
+	/**
+	 * Create an ordering for the given sort expression and direction.
+	 */
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
 
+	/**
+	 * Create an ordering for the given sort expression, direction, and null precedence.
+	 */
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
 
+	/**
+	 * Create an ordering for the given sort expression with optional case-insensitive comparison.
+	 */
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase);
 
+	/**
+	 * Create an ascending ordering for the given expression.
+	 */
 	@Nonnull
 	@Override
 	JpaOrder asc(@Nonnull Expression<?> x);
 
+	/**
+	 * Create a descending ordering for the given expression.
+	 */
 	@Nonnull
 	@Override
 	JpaOrder desc(@Nonnull Expression<?> x);
 
 	/**
 	 * Create an ordering by the ascending value of the expression.
-	 * @param x  expression used to define the ordering
+	 * @param x The expression used to define the ordering
 	 * @param nullsFirst Whether <code>null</code> should be sorted first
-	 * @return ascending ordering corresponding to the expression
+	 * @return the ascending ordering corresponding to the expression
 	 */
 	JpaOrder asc(Expression<?> x, boolean nullsFirst);
 
 	/**
 	 * Create an ordering by the descending value of the expression.
-	 * @param x  expression used to define the ordering
+	 * @param x The expression used to define the ordering
 	 * @param nullsFirst Whether <code>null</code> should be sorted first
-	 * @return descending ordering corresponding to the expression
+	 * @return the descending ordering corresponding to the expression
 	 */
 	JpaOrder desc(Expression<?> x, boolean nullsFirst);
 
 	/**
 	 * Create a search ordering based on the sort order and null precedence of the value of the CTE attribute.
-	 * @param cteAttribute CTE attribute used to define the ordering
+	 * @param cteAttribute The CTE attribute used to define the ordering
 	 * @param sortOrder The sort order
 	 * @param nullPrecedence The null precedence
-	 * @return ordering corresponding to the CTE attribute
+	 * @return the ordering corresponding to the CTE attribute
 	 */
 	@Incubating
 	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder, Nulls nullPrecedence);
 
 	/**
 	 * Create a search ordering based on the sort order of the value of the CTE attribute.
-	 * @param cteAttribute CTE attribute used to define the ordering
+	 * @param cteAttribute The CTE attribute used to define the ordering
 	 * @param sortOrder The sort order
-	 * @return ordering corresponding to the CTE attribute
+	 * @return the ordering corresponding to the CTE attribute
 	 */
 	@Incubating
 	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder);
 
 	/**
 	 * Create a search ordering based on the ascending value of the CTE attribute.
-	 * @param cteAttribute CTE attribute used to define the ordering
-	 * @return ascending ordering corresponding to the CTE attribute
+	 * @param cteAttribute The CTE attribute used to define the ordering
+	 * @return the ascending ordering corresponding to the CTE attribute
 	 */
 	@Incubating
 	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute);
 
 	/**
 	 * Create a search ordering by the ascending value of the CTE attribute.
-	 * @param x  CTE attribute used to define the ordering
-	 * @return ascending ordering corresponding to the CTE attribute
+	 * @param x The CTE attribute used to define the ordering
+	 * @return the ascending ordering corresponding to the CTE attribute
 	 */
 	@Incubating
 	JpaSearchOrder asc(JpaCteCriteriaAttribute x);
 
 	/**
 	 * Create a search ordering by the descending value of the CTE attribute.
-	 * @param x CTE attribute used to define the ordering
-	 * @return descending ordering corresponding to the CTE attribute
+	 * @param x The CTE attribute used to define the ordering
+	 * @return the descending ordering corresponding to the CTE attribute
 	 */
 	@Incubating
 	JpaSearchOrder desc(JpaCteCriteriaAttribute x);
 
 	/**
 	 * Create a search ordering by the ascending value of the CTE attribute.
-	 * @param x  CTE attribute used to define the ordering
+	 * @param x The CTE attribute used to define the ordering
 	 * @param nullsFirst Whether <code>null</code> should be sorted first
-	 * @return ascending ordering corresponding to the CTE attribute
+	 * @return the ascending ordering corresponding to the CTE attribute
 	 */
 	@Incubating
 	JpaSearchOrder asc(JpaCteCriteriaAttribute x, boolean nullsFirst);
 
 	/**
 	 * Create a search ordering by the descending value of the CTE attribute.
-	 * @param x CTE attribute used to define the ordering
+	 * @param x The CTE attribute used to define the ordering
 	 * @param nullsFirst Whether <code>null</code> should be sorted first
-	 * @return descending ordering corresponding to the CTE attribute
+	 * @return the descending ordering corresponding to the CTE attribute
 	 */
 	@Incubating
 	JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst);
@@ -1377,12 +2151,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Occurrences of {@code ?} in the pattern are replaced with the remaining {@code arguments}
 	 * of the function.
 	 *
-	 * @param pattern native SQL pattern
-	 * @param type type of this expression
-	 * @param arguments optional arguments to the SQL pattern
-	 * @param <T> type of this expression
+	 * @param pattern The native SQL pattern
+	 * @param type The type of this expression
+	 * @param arguments The optional arguments to the SQL pattern
+	 * @param <T> The type of this expression
 	 *
-	 * @return native SQL expression
+	 * @return the native SQL expression
 	 */
 	@Incubating
 	<T> JpaExpression<T> sql(String pattern, Class<T> type, Expression<?>... arguments);
@@ -1395,10 +2169,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * See {@link org.hibernate.dialect.Dialect#appendDatetimeFormat}
 	 * for a full list of pattern elements.
 	 *
-	 * @param datetime the datetime expression to format
-	 * @param pattern the pattern to use for formatting
+	 * @param datetime The datetime expression to format
+	 * @param pattern The pattern to use for formatting
 	 *
-	 * @return format expression
+	 * @return the format expression
 	 */
 	@Incubating
 	JpaFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern);
@@ -1406,7 +2180,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extracts the {@link TemporalUnit#YEAR} of a date, time, or datetime expression.
 	 *
-	 * @param datetime the date, time, or datetime to extract the value from
+	 * @param datetime The date, time, or datetime to extract the value from
 	 *
 	 * @return the extracted value
 	 */
@@ -1416,7 +2190,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extracts the {@link TemporalUnit#MONTH} of a date, time, or datetime expression.
 	 *
-	 * @param datetime the date, time, or datetime to extract the value from
+	 * @param datetime The date, time, or datetime to extract the value from
 	 *
 	 * @return the extracted value
 	 */
@@ -1426,7 +2200,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extracts the {@link TemporalUnit#DAY} of a date, time, or datetime expression.
 	 *
-	 * @param datetime the date, time, or datetime to extract the value from
+	 * @param datetime The date, time, or datetime to extract the value from
 	 *
 	 * @return the extracted value
 	 */
@@ -1436,7 +2210,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extracts the {@link TemporalUnit#HOUR} of a date, time, or datetime expression.
 	 *
-	 * @param datetime the date, time, or datetime to extract the value from
+	 * @param datetime The date, time, or datetime to extract the value from
 	 *
 	 * @return the extracted value
 	 */
@@ -1446,7 +2220,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extracts the {@link TemporalUnit#MINUTE} of a date, time, or datetime expression.
 	 *
-	 * @param datetime the date, time, or datetime to extract the value from
+	 * @param datetime The date, time, or datetime to extract the value from
 	 *
 	 * @return the extracted value
 	 */
@@ -1456,7 +2230,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extracts the {@link TemporalUnit#SECOND} of a date, time, or datetime expression.
 	 *
-	 * @param datetime the date, time, or datetime to extract the value from
+	 * @param datetime The date, time, or datetime to extract the value from
 	 *
 	 * @return the extracted value
 	 */
@@ -1470,8 +2244,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Truncating translates to obtaining a value of the same type in which all temporal units smaller than {@code field} have been pruned.
 	 * For hours, minutes and second this means setting them to {@code 00}. For months and days, this means setting them to {@code 01}.
 	 *
-	 * @param datetime the date, time or datetime expression to be truncated
-	 * @param temporalUnit the temporal unit for truncation
+	 * @param datetime The date, time, or datetime expression to truncate
+	 * @param temporalUnit The temporal unit for truncation
 	 *
 	 * @return the truncated value
 	 */
@@ -1562,12 +2336,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * corresponding to the length of the {@code replacement} expression or the
 	 * {@code length} parameter if specified.
 	 *
-	 * @param string string expression to be manipulated
-	 * @param replacement string expression to replace in original
-	 * @param start start position
-	 * @param length optional, number of characters to substitute
+	 * @param string The string expression to manipulate
+	 * @param replacement The replacement string expression
+	 * @param start The start position
+	 * @param length The optional number of characters to substitute
 	 *
-	 * @return overlay expression
+	 * @return the overlay expression
 	 */
 	@Incubating
 	JpaFunction<String> overlay(
@@ -1647,12 +2421,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Optionally pass a {@link jakarta.persistence.criteria.CriteriaBuilder.Trimspec} to pad the
 	 * string expression with {@code LEADING} or {@code TRAILING} (default) characters.
 	 *
-	 * @param ts optional {@link jakarta.persistence.criteria.CriteriaBuilder.Trimspec}
-	 * @param x string expression to pad
-	 * @param length length of the result string after padding
-	 * @param padChar optional pad character
+	 * @param ts The optional {@link jakarta.persistence.criteria.CriteriaBuilder.Trimspec}
+	 * @param x The string expression to pad
+	 * @param length The length of the result string after padding
+	 * @param padChar The optional pad character
 	 *
-	 * @return pad expression
+	 * @return the pad expression
 	 */
 	@Incubating
 	JpaFunction<String> pad(
@@ -1664,30 +2438,30 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Concatenate the given string expression with itself the given number of times.
 	 *
-	 * @param x the string expression to concatenate
-	 * @param times the number of times it should be repeated
+	 * @param x The string expression to concatenate
+	 * @param times The number of times it should be repeated
 	 *
-	 * @return repeat expression
+	 * @return the repeat expression
 	 */
 	JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times);
 
 	/**
 	 * Concatenate the given string expression with itself the given number of times.
 	 *
-	 * @param x the string expression to concatenate
-	 * @param times the number of times it should be repeated
+	 * @param x The string expression to concatenate
+	 * @param times The number of times it should be repeated
 	 *
-	 * @return repeat expression
+	 * @return the repeat expression
 	 */
 	JpaFunction<String> repeat(Expression<String> x, int times);
 
 	/**
 	 * Concatenate the given string expression with itself the given number of times.
 	 *
-	 * @param x the string expression to concatenate
-	 * @param times the number of times it should be repeated
+	 * @param x The string expression to concatenate
+	 * @param times The number of times it should be repeated
 	 *
-	 * @return repeat expression
+	 * @return the repeat expression
 	 */
 	JpaFunction<String> repeat(String x, Expression<Integer> times);
 
@@ -1701,10 +2475,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extract the {@code length} leftmost characters of a string.
 	 *
-	 * @param x original string
-	 * @param length number of characters
+	 * @param x The original string
+	 * @param length The number of characters
 	 *
-	 * @return left expression
+	 * @return the left expression
 	 */
 	@Nonnull
 	@Incubating
@@ -1720,10 +2494,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Extract the {@code length} rightmost characters of a string.
 	 *
-	 * @param x original string
-	 * @param length number of characters
+	 * @param x The original string
+	 * @param length The number of characters
 	 *
-	 * @return left expression
+	 * @return the left expression
 	 */
 	@Nonnull
 	@Incubating
@@ -1753,16 +2527,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Replace all occurrences of {@code pattern} within the original string with {@code replacement}.
 	 *
-	 * @param x original string
-	 * @param pattern the string to be replaced
-	 * @param replacement the new replacement string
+	 * @param x The original string
+	 * @param pattern The string to be replaced
+	 * @param replacement The new replacement string
 	 *
-	 * @return replace expression
+	 * @return the replace expression
 	 */
 	@Nonnull
 	@Incubating
 	JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<String> replacement);
 
+	/**
+	 * Create an expression that applies the named collation to a string expression.
+	 */
 	@Incubating
 	JpaFunction<String> collate(Expression<String> x, String collation);
 
@@ -1770,9 +2547,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that returns the base-10 logarithm
 	 * of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return base-10 logarithm
+	 * @return the base-10 logarithm
 	 */
 	@Incubating
 	JpaExpression<Double> log10(Expression<? extends Number> x);
@@ -1786,10 +2563,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the logarithm of {@code x} to the base {@code b}.
 	 *
-	 * @param b base
-	 * @param x expression
+	 * @param b The base
+	 * @param x The expression
 	 *
-	 * @return arbitrary-base logarithm
+	 * @return the arbitrary-base logarithm
 	 */
 	@Incubating
 	JpaExpression<Double> log(Expression<? extends Number> b, Expression<? extends Number> x);
@@ -1797,7 +2574,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Literal expression corresponding to the value of pi.
 	 *
-	 * @return pi expression
+	 * @return the pi expression
 	 */
 	@Incubating
 	JpaExpression<Double> pi();
@@ -1805,9 +2582,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the sine of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return sine
+	 * @return the sine
 	 */
 	@Incubating
 	JpaExpression<Double> sin(Expression<? extends Number> x);
@@ -1815,9 +2592,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the cosine of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return cosine
+	 * @return the cosine
 	 */
 	@Incubating
 	JpaExpression<Double> cos(Expression<? extends Number> x);
@@ -1825,9 +2602,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the tangent of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return tangent
+	 * @return the tangent
 	 */
 	@Incubating
 	JpaExpression<Double> tan(Expression<? extends Number> x);
@@ -1835,9 +2612,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the inverse sine of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return inverse sine
+	 * @return the inverse sine
 	 */
 	@Incubating
 	JpaExpression<Double> asin(Expression<? extends Number> x);
@@ -1845,9 +2622,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the inverse cosine of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return inverse cosine
+	 * @return the inverse cosine
 	 */
 	@Incubating
 	JpaExpression<Double> acos(Expression<? extends Number> x);
@@ -1855,9 +2632,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the inverse tangent of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return inverse tangent
+	 * @return the inverse tangent
 	 */
 	@Incubating
 	JpaExpression<Double> atan(Expression<? extends Number> x);
@@ -1877,10 +2654,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the inverse tangent of {@code y} over {@code x}.
 	 *
-	 * @param y y coordinate
-	 * @param x x coordinate
+	 * @param y The y coordinate
+	 * @param x The x coordinate
 	 *
-	 * @return 2-argument inverse tangent
+	 * @return the 2-argument inverse tangent
 	 */
 	@Incubating
 	JpaExpression<Double> atan2(Expression<? extends Number> y, Expression<? extends Number> x);
@@ -1888,9 +2665,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the hyperbolic sine of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return hyperbolic sine
+	 * @return the hyperbolic sine
 	 */
 	@Incubating
 	JpaExpression<Double> sinh(Expression<? extends Number> x);
@@ -1898,9 +2675,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the hyperbolic cosine of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return hyperbolic cosine
+	 * @return the hyperbolic cosine
 	 */
 	@Incubating
 	JpaExpression<Double> cosh(Expression<? extends Number> x);
@@ -1908,9 +2685,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an expression that returns the hyperbolic tangent of its argument.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return hyperbolic tangent
+	 * @return the hyperbolic tangent
 	 */
 	@Incubating
 	JpaExpression<Double> tanh(Expression<? extends Number> x);
@@ -1919,9 +2696,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that converts an angle measured in radians
 	 * to an approximately equivalent angle measured in degrees.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return degrees
+	 * @return the angle in degrees
 	 */
 	@Incubating
 	JpaExpression<Double> degrees(Expression<? extends Number> x);
@@ -1930,9 +2707,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create an expression that converts an angle measured in degrees
 	 * to an approximately equivalent angle measured in radians.
 	 *
-	 * @param x expression
+	 * @param x The expression
 	 *
-	 * @return radians
+	 * @return the angle in radians
 	 */
 	@Incubating
 	JpaExpression<Double> radians(Expression<? extends Number> x);
@@ -1965,7 +2742,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create window frame of type {@link FrameKind#OFFSET_PRECEDING} to use with {@link JpaWindow}s.
 	 *
-	 * @param offset the {@code offset} expression
+	 * @param offset The {@code offset} expression
 	 *
 	 * @return the window frame
 	 */
@@ -1989,7 +2766,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a window frame of type {@link FrameKind#OFFSET_FOLLOWING} to use with {@link JpaWindow}s.
 	 *
-	 * @param offset the {@code offset} expression
+	 * @param offset The {@code offset} expression
 	 *
 	 * @return the window frame
 	 */
@@ -2008,13 +2785,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * Create a generic window function expression that will be applied
 	 * over the specified {@link JpaWindow window}.
 	 *
-	 * @param name name of the window function
-	 * @param type type of this expression
-	 * @param window window over which the function will be applied
-	 * @param args arguments to the function
-	 * @param <T> type of this expression
+	 * @param name The name of the window function
+	 * @param type The type of this expression
+	 * @param window The window over which the function will be applied
+	 * @param args The arguments to the function
+	 * @param <T> The type of this expression
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 */
 	@Incubating
 	<T> JpaExpression<T> windowFunction(String name, Class<T> type, JpaWindow window, Expression<?>... args);
@@ -2022,9 +2799,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code row_number} window function expression.
 	 *
-	 * @param window window over which the function will be applied
+	 * @param window The window over which the function will be applied
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2034,11 +2811,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code first_value} window function expression.
 	 *
-	 * @param argument argument expression to pass to {@code first_value}
-	 * @param window window over which the function will be applied
-	 * @param <T> type of the expression
+	 * @param argument The argument expression to pass to {@code first_value}
+	 * @param window The window over which the function will be applied
+	 * @param <T> The type of the expression
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2048,11 +2825,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code last_value} window function expression.
 	 *
-	 * @param argument argument expression to pass to {@code last_value}
-	 * @param window window over which the function will be applied
-	 * @param <T> type of the expression
+	 * @param argument The argument expression to pass to {@code last_value}
+	 * @param window The window over which the function will be applied
+	 * @param <T> The type of the expression
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2068,12 +2845,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code nth_value} window function expression.
 	 *
-	 * @param argument argument expression to pass to {@code nth_value}
-	 * @param n the {@code N} argument for the function
-	 * @param window window over which the function will be applied
-	 * @param <T> type of the expression
+	 * @param argument The argument expression to pass to {@code nth_value}
+	 * @param n The {@code N} argument for the function
+	 * @param window The window over which the function will be applied
+	 * @param <T> The type of the expression
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2083,9 +2860,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code rank} window function expression.
 	 *
-	 * @param window window over which the function will be applied
+	 * @param window The window over which the function will be applied
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2095,9 +2872,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code dense_rank} window function expression.
 	 *
-	 * @param window window over which the function will be applied
+	 * @param window The window over which the function will be applied
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2107,9 +2884,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code percent_rank} window function expression.
 	 *
-	 * @param window window over which the function will be applied
+	 * @param window The window over which the function will be applied
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2119,9 +2896,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code cume_dist} window function expression.
 	 *
-	 * @param window window over which the function will be applied
+	 * @param window The window over which the function will be applied
 	 *
-	 * @return window function expression
+	 * @return the window function expression
 	 *
 	 * @see #windowFunction
 	 */
@@ -2154,14 +2931,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a generic aggregate function expression.
 	 *
-	 * @param name name of the ordered set-aggregate function
-	 * @param type type of this expression
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param args optional arguments to the function
-	 * @param <T> type of this expression
+	 * @param name The name of the ordered set-aggregate function
+	 * @param type The type of this expression
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param args The optional arguments to the function
+	 * @param <T> The type of this expression
 	 *
-	 * @return aggregate function expression
+	 * @return the aggregate function expression
 	 */
 	@Incubating
 	<T> JpaExpression<T> functionAggregate(
@@ -2186,12 +2963,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code sum} aggregate function expression.
 	 *
-	 * @param argument argument to the function
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param <N> type of the input expression
+	 * @param argument The argument to the function
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param <N> The type of the input expression
 	 *
-	 * @return aggregate function expression
+	 * @return the aggregate function expression
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2213,12 +2990,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create an {@code avg} aggregate function expression.
 	 *
-	 * @param argument argument to the function
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param <N> type of the input expression
+	 * @param argument The argument to the function
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param <N> The type of the input expression
 	 *
-	 * @return aggregate function expression
+	 * @return the aggregate function expression
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2240,11 +3017,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code count} aggregate function expression.
 	 *
-	 * @param argument argument to the function
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
+	 * @param argument The argument to the function
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
 	 *
-	 * @return aggregate function expression
+	 * @return the aggregate function expression
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2285,15 +3062,15 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a generic ordered set-aggregate function expression.
 	 *
-	 * @param name name of the ordered set-aggregate function
-	 * @param type type of this expression
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param args optional arguments to the function
-	 * @param <T> type of this expression
+	 * @param name The name of the ordered set-aggregate function
+	 * @param type The type of this expression
+	 * @param order The order-by clause used in the within group
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param args The optional arguments to the function
+	 * @param <T> The type of this expression
 	 *
-	 * @return ordered set-aggregate function expression
+	 * @return the ordered set-aggregate function expression
 	 */
 	@Incubating
 	<T> JpaExpression<T> functionWithinGroup(
@@ -2362,13 +3139,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code listagg} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param argument values to join
-	 * @param separator the separator used to join the values
+	 * @param order The order-by clause used in the within group
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param argument The values to join
+	 * @param separator The separator used to join the values
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2409,14 +3186,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code mode} ordered set-aggregate function expression.
 	 *
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param sortExpression the sort expression
-	 * @param sortOrder the sort order
-	 * @param nullPrecedence the null precedence
-	 * @param <T> type of this expression
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param sortExpression The sort expression
+	 * @param sortOrder The sort order
+	 * @param nullPrecedence The null precedence
+	 * @param <T> The type of this expression
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2463,14 +3240,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code percentile_cont} ordered set-aggregate function expression.
 	 *
-	 * @param argument argument to the function
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param sortExpression the sort expression
-	 * @param sortOrder the sort order
-	 * @param nullPrecedence the null precedence
+	 * @param argument The argument to the function
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param sortExpression The sort expression
+	 * @param sortOrder The sort order
+	 * @param nullPrecedence The null precedence
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2518,14 +3295,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code percentile_disc} ordered set-aggregate function expression.
 	 *
-	 * @param argument argument to the function
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param sortExpression the sort expression
-	 * @param sortOrder the sort order
-	 * @param nullPrecedence the null precedence
+	 * @param argument The argument to the function
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param sortExpression The sort expression
+	 * @param sortOrder The sort order
+	 * @param nullPrecedence The null precedence
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2559,12 +3336,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code rank} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param arguments arguments to the function
+	 * @param order The order-by clause used in the within group
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param arguments The arguments to the function
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2592,12 +3369,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code percent_rank} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param arguments arguments to the function
+	 * @param order The order-by clause used in the within group
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param arguments The arguments to the function
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -2636,12 +3413,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code array_agg} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param argument values to aggregate
+	 * @param order The order-by clause used in the within group
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param argument The values to aggregate
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 * @since 6.4
@@ -4269,12 +5046,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * Create a {@code xmlagg} ordered set-aggregate function expression.
 	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param argument values to join
+	 * @param order The order-by clause used in the within group
+	 * @param filter The optional filter clause
+	 * @param window The optional window over which to apply the function
+	 * @param argument The values to join
 	 *
-	 * @return ordered set-aggregate expression
+	 * @return the ordered set-aggregate expression
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
@@ -4577,10 +5354,16 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Incubating
 	JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
 
+	/**
+	 * Create a string concatenation expression from a list of expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaExpression<String> concat(@Nonnull List<Expression<String>> expressions);
 
+	/**
+	 * Create an expression extracting the given temporal field from a temporal expression.
+	 */
 	@Nonnull
 	@Override
 	<N, T extends Temporal> JpaExpression<N> extract(@Nonnull TemporalField<N, T> field, @Nonnull Expression<T> temporal);

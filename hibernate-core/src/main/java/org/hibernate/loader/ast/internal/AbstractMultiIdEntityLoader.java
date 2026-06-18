@@ -230,22 +230,27 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			}
 		}
 
-		// look for it in the Session first
-		final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
-		final Object entity = entry.entity();
-		if ( entity != null ) {
-			if ( entry.isManaged() ) {
-				results.add( i, entity );
-				return true;
+		if ( sessionCheckEnabled ) {
+			// look for it in the Session first
+			final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
+			final Object entity = entry.entity();
+			if ( entity != null ) {
+				if ( entry.isManaged() ) {
+					results.add( i, entity );
+					return true;
+				}
+				else {
+					final Object result =
+							loadOptions.getRemovalsMode() == FindMultipleOption.RemovalsMode.INCLUDE
+									? entity
+									: null;
+					results.add( i, result );
+					return true;
+				}
 			}
-			else if ( sessionCheckEnabled ) {
-				final Object result =
-						loadOptions.getRemovalsMode() == FindMultipleOption.RemovalsMode.INCLUDE
-								? entity
-								: null;
-				results.add( i, result );
-				return true;
-			}
+		}
+		else if ( session.getPersistenceContextInternal().containsEntity( entityKey ) ) {
+			return false;
 		}
 
 		if ( loadOptions.isSecondLevelCacheCheckingEnabled() ) {
@@ -382,28 +387,35 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			List<Object> unresolvedIds, int i,
 			SharedSessionContractImplementor session) {
 
-		// look for it in the Session first
-		final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
-		final Object sessionEntity = entry.entity();
-		if ( sessionEntity != null ) {
-			if ( entry.isManaged() ) {
-				//noinspection unchecked
-				resolutionConsumer.consume( i, entityKey, (R) sessionEntity );
-				return unresolvedIds;
-			}
-			else if ( loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED ) {
-				switch ( loadOptions.getRemovalsMode() ) {
-					case REPLACE :
-						resolutionConsumer.consume( i, entityKey, null );
-						return unresolvedIds;
-					case EXCLUDE:
-						return unresolvedIds;
-					case INCLUDE:
-						//noinspection unchecked
-						resolutionConsumer.consume( i, entityKey, (R) sessionEntity );
-						return unresolvedIds;
+		final boolean sessionCheckEnabled =
+				loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED;
+		if ( sessionCheckEnabled ) {
+			// look for it in the Session first
+			final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
+			final Object sessionEntity = entry.entity();
+			if ( sessionEntity != null ) {
+				if ( entry.isManaged() ) {
+					//noinspection unchecked
+					resolutionConsumer.consume( i, entityKey, (R) sessionEntity );
+					return unresolvedIds;
+				}
+				else {
+					switch ( loadOptions.getRemovalsMode() ) {
+						case REPLACE :
+							resolutionConsumer.consume( i, entityKey, null );
+							return unresolvedIds;
+						case EXCLUDE:
+							return unresolvedIds;
+						case INCLUDE:
+							//noinspection unchecked
+							resolutionConsumer.consume( i, entityKey, (R) sessionEntity );
+							return unresolvedIds;
+					}
 				}
 			}
+		}
+		else if ( session.getPersistenceContextInternal().containsEntity( entityKey ) ) {
+			return appendUnresolvedId( unresolvedIds, id );
 		}
 
 		final Object cachedEntity =
@@ -414,13 +426,16 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		if ( cachedEntity != null ) {
 			//noinspection unchecked
 			resolutionConsumer.consume( i, entityKey, (R) cachedEntity );
+			return unresolvedIds;
 		}
-		else {
-			if ( unresolvedIds == null ) {
-				unresolvedIds = new ArrayList<>();
-			}
-			unresolvedIds.add( id );
+		return appendUnresolvedId( unresolvedIds, id );
+	}
+
+	private List<Object> appendUnresolvedId(List<Object> unresolvedIds, Object id) {
+		if ( unresolvedIds == null ) {
+			unresolvedIds = new ArrayList<>();
 		}
+		unresolvedIds.add( id );
 		return unresolvedIds;
 	}
 

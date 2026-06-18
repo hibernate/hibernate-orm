@@ -7,7 +7,7 @@ package org.hibernate.engine.spi;
 import java.io.Serializable;
 
 import jakarta.persistence.AttributeNode;
-import jakarta.persistence.BatchSize;
+import jakarta.persistence.BatchFetch;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -78,7 +78,7 @@ public record FetchOptions(
 
 	private static @Nullable Integer batchSize(AttributeNode<?> node) {
 		for ( var option : node.getOptions() ) {
-			if ( option instanceof BatchSize batchSize
+			if ( option instanceof BatchFetch batchSize
 					&& batchSize.batchSize() >= 0 ) {
 				return batchSize.batchSize();
 			}

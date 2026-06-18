@@ -327,11 +327,11 @@ JPA provides a standard `FetchOption` for batch fetching:
 
 [source,java]
 ----
-import jakarta.persistence.BatchSize;
+import jakarta.persistence.BatchFetch;
 ...
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addAttributeNode(Book_.authors)
-     .addOption(new BatchSize(5));
+     .addOption(new BatchFetch(5));
 Book book = entityManager.find(graph, bookId);
 ----
 

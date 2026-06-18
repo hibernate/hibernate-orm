@@ -346,6 +346,27 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-20591" )
+	public void testCompositeIdKeyManyToOneMappedByTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-key-many-to-one/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl parentEntity = transformed.getEntities().stream()
+					.filter( e -> "Parent".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( parentEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
+
+			final JaxbOneToManyImpl children = parentEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( children.getName() ).isEqualTo( "children" );
+			assertThat( children.getMappedBy() )
+					.as( "mapped-by should resolve to 'id.parent' for key-many-to-one inside composite-id" )
+					.isEqualTo( "id.parent" );
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

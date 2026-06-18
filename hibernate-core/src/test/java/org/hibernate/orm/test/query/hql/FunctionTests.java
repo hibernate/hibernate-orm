@@ -2272,14 +2272,21 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "local datetime is evaluated in the database local time zone")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The clock in the container likes to get skewed, so to avoid false negatives, skip the test")
-	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
+	public void testExtractFunctionEpochLocalDateTime(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					long before = Instant.now().getEpochSecond()-1;
 					long epoch = session.createQuery( "select extract(epoch from local datetime)", Long.class ).getSingleResult();
 					long after = Instant.now().getEpochSecond()+1;
 					assertThat( epoch, allOf( greaterThanOrEqualTo( before ), lessThanOrEqualTo( after ) ) );
+				}
+		);
+	}
 
+	@Test
+	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select extract(epoch from offset datetime)", Long.class).getSingleResult();
 
 					assertThat( session.createQuery("select extract(epoch from datetime 1974-03-23 12:35)", Long.class).getSingleResult(),

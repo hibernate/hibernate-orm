@@ -9,6 +9,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.community.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -107,9 +108,10 @@ public class ConnectionLockTimeoutTests {
 			assertThat( initialLockTimeout.milliseconds() ).isEqualTo( expectedInitialValue );
 
 			List<Duration> durs;
-			if ( session.getDialect() instanceof TiDBDialect ) {
+			if ( session.getDialect() instanceof TiDBDialect || session.getDialect() instanceof InformixDialect ) {
 				// The supported values are between 1 and 3600 seconds
 				// 3600 means infinite, so it is special
+				// Informix only supports to configure seconds and has a maximum of 32767 seconds
 				durs = List.of(
 					Duration.ofSeconds(1),
 					Duration.ofSeconds(2),

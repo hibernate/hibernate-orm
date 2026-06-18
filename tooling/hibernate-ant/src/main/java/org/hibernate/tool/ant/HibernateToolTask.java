@@ -12,6 +12,7 @@ import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
 import org.hibernate.tool.ant.util.ExceptionUtil;
+import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.internal.util.StringUtil;
 
@@ -158,6 +159,7 @@ public class HibernateToolTask extends Task {
 		log("Executing Hibernate Tool with a " + configurationTask.getDescription() );
 		validateParameters();
 		Iterator<ExporterTask> iterator = generators.iterator();
+		final ArrayList<Exporter> exporters = new ArrayList<>( generators.size() );
 
 		try (AntClassLoader loader = getProject().createClassLoader(classPath)) {
 			ExporterTask generatorTask = null;
@@ -170,7 +172,7 @@ public class HibernateToolTask extends Task {
 				while (iterator.hasNext() ) {
 					generatorTask = iterator.next();
 					log(count++ + ". task: " + generatorTask.getName() );
-					generatorTask.execute();
+					exporters.add( generatorTask.executeWithoutClose() );
 				}
 			}
 			catch (RuntimeException re) {
@@ -179,6 +181,10 @@ public class HibernateToolTask extends Task {
 			finally {
 				loader.resetThreadContextLoader();
 				loader.cleanup();
+				for ( Exporter exporter : exporters ) {
+					exporter.stop();
+				}
+
 			}
 		}
 	}

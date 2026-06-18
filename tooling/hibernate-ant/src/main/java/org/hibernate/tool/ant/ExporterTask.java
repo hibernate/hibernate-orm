@@ -40,6 +40,13 @@ public abstract class ExporterTask {
 
 	}
 
+	public Exporter executeWithoutClose() {
+
+		Exporter exporter = configureExporter(createExporter() );
+		exporter.start( false );
+		return exporter;
+	}
+
 	protected abstract Exporter createExporter();
 
 	public File getDestdir() {

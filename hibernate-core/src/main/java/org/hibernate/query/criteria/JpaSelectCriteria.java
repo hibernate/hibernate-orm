@@ -62,58 +62,100 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	@Nonnull
 	<X> JpaFunctionRoot<X> from(@Nonnull JpaSetReturningFunction<X> function);
 
+	/**
+	 * Set whether duplicate query results are eliminated.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);
 
+	/**
+	 * Return the query selection.
+	 */
 	@Override
 	@Nullable
 	JpaSelection<T> getSelection();
 
+	/**
+	 * Create a query root for the given entity type.
+	 */
 	@Nonnull
 	@Override
 	<X> JpaRoot<X> from(@Nonnull Class<X> entityClass);
 
+	/**
+	 * Create a query root for the given entity type.
+	 */
 	@Nonnull
 	@Override
 	<X> JpaRoot<X> from(@Nonnull EntityType<X> entity);
 
+	/**
+	 * Return the restriction.
+	 */
 	@Override
 	@Nullable
 	JpaPredicate getRestriction();
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> where(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> where(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	/**
+	 * Set the grouping expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> groupBy(@Nonnull Expression<?>... grouping);
 
+	/**
+	 * Set the grouping expressions.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> groupBy(@Nonnull List<Expression<?>> grouping);
 
+	/**
+	 * Return the group restriction.
+	 */
 	@Override
 	@Nullable
 	JpaPredicate getGroupRestriction();
 
+	/**
+	 * Set the group restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> having(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the group restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> having(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the group restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions);

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.Incubating;
 import org.hibernate.query.SortDirection;
@@ -15,16 +16,22 @@ import org.hibernate.query.SortDirection;
  */
 @Incubating
 public interface JpaSearchOrder extends JpaCriteriaNode {
+	/**
+	 * Return the sort direction.
+	 */
+	@Nonnull
 	SortDirection getSortOrder();
 
 	/**
 	 * Set the precedence of nulls for this search order element
 	 */
-	JpaSearchOrder nullPrecedence(Nulls precedence);
+	@Nonnull
+	JpaSearchOrder nullPrecedence(@Nonnull Nulls precedence);
 
 	/**
 	 * The precedence for nulls for this search order element
 	 */
+	@Nonnull
 	Nulls getNullPrecedence();
 
 	/**

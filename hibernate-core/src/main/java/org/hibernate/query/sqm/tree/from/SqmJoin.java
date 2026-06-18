@@ -43,7 +43,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
  */
 public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	/**
-	 * The type of join - inner, cross, etc
+	 * The type of join.
 	 */
 	SqmJoinType getSqmJoinType();
 

@@ -33,12 +33,21 @@ import org.hibernate.Incubating;
 @Incubating
 public interface JpaCriteriaInsertValues<T> extends JpaCriteriaInsert<T> {
 
+	/**
+	 * Add value rows to this insert statement.
+	 */
 	@Nonnull
 	JpaCriteriaInsertValues<T> values(@Nonnull JpaValues... values);
 
+	/**
+	 * Add value rows to this insert statement.
+	 */
 	@Nonnull
 	JpaCriteriaInsertValues<T> values(@Nonnull List<? extends JpaValues> values);
 
+	/**
+	 * Set the conflict clause for this insert statement.
+	 */
 	@Override
 	@Nonnull
 	JpaCriteriaInsertValues<T> onConflict(@Nonnull JpaConflictClause<T> conflictClause);

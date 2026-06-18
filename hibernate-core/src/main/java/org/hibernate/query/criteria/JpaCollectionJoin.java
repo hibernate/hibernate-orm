@@ -21,29 +21,51 @@ import java.util.List;
  */
 public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>, T>, CollectionJoin<O, T> {
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCollectionJoin<O, T> on(@Nullable JpaExpression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCollectionJoin<O, T> on(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCollectionJoin<O, T> on(@Nullable JpaPredicate... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCollectionJoin<O, T> on(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaCollectionJoin<O, T> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Override
-	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);
+	@Nonnull
+	<S extends T> JpaTreatedJoin<O,T, S> treatAs(@Nonnull Class<S> treatAsType);
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
@@ -51,6 +73,10 @@ public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>,
 		return (JpaCollectionJoin<O, S>) treatAs( treatAsType );
 	}
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Override
-	<S extends T> JpaTreatedJoin<O,T, S> treatAs(EntityDomainType<S> treatAsType);
+	@Nonnull
+	<S extends T> JpaTreatedJoin<O,T, S> treatAs(@Nonnull EntityDomainType<S> treatAsType);
 }

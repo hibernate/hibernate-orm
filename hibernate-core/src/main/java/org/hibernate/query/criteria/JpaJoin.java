@@ -24,37 +24,66 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 */
 public interface JpaJoin<L, R> extends JpaFrom<L,R>, Join<L,R> {
 
+	/**
+	 * Return the joined attribute.
+	 */
 	@Override
 	@Nullable
 	PersistentAttribute<? super L, ?> getAttribute();
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	JpaJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaJoin<L, R> on(@Nonnull Expression<Boolean> restriction);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	JpaJoin<L, R> on(@Nullable JpaPredicate... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaJoin<L, R> on(@Nonnull BooleanExpression... restrictions);
 
+	/**
+	 * Set the join restriction.
+	 */
 	@Nonnull
 	@Override
 	JpaJoin<L, R> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Override
-	<S extends R> JpaTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);
+	@Nonnull
+	<S extends R> JpaTreatedJoin<L,R,S> treatAs(@Nonnull Class<S> treatAsType);
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Nonnull
 	@Override
 	default <S extends R> JpaJoin<L, S> treat(@Nonnull Class<S> treatAsType) {
 		return treatAs( treatAsType );
 	}
 
+	/**
+	 * Downcast this join to the specified subtype.
+	 */
 	@Override
-	<S extends R> JpaTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
+	@Nonnull
+	<S extends R> JpaTreatedJoin<L,R,S> treatAs(@Nonnull EntityDomainType<S> treatAsType);
 }

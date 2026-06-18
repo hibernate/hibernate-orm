@@ -164,6 +164,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -1673,8 +1674,13 @@ public class HbmXmlTransformer {
 		oneToOne.setForeignKey( new JaxbForeignKeyImpl() );
 		oneToOne.getForeignKey().setName( hbmOneToOne.getForeignKey() );
 		if ( isNotEmpty( hbmOneToOne.getPropertyRef() ) ) {
-			oneToOne.setPropertyRef( new JaxbPropertyRefImpl() );
-			oneToOne.getPropertyRef().setName( hbmOneToOne.getPropertyRef() );
+			if ( isPropertyRefBackReference( hbmOneToOne, propertyInfo ) ) {
+				oneToOne.setMappedBy( hbmOneToOne.getPropertyRef() );
+			}
+			else {
+				oneToOne.setPropertyRef( new JaxbPropertyRefImpl() );
+				oneToOne.getPropertyRef().setName( hbmOneToOne.getPropertyRef() );
+			}
 		}
 		for ( String formula : hbmOneToOne.getFormula() ) {
 			oneToOne.getJoinColumnOrJoinFormula().add( formula );
@@ -1690,6 +1696,26 @@ public class HbmXmlTransformer {
 		transferFetchable( hbmOneToOne.getLazy(), hbmOneToOne.getFetch(), hbmOneToOne.getOuterJoin(), hbmOneToOne.isConstrained(), oneToOne );
 
 		attributes.getOneToOneAttributes().add( oneToOne );
+	}
+
+	private boolean isPropertyRefBackReference(JaxbHbmOneToOneType hbmOneToOne, PropertyInfo propertyInfo) {
+		final String targetEntityName = isNotEmpty( hbmOneToOne.getEntityName() )
+				? hbmOneToOne.getEntityName()
+				: hbmOneToOne.getClazz();
+		final var targetEntityInfo = transformationState.getEntityInfoByName().get( targetEntityName );
+		if ( targetEntityInfo == null ) {
+			return false;
+		}
+		final var refPropertyInfo = targetEntityInfo.propertyInfoMap().get( hbmOneToOne.getPropertyRef() );
+		if ( refPropertyInfo == null ) {
+			return false;
+		}
+		final Value refValue = refPropertyInfo.bootModelProperty().getValue();
+		if ( !( refValue instanceof ToOne refToOne ) ) {
+			return false;
+		}
+		final String declaringEntityName = propertyInfo.bootModelProperty().getPersistentClass().getEntityName();
+		return declaringEntityName.equals( refToOne.getReferencedEntityName() );
 	}
 
 	private void transferManyToOne(

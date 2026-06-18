@@ -99,7 +99,7 @@ class DerivedIdentifierBinder {
 			);
 		}
 
-		final List<Column> identifierColumns = identifierValue.getColumns();
+		final List<Column> identifierColumns = sortedColumns( identifierValue, identifierValue.getColumns() );
 		final List<Column> targetColumns = resolveTargetColumns( derivedIdentifierBinding );
 		if ( identifierColumns.size() != targetColumns.size() ) {
 			throw new MappingException(
@@ -123,6 +123,7 @@ class DerivedIdentifierBinder {
 			derivedIdentifierBinding.value().addColumn( identifierColumn, false, false );
 		}
 		reorderAssociationColumns( derivedIdentifierBinding.value(), runtimeIdentifierColumns );
+		derivedIdentifierBinding.value().setSorted( true );
 		derivedIdentifierBinding.property().setOptional( false );
 		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 				derivedIdentifierBinding.ownerBinding(),
@@ -154,6 +155,7 @@ class DerivedIdentifierBinder {
 
 	private List<Column> sortedColumns(Value value, List<Column> fallbackColumns) {
 		if ( value instanceof Component component ) {
+			component.sortProperties();
 			return component.getColumns();
 		}
 		return fallbackColumns;

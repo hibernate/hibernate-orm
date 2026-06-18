@@ -58,6 +58,9 @@ class CollectionShapeBinder {
 			case ORDERED_SET, ORDERED_MAP -> applyOrdering( source, collection, bindingState );
 			case SORTED_SET, SORTED_MAP -> applySorting( source, collection );
 			default -> {
+				if ( source.orderBy() != null || source.sqlOrder() != null ) {
+					applyOrdering( source, collection, bindingState );
+				}
 			}
 		}
 		if ( collection instanceof List list ) {

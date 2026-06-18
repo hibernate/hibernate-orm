@@ -10,6 +10,7 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.models.bind.internal.SecondaryTable;
+import org.hibernate.boot.models.bind.internal.binding.IdentifierContribution;
 import org.hibernate.boot.models.bind.internal.binders.AssociationTargetBinding;
 import org.hibernate.boot.models.bind.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.models.bind.internal.binders.AssociationTableBinding;
@@ -23,6 +24,7 @@ import org.hibernate.boot.models.bind.internal.binders.InverseToOneAssociationBi
 import org.hibernate.boot.models.bind.internal.binders.ManagedTypeBinder;
 import org.hibernate.boot.models.bind.internal.binders.PropertyMapKeyBinding;
 import org.hibernate.boot.models.bind.internal.binders.TableForeignKeyBinding;
+import org.hibernate.boot.models.bind.internal.views.IdentifierContributionView;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
 import org.hibernate.boot.models.categorize.spi.ManagedTypeMetadata;
@@ -229,6 +231,18 @@ public interface BindingState {
 
 	/// Resolve the identifier binding for an entity hierarchy root.
 	IdentifierBinding getIdentifierBinding(EntityTypeMetadata rootType);
+
+	/// Register semantic identifier contribution state for an entity root.
+	void addIdentifierContribution(EntityTypeMetadata rootType, IdentifierContribution identifierContribution);
+
+	/// Resolve semantic identifier contribution state for an entity root.
+	IdentifierContribution getIdentifierContribution(EntityTypeMetadata rootType);
+
+	/// Resolve the finalized identifier contribution view for an entity root.
+	default IdentifierContributionView getIdentifierContributionView(EntityTypeMetadata rootType) {
+		final IdentifierContribution contribution = getIdentifierContribution( rootType );
+		return contribution == null ? null : new IdentifierContributionView( contribution );
+	}
 
 
 	/// Register the binder responsible for a categorized managed type.

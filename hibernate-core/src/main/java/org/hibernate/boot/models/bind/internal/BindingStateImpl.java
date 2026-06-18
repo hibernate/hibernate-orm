@@ -15,6 +15,7 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.models.bind.internal.binding.IdentifierContribution;
 import org.hibernate.boot.models.bind.internal.binders.AssociationTableBinding;
 import org.hibernate.boot.models.bind.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.models.bind.internal.binders.AssociationTargetBinding;
@@ -105,6 +106,7 @@ public class BindingStateImpl implements BindingState {
 	private final Map<ClassDetails, ManagedTypeBinder> typeBinders = new HashMap<>();
 	private final Map<ClassDetails, IdentifiableTypeBinder> typeBindersBySuper = new HashMap<>();
 	private final Map<EntityTypeMetadata, IdentifierBinding> identifierBindings = new HashMap<>();
+	private final Map<EntityTypeMetadata, IdentifierContribution> identifierContributions = new HashMap<>();
 
 	public BindingStateImpl(MetadataBuildingContext metadataBuildingContext, MetadataCollector metadataCollector) {
 		this.metadataBuildingContext = metadataBuildingContext;
@@ -285,6 +287,16 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public IdentifierBinding getIdentifierBinding(EntityTypeMetadata rootType) {
 		return identifierBindings.get( rootType );
+	}
+
+	@Override
+	public void addIdentifierContribution(EntityTypeMetadata rootType, IdentifierContribution identifierContribution) {
+		identifierContributions.put( rootType, identifierContribution );
+	}
+
+	@Override
+	public IdentifierContribution getIdentifierContribution(EntityTypeMetadata rootType) {
+		return identifierContributions.get( rootType );
 	}
 
 	@Override

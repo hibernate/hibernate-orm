@@ -37,6 +37,7 @@ import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
@@ -298,6 +299,9 @@ class ToOneAttributeBinder {
 					ownerClassName,
 					propertyName
 			);
+			if ( referenceToPrimaryKey ) {
+				value.setSorted( true );
+			}
 		}
 		else {
 			bindingState.addDerivedIdentifierBinding( new DerivedIdentifierBinding(
@@ -816,6 +820,7 @@ class ToOneAttributeBinder {
 				targetTypeBinder,
 				targetTypeBinder.getManagedType(),
 				identifierBinding.table(),
+				identifierBinding,
 				identifierBinding.columns()
 		);
 	}
@@ -836,9 +841,14 @@ class ToOneAttributeBinder {
 			EntityTypeBinder typeBinder,
 			EntityTypeMetadata entityNaming,
 			Table primaryTable,
+			IdentifierBinding identifierBinding,
 			List<Column> identifierColumns) {
 		@Override
 		public List<Column> identifierColumns() {
+			if ( identifierBinding.value() instanceof SortableValue sortableValue ) {
+				sortableValue.sortProperties();
+				return identifierBinding.value().getColumns();
+			}
 			if ( primaryTable.getPrimaryKey() != null
 					&& !primaryTable.getPrimaryKey().getColumns().isEmpty()
 					&& primaryTable.getPrimaryKey().getColumns().size() >= identifierColumns.size() ) {

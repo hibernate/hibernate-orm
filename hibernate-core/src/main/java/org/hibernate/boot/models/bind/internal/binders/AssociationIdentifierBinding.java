@@ -7,6 +7,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.hibernate.boot.models.bind.internal.binding.IdentifierAttributeBinding;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.mapping.Column;
@@ -14,6 +15,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.JoinColumn;
 
 /// Pending binding for an association-valued `IdClass` identifier attribute.
@@ -34,6 +36,7 @@ public record AssociationIdentifierBinding(
 		Property property,
 		ToOne value,
 		org.hibernate.mapping.Value identifierValue,
+		@Nullable IdentifierAttributeBinding identifierAttribute,
 		EntityTypeBinder targetTypeBinder,
 		List<JoinColumn> joinColumns,
 		ForeignKeySource foreignKeySource,
@@ -55,6 +58,32 @@ public record AssociationIdentifierBinding(
 				property,
 				value,
 				identifierValue,
+				null,
+				targetTypeBinder,
+				joinColumns,
+				foreignKeySource,
+				identifierColumns
+		);
+	}
+
+	public AssociationIdentifierBinding(
+			EntityTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			Property property,
+			ToOne value,
+			org.hibernate.mapping.Value identifierValue,
+			@Nullable IdentifierAttributeBinding identifierAttribute,
+			EntityTypeBinder targetTypeBinder,
+			List<JoinColumn> joinColumns,
+			ForeignKeySource foreignKeySource,
+			List<Column> identifierColumns) {
+		this(
+				ownerType,
+				ownerBinding,
+				property,
+				value,
+				identifierValue,
+				identifierAttribute,
 				targetTypeBinder,
 				joinColumns,
 				foreignKeySource,

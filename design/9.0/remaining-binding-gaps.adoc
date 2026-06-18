@@ -86,11 +86,13 @@ table.
 association uses a join table.  It also rejects inverse one-to-one association
 identifiers.
 
-| IdClass identifier attributes beyond basic/to-one
+| IdClass identifier attributes beyond basic/to-one/embedded-id bridge
 | source-confirmed gap
-| `IdentifierBinder` only handles basic and to-one id attributes for IdClass.
-Any remaining plural, component, or special association id shape needs either
-explicit support or an ORM 9 rejection decision.
+| `IdentifierBinder` now handles basic id attributes, association-valued id
+attributes, entity members whose IdClass member supplies `@ManyToOne`, and the
+`@EmbeddedId` plus IdClass bridge used by `@MapsId`.  Any remaining plural,
+component-valued non-embedded-id, `@Any`, or other special association id shape
+needs either explicit support or an ORM 9 rejection decision.
 
 | `@MapsId` over unsupported identifier value shapes
 | source-confirmed gap
@@ -344,6 +346,135 @@ collection Java types, and non-where/query paths still hit unsupported runtime
 branches.  Keep this separate from boot-model gaps unless a focused test shows
 SessionFactory construction failure.
 |===
+
+=== Core Guardrail Refresh: 2026-06-18
+
+Refresh command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test
+----
+
+Status:
+
+* The run reached broad `hibernate-core` test execution and produced a large
+  live-console failure stream.
+* After the visible stream reached JPA transaction/closed-EntityManager tests,
+  the Gradle session stopped producing output for several minutes.  The run was
+  interrupted with `Ctrl-C` to avoid leaving a dangling test process.
+* JUnit XML finalization was incomplete: only 5 XML files were written under
+  `hibernate-core/target/test-results/test`.
+* The generated HTML report tree was partially useful.  It contained 1,236 HTML
+  files, but the finalized class-summary pages represented only the last
+  reliable segment of the run.
+
+Finalized HTML-report subset:
+
+[cols="1,1,1,3", options="header"]
+|===
+| Bucket
+| Failed classes
+| Failed tests
+| Representative classes
+
+| Bytecode enhancement / lazy proxy / lazy to-one
+| 49
+| 143
+| `FetchGraphTest`, `DetachedReferenceInitializationAnyFetchTest`,
+`EagerOneToManyPersistAndLoadTest`, `BidirectionalLazyTest`,
+`ManyToOneAllowProxyTests`.
+
+| Collections/index/map/plural behavior
+| 17
+| 52
+| Mostly overlapping enhancement collection tests:
+`EagerSubSelectOneToManyPersistAndLoad2Test`,
+`DirtyTrackingCollectionInDefaultFetchGroupTest`,
+`LazyProxyBytecodeEnhancementCollectionInitializationTest`.
+
+| Association/FK/join/property-ref behavior
+| 12
+| 24
+| `PolymorphicToOneImplicitOptionTests`, `ManyToOneAllowProxyTests`,
+`JoinFetchedManyToOneAllowProxyTests`,
+`ManyToOneWithEmbeddedAndNotOptionalFieldTest`.
+
+| Query/entity-graph/lazy graph behavior
+| 4
+| 26
+| `FetchGraphTest`, `LoadAndFetchGraphCollectionsNotExplicitlySpecifiedTest`,
+`QueryScrollingWithInheritanceProxyTest`.
+
+| `@Any`
+| 1
+| 12
+| `DetachedReferenceInitializationAnyFetchTest`.
+
+| Identifier/composite/idclass/derived-id
+| 0
+| 0
+| No identifier failures appeared in the finalized HTML subset.  This matches
+the focused guardrail after the recent `IdentifierBinder` fixes, but it does
+not prove the broader full suite is identifier-clean because the run was
+interrupted.
+|===
+
+Live-console buckets observed before interruption:
+
+[cols="1,3", options="header"]
+|===
+| Bucket
+| Representative live-console signals
+
+| Collections and plural association keys
+| Many `ConstraintViolationException`, join-table/list-index assertion, and
+`InversePluralAssociationBinder`/`CollectionIndexBinder` failures.  This is the
+strongest binding-relevant bucket visible in the live stream.
+
+| Association target / join-column / property-ref binding
+| `AssociationTargetBinder`, `ToOneAttributeBinder`, `JoinColumnOccursOutOfOrder`,
+`BatchFetchReferencedColumnName`, and non-primary-key join tests.  This bucket
+is closely related to late FK/key resolution and should be sampled before
+runtime fixes.
+
+| `@Any` / `@ManyToAny`
+| `AnyValueBinder`, `AnyValue`, discriminator/key inference, and lazy/join-fetch
+any tests still appear repeatedly.  Existing source-confirmed `@Any` gaps remain
+valid.
+
+| Inheritance / mapped-superclass / discriminator
+| Console output still included inheritance, discriminator, mapped-superclass,
+and non-root table failures.  Some are likely downstream of association/table
+binding rather than pure categorization failures.
+
+| Audit/changelog state management
+| A large audit tail failed with `IllegalArgumentException`,
+`AssertionFailedError`, and occasional nulls.  Treat this as runtime/state
+fallout until core mapping buckets shrink.
+
+| Temporal/timezone and native datetime discovery
+| Several temporal tests failed in the live stream.  These are not primary
+boot-model binding gaps unless a focused rerun shows metadata construction
+failure.
+
+| JPA transaction / closed EntityManager behavior
+| The run reached closed-EntityManager and transaction-joining failures shortly
+before the quiet period.  Keep this out of the binding-gap critical path.
+|===
+
+Actionable conclusion from this refresh:
+
+* The recent focused identifier fixes are holding for the targeted guardrails;
+  do not keep the identifier bucket open without a new focused failing example.
+* A full `hibernate-core` run is currently too noisy and too unstable to use as
+  the next work selector.
+* Before starting broad design implementation, the highest-signal optional
+  sampling target is collections/plural-association key binding plus
+  association target/property-ref binding.
+* It is reasonable to proceed with the resolved contribution design work after
+  recording this harvest; the remaining full-suite failures are not a reason to
+  delay the design indefinitely.
 
 == Historical Full-Suite Failure Snapshot: 2026-06-17
 

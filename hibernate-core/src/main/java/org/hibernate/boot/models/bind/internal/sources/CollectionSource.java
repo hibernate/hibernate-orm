@@ -300,7 +300,10 @@ public record CollectionSource(
 		}
 		if ( java.util.List.class.isAssignableFrom( collectionType )
 				&& !member.hasDirectAnnotationUsage( Bag.class ) ) {
-			return defaultListSemantics == null ? CollectionClassification.LIST : defaultListSemantics;
+			if ( isOrdered( member ) && !hasListIndexSource( member ) ) {
+				return CollectionClassification.BAG;
+			}
+			return CollectionClassification.LIST;
 		}
 		if ( java.util.Map.class.isAssignableFrom( collectionType ) ) {
 			if ( isSorted( member, collectionType ) ) {
@@ -393,6 +396,14 @@ public record CollectionSource(
 	private static boolean isOrdered(MemberDetails member) {
 		return member.hasDirectAnnotationUsage( OrderBy.class )
 				|| member.hasDirectAnnotationUsage( SQLOrder.class );
+	}
+
+	private static boolean hasListIndexSource(MemberDetails member) {
+		return member.hasDirectAnnotationUsage( OrderColumn.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexBase.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJavaType.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJdbcType.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJdbcTypeCode.class );
 	}
 
 	/// The direct `@ManyToMany` annotation.

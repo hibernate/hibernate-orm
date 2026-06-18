@@ -308,12 +308,13 @@ public class MetadataContext {
 					for ( var property : persistentClass.getDeclaredProperties() ) {
 						// property represents special handling for @IdClass mappings,
 						// but we have already accounted for the embedded property mappings
-						// in #applyIdMetadata && #buildIdClassAttributes
-						if ( property.getValue() != persistentClass.getIdentifierMapper()
-							// skip the version property, it was already handled previously.
-							&& !isVersion( persistentClass, property )
-							// Skip generic properties since they may only be declared on abstract classes
-							&& !property.isGenericSpecialization() ) {
+							// in #applyIdMetadata && #buildIdClassAttributes
+							if ( property.getValue() != persistentClass.getIdentifierMapper()
+								&& !isIdentifierProperty( property, persistentClass )
+								// skip the version property, it was already handled previously.
+								&& !isVersion( persistentClass, property )
+								// Skip generic properties since they may only be declared on abstract classes
+								&& !property.isGenericSpecialization() ) {
 							buildAttribute( property, jpaMapping );
 						}
 					}
@@ -411,6 +412,12 @@ public class MetadataContext {
 
 	private static boolean isIdentifierProperty(Property property, MappedSuperclass mappedSuperclass) {
 		final var identifierMapper = mappedSuperclass.getIdentifierMapper();
+		return identifierMapper != null
+			&& contains( identifierMapper.getPropertyNames(), property.getName() );
+	}
+
+	private static boolean isIdentifierProperty(Property property, PersistentClass persistentClass) {
+		final var identifierMapper = persistentClass.getIdentifierMapper();
 		return identifierMapper != null
 			&& contains( identifierMapper.getPropertyNames(), property.getName() );
 	}
@@ -822,7 +829,7 @@ public class MetadataContext {
 				final var attributes = entityType.getIdClassAttributesSafely();
 				if ( attributes != null ) {
 					for ( var attribute : attributes ) {
-						registerAttribute( metamodelClass, attribute );
+						registerAttribute( metamodelClass, attribute, true );
 					}
 				}
 			}
@@ -830,6 +837,10 @@ public class MetadataContext {
 	}
 
 	private <X> void registerAttribute(Class<?> metamodelClass, Attribute<X, ?> attribute) {
+		registerAttribute( metamodelClass, attribute, false );
+	}
+
+	private <X> void registerAttribute(Class<?> metamodelClass, Attribute<X, ?> attribute, boolean allowInheritedField) {
 		final String name = attribute.getName();
 		try {
 			// there is a shortcoming in the existing Hibernate code in terms of the way MappedSuperclass
@@ -843,8 +854,9 @@ public class MetadataContext {
 			final var persistentAttribute = (PersistentAttribute<X, ?>) attribute;
 			final boolean allowNonDeclaredFieldReference =
 					persistentAttribute.getAttributeClassification() == AttributeClassification.EMBEDDED
-							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
-			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
+							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE
+							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.MAPPED_SUPERCLASS;
+			injectField( metamodelClass, name, attribute, true );
 		}
 		catch (NoSuchFieldException e) {
 			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );

@@ -98,6 +98,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	private String[] structColumnNames;
 	private transient Class<?> componentClass;
 	private transient Boolean simpleRecord;
+	private boolean preservePropertyOrder;
 	private String columnNamingPattern;
 
 	private boolean tableWasExplicit;
@@ -844,6 +845,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		if ( originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
 			return originalPropertyOrder;
 		}
+		if ( preservePropertyOrder ) {
+			return this.originalPropertyOrder = null;
+		}
 		// Don't sort the properties for a simple record
 		if ( isSimpleRecord() ) {
 			return this.originalPropertyOrder = null;
@@ -895,6 +899,14 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			simple = simpleRecord = true;
 		}
 		return simple;
+	}
+
+	public boolean isPreservePropertyOrder() {
+		return preservePropertyOrder;
+	}
+
+	public void setPreservePropertyOrder(boolean preservePropertyOrder) {
+		this.preservePropertyOrder = preservePropertyOrder;
 	}
 
 	private Class<?> resolveComponentClass() {

@@ -1,0 +1,531 @@
+= Resolved Contribution Model Design
+:toc:
+
+This document captures the combined ORM 9 design direction for identifiers,
+mapped superclasses, and embeddables.
+
+The common problem is not just that each area has a missing binder branch.  The
+deeper problem is that binding currently asks flattened legacy mapping objects
+to carry too many meanings at once:
+
+* source declarations;
+* path- or hierarchy-specific applications;
+* Java/member representation correspondence;
+* table and selectable correspondence;
+* compatibility property closures;
+* runtime traversal and JDBC ordering.
+
+That makes early mutation, especially property and column sorting, look like a
+semantic operation.  It is not.  Sorting should be a late projection over an
+explicitly resolved model.
+
+For the focused designs, see:
+
+* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+* link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
+
+For a concrete exploratory shape of the possible boot-time resolved model, see
+link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`].
+
+== Core Rule
+
+Binding should preserve source and application correspondence.  Legacy
+`org.hibernate.mapping` objects should be materialized compatibility views, not
+the only semantic record.
+
+In practical terms:
+
+* source declaration order is preserved as source information;
+* applied contribution order is resolved explicitly;
+* selectable correspondence is preserved as local-to-referenced pairs;
+* identifier part correspondence is preserved as virtual/id-class/target-id
+  relationships;
+* flattened property closures, primary-key order, foreign-key order, runtime
+  JDBC order, and static metamodel views are derived after resolution.
+
+The design target is:
+
+[source]
+----
+source annotations / XML
+        -> declarations
+        -> applied contributions
+        -> resolved semantic model
+        -> compatibility views
+        -> runtime model
+----
+
+== Why Now
+
+Recent ORM 9 boot-model work exposed the same failure pattern in several
+apparently separate places.
+
+=== Identifier And Derived-Id Failures
+
+`@IdClass`, association-valued identifiers, `@MapsId`, nested embedded ids, and
+composite foreign keys all need more than positional list matching.
+
+The same entity can have:
+
+* a virtual id attribute, such as `SystemUser.subsystem`;
+* an IdClass member, such as `PK.subsystem`;
+* a target identifier part, such as `Subsystem.id`;
+* a local selectable, such as `systemuser.subsystem_id`;
+* a runtime JDBC position used for key lookup and row initialization.
+
+Those are related, but they are not interchangeable.  Encoding the relationship
+only through `Component` property order or `Value` column order is fragile.
+
+=== Static Metamodel Injection
+
+The JPA static metamodel issue showed the same ambiguity at the domain-model
+boundary.  If an IdClass id property exists both as a flattened entity property
+and as an identifier-mapper property, `MetadataContext` must infer whether it is
+an id attribute from copied legacy state.
+
+With explicit identifier correspondence and contribution origin, static
+metamodel population can ask the resolved model:
+
+* which attributes are id attributes;
+* where they were declared;
+* whether they came from an entity, mapped superclass, or compatibility view;
+* which public Java member should receive injection.
+
+=== Mapped-Superclass Ownership
+
+A mapped superclass declaration does not own a table.  Its members are applied
+to a consuming entity hierarchy, where table context, overrides, identifier
+state, version state, and lifecycle state are resolved.
+
+Copying mapped-superclass properties into every consuming `PersistentClass`
+makes the flattened closure appear authoritative and hides contribution origin.
+
+=== Embeddable Path State
+
+An embeddable declaration is not the same as an embedded value mapping.  The
+same Java type can be applied at multiple paths with different generic
+substitutions, overrides, converters, table context, implicit names, and
+polymorphic subtype state.
+
+Adding more path facts directly to `Component` keeps the model ambiguous.
+`Component` should be materialized from a resolved embeddable contribution or
+component-mapping product.
+
+== Proposed Shared Model
+
+=== Managed Mapping Type Hierarchy
+
+Part of this work is to reshape the `org.hibernate.mapping` model itself, not
+only to add side-car metadata around it.
+
+The target should make `PersistentClass`, `MappedSuperclass`, and `Component`
+operate more like the JPA managed-type hierarchy:
+
+[source]
+----
+ManagedMappingType
+    IdentifiableMappingType
+        PersistentClass
+        MappedSuperclass
+    EmbeddableMappingType
+        Component
+----
+
+Names are provisional, and the implementation does not have to expose exactly
+this type hierarchy.  The important goal is conceptual: these mapping objects
+should represent managed type declarations and their inheritance/application
+relationships directly, rather than relying on copied flattened properties as
+the primary inheritance model.
+
+This means:
+
+* `PersistentClass` represents an entity managed type;
+* `MappedSuperclass` represents a mapped-superclass managed type declaration,
+  not a quasi-entity with global table ownership;
+* `Component` represents an embeddable/component managed type or an applied
+  component mapping, with that distinction made explicit during migration;
+* identifiable types share a coherent supertype relationship instead of
+  parallel `PersistentClass` and `MappedSuperclass` inheritance links;
+* flattened property closures remain available as derived compatibility views;
+* contribution/application objects provide the table, override, converter, and
+  path-specific context that a declaration does not own.
+
+In other words, the resolved contribution model should be used to evolve the
+mapping model toward first-class managed mapping types, not to permanently
+paper over the current model with external lookup tables.
+
+=== Declaration
+
+A declaration describes source facts that are true independent of one consuming
+path or hierarchy.
+
+Examples:
+
+* entity class declaration;
+* mapped-superclass declaration;
+* embeddable declaration;
+* IdClass or embedded-id class declaration;
+* declared members, access strategy, callbacks, annotations, XML overlays, and
+  type-level customizations.
+
+Declarations do not own applied table context.
+
+=== Contribution
+
+A contribution applies a declaration to a concrete consumer.
+
+Examples:
+
+* `MappedSuperclassContribution` applies a mapped-superclass declaration to one
+  entity hierarchy;
+* `EmbeddableContribution` applies an embeddable declaration to one embedded
+  path;
+* an identifier contribution applies entity id members, IdClass members,
+  association target id parts, and selectable correspondence to one entity
+  identifier.
+
+Contributions carry application facts:
+
+* consuming role/path;
+* hierarchy root or embedding owner;
+* effective access strategy;
+* resolved generic type-variable scope;
+* effective overrides and converters;
+* table and secondary-table resolution;
+* identifier/version/natural-id origin;
+* applied member list before compatibility sorting.
+
+=== Correspondence
+
+Correspondence links semantic parts that are related but not necessarily
+positionally identical.
+
+Two correspondence products are already useful:
+
+`SelectableCorrespondence`::
+Pairs a local selectable with a referenced selectable and tracks target runtime
+position.
+
+`IdentifierPartCorrespondence`::
+Pairs an entity virtual id part with one or more public id representation parts,
+optional target identifier parts, and the selectable correspondence for that
+semantic id contribution.
+
+Correspondence should be attached to the resolved contribution model, not
+reconstructed from independently sorted lists.
+
+=== Resolved Model
+
+The resolved model is the first point where all local source facts and deferred
+cross-type facts are available.
+
+It is produced after:
+
+* all referenced classes and XML overlays are resolved;
+* categorization knows entity, mapped-superclass, and embeddable roles;
+* identifiers, table keys, association identifiers, derived identifiers, and
+  association targets are resolved;
+* override and converter precedence has been applied;
+* selectable and identifier correspondences are known.
+
+The resolved model should still be boot-time internal.  It is not a new public
+API.
+
+=== Compatibility Views
+
+Compatibility views materialize the legacy shapes required by existing ORM
+internals:
+
+* `PersistentClass` property closures;
+* `MappedSuperclass` side objects;
+* `Component` properties;
+* identifier and identifier-mapper `Component` shapes;
+* primary-key, unique-key, and foreign-key column order;
+* static metamodel domain attributes;
+* runtime entity and embeddable mapping construction inputs.
+
+These views may sort properties or columns, but that sorting must not be the
+only record of semantic correspondence.
+
+=== Managed Type Views
+
+The resolved model should expose a first-class view hierarchy for consumers that
+need managed-type answers but should not need to understand raw declaration,
+contribution, and correspondence internals.
+
+Proposed names:
+
+[source]
+----
+ManagedTypeView
+    IdentifiableTypeView
+        EntityView
+        MappedSuperclassView
+    EmbeddableView
+----
+
+The `View` terminology is intentional.  These contracts describe the resolved
+perspective over declarations, applied contributions, correspondence products,
+and compatibility mapping artifacts.  They do not require an immediate rewrite
+of `PersistentClass`, `MappedSuperclass`, or `Component`.
+
+The conceptual flow becomes:
+
+[source]
+----
+Declaration + Contribution + Correspondence
+        -> ResolvedContributionModel
+        -> ManagedTypeView hierarchy
+        -> compatibility mapping views / runtime handoff
+----
+
+`ManagedTypeView`::
+Common view over a managed mapping type.  It should expose the Java type,
+managed role/name, declared attributes, applied attributes, attribute origin,
+access strategy, and callback/listener information where relevant.
+
+`IdentifiableTypeView`::
+Common view over entity and mapped-superclass types.  It should expose the
+resolved identifiable supertype, identifier contribution, version contribution,
+natural-id facts, and flattened identifiable property view.
+
+`EntityView`::
+Entity-specific view.  It should expose the backing `PersistentClass`, entity
+hierarchy/root information, table and secondary-table context, discriminator
+state, entity-specific property closure, and runtime entity handoff inputs.
+
+`MappedSuperclassView`::
+Mapped-superclass-specific view.  It should expose the backing
+mapped-superclass declaration, the contribution(s) applying it to consuming
+hierarchies, inherited identifier/version facts, and the flattened view needed
+by JPA domain and static metamodel consumers.
+
+`EmbeddableView`::
+Embeddable-specific view.  It should expose the embeddable declaration,
+embedding path/source role, applied member list, type-variable scope,
+override/converter model, storage context, discriminator/subtype facts, and the
+legacy `Component` materialization view.
+
+Consumers such as static metamodel population, runtime model creation, and
+compatibility property-closure APIs should prefer these views.  Raw contribution
+traversal should be concentrated in resolver/finalizer code that builds the
+views.
+
+== Sorting Policy
+
+Early destructive sorting is the design smell this model is meant to remove.
+
+Sorting has legitimate uses:
+
+* deterministic runtime traversal;
+* stable generated schema order;
+* compatibility with historical `ComponentType` property order;
+* primary-key and foreign-key DDL order;
+* runtime JDBC decomposition and assembly order.
+
+But sorting should be a projection produced by a named phase:
+
+[source]
+----
+ResolvedContributionModel
+        -> CompatibilityOrderingPlan
+        -> PersistentClassCompatibilityView
+        -> RuntimeMappingPlan
+----
+
+The ordering plan should say which order is being produced:
+
+* declaration order;
+* applied contribution order;
+* id-class Java member order;
+* target identifier traversal order;
+* physical key order;
+* runtime JDBC order;
+* static metamodel attribute classification order.
+
+When two views need different orders, the model should keep both projections
+instead of mutating one list and hoping every consumer interprets it the same
+way.
+
+== Identifier Track
+
+Identifier work should align with
+link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`].
+
+The combined design strengthens that document in two ways:
+
+* `IdentifierPartCorrespondence` is a resolved contribution product, not just a
+  runtime helper.
+* `Component` sorting and identifier-mapper property shape are compatibility
+  projections, not semantic sources.
+
+The resolved identifier contribution should answer:
+
+* which entity id attributes are declared or inherited;
+* which IdClass or embedded-id members represent them;
+* which association target id parts are consumed;
+* which local selectables correspond to which target selectables;
+* which extraction/conversion strategy applies;
+* which static metamodel attributes are id attributes.
+
+== Mapped-Superclass Track
+
+Mapped-superclass work should align with
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`].
+
+The combined design strengthens that document by making mapped-superclass
+contributions part of the same resolved model used by identifiers and runtime
+handoff.
+
+The resolved mapped-superclass contribution should answer:
+
+* which declaration introduced a member;
+* which entity hierarchy consumed it;
+* which table or secondary table applies;
+* which override or converter applied at that hierarchy;
+* whether the member contributes identifier, version, natural-id, or ordinary
+  state;
+* which flattened `PersistentClass` view should expose the member.
+
+== Embeddable Track
+
+Embeddable work should align with
+link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`].
+
+The combined design strengthens that document by treating `ComponentMapping` as
+the path-specific compatibility materialization product, not just a nicer
+wrapper for `Component`.
+
+The resolved embeddable contribution should answer:
+
+* which embeddable declaration is applied;
+* which embedded path consumed it;
+* which generic type-variable scope applies;
+* which inherited embeddable or mapped-superclass members participate;
+* which override, converter, and implicit naming inputs apply;
+* which table/storage context applies;
+* which subtype/discriminator facts apply;
+* which legacy `Component` property order and runtime state-array order should
+  be materialized.
+
+== Pipeline Placement
+
+The combined model belongs between binding and runtime model creation.
+
+During migration, the boundary may be implemented incrementally inside the
+existing binding phases:
+
+[source]
+----
+source collection
+        -> XML pre/post processing
+        -> categorization
+        -> binding declarations and partial values
+        -> deferred resolution phases
+        -> resolved contribution model
+        -> compatibility view materialization
+        -> SessionFactory/runtime model construction
+----
+
+The important change is conceptual: deferred resolution should produce explicit
+semantic products before compatibility objects are treated as complete.
+
+== Migration Slices
+
+=== Slice 1: Shared Guardrails And Vocabulary
+
+Add boot-model tests that assert mapping shape before runtime behavior:
+
+* IdClass association plus scalar part preserves distinct id parts and columns;
+* derived id association consuming whole target id records multiple id-class
+  parts for one virtual part;
+* mapped-superclass id and ordinary properties retain declaration origin;
+* embeddable inherited members retain path and declaring contribution;
+* static metamodel id attributes are classified from resolved id contribution,
+  not guessed from duplicated property shape.
+
+Update the focused design docs to point to this umbrella vocabulary.
+
+=== Slice 2: Identifier Contribution Bridge
+
+Introduce a resolved identifier contribution product around
+`IdentifierPartCorrespondence`.
+
+Keep existing `PersistentClass#getIdentifier()` and
+`PersistentClass#getIdentifierMapper()` materialization, but stop relying on
+their sorted property lists as the only correspondence record.
+
+Use it first for:
+
+* IdClass scalar plus association-valued identifiers;
+* whole-target-id derived identity;
+* static metamodel id classification.
+
+=== Slice 3: Mapped-Superclass Origin Metadata
+
+Introduce lightweight mapped-superclass contribution metadata without replacing
+all property closures.
+
+Use it first for:
+
+* identifier and version origin;
+* copied/applied property ownership;
+* static metamodel mapped-superclass attributes;
+* hierarchy-specific table and override diagnostics.
+
+=== Slice 4: ComponentMapping Bridge
+
+Evolve `ComponentSource` toward a `ComponentMapping` or equivalent internal
+product.
+
+Use it first for:
+
+* inherited embeddable members;
+* mapped-superclass members above embeddables;
+* generic embeddable type-variable scope;
+* path-aware override/converter lookup;
+* runtime component property/state-array ordering.
+
+=== Slice 5: Ordering Finalization Phase
+
+Introduce a named compatibility ordering/materialization step.
+
+This step should centralize:
+
+* identifier component and identifier-mapper projections;
+* primary-key and foreign-key key order;
+* `ComponentType` property order;
+* runtime JDBC order;
+* static metamodel attribute visibility/classification.
+
+The goal is not to remove every existing `sortProperties()` call immediately.
+The goal is to make those calls implementation details of a named projection,
+then reduce them as compatibility views improve.
+
+== Open Questions
+
+* Should the resolved contribution model be attached to `MetadataImplementor`, a
+  boot-model-specific state object, or a new internal runtime-mapping plan?
+* Should compatibility views wrap existing `PersistentClass` and `Component`, or
+  should those classes gradually grow contribution-aware APIs?
+* What is the smallest place to intercept `Component#getType()` so it no longer
+  performs semantic sorting as a side effect?
+* How much static metamodel population can move to resolved contribution data
+  before the runtime domain model handoff is redesigned?
+* Should primary-key and unique-key creation be delayed until the same ordering
+  finalization phase as foreign-key creation?
+
+== Recommendation
+
+Use this as the umbrella plan for the next model-binding migration.
+
+Do not implement the mapped-superclass, embeddable, and identifier redesigns as
+three isolated rewrites.  Start with a small resolved-contribution bridge that
+records enough origin and correspondence information to stop using destructive
+sorting as a semantic coordination mechanism.
+
+The short-term success criterion is not removing `PersistentClass`,
+`MappedSuperclass`, or `Component`.  It is making them compatibility products
+whose flattened and sorted views are derived from explicit contributions and
+correspondences.

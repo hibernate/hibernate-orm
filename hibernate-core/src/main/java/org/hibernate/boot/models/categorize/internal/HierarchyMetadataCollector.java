@@ -218,34 +218,33 @@ public class HierarchyMetadataCollector {
 		naturalIdCacheAnnotation = applyLocalAnnotation( NaturalIdCache.class, classDetails, naturalIdCacheAnnotation );
 		idClassAnnotation = applyLocalAnnotation( IdClass.class, classDetails, idClassAnnotation );
 
-		final boolean collectIds = collectedIdAttributes == null;
-		if ( collectIds || versionAttribute == null || tenantIdAttribute == null ) {
+		if ( versionAttribute == null || tenantIdAttribute == null || !( collectedIdAttributes instanceof AttributeMetadata idAttribute
+				&& idAttribute.getMember().hasDirectAnnotationUsage( EmbeddedId.class ) ) ) {
 			// walk the attributes
 			typeMetadata.forEachAttribute( (index, attributeMetadata) -> {
 				final MemberDetails attributeMember = attributeMetadata.getMember();
 
-				if ( collectIds ) {
-					if ( attributeMember.getDirectAnnotationUsage( EmbeddedId.class ) != null ) {
-						collectIdAttribute( attributeMetadata );
-					}
-
-					if ( attributeMember.getDirectAnnotationUsage( Id.class ) != null ) {
-						collectIdAttribute( attributeMetadata );
-					}
+				if ( attributeMember.hasDirectAnnotationUsage( EmbeddedId.class )
+						&& ( collectedIdAttributes == null || idClassAnnotation != null ) ) {
+					collectIdAttribute( attributeMetadata );
 				}
 
-				if ( attributeMember.getDirectAnnotationUsage( NaturalId.class ) != null ) {
+				if ( attributeMember.hasDirectAnnotationUsage( Id.class ) ) {
+					collectIdAttribute( attributeMetadata );
+				}
+
+				if ( attributeMember.hasDirectAnnotationUsage( NaturalId.class ) ) {
 					collectNaturalIdAttribute( attributeMetadata );
 				}
 
 				if ( versionAttribute == null ) {
-					if ( attributeMember.getDirectAnnotationUsage( Version.class ) != null ) {
+					if ( attributeMember.hasDirectAnnotationUsage( Version.class ) ) {
 						versionAttribute = attributeMetadata;
 					}
 				}
 
 				if ( tenantIdAttribute == null ) {
-					if ( attributeMember.getDirectAnnotationUsage( TenantId.class ) != null ) {
+					if ( attributeMember.hasDirectAnnotationUsage( TenantId.class ) ) {
 						tenantIdAttribute = attributeMetadata;
 					}
 				}

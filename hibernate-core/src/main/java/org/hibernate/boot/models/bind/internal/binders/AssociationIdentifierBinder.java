@@ -9,12 +9,14 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.models.bind.internal.views.IdentifierContributionView;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Value;
 
 import jakarta.persistence.JoinColumn;
@@ -123,27 +125,22 @@ class AssociationIdentifierBinder {
 					false
 			);
 			associationIdentifierBinding.ownerBinding().getTable().addColumn( column );
-			associationIdentifierBinding.value().addColumn( column, true, false );
-			addIdentifierColumn( associationIdentifierBinding.identifierValue(), i, column );
-			associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey().addColumn( column );
+				associationIdentifierBinding.value().addColumn( column, true, false );
+				if ( associationIdentifierBinding.identifierAttribute() != null
+						&& associationIdentifierBinding.identifierAttribute().identifierMapperValue() != null ) {
+					addIdentifierColumn( associationIdentifierBinding.identifierAttribute().identifierMapperValue(), i, column, false );
+				}
+				addIdentifierColumn( associationIdentifierBinding.identifierValue(), i, column, true );
+				associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey().addColumn( column );
 			associationIdentifierBinding.identifierColumns().add( column );
-		}
-		associationIdentifierBinding.value().setNonUpdatable();
-		associationIdentifierBinding.processed().set( true );
-		if ( associationIdentifierBinding.ownerBinding().getIdentifier() instanceof Component identifierComponent ) {
-			final List<Column> orderedIdentifierColumns = identifierComponent.getColumns();
-			final var primaryKey = associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey();
-			if ( primaryKey.getColumns().size() == orderedIdentifierColumns.size()
-					&& primaryKey.getColumns().containsAll( orderedIdentifierColumns )
-					&& !hasUnprocessedAssociationIdentifierBindings(
-							associationIdentifierBinding.ownerBinding(),
-							associationIdentifierBinding
-					) ) {
-				primaryKey.reorderColumns( orderedIdentifierColumns );
-				associationIdentifierBinding.identifierColumns().clear();
-				associationIdentifierBinding.identifierColumns().addAll( orderedIdentifierColumns );
+			if ( associationIdentifierBinding.identifierAttribute() != null ) {
+				associationIdentifierBinding.identifierAttribute().addColumn( column );
 			}
 		}
+		normalizePrimaryKeyColumnOrder( associationIdentifierBinding );
+		associationIdentifierBinding.value().setNonUpdatable();
+		( (SortableValue) associationIdentifierBinding.value() ).sortProperties();
+		associationIdentifierBinding.processed().set( true );
 		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 				associationIdentifierBinding.ownerBinding(),
 				associationIdentifierBinding.value(),
@@ -151,10 +148,10 @@ class AssociationIdentifierBinder {
 				targetColumns.referenceToPrimaryKey()
 						? ResolvedForeignKey.from(
 								associationIdentifierBinding.value(),
-								associationIdentifierBinding.value().getReferencedEntityName(),
+										associationIdentifierBinding.value().getReferencedEntityName(),
 								SelectableOrderResolver.resolveByTargetOrder(
 										associationIdentifierBinding.value().getColumns(),
-										targetColumns.columns(),
+										sortedTargetIdentifierColumns( targetIdentifierBinding ),
 										associationIdentifierBinding.ownerBinding().getClassName()
 												+ "." + associationIdentifierBinding.property().getName()
 								)
@@ -162,6 +159,24 @@ class AssociationIdentifierBinder {
 							: null
 			) );
 		return true;
+	}
+
+	private void normalizePrimaryKeyColumnOrder(AssociationIdentifierBinding associationIdentifierBinding) {
+		final IdentifierContributionView identifierContribution = bindingState.getIdentifierContributionView(
+				associationIdentifierBinding.ownerType().getHierarchy().getRoot()
+		);
+		if ( identifierContribution == null ) {
+			return;
+		}
+
+		final List<Column> identifierColumns = identifierContribution.identifierColumns();
+		if ( identifierColumns.isEmpty() ) {
+			return;
+		}
+
+		associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey().reorderColumns( identifierColumns );
+		associationIdentifierBinding.identifierColumns().clear();
+		associationIdentifierBinding.identifierColumns().addAll( identifierColumns );
 	}
 
 	private boolean hasUnprocessedAssociationIdentifierBindings(
@@ -178,7 +193,10 @@ class AssociationIdentifierBinder {
 		return result[0];
 	}
 
-	private void addIdentifierColumn(Value identifierValue, int columnIndex, Column column) {
+	private void addIdentifierColumn(Value identifierValue, int columnIndex, Column column, boolean writable) {
+		if ( identifierValue == null ) {
+			return;
+		}
 		if ( identifierValue instanceof Component component ) {
 			final List<SimpleValue> leafValues = new ArrayList<>();
 			collectLeafValues( component, leafValues );
@@ -188,10 +206,10 @@ class AssociationIdentifierBinder {
 								+ component.getComponentClassName()
 				);
 			}
-			leafValues.get( columnIndex ).addColumn( column, false, false );
+			leafValues.get( columnIndex ).addColumn( column, writable, writable );
 		}
 		else if ( identifierValue instanceof SimpleValue simpleValue ) {
-			simpleValue.addColumn( column, false, false );
+			simpleValue.addColumn( column, writable, writable );
 		}
 	}
 
@@ -248,6 +266,13 @@ class AssociationIdentifierBinder {
 			return targetIdentifierBinding.table().getPrimaryKey().getColumns();
 		}
 		return targetIdentifierBinding.columns();
+	}
+
+	private List<Column> sortedTargetIdentifierColumns(IdentifierBinding targetIdentifierBinding) {
+		if ( targetIdentifierBinding.value() instanceof SortableValue sortableValue ) {
+			sortableValue.sortProperties();
+		}
+		return targetIdentifierBinding.value().getColumns();
 	}
 
 	private boolean referencesSomePrimaryKeyColumns(List<JoinColumn> joinColumns, List<Column> targetIdentifierColumns) {

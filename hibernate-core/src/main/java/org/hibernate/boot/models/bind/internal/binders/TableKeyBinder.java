@@ -7,7 +7,6 @@ package org.hibernate.boot.models.bind.internal.binders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
@@ -22,6 +21,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.models.ModelsException;
@@ -167,6 +167,7 @@ public class TableKeyBinder {
 						+ "Backref"
 		);
 		backref.setOptional( true );
+		backref.setInsertable( false );
 		backref.setUpdatable( false );
 		backref.setSelectable( false );
 		backref.setCollectionRole( collectionTableBinding.collection().getRole() );
@@ -264,12 +265,10 @@ public class TableKeyBinder {
 	}
 
 	private List<Column> targetIdentifierColumns(IdentifierBinding identifierBinding) {
-		if ( identifierBinding.table().getPrimaryKey() != null
-				&& !identifierBinding.table().getPrimaryKey().getColumns().isEmpty()
-				&& identifierBinding.table().getPrimaryKey().getColumns().size() >= identifierBinding.columns().size() ) {
-			return identifierBinding.table().getPrimaryKey().getColumns();
+		if ( identifierBinding.value() instanceof SortableValue sortableValue ) {
+			sortableValue.sortProperties();
 		}
-		return identifierBinding.columns();
+		return identifierBinding.value().getColumns();
 	}
 
 	private DependantValue createDependentKeyValue(Table table, IdentifierBinding identifierBinding) {
@@ -303,6 +302,7 @@ public class TableKeyBinder {
 			table.addColumn( keyColumn );
 			key.addColumn( keyColumn, true, false );
 		}
+		key.sortProperties();
 		return key;
 	}
 
@@ -362,6 +362,7 @@ public class TableKeyBinder {
 					false
 			);
 		}
+		key.sortProperties();
 		return key;
 	}
 
@@ -399,11 +400,12 @@ public class TableKeyBinder {
 					updateable
 			);
 		}
+		key.sortProperties();
 		return key;
 	}
 
 	private String implicitCollectionKeyColumnName(Column identifierColumn) {
-		return entityBinder.getTypeBinding().getJpaEntityName().toLowerCase( Locale.ROOT ) + "_" + identifierColumn.getName();
+		return identifierColumn.getName();
 	}
 
 	private Column copyKeyColumn(Column source) {

@@ -1,0 +1,581 @@
+= Resolved Model Proposal
+:toc:
+
+This document sketches a possible boot-time binding/finalization model for ORM
+9 binding.
+It complements link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].
+
+The proposal is intentionally concrete, but still exploratory.  The goal is not
+to introduce a second complete ORM mapping model.  The goal is to preserve
+source facts, contribution ownership, and correspondence until
+stable managed-type views can be exposed and `org.hibernate.mapping` can be
+materialized safely.
+
+== Core Shape
+
+[source]
+----
+categorized source model
+        -> BootBindingModel
+        -> BindingModelFinalizer
+        -> ManagedTypeView hierarchy and ordering/correspondence views
+        -> consumers
+----
+
+Consumers include:
+
+[source]
+----
+MappingModelMaterializer -> org.hibernate.mapping
+runtime model handoff
+JPA static metamodel population
+diagnostics / validation
+----
+
+Said differently:
+
+[source]
+----
+binding model is finalized
+        -> views are the stable read API over finalized binding state
+        -> org.hibernate.mapping and other consumers are built from those views
+        -> runtime mapping model
+----
+
+The binding model is a semantic graph made from boot-time binding nodes:
+
+[source]
+----
+BootBindingModel
+    ManagedTypeBinding(s)
+    TableBinding(s)
+    IdentifierBinding(s)
+    AttributeBinding(s)
+    SelectableBinding(s)
+    ForeignKeyBinding(s)
+    Correspondence(s)
+----
+
+This graph should not be another mutable half-built mapping model.  It should
+make unresolved cross-type facts explicit and only expose stable views after
+the relevant deferred phases have run.
+
+== Original PoC Comparison
+
+The original https://github.com/sebersole/hibernate-annotation-source/tree/9d78eb96d16b86658d4f557a9df73a5d0332fb57[annotation-source PoC] already explored a closely related
+intermediate model under `org.hibernate.boot.models.intermediate`.  It used a
+`Metadata` suffix in names such as managed type, identifiable type, entity,
+mapped superclass, attribute, column, relational value, override, conversion,
+and entity hierarchy metadata.
+
+This proposal intentionally does not adopt that naming, but the PoC structure is
+important evidence for the shape:
+
+* it already had a managed-type spine similar to `ManagedTypeBinding`,
+  `IdentifiableTypeBinding`, `EntityTypeBinding`, and
+  `MappedSuperclassTypeBinding`;
+* it modeled declared attributes separately from later
+  `org.hibernate.mapping.Property` creation;
+* it had an entity hierarchy product before `RootClass` / `Subclass`
+  materialization;
+* it had a first materialization phase under `boot.models.bind.internal` that
+  created `PersistentClass`, `Property`, `BasicValue`, `Column`, `Table`, and
+  `Join` instances from the intermediate model.
+
+The current design should keep that useful separation, but strengthen the areas
+that the PoC had only started to expose:
+
+* distinguish declaration from hierarchy/path-specific application;
+* model mapped-superclass contributions explicitly instead of treating them as
+  a kludge during `PersistentClass` creation;
+* model embeddable/component application separately from the embeddable type
+  declaration;
+* preserve identifier and selectable correspondence instead of deriving it from
+  sorted `Component` or `Value` lists;
+* make unresolved cross-type dependencies explicit rather than representing them
+  as partially populated mapping objects.
+
+In short, the PoC validates the intermediate/binding-model direction, but the
+ORM 9 version should be contribution- and correspondence-aware from the start.
+
+== Binding Model And Views
+
+The proposal uses two different kinds of contracts:
+
+`*Binding`::
+Mutable, phase-built nodes created by binders.  These may contain explicit
+unresolved or deferred references.
+
+`*View`::
+Stable read contracts exposed after finalization.  Consumers should use views
+instead of traversing raw bindings.
+
+The mapping model materializer should consume views, not independently inspect
+and reinterpret the mutable binding model.  This keeps `org.hibernate.mapping`,
+runtime handoff, static metamodel population, diagnostics, and validation using
+the same resolved interpretation.
+
+== Managed Type Bindings
+
+[source]
+----
+ManagedTypeBinding
+    EntityTypeBinding
+    MappedSuperclassTypeBinding
+    EmbeddableTypeBinding
+----
+
+`ManagedTypeBinding` represents a managed Java type declaration or applied
+managed type in the boot binding model.
+
+=== EntityTypeBinding
+
+Represents an entity managed type.
+
+Expected state:
+
+* Java type and entity name;
+* identifiable supertype;
+* declared attributes;
+* applied mapped-superclass contributions;
+* identifier contribution;
+* version and natural-id contributions;
+* table and secondary-table context;
+* discriminator and inheritance state;
+* eventual `PersistentClass` materialization target.
+
+=== MappedSuperclassTypeBinding
+
+Represents a mapped-superclass managed type declaration.
+
+Expected state:
+
+* Java type;
+* identifiable supertype;
+* declared attributes;
+* declared identifier and version facts;
+* callback/listener facts;
+* no table ownership;
+* contribution applications into entity or embeddable consumers.
+
+=== EmbeddableTypeBinding
+
+Represents an embeddable managed type declaration.
+
+Expected state:
+
+* Java type;
+* super embeddable type;
+* declared attributes;
+* mapped-superclass declarations above the embeddable;
+* discriminator and subtype facts for polymorphic embeddables;
+* custom instantiator, mutability, and type-level customizations;
+* no global table or embedding-path ownership.
+
+== Contribution Bindings
+
+Contribution bindings model "this declaration applied here."
+
+[source]
+----
+ContributionBinding
+    MappedSuperclassContribution
+    EmbeddableContribution
+    IdentifierContribution
+----
+
+=== MappedSuperclassContribution
+
+Applies one mapped-superclass declaration to one consuming hierarchy or
+embeddable path.
+
+Example:
+
+[source]
+----
+MappedSuperclassContribution
+    declaration = AuditedBase
+    consumer = Order
+    tableContext = Order primary table
+    appliedAttributes = [createdBy, createdAt]
+----
+
+Expected state:
+
+* declaration;
+* consumer hierarchy or embedding path;
+* super contribution or nearest super entity;
+* effective table and secondary-table context;
+* applied overrides and converters;
+* applied identifier, version, and ordinary attributes;
+* origin metadata for static metamodel and runtime handoff.
+
+=== EmbeddableContribution
+
+Applies one embeddable declaration to one consuming component path.
+
+Example:
+
+[source]
+----
+EmbeddableContribution
+    declaration = Address
+    consumerPath = Customer.billingAddress
+    typeVariableScope = ...
+    overrides = ...
+    appliedAttributes = [...]
+----
+
+Expected state:
+
+* declaration;
+* source role, such as embedded attribute, collection element, map key, or
+  embedded identifier;
+* source member;
+* owner-relative and full component paths;
+* resolved type-variable scope;
+* effective access strategy per participating declaration;
+* applied mapped-superclass and super-embeddable contributions;
+* override, converter, implicit naming, and storage context;
+* subtype/discriminator facts;
+* eventual `Component` materialization target.
+
+=== IdentifierContribution
+
+Applies identifier declarations, id representation parts, target identifier
+parts, and selectable correspondence to one entity identifier.
+
+Example:
+
+[source]
+----
+IdentifierContribution
+    entity = SystemUser
+    virtualParts = [subsystem, username]
+    idClassParts = [PK.subsystem, PK.username]
+    selectableCorrespondence = [...]
+----
+
+Expected state:
+
+* entity;
+* virtual id attributes;
+* embedded-id or IdClass representation parts;
+* target identifier parts for association-valued identifiers;
+* local selectable parts;
+* selectable correspondence;
+* extraction/conversion strategy for each semantic id contribution;
+* projections needed by identifier mapper, static metamodel, and runtime id
+  mapping.
+
+== Attribute Bindings
+
+Attributes are source/application aware.
+
+[source]
+----
+AttributeBinding
+    BasicAttributeBinding
+    ToOneAttributeBinding
+    EmbeddedAttributeBinding
+    PluralAttributeBinding
+    AnyAttributeBinding
+----
+
+Expected common state:
+
+* attribute name;
+* declaring managed type;
+* applied contribution, when inherited or path-specific;
+* source member;
+* source access strategy;
+* attribute kind;
+* value part;
+* origin metadata;
+* generated/value/conversion facts;
+* eventual `Property` materialization target.
+
+The important distinction is:
+
+[source]
+----
+declaringType = mapped superclass or embeddable declaration
+appliedContribution = concrete entity hierarchy or embedded path
+----
+
+That distinction is what a legacy `Property` currently blurs.
+
+== Value And Selectable Bindings
+
+`ValueBinding` represents the logical value.
+
+[source]
+----
+ValueBinding
+    BasicValueBinding
+    ToOneValueBinding
+    ComponentValueBinding
+    CollectionValueBinding
+----
+
+`SelectableBinding` represents physical storage.
+
+Expected selectable state:
+
+* table;
+* identifier/name including quotedness;
+* source position;
+* source role;
+* formula/custom read/write expression where applicable;
+* eventual `Column` or selectable materialization target.
+
+This separation avoids premature column sorting.  A `ToOneValueBinding` can say:
+
+[source]
+----
+local selectables = [systemuser.subsystem_id]
+referenced selectables = [Subsystem.id]
+----
+
+without requiring an already-final `ManyToOne` column list.
+
+== Correspondence
+
+Correspondence products are the main pressure valve for cases where positional
+lists currently lose meaning.
+
+=== SelectableCorrespondence
+
+Pairs a local selectable with a referenced selectable and tracks target runtime
+position.
+
+[source]
+----
+SelectableCorrespondence
+    localSelectable
+    referencedSelectable
+    localSourcePosition
+    targetPosition
+    sourceRole
+----
+
+=== IdentifierPartCorrespondence
+
+Pairs a virtual entity id part with its public id representation and optional
+target identifier parts.
+
+[source]
+----
+IdentifierPartCorrespondence
+    virtualPart
+    idRepresentationParts
+    targetIdentifierParts
+    selectableOrder
+    extractionKind
+    sourceRole
+----
+
+Example:
+
+[source]
+----
+SystemUser.subsystem
+    virtual id part
+    id-class part PK.subsystem
+    target id part Subsystem.id
+    local selectable systemuser.subsystem_id
+
+SystemUser.username
+    virtual id part
+    id-class part PK.username
+    local selectable systemuser.username
+----
+
+No sorting is required to preserve the meaning.
+
+== Materialization
+
+Only after finalization should legacy mapping objects be materialized or
+updated:
+
+* `PersistentClass`
+* `MappedSuperclass`
+* `Component`
+* `Property`
+* `Value`
+* `PrimaryKey`
+* `ForeignKey`
+* `UniqueKey`
+
+The `MappingModelMaterializer` should consume stable views over the finalized
+binding state.  It can produce multiple compatibility projections:
+
+* declaration order;
+* applied contribution order;
+* IdClass member order;
+* target identifier order;
+* physical primary-key order;
+* foreign-key order;
+* runtime JDBC order;
+* static metamodel view.
+
+These projections are derived from the finalized binding state through views.
+They are not the semantic model itself.
+
+== View Layer
+
+The view layer is the stable read API over finalized binding state.
+
+Expected first views:
+
+[source]
+----
+ManagedTypeView
+    IdentifiableTypeView
+        EntityView
+        MappedSuperclassView
+    EmbeddableView
+
+IdentifierContributionView
+SelectableOrderView
+PropertyClosureView
+----
+
+The mapping materializer should use these views, and so should other consumers
+such as static metamodel population and diagnostics.  The goal is one
+authoritative interpretation layer before materialization.
+
+== Unresolved State
+
+To avoid merely moving timing problems into a new layer, cross-type facts must
+be explicit about resolution state.
+
+Possible vocabulary:
+
+[source]
+----
+ResolvedReference<T>
+UnresolvedReference<T>
+DeferredResolution<T>
+----
+
+Example:
+
+[source]
+----
+ToOneValueBinding
+    targetEntity = unresolved until entity categorization/binding exists
+    targetIdentifier = unresolved until target id binding exists
+    selectableCorrespondence = unresolved until join columns are resolved
+----
+
+Resolvers should fail with role-specific diagnostics when required facts remain
+unresolved after their phase.
+
+== Phase Sketch
+
+[source]
+----
+1. declare managed types
+2. declare attributes
+3. resolve identifiers
+4. resolve association identifiers and derived identifiers
+5. resolve table keys and foreign keys
+6. resolve ordering projections
+7. materialize org.hibernate.mapping
+----
+
+The exact phase names can differ from the current binder phases.  The important
+rule is that a phase should either preserve unresolved state explicitly or
+produce a named finalized view/product.
+
+== Package Placement
+
+The binding model objects should not live directly in
+`org.hibernate.boot.models.bind.internal.binders`.
+
+The `binders` package should remain the worker/action layer.  Binders create,
+populate, and resolve binding model nodes, but they should not be the package
+that defines the binding model itself.
+
+Possible package layout:
+
+[source]
+----
+org.hibernate.boot.models.bind.internal
+    BindingCoordinator
+    BindingStateImpl
+
+org.hibernate.boot.models.bind.internal.binders
+    EntityTypeBinder
+    IdentifierBinder
+    ComponentBinder
+    ToOneAttributeBinder
+    ...
+
+org.hibernate.boot.models.bind.internal.binding
+    BootBindingModel
+    ManagedTypeBinding
+    EntityTypeBinding
+    MappedSuperclassTypeBinding
+    EmbeddableTypeBinding
+    AttributeBinding
+    ValueBinding
+    SelectableBinding
+    IdentifierContribution
+    EmbeddableContribution
+    MappedSuperclassContribution
+
+org.hibernate.boot.models.bind.internal.views
+    ManagedTypeView
+    IdentifiableTypeView
+    EntityView
+    MappedSuperclassView
+    EmbeddableView
+    PropertyClosureView
+    SelectableOrderView
+
+org.hibernate.boot.models.bind.internal.materialize
+    MappingModelMaterializer
+    PersistentClassMaterializer
+    ComponentMaterializer
+    TableKeyMaterializer
+----
+
+The names are provisional.  The important separation is:
+
+* `binders` are phase/action classes;
+* `binding` objects are mutable boot binding state;
+* `views` are finalized read APIs over binding state;
+* `materialize` turns views into `org.hibernate.mapping` objects.
+
+`binding` is preferred over broader names such as `model` for the package
+because these products are boot binding products, not runtime model parts and
+not final mapping objects.
+
+== Minimal First Slice
+
+Do not build this whole graph at once.
+
+Start with the smallest products that preserve information currently destroyed,
+guessed, or encoded through sorting:
+
+* `IdentifierContribution`;
+* `IdentifierPartCorrespondence`;
+* mapped-superclass contribution origin metadata;
+* `EmbeddableContribution` / `ComponentMapping` bridge;
+* existing `SelectableCorrespondence`.
+
+Then use those products to materialize the existing `org.hibernate.mapping`
+objects more deliberately.
+
+== Admission Rule
+
+Do not add an intermediate object merely because it looks cleaner.
+
+Add a binding model node only when it preserves source, application, or
+correspondence information that `org.hibernate.mapping` currently destroys,
+guesses, or encodes through premature sorting/copying.
+
+If a fact can be represented cleanly and safely in `org.hibernate.mapping`
+without timing ambiguity, it probably does not need a separate binding node.

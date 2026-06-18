@@ -82,6 +82,17 @@ storage, collection key / primary-key / foreign-key creation, table-key FK
 metadata, source-model facts on mapping values, property-ref target resolution,
 and derived identifier phase ordering.
 
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+
+This is the umbrella design note for the shared declaration/contribution/
+correspondence model behind identifiers, mapped superclasses, and embeddables.
+It records the common rule that binding preserves semantic contributions while
+flattened/sorted `org.hibernate.mapping` objects are compatibility views.
+
+Use this document when a change crosses more than one of the identifier,
+mapped-superclass, or embeddable designs, or when reasoning about delaying
+property/column sorting until a resolved compatibility-ordering phase.
+
 link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
 
 This is the design note for reshaping `@MappedSuperclass` in the Hibernate
@@ -164,6 +175,10 @@ If the question is "how does the model-binding pipeline work?", read
 
 If the question is "what ORM mapping API change would make this cleaner?", use
 `orm-integration-notes.adoc`.
+
+If the question is "how do identifier correspondence, mapped-superclass
+contributions, and embeddable contributions fit together?", use
+`resolved-contribution-model-design.adoc`.
 
 If the question is "how should mapped superclasses be represented in the mapping
 model?", use `mapped-superclass-model-design.adoc`.

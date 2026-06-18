@@ -219,18 +219,17 @@ class InversePluralAssociationBinder {
 				entityBinder.getOptions().getDefaultListSemantics(),
 				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
 		);
-		if ( inverseCollection instanceof IndexedCollection indexedCollection ) {
-			CollectionIndexBinder.bindListIndex(
-					source,
-					indexedCollection,
-					inverseCollection.getCollectionTable(),
-					entityBinder.getOptions(),
-					bindingState,
-					entityBinder.getBindingContext()
-			);
-			return;
-		}
 		if ( !( inverseCollection instanceof org.hibernate.mapping.Map inverseMap ) ) {
+			if ( inverseCollection instanceof IndexedCollection indexedCollection ) {
+				CollectionIndexBinder.bindListIndex(
+						source,
+						indexedCollection,
+						inverseCollection.getCollectionTable(),
+						entityBinder.getOptions(),
+						bindingState,
+						entityBinder.getBindingContext()
+				);
+			}
 			return;
 		}
 

@@ -118,7 +118,7 @@ class JpaFetchAnnotationGraphTest {
 			final var graph = (RootGraphImplementor<?>) session.getEntityGraph( DETAIL_GRAPH );
 			final Set<FetchOption> options = graph.findNode( "author" ).getOptions();
 
-			assertThat( options ).contains( FetchType.EAGER, CacheStoreMode.BYPASS, new jakarta.persistence.BatchSize( 16 ) );
+			assertThat( options ).contains( FetchType.EAGER, CacheStoreMode.BYPASS, new jakarta.persistence.BatchFetch( 16 ) );
 			assertThat( options ).anySatisfy( option -> {
 				assertThat( option.getClass().getSimpleName() ).isEqualTo( "FetchHintOptions" );
 				assertThat( option.toString() ).contains( "sample.fetch.hint", "true" );

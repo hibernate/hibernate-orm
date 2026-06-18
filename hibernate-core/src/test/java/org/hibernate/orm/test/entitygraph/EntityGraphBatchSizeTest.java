@@ -18,7 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.BatchSize;
+import jakarta.persistence.BatchFetch;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
@@ -71,16 +71,16 @@ class EntityGraphBatchSizeTest {
 			final var graph = session.createEntityGraph( Book.class );
 			graph.addAttributeNode( Book_.batchedAuthor )
 					.addOption( FetchType.EAGER )
-					.addOption( new BatchSize( 3 ) );
+					.addOption( new BatchFetch( 3 ) );
 			graph.addAttributeNode( Book_.singleAuthor )
 					.addOption( FetchType.EAGER )
-					.addOption( new BatchSize( 1 ) );
+					.addOption( new BatchFetch( 1 ) );
 			graph.addAttributeNode( Book_.batchedTags )
 					.addOption( FetchType.EAGER )
-					.addOption( new BatchSize( 3 ) );
+					.addOption( new BatchFetch( 3 ) );
 			graph.addAttributeNode( Book_.singleTags )
 					.addOption( FetchType.EAGER )
-					.addOption( new BatchSize( 1 ) );
+					.addOption( new BatchFetch( 1 ) );
 
 			final var books =
 					session.createQuery( "from GraphBatchBook order by id", Book.class )

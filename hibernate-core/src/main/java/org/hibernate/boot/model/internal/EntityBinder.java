@@ -7,7 +7,7 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.Access;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.BatchSize;
+import jakarta.persistence.BatchFetch;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
@@ -1742,7 +1742,7 @@ public class EntityBinder {
 		final var options = new ArrayList<FetchOption>();
 		options.add( fetch.type() );
 		if ( fetch.batchSize() >= 0 ) {
-			options.add( new BatchSize( fetch.batchSize() ) );
+			options.add( new BatchFetch( fetch.batchSize() ) );
 		}
 		options.add( fetch.cacheStoreMode() );
 		options.add( fetch.cacheRetrieveMode() );

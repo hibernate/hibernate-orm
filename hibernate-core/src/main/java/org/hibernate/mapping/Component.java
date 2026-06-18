@@ -67,7 +67,7 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
 public class Component extends SimpleValue implements AttributeContainer, MetaAttributable, SortableValue {
 
 	private String componentClassName;
-	private boolean embedded;
+	private boolean flattened;
 	private String parentProperty;
 	private PersistentClass owner;
 	private boolean dynamic;
@@ -132,7 +132,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		this.propertyDeclaringClasses = original.propertyDeclaringClasses;
 		this.componentClassName = original.componentClassName;
 		this.componentClass = original.componentClass;
-		this.embedded = original.embedded;
+		this.flattened = original.flattened;
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
 		this.dynamic = original.dynamic;
@@ -228,8 +228,25 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return unmodifiableList( columns );
 	}
 
+	/**
+	 * Whether this component is flattened into its owning managed type.
+	 * <p>
+	 * This is Hibernate's historical "embedded" component mode, used for
+	 * non-aggregated composite identifiers and identifier mappers where the
+	 * component's properties are exposed as properties of the owning type.
+	 */
+	public boolean isFlattened() {
+		return flattened;
+	}
+
+	/**
+	 * @deprecated Use {@link #isFlattened()}.  This method name reflects
+	 * historical Hibernate terminology and does not mean the same as JPA's
+	 * {@code @Embedded}.
+	 */
+	@Deprecated(since = "9.0")
 	public boolean isEmbedded() {
-		return embedded;
+		return isFlattened();
 	}
 
 	public AggregateColumn getAggregateColumn() {
@@ -394,8 +411,18 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		this.simpleRecord = null;
 	}
 
-	public void setEmbedded(boolean embedded) {
-		this.embedded = embedded;
+	public void setFlattened(boolean flattened) {
+		this.flattened = flattened;
+	}
+
+	/**
+	 * @deprecated Use {@link #setFlattened(boolean)}.  This method name reflects
+	 * historical Hibernate terminology and does not mean "mapped by
+	 * {@code @Embedded}".
+	 */
+	@Deprecated(since = "9.0")
+	public void setEmbedded(boolean flattened) {
+		setFlattened( flattened );
 	}
 
 	public void setOwner(PersistentClass owner) {
@@ -449,7 +476,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 					final String typeName = getTypeName();
 					if ( typeName == null ) {
-						localType = isEmbedded()
+						localType = isFlattened()
 								? new EmbeddedComponentType( this, originalPropertyOrder )
 								: new ComponentType( this, originalPropertyOrder );
 					}
@@ -500,7 +527,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return super.isSame( other )
 			&& Objects.equals( properties, other.properties )
 			&& Objects.equals( componentClassName, other.componentClassName )
-			&& embedded == other.embedded
+			&& flattened == other.flattened
 			&& Objects.equals( aggregateColumn, other.aggregateColumn )
 			&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
 			&& Objects.equals( structName, other.structName )
@@ -857,7 +884,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		// to be able to sort the other side of the foreign key accordingly
 		// and also if the source is a XML mapping
 		// because XML mappings might refer to this through the defined order
-		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded() ) {
+		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isFlattened() ) {
 			final var originalProperties = properties.toArray( new Property[0] );
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = new int[originalProperties.length];

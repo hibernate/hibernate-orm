@@ -13,8 +13,9 @@ import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.models.bind.internal.materialize.BasicValueMappingMaterializer;
+import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.models.AnnotationPlacementException;
-import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
@@ -28,15 +29,10 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.ExcludedFromVersioning;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Lob;
 
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.models.AttributeNature.ANY;
@@ -109,9 +105,10 @@ public class AttributeBinder {
 		this.bindingOptions = bindingOptions;
 		this.bindingContext = bindingContext;
 
-		this.binding = new Property();
-		binding.setName( attributeMetadata.getName() );
-		bindPropertyAccessor( attributeMetadata.getMember(), binding );
+		this.binding = new PropertyMappingMaterializer().createProperty(
+				attributeMetadata.getName(),
+				attributeMetadata.getMember()
+		);
 
 		if ( attributeMetadata.getNature() == BASIC ) {
 			final var basicValue = createBasicValue( primaryTable );
@@ -244,16 +241,6 @@ public class AttributeBinder {
 		return binding;
 	}
 
-	public static void bindPropertyAccessor(MemberDetails member, Property property) {
-		final Access access = member.getDirectAnnotationUsage( Access.class );
-		if ( access != null ) {
-			property.setPropertyAccessorName( access.value() == jakarta.persistence.AccessType.FIELD ? "field" : "property" );
-		}
-		else {
-			property.setPropertyAccessorName( member.isField() ? "field" : "property" );
-		}
-	}
-
 	public Table getTable() {
 		return attributeTable;
 	}
@@ -276,43 +263,14 @@ public class AttributeBinder {
 	}
 
 	private BasicValue createBasicValue(Table primaryTable) {
-		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext() );
-
-		final MemberDetails member = attributeMetadata.getMember();
-		bindMutability( member, binding, basicValue, bindingOptions, bindingState, bindingContext );
-		bindOptimisticLocking( member, binding, basicValue, bindingOptions, bindingState, bindingContext );
-
-		final var column = processColumn( member, binding, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
-		applyBasicOptionality( member, binding, column );
-		applyBasicFetch( member, binding );
-		binding.setLob( member.hasDirectAnnotationUsage( Lob.class ) );
-
-		BasicValueBinder.bindBasicValue(
-				BasicValueSource.attribute( member ),
+		return new BasicValueMappingMaterializer().createAttributeBasicValue(
+				attributeMetadata.getMember(),
 				binding,
-				basicValue,
+				primaryTable,
 				bindingOptions,
 				bindingState,
 				bindingContext
 		);
-
-		return basicValue;
-	}
-
-	private static void applyBasicOptionality(
-			MemberDetails member,
-			Property property,
-			org.hibernate.mapping.Column column) {
-		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
-		final boolean optionalByType = member.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
-		final boolean optionalByBasic = basic == null || basic.optional();
-		final boolean optionalByColumn = column == null || column.isNullable();
-		property.setOptional( optionalByType && optionalByBasic && optionalByColumn );
-	}
-
-	private static void applyBasicFetch(MemberDetails member, Property property) {
-		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
-		property.setLazy( basic != null && basic.fetch() == FetchType.LAZY );
 	}
 
 	public static void bindImplicitJavaType(

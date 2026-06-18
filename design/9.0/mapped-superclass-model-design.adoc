@@ -322,6 +322,20 @@ Status: in progress.  The first contribution-lite bridge keeps the existing
 flattened `PersistentClass` compatibility view, but applies mapped-superclass
 declared properties only to the nearest consuming entity boundary and uses
 separate `Property` copies per consuming entity.
++
+The mapping model now also exposes a direct `IdentifiableTypeClass` supertype /
+subtype graph for `PersistentClass` and `MappedSuperclass`.  `PersistentClass`
+still keeps entity-inheritance helpers such as `getSuperclass()` and
+`getDirectSubclasses()` for compatibility, but `getSuperType()` prefers the
+direct mapped-superclass boundary when one exists.  `getSubTypes()` follows the
+direct managed-type chain, so an entity with a mapped-superclass subtype and an
+entity subtype below that mapped superclass does not collapse both into the same
+direct managed subtype list.
++
+Shared mapped-superclass Java declarations may still materialize as separate
+`MappedSuperclass` mapping nodes per consuming hierarchy/table context.  That is
+intentional during this migration: the Java class identifies the declaration,
+while the mapping node represents the hierarchy-scoped application.
 2. Stop assuming `Class<?> -> MappedSuperclass` is necessarily one-to-one in the
    long term.
 3. Introduce a contribution-style internal wrapper or adapter around the current

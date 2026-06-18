@@ -300,10 +300,13 @@ public record CollectionSource(
 		}
 		if ( java.util.List.class.isAssignableFrom( collectionType )
 				&& !member.hasDirectAnnotationUsage( Bag.class ) ) {
+			if ( hasListIndexSource( member ) ) {
+				return CollectionClassification.LIST;
+			}
 			if ( isOrdered( member ) && !hasListIndexSource( member ) ) {
 				return CollectionClassification.BAG;
 			}
-			return CollectionClassification.LIST;
+			return defaultListSemantics;
 		}
 		if ( java.util.Map.class.isAssignableFrom( collectionType ) ) {
 			if ( isSorted( member, collectionType ) ) {

@@ -2,14 +2,29 @@
 :toc:
 
 This document sketches a possible boot-time binding/finalization model for ORM
-9 binding.
+9 binding and how that model should evolve `org.hibernate.mapping`.
 It complements link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].
 
 The proposal is intentionally concrete, but still exploratory.  The goal is not
-to introduce a second complete ORM mapping model.  The goal is to preserve
-source facts, contribution ownership, and correspondence until
-stable managed-type views can be exposed and `org.hibernate.mapping` can be
-materialized safely.
+to introduce a second complete ORM mapping model beside `org.hibernate.mapping`.
+The goal is to preserve source facts, contribution ownership, and
+correspondence until an improved `org.hibernate.mapping` model can represent
+the resolved boot mapping directly.
+
+In other words, the long-term target is:
+
+[source]
+----
+binding/source model
+        -> resolved org.hibernate.mapping model
+        -> runtime model
+----
+
+The binding model is still useful, but it is a construction and resolution
+model.  It should not become a permanent parallel mapping model with
+`org.hibernate.mapping` reduced to a stale copy.  Instead, ORM 9 should use the
+major-version window to reshape `org.hibernate.mapping` itself where there is a
+real semantic win.
 
 == Core Shape
 
@@ -19,17 +34,8 @@ categorized source model
         -> BootBindingModel
         -> BindingModelFinalizer
         -> ManagedTypeView hierarchy and ordering/correspondence views
-        -> consumers
-----
-
-Consumers include:
-
-[source]
-----
-MappingModelMaterializer -> org.hibernate.mapping
-runtime model handoff
-JPA static metamodel population
-diagnostics / validation
+        -> resolved org.hibernate.mapping model
+        -> runtime/domain consumers
 ----
 
 Said differently:
@@ -38,7 +44,8 @@ Said differently:
 ----
 binding model is finalized
         -> views are the stable read API over finalized binding state
-        -> org.hibernate.mapping and other consumers are built from those views
+        -> org.hibernate.mapping is populated as the resolved boot mapping model
+        -> compatibility APIs expose legacy flattened views where needed
         -> runtime mapping model
 ----
 
@@ -115,16 +122,62 @@ and reinterpret the mutable binding model.  This keeps `org.hibernate.mapping`,
 runtime handoff, static metamodel population, diagnostics, and validation using
 the same resolved interpretation.
 
+The views are not the authoritative model.  They are the read boundary over the
+authoritative binding/finalization state used to populate the resolved mapping
+model.
+
+== Relationship To `org.hibernate.mapping`
+
+The preferred ORM 9 direction is to evolve `org.hibernate.mapping` into the
+resolved boot mapping model, not to build a permanent replacement model beside
+it.
+
+That has two consequences:
+
+* binding/source objects capture facts while cross-type decisions are still
+  deferred;
+* finalized views provide stable answers for materialization;
+* `PersistentClass`, `MappedSuperclass`, `Component`, `Property`, `Value`, and
+  related mapping objects should be adjusted when they can represent those
+  answers directly and remove timing ambiguity;
+* old closure/traversal methods remain as compatibility views where current
+  consumers need them;
+* new runtime/domain work should prefer APIs that expose resolved ownership,
+  contribution, correspondence, and ordering facts instead of inferring them
+  from copied properties or sorted lists.
+
+So the mapping model should become more honest, not merely wrapped:
+
+[source]
+----
+BootBindingModel
+        -> finalized views
+        -> improved org.hibernate.mapping objects
+             - direct managed-type supertype graph
+             - declaration/application origin
+             - identifier part correspondence
+             - selectable correspondence
+             - derived compatibility closures
+        -> runtime model
+----
+
+This does not mean every old mapping object must be redesigned immediately.
+The migration rule is to change `org.hibernate.mapping` when the change removes
+a real ambiguity, preserves source/application correspondence, or lets current
+consumers continue using compatibility views without forcing the old flattened
+shape to be the only source of truth.
+
 == Near-Term Implementation Rule
 
-The first implementation slices should build the horizontal binding model before
-continuing to add vertical compatibility bridges.
+The first implementation slices should build enough horizontal binding model to
+avoid losing source/application/correspondence facts before materialization.
 
 The rule for new binding-model contracts is strict:
 
 * binding objects are created from categorization/source facts;
 * views are derived from finalized binding objects;
-* `org.hibernate.mapping` objects are materialized from views;
+* `org.hibernate.mapping` objects are materialized or populated from views as
+  the resolved boot mapping model;
 * new binding objects must not hold `PersistentClass`, `MappedSuperclass`,
   `Component`, `Property`, `Value`, or `Column` references.
 
@@ -137,6 +190,75 @@ members, id-representation members, extraction kind, and selectable intent.
 The identifier materialization bridge then creates the legacy `RootClass`,
 identifier `Value`, identifier mapper, `Property`, primary-key columns, and
 association-identifier work items from the identifier view.
+
+== Extension Point Migration
+
+The existing `org.hibernate.binder.AttributeBinder` and
+`org.hibernate.binder.TypeBinder` contracts are real extension points, but they
+are shaped around direct mutation of `org.hibernate.mapping` objects.  That is
+the wrong semantic layer for the proposed binding/view/materialization model.
+
+ORM 9 should migrate the extension concept, not simply preserve the current
+mapping-object mutation contract as the long-term answer.
+
+The target shape is:
+
+* old `AttributeBinder` / `TypeBinder` contracts remain only as compatibility
+  adapters while required;
+* compatibility adapters run late enough that they can mutate materialized
+  mapping objects without becoming the semantic owner of binding decisions;
+* new replacement contracts operate at the binding layer;
+* the replacement for `AttributeBinder` is attribute-level, not
+  `BasicValue`-level, and must be able to contribute semantics for basic,
+  association, embedded/component, plural, `ANY`, and other attribute shapes;
+* a new binding-model-focused extension should either mutate well-defined
+  binding nodes or return structured binding contributions;
+* those returned/applied contributions are finalized into views and then
+  materialized into `org.hibernate.mapping` like ORM-owned contributions;
+* new extension contracts must not require extension authors to directly create
+  or sort `PersistentClass`, `Component`, `Property`, `Value`, or `Column`
+  instances.
+
+This keeps extension behavior in the same resolution pipeline as built-in
+annotations.  It also avoids reintroducing timing problems where a custom binder
+creates partially-resolved mapping objects before identifiers, mapped
+superclasses, embeddable applications, table keys, or selectable correspondence
+have been finalized.
+
+In particular, `AttributeBinder` should not be reimagined as a custom
+basic-value hook.  The current extension can apply to any persistent attribute
+kind, so a binding-layer replacement needs an attribute contribution target with
+structured mutation/contribution points appropriate to the actual attribute
+shape.  A basic attribute may contribute value/type/column facts, a to-one may
+contribute association-target or foreign-key facts, an embedded attribute may
+contribute component/path/override facts, and a plural attribute may contribute
+collection-table, element, key, or ordering facts.
+
+Possible replacement concepts:
+
+[source]
+----
+AttributeBindingContributor
+ManagedTypeBindingContributor
+EmbeddableBindingContributor
+IdentifierBindingContributor
+----
+
+The exact names are provisional.  The important decision is the layer: new
+forms of `AttributeBinder` and `TypeBinder` should work against the binding
+model, not the mapping model.  If mutation is allowed, it should be mutation of
+declared binding nodes or contribution collections with explicit phase rules.
+Where possible, returning a structured contribution is preferable because it
+preserves ordering, origin, diagnostics, and finalization control.
+
+Built-in annotations should prove the replacement shape before it is exposed as
+public SPI.  `@TenantId` is the first proof because it is an attribute-level
+contribution with coordinated property, filter, and row-level-security effects,
+but it must not define the replacement as basic-only.  Other good candidates are
+annotations whose current behavior crosses simple property decoration, such as
+`@NaturalId`, `@Immutable`, `@SoftDelete`, and custom type/value annotations.
+The old mapping-model extension contracts can then be deprecated or removed once
+the new binding-layer contracts cover the required use cases.
 
 == Managed Type Bindings
 

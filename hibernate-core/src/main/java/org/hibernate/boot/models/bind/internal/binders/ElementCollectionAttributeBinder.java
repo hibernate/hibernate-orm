@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDelete;
+import org.hibernate.boot.models.bind.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
@@ -278,11 +279,12 @@ class ElementCollectionAttributeBinder {
 				ownerType.getAccessType(),
 				bindingContext
 		);
-		final Component component = new Component( bindingState.getMetadataBuildingContext(), collection );
-		component.setEmbedded( true );
-		component.setComponentClassName( source.componentType().getClassName() );
-		component.setTable( table );
-		component.setRoleName( collection.getRole() );
+		final Component component =
+				new EmbeddableMappingMaterializer( bindingState ).createCollectionElementComponent(
+						source,
+						collection,
+						table
+				);
 
 		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
 				ownerType,

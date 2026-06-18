@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
+import org.hibernate.boot.models.bind.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
@@ -202,11 +203,12 @@ class CollectionIndexBinder {
 				ownerType.getAccessType(),
 				bindingContext
 		);
-		final Component component = new Component( bindingState.getMetadataBuildingContext(), collection );
-		component.setEmbedded( true );
-		component.setComponentClassName( source.componentType().getClassName() );
-		component.setTable( table );
-		component.setRoleName( collection.getRole() + ".key" );
+		final Component component =
+				new EmbeddableMappingMaterializer( bindingState ).createMapKeyComponent(
+						source,
+						collection,
+						table
+				);
 		if ( componentMapKey.compositeUserTypeClass() != null ) {
 			component.setTypeName( componentMapKey.compositeUserTypeClass().getName() );
 		}

@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.boot.models.bind.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
@@ -107,14 +108,13 @@ class EmbeddableAttributeBinder {
 				bindingContext
 		);
 		final Table componentTable = resolveComponentTable( member );
-		final Component component = new Component(
-				bindingState.getMetadataBuildingContext(),
+		final Component component = new EmbeddableMappingMaterializer( bindingState ).createEmbeddedAttributeComponent(
+				componentSource,
+				ownerBinding,
 				componentTable,
-				ownerBinding
+				ownerType.getClassDetails().getClassName(),
+				attributeMetadata.getName()
 		);
-		component.setComponentClassName( componentSource.componentType().getClassName() );
-		component.setTable( componentTable );
-		component.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
 		bindDiscriminator( component, componentTable );
 
 		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(

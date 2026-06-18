@@ -13,6 +13,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchyRoot;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchySuper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -69,6 +70,8 @@ public class MappedSuperclassTests {
 
 					assertThat( rootBinding.getMappedClass() ).isEqualTo( HierarchyRoot.class );
 					assertThat( rootBinding.getSuperMappedSuperclass() ).isSameAs( superBinding );
+					assertThat( rootBinding.getSuperType() ).isSameAs( superBinding );
+					assertThat( superBinding.getSubTypes() ).containsExactly( rootBinding );
 					assertThat( rootBinding.getImplicitTable() ).isNotNull();
 					assertThat( rootBinding.getTable() ).isNotNull();
 					assertThat( rootBinding.getRootTable() ).isSameAs( rootBinding.getTable() );
@@ -91,9 +94,20 @@ public class MappedSuperclassTests {
 		checkDomainModel(
 				(context) -> {
 					final var metadataCollector = context.getMetadataCollector();
+					final MappedSuperclass contributionBinding = metadataCollector.getMappedSuperclass( RootContribution.class );
 					final PersistentClass rootBinding = metadataCollector.getEntityBinding( RootConsumer.class.getName() );
 					final PersistentClass leafBinding = metadataCollector.getEntityBinding( LeafConsumer.class.getName() );
 
+					assertThat( rootBinding.getSuperType() ).isSameAs( contributionBinding );
+					assertThat( contributionBinding.getSubTypes() ).containsExactly( rootBinding );
+					assertThat( leafBinding.getSuperclass() ).isSameAs( rootBinding );
+					assertThat( rootBinding.getDirectSubclasses() ).containsExactly( (Subclass) leafBinding );
+					assertThat( leafBinding.getSuperType() ).isSameAs( rootBinding );
+					assertThat( rootBinding.getSubTypes() ).containsExactly( leafBinding );
+					final Property rootCode = localProperty( rootBinding, "rootCode" );
+					assertThat( rootBinding.getDeclaredProperties() ).doesNotContain( rootCode );
+					assertThat( rootBinding.getMappedSuperclassProperties() ).containsExactly( rootCode );
+					assertThat( rootBinding.getMappedSuperclassPropertyOrigin( rootCode ) ).isSameAs( contributionBinding );
 					assertThat( countLocalProperties( rootBinding, "rootCode" ) ).isEqualTo( 1 );
 					assertThat( countLocalProperties( leafBinding, "rootCode" ) ).isEqualTo( 0 );
 					assertThat( countClosureProperties( leafBinding, "rootCode" ) ).isEqualTo( 1 );
@@ -112,9 +126,21 @@ public class MappedSuperclassTests {
 				(context) -> {
 					final var metadataCollector = context.getMetadataCollector();
 					final PersistentClass rootBinding = metadataCollector.getEntityBinding( EntityBeforeContribution.class.getName() );
+					final MappedSuperclass contributionBinding = metadataCollector.getMappedSuperclass( ContributionBetweenEntities.class );
 					final PersistentClass appliedBinding = metadataCollector.getEntityBinding( EntityAfterContribution.class.getName() );
 					final PersistentClass leafBinding = metadataCollector.getEntityBinding( EntityAfterContributionLeaf.class.getName() );
 
+					assertThat( contributionBinding.getSuperType() ).isSameAs( rootBinding );
+					assertThat( rootBinding.getSubTypes() ).containsExactly( contributionBinding );
+					assertThat( appliedBinding.getSuperType() ).isSameAs( contributionBinding );
+					assertThat( contributionBinding.getSubTypes() ).containsExactly( appliedBinding );
+					assertThat( leafBinding.getSuperType() ).isSameAs( appliedBinding );
+					assertThat( appliedBinding.getSubTypes() ).containsExactly( leafBinding );
+
+					final Property nestedCode = localProperty( appliedBinding, "nestedCode" );
+					assertThat( appliedBinding.getDeclaredProperties() ).doesNotContain( nestedCode );
+					assertThat( appliedBinding.getMappedSuperclassProperties() ).containsExactly( nestedCode );
+					assertThat( appliedBinding.getMappedSuperclassPropertyOrigin( nestedCode ) ).isSameAs( contributionBinding );
 					assertThat( countLocalProperties( rootBinding, "nestedCode" ) ).isEqualTo( 0 );
 					assertThat( countLocalProperties( appliedBinding, "nestedCode" ) ).isEqualTo( 1 );
 					assertThat( countLocalProperties( leafBinding, "nestedCode" ) ).isEqualTo( 0 );
@@ -136,12 +162,25 @@ public class MappedSuperclassTests {
 					final var metadataCollector = context.getMetadataCollector();
 					final PersistentClass firstRootBinding = metadataCollector.getEntityBinding( FirstSharedRoot.class.getName() );
 					final PersistentClass secondRootBinding = metadataCollector.getEntityBinding( SecondSharedRoot.class.getName() );
+					final MappedSuperclass firstContribution = (MappedSuperclass) firstRootBinding.getSuperType();
+					final MappedSuperclass secondContribution = (MappedSuperclass) secondRootBinding.getSuperType();
 					final Property firstAppliedProperty = localProperty( firstRootBinding, "sharedCode" );
 					final Property secondAppliedProperty = localProperty( secondRootBinding, "sharedCode" );
 
+					assertThat( firstContribution.getMappedClass() ).isEqualTo( SharedContribution.class );
+					assertThat( secondContribution.getMappedClass() ).isEqualTo( SharedContribution.class );
+					assertThat( firstContribution ).isNotSameAs( secondContribution );
+					assertThat( firstContribution.getSubTypes() ).containsExactly( firstRootBinding );
+					assertThat( secondContribution.getSubTypes() ).containsExactly( secondRootBinding );
 					assertThat( firstAppliedProperty ).isNotNull();
 					assertThat( secondAppliedProperty ).isNotNull();
 					assertThat( firstAppliedProperty ).isNotSameAs( secondAppliedProperty );
+					assertThat( firstRootBinding.getMappedSuperclassProperties() ).containsExactly( firstAppliedProperty );
+					assertThat( secondRootBinding.getMappedSuperclassProperties() ).containsExactly( secondAppliedProperty );
+					assertThat( firstRootBinding.getMappedSuperclassPropertyOrigin( firstAppliedProperty ) )
+							.isSameAs( firstContribution );
+					assertThat( secondRootBinding.getMappedSuperclassPropertyOrigin( secondAppliedProperty ) )
+							.isSameAs( secondContribution );
 				},
 				scope.getRegistry(),
 				SharedContribution.class,

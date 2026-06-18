@@ -9,15 +9,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 
-import org.hibernate.MappingException;
-import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.models.bind.internal.materialize.EmbeddableMappingMaterializer;
+import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
+import org.hibernate.boot.models.bind.internal.materialize.ToOneMaterializationHelper;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.boot.models.bind.internal.sources.ToOneSource;
+import org.hibernate.boot.models.bind.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -44,8 +46,6 @@ import jakarta.persistence.Basic;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinTable;
 
-import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindPropertyAccessor;
-import static org.hibernate.internal.util.StringHelper.count;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -67,6 +67,8 @@ public class ComponentBinder {
 	private final BindingState state;
 	private final BindingOptions options;
 	private final BindingContext context;
+	private final EmbeddableMappingMaterializer embeddableMappingMaterializer;
+	private final PropertyMappingMaterializer propertyMappingMaterializer;
 
 	public ComponentBinder(
 			ModelBinders modelBinders,
@@ -77,6 +79,8 @@ public class ComponentBinder {
 		this.state = state;
 		this.options = options;
 		this.context = context;
+		this.embeddableMappingMaterializer = new EmbeddableMappingMaterializer( state );
+		this.propertyMappingMaterializer = new PropertyMappingMaterializer();
 	}
 
 	public List<Column> bindBasicProperties(
@@ -115,8 +119,7 @@ public class ComponentBinder {
 			boolean updatable,
 			boolean registerCollectionBindings) {
 		validateEmbeddedTablePlacement( source );
-		applyComponentCustomizations( component, source.sourceMember(), source.componentType() );
-		applyColumnNamingPattern( component, source.sourceMember() );
+		embeddableMappingMaterializer.prepareComponentForBinding( component, source );
 		final List<Column> columns = bindProperties(
 				ownerType,
 				ownerBinding,
@@ -153,7 +156,9 @@ public class ComponentBinder {
 				source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
 						? columns
 						: identifierColumns;
-		final List<ComponentSource.ComponentMember> members = new ArrayList<>( source.members() );
+		final EmbeddableContributionView contributionView =
+				embeddableMappingMaterializer.createContributionView( source );
+		final List<ComponentSource.ComponentMember> members = new ArrayList<>( contributionView.members() );
 		if ( component.isPolymorphic() ) {
 			members.addAll( source.subclassMembers( context ) );
 		}
@@ -168,9 +173,7 @@ public class ComponentBinder {
 			}
 
 			if ( isPluralMember( member ) ) {
-				final Property property = new Property();
-				property.setName( attributeName );
-				bindPropertyAccessor( member, property );
+				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
 				final Collection collection = bindPluralMember(
 						ownerType,
 						ownerBinding,
@@ -188,9 +191,7 @@ public class ComponentBinder {
 			}
 
 			if ( isToOneMember( member ) ) {
-				final Property property = new Property();
-				property.setName( attributeName );
-				bindPropertyAccessor( member, property );
+				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
 				final AssociationOverride associationOverride = source.associationOverride( memberPath );
 				final var manyToOne = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
 						? bindAssociationIdentifierMember(
@@ -232,14 +233,15 @@ public class ComponentBinder {
 					|| isImplicitEmbeddedIdentifierMember( source, componentMember.type() ) ) {
 				validateNestedEmbeddedTablePlacement( member );
 				final ComponentSource nestedSource = source.nested( componentMember, context );
-				final Component nestedComponent = new Component( state.getMetadataBuildingContext(), component );
-				nestedComponent.setComponentClassName( nestedSource.componentType().getClassName() );
-				nestedComponent.setTable( table );
-				nestedComponent.setTypeUsingReflection( source.componentType().getClassName(), attributeName );
-				applyComponentCustomizations( nestedComponent, member, nestedSource.componentType() );
-				applyColumnNamingPattern( nestedComponent, member );
+				final Component nestedComponent = embeddableMappingMaterializer.createNestedComponent(
+						nestedSource,
+						component,
+						table,
+						source.componentType().getClassName(),
+						attributeName
+				);
 
-				final Property property = createProperty( attributeName, nestedComponent, member );
+				final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
 				component.addProperty( property, componentMember.declaringType() );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				columns.addAll( bindProperties(
@@ -260,7 +262,7 @@ public class ComponentBinder {
 			}
 
 			final BasicValue basicValue = createBasicValue( table );
-			final Property property = createProperty( attributeName, basicValue, member );
+			final Property property = propertyMappingMaterializer.createProperty( attributeName, basicValue, member );
 			final org.hibernate.annotations.Formula formula = member.getDirectAnnotationUsage( org.hibernate.annotations.Formula.class );
 			if ( formula != null ) {
 				basicValue.addFormula( new org.hibernate.mapping.Formula( formula.value() ) );
@@ -327,29 +329,6 @@ public class ComponentBinder {
 				.getText();
 	}
 
-	private static void applyComponentCustomizations(
-			Component component,
-			MemberDetails sourceMember,
-			ClassDetails componentType) {
-		final org.hibernate.annotations.CompositeType compositeType = sourceMember == null
-				? null
-				: sourceMember.getDirectAnnotationUsage( org.hibernate.annotations.CompositeType.class );
-		if ( compositeType != null ) {
-			component.setTypeName( compositeType.value().getName() );
-		}
-
-		final org.hibernate.annotations.EmbeddableInstantiator memberInstantiator = sourceMember == null
-				? null
-				: sourceMember.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
-		final org.hibernate.annotations.EmbeddableInstantiator typeInstantiator =
-				componentType.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
-		final org.hibernate.annotations.EmbeddableInstantiator instantiator =
-				memberInstantiator == null ? typeInstantiator : memberInstantiator;
-		if ( instantiator != null ) {
-			component.setCustomInstantiator( instantiator.value() );
-		}
-	}
-
 	private ManyToOne bindAssociationIdentifierMember(
 			IdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
@@ -400,7 +379,7 @@ public class ComponentBinder {
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
 		value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
-		ToOneAttributeBinder.applyFetchMode( source, value );
+		ToOneMaterializationHelper.applyFetchMode( source, value );
 		if ( source.isLogicalOneToOne() ) {
 			value.markAsLogicalOneToOne();
 		}
@@ -535,14 +514,6 @@ public class ComponentBinder {
 		return source.effectiveFetchType( options.getDefaultToOneFetchType() );
 	}
 
-	private Property createProperty(String name, org.hibernate.mapping.Value value, MemberDetails member) {
-		final Property property = new Property();
-		property.setName( name );
-		property.setValue( value );
-		bindPropertyAccessor( member, property );
-		return property;
-	}
-
 	private void applyBasicOptionality(MemberDetails member, TypeDetails memberType, Property property, Column column) {
 		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
 		final boolean optionalByType = memberType.getTypeKind() != TypeDetails.Kind.PRIMITIVE;
@@ -589,33 +560,6 @@ public class ComponentBinder {
 		public MemberDetails getMember() {
 			return member;
 		}
-	}
-
-	private static void applyColumnNamingPattern(Component component, MemberDetails sourceMember) {
-		if ( sourceMember == null ) {
-			return;
-		}
-
-		final EmbeddedColumnNaming columnNaming = sourceMember.getDirectAnnotationUsage( EmbeddedColumnNaming.class );
-		if ( columnNaming == null ) {
-			return;
-		}
-
-		final String pattern = isEmpty( columnNaming.value() )
-				? sourceMember.resolveAttributeName() + "_%s"
-				: columnNaming.value();
-		final int markerCount = count( pattern, '%' );
-		if ( markerCount != 1 ) {
-			throw new MappingException( String.format(
-					Locale.ROOT,
-					"@EmbeddedColumnNaming expects pattern with exactly 1 format marker, but found %s - `%s` (%s#%s)",
-					markerCount,
-					pattern,
-					sourceMember.getDeclaringType().getName(),
-					sourceMember.getName()
-			) );
-		}
-		component.setColumnNamingPattern( pattern );
 	}
 
 	private static void validateEmbeddedTablePlacement(ComponentSource source) {

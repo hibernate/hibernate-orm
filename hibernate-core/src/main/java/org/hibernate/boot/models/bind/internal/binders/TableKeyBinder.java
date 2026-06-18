@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -405,7 +408,40 @@ public class TableKeyBinder {
 	}
 
 	private String implicitCollectionKeyColumnName(Column identifierColumn) {
-		return identifierColumn.getName();
+		return entityBinder.getBindingContext()
+				.getImplicitNamingStrategy()
+				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
+					@Override
+					public Nature getNature() {
+						return Nature.ENTITY_COLLECTION;
+					}
+
+					@Override
+					public EntityTypeMetadata getEntityNaming() {
+						return entityBinder.getManagedType();
+					}
+
+					@Override
+					public AttributePath getAttributePath() {
+						return null;
+					}
+
+					@Override
+					public Identifier getReferencedTableName() {
+						return bindingState.getDatabase().toIdentifier( entityBinder.getTypeBinding().getTable().getName() );
+					}
+
+					@Override
+					public Identifier getReferencedColumnName() {
+						return identifierColumn.getNameIdentifier( bindingState.getDatabase() );
+					}
+
+					@Override
+					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
+						return bindingState.getMetadataBuildingContext();
+					}
+				} )
+				.render( bindingState.getDatabase().getDialect() );
 	}
 
 	private Column copyKeyColumn(Column source) {

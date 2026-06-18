@@ -220,6 +220,39 @@ public class SimpleIdTests {
 
 	@Test
 	@ServiceRegistry
+	void testEmbeddedIdClassBinding(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( EmbeddedIdClassEntity.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final Component identifierMapper = entityBinding.getIdentifierMapper();
+
+					assertThat( entityBinding.hasEmbeddedIdentifier() ).isFalse();
+					assertThat( identifier.getProperty( "code" ).getValue() ).isInstanceOf( Component.class );
+					assertThat( identifierMapper.getProperty( "code" ).getValue() ).isInstanceOf( Component.class );
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code_part", "local_id" );
+					final IdentifierContributionView identifierContribution = identifierContribution(
+							context,
+							EmbeddedIdClassEntity.class
+					);
+					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "code", "localId" );
+					assertThat( identifierContribution.attribute( "code" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
+					assertThat( identifierContribution.attribute( "code" ).selectableNames() )
+							.containsExactly( "code_part" );
+					assertThat( identifierContribution.attribute( "localId" ).selectableNames() )
+							.containsExactly( "local_id" );
+				},
+				scope.getRegistry(),
+				EmbeddedIdClassEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testMapsIdWithEmbeddedId(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {

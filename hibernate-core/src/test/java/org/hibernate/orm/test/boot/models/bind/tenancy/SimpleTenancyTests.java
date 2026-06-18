@@ -9,6 +9,9 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.boot.models.bind.internal.binders.TenantIdBinder;
+import org.hibernate.boot.models.bind.internal.view.TenantIdContributionView;
+import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
@@ -47,6 +50,13 @@ public class SimpleTenancyTests {
 					assertThat( filterDefinition.isAppliedToLoadByKey() ).isTrue();
 
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( ProtectedEntity.class.getName() );
+					final TenantIdContributionView tenantIdContribution = context.getBindingState()
+							.getBootBindingModel()
+							.getTenantIdContributionView( entityType( context, ProtectedEntity.class ) );
+					assertThat( tenantIdContribution ).isNotNull();
+					assertThat( tenantIdContribution.attributeName() ).isEqualTo( "tenant" );
+					assertThat( tenantIdContribution.member().getName() ).isEqualTo( "tenant" );
+
 					assertTenantFilter( entityBinding, "tenant = :tenantId" );
 					final Property tenantProperty = entityBinding.getProperty( "tenant" );
 					final BasicValue value = (BasicValue) tenantProperty.getValue();
@@ -120,6 +130,17 @@ public class SimpleTenancyTests {
 		assertThat( filter.getName() ).isEqualTo( TenantIdBinder.FILTER_NAME );
 		assertThat( filter.getCondition() ).isEqualTo( expectedCondition );
 		assertThat( filter.useAutoAliasInjection() ).isTrue();
+	}
+
+	private static EntityTypeMetadata entityType(
+			org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelCheckContext context,
+			Class<?> entityClass) {
+		for ( EntityHierarchy hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
+			if ( hierarchy.getRoot().getClassDetails().getClassName().equals( entityClass.getName() ) ) {
+				return hierarchy.getRoot();
+			}
+		}
+		throw new AssertionError( "Could not locate entity type for " + entityClass.getName() );
 	}
 
 	enum Tenant { ACME, SPACELY }

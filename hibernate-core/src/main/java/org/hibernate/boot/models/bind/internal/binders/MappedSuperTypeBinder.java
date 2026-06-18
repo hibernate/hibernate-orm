@@ -7,6 +7,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.boot.models.bind.internal.model.MappedSuperclassContribution;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
@@ -78,6 +79,12 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 		this.binding = new MappedSuperclass( superMappedSuper, superEntity, getTable() );
 		this.binding.setMappedClass( type.getClassDetails().toJavaClass() );
+		if ( superMappedSuper != null ) {
+			superMappedSuper.addSubType( binding );
+		}
+		else if ( superEntity != null ) {
+			superEntity.addSubType( binding );
+		}
 	}
 
 	/// Publish the mapped-superclass skeleton for downstream binders.
@@ -118,6 +125,12 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			final var typeBinder = (IdentifiableTypeBinder) getBindingState().getTypeBinder( subType.getClassDetails() );
 			if ( subType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
 				final var entityBinding = (PersistentClass) typeBinder.getTypeBinding();
+				final MappedSuperclassContribution contribution = new MappedSuperclassContribution(
+						(MappedSuperclassTypeMetadata) getManagedType(),
+						subType,
+						(EntityTypeMetadata) subType
+				);
+				getBindingState().getBootBindingModel().addMappedSuperclassContribution( contribution );
 				// Transitional contribution-lite bridge: until PersistentClass derives inherited mapped-superclass
 				// state by traversing applied contributions, bind each declared property only into the nearest
 				// consuming entity.  Entity subclasses then inherit it through the normal entity closure.
@@ -127,7 +140,10 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 						(EntityTypeMetadata) subType,
 						entityBinding,
 						entityBinding.getTable(),
-						(property) -> applyMappedSuperclassProperty( property, entityBinding )
+						(property) -> {
+							applyMappedSuperclassProperty( property, entityBinding );
+							contribution.addAppliedAttributeName( property.getName() );
+						}
 				);
 			}
 			else {
@@ -141,7 +157,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			return;
 		}
 
-		entityBinding.addMappedSuperclassProperty( property );
+		entityBinding.addMappedSuperclassProperty( property, binding );
 	}
 
 	private boolean hasDeclaredProperty(PersistentClass entityBinding, String propertyName) {

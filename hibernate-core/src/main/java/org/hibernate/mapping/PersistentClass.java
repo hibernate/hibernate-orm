@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +69,7 @@ public abstract sealed class PersistentClass
 
 	private final MetadataBuildingContext metadataBuildingContext;
 	private final String contributor;
+	private final List<IdentifiableTypeClass> subTypes = new ArrayList<>();
 
 	private String entityName;
 
@@ -83,6 +85,8 @@ public abstract sealed class PersistentClass
 	private boolean lazy;
 	private final List<Property> properties = new ArrayList<>();
 	private final List<Property> declaredProperties = new ArrayList<>();
+	private final List<Property> mappedSuperclassProperties = new ArrayList<>();
+	private final Map<Property, MappedSuperclass> mappedSuperclassPropertyOrigins = new IdentityHashMap<>();
 	private final List<Subclass> subclasses = new ArrayList<>();
 	private final List<Property> subclassProperties = new ArrayList<>();
 	private final List<Table> subclassTables = new ArrayList<>();
@@ -223,6 +227,20 @@ public abstract sealed class PersistentClass
 			superclass = superclass.getSuperclass();
 		}
 		subclasses.add( subclass );
+	}
+
+	/**
+	 * Registers a direct managed-type subtype.
+	 * <p>
+	 * This is separate from {@link #addSubclass(Subclass)} because
+	 * {@code addSubclass} preserves legacy entity-inheritance state while this
+	 * method records the direct managed-type graph, which may include mapped
+	 * superclasses.
+	 */
+	public void addSubType(IdentifiableTypeClass subType) {
+		if ( !subTypes.contains( subType ) ) {
+			subTypes.add( subType );
+		}
 	}
 
 	public boolean hasSubclasses() {
@@ -1095,8 +1113,32 @@ public abstract sealed class PersistentClass
 	}
 
 	public void addMappedSuperclassProperty(Property property) {
+		addMappedSuperclassProperty( property, null );
+	}
+
+	public void addMappedSuperclassProperty(Property property, MappedSuperclass origin) {
 		properties.add( property );
+		mappedSuperclassProperties.add( property );
+		if ( origin != null ) {
+			mappedSuperclassPropertyOrigins.put( property, origin );
+		}
 		property.setPersistentClass( this );
+	}
+
+	/**
+	 * Properties locally applied to this entity from mapped-superclass
+	 * contributions.
+	 * <p>
+	 * These properties are also exposed through compatibility APIs such as
+	 * {@link #getProperties()}.  This method keeps their mapped-superclass origin
+	 * distinguishable from declared entity properties.
+	 */
+	public List<Property> getMappedSuperclassProperties() {
+		return unmodifiableList( mappedSuperclassProperties );
+	}
+
+	public MappedSuperclass getMappedSuperclassPropertyOrigin(Property property) {
+		return mappedSuperclassPropertyOrigins.get( property );
 	}
 
 	public MappedSuperclass getSuperMappedSuperclass() {
@@ -1228,16 +1270,19 @@ public abstract sealed class PersistentClass
 
 	@Override
 	public IdentifiableTypeClass getSuperType() {
+		if ( superMappedSuperclass != null ) {
+			return superMappedSuperclass;
+		}
 		final var superPersistentClass = getSuperclass();
 		if ( superPersistentClass != null ) {
 			return superPersistentClass;
 		}
-		return superMappedSuperclass;
+		return null;
 	}
 
 	@Override
 	public List<IdentifiableTypeClass> getSubTypes() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		return unmodifiableList( subTypes );
 	}
 
 	private boolean containsColumn(Column column) {

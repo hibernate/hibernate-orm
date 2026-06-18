@@ -15,6 +15,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.PropertyRef;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.models.bind.internal.materialize.ToOneMaterializationHelper;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.boot.models.bind.internal.sources.ToOneSource;
@@ -26,7 +27,6 @@ import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
@@ -271,7 +271,7 @@ class ToOneAttributeBinder {
 		value.setTypeName( target.entityName() );
 		value.setTypeUsingReflection( ownerClassName, propertyName );
 		value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
-		applyFetchMode( source, value );
+		ToOneMaterializationHelper.applyFetchMode( source, value );
 		applyOnDelete( member, value );
 		applyNotFound( source, value );
 		applyFetchProfileOverrides( source, ownerBinding, propertyName, bindingState );
@@ -411,28 +411,6 @@ class ToOneAttributeBinder {
 		if ( notFound != null ) {
 			value.setNotFoundAction( notFound.action() );
 		}
-	}
-
-	static void applyFetchMode(ToOneSource source, ManyToOne value) {
-		final org.hibernate.annotations.Fetch fetch = source.hibernateFetch();
-		if ( fetch == null ) {
-			value.setFetchStyle( value.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN );
-			return;
-		}
-
-		value.setFetchStyle( fetchStyle( fetch.value() ) );
-		if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
-			value.setLazy( false );
-			value.setUnwrapProxy( false );
-		}
-	}
-
-	private static FetchStyle fetchStyle(org.hibernate.annotations.FetchMode fetchMode) {
-		return switch ( fetchMode ) {
-			case JOIN -> FetchStyle.JOIN;
-			case SELECT -> FetchStyle.SELECT;
-			case SUBSELECT -> FetchStyle.SUBSELECT;
-		};
 	}
 
 	private static void applyFetchProfileOverrides(

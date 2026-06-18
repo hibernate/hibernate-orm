@@ -231,7 +231,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 							);
 
 			if ( superTypeBinder != null ) {
-				rootClass.setSuperMappedSuperclass( (MappedSuperclass) superTypeBinder.getTypeBinding() );
+				final MappedSuperclass superMappedSuperclass = (MappedSuperclass) superTypeBinder.getTypeBinding();
+				rootClass.setSuperMappedSuperclass( superMappedSuperclass );
+				superMappedSuperclass.addSubType( rootClass );
 			}
 		}
 		else {
@@ -241,9 +243,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			if ( (superTypeBinder == superEntityBinder && superTypeBinder != null) ) {
 				// the super is an entity
 				subclass.setSuperclass( superEntity );
+				superEntity.addSubType( subclass );
 			}
 			else if ( superTypeBinder != null ) {
-				subclass.setSuperMappedSuperclass( (MappedSuperclass) superTypeBinder.getTypeBinding() );
+				final MappedSuperclass superMappedSuperclass = (MappedSuperclass) superTypeBinder.getTypeBinding();
+				subclass.setSuperMappedSuperclass( superMappedSuperclass );
+				superMappedSuperclass.addSubType( subclass );
 			}
 
 			if ( !superEntity.getDirectSubclasses().contains( subclass ) ) {

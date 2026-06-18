@@ -123,7 +123,12 @@ public sealed class Subclass extends PersistentClass
 
 	@Override
 	public void addMappedSuperclassProperty(Property property) {
-		super.addMappedSuperclassProperty( property );
+		addMappedSuperclassProperty( property, null );
+	}
+
+	@Override
+	public void addMappedSuperclassProperty(Property property, MappedSuperclass origin) {
+		super.addMappedSuperclassProperty( property, origin );
 		getSuperclass().addSubclassProperty( property );
 	}
 

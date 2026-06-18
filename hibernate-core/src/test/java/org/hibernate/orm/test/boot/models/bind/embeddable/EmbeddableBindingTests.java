@@ -9,6 +9,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 
 import org.hibernate.annotations.EmbeddedTable;
@@ -48,13 +49,24 @@ public class EmbeddableBindingTests {
 					assertThat( property.getValue() ).isInstanceOf( Component.class );
 					final Component component = (Component) property.getValue();
 
-					assertThat( component.isEmbedded() ).isTrue();
+					assertThat( component.isFlattened() ).isFalse();
 					assertThat( component.getComponentClassName() ).isEqualTo( Address.class.getName() );
 					assertThat( component.getProperties() )
 							.extracting( org.hibernate.mapping.Property::getName )
 							.containsExactly( "line1", "zipCode" );
 					assertThat( component.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "line1", "zipCode" );
+
+					final var contributions = context.getBindingState().getBootBindingModel()
+							.embeddableContributions();
+					assertThat( contributions ).hasSize( 1 );
+					final var contribution = contributions.get( 0 );
+					assertThat( contribution.kind() ).isEqualTo( ComponentSource.Kind.EMBEDDED_ATTRIBUTE );
+					assertThat( contribution.sourceMember().resolveAttributeName() ).isEqualTo( "address" );
+					assertThat( contribution.componentType().toJavaClass() ).isEqualTo( Address.class );
+					assertThat( contribution.members() )
+							.extracting( ComponentSource.ComponentMember::attributeName )
 							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
@@ -176,6 +188,14 @@ public class EmbeddableBindingTests {
 					assertThat( address.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "line1", "city", "country", "zipCode" );
+
+					final var contributions = context.getBindingState().getBootBindingModel()
+							.embeddableContributions();
+					assertThat( contributions )
+							.extracting( (contribution) -> contribution.componentType().getName() )
+							.containsExactly( AddressWithLocation.class.getName(), Location.class.getName() );
+					assertThat( contributions.get( 1 ).pathPrefix() ).isEqualTo( "location." );
+					assertThat( contributions.get( 1 ).namingPathPrefix() ).isEqualTo( "address.location." );
 				},
 				scope.getRegistry(),
 				NestedEmbeddedEntity.class

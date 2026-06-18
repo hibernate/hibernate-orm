@@ -341,12 +341,12 @@ class InversePluralAssociationBinder {
 		result.setPrecision( source.getPrecision() );
 		result.setScale( source.getScale() );
 		result.setSqlType( source.getSqlType() );
-		result.setNullable( false );
+		result.setNullable( source.isNullable() );
 		result.setUnique( unique );
 		table.addColumn( result );
 		final Column canonicalColumn = table.getColumn( result );
 		final Column column = canonicalColumn == null ? result : canonicalColumn;
-		column.setNullable( false );
+		column.setNullable( source.isNullable() );
 		column.setUnique( unique );
 		return column;
 	}

@@ -20,14 +20,39 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read
 
     steps:
-      # Checkout target branch which has trusted code
+      - name: Determine the branch for which the original action was triggered
+        id: determine_branch_ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_EVENT: ${{ github.event.workflow_run.event }}
+          FORK_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+          REPO_OWNER: ${{ github.event.workflow_run.repository.owner.login }}
+          REPO_FULL_NAME: ${{ github.event.workflow_run.repository.full_name }}
+          HEAD_BRANCH_NAME: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          BRANCH_NAME="$HEAD_BRANCH_NAME"
+          if [ "$GH_EVENT" == "pull_request" ]; then
+            if [ "$FORK_OWNER" != "$REPO_OWNER" ]; then
+              BRANCH_NAME="$FORK_OWNER:$BRANCH_NAME"
+            fi
+            GH_RESPONSE=$(gh pr view "$BRANCH_NAME" --repo "$REPO_FULL_NAME" --json baseRefName)
+            TARGET_BRANCH=$(echo "$GH_RESPONSE" | jq -r '.baseRefName')
+            echo "::notice::PR target branch: $TARGET_BRANCH"
+            echo "original_branch_ref=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Push event, using head branch: $BRANCH_NAME"
+            echo "original_branch_ref=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+          fi
+      # Checkout the target branch so that the Develocity plugin version matches
+      # the one that was used to produce the build scan data.
       - name: Check out target branch
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
-          ref: ${{ github.ref }}
+          ref: ${{ steps.determine_branch_ref.outputs.original_branch_ref }}
       - name: Set up JDK
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
@@ -37,7 +62,7 @@ jobs:
       - name: Generate cache key
         id: cache-key
         env:
-          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || steps.determine_branch_ref.outputs.original_branch_ref || github.ref_name }}
         run: |
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")

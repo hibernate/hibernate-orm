@@ -20,4 +20,15 @@ public interface Exporter {
 	 */
 	public void start();
 
+	/**
+	 * Called when exporter should start generating its output
+	 */
+	default void start(boolean autoStop) {
+		start();
+	}
+
+	default void stop() {
+		// No-op
+	}
+
 }

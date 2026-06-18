@@ -14,7 +14,7 @@ permissions: { } # none, jobs are defining their own if they need any
 jobs:
   publish-build-scans:
     name: Publish Develocity build scans
-    if: github.repository == 'hibernate/hibernate-orm' && github.event.workflow_run.conclusion != 'cancelled'
+    if: github.repository == 'hibernate/hibernate-orm'
     runs-on: ubuntu-latest
 
     permissions:
@@ -75,21 +75,27 @@ jobs:
         if: ${{ steps.downloadBuildScan.outcome != 'failure'}}
         run: |
           shopt -s nullglob # Don't run the loop below if there are no artifacts
-          status=0
+          published=0
+          failed=0
           mkdir -p ~/.gradle/
           for build_scan_data_directory in /tmp/downloaded-build-scan-data/*
           do
             rm -rf ~/.gradle/build-scan-data
-            mv "$build_scan_data_directory" ~/.gradle/build-scan-data \
-            && ./gradlew --no-build-cache buildScanPublishPrevious || status=1
+            mv "$build_scan_data_directory" ~/.gradle/build-scan-data
+            if ./gradlew --no-build-cache buildScanPublishPrevious; then
+              published=$((published + 1))
+            else
+              echo "::warning::Failed to publish build scan from $(basename "$build_scan_data_directory")"
+              failed=$((failed + 1))
+            fi
           done
-          exit $status
+          echo "Published $published build scan(s), $failed failed"
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY_PR }}
 
   publish-sonar-scans:
     name: Publish Sonar scan
-    if: github.repository == 'hibernate/hibernate-orm' && github.event.workflow_run.conclusion != 'cancelled'
+    if: github.repository == 'hibernate/hibernate-orm'
     runs-on: ubuntu-latest
 
     permissions:

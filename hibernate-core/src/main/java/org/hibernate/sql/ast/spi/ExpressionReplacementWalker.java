@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpr
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingWindowFunctionSqlAstExpression;
-import org.hibernate.query.sqm.tree.expression.Conversion;
+import org.hibernate.query.sqm.tree.spi.expression.Conversion;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;

@@ -6,16 +6,16 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.sqm.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.spi.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.domain.AbstractSqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEntityDomainType;
 import org.hibernate.spi.NavigablePath;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;

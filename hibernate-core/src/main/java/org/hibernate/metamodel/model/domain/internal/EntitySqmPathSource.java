@@ -6,14 +6,14 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.SqmJoinable;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
-import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.spi.SqmJoinable;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.SqmJoinType;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPluralPartJoin;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 
 /**
  * @author Steve Ebersole

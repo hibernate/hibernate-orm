@@ -7,7 +7,7 @@ package org.hibernate.query.internal;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.spi.HqlTranslator;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -15,8 +15,8 @@ import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 

@@ -5,9 +5,9 @@
 package org.hibernate.query.internal;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractQueryParameter;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.spi.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.type.BindableType;
 
 

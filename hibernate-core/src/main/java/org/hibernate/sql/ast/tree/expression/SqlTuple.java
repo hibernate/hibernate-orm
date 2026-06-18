@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;

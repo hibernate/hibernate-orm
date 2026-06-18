@@ -20,7 +20,7 @@ import org.hibernate.query.specification.QuerySpecification;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.specification.SimpleProjectionSpecification;
 import org.hibernate.query.spi.JpaTypedQueryReference;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import java.util.Collections;
 import java.util.Map;

@@ -9,7 +9,7 @@ import java.util.List;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 
 /**
  * A {@link ArgumentsValidator} that validates the arguments for the {@code array_contains} function.

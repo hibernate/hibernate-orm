@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.internal;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
 
 /**
  * @author Christian Beikov

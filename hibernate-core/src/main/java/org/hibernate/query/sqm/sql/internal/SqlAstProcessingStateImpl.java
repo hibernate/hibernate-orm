@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.SqmAliasedNodeCollector;
-import org.hibernate.query.sqm.sql.ConversionException;
+import org.hibernate.query.sqm.sql.spi.BaseSqmToSqlAstConverter.SqmAliasedNodeCollector;
+import org.hibernate.query.sqm.sql.spi.ConversionException;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;

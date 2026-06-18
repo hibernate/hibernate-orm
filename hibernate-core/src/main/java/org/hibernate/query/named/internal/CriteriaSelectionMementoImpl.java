@@ -15,12 +15,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.internal.SelectionQueryImpl;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.internal.SqmUtil;
-import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import java.io.Serializable;
 import java.util.Locale;

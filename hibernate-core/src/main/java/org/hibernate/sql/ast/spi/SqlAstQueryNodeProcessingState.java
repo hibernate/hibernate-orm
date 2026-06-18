@@ -6,7 +6,7 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.Map;
 
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 

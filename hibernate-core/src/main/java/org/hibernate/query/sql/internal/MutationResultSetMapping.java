@@ -6,7 +6,7 @@ package org.hibernate.query.sql.internal;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.results.spi.LegacyFetchBuilder;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.spi.ResultSetMapping;

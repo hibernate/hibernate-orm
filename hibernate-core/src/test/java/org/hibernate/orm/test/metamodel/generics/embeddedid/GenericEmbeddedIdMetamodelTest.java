@@ -6,7 +6,7 @@ package org.hibernate.orm.test.metamodel.generics.embeddedid;
 
 import jakarta.persistence.criteria.Path;
 import org.hibernate.SessionFactory;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterAll;

@@ -9,7 +9,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReaderInputStream;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityValued;

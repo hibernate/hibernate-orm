@@ -6,7 +6,7 @@ package org.hibernate.query.assignment;
 
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.restriction.Path;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
 /**
  * Assignment of a path to an attribute.

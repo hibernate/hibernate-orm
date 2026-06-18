@@ -5,7 +5,7 @@
 package org.hibernate.query.assignment;
 
 import org.hibernate.query.restriction.Path;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
 /**
  * Assignment of a value to a path.

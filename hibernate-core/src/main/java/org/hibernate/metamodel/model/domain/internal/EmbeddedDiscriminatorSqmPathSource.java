@@ -7,8 +7,8 @@ package org.hibernate.metamodel.model.domain.internal;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 
 /**
  * SqmPathSource implementation for embeddable discriminator

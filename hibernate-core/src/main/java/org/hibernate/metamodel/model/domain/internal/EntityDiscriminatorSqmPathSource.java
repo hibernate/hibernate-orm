@@ -7,10 +7,10 @@ package org.hibernate.metamodel.model.domain.internal;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
-import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEntityDomainType;
 
 /**
  * SqmPathSource implementation for entity discriminator

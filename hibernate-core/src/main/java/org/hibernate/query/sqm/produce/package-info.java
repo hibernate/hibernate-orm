@@ -3,27 +3,27 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
-/// # Producing SQM
+/// ## Producing SQM
 ///
 /// This package defines support for producing SQM trees (see [org.hibernate.query.sqm.tree]).
 /// The main entry point into producing an SQM tree is
-/// [org.hibernate.query.hql.HqlTranslator], which
+/// [org.hibernate.query.hql.spi.HqlTranslator], which
 /// can be obtained via
 /// [org.hibernate.query.spi.QueryEngine] which in turn is obtained via
 /// `getQueryEngine()`.
 ///
-/// ## From HQL/JPQL
+/// ### From HQL/JPQL
 ///
 /// `SemanticQueryProducer` defines just a single method for producing SQM based on HQL:
 /// `translate()`.
 /// See [org.hibernate.query.hql.internal] for details
 ///
-/// ## From Criteria
+/// ### From Criteria
 ///
 /// `SemanticQueryProducer` builds SQM directly.
 /// See [org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder] for details
 ///
-/// ## Exceptions
+/// ### Exceptions
 ///
 /// Generally, the interpretation will throw exceptions as one of 3 types:
 ///

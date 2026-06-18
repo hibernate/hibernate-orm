@@ -5,6 +5,7 @@
 package org.hibernate.metamodel.model.domain;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -44,7 +45,7 @@ public interface DomainType<J> {
 	 * The name of the type. Usually, but not always, the name of a Java class.
 	 *
 	 * @see ManagedDomainType#getTypeName()
-	 * @see org.hibernate.query.sqm.SqmExpressible#getTypeName()
+	 * @see SqmExpressible#getTypeName()
 	 */
 	default String getTypeName() {
 		return getExpressibleJavaType().getTypeName();

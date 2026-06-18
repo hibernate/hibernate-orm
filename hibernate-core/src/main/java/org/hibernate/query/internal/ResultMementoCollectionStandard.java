@@ -11,7 +11,7 @@ import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.named.ModelPartResultMementoCollection;
+import org.hibernate.query.named.spi.ModelPartResultMementoCollection;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderCollectionStandard;
 

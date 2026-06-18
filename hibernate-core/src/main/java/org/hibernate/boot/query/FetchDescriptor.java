@@ -5,10 +5,10 @@
 package org.hibernate.boot.query;
 
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.named.FetchMemento;
+import org.hibernate.query.named.spi.FetchMemento;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.ResultMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.ResultMemento;
 
 /**
  * Describes the mapping for a fetch as part of a {@link NamedResultSetMappingDescriptor}

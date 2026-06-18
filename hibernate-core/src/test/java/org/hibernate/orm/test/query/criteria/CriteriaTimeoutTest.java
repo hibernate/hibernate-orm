@@ -12,8 +12,8 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProviderSettingProvider;

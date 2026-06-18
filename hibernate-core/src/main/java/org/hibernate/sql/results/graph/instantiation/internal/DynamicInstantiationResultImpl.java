@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.sqm.DynamicInstantiationNature;
+import org.hibernate.query.sqm.tree.spi.select.DynamicInstantiationNature;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.InitializerParent;

@@ -8,7 +8,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.spi.HqlTranslator;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey;
 import org.hibernate.query.sqm.spi.InterpretationsKeySource;

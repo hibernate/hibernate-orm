@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.query.criteria.internal;
 
 import jakarta.persistence.criteria.Order;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.spi.select.SqmSortSpecification;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;

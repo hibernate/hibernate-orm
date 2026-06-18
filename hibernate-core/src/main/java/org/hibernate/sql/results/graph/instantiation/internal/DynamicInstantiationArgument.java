@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.spi.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 

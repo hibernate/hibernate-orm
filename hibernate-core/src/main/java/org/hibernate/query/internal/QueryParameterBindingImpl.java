@@ -21,7 +21,7 @@ import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;

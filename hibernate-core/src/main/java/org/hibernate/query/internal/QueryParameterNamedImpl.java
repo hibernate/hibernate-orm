@@ -9,8 +9,8 @@ import java.util.Objects;
 import jakarta.annotation.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
-import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 
 /**
  * QueryParameter impl for named-parameters in HQL, JPQL or Criteria queries.

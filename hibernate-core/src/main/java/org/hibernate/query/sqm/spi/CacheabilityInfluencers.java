@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.spi;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 
 import java.util.function.BooleanSupplier;
 

@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.internal.SelectionQueryImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;

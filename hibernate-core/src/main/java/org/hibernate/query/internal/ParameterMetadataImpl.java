@@ -25,7 +25,7 @@ import org.hibernate.query.UnknownParameterException;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 
 import jakarta.persistence.Parameter;
 import jakarta.annotation.Nullable;

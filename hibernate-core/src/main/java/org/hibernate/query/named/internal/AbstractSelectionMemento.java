@@ -13,7 +13,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
-import org.hibernate.query.named.NamedSelectionMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 

@@ -9,8 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import static org.hibernate.query.sqm.internal.SqmUtil.checkQueryReturnType;
 import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed;

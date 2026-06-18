@@ -6,8 +6,8 @@ package org.hibernate.query.hql.internal;
 
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 
 /**
  * Specialized "intermediate" SemanticPathPart for processing domain model paths/

@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.SyntaxException;
 import org.hibernate.query.sqm.TerminalPathException;
-import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.spi.HqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.ParsingException;
@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.internal.SqmTreePrinter;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -31,7 +31,7 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
-import static org.hibernate.query.hql.HqlLogging.QUERY_LOGGER;
+import static org.hibernate.query.hql.internal.HqlLogging.QUERY_LOGGER;
 
 /**
  * Standard implementation of {@link HqlTranslator}.

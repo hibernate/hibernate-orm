@@ -18,7 +18,7 @@ import jakarta.persistence.query.StaticTypedQueryReference;
 import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Order;
-import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.range.Range;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.MutationSpecification;

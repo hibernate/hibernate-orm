@@ -11,7 +11,7 @@ import jakarta.persistence.sql.ConstructorMapping;
 import jakarta.persistence.sql.MappingElement;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.SessionFactory;
-import org.hibernate.query.named.ResultMementoInstantiation;
+import org.hibernate.query.named.spi.ResultMementoInstantiation;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderInstantiation;
 import org.hibernate.type.descriptor.java.JavaType;

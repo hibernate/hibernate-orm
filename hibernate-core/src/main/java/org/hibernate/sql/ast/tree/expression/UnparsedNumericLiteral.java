@@ -10,7 +10,8 @@ import java.sql.SQLException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.query.sqm.tree.expression.NumericTypeCategory;
+import org.hibernate.query.sqm.tree.spi.expression.NumericTypeCategory;
+import org.hibernate.query.sqm.tree.spi.expression.SqmHqlNumericLiteral;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -24,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * A numeric literal coming from an HQL query, which needs special handling
  *
- * @see org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral
+ * @see SqmHqlNumericLiteral
  *
  * @author Steve Ebersole
  */

@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.named.internal;
 
-import org.hibernate.query.named.NamedMutationMemento;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedMutationMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 
 /// Union of `NamedSqmQueryMemento` and `NamedMutationMemento`.
 ///

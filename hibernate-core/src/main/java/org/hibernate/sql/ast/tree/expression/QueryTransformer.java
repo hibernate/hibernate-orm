@@ -5,7 +5,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 

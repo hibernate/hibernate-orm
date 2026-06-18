@@ -6,9 +6,9 @@ package org.hibernate.orm.test.annotations.embeddables.generics;
 
 import java.io.Serializable;
 
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.spi.SqmPathSource;
 
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;

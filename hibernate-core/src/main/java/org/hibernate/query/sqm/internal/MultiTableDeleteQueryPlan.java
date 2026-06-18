@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.internal;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 
 /**
  * @author Steve Ebersole

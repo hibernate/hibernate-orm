@@ -19,22 +19,22 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.internal.SelectionQueryImpl;
-import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.named.NamedSelectionMemento;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.SelectionQueryImplementor;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.spi.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmUtil;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.select.AbstractSqmSelectQuery;
+import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +49,8 @@ import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
+import static org.hibernate.query.sqm.tree.spi.SqmCopyContext.noParamCopyContext;
+import static org.hibernate.query.sqm.tree.spi.SqmCopyContext.simpleContext;
 
 /**
  * Standard implementation of {@link SelectionSpecification}.

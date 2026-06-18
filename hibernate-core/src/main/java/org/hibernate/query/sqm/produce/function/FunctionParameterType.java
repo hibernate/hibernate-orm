@@ -5,6 +5,10 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCollation;
+import org.hibernate.query.sqm.tree.spi.expression.SqmDurationUnit;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.spi.expression.SqmTrimSpecification;
 
 /**
  * A mini-"type system" for HQL function parameters.
@@ -61,20 +65,20 @@ public enum FunctionParameterType {
 	 * some native database functions
 	 *
 	 * @see TemporalUnit
-	 * @see org.hibernate.query.sqm.tree.expression.SqmExtractUnit
-	 * @see org.hibernate.query.sqm.tree.expression.SqmDurationUnit
+	 * @see SqmExtractUnit
+	 * @see SqmDurationUnit
 	 */
 	TEMPORAL_UNIT,
 	/**
 	 * A trim specification, for trimming and padding functions
 	 *
-	 * @see org.hibernate.query.sqm.tree.expression.SqmTrimSpecification
+	 * @see SqmTrimSpecification
 	 */
 	TRIM_SPEC,
 	/**
 	 * A collation, used by the {@code collate()} function
 	 *
-	 * @see org.hibernate.query.sqm.tree.expression.SqmCollation
+	 * @see SqmCollation
 	 */
 	COLLATION,
 	/**

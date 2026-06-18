@@ -6,7 +6,7 @@ package org.hibernate.query.criteria;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
+import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedEntityJoin;
 
 /**
  * @author Steve Ebersole

@@ -8,8 +8,8 @@ import jakarta.persistence.FlushModeType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.query.Query;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedSelectionMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

@@ -12,7 +12,7 @@ import java.util.Set;
 import org.hibernate.LockOptions;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sqm.spi.InterpretationsKeySource;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 
 
 /**

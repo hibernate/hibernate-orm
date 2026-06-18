@@ -19,24 +19,24 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.internal.MutationQueryImpl;
-import org.hibernate.query.named.NamedMutationMemento;
-import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedMutationMemento;
+import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.JpaStatementReference;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.spi.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmUtil;
-import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
-import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.AbstractSqmDmlStatement;
+import org.hibernate.query.sqm.tree.spi.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +48,8 @@ import java.util.function.BiConsumer;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
+import static org.hibernate.query.sqm.tree.spi.SqmCopyContext.noParamCopyContext;
+import static org.hibernate.query.sqm.tree.spi.SqmCopyContext.simpleContext;
 
 /**
  * Standard implementation of {@link MutationSpecification}.

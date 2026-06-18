@@ -22,7 +22,7 @@
  * <h2>Criteria queries</h2>
  *
  * The SQM tree nodes directly implement the JPA criteria query contracts.
- * For example, {@link org.hibernate.query.sqm.tree.from.SqmFrom} implements
+ * For example, {@link org.hibernate.query.sqm.tree.spi.from.SqmFrom} implements
  * {@link jakarta.persistence.criteria.From}.
  * <p>
  * Our implementation of the JPA

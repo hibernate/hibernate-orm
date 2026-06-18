@@ -5,8 +5,8 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
 
 public class PathHelper {

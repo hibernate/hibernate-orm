@@ -15,7 +15,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
+import static org.hibernate.query.sqm.tree.spi.expression.Compatibility.areAssignmentCompatible;
 
 /**
  * @author Steve Ebersole

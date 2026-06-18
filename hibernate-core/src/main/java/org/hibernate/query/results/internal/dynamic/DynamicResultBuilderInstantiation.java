@@ -7,7 +7,7 @@ package org.hibernate.query.results.internal.dynamic;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.spi.ResultBuilderInstantiationValued;
-import org.hibernate.query.sqm.DynamicInstantiationNature;
+import org.hibernate.query.sqm.tree.spi.select.DynamicInstantiationNature;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.instantiation.internal.ArgumentDomainResult;

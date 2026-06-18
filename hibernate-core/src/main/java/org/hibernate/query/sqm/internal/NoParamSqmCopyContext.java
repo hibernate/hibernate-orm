@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.spi.SqmQuerySource;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 
 import jakarta.annotation.Nullable;
 

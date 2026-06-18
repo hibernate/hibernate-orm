@@ -22,7 +22,7 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.tree.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 
 import static java.util.Collections.addAll;

@@ -39,10 +39,10 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.query.sqm.tree.domain.SqmManagedDomainType;
-import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
-import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
-import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
+import org.hibernate.query.sqm.tree.spi.domain.SqmManagedDomainType;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPersistentAttribute;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.spi.domain.SqmSingularPersistentAttribute;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 

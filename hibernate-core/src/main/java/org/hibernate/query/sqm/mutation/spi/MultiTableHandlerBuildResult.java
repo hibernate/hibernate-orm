@@ -6,8 +6,8 @@ package org.hibernate.query.sqm.mutation.spi;
 
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.query.sqm.tree.spi.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /**

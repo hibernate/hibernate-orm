@@ -6,7 +6,7 @@ package org.hibernate.query.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

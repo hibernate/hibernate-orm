@@ -10,13 +10,14 @@ import org.hibernate.Incubating;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaQuery;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertSelectStatement;
 
 /**
  * A representation of SqmInsertSelectStatement at the
  * {@link org.hibernate.query.criteria} level, even though JPA does
  * not define support for insert-select criteria.
  *
- * @see org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement
+ * @see SqmInsertSelectStatement
  *
  * @apiNote Incubating mainly for 2 purposes:<ul>
  *     <li>

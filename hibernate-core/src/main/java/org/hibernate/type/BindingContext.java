@@ -10,12 +10,13 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.spi.SqmBindableType;
+import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A context within which a {@link BindableType} can be resolved
- * to an instance of {@link org.hibernate.query.sqm.SqmExpressible}.
+ * to an instance of {@link SqmExpressible}.
  *
  * @author Gavin King
  *

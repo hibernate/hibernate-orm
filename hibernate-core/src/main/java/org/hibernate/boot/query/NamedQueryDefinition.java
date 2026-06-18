@@ -8,7 +8,7 @@ import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.JpaReference;
 
 import java.util.Map;

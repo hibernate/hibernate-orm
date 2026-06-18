@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.query.sqm.tree.SqmRenderContext;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
+import org.hibernate.query.sqm.tree.spi.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 
 import java.util.IdentityHashMap;
 

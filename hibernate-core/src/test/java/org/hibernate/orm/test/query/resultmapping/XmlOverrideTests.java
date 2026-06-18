@@ -9,9 +9,9 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ResultMementoInstantiationStandard;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.named.ResultMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.ResultMemento;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

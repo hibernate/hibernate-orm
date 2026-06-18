@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.named.FetchMemento;
+import org.hibernate.query.named.spi.FetchMemento;
 import org.hibernate.query.results.spi.FetchBuilder;
 import org.hibernate.query.results.internal.complete.CompleteFetchBuilderEntityValuedModelPart;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;

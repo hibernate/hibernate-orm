@@ -29,7 +29,7 @@
  *     executable SQL statement.
  * </ul>
  *
- * @see org.hibernate.query.hql.HqlTranslator
+ * @see org.hibernate.query.hql.spi.HqlTranslator
  * @see org.hibernate.query.SelectionQuery
  * @see org.hibernate.query.MutationQuery
  */

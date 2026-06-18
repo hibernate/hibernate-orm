@@ -6,8 +6,8 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.IdentityHashMap;
 
-import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.spi.SqmQuerySource;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 
 import jakarta.annotation.Nullable;
 

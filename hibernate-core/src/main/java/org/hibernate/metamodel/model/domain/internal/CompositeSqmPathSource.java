@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.spi.SqmPathSource;
 
 /**
  * @author Steve Ebersole

@@ -6,8 +6,8 @@ package org.hibernate.orm.test.hbm.query;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernateHints;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedSelectionMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

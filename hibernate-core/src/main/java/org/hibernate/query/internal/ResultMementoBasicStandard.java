@@ -9,7 +9,7 @@ import jakarta.persistence.ColumnResult;
 import jakarta.persistence.sql.ColumnMapping;
 import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.named.ResultMementoBasic;
+import org.hibernate.query.named.spi.ResultMementoBasic;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedConverted;
 import org.hibernate.query.results.internal.complete.CompleteResultBuilderBasicValuedStandard;
 import org.hibernate.query.results.spi.ResultBuilderBasicValued;

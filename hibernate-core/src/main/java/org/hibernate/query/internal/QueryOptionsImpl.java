@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
+import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
 
 /**
  * @author Steve Ebersole

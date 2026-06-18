@@ -8,7 +8,7 @@ import java.util.Collection;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.spi.SqmJoinType;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;

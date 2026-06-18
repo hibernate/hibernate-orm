@@ -6,7 +6,7 @@ package org.hibernate.orm.test.query.resultmapping;
 
 import java.util.List;
 
-import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
 
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;

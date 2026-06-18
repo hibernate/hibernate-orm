@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!--
+    Reproduces the pattern where entity A has a one-to-one with
+    property-ref pointing at a many-to-one on entity B, and B
+    has a composite PK. The transformer must resolve mapped-by
+    correctly despite B's composite PK spanning more columns
+    than the single-column many-to-one back-reference.
+-->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.compositepkpropertyref">
+
+	<class name="EntityA" table="CPR_A">
+		<id name="id" column="ID" type="long">
+			<generator class="assigned"/>
+		</id>
+		<property name="name" column="NAME" type="string"/>
+		<one-to-one name="entityB" entity-name="org.hibernate.orm.test.boot.jaxb.mapping.compositepkpropertyref.EntityB"
+					outer-join="auto" property-ref="entityA"/>
+	</class>
+
+	<class name="EntityB" table="CPR_B">
+		<composite-id>
+			<key-property name="code" column="CODE" type="integer"/>
+			<key-property name="label" column="LABEL" type="string"/>
+		</composite-id>
+		<property name="refId" column="REF_ID" type="long"/>
+		<many-to-one name="entityA" class="EntityA" column="REF_ID"
+					 unique="false" insert="false" update="false"/>
+	</class>
+
+</hibernate-mapping>

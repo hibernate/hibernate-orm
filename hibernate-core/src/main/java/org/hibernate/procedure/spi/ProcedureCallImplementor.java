@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.NamedParametersNotSupportedException;
 import org.hibernate.procedure.ProcedureCall;
 import jakarta.persistence.QueryFlushMode;
-import org.hibernate.query.named.NameableQuery;
+import org.hibernate.query.named.spi.NameableQuery;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;

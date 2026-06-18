@@ -8,122 +8,124 @@ import java.util.List;
 import java.util.Locale;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.query.sqm.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.spi.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.query.QueryLogging;
-import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
-import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
-import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
-import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
-import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
-import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
-import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
-import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
-import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
-import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
-import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
-import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmAny;
-import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmByUnit;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
-import org.hibernate.query.sqm.tree.expression.SqmCollation;
-import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
-import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmEvery;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmFormat;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
-import org.hibernate.query.sqm.tree.expression.SqmOver;
-import org.hibernate.query.sqm.tree.expression.SqmOverflow;
-import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.SqmSummarization;
-import org.hibernate.query.sqm.tree.expression.SqmToDuration;
-import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.expression.SqmTuple;
-import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.SqmWindow;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
-import org.hibernate.query.sqm.tree.from.SqmCteJoin;
-import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
-import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
-import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
-import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
-import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
-import org.hibernate.query.sqm.tree.insert.SqmValues;
-import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmGroupedPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
-import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
-import org.hibernate.query.sqm.tree.select.SqmQueryPart;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
-import org.hibernate.query.sqm.tree.update.SqmAssignment;
-import org.hibernate.query.sqm.tree.update.SqmSetClause;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.internal.QueryLogging;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.cte.SqmCteContainer;
+import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.spi.domain.NonAggregatedCompositeSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmAnyValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.spi.domain.SqmCteRoot;
+import org.hibernate.query.sqm.tree.spi.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.spi.domain.SqmFunctionPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmFunctionRoot;
+import org.hibernate.query.sqm.tree.spi.domain.SqmIndexedCollectionAccessPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmMapEntryReference;
+import org.hibernate.query.sqm.tree.spi.domain.SqmElementAggregateFunction;
+import org.hibernate.query.sqm.tree.spi.domain.SqmIndexAggregateFunction;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPluralPartJoin;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.spi.expression.AsWrapperSqmExpression;
+import org.hibernate.query.sqm.tree.spi.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmAny;
+import org.hibernate.query.sqm.tree.spi.expression.SqmAnyDiscriminatorValue;
+import org.hibernate.query.sqm.tree.spi.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.spi.expression.SqmByUnit;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCoalesce;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCollation;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.spi.expression.SqmDistinct;
+import org.hibernate.query.sqm.tree.spi.expression.SqmDurationUnit;
+import org.hibernate.query.sqm.tree.spi.expression.SqmEnumLiteral;
+import org.hibernate.query.sqm.tree.spi.expression.SqmEvery;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.spi.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.spi.expression.SqmFormat;
+import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.spi.expression.SqmHqlNumericLiteral;
+import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralEmbeddableType;
+import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.spi.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmNamedExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmOver;
+import org.hibernate.query.sqm.tree.spi.expression.SqmOverflow;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameterizedEntityType;
+import org.hibernate.query.sqm.tree.spi.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmSetReturningFunction;
+import org.hibernate.query.sqm.tree.spi.expression.SqmStar;
+import org.hibernate.query.sqm.tree.spi.expression.SqmSummarization;
+import org.hibernate.query.sqm.tree.spi.expression.SqmToDuration;
+import org.hibernate.query.sqm.tree.spi.expression.SqmTrimSpecification;
+import org.hibernate.query.sqm.tree.spi.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.spi.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.spi.expression.SqmWindow;
+import org.hibernate.query.sqm.tree.spi.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmCteJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmDerivedJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.spi.from.SqmFunctionJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.insert.SqmConflictClause;
+import org.hibernate.query.sqm.tree.spi.insert.SqmConflictUpdateAction;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.spi.insert.SqmValues;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmBetweenPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmBooleanExpressionPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmExistsPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmGroupedPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmInSubQueryPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmJunctionPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmLikePredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmMemberOfPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmNegatedPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmNullnessPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmTruthnessPredicate;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmWhereClause;
+import org.hibernate.query.sqm.tree.spi.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.spi.select.SqmJpaCompoundSelection;
+import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.spi.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.spi.select.SqmQueryPart;
+import org.hibernate.query.sqm.tree.spi.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelection;
+import org.hibernate.query.sqm.tree.spi.select.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.spi.select.SqmSubQuery;
+import org.hibernate.query.sqm.tree.spi.update.SqmAssignment;
+import org.hibernate.query.sqm.tree.spi.update.SqmSetClause;
+import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.criteria.Predicate;
+
+import static java.lang.System.lineSeparator;
 
 /**
  * Printer for an SQM tree - for debugging purpose
@@ -141,41 +143,33 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	private static final Logger LOGGER = QueryLogging.subLogger( "sqm.ast" );
 	private static final boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 
-	public static void logTree(SqmQuerySpec<?> sqmQuerySpec, String header) {
-		if ( !TRACE_ENABLED ) {
-			return;
-		}
-
-		final SqmTreePrinter treePrinter = new SqmTreePrinter();
-
-		treePrinter.visitQuerySpec( sqmQuerySpec );
-
-		final String title = header != null ? header : "SqmQuerySpec Tree";
-
-		LOGGER.tracef( "%s:%n%s", title, treePrinter.buffer.toString() );
-	}
+//	public static void logTree(SqmQuerySpec<?> sqmQuerySpec, String header) {
+//		if ( TRACE_ENABLED ) {
+//			final var treePrinter = new SqmTreePrinter();
+//			treePrinter.visitQuerySpec( sqmQuerySpec );
+//			LOGGER.tracef( "%s:%n%s",
+//					header != null ? header : "SqmQuerySpec Tree",
+//					treePrinter.buffer.toString() );
+//		}
+//	}
 
 	public static void logTree(SqmStatement<?> sqmStatement) {
-		if ( !TRACE_ENABLED ) {
-			return;
+		if ( TRACE_ENABLED ) {
+			final var printer = new SqmTreePrinter();
+			if ( sqmStatement instanceof SqmSelectStatement<?> statement ) {
+				printer.visitSelectStatement( statement );
+			}
+			else if ( sqmStatement instanceof SqmDeleteStatement<?> statement ) {
+				printer.visitDeleteStatement( statement );
+			}
+			else if ( sqmStatement instanceof SqmUpdateStatement<?> statement ) {
+				printer.visitUpdateStatement( statement );
+			}
+			else if ( sqmStatement instanceof SqmInsertSelectStatement<?> statement ) {
+				printer.visitInsertSelectStatement( statement );
+			}
+			LOGGER.tracef( "SqmStatement Tree:%n%s", printer.buffer.toString() );
 		}
-
-		final SqmTreePrinter printer = new SqmTreePrinter();
-
-		if ( sqmStatement instanceof SqmSelectStatement<?> statement ) {
-			printer.visitSelectStatement( statement );
-		}
-		else if ( sqmStatement instanceof SqmDeleteStatement<?> statement ) {
-			printer.visitDeleteStatement( statement );
-		}
-		else if ( sqmStatement instanceof SqmUpdateStatement<?> statement ) {
-			printer.visitUpdateStatement( statement );
-		}
-		else if ( sqmStatement instanceof SqmInsertSelectStatement<?> statement ) {
-			printer.visitInsertSelectStatement( statement );
-		}
-
-		LOGGER.tracef( "SqmStatement Tree:%n%s", printer.buffer.toString() );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
@@ -244,13 +238,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	private void logWithIndentation(Object line) {
 		pad( depth );
-		buffer.append( line ).append( System.lineSeparator() );
+		buffer.append( line ).append( lineSeparator() );
 	}
 
 	private void pad(int depth) {
-		for ( int i = 0; i < depth; i++ ) {
-			buffer.append( "  " );
-		}
+		buffer.append( "  ".repeat( Math.max( 0, depth ) ) );
 	}
 
 	private void logWithIndentation(String pattern, Object arg1) {

@@ -8,10 +8,12 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaStatement;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.query.hql.spi.HqlTranslator;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.spi.QueryPlan;
 
 import jakarta.persistence.criteria.CriteriaQuery;
+import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
 
 /**
  * @author Steve Ebersole
@@ -57,7 +59,7 @@ public interface QuerySettings {
 	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
 
 	/**
-	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
+	 * Specifies a {@link HqlTranslator} to use for HQL query
 	 * translation.
 	 *
 	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomHqlTranslator
@@ -65,7 +67,7 @@ public interface QuerySettings {
 	String SEMANTIC_QUERY_PRODUCER = "hibernate.query.hql.translator";
 
 	/**
-	 * Specifies a {@link org.hibernate.query.sqm.sql.SqmTranslatorFactory} to use for
+	 * Specifies a {@link SqmTranslatorFactory} to use for
 	 * HQL query translation.
 	 *
 	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmTranslatorFactory

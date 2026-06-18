@@ -11,9 +11,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.SqmJoinType;
+import org.hibernate.query.sqm.tree.spi.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;

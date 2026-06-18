@@ -9,7 +9,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.query.assignment.Assignment;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.UpdateSpecification;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
 import java.util.List;
 

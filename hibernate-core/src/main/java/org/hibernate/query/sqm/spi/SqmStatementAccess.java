@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.spi;
 
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 
 /// Provides access to an underlying SQM AST
 ///

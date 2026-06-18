@@ -8,8 +8,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.sql.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.Statement;
 

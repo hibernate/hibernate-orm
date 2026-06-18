@@ -17,8 +17,8 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import java.util.Collection;
 import java.util.List;

@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.function;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 
 import java.util.List;
 

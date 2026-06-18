@@ -9,10 +9,10 @@ import org.hibernate.query.internal.QueryParameterIdentifiedImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.type.BasicCollectionType;
 
 import java.util.ArrayList;

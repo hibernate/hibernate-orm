@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.spi.ExpressionReplacementWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;

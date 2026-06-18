@@ -12,7 +12,7 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedMutationDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.named.internal.HqlMutationMementoImpl;
 
 import java.util.Map;

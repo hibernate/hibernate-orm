@@ -7,8 +7,8 @@ package org.hibernate.orm.test.query.resultmapping;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.results.spi.ResultBuilderBasicValued;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;

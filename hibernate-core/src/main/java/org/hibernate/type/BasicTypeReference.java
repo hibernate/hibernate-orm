@@ -7,7 +7,7 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import jakarta.persistence.TemporalType;
-import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;

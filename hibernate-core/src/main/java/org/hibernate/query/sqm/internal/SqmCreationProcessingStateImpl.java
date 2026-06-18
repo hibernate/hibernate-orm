@@ -8,7 +8,7 @@ import org.hibernate.query.hql.internal.SqmPathRegistryImpl;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.spi.SqmQuery;
 
 /**
  * @author Steve Ebersole

@@ -8,7 +8,7 @@ import jakarta.persistence.Tuple;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaFunctionRoot;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.library.Book;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;

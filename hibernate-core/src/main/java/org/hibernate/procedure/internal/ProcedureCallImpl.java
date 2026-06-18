@@ -51,7 +51,7 @@ import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SelectionQueryImplementor;
-import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.procedure.ResultSetOutput;
 import org.hibernate.procedure.UpdateCountOutput;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;

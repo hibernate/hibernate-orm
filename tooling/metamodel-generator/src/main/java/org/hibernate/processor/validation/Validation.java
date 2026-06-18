@@ -20,7 +20,7 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.sqm.TerminalPathException;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 
 import javax.lang.model.element.TypeElement;

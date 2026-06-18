@@ -5,8 +5,8 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.named.ResultMemento;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.ResultMemento;
 import org.hibernate.query.results.spi.ResultSetMapping;
 
 import jakarta.persistence.sql.MappingElement;

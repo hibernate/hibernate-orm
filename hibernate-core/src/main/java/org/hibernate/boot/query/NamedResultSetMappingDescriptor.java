@@ -5,8 +5,8 @@
 package org.hibernate.boot.query;
 
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 
 import jakarta.annotation.Nullable;

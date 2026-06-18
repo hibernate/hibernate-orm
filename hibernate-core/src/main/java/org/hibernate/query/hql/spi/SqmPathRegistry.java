@@ -9,11 +9,11 @@ import java.util.function.Function;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.select.SqmAliasedNode;
 import org.hibernate.spi.NavigablePath;
 
 /**

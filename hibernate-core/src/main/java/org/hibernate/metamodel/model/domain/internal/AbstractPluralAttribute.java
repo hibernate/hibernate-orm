@@ -12,12 +12,12 @@ import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPluralPersistentAttribute;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.PLURAL_ATTRIBUTE;

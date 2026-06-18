@@ -32,8 +32,8 @@ import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.hql.internal.QuerySplitter;
-import org.hibernate.query.named.NamedMutationMemento;
-import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedMutationMemento;
+import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.named.internal.CriteriaMutationMementoImpl;
 import org.hibernate.query.named.internal.HqlMutationMementoImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -54,13 +54,13 @@ import org.hibernate.query.sqm.internal.SimpleNonSelectQueryPlan;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 import org.hibernate.query.sqm.spi.SqmStatementAccess;
-import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
-import org.hibernate.query.sqm.tree.SqmDmlStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
-import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tree.spi.AbstractSqmDmlStatement;
+import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
+import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
+import org.hibernate.query.sqm.tree.spi.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -71,7 +71,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
+import static org.hibernate.query.sqm.tree.spi.SqmCopyContext.simpleContext;
 
 ///Implementation of `MutationQuery` based on a [SqmDmlStatement] SQM AST.
 ///

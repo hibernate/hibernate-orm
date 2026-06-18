@@ -35,7 +35,7 @@ import static jakarta.persistence.sql.ResultSetMapping.field;
 /// in terms of -
 ///
 /// * converting one to the Hibernate [form][ResultSetMapping]
-/// * creating one from Hibernate's [memento][org.hibernate.query.named.NamedResultSetMappingMemento]
+/// * creating one from Hibernate's [memento][NamedResultSetMappingMemento]
 ///
 /// @author Steve Ebersole
 public class JpaMappingHelper {

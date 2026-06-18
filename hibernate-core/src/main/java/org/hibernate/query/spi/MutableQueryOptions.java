@@ -15,7 +15,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 
-import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
+import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
 
 /**
  * Extension to QueryOptions providing ability to mutate the values.

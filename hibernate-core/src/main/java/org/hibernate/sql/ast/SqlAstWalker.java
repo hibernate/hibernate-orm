@@ -6,7 +6,7 @@ package org.hibernate.sql.ast;
 
 import org.hibernate.Incubating;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.query.sqm.tree.expression.Conversion;
+import org.hibernate.query.sqm.tree.spi.expression.Conversion;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Any;

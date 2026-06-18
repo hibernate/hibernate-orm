@@ -9,7 +9,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.type.BindableType;
 
-import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.query.internal.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**
  * Base implementation of {@link org.hibernate.query.QueryParameter}.

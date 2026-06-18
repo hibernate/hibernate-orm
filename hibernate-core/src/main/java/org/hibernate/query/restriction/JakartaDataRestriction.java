@@ -6,7 +6,7 @@ package org.hibernate.query.restriction;
 
 import org.hibernate.Internal;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.spi.NodeBuilder;
 
 import jakarta.data.constraint.AtLeast;
 import jakarta.data.constraint.AtMost;

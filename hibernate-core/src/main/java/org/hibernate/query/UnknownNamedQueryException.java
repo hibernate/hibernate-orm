@@ -12,7 +12,7 @@ import org.hibernate.QueryException;
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.query.named.NamedObjectRepository
+ * @see org.hibernate.query.named.spi.NamedObjectRepository
  * @see jakarta.persistence.NamedQuery
  * @see jakarta.persistence.NamedNativeQuery
  * @see org.hibernate.annotations.NamedQuery

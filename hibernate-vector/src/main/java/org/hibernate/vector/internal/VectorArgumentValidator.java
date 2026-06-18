@@ -8,11 +8,11 @@ import java.util.List;
 
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BindingContext;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
+import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 import org.hibernate.type.SqlTypes;
 
 /**

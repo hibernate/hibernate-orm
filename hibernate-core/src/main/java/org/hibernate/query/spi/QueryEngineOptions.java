@@ -10,12 +10,12 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.criteria.ValueHandlingMode;
-import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.hql.spi.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
 
 /**
  * User configuration options related to the {@link QueryEngine}.

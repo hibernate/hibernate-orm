@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.produce.function.internal.AbstractFunctionArgumentTypeResolver;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

@@ -9,9 +9,9 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.spi.JpaTypedQueryReference;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 
 import java.util.List;
 import java.util.Map;

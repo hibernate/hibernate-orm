@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.hql.spi.HqlTranslator;
 
 /**
  * Indicates a failure to resolve an entity name in HQL to a known mapped
@@ -14,7 +15,7 @@ import org.hibernate.query.SemanticException;
  *          as an {@link IllegalArgumentException}, and so we usually
  *          throw {@link EntityTypeException} from the SQM objects, and
  *          then wrap as an instance of this exception type in the
- *          {@link org.hibernate.query.hql.HqlTranslator}.
+ *          {@link HqlTranslator}.
  *
  * @author Steve Ebersole
  *

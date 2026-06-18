@@ -6,8 +6,8 @@ package org.hibernate.sql.results.internal;
 
 import jakarta.persistence.TupleElement;
 import org.hibernate.InstantiationException;
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
+import org.hibernate.query.sqm.spi.SqmExpressible;
+import org.hibernate.query.sqm.tree.spi.SqmExpressibleAccessor;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.spi.TypeConfiguration;
 

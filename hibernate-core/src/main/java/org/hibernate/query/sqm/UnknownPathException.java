@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.query.PathException;
+import org.hibernate.query.hql.spi.HqlTranslator;
 
 /**
  * Indicates a failure to resolve an element of a path expression in HQL/JPQL.
@@ -14,7 +15,7 @@ import org.hibernate.query.PathException;
  *          and so we usually throw {@link PathElementException} or
  *          {@link TerminalPathException} from the SQM objects, and then wrap
  *          as an instance of this exception type in the
- *          {@link org.hibernate.query.hql.HqlTranslator}.
+ *          {@link HqlTranslator}.
  *
  * @author Steve Ebersole
  *

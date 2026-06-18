@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.criteria;
 
+import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.Order;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -12,7 +13,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 /**
- * Simple {@link org.hibernate.query.sqm.NodeBuilder} tests
+ * Simple {@link NodeBuilder} tests
  *
  * @author Steve Ebersole
  */

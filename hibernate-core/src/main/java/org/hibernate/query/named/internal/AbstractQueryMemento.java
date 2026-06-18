@@ -9,7 +9,7 @@ import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.FlushMode;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedQueryMemento;
 
 import java.util.Map;
 

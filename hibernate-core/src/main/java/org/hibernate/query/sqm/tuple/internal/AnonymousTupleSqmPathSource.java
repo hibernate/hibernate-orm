@@ -11,12 +11,12 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.PathHelper;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

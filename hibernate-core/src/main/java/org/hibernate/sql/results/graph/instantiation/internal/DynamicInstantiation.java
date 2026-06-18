@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.query.sqm.DynamicInstantiationNature;
-import org.hibernate.query.sqm.sql.ConversionException;
+import org.hibernate.query.sqm.tree.spi.select.DynamicInstantiationNature;
+import org.hibernate.query.sqm.sql.spi.ConversionException;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;

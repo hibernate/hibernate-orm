@@ -1,0 +1,196 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.tree.spi.domain;
+
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.PathSource;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaListJoin;
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.SqmJoinType;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.spi.NavigablePath;
+
+import java.util.List;
+
+/**
+ * @author Steve Ebersole
+ */
+public class SqmListJoin<O,E>
+		extends AbstractSqmPluralJoin<O,List<E>, E>
+		implements JpaListJoin<O, E> {
+	public SqmListJoin(
+			SqmFrom<?,O> lhs,
+			SqmListPersistentAttribute<? super O, E> listAttribute,
+			@Nullable String alias,
+			SqmJoinType sqmJoinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
+		super( lhs, listAttribute, alias, sqmJoinType, fetched, nodeBuilder );
+	}
+
+	protected SqmListJoin(
+			SqmFrom<?, O> lhs,
+			NavigablePath navigablePath,
+			SqmListPersistentAttribute<O, E> listAttribute,
+			@Nullable String alias,
+			SqmJoinType joinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
+		super( lhs, navigablePath, listAttribute, alias, joinType, fetched, nodeBuilder );
+	}
+
+	@Override
+	public SqmListJoin<O, E> copy(SqmCopyContext context) {
+		final var existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
+		final var path = context.registerCopy(
+				this,
+				new SqmListJoin<>(
+						lhsCopy,
+						getNavigablePathCopy( lhsCopy ),
+						getAttribute(),
+						getExplicitAlias(),
+						getSqmJoinType(),
+						context.copyFetchedFlag() && isFetched(),
+						nodeBuilder()
+				)
+		);
+		copyTo( path, context );
+		return path;
+	}
+
+	@Nonnull
+	@Override
+	public SqmListPersistentAttribute<O, E> getModel() {
+		return (SqmListPersistentAttribute<O, E>) super.getModel();
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitListJoin( this );
+	}
+
+	@Override
+	public @Nonnull SqmListPersistentAttribute<O,E> getAttribute() {
+		return getModel();
+	}
+
+	@Nonnull
+	@Override
+	public SqmPath<Integer> index() {
+		final PathSource<Integer> indexPathSource = getAttribute().getIndexPathSource();
+		return resolvePath( indexPathSource.getPathName(), (SqmPathSource<Integer>) indexPathSource );
+	}
+
+	@Override
+	@Nonnull
+	public SqmListJoin<O, E> on(@Nullable JpaExpression<Boolean> restriction) {
+		return (SqmListJoin<O, E>) super.on( restriction );
+	}
+
+	@Nonnull
+	@Override
+	public SqmListJoin<O, E> on(@Nonnull Expression<Boolean> restriction) {
+		return (SqmListJoin<O, E>) super.on( restriction );
+	}
+
+	@Override
+	@Nonnull
+	public SqmListJoin<O, E> on(@Nullable JpaPredicate... restrictions) {
+		return (SqmListJoin<O, E>) super.on( restrictions );
+	}
+
+	@Nonnull
+	@Override
+	public SqmListJoin<O, E> on(@Nonnull BooleanExpression... restrictions) {
+		return (SqmListJoin<O, E>) super.on( restrictions );
+	}
+
+	@Nonnull
+	@Override
+	public SqmListJoin<O, E> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
+		return (SqmListJoin<O, E>) super.on( restrictions );
+	}
+
+	@Override
+	@Nonnull
+	public SqmCorrelatedListJoin<O, E> createCorrelation() {
+		return new SqmCorrelatedListJoin<>( this );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(@Nonnull Class<S> treatJavaType) {
+		return treatAs( treatJavaType, null );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends E> SqmListJoin<O, S> treat(@Nonnull Class<S> treatJavaType) {
+		return treatAs( treatJavaType );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null );
+	}
+
+	@Override
+	@Nonnull
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
+		return treatAs( treatJavaType, alias, false );
+	}
+
+	@Override
+	@Nonnull
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
+		return treatAs( treatTarget, alias, false );
+	}
+
+	@Override
+	@Nonnull
+	public <S extends E> SqmTreatedListJoin<O, E, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+		final var treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final var treat = (SqmTreatedListJoin<O, E, S>) findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			if ( treatTarget instanceof TreatableDomainType<S> ) {
+				return addTreat( new SqmTreatedListJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
+			}
+			else {
+				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
+			}
+		}
+		else {
+			return treat;
+		}
+	}
+
+	@Override
+	@Nonnull
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+		final var treat = (SqmTreatedListJoin<O, E, S>) findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedListJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
+		}
+		else {
+			return treat;
+		}
+	}
+
+}

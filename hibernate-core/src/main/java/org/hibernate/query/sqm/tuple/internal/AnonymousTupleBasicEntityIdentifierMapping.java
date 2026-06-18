@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.spi.SqmExpressible;
 
 /**
  * @author Christian Beikov

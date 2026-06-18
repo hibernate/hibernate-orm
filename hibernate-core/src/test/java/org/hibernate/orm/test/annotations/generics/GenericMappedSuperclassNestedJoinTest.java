@@ -7,7 +7,7 @@ package org.hibernate.orm.test.annotations.generics;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;

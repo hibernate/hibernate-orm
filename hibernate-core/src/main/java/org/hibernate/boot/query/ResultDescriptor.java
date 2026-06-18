@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.query;
 
-import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.named.ResultMemento;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.named.spi.ResultMemento;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 
 /**

@@ -10,7 +10,7 @@ import org.hibernate.boot.query.NamedMutationDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.query.named.NamedNativeQueryMemento;
+import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 import org.hibernate.query.named.internal.NativeMutationMementoImpl;
 
 import java.util.HashSet;

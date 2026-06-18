@@ -7,10 +7,10 @@ package org.hibernate.query.sqm.tuple.internal;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.internal.PathHelper;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.spi.SqmPathSource;
+import org.hibernate.query.sqm.tree.spi.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

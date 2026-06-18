@@ -6,14 +6,14 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.domain.Person;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.spi.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.spi.expression.SqmHqlNumericLiteral;
+import org.hibernate.query.sqm.tree.spi.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectableNode;
 
 import org.hibernate.testing.orm.junit.TestingUtil;
 import org.junit.jupiter.api.Test;

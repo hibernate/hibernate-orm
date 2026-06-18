@@ -11,13 +11,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.internal.MutationQueryImpl;
 import org.hibernate.query.internal.QueryHelper;
-import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.spi.SqmStatement;
 
 import java.io.Serializable;
 import java.util.Map;

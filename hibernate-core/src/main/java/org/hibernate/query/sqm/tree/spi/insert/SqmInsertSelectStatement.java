@@ -1,0 +1,211 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.query.sqm.tree.spi.insert;
+
+import jakarta.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.hibernate.Incubating;
+import org.hibernate.query.criteria.JpaConflictClause;
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.spi.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmQuerySource;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
+import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
+import org.hibernate.query.sqm.tree.spi.select.SqmQueryPart;
+import org.hibernate.query.sqm.tree.spi.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
+
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
+
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
+
+/**
+ * @author Steve Ebersole
+ */
+@Incubating
+public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
+	private SqmQueryPart<?> selectQueryPart;
+
+	public SqmInsertSelectStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
+		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
+		this.selectQueryPart = new SqmQuerySpec<>( nodeBuilder );
+	}
+
+	public SqmInsertSelectStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
+		super(
+				new SqmRoot<>(
+						nodeBuilder.getDomainModel().entity( targetEntity ),
+						"_0",
+						false,
+						nodeBuilder
+				),
+				SqmQuerySource.CRITERIA,
+				nodeBuilder
+		);
+		this.selectQueryPart = new SqmQuerySpec<>( nodeBuilder );
+	}
+
+	private SqmInsertSelectStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			@Nullable Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			SqmRoot<T> target,
+			@Nullable List<SqmPath<?>> insertionTargetPaths,
+			@Nullable SqmConflictClause<T> conflictClause,
+			SqmQueryPart<?> selectQueryPart) {
+		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, conflictClause );
+		this.selectQueryPart = selectQueryPart;
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> copy(SqmCopyContext context) {
+		final var existing = context.getCopy( this );
+		if ( existing != null ) {
+			return existing;
+		}
+		final var newQuerySource = context.getQuerySource();
+		final SqmInsertSelectStatement<T> sqmInsertSelectStatementCopy = new SqmInsertSelectStatement<>(
+				nodeBuilder(),
+				newQuerySource == null ? getQuerySource() : newQuerySource,
+				copyParameters( context ),
+				copyCteStatements( context ),
+				getTarget().copy( context ),
+				null,
+				null,
+				selectQueryPart.copy( context )
+		);
+
+		context.registerCopy( this, sqmInsertSelectStatementCopy );
+
+		final List<SqmPath<?>> insertionTargetPaths = copyInsertionTargetPaths( context );
+		if ( insertionTargetPaths != null ) {
+			sqmInsertSelectStatementCopy.setInsertionTargetPaths( insertionTargetPaths );
+		}
+
+		final var conflictClause = getConflictClause();
+		if ( conflictClause != null ) {
+			sqmInsertSelectStatementCopy.setConflictClause( conflictClause.copy( context ) );
+		}
+
+		return sqmInsertSelectStatementCopy;
+	}
+
+	@Override
+	public void validate(@Nullable String hql) {
+		verifyInsertTypesMatch( getInsertionTargetPaths(),
+				getSelectQueryPart().getFirstQuerySpec()
+						.getSelectClause().getSelectionItems() );
+		getSelectQueryPart().validateQueryStructureAndFetchOwners();
+	}
+
+	@Nonnull
+	@Override
+	public SqmInsertSelectStatement<T> select(CriteriaQuery<Tuple> criteriaQuery) {
+		final var selectStatement = (SqmSelectStatement<Tuple>) criteriaQuery;
+		putAllCtes( selectStatement );
+		setSelectQueryPart( selectStatement.getQueryPart() );
+		return this;
+	}
+
+	public SqmQueryPart<?> getSelectQueryPart() {
+		return selectQueryPart;
+	}
+
+	public void setSelectQueryPart(SqmQueryPart<?> selectQueryPart) {
+		this.selectQueryPart = selectQueryPart;
+	}
+
+	@Override
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitInsertSelectStatement( this );
+	}
+
+	@Nonnull
+	@Override
+	public <U> Subquery<U> subquery(@Nonnull EntityType<U> type) {
+		throw new UnsupportedOperationException( "INSERT cannot be basis for subquery" );
+	}
+
+	@Nullable
+	@Override
+	public JpaPredicate getRestriction() {
+		// insert has no predicate
+		return null;
+	}
+
+	@Nonnull
+	@Override
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(@Nonnull Path<?>... insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Nonnull
+	@Override
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(@Nonnull List<? extends Path<?>> insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Nonnull
+	@Override
+	public SqmInsertSelectStatement<T> onConflict(@Nullable JpaConflictClause<T> conflictClause) {
+		super.onConflict( conflictClause );
+		return this;
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		super.appendHqlString( hql, context );
+		hql.append( ' ' );
+		selectQueryPart.appendHqlString( hql, context );
+		final SqmConflictClause<?> conflictClause = getConflictClause();
+		if ( conflictClause != null ) {
+			conflictClause.appendHqlString( hql, context );
+		}
+	}
+
+	@Override
+	public boolean equals(@Nullable Object object) {
+		return object instanceof SqmInsertSelectStatement<?> that
+			&& super.equals( that )
+			&& selectQueryPart.equals( that.selectQueryPart );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + selectQueryPart.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean isCompatible(Object object) {
+		return object instanceof SqmInsertSelectStatement<?> that
+			&& super.isCompatible( that )
+			&& selectQueryPart.isCompatible( that.selectQueryPart );
+	}
+
+	@Override
+	public int cacheHashCode() {
+		int result = super.cacheHashCode();
+		result = 31 * result + selectQueryPart.cacheHashCode();
+		return result;
+	}
+}

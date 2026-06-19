@@ -88,6 +88,7 @@ public class IdentifierMappingMaterializer {
 	private final BindingOptions options;
 	private final BindingContext context;
 	private final PropertyMappingMaterializer propertyMappingMaterializer = new PropertyMappingMaterializer();
+	private final PrimaryTableKeyMappingMaterializer primaryTableKeyMappingMaterializer;
 
 	public IdentifierMappingMaterializer(
 			ModelBinders modelBinders,
@@ -98,6 +99,9 @@ public class IdentifierMappingMaterializer {
 		this.state = state;
 		this.options = options;
 		this.context = context;
+		this.primaryTableKeyMappingMaterializer = new PrimaryTableKeyMappingMaterializer(
+				state.getMetadataBuildingContext()
+		);
 	}
 
 	public IdentifierBinding materializeBasicIdentifier(
@@ -557,6 +561,7 @@ public class IdentifierMappingMaterializer {
 			EntityIdentifierBinding binding) {
 		final EntityIdentifierBindingView view = new EntityIdentifierBindingView( binding );
 		view.identifierSelectableNames();
+		primaryTableKeyMappingMaterializer.finalizePrimaryKey( rootClass, table );
 		return new IdentifierBinding(
 				entityType,
 				rootClass,
@@ -580,7 +585,7 @@ public class IdentifierMappingMaterializer {
 				componentSource,
 				idValue,
 				table,
-				(member, column) -> table.getPrimaryKey().addColumn( column ),
+				(member, column) -> primaryTableKeyMappingMaterializer.addIdentifierColumn( table, column ),
 				false,
 				false,
 				false
@@ -1145,7 +1150,7 @@ public class IdentifierMappingMaterializer {
 			additionalValue.addColumn( column, true, true );
 		}
 		table.addColumn( column );
-		table.getPrimaryKey().addColumn( column );
+		primaryTableKeyMappingMaterializer.addIdentifierColumn( table, column );
 		return column;
 	}
 }

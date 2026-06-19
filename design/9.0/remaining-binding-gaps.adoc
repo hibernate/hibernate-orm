@@ -1024,7 +1024,10 @@ Open parity questions:
   columns, temporal/enum/lob handling, and custom DDL fragments need
   combination coverage.
 * Table-key creation and FK creation should remain split and ordered: table keys
-  first, physical FK customization later.
+  first, physical FK customization later.  See
+  link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`] for
+  the planned explicit key-creation replacement for hidden `Value`,
+  `Collection`, and `Join` side effects.
 * Exportable database objects and auxiliary objects need coverage through schema
   generation.
 

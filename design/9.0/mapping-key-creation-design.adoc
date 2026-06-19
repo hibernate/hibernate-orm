@@ -1,0 +1,271 @@
+= Mapping Key Creation Design
+
+This note captures the ORM 9 design slice for making relational key and
+constraint creation explicit in the boot mapping model.
+
+== Problem
+
+The current `org.hibernate.mapping` model hides key and constraint creation
+behind mutable mapping objects.  Examples include:
+
+* `Collection#createPrimaryKeyIfNeeded()`;
+* `Collection#createForeignKeys()`;
+* `Value#createForeignKey()`;
+* `Value#createUniqueKey()`;
+* `KeyValue#createForeignKeyOfEntity()`;
+* `Join#createForeignKey()`;
+* table helper methods that create or reuse `ForeignKey`, `UniqueKey`, `Index`,
+  and `PrimaryKey` instances as side effects of value binding.
+
+These methods make it difficult to answer basic boot-time questions:
+
+* which phase owns creating the key;
+* which source annotation or XML element supplied the key metadata;
+* whether local columns are in declaration order, target identifier order,
+  primary-key constraint order, or runtime JDBC order;
+* whether referenced columns were matched by explicit names, implicit names, or
+  positional fallback;
+* whether copied column flags, such as `unique`, are semantic or accidental;
+* whether the same constraint was created once, twice, or too early.
+
+This became visible in recent collection table and composite-id work.  Copying
+identifier columns for collection owner keys accidentally copied uniqueness from
+the referenced identifier.  The collection key needed the referenced column's
+type details, but not its local uniqueness semantics.  That distinction should
+be represented by an explicit key-creation product, not by ad hoc column copying.
+
+== Goal
+
+Make key and constraint creation a named, phase-owned materialization step.
+
+The ORM 9 mapping model may change where that creates a real win.  The goal is
+not to redesign `org.hibernate.mapping` for aesthetics.  The goal is to remove
+side effects that obscure ordering, ownership, source metadata, and
+correspondence between local and referenced selectables.
+
+== Proposed Shape
+
+Keep `Table`, `PrimaryKey`, `ForeignKey`, `UniqueKey`, and `Index` as mapping
+objects, but make them products of explicit key materialization.
+
+Introduce internal key-intent or key-resolution products for the common
+constraint shapes:
+
+* primary table primary key;
+* joined-subclass and secondary-table keys;
+* collection table owner key;
+* join-table inverse key;
+* association foreign key;
+* unique key contributed by natural ids, one-to-one mappings, join tables, and
+  explicit unique constraints;
+* indexes and checks where ordering or source ownership matters.
+
+These products should carry:
+
+* source role and source metadata;
+* local table and local selectables;
+* referenced table and referenced selectables, when applicable;
+* ordered selectable correspondence, not independent local and referenced lists;
+* key name, definition, options, and constraint mode;
+* nullability, insert/update participation, and uniqueness as local key facts,
+  not as blindly copied column state;
+* the `Database`/dialect context needed for `Identifier#matches(...)` and name
+  rendering.
+
+`Table` should become the owner/registry of materialized constraints.  It should
+not be the place where arbitrary values opportunistically decide that a
+constraint now exists.
+
+[source,java]
+----
+table.addPrimaryKey( resolvedPrimaryKey );
+table.addForeignKey( resolvedForeignKey );
+table.addUniqueKey( resolvedUniqueKey );
+----
+
+The exact APIs do not need to be public.  They should express that the caller
+has already resolved source metadata, local columns, referenced columns, and
+ordering.
+
+== Relationship To Correspondence
+
+Foreign-key creation should consume selectable correspondence directly.
+
+A correspondence entry pairs one local selectable with one referenced selectable
+and records the target position used by the referenced value or identifier.  If
+the correspondences are ordered, constraint-column order follows from the same
+ordered data.  There should not be a separate sort of local columns and another
+sort of referenced columns.
+
+This keeps explicit referenced names, quoted identifier semantics, and runtime
+JDBC order connected to the same resolution result.
+
+== Migration Slices
+
+=== Slice 1: Primary Table Primary Keys
+
+Status: initial bridge complete; full slice in progress.
+
+Start by making entity primary table primary-key creation explicit.
+
+This covers `PersistentClass#createPrimaryKey()` and the places where root
+entity identifier columns are added to a `Table` primary key as a side effect of
+identifier binding or later mapping validation.
+
+This slice should:
+
+* introduce a resolved primary-key product for an entity primary table;
+* carry the owning entity role, table, ordered identifier columns, source
+  identifier contribution/view, and naming context;
+* materialize the `PrimaryKey` from that product instead of letting
+  `PersistentClass` opportunistically create it;
+* preserve the current primary-key column order expected by identifier values
+  and runtime JDBC mappings;
+* keep `PersistentClass#createPrimaryKey()` as a temporary compatibility bridge
+  until legacy paths are migrated.
+
+Primary table PKs should be addressed before deleting hidden key helpers, but
+they do not have to block collection/table-key work.  The collection/table-key
+slice can continue in parallel because dependent table keys need a completed
+identifier column set, while primary table PK materialization owns the root
+identifier table constraint itself.
+
+Progress:
+
+* New-pipeline root entity identifier binding now initializes, populates, and
+  finalizes primary-table primary keys through an explicit internal materializer.
+* `PersistentClass#createPrimaryKey()` remains as a compatibility bridge for
+  legacy paths and unmigrated second-pass callers.
+* Legacy hidden key-creation helpers are deprecated during the transitory
+  period so remaining callers are visible while explicit materializers are
+  introduced.
+* Partition-key columns are still preserved during finalization; the
+  materializer receives `MetadataBuildingContext` explicitly rather than
+  discovering dialect state through the mapping object.
+
+Remaining:
+
+* Introduce the resolved primary-key product described above, instead of passing
+  table/entity/column facts directly to the materializer.
+* Move any remaining new-pipeline primary-table PK mutations behind that product
+  if new cases appear.
+* Retire or narrow `PersistentClass#createPrimaryKey()` after legacy paths and
+  second-pass callers have migrated.
+
+=== Slice 2: Collection and Dependent Table Keys
+
+Status: in progress.
+
+Start with collection owner keys, join-table inverse keys, joined-subclass keys,
+and secondary-table keys.
+
+These paths already expose the problem:
+
+* implicit key-column naming differs by table role;
+* collection table key columns often copy referenced identifier details but must
+  not copy uniqueness accidentally;
+* table-key creation must happen before physical foreign-key creation;
+* table-key FKs need source `@ForeignKey` metadata after local columns exist.
+
+The first implementation should:
+
+* introduce a small internal resolved table-key product;
+* create local key columns from source/naming facts;
+* materialize primary-key or dependant-key values explicitly;
+* register foreign-key creation work separately for the late FK phase;
+* leave existing `Collection#createPrimaryKeyIfNeeded()` as a compatibility
+  bridge until all new binder paths stop calling it.
+
+Progress:
+
+* New-pipeline collection primary-key and set unique-key creation is now routed
+  through an explicit internal materializer rather than calling
+  `Collection#createPrimaryKeyIfNeeded()` directly.
+* The old `Collection#createPrimaryKeyIfNeeded()` method remains for legacy
+  compatibility paths.
+* Collection owner-key column creation is still local to `TableKeyBinder`; a
+  fuller resolved table-key product remains a follow-up inside this slice.
+
+=== Slice 3: Association Foreign Keys
+
+Move singular to-one, association-valued id, derived-id, and collection
+association FK creation behind the same resolved-FK product.
+
+The binder should resolve local/referenced selectable correspondence once and
+the FK materializer should create the `ForeignKey` from that ordered
+correspondence.
+
+=== Slice 4: Unique Keys And Natural-Id/One-To-One Constraints
+
+Replace `Value#createUniqueKey()` side effects with explicit unique-key
+materialization.
+
+This is important because uniqueness may come from different semantic sources:
+
+* `@Column(unique = true)`;
+* `@JoinColumn(unique = true)`;
+* natural id;
+* one-to-one cardinality;
+* table-level `@UniqueConstraint`;
+* collection table uniqueness.
+
+Those sources should not all collapse into "some value marked some column
+unique" before ordering and table ownership are clear.
+
+=== Slice 5: Retire Hidden Creation APIs
+
+Once migrated paths are green, delete or sharply narrow hidden creation methods.
+For ORM 9, deleting obsolete helpers is acceptable when their behavior is now
+represented by explicit key materialization.
+
+Candidate methods include:
+
+* `Collection#createPrimaryKeyIfNeeded()`;
+* `Collection#createForeignKeys()`;
+* `PersistentClass#createPrimaryKey()`;
+* `Value#createForeignKey()`;
+* `Value#createUniqueKey()`;
+* `KeyValue#createForeignKeyOfEntity()`;
+* `Join#createForeignKey()`.
+
+Compatibility call sites may temporarily delegate to the new materializers, but
+the long-term direction is that values describe value state and key products
+describe relational constraints.
+
+== Non-Goals
+
+* Do not change runtime SQL behavior merely to compensate for boot mapping
+  mistakes.
+* Do not add broad case-insensitive column matching.  Identifier matching must
+  preserve quoted identifier semantics.
+* Do not redesign every `Table` registry method in the first slice.
+* Do not remove `PrimaryKey`, `ForeignKey`, `UniqueKey`, or `Index` as mapping
+  objects.  The first goal is explicit creation, not wholesale replacement.
+
+== Test Strategy
+
+Each slice should include mapping-state tests before relying on functional
+schema tests.
+
+Required guardrails:
+
+* collection owner key copies referenced type/nullability details without
+  copying referenced uniqueness;
+* implicit collection owner-key column names follow the configured
+  `ImplicitNamingStrategy`;
+* join-table owner and inverse keys preserve source `@ForeignKey` metadata;
+* nested embedded-id referenced-column order is preserved through FK creation;
+* generated composite-id self-references preserve ordered local/referenced
+  correspondence;
+* quoted `"id"` and `"ID"` referenced columns do not match;
+* unique keys created from natural id, one-to-one, and explicit unique
+  constraints remain distinct in source ownership.
+
+== Status
+
+Planned.
+
+The immediate candidate implementation slice is collection/table key
+materialization, because the current binder already owns table-key timing and
+recent tests exposed accidental uniqueness copying and implicit key-column
+naming gaps.

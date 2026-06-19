@@ -8,7 +8,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
@@ -50,6 +55,7 @@ import jakarta.persistence.PrimaryKeyJoinColumns;
 public class TableKeyBinder {
 	private final EntityTypeBinder entityBinder;
 	private final BindingState bindingState;
+	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer();
 
 	public TableKeyBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
@@ -127,7 +133,7 @@ public class TableKeyBinder {
 		);
 		key.setOnDeleteAction( collectionTableBinding.onDeleteAction() );
 		collectionTableBinding.collection().setKey( key );
-		collectionTableBinding.collection().createPrimaryKeyIfNeeded();
+		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded( collectionTableBinding.collection() );
 		createOneToManyBackref( collectionTableBinding, key );
 		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
 				entityBinder.getTypeBinding(),
@@ -297,7 +303,7 @@ public class TableKeyBinder {
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
 			final Column identifierColumn = targetColumns.get( i );
 			final Column keyColumn = orderedJoinColumns.isEmpty()
-					? copyKeyColumn( identifierColumn )
+					? copyKeyColumn( identifierColumn, true )
 					: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) );
 			table.addColumn( keyColumn );
 			key.addColumn( keyColumn, true, false );
@@ -390,7 +396,12 @@ public class TableKeyBinder {
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
 			final Column identifierColumn = targetColumns.get( i );
 			final Column keyColumn = orderedJoinColumns.isEmpty()
-					? copyKeyColumn( identifierColumn )
+					? bindKeyColumn(
+							table,
+							identifierColumn,
+							null,
+							() -> implicitCollectionKeyColumnName( identifierColumn )
+					)
 					: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) );
 			table.addColumn( keyColumn );
 			key.addColumn( keyColumn, true, updateable );
@@ -399,7 +410,7 @@ public class TableKeyBinder {
 		return key;
 	}
 
-	private Column copyKeyColumn(Column source) {
+	private Column copyKeyColumn(Column source, boolean copyUnique) {
 		// todo : is this enough detail?
 		final Column result = new Column( source.getName() );
 		result.setLength( source.getLength() );
@@ -407,12 +418,50 @@ public class TableKeyBinder {
 		result.setScale( source.getScale() );
 		result.setSqlType( source.getSqlType() );
 		result.setNullable( false );
-		result.setUnique( source.isUnique() );
+		result.setUnique( copyUnique && source.isUnique() );
 		return result;
 	}
 
 	private Column bindKeyColumn(Table table, Column identifierColumn, jakarta.persistence.JoinColumn joinColumn) {
 		return bindKeyColumn( table, identifierColumn, joinColumn, identifierColumn::getName );
+	}
+
+	private String implicitCollectionKeyColumnName(Column referencedColumn) {
+		final MetadataBuildingContext buildingContext = bindingState.getMetadataBuildingContext();
+		final Identifier name = buildingContext.getBuildingOptions()
+				.getImplicitNamingStrategy()
+				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
+					@Override
+					public Nature getNature() {
+						return Nature.ENTITY_COLLECTION;
+					}
+
+					@Override
+					public EntityTypeMetadata getEntityNaming() {
+						return entityBinder.getManagedType();
+					}
+
+					@Override
+					public AttributePath getAttributePath() {
+						return null;
+					}
+
+					@Override
+					public Identifier getReferencedTableName() {
+						return entityBinder.getTypeBinding().getTable().getNameIdentifier();
+					}
+
+					@Override
+					public Identifier getReferencedColumnName() {
+						return referencedColumn.getNameIdentifier( buildingContext );
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return buildingContext;
+					}
+				} );
+		return name.render( buildingContext.getMetadataCollector().getDatabase().getDialect() );
 	}
 
 	private Column bindKeyColumn(

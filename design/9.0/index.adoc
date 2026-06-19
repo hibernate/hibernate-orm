@@ -9,6 +9,15 @@ track follow-up work discovered while integrating the prototype into ORM.
 Use this index as the starting point when deciding which document to read or
 update.
 
+link:current-work-handoff.adoc[`current-work-handoff.adoc`]
+
+This is the compact handoff note for continuing the current branch in a fresh
+context.  It records the branch theme, recently completed direction,
+transitional bridges, green guardrails, and recommended next slices.
+
+Read this first when picking up an existing worktree or starting a new chat
+without the old conversation context.
+
 == Bootstrap Design and Plan
 
 link:flow-notation.adoc[`flow-notation.adoc`]
@@ -81,6 +90,16 @@ and existing ORM mapping structures.  Examples include custom SQL mutation
 storage, collection key / primary-key / foreign-key creation, table-key FK
 metadata, source-model facts on mapping values, property-ref target resolution,
 and derived identifier phase ordering.
+
+link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+
+This is the focused design note for making primary-key, foreign-key, unique-key,
+and index creation explicit instead of hiding it behind `Value`, `Collection`,
+`Join`, or `Table` side effects.
+
+Use this document when changing `Collection#createPrimaryKeyIfNeeded()`,
+`Value#createUniqueKey()`, `Value#createForeignKey()`, table-key creation,
+correspondence-backed FK creation, or uniqueness/constraint materialization.
 
 link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
 

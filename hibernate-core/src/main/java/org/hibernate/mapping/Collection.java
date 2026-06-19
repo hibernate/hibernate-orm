@@ -503,10 +503,12 @@ public abstract sealed class Collection
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
@@ -560,6 +562,10 @@ public abstract sealed class Collection
 
 	abstract void createPrimaryKey();
 
+	/**
+	 * @deprecated Use explicit boot-time collection key materialization instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKeyIfNeeded() {
 		if ( !isInverse() && !isPrimaryKeyDisabled() ) {
 			createPrimaryKey();
@@ -567,6 +573,11 @@ public abstract sealed class Collection
 		}
 	}
 
+	/**
+	 * @deprecated Hidden key creation is being replaced by explicit boot-time
+	 * key materialization products.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createAllKeys() throws MappingException {
 		createForeignKeys();
 		createPrimaryKeyIfNeeded();
@@ -613,6 +624,10 @@ public abstract sealed class Collection
 	@Override
 	public boolean isAuxiliaryColumnInPrimaryKey() {
 		return auxiliaryColumnInPrimaryKey != null;
+	}
+
+	public String getAuxiliaryColumnInPrimaryKey() {
+		return auxiliaryColumnInPrimaryKey;
 	}
 
 	public String getCacheConcurrencyStrategy() {

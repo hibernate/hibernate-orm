@@ -536,8 +536,10 @@ then reduce them as compatibility views improve.
   performs semantic sorting as a side effect?
 * How much static metamodel population can move to resolved contribution data
   before the runtime domain model handoff is redesigned?
-* Should primary-key and unique-key creation be delayed until the same ordering
-  finalization phase as foreign-key creation?
+* How much of the explicit key-creation work described in
+  link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+  belongs in the resolved contribution layer versus the mapping-model
+  materialization layer?
 
 == Recommendation
 

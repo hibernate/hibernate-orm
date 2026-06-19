@@ -345,11 +345,14 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() throws MappingException {}
 
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
@@ -368,6 +371,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
 		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
@@ -400,6 +404,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( hasFormula() ) {
 			throw new MappingException( "Unique key constraint involves formulas" );

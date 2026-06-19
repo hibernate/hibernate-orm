@@ -197,6 +197,7 @@ public abstract sealed class ToOne
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();
@@ -227,6 +228,7 @@ public abstract sealed class ToOne
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();

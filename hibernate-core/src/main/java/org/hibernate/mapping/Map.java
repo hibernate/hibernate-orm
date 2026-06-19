@@ -66,6 +66,8 @@ public non-sealed class Map extends IndexedCollection {
 	}
 
 
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createAllKeys() throws MappingException {
 		super.createAllKeys();
 		if ( !isInverse() ) {

@@ -24,6 +24,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.mapping.internal.context.BindingHelper;
+import org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.relational.InLineView;
 import org.hibernate.boot.mapping.internal.relational.PhysicalTable;
 import org.hibernate.boot.mapping.internal.relational.PhysicalView;
@@ -42,7 +43,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Join;
-import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 
@@ -72,6 +72,7 @@ public class TableBinder {
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
 	private final BindingContext bindingContext;
+	private final PrimaryTableKeyMappingMaterializer primaryTableKeyMappingMaterializer;
 
 	private final ImplicitNamingStrategy implicitNamingStrategy;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
@@ -86,6 +87,9 @@ public class TableBinder {
 		this.bindingState = bindingState;
 		this.bindingOptions = bindingOptions;
 		this.bindingContext = bindingContext;
+		this.primaryTableKeyMappingMaterializer = new PrimaryTableKeyMappingMaterializer(
+				bindingState.getMetadataBuildingContext()
+		);
 		this.modelBinders = modelBinders;
 
 		this.implicitNamingStrategy = bindingContext.getImplicitNamingStrategy();
@@ -144,8 +148,10 @@ public class TableBinder {
 			bindingState.addTable( type, tableReference );
 			applyRowId( tableReference.binding(), type );
 
-			final PrimaryKey primaryKey = new PrimaryKey( tableReference.binding() );
-			tableReference.binding().setPrimaryKey( primaryKey );
+			primaryTableKeyMappingMaterializer.initializePrimaryKey(
+					entityBinder.getTypeBinding(),
+					tableReference.binding()
+			);
 		}
 
 		return tableReference;

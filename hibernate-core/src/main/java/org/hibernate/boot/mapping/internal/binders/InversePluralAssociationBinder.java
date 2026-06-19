@@ -5,6 +5,7 @@
 package org.hibernate.boot.mapping.internal.binders;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.mapping.BasicValue;
@@ -29,6 +30,7 @@ import jakarta.persistence.MapKey;
 class InversePluralAssociationBinder {
 	private final EntityTypeBinder entityBinder;
 	private final BindingState bindingState;
+	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer();
 
 	InversePluralAssociationBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
@@ -92,7 +94,7 @@ class InversePluralAssociationBinder {
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningElement ) );
 		inverseCollection.setElement( createInverseElement( inverseBinding, collectionTable, targetTypeBinder, owningCollection ) );
 		bindInverseIndex( inverseBinding, owningCollection, inverseCollection );
-		inverseCollection.createPrimaryKeyIfNeeded();
+		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded( inverseCollection );
 	}
 
 	private void bindInverseOneToMany(InversePluralAssociationBinding inverseBinding) {
@@ -125,7 +127,7 @@ class InversePluralAssociationBinder {
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningToOne ) );
 		inverseCollection.setElement( createOneToManyElement( inverseBinding, targetTypeBinder ) );
 		bindInverseOneToManyIndex( inverseBinding, targetTypeBinder, inverseCollection );
-		inverseCollection.createPrimaryKeyIfNeeded();
+		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded( inverseCollection );
 	}
 
 	private KeyValue createInverseKey(

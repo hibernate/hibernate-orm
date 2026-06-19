@@ -15,6 +15,7 @@ import org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding;
 import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
 import org.hibernate.boot.mapping.internal.materialize.IdentifierMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
@@ -27,7 +28,6 @@ import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
-import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
@@ -58,6 +58,7 @@ public class IdentifierBinder {
 	private final BindingOptions options;
 	private final BindingContext context;
 	private final IdentifierMappingMaterializer identifierMappingMaterializer;
+	private final PrimaryTableKeyMappingMaterializer primaryTableKeyMappingMaterializer;
 
 	public IdentifierBinder(
 			ModelBinders modelBinders,
@@ -69,6 +70,9 @@ public class IdentifierBinder {
 		this.options = options;
 		this.context = context;
 		this.identifierMappingMaterializer = new IdentifierMappingMaterializer( modelBinders, state, options, context );
+		this.primaryTableKeyMappingMaterializer = new PrimaryTableKeyMappingMaterializer(
+				state.getMetadataBuildingContext()
+		);
 	}
 
 	public static IdentifierBinding bindIdentifier(
@@ -87,8 +91,7 @@ public class IdentifierBinder {
 		final KeyMapping idMapping = hierarchy.getIdMapping();
 		final Table table = typeBinding.getTable();
 
-		final PrimaryKey primaryKey = new PrimaryKey( table );
-		table.setPrimaryKey( primaryKey );
+		primaryTableKeyMappingMaterializer.initializePrimaryKey( typeBinding, table );
 
 		if ( idMapping instanceof BasicKeyMapping basicKeyMapping ) {
 			return bindBasicIdentifier( basicKeyMapping, table, type, typeBinding );

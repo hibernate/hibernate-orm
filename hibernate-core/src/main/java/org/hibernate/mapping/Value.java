@@ -139,11 +139,21 @@ public interface Value extends Serializable {
 
 	boolean isNullable();
 
+	/**
+	 * @deprecated Hidden key creation is being replaced by explicit boot-time
+	 * key materialization products.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createForeignKey();
 
 	// called when this is the foreign key of a
 	// @OneToOne with a FK, or a @OneToMany with
 	// a join table
+	/**
+	 * @deprecated Hidden key creation is being replaced by explicit boot-time
+	 * key materialization products.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createUniqueKey(MetadataBuildingContext context);
 
 	boolean isSimpleValue();

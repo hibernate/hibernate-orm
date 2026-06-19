@@ -472,6 +472,11 @@ public abstract sealed class PersistentClass
 		this.entityName = entityName == null ? null : entityName.intern();
 	}
 
+	/**
+	 * @deprecated Use explicit boot-time primary-table key materialization
+	 * instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKey() {
 		final var table = getTable();
 		// Never overwrite the primary key if there already is an existing one,

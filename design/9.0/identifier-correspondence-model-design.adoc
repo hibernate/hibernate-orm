@@ -1,6 +1,65 @@
 = Identifier Correspondence Model Design
 :toc:
 
+== Status
+
+Partially implemented foundation; core identifier-part correspondence remains
+planned.
+
+Implemented adjacent pieces:
+
+* `IdentifierExtractionKind`;
+* identifier binding/model/view products such as `IdentifierAttributeBinding`,
+  `EntityIdentifierBinding`, and `EntityIdentifierBindingView`;
+* `IdentifierMappingMaterializer` as the boundary for producing the legacy
+  `org.hibernate.mapping` identifier shape;
+* selectable-level correspondence products, including
+  `SelectableCorrespondence`, `SelectableOrderResolution`, and
+  correspondence-backed foreign-key creation.
+
+Not yet implemented:
+
+* the `IdentifierPartCorrespondence` product described in this document;
+* a first-class model for one virtual identifier part expanding to multiple
+  public id-class or target-id parts;
+* runtime identifier mapping consumption of identifier correspondence in
+  `NonAggregatedIdentifierMapping`, `IdClassEmbeddable`, and related
+  initializer/extraction paths;
+* reduction of the special legacy `Component` / identifier-mapper encodings
+  whose main purpose is positional compatibility.
+
+The current ORM 9 boot pipeline therefore has better identifier binding
+ownership than before, but it still uses legacy-compatible mapping objects as
+the main semantic bridge for non-aggregated identifier representation.
+
+== Relationship To Key Creation
+
+This design is related to, but separate from,
+link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
+
+The key-creation design is about relational constraint materialization:
+primary keys, foreign keys, unique keys, indexes, local/referenced selectable
+pairing, and `Table` ownership of constraints.
+
+This design is about Java/value-level identifier representation:
+which entity-side identifier part corresponds to which id-class part, target-id
+part, and extraction strategy.
+
+Recommended sequencing:
+
+1. Finish the first key-creation slice for collection/table keys and
+   correspondence-backed FK creation.
+2. Use that stable selectable correspondence/order layer as an input to
+   `IdentifierPartCorrespondence`.
+3. Teach non-aggregated runtime identifier mappings to consume identifier-part
+   correspondence.
+4. Reduce special `Component` and identifier-mapper encodings after runtime
+   conversion no longer depends on positional inference alone.
+
+In other words, key creation should not absorb this design.  It should provide
+the relational/selectable foundation that this identifier correspondence design
+uses.
+
 This document captures a follow-up design direction for non-aggregated
 identifiers, `@IdClass`, association-valued identifiers, and derived identity.
 It is motivated by the ORM 9 boot-model binding work, especially the JPA

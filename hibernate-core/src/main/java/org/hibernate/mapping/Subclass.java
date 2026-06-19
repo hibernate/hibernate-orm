@@ -236,6 +236,11 @@ public sealed class Subclass extends PersistentClass
 		return getTable() != getRootTable();
 	}
 
+	/**
+	 * @deprecated Hidden key creation is being replaced by explicit boot-time
+	 * key materialization products.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 		if ( isJoinedSubclass() ) {
 			getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );

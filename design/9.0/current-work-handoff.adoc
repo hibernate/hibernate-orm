@@ -1,0 +1,201 @@
+= ORM 9 Current Work Handoff
+
+This note is a compact handoff for continuing the ORM 9 boot-model /
+binding-model work in a fresh context.
+It records the current branch intent, recently completed slices, deliberate
+transitional bridges, useful guardrails, and the next likely migration slices.
+
+Read this first when picking up the current branch, then follow the linked
+design documents for detail.
+
+== Current Branch Theme
+
+The active work is moving ORM bootstrap away from direct, side-effect-heavy
+`org.hibernate.mapping` construction and toward an explicit boot/mapping
+pipeline:
+
+* source discovery, XML overlay, categorization, binding, views, and
+  materialization are separate phases;
+* semantic binding facts are recorded before compatibility
+  `org.hibernate.mapping` objects are populated;
+* views over the binding model are intended to support more than one consumer,
+  including mapping-object materialization and JPA static metamodel planning;
+* hidden key creation and ordering side effects are being replaced by explicit
+  materializers and correspondence products.
+
+The most relevant orientation documents are:
+
+* link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`]
+* link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+* link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+* link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`]
+* link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
+* link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
+
+== Recently Completed Direction
+
+SessionFactory and JPA bootstrap have already moved substantially toward the
+new pipeline:
+
+* `EntityManagerFactoryBuilder` and `SessionFactoryBuilder` public staged
+  bootstrap surfaces were removed.
+* `SessionFactoryProducer` / construction-request based custom factory
+  production is the intended custom `SessionFactory` hook.
+* `SessionFactoryImpl` construction now has internal preparation products, but
+  much constructor work intentionally remains in place.
+* `MetadataBootstrap` / `SessionFactoryBootstrap.resolveMetadata(...)` exist as
+  transitional metadata-resolution products.
+
+Binding/model work has also moved forward:
+
+* the internal binding model package was moved under `org.hibernate.boot.mapping`;
+* binding-model declarations/usages now distinguish direct attributes,
+  mapped-superclass declarations, and embeddable-site usages;
+* `ValueIntent` covers singular basic, embedded, to-one, any, and plural
+  collection-valued attributes;
+* identifier binding has an identifier materializer path for the important
+  simple, embedded, IdClass, association-id, and derived-id shapes;
+* JPA static metamodel work now has view-backed planning pieces, though
+  injection is still partly transitional.
+
+== Current Uncommitted Slice
+
+The active uncommitted slice is explicit key creation for mapping
+materialization.
+
+Added materializers:
+
+* `CollectionKeyMappingMaterializer`
+* `PrimaryTableKeyMappingMaterializer`
+
+Routed callers include:
+
+* `TableKeyBinder`
+* `InversePluralAssociationBinder`
+* `TableBinder`
+* `IdentifierBinder`
+* `IdentifierMappingMaterializer`
+* `AssociationIdentifierBinder`
+
+The key design document is
+link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
+
+Current status:
+
+* collection/table primary-key creation is routed through an explicit
+  materializer bridge;
+* primary-table primary-key creation is routed through an explicit materializer
+  bridge;
+* `PersistentClass#createPrimaryKey()` remains as a legacy bridge;
+* low-level `Table#createForeignKey(...)` remains the table registry operation
+  used by explicit foreign-key materialization;
+* legacy hidden helpers on `Value`, `KeyValue`, `Collection`,
+  `PersistentClass`, `Join`, `Map`, `Subclass`, `SimpleValue`, and `ToOne` are
+  deprecated as transitional compatibility methods.
+
+This slice is not a full mapping-key redesign yet.
+It is the bridge that makes remaining hidden key creation visible and easier to
+drain.
+
+== Deliberate Transitional Bridges
+
+Do not treat these as accidental leftovers:
+
+* `org.hibernate.mapping` remains the compatibility materialization output for
+  now.
+* Binding-model contracts should stay mapping-model-free, but materializers and
+  compatibility registries may still hold `PersistentClass`, `Component`,
+  `Property`, `Value`, and `Column`.
+* `BindingStateImpl` still owns compatibility registries for mapping objects and
+  pending work.
+* Mapped-superclass and embeddable contribution/view designs are not fully
+  implemented.
+* `Table#createForeignKey(...)` is not deprecated yet because it is still the
+  low-level table registry primitive for explicit FK creation.
+* `sortProperties()`, `sortColumns(...)`, and similar ordering APIs still exist;
+  the target direction is to reduce destructive sorting after explicit
+  correspondence/order products cover enough paths.
+
+== Useful Guardrails
+
+The most recent focused guardrail for the active key-creation slice passed:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.*' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.EmbeddedTest.testEmbeddableInsideEmbeddable' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides.PluralEmbeddedOverrideTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.override.AssociationOverrideTest.testSchemaCreation'
+----
+
+Earlier embedded/override guardrails also passed after the component and
+collection intent work:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.*' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.override.*' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides.*'
+----
+
+Always run:
+
+[source,bash]
+----
+git diff --check
+----
+
+Expect Java deprecation warnings because the current slice deliberately marks
+legacy helpers for removal.
+
+== Recommended Next Slices
+
+The best next step depends on the desired risk profile.
+
+If finishing the active key-creation work:
+
+* continue link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`];
+* introduce resolved primary-key products instead of only materializer helper
+  calls;
+* route any remaining new-pipeline primary-key mutation through explicit
+  materializers;
+* then narrow or retire `PersistentClass#createPrimaryKey()` when legacy callers
+  are gone.
+
+If returning to model-shape work:
+
+* continue mapped-superclass declaration/application modeling from
+  link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+  and link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`];
+* then continue embeddable contribution/view modeling from
+  link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`].
+
+If pursuing a second consumer of binding views:
+
+* continue link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`];
+* move actual static metamodel injection responsibility into the view-backed
+  JPA consumer rather than only producing source/planning data.
+
+If looking for correctness failures:
+
+* refresh link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`] with a
+  focused `hibernate-core` failure run;
+* prefer bucketed fixes over broad source/categorization churn.
+
+== Fresh-Context Cautions
+
+* Do not "fix" runtime entity-key or initializer behavior to compensate for
+  mapping shapes that the old binding process produced correctly.  Most recent
+  id/derived-id regressions were binding/materialization shape issues.
+* Be careful with quoted identifiers.  Use `Identifier#matches(...)` semantics
+  where identifier-aware comparison is needed; do not introduce broad
+  case-insensitive string matching.
+* Avoid reintroducing builder surfaces.  The design direction is explicit
+  pipeline products, construction requests, producers, views, and
+  materializers.
+* Keep new binding-model contracts free of `org.hibernate.mapping` types unless
+  the contract is explicitly a materializer or compatibility bridge.
+* When adding new Java files, include `@author Steve Ebersole`.
+

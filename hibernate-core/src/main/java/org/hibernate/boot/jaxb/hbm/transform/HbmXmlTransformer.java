@@ -1097,6 +1097,12 @@ public class HbmXmlTransformer {
 			ColumnAndFormulaTarget target,
 			ColumnDefaults columnDefaults,
 			String table) {
+		if ( table != null
+				&& currentBaseTable != null
+				&& ( currentBaseTable.isPhysicalTable() || currentBaseTable.isSubselect() )
+				&& currentBaseTable.getName().equals( table ) ) {
+			table = null;
+		}
 		for ( int i = 0; i < value.getSelectables().size(); i++ ) {
 			final var selectable = value.getSelectables().get( i );
 			if ( selectable instanceof Formula formula ) {
@@ -2258,12 +2264,20 @@ public class HbmXmlTransformer {
 		embeddable.setClazz( embeddableClassName );
 		embeddable.setName( embeddableName );
 		embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
-		transferBaseAttributes(
-				partRole,
-				compositeElement.getAttributes(),
-				componentTypeInfo,
-				embeddable.getAttributes()
-		);
+
+		final var previousBaseTable = currentBaseTable;
+		currentBaseTable = componentTypeInfo.table();
+		try {
+			transferBaseAttributes(
+					partRole,
+					compositeElement.getAttributes(),
+					componentTypeInfo,
+					embeddable.getAttributes()
+			);
+		}
+		finally {
+			currentBaseTable = previousBaseTable;
+		}
 		mappingXmlBinding.getRoot().getEmbeddables().add( embeddable );
 	}
 

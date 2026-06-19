@@ -16,6 +16,7 @@ import org.hibernate.boot.models.bind.internal.materialize.CollationMappingMater
 import org.hibernate.boot.models.bind.internal.materialize.NaturalIdMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.models.bind.internal.model.BasicValueIntent;
 import org.hibernate.boot.models.bind.internal.model.CollationContribution;
 import org.hibernate.boot.models.bind.internal.model.NaturalIdContribution;
 import org.hibernate.boot.models.bind.internal.view.AttributeBindingView;
@@ -376,6 +377,47 @@ public class AttributeBinder {
 
 
 	public static org.hibernate.mapping.Column processColumn(
+			AttributeBindingView attributeBinding,
+			Property property,
+			BasicValue basicValue,
+			Table primaryTable,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final BasicValueIntent selectableIntent = attributeBinding.basicValueIntent();
+		if ( selectableIntent.isFormula() ) {
+			basicValue.setTable( primaryTable );
+			basicValue.addFormula( new org.hibernate.mapping.Formula( selectableIntent.formulaExpression() ) );
+			return null;
+		}
+
+		final var column = ColumnBinder.bindColumn( selectableIntent.columnSource(), property::getName );
+		if ( selectableIntent.arrayLength() != null ) {
+			column.setArrayLength( selectableIntent.arrayLength() );
+		}
+		applyColumnTransformer( attributeBinding, property, column );
+
+		final String tableName = selectableIntent.tableName();
+		if ( tableName == null || tableName.isEmpty() ) {
+			basicValue.setTable( primaryTable );
+		}
+		else {
+			final Identifier identifier = Identifier.toIdentifier( tableName );
+			final TableReference tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
+			basicValue.setTable( tableByName.binding() );
+		}
+
+		final boolean insertable = selectableIntent.insertable();
+		final boolean updatable = selectableIntent.updatable();
+		property.setInsertable( insertable );
+		property.setUpdatable( updatable );
+		basicValue.addColumn( column, insertable, updatable );
+		basicValue.getTable().addColumn( column );
+
+		return column;
+	}
+
+	public static org.hibernate.mapping.Column processColumn(
 			MemberDetails member,
 			Property property,
 			BasicValue basicValue,
@@ -422,6 +464,33 @@ public class AttributeBinder {
 		basicValue.getTable().addColumn( column );
 
 		return column;
+	}
+
+	private static void applyColumnTransformer(
+			AttributeBindingView attributeBinding,
+			Property property,
+			org.hibernate.mapping.Column column) {
+		final BasicValueIntent selectableIntent = attributeBinding.basicValueIntent();
+		final String targetColumnName = selectableIntent.columnTransformerName();
+		if ( targetColumnName != null
+				&& !targetColumnName.isBlank()
+				&& !targetColumnName.equals( column.getName() ) ) {
+			return;
+		}
+
+		final String writeExpression = selectableIntent.customWriteExpression();
+		if ( writeExpression != null
+				&& !writeExpression.isBlank()
+				&& org.hibernate.internal.util.StringHelper.count( writeExpression, '?' ) != 1 ) {
+			throw new AnnotationException(
+					"Write expression in '@ColumnTransformer' for property '" + property.getName()
+							+ "' and column '" + column.getName() + "' must contain exactly one placeholder character ('?')"
+			);
+		}
+
+		final String readExpression = selectableIntent.customReadExpression();
+		column.setResolvedCustomRead( readExpression == null || readExpression.isBlank() ? null : readExpression );
+		column.setCustomWrite( writeExpression == null || writeExpression.isBlank() ? null : writeExpression );
 	}
 
 	private static void applyColumnTransformer(

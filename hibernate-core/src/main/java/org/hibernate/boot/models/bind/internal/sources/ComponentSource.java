@@ -279,13 +279,39 @@ public record ComponentSource(
 		);
 	}
 
+	public ComponentSource nested(
+			MemberDetails member,
+			TypeDetails memberType,
+			String path,
+			String fullPath,
+			BindingContext bindingContext) {
+		final ClassDetails nestedComponentType = resolveEmbeddableType( member, memberType, bindingContext );
+		return new ComponentSource(
+				kind,
+				member,
+				nestedComponentType,
+				member.resolveRelativeType( typeVariableScope ),
+				pathAdjustments,
+				defaultAccessType,
+				path + ".",
+				fullPath + "."
+		);
+	}
+
 	private static ClassDetails resolveEmbeddableType(ComponentMember member, BindingContext bindingContext) {
-		final TargetEmbeddable targetEmbeddable = resolveTargetEmbeddable( member.member(), false );
+		return resolveEmbeddableType( member.member(), member.type(), bindingContext );
+	}
+
+	private static ClassDetails resolveEmbeddableType(
+			MemberDetails member,
+			TypeDetails memberType,
+			BindingContext bindingContext) {
+		final TargetEmbeddable targetEmbeddable = resolveTargetEmbeddable( member, false );
 		if ( targetEmbeddable != null ) {
 			return bindingContext.getClassDetailsRegistry()
 					.resolveClassDetails( targetEmbeddable.value().getName() );
 		}
-		return member.type().determineRawClass();
+		return memberType.determineRawClass();
 	}
 
 	public record ComponentMember(
@@ -295,7 +321,8 @@ public record ComponentSource(
 			String path,
 			AttributePath namingPath,
 			String fullPath,
-			ClassDetails declaringType) {
+			ClassDetails declaringType,
+			AccessType accessType) {
 		public String attributeName() {
 			return member.resolveAttributeName();
 		}
@@ -308,11 +335,8 @@ public record ComponentSource(
 		}
 
 		final List<MemberDetails> localMembers = resolveLocalMembers( componentClass );
-		final ClassDetails declaringType = componentClass.hasDirectAnnotationUsage( MappedSuperclass.class )
-				? componentType
-				: componentClass;
 		for ( MemberDetails localMember : localMembers ) {
-			addMember( localMember, typeVariableScope, declaringType, members );
+			addMember( localMember, typeVariableScope, componentClass, members );
 		}
 	}
 
@@ -328,11 +352,12 @@ public record ComponentSource(
 					localMember,
 					localMember.resolveRelativeType( localTypeVariableScope ),
 					AttributePath.parse( path ),
-					path,
-					AttributePath.parse( fullPath ),
-					fullPath,
-					componentClass
-			) );
+						path,
+						AttributePath.parse( fullPath ),
+						fullPath,
+						componentClass,
+						determineAccessType( componentClass )
+				) );
 		}
 	}
 
@@ -368,11 +393,12 @@ public record ComponentSource(
 				localMember,
 				memberType,
 				AttributePath.parse( path ),
-				path,
-				AttributePath.parse( fullPath ),
-				fullPath,
-				declaringType
-		) );
+					path,
+					AttributePath.parse( fullPath ),
+					fullPath,
+					declaringType,
+					determineAccessType( declaringType )
+			) );
 	}
 
 	private void collectPlainIdentifierClassMembers(ClassDetails componentClass, Map<String, ComponentMember> members) {
@@ -389,11 +415,12 @@ public record ComponentSource(
 					field,
 					fieldType,
 					AttributePath.parse( path ),
-					path,
-					AttributePath.parse( fullPath ),
-					fullPath,
-					componentClass
-			) );
+						path,
+						AttributePath.parse( fullPath ),
+						fullPath,
+						componentClass,
+						determineAccessType( componentClass )
+				) );
 		}
 	}
 

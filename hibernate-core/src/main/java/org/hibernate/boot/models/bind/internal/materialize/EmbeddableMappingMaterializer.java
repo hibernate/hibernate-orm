@@ -11,6 +11,7 @@ import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.boot.models.bind.internal.model.EmbeddableContribution;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.boot.models.bind.internal.view.EmbeddableContributionView;
+import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -40,8 +41,8 @@ public class EmbeddableMappingMaterializer {
 		this.state = state;
 	}
 
-	public EmbeddableContributionView createContributionView(ComponentSource source) {
-		final EmbeddableContribution contribution = EmbeddableContribution.from( source );
+	public EmbeddableContributionView createContributionView(ComponentSource source, BindingContext bindingContext) {
+		final EmbeddableContribution contribution = EmbeddableContribution.from( source, state, bindingContext );
 		state.getBootBindingModel().addEmbeddableContribution( contribution );
 		return state.getBootBindingModel().embeddableContributionView( contribution );
 	}

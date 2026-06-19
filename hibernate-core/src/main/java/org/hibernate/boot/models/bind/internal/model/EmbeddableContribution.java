@@ -7,6 +7,8 @@ package org.hibernate.boot.models.bind.internal.model;
 import java.util.List;
 
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
+import org.hibernate.boot.models.bind.spi.BindingContext;
+import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeVariableScope;
@@ -14,12 +16,11 @@ import org.hibernate.models.spi.TypeVariableScope;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AccessType;
 
-/// Binding-model contribution for one applied embeddable/component path.
+/// Binding-model contribution for one embeddable/component usage path.
 ///
-/// The contribution captures the path-sensitive source facts used to materialize
-/// a legacy `Component`: component role, declaring member, component type,
-/// type-variable scope, access fallback, and the ordered source members selected
-/// for this application.
+/// The contribution captures the path-sensitive source facts for an embeddable
+/// usage: component role, declaring member, component type, type-variable scope,
+/// access fallback, and the ordered source members selected for this usage.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -31,7 +32,7 @@ public class EmbeddableContribution {
 	private final AccessType defaultAccessType;
 	private final String pathPrefix;
 	private final String namingPathPrefix;
-	private final List<ComponentSource.ComponentMember> members;
+	private final List<ComponentMemberBinding> members;
 
 	public EmbeddableContribution(
 			ComponentSource.Kind kind,
@@ -41,7 +42,7 @@ public class EmbeddableContribution {
 			AccessType defaultAccessType,
 			String pathPrefix,
 			String namingPathPrefix,
-			List<ComponentSource.ComponentMember> members) {
+			List<ComponentMemberBinding> members) {
 		this.kind = kind;
 		this.sourceMember = sourceMember;
 		this.componentType = componentType;
@@ -52,7 +53,10 @@ public class EmbeddableContribution {
 		this.members = List.copyOf( members );
 	}
 
-	public static EmbeddableContribution from(ComponentSource source) {
+	public static EmbeddableContribution from(
+			ComponentSource source,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		return new EmbeddableContribution(
 				source.kind(),
 				source.sourceMember(),
@@ -62,6 +66,9 @@ public class EmbeddableContribution {
 				source.pathPrefix(),
 				source.namingPathPrefix(),
 				source.members()
+						.stream()
+						.map( (member) -> ComponentMemberBinding.from( source, member, bindingState, bindingContext ) )
+						.toList()
 		);
 	}
 
@@ -93,7 +100,7 @@ public class EmbeddableContribution {
 		return namingPathPrefix;
 	}
 
-	public List<ComponentSource.ComponentMember> members() {
+	public List<ComponentMemberBinding> members() {
 		return members;
 	}
 }

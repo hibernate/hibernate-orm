@@ -16,9 +16,9 @@ import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 ///
 /// The declaration is the mapped superclass that owns the source members.  The
 /// consumer is the nearest subtype currently receiving those members.  When that
-/// consumer is an entity, the legacy mapping model is still materialized by
-/// applying copied properties to the entity boundary and letting entity
-/// inheritance carry them from there.
+/// consumer is an entity, compatibility materialization still applies the
+/// contribution at the entity boundary and lets entity inheritance carry it from
+/// there.
 ///
 /// @since 9.0
 /// @author Steve Ebersole

@@ -7,34 +7,55 @@ package org.hibernate.boot.models.bind.internal.view;
 import jakarta.persistence.AccessType;
 
 import org.hibernate.boot.models.AttributeNature;
-import org.hibernate.boot.models.bind.internal.model.AttributeBinding;
+import org.hibernate.boot.models.bind.internal.model.AttributeDeclarationBinding;
+import org.hibernate.boot.models.bind.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.models.bind.internal.model.BasicValueIntent;
+import org.hibernate.boot.models.bind.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.models.bind.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.models.bind.internal.model.ValueIntent;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
-/// Stable read view over a finalized attribute binding.
+/// Stable read view over a finalized attribute usage binding.
 ///
 /// The view exposes source and option facts without exposing the materialized
-/// `Property`, `Value`, or `Column` objects as semantic state.
+/// `Property`, `Value`, or `Column` objects as semantic state.  Transitional
+/// callers that still need categorized attribute metadata read it from the
+/// declaration binding.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record AttributeBindingView(AttributeBinding binding) {
+public record AttributeBindingView(AttributeUsageBinding binding) {
+	public AttributeDeclarationBinding declaration() {
+		return binding.declaration();
+	}
+
+	public AttributeUsageBinding usageBinding() {
+		return binding;
+	}
+
 	public String attributeName() {
 		return binding.attributeName();
 	}
 
 	public AttributeMetadata attributeMetadata() {
-		return binding.attributeMetadata();
+		final AttributeMetadata attributeMetadata = attributeDeclaration().attributeMetadata();
+		if ( attributeMetadata == null ) {
+			throw new IllegalStateException(
+					"Attribute binding view requires categorized attribute metadata for " + binding.sourceRole()
+			);
+		}
+		return attributeMetadata;
 	}
 
 	public ManagedTypeBinding ownerType() {
-		return binding.ownerType();
+		return (ManagedTypeBinding) binding.usageContainer();
 	}
 
 	public ManagedTypeBinding declaringType() {
-		return binding.declaringType();
+		return declaration().declarationContainer();
 	}
 
 	public MemberDetails member() {
@@ -42,7 +63,7 @@ public record AttributeBindingView(AttributeBinding binding) {
 	}
 
 	public AccessType accessType() {
-		return binding.accessType();
+		return declaration().accessType();
 	}
 
 	public AttributeNature nature() {
@@ -57,31 +78,52 @@ public record AttributeBindingView(AttributeBinding binding) {
 		return binding.attributePath();
 	}
 
+	public TypeDetails resolvedType() {
+		return binding.resolvedType();
+	}
+
 	public boolean isNaturalId() {
-		return binding.isNaturalId();
+		return attributeDeclaration().isNaturalId();
 	}
 
 	public boolean naturalIdMutable() {
-		return binding.naturalIdMutable();
+		return attributeDeclaration().naturalIdMutable();
 	}
 
 	public String collation() {
-		return binding.collation();
+		return attributeDeclaration().collation();
 	}
 
 	public String lazyGroup() {
-		return binding.lazyGroup();
+		return attributeDeclaration().lazyGroup();
 	}
 
 	public boolean optimisticLocked() {
-		return binding.optimisticLocked();
+		return attributeDeclaration().optimisticLocked();
 	}
 
 	public boolean immutable() {
-		return binding.immutable();
+		return attributeDeclaration().immutable();
 	}
 
 	public Class<? extends MutabilityPlan<?>> explicitMutabilityPlanClass() {
-		return binding.explicitMutabilityPlanClass();
+		return attributeDeclaration().explicitMutabilityPlanClass();
+	}
+
+	public ValueIntent valueIntent() {
+		return binding.valueIntent();
+	}
+
+	public BasicValueIntent basicValueIntent() {
+		return binding.basicValueIntent();
+	}
+
+	private IdentifiableAttributeDeclarationBinding attributeDeclaration() {
+		if ( binding.declaration() instanceof IdentifiableAttributeDeclarationBinding attributeBinding ) {
+			return attributeBinding;
+		}
+		throw new IllegalStateException(
+				"Attribute binding view requires an identifiable attribute declaration for " + binding.sourceRole()
+		);
 	}
 }

@@ -7,6 +7,10 @@ package org.hibernate.orm.test.boot.models.bind.mappedsuper;
 import java.util.Set;
 
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.models.bind.internal.model.IdentifiableAttributeDeclarationBinding;
+import org.hibernate.boot.models.bind.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.models.bind.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.models.bind.internal.model.StandardAttributeUsageBinding;
 import org.hibernate.boot.models.categorize.spi.BasicKeyMapping;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.cache.spi.access.AccessType;
@@ -189,6 +193,32 @@ public class MappedSuperclassTests {
 		);
 	}
 
+	@Test
+	@ServiceRegistry
+	void genericMappedSuperclassAttributeIsStoredAsSpecializedEntityUsage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final ManagedTypeBinding entityBinding = managedTypeBinding( context, GenericStringEntity.class );
+					final ManagedTypeBinding superBinding = managedTypeBinding( context, GenericMappedSuper.class );
+					final AttributeUsageBinding usage = attributeUsage( entityBinding, "genericValue" );
+
+					assertThat( usage ).isInstanceOf( StandardAttributeUsageBinding.class );
+					assertThat( usage.declaration() ).isInstanceOf( IdentifiableAttributeDeclarationBinding.class );
+					assertThat( usage.declaration() ).isSameAs( superBinding.declaredAttributes().get( 0 ) );
+					assertThat( usage.resolvedType().determineRawClass().toJavaClass() ).isEqualTo( String.class );
+					assertThat( entityBinding.declaredAttributes() )
+							.extracting( "attributeName" )
+							.doesNotContain( "genericValue" );
+					assertThat( superBinding.declaredAttributes() )
+							.extracting( "attributeName" )
+							.contains( "genericValue" );
+				},
+				scope.getRegistry(),
+				GenericMappedSuper.class,
+				GenericStringEntity.class
+		);
+	}
+
 	private static long countLocalProperties(PersistentClass binding, String propertyName) {
 		return binding.getProperties().stream()
 				.filter( (property) -> propertyName.equals( property.getName() ) )
@@ -206,6 +236,25 @@ public class MappedSuperclassTests {
 				.filter( (property) -> propertyName.equals( property.getName() ) )
 				.findFirst()
 				.orElse( null );
+	}
+
+	private static ManagedTypeBinding managedTypeBinding(
+			org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelCheckContext context,
+			Class<?> javaType) {
+		return context.getBindingState().getBootBindingModel()
+				.managedTypeBindings()
+				.stream()
+				.filter( (binding) -> binding.classDetails().toJavaClass().equals( javaType ) )
+				.findFirst()
+				.orElseThrow();
+	}
+
+	private static AttributeUsageBinding attributeUsage(ManagedTypeBinding binding, String attributeName) {
+		return binding.attributeUsages()
+				.stream()
+				.filter( (usage) -> usage.attributeName().equals( attributeName ) )
+				.findFirst()
+				.orElseThrow();
 	}
 
 	@jakarta.persistence.MappedSuperclass
@@ -255,5 +304,16 @@ public class MappedSuperclassTests {
 
 	@Entity
 	public static class SecondSharedRoot extends SharedContribution {
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class GenericMappedSuper<T> {
+		@Id
+		private Integer id;
+		private T genericValue;
+	}
+
+	@Entity
+	public static class GenericStringEntity extends GenericMappedSuper<String> {
 	}
 }

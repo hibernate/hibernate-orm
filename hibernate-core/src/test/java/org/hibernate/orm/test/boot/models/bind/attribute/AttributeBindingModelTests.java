@@ -16,10 +16,14 @@ import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.Formula;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.models.AttributeNature;
-import org.hibernate.boot.models.bind.internal.model.AttributeBinding;
+import org.hibernate.boot.models.bind.internal.model.AttributeDeclarationBinding;
+import org.hibernate.boot.models.bind.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.models.bind.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.models.bind.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.models.bind.internal.view.AttributeBindingView;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
@@ -27,6 +31,7 @@ import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
@@ -71,6 +76,12 @@ public class AttributeBindingModelTests {
 					assertThat( name.nature() ).isEqualTo( AttributeNature.BASIC );
 					assertThat( name.sourceRole() ).isEqualTo( AttributeBoundEntity.class.getName() + ".name" );
 					assertThat( name.attributePath() ).isEqualTo( "name" );
+					assertThat( name.binding() ).isInstanceOf( AttributeUsageBinding.class );
+					assertThat( name.declaration() ).isInstanceOf( AttributeDeclarationBinding.class );
+					assertThat( name.declaration() ).isInstanceOf( IdentifiableAttributeDeclarationBinding.class );
+					assertThat( name.declaration() ).isNotSameAs( name.usageBinding() );
+					assertThat( managedTypeBinding.attributeUsages() ).contains( name.usageBinding() );
+					assertThat( name.resolvedType().determineRawClass().toJavaClass() ).isEqualTo( String.class );
 
 					final AttributeBindingView code = attribute( managedTypeBinding, "code" );
 					assertThat( code.isNaturalId() ).isTrue();
@@ -94,6 +105,26 @@ public class AttributeBindingModelTests {
 					final AttributeBindingView mutabilityPlanned = attribute( managedTypeBinding, "mutabilityPlanned" );
 					assertThat( mutabilityPlanned.explicitMutabilityPlanClass() ).isEqualTo( CustomMutabilityPlan.class );
 
+					final AttributeBindingView columnedName = attribute( managedTypeBinding, "columnedName" );
+					assertThat( columnedName.basicValueIntent().columnSource().name() ).isEqualTo( "columned_name" );
+					assertThat( columnedName.basicValueIntent().insertable() ).isFalse();
+					assertThat( columnedName.basicValueIntent().updatable() ).isFalse();
+					assertThat( columnedName.basicValueIntent().columnSource().nullable( true ) ).isFalse();
+					assertThat( columnedName.basicValueIntent().columnSource().length( 255 ) ).isEqualTo( 64 );
+					assertThat( columnedName.usageBinding().basicValueIntent() ).isSameAs( columnedName.basicValueIntent() );
+
+					final AttributeBindingView formulaName = attribute( managedTypeBinding, "formulaName" );
+					assertThat( formulaName.basicValueIntent().isFormula() ).isTrue();
+					assertThat( formulaName.basicValueIntent().formulaExpression() ).isEqualTo( "upper(name)" );
+
+					final AttributeBindingView transformedName = attribute( managedTypeBinding, "transformedName" );
+					assertThat( transformedName.basicValueIntent().columnTransformerName() )
+							.isEqualTo( "transformed_name" );
+					assertThat( transformedName.basicValueIntent().customReadExpression() )
+							.isEqualTo( "lower(transformed_name)" );
+					assertThat( transformedName.basicValueIntent().customWriteExpression() )
+							.isEqualTo( "upper(?)" );
+
 					final PersistentClass entityBinding = context.getMetadataCollector()
 							.getEntityBinding( AttributeBoundEntity.class.getName() );
 					assertThat( entityBinding.getProperty( "code" ).isNaturalIdentifier() ).isTrue();
@@ -106,6 +137,25 @@ public class AttributeBindingModelTests {
 					assertThat( entityBinding.getProperty( "optimisticExcluded" ).isOptimisticLocked() ).isFalse();
 					assertThat( entityBinding.getProperty( "versioningExcluded" ).isOptimisticLocked() ).isFalse();
 					assertThat( entityBinding.getProperty( "immutableName" ).isUpdatable() ).isFalse();
+
+					final Property columnedProperty = entityBinding.getProperty( "columnedName" );
+					assertThat( columnedProperty.isInsertable() ).isFalse();
+					assertThat( columnedProperty.isUpdatable() ).isFalse();
+					final Column columnedColumn = (Column) ( (BasicValue) columnedProperty.getValue() ).getColumn();
+					assertThat( columnedColumn.getName() ).isEqualTo( "columned_name" );
+					assertThat( columnedColumn.isNullable() ).isFalse();
+					assertThat( columnedColumn.getLength() ).isEqualTo( 64 );
+
+					final Selectable formulaSelectable = ( (BasicValue) entityBinding.getProperty( "formulaName" )
+							.getValue() ).getSelectables().get( 0 );
+					assertThat( formulaSelectable.isFormula() ).isTrue();
+					assertThat( formulaSelectable.getText() ).isEqualTo( "upper(name)" );
+
+					final Column transformedColumn = (Column) ( (BasicValue) entityBinding.getProperty( "transformedName" )
+							.getValue() ).getColumn();
+					assertThat( transformedColumn.getName() ).isEqualTo( "transformed_name" );
+					assertThat( transformedColumn.getCustomRead() ).isEqualTo( "lower(transformed_name)" );
+					assertThat( transformedColumn.getCustomWrite() ).isEqualTo( "upper(?)" );
 
 					final BasicValue mutabilityValue = (BasicValue) entityBinding.getProperty( "mutabilityPlanned" )
 							.getValue();
@@ -124,9 +174,9 @@ public class AttributeBindingModelTests {
 	}
 
 	private static AttributeBindingView attribute(ManagedTypeBinding managedTypeBinding, String name) {
-		for ( AttributeBinding attributeBinding : managedTypeBinding.declaredAttributes() ) {
-			if ( attributeBinding.attributeName().equals( name ) ) {
-				return new AttributeBindingView( attributeBinding );
+		for ( var attributeUsage : managedTypeBinding.attributeUsages() ) {
+			if ( attributeUsage.attributeName().equals( name ) ) {
+				return new AttributeBindingView( attributeUsage );
 			}
 		}
 		throw new AssertionError( "Could not locate attribute binding " + name );
@@ -170,6 +220,16 @@ public class AttributeBindingModelTests {
 
 		@Mutability(CustomMutabilityPlan.class)
 		private String mutabilityPlanned;
+
+		@jakarta.persistence.Column(name = "columned_name", nullable = false, insertable = false, updatable = false, length = 64)
+		private String columnedName;
+
+		@Formula("upper(name)")
+		private String formulaName;
+
+		@jakarta.persistence.Column(name = "transformed_name")
+		@ColumnTransformer(forColumn = "transformed_name", read = "lower(transformed_name)", write = "upper(?)")
+		private String transformedName;
 
 		@CompatibilityBound
 		private String customBound;

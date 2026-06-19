@@ -17,11 +17,16 @@ import org.hibernate.boot.models.bind.internal.view.IdentifierContributionView;
 import org.hibernate.boot.models.bind.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.models.bind.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.models.bind.internal.view.TenantIdContributionView;
+import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.MappedSuperclass;
 
 /// Aggregate root for the horizontal boot binding model.
 ///
@@ -52,6 +57,86 @@ public class BootBindingModel {
 
 	public Collection<ManagedTypeBinding> managedTypeBindings() {
 		return managedTypeBindings.values();
+	}
+
+	public @Nullable AttributeDeclarationBinding findAttributeDeclaration(
+			ClassDetails declaringType,
+			String attributeName) {
+		final ManagedTypeBinding managedTypeBinding = getManagedTypeBinding( declaringType );
+		if ( managedTypeBinding == null ) {
+			return null;
+		}
+		for ( AttributeDeclarationBinding declarationBinding : managedTypeBinding.declaredAttributes() ) {
+			if ( declarationBinding.attributeName().equals( attributeName ) ) {
+				return declarationBinding;
+			}
+		}
+		return null;
+	}
+
+	public AttributeDeclarationBinding findOrCreateAttributeDeclaration(
+			ClassDetails declaringType,
+			MemberDetails member,
+			AccessType accessType,
+			AttributeNature nature) {
+		final String attributeName = member.resolveAttributeName();
+		final AttributeDeclarationBinding existing = findAttributeDeclaration( declaringType, attributeName );
+		if ( existing != null ) {
+			return existing;
+		}
+
+		ManagedTypeBinding managedTypeBinding = getManagedTypeBinding( declaringType );
+		if ( managedTypeBinding == null ) {
+			managedTypeBinding = createManagedTypeBinding( declaringType, accessType );
+			addManagedTypeBinding( managedTypeBinding );
+		}
+		final AttributeDeclarationBinding declarationBinding = createAttributeDeclaration(
+				attributeName,
+				managedTypeBinding,
+				member,
+				accessType,
+				nature
+		);
+		managedTypeBinding.addDeclaredAttribute( declarationBinding );
+		return declarationBinding;
+	}
+
+	private AttributeDeclarationBinding createAttributeDeclaration(
+			String attributeName,
+			ManagedTypeBinding managedTypeBinding,
+			MemberDetails member,
+			AccessType accessType,
+			AttributeNature nature) {
+		if ( managedTypeBinding.kind() == ManagedTypeBinding.Kind.EMBEDDABLE ) {
+			return new EmbeddableAttributeDeclarationBinding(
+					attributeName,
+					managedTypeBinding,
+					member,
+					accessType,
+					nature
+			);
+		}
+		return new IdentifiableAttributeDeclarationBinding(
+				attributeName,
+				null,
+				managedTypeBinding,
+				managedTypeBinding,
+				member,
+				accessType,
+				nature,
+				managedTypeBinding.classDetails().getName() + "." + attributeName,
+				attributeName
+		);
+	}
+
+	private ManagedTypeBinding createManagedTypeBinding(ClassDetails classDetails, AccessType accessType) {
+		if ( classDetails.hasDirectAnnotationUsage( Embeddable.class ) ) {
+			return new EmbeddableTypeBinding( classDetails, accessType );
+		}
+		if ( classDetails.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+			return new MappedSuperclassTypeBinding( classDetails, accessType );
+		}
+		return new ManagedTypeBinding( classDetails, ManagedTypeBinding.Kind.MAPPED_SUPERCLASS, accessType );
 	}
 
 	public void addIdentifierContribution(EntityTypeMetadata rootType, IdentifierContribution identifierContribution) {

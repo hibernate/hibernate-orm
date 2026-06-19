@@ -692,7 +692,7 @@ public class SimpleIdTests {
 				org.hibernate.boot.models.bind.internal.model.EntityTypeBinding.class,
 				org.hibernate.boot.models.bind.internal.model.MappedSuperclassTypeBinding.class,
 				org.hibernate.boot.models.bind.internal.model.EmbeddableTypeBinding.class,
-				org.hibernate.boot.models.bind.internal.model.AttributeBinding.class,
+				org.hibernate.boot.models.bind.internal.model.IdentifiableAttributeDeclarationBinding.class,
 				org.hibernate.boot.models.bind.internal.model.IdentifierContribution.class,
 				org.hibernate.boot.models.bind.internal.model.IdentifierAttributeBinding.class
 		);

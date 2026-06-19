@@ -9,10 +9,17 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.boot.models.bind.internal.model.AttributeDeclarationBinding;
+import org.hibernate.boot.models.bind.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.models.bind.internal.model.ComponentMemberBinding;
+import org.hibernate.boot.models.bind.internal.model.EmbeddableAttributeDeclarationBinding;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 
+import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.annotations.Formula;
+import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -29,6 +36,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
@@ -38,6 +46,103 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 public class EmbeddableBindingTests {
+	@Test
+	@ServiceRegistry
+	void testComponentMemberBindingFacts(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var contribution = context.getBindingState().getBootBindingModel()
+							.embeddableContributions()
+							.stream()
+							.filter( (candidate) -> candidate.componentType().getName().equals( ComponentFacts.class.getName() ) )
+							.findFirst()
+							.orElseThrow();
+
+					final ComponentMemberBinding city = componentMember( contribution.members(), "city" );
+					assertThat( city.nature() ).isEqualTo( AttributeNature.BASIC );
+					assertThat( city ).isInstanceOf( AttributeUsageBinding.class );
+					assertThat( city ).isNotInstanceOf( AttributeDeclarationBinding.class );
+					assertThat( city.declaration() ).isInstanceOf( EmbeddableAttributeDeclarationBinding.class );
+					assertThat( city.declaration().attributeName() ).isEqualTo( "city" );
+					assertThat( city.valueIntent() ).isSameAs( city.basicValueIntent() );
+					assertThat( city.basicValueIntent().columnSource().name() ).isEqualTo( "home_city" );
+
+					final ComponentMemberBinding code = componentMember( contribution.members(), "code" );
+					assertThat( code.basicValueIntent().conversion() ).isNotNull();
+
+					final ComponentMemberBinding formula = componentMember( contribution.members(), "cityFormula" );
+					assertThat( formula.basicValueIntent().isFormula() ).isTrue();
+					assertThat( formula.basicValueIntent().formulaExpression() ).isEqualTo( "upper(city)" );
+
+					final ComponentMemberBinding collated = componentMember( contribution.members(), "collated" );
+					assertThat( collated.collation() ).isEqualTo( "ucs_basic" );
+
+					final ComponentMemberBinding country = componentMember( contribution.members(), "country" );
+					assertThat( country.nature() ).isEqualTo( AttributeNature.TO_ONE );
+					assertThat( country.associationOverride() ).isNotNull();
+					assertThat( country.valueIntent() ).isSameAs( country.toOneValueIntent() );
+					assertThat( country.toOneValueIntent().memberType().determineRawClass().toJavaClass() )
+							.isEqualTo( Country.class );
+					assertThat( country.toOneValueIntent().path() ).isEqualTo( "country" );
+					assertThat( country.toOneValueIntent().fullPath() ).isEqualTo( "facts.country" );
+					assertThat( country.toOneValueIntent().associationOverride() ).isNotNull();
+
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ComponentFactsEntity.class.getName() );
+					final Component facts = (Component) entityBinding.getProperty( "facts" ).getValue();
+					assertThat( facts.getProperty( "city" ).getValue().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "home_city" );
+					assertThat( ( (BasicValue) facts.getProperty( "code" ).getValue() )
+							.getJpaAttributeConverterDescriptor() ).isNotNull();
+					assertThat( ( (BasicValue) facts.getProperty( "cityFormula" ).getValue() )
+							.getSelectables().get( 0 ).getText() ).isEqualTo( "upper(city)" );
+					assertThat( ( (ManyToOne) facts.getProperty( "country" ).getValue() )
+							.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "country_fk" );
+				},
+				scope.getRegistry(),
+				Country.class,
+				ComponentFactsEntity.class
+		);
+	}
+
+	private static ComponentMemberBinding componentMember(
+			java.util.List<ComponentMemberBinding> members,
+			String attributeName) {
+		return members.stream()
+				.filter( (member) -> member.attributeName().equals( attributeName ) )
+				.findFirst()
+				.orElseThrow();
+	}
+
+	@Test
+	@ServiceRegistry
+	void testGenericMappedSuperclassMemberResolvesAtEmbeddedSite(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var contribution = context.getBindingState().getBootBindingModel()
+							.embeddableContributions()
+							.stream()
+							.filter( (candidate) -> candidate.componentType().getName().equals( GenericAmount.class.getName() ) )
+							.findFirst()
+							.orElseThrow();
+
+					final ComponentMemberBinding amount = componentMember( contribution.members(), "amount" );
+					assertThat( amount ).isInstanceOf( AttributeUsageBinding.class );
+					assertThat( amount ).isNotInstanceOf( AttributeDeclarationBinding.class );
+					assertThat( amount.declaration().attributeName() ).isEqualTo( "amount" );
+					assertThat( amount.resolvedType().determineRawClass().toJavaClass() )
+							.isEqualTo( java.math.BigDecimal.class );
+					assertThat( amount.path() ).isEqualTo( "amount" );
+					assertThat( amount.fullPath() ).isEqualTo( "price.amount" );
+				},
+				scope.getRegistry(),
+				GenericAmountEntity.class
+		);
+	}
+
 	@Test
 	@ServiceRegistry
 	void testExplicitEmbedded(ServiceRegistryScope scope) {
@@ -66,7 +171,7 @@ public class EmbeddableBindingTests {
 					assertThat( contribution.sourceMember().resolveAttributeName() ).isEqualTo( "address" );
 					assertThat( contribution.componentType().toJavaClass() ).isEqualTo( Address.class );
 					assertThat( contribution.members() )
-							.extracting( ComponentSource.ComponentMember::attributeName )
+							.extracting( ComponentMemberBinding::attributeName )
 							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
@@ -194,6 +299,16 @@ public class EmbeddableBindingTests {
 					assertThat( contributions )
 							.extracting( (contribution) -> contribution.componentType().getName() )
 							.containsExactly( AddressWithLocation.class.getName(), Location.class.getName() );
+					final ComponentMemberBinding locationMember = componentMember( contributions.get( 0 ).members(), "location" );
+					assertThat( locationMember.nature() ).isEqualTo( AttributeNature.EMBEDDED );
+					assertThat( locationMember.valueIntent() ).isSameAs( locationMember.embeddedValueIntent() );
+					assertThat( locationMember.path() ).isEqualTo( "location" );
+					assertThat( locationMember.namingPath().getFullPath() ).isEqualTo( "address.location" );
+					assertThat( locationMember.fullPath() ).isEqualTo( "address.location" );
+					assertThat( locationMember.embeddedValueIntent().memberType().determineRawClass().toJavaClass() )
+							.isEqualTo( Location.class );
+					assertThat( locationMember.embeddedValueIntent().path() ).isEqualTo( "location" );
+					assertThat( locationMember.embeddedValueIntent().fullPath() ).isEqualTo( "address.location" );
 					assertThat( contributions.get( 1 ).pathPrefix() ).isEqualTo( "location." );
 					assertThat( contributions.get( 1 ).namingPathPrefix() ).isEqualTo( "address.location." );
 				},
@@ -547,6 +662,26 @@ public class EmbeddableBindingTests {
 		private AddressWithCompositeAssociationLocation address;
 	}
 
+	@Entity(name = "ComponentFactsEntity")
+	@Table(name = "component_facts")
+	public static class ComponentFactsEntity {
+		@Id
+		private Integer id;
+		@Embedded
+		@AttributeOverride(name = "city", column = @Column(name = "home_city"))
+		@AssociationOverride(name = "country", joinColumns = @JoinColumn(name = "country_fk"))
+		private ComponentFacts facts;
+	}
+
+	@Entity(name = "GenericAmountEntity")
+	@Table(name = "generic_amount_entities")
+	public static class GenericAmountEntity {
+		@Id
+		private Integer id;
+		@Embedded
+		private GenericAmount price;
+	}
+
 	@Entity(name = "Country")
 	@Table(name = "countries")
 	public static class Country {
@@ -633,6 +768,28 @@ public class EmbeddableBindingTests {
 	public static class CompositeCountryPk {
 		private String code;
 		private String region;
+	}
+
+	@Embeddable
+	public static class ComponentFacts {
+		private String city;
+		@Convert(converter = CountryConverter.class)
+		private String code;
+		@Formula("upper(city)")
+		private String cityFormula;
+		@Collate("ucs_basic")
+		private String collated;
+		@jakarta.persistence.ManyToOne
+		private Country country;
+	}
+
+	@MappedSuperclass
+	public static class GenericAmountBase<T extends Number> {
+		private T amount;
+	}
+
+	@Embeddable
+	public static class GenericAmount extends GenericAmountBase<java.math.BigDecimal> {
 	}
 
 	public static class CityConverter implements AttributeConverter<String, String> {

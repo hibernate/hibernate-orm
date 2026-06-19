@@ -16,7 +16,8 @@ import org.hibernate.models.spi.MemberDetails;
 ///
 /// The contribution records the attribute path because collation can be applied
 /// to attributes nested inside embeddables.  Materialization currently applies
-/// the collation to the legacy mapping columns for the attribute value.
+/// the collation to the compatibility selectable outputs for the attribute
+/// value.
 ///
 /// @since 9.0
 /// @author Steve Ebersole

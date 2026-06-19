@@ -369,6 +369,107 @@ ContributionBinding
     IdentifierContribution
 ----
 
+=== Declaration Versus Usage Site
+
+The binding model needs to distinguish declaration facts from usage-site facts.
+This is especially important for embeddables, mapped superclasses, and generic
+supertypes.
+
+The target terminology should be:
+
+`AttributeDeclarationBinding`::
+The source declaration of an attribute on a managed type.  It owns declaration
+facts such as the declaration container, source member, broad attribute kind,
+and declaration-level annotations.
+
+`IdentifiableAttributeDeclarationBinding`::
+An attribute declaration whose declaration container is an entity or mapped
+superclass.  These declarations are stable: the identifiable managed-type
+hierarchy determines the effective access strategy and selected persistent
+member independently of any embedded usage site.
+
+`EmbeddableAttributeDeclarationBinding`::
+An attribute declaration whose declaration container is an embeddable type.
+This records the embeddable-local source member, but does not pretend that the
+source member and access strategy are globally final for every usage.  Unless
+the embeddable declares explicit `@Access`, embeddable member selection can be
+affected by the embedded usage site.  The corresponding usage binding therefore
+owns the effective member, effective access, resolved type, override/conversion
+lookup, implicit naming input, table/storage context, and materialization
+target.
+
+`AttributeUsageBinding`::
+One use of an attribute declaration in a concrete mapping context.  It owns
+the source declaration, usage container, resolved member type, path, naming
+input, table/storage context, override/conversion lookup, and materialization
+target.
+
+For example:
+
+[source,java]
+----
+@MappedSuperclass
+class Base<T extends Number> {
+    T amount;
+}
+
+@Embeddable
+class MoneyAmount extends Base<BigDecimal> {
+}
+
+@Entity
+class Product {
+    @Embedded MoneyAmount listPrice;
+    @Embedded MoneyAmount salePrice;
+}
+----
+
+There is one source declaration for `Base#amount`, but there are several
+different facts ORM must preserve:
+
+* the declaration member `Base#amount`, whose declared type is the type variable
+  `T extends Number`;
+* the embeddable specialization `MoneyAmount.amount`, whose resolved member type
+  is `BigDecimal`;
+* the embedded usage sites `Product.listPrice.amount` and
+  `Product.salePrice.amount`, each with its own path, implicit-naming input,
+  override/conversion lookup, table context, and materialization target.
+
+The current implementation already models part of this distinction:
+
+* `IdentifiableAttributeDeclarationBinding` is the declaration binding for
+  categorized entity and mapped-superclass attributes;
+* `EmbeddableAttributeDeclarationBinding` is the declaration binding for
+  embeddable-local source members, but the usage binding owns effective
+  usage-site interpretation;
+* `StandardAttributeUsageBinding` represents a declaration used in an entity or
+  mapped-superclass managed-type context;
+* `ComponentMemberBinding` is an embedded-site-specific attribute usage
+  binding;
+* `ComponentMemberBinding#type()` is the resolved member type at that embedded
+  site, not necessarily the raw declaration type.
+
+Mapped-superclass attributes remain identifiable declarations even when they are
+consumed by entity or embeddable hierarchies.  Entity consumers use a usage
+binding that points back to the declaration.  Embeddable component members expose
+the declaration origin and a component-site usage container.  For local
+embeddable members that declaration origin is an
+`EmbeddableAttributeDeclarationBinding`; for mapped-superclass members inherited
+by an embeddable it is an `IdentifiableAttributeDeclarationBinding`.
+
+The key container distinction is:
+
+* declaration container: the managed type that declares the member;
+* usage container: the managed type or component site where the declaration is
+  used;
+* materialization container: the legacy mapping target such as `PersistentClass`,
+  `Component`, `Property`, `Value`, or table/column structures.
+
+This split intentionally keeps separate objects even in the common direct
+managed-type case.  The declaration container and usage container may be the
+same managed type, but declaration and usage remain different binding-model
+roles.
+
 === MappedSuperclassContribution
 
 Applies one mapped-superclass declaration to one consuming hierarchy or

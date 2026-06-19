@@ -47,7 +47,7 @@ public class BasicValueMappingMaterializer {
 		final MemberDetails member = attributeBinding.member();
 		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext() );
 
-		final var column = processColumn( member, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
+		final var column = processColumn( attributeBinding, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
 		applyBasicOptionality( member, property, column );
 		applyBasicFetch( member, property );
 		property.setLob( member.hasDirectAnnotationUsage( Lob.class ) );

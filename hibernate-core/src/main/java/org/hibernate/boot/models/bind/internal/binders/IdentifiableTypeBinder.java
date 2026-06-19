@@ -9,8 +9,12 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.models.AttributeNature;
-import org.hibernate.boot.models.bind.internal.model.AttributeBinding;
+import org.hibernate.boot.models.bind.internal.model.AttributeDeclarationBinding;
+import org.hibernate.boot.models.bind.internal.model.BasicValueIntent;
+import org.hibernate.boot.models.bind.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.models.bind.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.models.bind.internal.model.StandardAttributeUsageBinding;
+import org.hibernate.boot.models.bind.internal.model.ValueIntent;
 import org.hibernate.boot.models.bind.internal.view.AttributeBindingView;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
@@ -226,20 +230,82 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		}
 
 		final String attributeName = attributeMetadata.getName();
-		final AttributeBinding attributeBinding = AttributeBinding.from(
-				attributeMetadata,
-				ownerTypeBinding,
+		if ( sourceType == ownerType ) {
+			final IdentifiableAttributeDeclarationBinding attributeBinding = IdentifiableAttributeDeclarationBinding.from(
+					attributeMetadata,
+					declaringTypeBinding,
+					declaringTypeBinding,
+					attributeMetadata.getMember(),
+					sourceType.getAccessType(),
+					attributeMetadata.getNature(),
+					sourceType.getClassDetails().getName() + "." + attributeName,
+					attributeName
+			);
+			declaringTypeBinding.addDeclaredAttribute( attributeBinding );
+			final StandardAttributeUsageBinding usageBinding = createAttributeUsage(
+					attributeBinding,
+					ownerType,
+					ownerTypeBinding,
+					attributeMetadata
+			);
+			ownerTypeBinding.addAttributeUsage( usageBinding );
+			return new AttributeBindingView( usageBinding );
+		}
+
+		final AttributeDeclarationBinding declarationBinding = resolveAttributeDeclaration(
 				declaringTypeBinding,
-				attributeMetadata.getMember(),
-				sourceType.getAccessType(),
-				attributeMetadata.getNature(),
-				sourceType.getClassDetails().getName() + "." + attributeName,
 				attributeName
 		);
-		if ( sourceType == ownerType ) {
-			declaringTypeBinding.addDeclaredAttribute( attributeBinding );
+		final StandardAttributeUsageBinding usageBinding = createAttributeUsage(
+				declarationBinding,
+				ownerType,
+				ownerTypeBinding,
+				attributeMetadata
+		);
+		ownerTypeBinding.addAttributeUsage( usageBinding );
+		return new AttributeBindingView( usageBinding );
+	}
+
+	private StandardAttributeUsageBinding createAttributeUsage(
+			AttributeDeclarationBinding declarationBinding,
+			IdentifiableTypeMetadata ownerType,
+			ManagedTypeBinding ownerTypeBinding,
+			AttributeMetadata attributeMetadata) {
+		final String attributeName = attributeMetadata.getName();
+		return new StandardAttributeUsageBinding(
+				declarationBinding,
+				ownerTypeBinding,
+				attributeMetadata.getMember(),
+				attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() ),
+				ownerType.getClassDetails().getName() + "." + attributeName,
+				attributeName,
+				attributeMetadata.getNature(),
+				valueIntent( attributeMetadata )
+		);
+	}
+
+	private ValueIntent valueIntent(AttributeMetadata attributeMetadata) {
+		return attributeMetadata.getNature() == AttributeNature.BASIC
+				? BasicValueIntent.fromAttribute(
+						attributeMetadata.getMember(),
+						getBindingState(),
+						getBindingContext()
+				)
+				: null;
+	}
+
+	private AttributeDeclarationBinding resolveAttributeDeclaration(
+			ManagedTypeBinding declaringTypeBinding,
+			String attributeName) {
+		for ( AttributeDeclarationBinding declaredAttribute : declaringTypeBinding.declaredAttributes() ) {
+			if ( declaredAttribute.attributeName().equals( attributeName ) ) {
+				return declaredAttribute;
+			}
 		}
-		return new AttributeBindingView( attributeBinding );
+		throw new IllegalStateException(
+				"Unable to resolve attribute declaration `" + attributeName + "` for "
+						+ declaringTypeBinding.classDetails().getName()
+		);
 	}
 
 	private boolean isPlural(AttributeNature nature) {

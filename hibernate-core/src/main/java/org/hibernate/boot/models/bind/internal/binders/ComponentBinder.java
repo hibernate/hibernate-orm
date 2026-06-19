@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 
-import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -17,7 +16,11 @@ import org.hibernate.boot.models.bind.internal.materialize.CollationMappingMater
 import org.hibernate.boot.models.bind.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.ToOneMaterializationHelper;
+import org.hibernate.boot.models.bind.internal.model.BasicValueIntent;
 import org.hibernate.boot.models.bind.internal.model.CollationContribution;
+import org.hibernate.boot.models.bind.internal.model.ComponentMemberBinding;
+import org.hibernate.boot.models.bind.internal.model.EmbeddedValueIntent;
+import org.hibernate.boot.models.bind.internal.model.ToOneValueIntent;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
@@ -161,13 +164,14 @@ public class ComponentBinder {
 						? columns
 						: identifierColumns;
 		final EmbeddableContributionView contributionView =
-				embeddableMappingMaterializer.createContributionView( source );
-		final List<ComponentSource.ComponentMember> members = new ArrayList<>( contributionView.members() );
+				embeddableMappingMaterializer.createContributionView( source, context );
+		final List<ComponentMemberBinding> members = new ArrayList<>( contributionView.members() );
 		if ( component.isPolymorphic() ) {
-			members.addAll( source.subclassMembers( context ) );
+			source.subclassMembers( context )
+					.forEach( (member) -> members.add( ComponentMemberBinding.from( source, member, state, context ) ) );
 		}
 		for ( int i = 0; i < members.size(); i++ ) {
-			final ComponentSource.ComponentMember componentMember = members.get( i );
+			final ComponentMemberBinding componentMember = members.get( i );
 			final MemberDetails member = componentMember.member();
 			final String attributeName = componentMember.attributeName();
 			final String memberPath = componentMember.path();
@@ -183,7 +187,7 @@ public class ComponentBinder {
 						ownerBinding,
 						member,
 						componentMember.fullPath(),
-						source.associationOverride( memberPath ),
+						componentMember.associationOverride(),
 						property,
 						registerCollectionBindings
 				);
@@ -197,7 +201,7 @@ public class ComponentBinder {
 
 			if ( isToOneMember( member ) ) {
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
-				final AssociationOverride associationOverride = source.associationOverride( memberPath );
+				final ToOneValueIntent toOneValueIntent = componentMember.toOneValueIntent();
 				final var manyToOne = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
 						? bindAssociationIdentifierMember(
 								ownerType,
@@ -205,10 +209,10 @@ public class ComponentBinder {
 								source.componentType(),
 								attributeName,
 								member,
-								componentMember.type(),
+								toOneValueIntent.memberType(),
 								property,
 								table,
-								associationOverride,
+								toOneValueIntent.associationOverride(),
 								associationIdentifierColumns
 						)
 						: ToOneAttributeBinder.bindToOne(
@@ -217,10 +221,10 @@ public class ComponentBinder {
 								source.componentType().getClassName(),
 								attributeName,
 								member,
-								componentMember.type(),
+								toOneValueIntent.memberType(),
 								property,
 								table,
-								associationOverride,
+								toOneValueIntent.associationOverride(),
 								modelBinders,
 								options,
 								state,
@@ -238,7 +242,14 @@ public class ComponentBinder {
 			if ( isEmbeddedMember( member, componentMember.type() )
 					|| isImplicitEmbeddedIdentifierMember( source, componentMember.type() ) ) {
 				validateNestedEmbeddedTablePlacement( member );
-				final ComponentSource nestedSource = source.nested( componentMember, context );
+				final EmbeddedValueIntent embeddedValueIntent = componentMember.embeddedValueIntent();
+				final ComponentSource nestedSource = source.nested(
+						member,
+						embeddedValueIntent.memberType(),
+						embeddedValueIntent.path(),
+						embeddedValueIntent.fullPath(),
+						context
+				);
 				final Component nestedComponent = embeddableMappingMaterializer.createNestedComponent(
 						nestedSource,
 						component,
@@ -270,14 +281,14 @@ public class ComponentBinder {
 
 			final BasicValue basicValue = createBasicValue( table );
 			final Property property = propertyMappingMaterializer.createProperty( attributeName, basicValue, member );
-			final org.hibernate.annotations.Formula formula = member.getDirectAnnotationUsage( org.hibernate.annotations.Formula.class );
-			if ( formula != null ) {
-				basicValue.addFormula( new org.hibernate.mapping.Formula( formula.value() ) );
+			final BasicValueIntent basicValueIntent = componentMember.basicValueIntent();
+			if ( basicValueIntent.isFormula() ) {
+				basicValue.addFormula( new org.hibernate.mapping.Formula( basicValueIntent.formulaExpression() ) );
 				property.setOptional( true );
 				property.setInsertable( false );
 				property.setUpdatable( false );
 				BasicValueBinder.bindBasicValue(
-						BasicValueSource.embeddableMember( member, source.conversion( memberPath, member ) ),
+						BasicValueSource.embeddableMember( member, basicValueIntent.conversion() ),
 						property,
 						basicValue,
 						options,
@@ -292,7 +303,7 @@ public class ComponentBinder {
 			final Column column = bindColumn(
 					() -> implicitBasicColumnName( source, componentMember ),
 					basicValue,
-					source.columnSource( memberPath, member ),
+					basicValueIntent.columnSource(),
 					columnNamingPatterns,
 					uniqueByDefault,
 					nullableByDefault,
@@ -300,7 +311,7 @@ public class ComponentBinder {
 			);
 			applyBasicOptionality( member, componentMember.type(), property, column );
 			BasicValueBinder.bindBasicValue(
-					BasicValueSource.embeddableMember( member, componentMember.type(), source.conversion( memberPath, member ) ),
+					BasicValueSource.embeddableMember( member, componentMember.type(), basicValueIntent.conversion() ),
 					property,
 					basicValue,
 					options,
@@ -317,7 +328,7 @@ public class ComponentBinder {
 		return columns;
 	}
 
-	private String implicitBasicColumnName(ComponentSource source, ComponentSource.ComponentMember member) {
+	private String implicitBasicColumnName(ComponentSource source, ComponentMemberBinding member) {
 		return context.getImplicitNamingStrategy()
 				.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
 					@Override
@@ -340,17 +351,16 @@ public class ComponentBinder {
 
 	private void applyCollation(
 			IdentifiableTypeMetadata ownerType,
-			ComponentSource.ComponentMember componentMember,
+			ComponentMemberBinding componentMember,
 			Property property) {
-		final var collateAnn = componentMember.member().getDirectAnnotationUsage( Collate.class );
-		if ( collateAnn == null ) {
+		if ( componentMember.collation() == null ) {
 			return;
 		}
 		final var contribution = new CollationContribution(
 				ownerType,
 				componentMember.fullPath(),
 				componentMember.member(),
-				collateAnn.value()
+				componentMember.collation()
 		);
 		state.getBootBindingModel().addCollationContribution( contribution );
 		new CollationMappingMaterializer().materializeCollation(

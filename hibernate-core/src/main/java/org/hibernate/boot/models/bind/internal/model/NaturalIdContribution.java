@@ -11,13 +11,13 @@ import org.hibernate.models.spi.MemberDetails;
 ///
 /// This is the second small proof for a possible binding-layer replacement
 /// shape for `org.hibernate.binder.AttributeBinder`.  Unlike `@TenantId`,
-/// natural-id binding is mostly legacy `Property` decoration today, but it is
-/// still attribute-level semantic state: the annotation may appear on an
-/// inherited identifiable-type attribute, and the resulting natural-id contract
-/// is consumed later by entity mapping and runtime layers.
+/// natural-id binding is mostly compatibility decoration today, but it is still
+/// attribute-level semantic state: the annotation may appear on an inherited
+/// identifiable-type attribute, and the resulting natural-id contract is
+/// consumed later by entity mapping and runtime layers.
 ///
 /// The contribution records only source/binding facts.  Materialization applies
-/// those facts to the legacy mapping property until natural-id handling can be
+/// those facts to compatibility outputs until natural-id handling can be
 /// consumed directly from binding/model views.
 ///
 /// @since 9.0

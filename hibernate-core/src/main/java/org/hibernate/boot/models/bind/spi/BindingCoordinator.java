@@ -34,6 +34,7 @@ import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.bind.ModelBindingLogging;
 import org.hibernate.boot.models.bind.internal.model.EntityTypeBinding;
+import org.hibernate.boot.models.bind.internal.model.EmbeddableTypeBinding;
 import org.hibernate.boot.models.bind.internal.model.MappedSuperclassTypeBinding;
 import org.hibernate.boot.models.bind.internal.binders.EntityTypeBinder;
 import org.hibernate.boot.models.bind.internal.binders.ManagedTypeBinder;
@@ -139,6 +140,7 @@ public class BindingCoordinator {
 	private void coordinateModelBindings() {
 		final List<ManagedTypeBinder> binders = new ArrayList<>();
 		final Set<String> boundTypeNames = new HashSet<>();
+		registerCategorizedDeclarationContainers();
 		categorizedDomainModel.forEachEntityHierarchy( (index, hierarchy) -> {
 			hierarchy.forEachType( (type, superType, entityHierarchy, relation) -> {
 				if ( type.getManagedTypeKind() != ManagedTypeMetadata.Kind.ENTITY
@@ -167,6 +169,28 @@ public class BindingCoordinator {
 			final RootClass binding = (RootClass) typeBinder.getTypeBinding();
 			ModelBindingLogging.MODEL_BINDING_LOGGER.tracef( "Bound entity hierarchy - %s", binding.getEntityName() );
 		} );
+	}
+
+	private void registerCategorizedDeclarationContainers() {
+		categorizedDomainModel.forEachMappedSuperclass( (name, type) -> {
+			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type ) == null ) {
+				bindingState.getBootBindingModel().addManagedTypeBinding(
+						new MappedSuperclassTypeBinding( type, defaultAccessType( type ) )
+				);
+			}
+		} );
+		categorizedDomainModel.forEachEmbeddable( (name, type) -> {
+			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type ) == null ) {
+				bindingState.getBootBindingModel().addManagedTypeBinding(
+						new EmbeddableTypeBinding( type, defaultAccessType( type ) )
+				);
+			}
+		} );
+	}
+
+	private jakarta.persistence.AccessType defaultAccessType(ClassDetails type) {
+		final var access = type.getDirectAnnotationUsage( jakarta.persistence.Access.class );
+		return access == null ? jakarta.persistence.AccessType.FIELD : access.value();
 	}
 
 	private void coordinateGlobalBindings() {
@@ -217,9 +241,11 @@ public class BindingCoordinator {
 		processGenerators( type );
 
 		if ( type.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
-			bindingState.getBootBindingModel().addManagedTypeBinding(
-					new EntityTypeBinding( type.getClassDetails(), type.getAccessType() )
-			);
+			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type.getClassDetails() ) == null ) {
+				bindingState.getBootBindingModel().addManagedTypeBinding(
+						new EntityTypeBinding( type.getClassDetails(), type.getAccessType() )
+				);
+			}
 			final EntityTypeBinder binder = new EntityTypeBinder(
 					(EntityTypeMetadata) type,
 					superType,
@@ -234,9 +260,11 @@ public class BindingCoordinator {
 		}
 		else {
 			assert type.getManagedTypeKind() == ManagedTypeMetadata.Kind.MAPPED_SUPER;
-			bindingState.getBootBindingModel().addManagedTypeBinding(
-					new MappedSuperclassTypeBinding( type.getClassDetails(), type.getAccessType() )
-			);
+			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type.getClassDetails() ) == null ) {
+				bindingState.getBootBindingModel().addManagedTypeBinding(
+						new MappedSuperclassTypeBinding( type.getClassDetails(), type.getAccessType() )
+				);
+			}
 			final MappedSuperTypeBinder binder = new MappedSuperTypeBinder(
 					(MappedSuperclassTypeMetadata) type,
 					superType,

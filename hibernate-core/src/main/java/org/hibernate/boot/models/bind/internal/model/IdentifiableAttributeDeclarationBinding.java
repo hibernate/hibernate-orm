@@ -7,8 +7,10 @@ package org.hibernate.boot.models.bind.internal.model;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.ExcludedFromVersioning;
 
-import org.hibernate.annotations.Immutable;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.annotations.Collate;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.NaturalId;
@@ -19,18 +21,30 @@ import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
-/// Binding-model node for one declared or applied persistent attribute.
+/// Declaration binding for an attribute declared by an identifiable managed
+/// type: an entity or mapped superclass.
 ///
-/// Attribute bindings preserve the source member, declaring managed type,
-/// effective access strategy, semantic attribute kind, and source role/path used
-/// while resolving overrides, identifier participation, association targets, and
-/// column/selectable correspondence.
+/// Identifiable declarations are stable in a way embeddable declarations are
+/// not.  The entity or mapped-superclass hierarchy determines the effective
+/// access strategy and selected persistent member for the declaration.  Concrete
+/// usages may still specialize the member type or path when the declaration is
+/// inherited or consumed, but the declaration itself is not dependent on a
+/// usage site.
+///
+/// This class also carries a small set of transitional declaration-level option
+/// facts used by current identifiable attribute materialization, such as
+/// `@NaturalId`, `@Collate`, lazy group, optimistic-lock exclusion, immutability,
+/// and explicit mutability plan.
+///
+/// @apiNote Do not use this class for local embeddable members.  Use
+/// [EmbeddableAttributeDeclarationBinding] and let the concrete
+/// [AttributeUsageBinding] own usage-site-sensitive facts.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class AttributeBinding {
+public class IdentifiableAttributeDeclarationBinding implements AttributeDeclarationBinding {
 	private final String attributeName;
-	private final AttributeMetadata attributeMetadata;
+	private final @Nullable AttributeMetadata attributeMetadata;
 	private final ManagedTypeBinding ownerType;
 	private final ManagedTypeBinding declaringType;
 	private final MemberDetails member;
@@ -46,9 +60,9 @@ public class AttributeBinding {
 	private boolean immutable;
 	private Class<? extends MutabilityPlan<?>> explicitMutabilityPlanClass;
 
-	public AttributeBinding(
+	public IdentifiableAttributeDeclarationBinding(
 			String attributeName,
-			AttributeMetadata attributeMetadata,
+			@Nullable AttributeMetadata attributeMetadata,
 			ManagedTypeBinding ownerType,
 			ManagedTypeBinding declaringType,
 			MemberDetails member,
@@ -67,7 +81,7 @@ public class AttributeBinding {
 		this.attributePath = attributePath;
 	}
 
-	public static AttributeBinding from(
+	public static IdentifiableAttributeDeclarationBinding from(
 			AttributeMetadata attributeMetadata,
 			ManagedTypeBinding ownerType,
 			ManagedTypeBinding declaringType,
@@ -76,7 +90,7 @@ public class AttributeBinding {
 			AttributeNature nature,
 			String sourceRole,
 			String attributePath) {
-		final AttributeBinding binding = new AttributeBinding(
+		final IdentifiableAttributeDeclarationBinding binding = new IdentifiableAttributeDeclarationBinding(
 				attributeMetadata.getName(),
 				attributeMetadata,
 				ownerType,
@@ -91,11 +105,12 @@ public class AttributeBinding {
 		return binding;
 	}
 
+	@Override
 	public String attributeName() {
 		return attributeName;
 	}
 
-	public AttributeMetadata attributeMetadata() {
+	public @Nullable AttributeMetadata attributeMetadata() {
 		return attributeMetadata;
 	}
 
@@ -103,18 +118,22 @@ public class AttributeBinding {
 		return ownerType;
 	}
 
-	public ManagedTypeBinding declaringType() {
+	@Override
+	public ManagedTypeBinding declarationContainer() {
 		return declaringType;
 	}
 
+	@Override
 	public MemberDetails member() {
 		return member;
 	}
 
+	@Override
 	public AccessType accessType() {
 		return accessType;
 	}
 
+	@Override
 	public AttributeNature nature() {
 		return nature;
 	}

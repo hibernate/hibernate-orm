@@ -12,14 +12,14 @@ import org.hibernate.type.BasicType;
 ///
 /// This is an internal proof for a possible binding-layer replacement shape for
 /// `org.hibernate.binder.AttributeBinder`.  The proof is intentionally
-/// attribute-level rather than `BasicValue`-level: `@TenantId` happens to
+/// attribute-level rather than basic-value-shaped: `@TenantId` happens to
 /// materialize a basic property today, but the extension concept being tested is
 /// "an annotation contributes structured attribute semantics before
-/// `org.hibernate.mapping` objects exist".
+/// compatibility objects are materialized".
 ///
 /// The contribution owns the semantic tenant-id source facts; materialization
-/// later turns it into the legacy property, filter, and row-level-security
-/// mapping objects.
+/// later turns it into the compatibility outputs needed by filters and
+/// row-level-security support.
 ///
 /// @since 9.0
 /// @author Steve Ebersole

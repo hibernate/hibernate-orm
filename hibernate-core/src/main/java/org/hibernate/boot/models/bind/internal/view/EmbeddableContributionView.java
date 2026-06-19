@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.view;
 
 import java.util.List;
 
+import org.hibernate.boot.models.bind.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.models.bind.internal.model.EmbeddableContribution;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.models.spi.ClassDetails;
@@ -48,7 +49,7 @@ public record EmbeddableContributionView(EmbeddableContribution contribution) {
 		return contribution.namingPathPrefix();
 	}
 
-	public List<ComponentSource.ComponentMember> members() {
+	public List<ComponentMemberBinding> members() {
 		return contribution.members();
 	}
 }

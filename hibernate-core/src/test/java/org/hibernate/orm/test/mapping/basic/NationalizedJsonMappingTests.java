@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -24,6 +25,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNationalizedData.class)
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase JSON/CLOB storage does not preserve supplementary Unicode characters")
 public class NationalizedJsonMappingTests {
 
 	private static final String UNICODE_JSON = "{\"name\": \"🦑 Unicode Test 🦑\"}";

@@ -20,7 +20,7 @@ import org.hibernate.envers.Audited;
 @DiscriminatorValue(ClassTypeEntity.PARENT_TYPE)
 @Audited
 public class ParentEntity {
-	public static final String DISCRIMINATOR_QUERY = "(SELECT c.type FROM ClassTypeEntity c WHERE c.id = typeId)";
+	public static final String DISCRIMINATOR_QUERY = "(SELECT c.entity_type FROM ClassTypeEntity c WHERE c.id = typeId)";
 
 	@Id
 	@GeneratedValue

@@ -82,7 +82,7 @@ class SingleTableConstraintsTest {
 			try {
 				em.createNativeQuery(
 							"""
-							insert into Publication (text, title, edition,\spublisher_id, type, id)
+							insert into Publication (text, title, edition, publisher_id, publication_type, id)
 							values ('Lorem ipsum', 'Lorem Ipsum', 1, 1, 'Monograph', 5)
 							""" )
 						.executeUpdate();
@@ -96,7 +96,7 @@ class SingleTableConstraintsTest {
 			try {
 				em.createNativeQuery(
 							"""
-							insert into Publication (pages, text, edition, publisher_id, type, id)
+							insert into Publication (pages, text, edition, publisher_id, publication_type, id)
 							values (20, 'Lorem ipsum', 1, 1, 'Monograph', 5)
 							""" )
 						.executeUpdate();
@@ -110,7 +110,7 @@ class SingleTableConstraintsTest {
 			try {
 				em.createNativeQuery(
 							"""
-							insert into Publication (pages, text, title, publisher_id, type, id)
+							insert into Publication (pages, text, title, publisher_id, publication_type, id)
 							values (100, 'Lorem ipsum', 'Lorem Ipsum', 1, 'Monograph', 5)
 							""" )
 					.executeUpdate();
@@ -124,7 +124,7 @@ class SingleTableConstraintsTest {
 			try {
 				em.createNativeQuery(
 							"""
-							insert into Publication (pages, text, title, edition, type, id)
+							insert into Publication (pages, text, title, edition, publication_type, id)
 							values (100, 'Lorem ipsum', 'Lorem Ipsum', 1, 'Monograph', 5)
 							""" )
 						.executeUpdate();
@@ -138,7 +138,7 @@ class SingleTableConstraintsTest {
 			try {
 				em.createNativeQuery(
 							"""
-							insert into Publication (pages, text, title, edition, publisher_id, type, id)
+							insert into Publication (pages, text, title, edition, publisher_id, publication_type, id)
 							values (100, 'Lorem ipsum', 'Lorem Ipsum', 1, 1, 'Shrubbery', 5)
 							""" )
 						.executeUpdate();
@@ -151,7 +151,7 @@ class SingleTableConstraintsTest {
 		scope.inTransaction( em -> {
 			em.createNativeQuery(
 							"""
-							insert into Publication (pages, text, title, edition, publisher_id, type, id)
+							insert into Publication (pages, text, title, edition, publisher_id, publication_type, id)
 							values (100, 'Lorem ipsum', 'Lorem Ipsum', 1, 1, 'Monograph', 5)
 							""" )
 					.executeUpdate();
@@ -159,7 +159,8 @@ class SingleTableConstraintsTest {
 	}
 
 	@Entity(name = "Publication")
-	@DiscriminatorColumn(name = "type")
+	// This test targets single-table constraints, not reserved-word handling.
+	@DiscriminatorColumn(name = "publication_type")
 	static abstract class Publication {
 		@Id
 		long id;

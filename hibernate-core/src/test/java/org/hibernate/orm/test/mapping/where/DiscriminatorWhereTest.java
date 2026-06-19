@@ -7,13 +7,11 @@ package org.hibernate.orm.test.mapping.where;
 import java.util.Set;
 
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.community.dialect.AltibaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.DiscriminatorColumn;
@@ -33,7 +31,6 @@ import jakarta.persistence.Table;
 })
 @SessionFactory
 @JiraKey( "https://hibernate.atlassian.net/browse/HHH-14977" )
-@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class DiscriminatorWhereTest {
 	@Test
 	public void testAddDiscriminatedEntityToCollectionWithWhere(SessionFactoryScope scope) {
@@ -46,7 +43,7 @@ public class DiscriminatorWhereTest {
 		} );
 
 		// Fetch EntityA and add a new EntityC to its collection.
-		// The collection is annotated with @Where("TYPE = 'C'")
+		// The collection uses a SQL restriction on the discriminator column.
 		scope.inTransaction( (session) -> {
 			final EntityA entityA = session.find( EntityA.class, id );
 			final EntityC entityC = new EntityC();
@@ -72,7 +69,7 @@ public class DiscriminatorWhereTest {
 
 		@OneToMany
 		@JoinColumn(name = "allC")
-		@SQLRestriction("type = 'C'")
+		@SQLRestriction("entity_type = 'C'")
 		private Set<EntityC> allMyC;
 
 		public Integer getId() {
@@ -102,7 +99,8 @@ public class DiscriminatorWhereTest {
 
 	@Entity(name = "EntityB")
 	@Table(name = "b_tab")
-	@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
+	// The SQL restriction above references this name directly, so keep it non-keyword.
+	@DiscriminatorColumn(name = "entity_type", discriminatorType = DiscriminatorType.STRING)
 	@DiscriminatorValue( value = "B")
 	public static class EntityB {
 		@Id

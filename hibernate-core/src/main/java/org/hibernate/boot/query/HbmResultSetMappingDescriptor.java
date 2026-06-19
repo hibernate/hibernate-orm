@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -28,9 +29,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEmbeddableStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
@@ -246,13 +245,15 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 //		);
 	}
 
+	@Nonnull
 	@Override
 	public String getRegistrationName() {
 		return registrationName;
 	}
 
+	@Nonnull
 	@Override
-	public NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
+	public NamedResultSetMappingMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
 		BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
 				"Resolving HbmResultSetMappingDescriptor into memento for [%s]",
 				registrationName
@@ -322,20 +323,20 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				String registrationName,
 				MetadataBuildingContext context) {
 			assert joinDescriptorsAccess != null;
+			this.joinDescriptorsAccess = joinDescriptorsAccess;
+			this.registrationName = registrationName;
 
-			if ( hbmEntityReturn.getEntityName() == null ) {
-				this.entityName = context.getMetadataCollector().getImports().get( hbmEntityReturn.getClazz() );
-			}
-			else {
-				this.entityName = hbmEntityReturn.getEntityName();
-			}
+			entityName =
+					hbmEntityReturn.getEntityName() == null
+							? context.getMetadataCollector().getImports().get( hbmEntityReturn.getClazz() )
+							: hbmEntityReturn.getEntityName();
 			if ( entityName == null ) {
 				throw new MappingException(
 						"Entity <return/> mapping did not specify entity name"
 				);
 			}
 
-			this.tableAlias = hbmEntityReturn.getAlias();
+			tableAlias = hbmEntityReturn.getAlias();
 			if ( tableAlias == null ) {
 				throw new MappingException(
 						"Entity <return/> mapping did not specify alias"
@@ -349,14 +350,13 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					registrationName
 			);
 
-			this.discriminatorColumnAlias = hbmEntityReturn.getReturnDiscriminator() == null
-					? null
-					: hbmEntityReturn.getReturnDiscriminator().getColumn();
-			this.lockMode = hbmEntityReturn.getLockMode();
-			this.joinDescriptorsAccess = joinDescriptorsAccess;
-			this.registrationName = registrationName;
+			discriminatorColumnAlias =
+					hbmEntityReturn.getReturnDiscriminator() == null
+							? null
+							: hbmEntityReturn.getReturnDiscriminator().getColumn();
+			lockMode = hbmEntityReturn.getLockMode();
 
-			this.propertyFetchDescriptors = extractPropertyFetchDescriptors(
+			propertyFetchDescriptors = extractPropertyFetchDescriptors(
 					hbmEntityReturn.getReturnProperty(),
 					this,
 					registrationName,
@@ -364,8 +364,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 		}
 
+		@Nonnull
 		@Override
-		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
+		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
 			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
 					"Resolving HBM EntityResultDescriptor into memento - %s : %s (%s)",
 					tableAlias,
@@ -373,11 +374,12 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					registrationName
 			);
 
-			final EntityMappingType entityDescriptor =
-					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
+			final var entityDescriptor =
+					resolutionContext.getMappingMetamodel()
+							.getEntityDescriptor( entityName );
 			applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
 
-			final NavigablePath entityPath = new NavigablePath( entityName );
+			final var entityPath = new NavigablePath( entityName );
 
 			final FetchMementoBasic discriminatorMemento;
 			if ( discriminatorColumnAlias == null ) {
@@ -420,8 +422,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Override
 		public FetchParentMemento resolveParentMemento(ResultSetMappingResolutionContext resolutionContext) {
 			if ( thisAsParentMemento == null ) {
-				final EntityMappingType entityDescriptor =
-						resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
+				final var entityDescriptor =
+						resolutionContext.getMappingMetamodel()
+								.getEntityDescriptor( entityName );
 				thisAsParentMemento = new HbmFetchParentMemento(
 						new NavigablePath( entityDescriptor.getEntityName() ),
 						entityDescriptor
@@ -632,8 +635,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			return columnAliases;
 		}
 
+		@Nonnull
 		@Override
-		public FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
+		public FetchMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
 			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
 					"Resolving HBM PropertyFetchDescriptor into memento - %s : %s",
 					parent,
@@ -688,11 +692,6 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				throw new AssertionFailure( "Unexpected fetchable type" );
 			}
 		}
-
-		@Override
-		public ResultMemento asResultMemento(NavigablePath path, ResultSetMappingResolutionContext resolutionContext) {
-			throw new UnsupportedOperationException( "PropertyFetchDescriptor cannot be converted to a result" );
-		}
 	}
 
 	/**
@@ -724,18 +723,18 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			this.ownerTableAlias = fullPropertyPath.substring( 0, firstDot );
+			ownerTableAlias = fullPropertyPath.substring( 0, firstDot );
 
-			this.propertyPath = fullPropertyPath.substring( firstDot + 1 );
-			this.tableAlias = hbmJoinReturn.getAlias();
+			propertyPath = fullPropertyPath.substring( firstDot + 1 );
+			tableAlias = hbmJoinReturn.getAlias();
 			if ( tableAlias == null ) {
 				throw new MappingException(
 						"<return-join/> did not specify alias [" + ownerTableAlias + "." + propertyPath + "]"
 				);
 			}
 
-			this.lockMode = hbmJoinReturn.getLockMode();
-			this.propertyFetchDescriptors = extractPropertyFetchDescriptors(
+			lockMode = hbmJoinReturn.getLockMode();
+			propertyFetchDescriptors = extractPropertyFetchDescriptors(
 					hbmJoinReturn.getReturnProperty(),
 					this,
 					registrationName,
@@ -751,8 +750,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private FetchMementoHbmStandard memento;
 		private HbmFetchParentMemento thisAsParentMemento;
 
+		@Nonnull
 		@Override
-		public FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
+		public FetchMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
 			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
 					"Resolving HBM JoinDescriptor into memento - %s : %s . %s",
 					tableAlias,
@@ -761,7 +761,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 
 			if ( memento == null ) {
-				final HbmFetchParentMemento thisAsParentMemento = resolveParentMemento( resolutionContext );
+				final var thisAsParentMemento = resolveParentMemento( resolutionContext );
 
 				applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
 
@@ -799,16 +799,16 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Override
 		public HbmFetchParentMemento resolveParentMemento(ResultSetMappingResolutionContext resolutionContext) {
 			if ( thisAsParentMemento == null ) {
-				final HbmFetchParent hbmFetchParent = fetchParentByAliasAccess.get().get( ownerTableAlias );
+				final var hbmFetchParent = fetchParentByAliasAccess.get().get( ownerTableAlias );
 				if ( hbmFetchParent == null ) {
 					throw new MappingException(
 							"Could not locate join-return owner by alias [" + ownerTableAlias + "] for join path [" + propertyPath + "]"
 					);
 				}
 
-				final FetchParentMemento ownerMemento = hbmFetchParent.resolveParentMemento( resolutionContext );
+				final var ownerMemento = hbmFetchParent.resolveParentMemento( resolutionContext );
 
-				final String[] parts = split( ".", propertyPath );
+				final var parts = split( ".", propertyPath );
 				NavigablePath navigablePath =
 						ownerMemento.getFetchableContainer() instanceof PluralAttributeMapping
 								? ownerMemento.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
@@ -826,13 +826,6 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			}
 
 			return thisAsParentMemento;
-		}
-
-		@Override
-		public ResultMemento asResultMemento(
-				NavigablePath path,
-				ResultSetMappingResolutionContext resolutionContext) {
-			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -853,12 +846,12 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final String role = hbmCollectionReturn.getRole();
 			final int dotIndex = role.indexOf( '.' );
 			final String entityName = role.substring( 0, dotIndex );
-			final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+			final var metadataCollector = context.getMetadataCollector();
 			final String fullEntityName = metadataCollector.getImports().get( entityName );
-			this.collectionPath = new NavigablePath(
+			collectionPath = new NavigablePath(
 					fullEntityName + "." + role.substring( dotIndex + 1 )
 			);
-			this.tableAlias = hbmCollectionReturn.getAlias();
+			tableAlias = hbmCollectionReturn.getAlias();
 			if ( tableAlias == null ) {
 				throw new MappingException(
 						String.format(
@@ -878,7 +871,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 //			this.lockMode = hbmCollectionReturn.getLockMode();
 			this.joinDescriptorsAccess = joinDescriptorsAccess;
 
-			this.propertyFetchDescriptors = extractPropertyFetchDescriptors(
+			propertyFetchDescriptors = extractPropertyFetchDescriptors(
 					hbmCollectionReturn.getReturnProperty(),
 					this,
 					registrationName,
@@ -889,8 +882,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		private ResultMemento memento;
 		private FetchParentMemento thisAsParentMemento;
 
+		@Nonnull
 		@Override
-		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
+		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
 			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
 					"Resolving HBM CollectionResultDescriptor into memento - %s : %s",
 					tableAlias,
@@ -915,13 +909,13 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Override
 		public FetchParentMemento resolveParentMemento(ResultSetMappingResolutionContext resolutionContext) {
 			if ( thisAsParentMemento == null ) {
-				final CollectionPersister collectionDescriptor =
+				final var collectionDescriptor =
 						resolutionContext.getMappingMetamodel()
 								.getCollectionDescriptor( collectionPath.getFullPath() );
-
-				thisAsParentMemento = new HbmFetchParentMemento( collectionPath, collectionDescriptor.getAttributeMapping() );
+				thisAsParentMemento =
+						new HbmFetchParentMemento( collectionPath,
+								collectionDescriptor.getAttributeMapping() );
 			}
-
 			return thisAsParentMemento;
 		}
 	}
@@ -947,28 +941,26 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			this( hbmScalarReturn.getColumn(), hbmScalarReturn.getType() );
 		}
 
+		@Nonnull
 		@Override
-		public ResultMementoBasicStandard resolve(ResultSetMappingResolutionContext resolutionContext) {
+		public ResultMementoBasicStandard resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
 			BootQueryLogging.BOOT_QUERY_LOGGER.tracef(
 					"Resolving HBM ScalarDescriptor into memento - %s",
 					columnName
 			);
-
 			if ( hibernateTypeName != null ) {
 				final var namedType =
 						resolutionContext.getTypeConfiguration().getBasicTypeRegistry()
 								.getRegisteredType( hibernateTypeName );
-
 				if ( namedType == null ) {
 					throw new IllegalArgumentException( "Could not resolve named type : " + hibernateTypeName );
 				}
-
 				return new ResultMementoBasicStandard( columnName, namedType );
 			}
-
-			// todo (6.0) : column name may be optional in HBM - double check
-
-			return new ResultMementoBasicStandard( columnName, null );
+			else {
+				// todo (6.0) : column name may be optional in HBM - double check
+				return new ResultMementoBasicStandard( columnName, null );
+			}
 		}
 	}
 }

@@ -4,11 +4,10 @@
  */
 package org.hibernate.boot.query;
 
-import org.hibernate.spi.NavigablePath;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.named.spi.FetchMemento;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.spi.NamedObjectRepository;
-import org.hibernate.query.named.spi.ResultMemento;
 
 /**
  * Describes the mapping for a fetch as part of a {@link NamedResultSetMappingDescriptor}
@@ -18,9 +17,10 @@ public interface FetchDescriptor {
 	 * Resolve the descriptor into a memento capable of being stored in the
 	 * {@link NamedObjectRepository}
 	 */
-	FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext);
+	@Nonnull
+	FetchMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext);
 
-	ResultMemento asResultMemento(
-			NavigablePath path,
-			ResultSetMappingResolutionContext resolutionContext);
+//	ResultMemento asResultMemento(
+//			NavigablePath path,
+//			ResultSetMappingResolutionContext resolutionContext);
 }

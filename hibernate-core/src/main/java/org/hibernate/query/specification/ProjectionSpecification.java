@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -56,7 +58,8 @@ public interface ProjectionSpecification<T> extends QuerySpecification<Object[]>
 	 * Create a new {@code ProjectionSpecification} which augments the given
 	 * {@link SelectionSpecification}.
 	 */
-	static <T> ProjectionSpecification<T> create(SelectionSpecification<T> selectionSpecification) {
+	@Nonnull
+	static <T> ProjectionSpecification<T> create(@Nonnull SelectionSpecification<T> selectionSpecification) {
 		return new ProjectionSpecificationImpl<>( selectionSpecification );
 	}
 
@@ -68,10 +71,12 @@ public interface ProjectionSpecification<T> extends QuerySpecification<Object[]>
 	 */
 	@FunctionalInterface
 	interface Element<X> extends Function<Object[],X> {
-		X in(Object[] tuple);
+		@Nullable
+		X in(@Nonnull Object[] tuple);
 
+		@Nullable
 		@Override
-		default X apply(Object[] tuple) {
+		default X apply(@Nonnull Object[] tuple) {
 			return in(tuple);
 		}
 	}
@@ -82,7 +87,8 @@ public interface ProjectionSpecification<T> extends QuerySpecification<Object[]>
 	 * @param attribute An attribute of the root entity
 	 * @return An {@link Element} allowing typesafe access to the results
 	 */
-	<X> Element<X> select(SingularAttribute<T,X> attribute);
+	@Nonnull
+	<X> Element<X> select(@Nonnull SingularAttribute<T,X> attribute);
 
 	/**
 	 * Select the given field or property identified by the given path
@@ -91,17 +97,22 @@ public interface ProjectionSpecification<T> extends QuerySpecification<Object[]>
 	 * @param path A path from the root entity
 	 * @return An {@link Element} allowing typesafe access to the results
 	 */
-	<X> Element<X> select(Path<T,X> path);
+	@Nonnull
+	<X> Element<X> select(@Nonnull Path<T,X> path);
 
+	@Nonnull
 	@Override
-	SelectionQuery<Object[]> createQuery(EntityHandler entityHandler);
+	SelectionQuery<Object[]> createQuery(@Nonnull EntityHandler entityHandler);
 
+	@Nonnull
 	@Override
-	CriteriaQuery<Object[]> buildCriteria(CriteriaBuilder builder);
+	CriteriaQuery<Object[]> buildCriteria(@Nonnull CriteriaBuilder builder);
 
+	@Nonnull
 	@Override
 	TypedQueryReference<Object[]> reference();
 
+	@Nonnull
 	@Override
-	ProjectionSpecification<T> validate(CriteriaBuilder builder);
+	ProjectionSpecification<T> validate(@Nonnull CriteriaBuilder builder);
 }

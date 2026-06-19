@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.QueryHint;
@@ -37,17 +39,17 @@ public class QueryHintDefinition {
 	private final String queryName;
 	private final Map<String, Object> hintsMap;
 
-	public QueryHintDefinition(String queryName, final QueryHint[] hints) {
+	public QueryHintDefinition(@Nonnull String queryName, final QueryHint[] hints) {
 		this.queryName = queryName;
 		if ( isEmpty( hints ) ) {
 			hintsMap = emptyMap();
 		}
 		else {
-			final Map<String, Object> hintsMap = mapOfSize( hints.length );
+			final Map<String, Object> map = mapOfSize( hints.length );
 			for ( var hint : hints ) {
-				hintsMap.put( hint.name(), hint.value() );
+				map.put( hint.name(), hint.value() );
 			}
-			this.hintsMap = hintsMap;
+			hintsMap = map;
 		}
 	}
 
@@ -55,15 +57,17 @@ public class QueryHintDefinition {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Generic access
 
+	@Nonnull
 	public Map<String, Object> getHintsMap() {
 		return hintsMap;
 	}
 
-	public String getString(String hintName) {
+	@Nullable
+	public String getString(@Nonnull String hintName) {
 		return (String) hintsMap.get( hintName );
 	}
 
-	public boolean getBoolean(String hintName) {
+	public boolean getBoolean(@Nonnull String hintName) {
 		try {
 			return ConfigurationHelper.getBoolean( hintName, hintsMap );
 		}
@@ -72,7 +76,8 @@ public class QueryHintDefinition {
 		}
 	}
 
-	public Boolean getBooleanWrapper(String hintName) {
+	@Nullable
+	public Boolean getBooleanWrapper(@Nonnull String hintName) {
 		try {
 			return ConfigurationHelper.getBooleanWrapper( hintName, hintsMap, null );
 		}
@@ -81,7 +86,8 @@ public class QueryHintDefinition {
 		}
 	}
 
-	public Integer getInteger(String hintName) {
+	@Nullable
+	public Integer getInteger(@Nonnull String hintName) {
 		try {
 			return ConfigurationHelper.getInteger( hintName, hintsMap );
 		}
@@ -94,6 +100,7 @@ public class QueryHintDefinition {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Specialized access
 
+	@Nullable
 	public Integer getTimeout() {
 		final Integer jakartaTimeout = getInteger( SpecHints.HINT_SPEC_QUERY_TIMEOUT );
 		if ( jakartaTimeout != null ) {
@@ -110,6 +117,7 @@ public class QueryHintDefinition {
 		return getInteger( HibernateHints.HINT_TIMEOUT );
 	}
 
+	@Nullable
 	public Timeout getTimeoutRef() {
 		final Integer timeoutSeconds = getTimeout();
 		return timeoutSeconds == null ? null : Timeout.seconds( timeoutSeconds );
@@ -119,6 +127,7 @@ public class QueryHintDefinition {
 		return getBoolean( HibernateHints.HINT_CACHEABLE );
 	}
 
+	@Nullable
 	public CacheMode getCacheMode() {
 		final String value = getString( HibernateHints.HINT_CACHE_MODE );
 		try {
@@ -131,6 +140,7 @@ public class QueryHintDefinition {
 		}
 	}
 
+	@Nullable
 	public QueryFlushMode getFlushMode() {
 		final String value = getString( HibernateHints.HINT_FLUSH_MODE );
 		try {
@@ -143,6 +153,7 @@ public class QueryHintDefinition {
 		}
 	}
 
+	@Nullable
 	public LockMode getLockMode(String query) {
 		final var value = (String) hintsMap.get( HibernateHints.HINT_NATIVE_LOCK_MODE );
 		if ( value == null ) {
@@ -157,10 +168,12 @@ public class QueryHintDefinition {
 		}
 	}
 
+	@Nonnull
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
 		return determineLockOptions( namedQueryAnnotation.lockMode(), specLockTimeout(), followOnStrategy() );
 	}
 
+	@Nullable
 	private Integer specLockTimeout() {
 		final Integer jakartaLockTimeout = getInteger( AvailableSettings.JAKARTA_LOCK_TIMEOUT );
 		if ( jakartaLockTimeout != null ) {
@@ -170,6 +183,7 @@ public class QueryHintDefinition {
 		return getInteger( AvailableSettings.JPA_LOCK_TIMEOUT );
 	}
 
+	@Nonnull
 	private Locking.FollowOn followOnStrategy() {
 		final Object strategyValue = hintsMap.get( HibernateHints.HINT_FOLLOW_ON_STRATEGY );
 		if ( strategyValue != null ) {
@@ -187,6 +201,7 @@ public class QueryHintDefinition {
 		}
 	}
 
+	@Nonnull
 	private LockOptions determineLockOptions(
 			LockModeType lockModeType,
 			Integer lockTimeoutHint,

@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.spi.NamedQueryMemento;
@@ -21,16 +22,18 @@ import org.hibernate.query.spi.JpaStatementReference;
 public interface NamedMutationDefinition<T>
 		extends NamedQueryDefinition<T>, JpaStatementReference<T> {
 	@Override
-	@Nullable
+	@Nonnull
 	default String getName() {
 		return getRegistrationName();
 	}
 
+	@Nonnull
 	String getStatementString();
 
 	/**
 	 * The name under which the query is to be registered.
 	 */
+	@Nonnull
 	String getRegistrationName();
 
 	/**
@@ -44,5 +47,6 @@ public interface NamedMutationDefinition<T>
 	/**
 	 * Resolve the mapping definition into its run-time memento form.
 	 */
-	NamedQueryMemento<T> resolve(SessionFactoryImplementor factory);
+	@Nonnull
+	NamedQueryMemento<T> resolve(@Nonnull SessionFactoryImplementor factory);
 }

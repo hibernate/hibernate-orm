@@ -7,6 +7,8 @@ package org.hibernate.procedure.spi;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -15,7 +17,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 
 /**
- * Represents a "memento" (disconnected, externalizable form) of a ProcedureCall
+ * Represents a "memento" (disconnected, externalizable form) of a {@link ProcedureCall}.
  *
  * @author Steve Ebersole
  */
@@ -24,8 +26,10 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	/**
 	 * Informational access to the name of the database function or procedure
 	 */
+	@Nonnull
 	String getCallableName();
 
+	@Nonnull
 	List<ParameterMemento> getParameterMementos();
 
 	/**
@@ -35,7 +39,8 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	 *
 	 * @return The executable call
 	 */
-	default ProcedureCall makeProcedureCall(Session session) {
+	@Nonnull
+	default ProcedureCall makeProcedureCall(@Nonnull Session session) {
 		return makeProcedureCall( (SharedSessionContractImplementor) session );
 	}
 
@@ -46,23 +51,30 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	 *
 	 * @return The executable call
 	 */
-	default ProcedureCall makeProcedureCall(SessionImplementor session) {
+	@Nonnull
+	default ProcedureCall makeProcedureCall(@Nonnull SessionImplementor session) {
 		return makeProcedureCall( (SharedSessionContractImplementor) session );
 	}
 
+	@Nonnull
 	ParameterStrategy getParameterStrategy();
 
+	@Nullable
 	String[] getResultSetMappingNames();
 
+	@Nullable
 	Class<?>[] getResultSetMappingClasses();
 
+	@Nullable
 	Set<String> getQuerySpaces();
 
+	@Nonnull
 	@Override
-	ProcedureCallImplementor toQuery(SharedSessionContractImplementor session);
+	ProcedureCallImplementor toQuery(@Nonnull SharedSessionContractImplementor session);
 
+	@Nonnull
 	@Override
-	<X> ProcedureCallImplementor<X> toQuery(SharedSessionContractImplementor session, Class<X> javaType);
+	<X> ProcedureCallImplementor<X> toQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<X> javaType);
 
 	/**
 	 * Convert the memento back into an executable (connected) form.
@@ -71,7 +83,8 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	 *
 	 * @return The executable call
 	 */
-	ProcedureCallImplementor makeProcedureCall(SharedSessionContractImplementor session);
+	@Nonnull
+	ProcedureCallImplementor makeProcedureCall(@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Convert the memento back into an executable (connected) form.
@@ -80,9 +93,13 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	 *
 	 * @return The executable call
 	 */
-	ProcedureCallImplementor makeProcedureCall(SharedSessionContractImplementor session, String... resultSetMappingNames);
+	@Nonnull
+	ProcedureCallImplementor makeProcedureCall(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull String... resultSetMappingNames);
 
 	interface ParameterMemento extends NamedQueryMemento.ParameterMemento {
-		ProcedureParameterImplementor<?> resolve(SharedSessionContractImplementor session);
+		@Nonnull
+		ProcedureParameterImplementor<?> resolve(@Nonnull SharedSessionContractImplementor session);
 	}
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -88,7 +89,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> sort(Order<? super T> order);
+	@Nonnull
+	SelectionSpecification<T> sort(@Nonnull Order<? super T> order);
 
 	/**
 	 * Sets the ordering for this selection specification.
@@ -99,7 +101,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> resort(Order<? super T> order);
+	@Nonnull
+	SelectionSpecification<T> resort(@Nonnull Order<? super T> order);
 
 	/**
 	 * Sets the sorting for this selection specification.
@@ -110,10 +113,12 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> resort(List<? extends Order<? super T>> orders);
+	@Nonnull
+	SelectionSpecification<T> resort(@Nonnull List<? extends Order<? super T>> orders);
 
+	@Nonnull
 	@Override
-	SelectionSpecification<T> restrict(Restriction<? super T> restriction);
+	SelectionSpecification<T> restrict(@Nonnull Restriction<? super T> restriction);
 
 	/**
 	 * Add a fetch {@linkplain Path path} to the specification.
@@ -122,7 +127,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> fetch(Path<T,?> fetchPath);
+	@Nonnull
+	SelectionSpecification<T> fetch(@Nonnull Path<T,?> fetchPath);
 
 	/**
 	 * A function capable of modifying or augmenting a criteria query.
@@ -131,7 +137,9 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	@FunctionalInterface
 	interface Augmentation<T> {
-		void augment(CriteriaBuilder builder, CriteriaQuery<T> query, Root<? extends T> root);
+		void augment(@Nonnull CriteriaBuilder builder,
+					@Nonnull CriteriaQuery<T> query,
+					@Nonnull Root<? extends T> root);
 	}
 
 	/**
@@ -169,10 +177,12 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> augment(Augmentation<T> augmentation);
+	@Nonnull
+	SelectionSpecification<T> augment(@Nonnull Augmentation<T> augmentation);
 
 	@Override
-	SelectionQuery<T> createQuery(EntityHandler entityHandler);
+	@Nonnull
+	SelectionQuery<T> createQuery(@Nonnull EntityHandler entityHandler);
 
 	/**
 	 * Build a {@link CriteriaQuery criteria query}
@@ -184,12 +194,15 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return a new criteria query
 	 */
+	@Nonnull
 	@Override
-	CriteriaQuery<T> buildCriteria(CriteriaBuilder builder);
+	CriteriaQuery<T> buildCriteria(@Nonnull CriteriaBuilder builder);
 
+	@Nonnull
 	@Override
-	SelectionSpecification<T> validate(CriteriaBuilder builder);
+	SelectionSpecification<T> validate(@Nonnull CriteriaBuilder builder);
 
+	@Nonnull
 	@Override
 	TypedQueryReference<T> reference();
 
@@ -206,7 +219,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @param <T> The entity type which is the root of the query.
 	 * {@code resultType} and {@code <T>} are both expected to refer to a singular query root.
 	 */
-	static <T> SelectionSpecification<T> create(Class<T> rootEntityType) {
+	@Nonnull
+	static <T> SelectionSpecification<T> create(@Nonnull Class<T> rootEntityType) {
 		return new SelectionSpecificationImpl<>( rootEntityType );
 	}
 
@@ -225,7 +239,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @throws IllegalSelectQueryException The given HQL is expected to be a {@code select} query.  This method will
 	 * throw an exception if not.
 	 */
-	static <T> SelectionSpecification<T> create(Class<T> resultType, String hql) {
+	@Nonnull
+	static <T> SelectionSpecification<T> create(@Nonnull Class<T> resultType, @Nonnull String hql) {
 		return new SelectionSpecificationImpl<>( hql, resultType );
 	}
 
@@ -241,9 +256,10 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 8.0
 	 */
-	static <T> SelectionSpecification<T> create(TypedQueryReference<T> typedQueryReference) {
+	@Nonnull
+	static <T> SelectionSpecification<T> create(@Nonnull TypedQueryReference<T> typedQueryReference) {
 		@SuppressWarnings("unchecked")
-		final Class<T> resultType = (Class<T>) typedQueryReference.getResultType();
+		final var resultType = (Class<T>) typedQueryReference.getResultType();
 		return new SelectionSpecificationImpl<>( typedQueryReference, resultType );
 	}
 
@@ -257,7 +273,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @param <T> The entity type which is the root of the query.
 	 */
-	static <T> SelectionSpecification<T> create(CriteriaQuery<T> criteria) {
+	@Nonnull
+	static <T> SelectionSpecification<T> create(@Nonnull CriteriaQuery<T> criteria) {
 		return new SelectionSpecificationImpl<>( criteria );
 	}
 
@@ -272,6 +289,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	@Incubating
 	default ProjectionSpecification<T> createProjection() {
 		return ProjectionSpecification.create( this );
@@ -287,8 +305,9 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	@Incubating
-	default <X> SimpleProjectionSpecification<T,X> createProjection(SingularAttribute<? super T, X> attribute) {
+	default <X> SimpleProjectionSpecification<T,X> createProjection(@Nonnull SingularAttribute<? super T, X> attribute) {
 		return SimpleProjectionSpecification.create( this, attribute );
 	}
 
@@ -302,6 +321,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 7.3
 	 */
+	@Nonnull
 	@Incubating
 	default SimpleProjectionSpecification<T,Long> createCountProjection() {
 		return SimpleProjectionSpecification.count( this );
@@ -318,6 +338,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 7.3
 	 */
+	@Nonnull
 	@Incubating
 	default SimpleProjectionSpecification<T,Boolean> createExistsProjection() {
 		return SimpleProjectionSpecification.exists( this );
@@ -333,8 +354,9 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	@Incubating
-	default <X> SimpleProjectionSpecification<T,X> createProjection(Path<T, X> path) {
+	default <X> SimpleProjectionSpecification<T,X> createProjection(@Nonnull Path<T, X> path) {
 		return SimpleProjectionSpecification.create( this, path );
 	}
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import org.hibernate.Incubating;
@@ -22,14 +23,17 @@ import org.hibernate.query.specification.internal.DeleteSpecificationImpl;
  */
 @Incubating
 public interface DeleteSpecification<T> extends MutationSpecification<T> {
+	@Nonnull
 	@Override
-	DeleteSpecification<T> restrict(Restriction<? super T> restriction);
+	DeleteSpecification<T> restrict(@Nonnull Restriction<? super T> restriction);
 
+	@Nonnull
 	@Override
-	DeleteSpecification<T> augment(Augmentation<T> augmentation);
+	DeleteSpecification<T> augment(@Nonnull Augmentation<T> augmentation);
 
+	@Nonnull
 	@Override
-	DeleteSpecification<T> validate(CriteriaBuilder builder);
+	DeleteSpecification<T> validate(@Nonnull CriteriaBuilder builder);
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,
@@ -40,7 +44,8 @@ public interface DeleteSpecification<T> extends MutationSpecification<T> {
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
 	 */
-	static <T> DeleteSpecification<T> create(Class<T> targetEntityClass) {
+	@Nonnull
+	static <T> DeleteSpecification<T> create(@Nonnull Class<T> targetEntityClass) {
 		return new DeleteSpecificationImpl<>( targetEntityClass );
 	}
 
@@ -54,7 +59,8 @@ public interface DeleteSpecification<T> extends MutationSpecification<T> {
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
 	 */
-	static <T> DeleteSpecification<T> create(CriteriaDelete<T> criteriaDelete) {
+	@Nonnull
+	static <T> DeleteSpecification<T> create(@Nonnull CriteriaDelete<T> criteriaDelete) {
 		return new DeleteSpecificationImpl<>( criteriaDelete );
 	}
 }

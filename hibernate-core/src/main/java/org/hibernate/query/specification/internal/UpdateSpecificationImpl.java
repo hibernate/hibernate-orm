@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.query.assignment.Assignment;
@@ -20,16 +21,17 @@ public class UpdateSpecificationImpl<T>
 		extends MutationSpecificationImpl<T>
 		implements UpdateSpecification<T> {
 
-	public UpdateSpecificationImpl(Class<T> mutationTarget) {
+	public UpdateSpecificationImpl(@Nonnull Class<T> mutationTarget) {
 		super( MutationType.UPDATE, mutationTarget );
 	}
 
-	public UpdateSpecificationImpl(CriteriaUpdate<T> criteriaQuery) {
+	public UpdateSpecificationImpl(@Nonnull CriteriaUpdate<T> criteriaQuery) {
 		super( criteriaQuery );
 	}
 
+	@Nonnull
 	@Override
-	public UpdateSpecification<T> assign(Assignment<? super T> assignment) {
+	public UpdateSpecification<T> assign(@Nonnull Assignment<? super T> assignment) {
 		specifications.add( (sqmStatement, mutationTargetRoot) -> {
 			if ( sqmStatement instanceof SqmUpdateStatement<T> sqmUpdateStatement ) {
 				assignment.apply( sqmUpdateStatement );
@@ -41,8 +43,9 @@ public class UpdateSpecificationImpl<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public UpdateSpecification<T> reassign(List<? extends Assignment<? super T>> assignments) {
+	public UpdateSpecification<T> reassign(@Nonnull List<? extends Assignment<? super T>> assignments) {
 		specifications.add( (sqmStatement, mutationTargetRoot) -> {
 			if ( sqmStatement instanceof SqmUpdateStatement<T> sqmUpdateStatement ) {
 				final var setClause = sqmUpdateStatement.getSetClause();
@@ -58,20 +61,23 @@ public class UpdateSpecificationImpl<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public UpdateSpecification<T> restrict(Restriction<? super T> restriction) {
+	public UpdateSpecification<T> restrict(@Nonnull Restriction<? super T> restriction) {
 		super.restrict( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public UpdateSpecification<T> augment(Augmentation<T> augmentation) {
+	public UpdateSpecification<T> augment(@Nonnull Augmentation<T> augmentation) {
 		super.augment( augmentation );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public UpdateSpecification<T> validate(CriteriaBuilder builder) {
+	public UpdateSpecification<T> validate(@Nonnull CriteriaBuilder builder) {
 		super.validate( builder );
 		return this;
 	}

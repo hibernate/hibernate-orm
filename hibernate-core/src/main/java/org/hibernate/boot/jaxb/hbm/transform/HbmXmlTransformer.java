@@ -1318,52 +1318,13 @@ public class HbmXmlTransformer {
 				return;
 			}
 
-			final Set<String> transientNames = new HashSet<>();
-
-			if ( "field".equals( hbmXmlBinding.getRoot().getDefaultAccess().toLowerCase( Locale.ROOT ) ) ) {
-				for ( var field : javaClass.getDeclaredFields() ) {
-					final String fieldName = field.getName();
-					if ( !mappedPropertyNames.contains( fieldName ) ) {
-						transientNames.add( fieldName );
-					}
-				}
-			}
-			else {
-				final var setterNames = new HashSet<>();
-				for ( var method : javaClass.getMethods() ) {
-					if ( method.getParameterCount() == 1
-							&& method.getName().startsWith( "set" ) && method.getName().length() > 3 ) {
-						setterNames.add( org.hibernate.internal.util.StringHelper.decapitalize( method.getName().substring( 3 ) ) );
-					}
-				}
-
-				for ( var method : javaClass.getMethods() ) {
-					final String methodName = method.getName();
-					if ( method.getParameterCount() != 0 ) {
-						continue;
-					}
-					String propertyName = null;
-					if ( methodName.startsWith( "get" ) && methodName.length() > 3 ) {
-						propertyName = org.hibernate.internal.util.StringHelper.decapitalize( methodName.substring( 3 ) );
-					}
-					else if ( methodName.startsWith( "is" ) && methodName.length() > 2
-							&& ( method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class ) ) {
-						propertyName = org.hibernate.internal.util.StringHelper.decapitalize( methodName.substring( 2 ) );
-					}
-					if ( propertyName != null
-							&& setterNames.contains( propertyName )
-							&& !mappedPropertyNames.contains( propertyName )
-							&& !propertyName.equals( "class" ) ) {
-						transientNames.add( propertyName );
-					}
-				}
-			}
-
-			for ( var name : transientNames ) {
-				final var transientMapping = new JaxbTransientImpl();
-				transientMapping.setName( name );
-				mappingEntity.getAttributes().getTransients().add( transientMapping );
-			}
+			final boolean fieldAccess = "field".equals(
+					hbmXmlBinding.getRoot().getDefaultAccess().toLowerCase( Locale.ROOT )
+			);
+			final Set<String> transientNames = TransformationHelper.discoverUnmappedPropertyNames(
+					javaClass, mappedPropertyNames, fieldAccess
+			);
+			TransformationHelper.addTransients( transientNames, mappingEntity.getAttributes().getTransients() );
 		}
 		catch (Exception e) {
 			// if we can't load the class, skip transient generation

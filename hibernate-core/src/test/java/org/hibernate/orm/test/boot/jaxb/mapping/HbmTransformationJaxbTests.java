@@ -6,6 +6,7 @@ package org.hibernate.orm.test.boot.jaxb.mapping;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.xml.stream.XMLEventFactory;
@@ -317,6 +318,22 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20600" )
+	public void testRecursiveComponentTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/recursive-component/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			assertThat( embeddable.getAttributes().getBasicAttributes() )
+					.as( "Only the mapped 'name' property should be present" )
+					.hasSize( 1 );
+			assertThat( embeddable.getAttributes().getBasicAttributes().get( 0 ).getName() )
+					.isEqualTo( "name" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20599" )
 	public void testCompositeElementColumnTableTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {
@@ -493,6 +510,55 @@ public class HbmTransformationJaxbTests {
 			}
 			catch (IOException e) {
 				throw new RuntimeException( "Error accessing mapping file", e );
+			}
+		} );
+	}
+
+	private void transformAndVerifyMultiple(
+			String[] resourceNames,
+			ServiceRegistryScope scope,
+			Consumer<List<JaxbEntityMappingsImpl>> assertions) {
+		scope.withService( ClassLoaderService.class, (cls) -> {
+			try {
+				final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
+				final List<Binding<JaxbHbmHibernateMapping>> hbmBindings = new ArrayList<>();
+
+				for ( String resourceName : resourceNames ) {
+					try (final InputStream inputStream = cls.locateResourceStream( resourceName )) {
+						withStaxEventReader( inputStream, cls, (staxEventReader) -> {
+							final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
+							try {
+								final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb(
+										reader,
+										MappingXsdSupport.hbmXml.getSchema(),
+										jaxbCtx
+								);
+								hbmBindings.add( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) );
+							}
+							catch (JAXBException e) {
+								throw new RuntimeException( "Error during JAXB processing of " + resourceName, e );
+							}
+						} );
+					}
+				}
+
+				final MetadataSources metadataSources = new MetadataSources( scope.getRegistry() );
+				hbmBindings.forEach( metadataSources::addHbmXmlBinding );
+				final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+
+				final List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
+						hbmBindings,
+						metadata,
+						UnsupportedFeatureHandling.ERROR
+				);
+
+				final List<JaxbEntityMappingsImpl> transformedRoots = transformedBindings.stream()
+						.map( Binding::getRoot )
+						.toList();
+				assertions.accept( transformedRoots );
+			}
+			catch (JAXBException | IOException e) {
+				throw new RuntimeException( "Error during transformation", e );
 			}
 		} );
 	}

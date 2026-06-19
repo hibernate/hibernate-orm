@@ -348,9 +348,8 @@ public final class HqlParser extends HqlBaseParser {
 		AST ast = ASTUtil.createParent( astFactory, RANGE, "RANGE", node );
 		ast = ASTUtil.createParent( astFactory, FROM, "from", ast );
 
-		AST alias = ASTUtil.createSibling( astFactory, ALIAS, "_", node );
-		ASTUtil.insertChild( ASTUtil.createSibling( astFactory, SELECT, "select", ast ), astFactory.create(IDENT, alias.getText() ) );
-		
+		ASTUtil.insertChild( ASTUtil.createSibling( astFactory, SELECT, "select", ast ), astFactory.create( NUM_INT, "1" ) );
+
 		ast = ASTUtil.createParent( astFactory, SELECT_FROM, "SELECT_FROM", ast );
 		ast = ASTUtil.createParent( astFactory, QUERY, "QUERY", ast );
 		return ast;

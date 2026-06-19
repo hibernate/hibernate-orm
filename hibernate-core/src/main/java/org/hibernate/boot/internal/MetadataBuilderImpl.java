@@ -6,13 +6,11 @@ package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
-import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
@@ -63,7 +61,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -82,7 +79,6 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.ManagedBeanSettings.ALLOW_EXTENSIONS_IN_CDI;
 import static org.hibernate.cfg.MappingSettings.COLUMN_ORDERING_STRATEGY;
-import static org.hibernate.cfg.MappingSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.cfg.MappingSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT;
 import static org.hibernate.cfg.MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS;
 import static org.hibernate.cfg.MappingSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS;
@@ -211,14 +207,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
 		bootstrapContext.injectArchiveDescriptorFactory( factory );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
-		if ( classification != null ) {
-			options.mappingDefaults.implicitListClassification = classification;
-		}
 		return this;
 	}
 
@@ -454,8 +442,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean toOnesAreLazyByDefault = false;
 
 		private AccessType implicitCacheAccessType;
-		private CollectionClassification implicitListClassification;
-
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
 			final var configService = serviceRegistry.requireService( ConfigurationService.class );
 
@@ -477,27 +463,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					value -> AccessType.fromExternalName( value.toString() )
 			);
 
-			implicitListClassification = configService.getSetting(
-					DEFAULT_LIST_SEMANTICS,
-					value -> {
-						final var classification = CollectionClassification.interpretSetting( value );
-						if ( classification != CollectionClassification.LIST
-							&& classification != CollectionClassification.BAG ) {
-							throw new AnnotationException(
-									String.format(
-											Locale.ROOT,
-											"'%s' should specify either '%s' or '%s' (was '%s')",
-											DEFAULT_LIST_SEMANTICS,
-											java.util.List.class.getName(),
-											java.util.Collection.class.getName(),
-											classification.name()
-									)
-							);
-						}
-						return classification;
-					},
-					CollectionClassification.BAG
-			);
 		}
 
 		@Override
@@ -566,10 +531,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return implicitCacheAccessType;
 		}
 
-		@Override
-		public CollectionClassification getImplicitListClassification() {
-			return implicitListClassification;
-		}
 	}
 
 	public static class MetadataBuildingOptionsImpl

@@ -8,7 +8,6 @@ import java.util.EnumSet;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.relational.QuotedIdentifierTarget;
-import org.hibernate.metamodel.CollectionClassification;
 
 import jakarta.persistence.FetchType;
 
@@ -38,8 +37,4 @@ public interface BindingOptions {
 	/// Default fetch type to use for to-one associations when no explicit fetch
 	/// mode is distinguishable from the annotation default.
 	FetchType getDefaultToOneFetchType();
-
-	/// Semantic classification to use for Java `List` mappings without explicit
-	/// list/bag metadata.
-	CollectionClassification getDefaultListSemantics();
 }

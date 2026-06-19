@@ -179,9 +179,8 @@ public record CollectionSource(
 	/// to inspect Java collection classes and annotations independently.
 	public static CollectionSource elementCollection(
 			MemberDetails member,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return elementCollection( member, null, null, defaultListSemantics, modelsContext );
+		return elementCollection( member, null, null, modelsContext );
 	}
 
 	/// Creates a collection source for an element collection member, including owner-level
@@ -190,9 +189,8 @@ public record CollectionSource(
 			MemberDetails member,
 			ClassDetails ownerType,
 			ClassDetails hierarchyRootType,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		final CollectionClassification classification = determineClassification( member, defaultListSemantics );
+		final CollectionClassification classification = determineClassification( member );
 		final AssociationOverride associationOverride = locateAssociationOverride(
 				member,
 				ownerType,
@@ -218,9 +216,8 @@ public record CollectionSource(
 	/// Creates a collection source for an owning many-to-many association member.
 	public static CollectionSource manyToMany(
 			MemberDetails member,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_MANY, member, defaultListSemantics, modelsContext, null );
+		return association( Nature.MANY_TO_MANY, member, modelsContext, null );
 	}
 
 	/// Creates a collection source for an owning many-to-many association member,
@@ -228,17 +225,15 @@ public record CollectionSource(
 	public static CollectionSource manyToMany(
 			MemberDetails member,
 			AssociationOverride associationOverride,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_MANY, member, defaultListSemantics, modelsContext, associationOverride );
+		return association( Nature.MANY_TO_MANY, member, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member.
 	public static CollectionSource oneToMany(
 			MemberDetails member,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return association( Nature.ONE_TO_MANY, member, defaultListSemantics, modelsContext, null );
+		return association( Nature.ONE_TO_MANY, member, modelsContext, null );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member,
@@ -246,26 +241,23 @@ public record CollectionSource(
 	public static CollectionSource oneToMany(
 			MemberDetails member,
 			AssociationOverride associationOverride,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return association( Nature.ONE_TO_MANY, member, defaultListSemantics, modelsContext, associationOverride );
+		return association( Nature.ONE_TO_MANY, member, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for a heterogeneous many-to-any association member.
 	public static CollectionSource manyToAny(
 			MemberDetails member,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_ANY, member, defaultListSemantics, modelsContext, null );
+		return association( Nature.MANY_TO_ANY, member, modelsContext, null );
 	}
 
 	private static CollectionSource association(
 			Nature nature,
 			MemberDetails member,
-			CollectionClassification defaultListSemantics,
 			ModelsContext modelsContext,
 			AssociationOverride associationOverride) {
-		final CollectionSource source = elementCollection( member, defaultListSemantics, modelsContext );
+		final CollectionSource source = elementCollection( member, modelsContext );
 		return new CollectionSource(
 				nature,
 				source.classification,
@@ -279,9 +271,7 @@ public record CollectionSource(
 			);
 	}
 
-	private static CollectionClassification determineClassification(
-			MemberDetails member,
-			CollectionClassification defaultListSemantics) {
+	private static CollectionClassification determineClassification(MemberDetails member) {
 		final Class<?> collectionType = member.getType().determineRawClass().toJavaClass();
 		if ( collectionType.isArray() ) {
 			return CollectionClassification.ARRAY;
@@ -302,9 +292,6 @@ public record CollectionSource(
 				&& !member.hasDirectAnnotationUsage( Bag.class ) ) {
 			if ( hasListIndexSource( member ) ) {
 				return CollectionClassification.LIST;
-			}
-			if ( isOrdered( member ) && !hasListIndexSource( member ) ) {
-				return CollectionClassification.BAG;
 			}
 			return CollectionClassification.LIST;
 		}

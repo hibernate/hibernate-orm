@@ -986,11 +986,6 @@ public abstract class CollectionBinder {
 				return CollectionClassification.LIST;
 			}
 
-			if ( property.hasDirectAnnotationUsage( jakarta.persistence.OrderBy.class )
-					|| property.hasDirectAnnotationUsage( org.hibernate.annotations.SQLOrder.class ) ) {
-				return CollectionClassification.BAG;
-			}
-
 			final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 			final var manyToMany = property.getAnnotationUsage( ManyToMany.class, modelsContext );
 			if ( manyToMany != null && !manyToMany.mappedBy().isBlank() ) {
@@ -1004,8 +999,7 @@ public abstract class CollectionBinder {
 				return CollectionClassification.BAG;
 			}
 
-			// otherwise, return the implicit classification for List attributes
-			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
+			return CollectionClassification.LIST;
 		}
 
 		if ( java.util.SortedSet.class.isAssignableFrom( semanticJavaType ) ) {

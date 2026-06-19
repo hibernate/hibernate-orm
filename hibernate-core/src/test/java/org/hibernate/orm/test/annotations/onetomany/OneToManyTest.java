@@ -22,7 +22,6 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.annotations.Customer;
 import org.hibernate.orm.test.annotations.Discount;
 import org.hibernate.orm.test.annotations.Passport;
@@ -32,10 +31,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -52,7 +48,6 @@ import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -84,25 +79,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 				Model.class,
 				OneToManyTest.OnDeleteUnidirectionalOneToManyParent.class,
 				OneToManyTest.OnDeleteUnidirectionalOneToManyChild.class
-		},
-		xmlMappings = "org/hibernate/orm/test/annotations/onetomany/orm.xml"
-)
-@SessionFactory
-@ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = OneToManyTest.ListSemanticProvider.class
-		)
-)
+		})
 public class OneToManyTest {
 
-	public static class ListSemanticProvider implements SettingProvider.Provider<CollectionClassification> {
-
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.BAG;
-		}
-	}
 
 	@AfterEach
 	public void afterEach(SessionFactoryScope scope) {

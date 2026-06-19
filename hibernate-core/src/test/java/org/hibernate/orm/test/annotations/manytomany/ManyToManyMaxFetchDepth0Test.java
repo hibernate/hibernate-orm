@@ -19,10 +19,6 @@ import org.hibernate.testing.orm.junit.SettingProvider;
 		settings = @Setting(name = Environment.MAX_FETCH_DEPTH, value = "0"),
 		settingProviders = {
 				@SettingProvider(
-						settingName = AvailableSettings.DEFAULT_LIST_SEMANTICS,
-						provider = ManyToManyTest.ListSemanticProvider.class
-				),
-				@SettingProvider(
 						settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
 						provider = ManyToManyTest.ImplicitNamingStrategyProvider.class
 				)

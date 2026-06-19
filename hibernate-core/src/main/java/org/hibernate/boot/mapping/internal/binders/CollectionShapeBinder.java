@@ -35,6 +35,7 @@ import org.hibernate.mapping.List;
 import jakarta.persistence.FetchType;
 
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 
 /// Applies collection-shape metadata after the concrete collection mapping exists.
 ///
@@ -359,12 +360,14 @@ class CollectionShapeBinder {
 				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
 		);
 		if ( sqlOrder != null ) {
-			collection.setOrderBy( sqlOrder.value() );
+			if ( isNotBlank( sqlOrder.value() ) ) {
+				collection.setOrderBy( sqlOrder.value() );
+			}
 			return;
 		}
 
 		final var orderBy = source.orderBy();
-		if ( orderBy != null ) {
+		if ( orderBy != null && isNotBlank( orderBy.value() ) ) {
 			collection.setOrderBy( orderBy.value() );
 		}
 	}

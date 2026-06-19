@@ -510,7 +510,7 @@ public class ToOneAssociationTests {
 							.getEntityBinding( ManyToManyEmptyOrderByOwner.class.getName() );
 					final Collection collection = (Collection) entityBinding.getProperty( "parents" ).getValue();
 
-					assertThat( collection.getOrderBy() ).isEmpty();
+					assertThat( collection.getOrderBy() ).isNull();
 				},
 				scope.getRegistry(),
 				Parent.class,

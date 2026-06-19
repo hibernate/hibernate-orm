@@ -7,15 +7,11 @@ package org.hibernate.orm.test.mapping.collections;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.ImplicitListAsListProvider;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -26,28 +22,18 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
- * Uses the default {@value AvailableSettings#DEFAULT_LIST_SEMANTICS} value of LIST
- * and verifies the outcome
+ * Verifies that Java {@link List} mappings use list semantics by default.
  *
  * @author Steve Ebersole
  */
-@ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsListProvider.class
-		)
-)
 @DomainModel( annotatedClasses = ImplicitListDefaultSemanticsTests.AnEntity.class )
 public class ImplicitListDefaultSemanticsTests {
 	@Test
 	void verifyModel(DomainModelScope scope) {
 		scope.withHierarchy( AnEntity.class, (descriptor) -> {
 			final Property implicitList = descriptor.getProperty( "implicitList" );
-			// this is the change related to AvailableSettings#DEFAULT_LIST_SEMANTICS
-			// previous versions interpreted these as BAG
 			assertThat( implicitList.getValue() ).isInstanceOf( org.hibernate.mapping.List.class );
 
 			final Property implicitBag = descriptor.getProperty( "implicitBag" );

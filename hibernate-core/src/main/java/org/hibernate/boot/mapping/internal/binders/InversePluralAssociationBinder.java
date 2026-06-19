@@ -216,7 +216,6 @@ class InversePluralAssociationBinder {
 			Collection inverseCollection) {
 		final CollectionSource source = CollectionSource.oneToMany(
 				inverseBinding.attributeMetadata().getMember(),
-				entityBinder.getOptions().getDefaultListSemantics(),
 				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
 		);
 		if ( !( inverseCollection instanceof org.hibernate.mapping.Map inverseMap ) ) {

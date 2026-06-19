@@ -162,7 +162,6 @@ class ElementCollectionAttributeBinder {
 						attributeMetadata.getMember(),
 						bindingContext.getClassDetailsRegistry().resolveClassDetails( ownerBinding.getClassName() ),
 						ownerType.getHierarchy().getRoot().getClassDetails(),
-						bindingOptions.getDefaultListSemantics(),
 						bindingContext.getBootstrapContext().getModelsContext()
 				)
 				: collectionValueIntent.source();

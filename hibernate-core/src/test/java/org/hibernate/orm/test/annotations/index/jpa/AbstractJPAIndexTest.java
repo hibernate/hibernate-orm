@@ -17,7 +17,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -35,8 +34,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @ServiceRegistry(
 		settingProviders = {
-				@SettingProvider(settingName = AvailableSettings.DEFAULT_LIST_SEMANTICS,
-						provider = AbstractJPAIndexTest.ListSemanticProvider.class),
 				@SettingProvider(settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
 						provider = AbstractJPAIndexTest.ImplicitNameSettingProvider.class)}
 )
@@ -49,12 +46,6 @@ public abstract class AbstractJPAIndexTest {
 		}
 	}
 
-	public static class ListSemanticProvider implements SettingProvider.Provider<CollectionClassification> {
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.BAG;
-		}
-	}
 
 	@Test
 	public void testTableIndex(SessionFactoryScope scope) {

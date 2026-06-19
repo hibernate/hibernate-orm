@@ -187,7 +187,6 @@ class PluralAssociationAttributeBinder {
 				? CollectionSource.manyToMany(
 						attributeMetadata.getMember(),
 						associationOverride,
-						bindingOptions.getDefaultListSemantics(),
 						bindingContext.getBootstrapContext().getModelsContext()
 				)
 				: collectionValueIntent.source();
@@ -203,7 +202,6 @@ class PluralAssociationAttributeBinder {
 				? CollectionSource.oneToMany(
 						attributeMetadata.getMember(),
 						associationOverride,
-						bindingOptions.getDefaultListSemantics(),
 						bindingContext.getBootstrapContext().getModelsContext()
 				)
 				: collectionValueIntent.source();
@@ -221,7 +219,6 @@ class PluralAssociationAttributeBinder {
 		final CollectionSource source = collectionValueIntent == null
 				? CollectionSource.manyToAny(
 						attributeMetadata.getMember(),
-						bindingOptions.getDefaultListSemantics(),
 						bindingContext.getBootstrapContext().getModelsContext()
 				)
 				: collectionValueIntent.source();

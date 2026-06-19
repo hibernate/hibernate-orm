@@ -18,11 +18,9 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
  * @author Vlad Mihalcea
@@ -41,20 +38,9 @@ import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 @Jpa(
 		annotatedClasses = {
 				CustomSQLTest.Person.class
-		},
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = CustomSQLTest.ListSemanticsProvider.class
-		)
-)
+		})
 public class CustomSQLTest {
 
-	public static class ListSemanticsProvider implements SettingProvider.Provider<String> {
-		@Override
-		public String getSetting() {
-			return CollectionClassification.BAG.name();
-		}
-	}
 
 	@BeforeAll
 	public void init(EntityManagerFactoryScope scope) {

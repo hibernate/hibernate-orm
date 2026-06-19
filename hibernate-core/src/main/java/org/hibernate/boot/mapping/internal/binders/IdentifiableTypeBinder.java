@@ -339,24 +339,20 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 					attributeMetadata.getMember(),
 					getBindingContext().getClassDetailsRegistry().resolveClassDetails( ownerType.getClassDetails().getName() ),
 					ownerType.getHierarchy().getRoot().getClassDetails(),
-					getOptions().getDefaultListSemantics(),
 					modelsContext
 			);
 			case MANY_TO_MANY -> CollectionSource.manyToMany(
 					attributeMetadata.getMember(),
 					locateAssociationOverride( ownerType, attributeMetadata.getName() ),
-					getOptions().getDefaultListSemantics(),
 					modelsContext
 			);
 			case ONE_TO_MANY -> CollectionSource.oneToMany(
 					attributeMetadata.getMember(),
 					locateAssociationOverride( ownerType, attributeMetadata.getName() ),
-					getOptions().getDefaultListSemantics(),
 					modelsContext
 			);
 			case MANY_TO_ANY -> CollectionSource.manyToAny(
 					attributeMetadata.getMember(),
-					getOptions().getDefaultListSemantics(),
 					modelsContext
 			);
 			default -> throw new IllegalArgumentException(

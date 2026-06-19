@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!--
+    Reproduces a component with a self-referencing subcomponent of
+    the same type. The hbm.xml only maps "name", so "subcomponent"
+    should be treated as unmapped.
+-->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.recursivecomponent">
+	<class name="MyEntity">
+		<id name="id" type="long">
+			<generator class="increment"/>
+		</id>
+		<component name="component" class="MyComponent">
+			<property name="name" column="comp_name"/>
+		</component>
+	</class>
+</hibernate-mapping>

@@ -9,7 +9,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.boot.mapping.internal.binders.TenantIdBinder;
-import org.hibernate.boot.mapping.internal.view.TenantIdContributionView;
+import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -50,12 +50,12 @@ public class SimpleTenancyTests {
 					assertThat( filterDefinition.isAppliedToLoadByKey() ).isTrue();
 
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( ProtectedEntity.class.getName() );
-					final TenantIdContributionView tenantIdContribution = context.getBindingState()
+					final TenantIdBindingView tenantIdBinding = context.getBindingState()
 							.getBootBindingModel()
-							.getTenantIdContributionView( entityType( context, ProtectedEntity.class ) );
-					assertThat( tenantIdContribution ).isNotNull();
-					assertThat( tenantIdContribution.attributeName() ).isEqualTo( "tenant" );
-					assertThat( tenantIdContribution.member().getName() ).isEqualTo( "tenant" );
+							.getTenantIdBindingView( entityType( context, ProtectedEntity.class ) );
+					assertThat( tenantIdBinding ).isNotNull();
+					assertThat( tenantIdBinding.attributeName() ).isEqualTo( "tenant" );
+					assertThat( tenantIdBinding.member().getName() ).isEqualTo( "tenant" );
 
 					assertTenantFilter( entityBinding, "tenant = :tenantId" );
 					final Property tenantProperty = entityBinding.getProperty( "tenant" );

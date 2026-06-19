@@ -914,7 +914,9 @@ org.hibernate.boot.mapping.internal.model
     AttributeDeclarationBinding
     AttributeUsageBinding
     ValueIntent
-    IdentifierContribution
+    EntityIdentifierBinding
+    VersionBinding
+    TenantIdBinding
     EmbeddableContribution
     MappedSuperclassContribution
 
@@ -980,6 +982,51 @@ overall `org.hibernate.boot.mapping` subsystem and the binder worker layer.
 These products are still boot binding products, not runtime model parts and not
 final mapping objects.
 
+=== Deferred SPI Package Inversion
+
+Do not flip package names merely because some contracts look SPI-shaped today.
+For now the whole pipeline is intentionally internal.  Once a contract becomes
+a supported user/integrator SPI, package names should be inverted to follow
+Hibernate's API/SPI/internal taxonomy:
+
+* `org.hibernate.thing` is user-facing API;
+* `org.hibernate.thing.spi` is supported integration SPI;
+* `org.hibernate.thing.internal` is Hibernate-only implementation detail.
+
+That means current rehearsal packages such as:
+
+[source]
+----
+org.hibernate.boot.mapping.internal.context
+org.hibernate.boot.mapping.internal.extension
+org.hibernate.boot.mapping.internal.view
+----
+
+may eventually split into supported SPI contracts plus internal implementations:
+
+[source]
+----
+org.hibernate.boot.mapping.context.spi
+org.hibernate.boot.mapping.context.internal
+
+org.hibernate.boot.mapping.extension.spi
+org.hibernate.boot.mapping.extension.internal
+
+org.hibernate.boot.mapping.view.spi
+org.hibernate.boot.mapping.view.internal
+----
+
+The same pattern applies to other phases only if they actually expose supported
+integration contracts.  For example, many context interfaces may become SPI
+because extension contributors need stable access to services, diagnostics,
+settings, and source facts.  Their current implementations and mutable working
+state would move to `context.internal`.
+
+This package inversion should happen as a deliberate SPI-freezing step, not as
+ongoing churn.  Until then, keeping the packages under
+`org.hibernate.boot.mapping.internal.*` avoids accidentally promising support
+for contracts that are still being shaped.
+
 === Follow-Up Package Rule
 
 Avoid additional package churn unless it clarifies a real phase boundary or
@@ -993,7 +1040,8 @@ For now:
 * keep the internal SPI proof isolated in `mapping.internal.extension`;
 * move any future public replacement for `org.hibernate.binder.AttributeBinder`
   or `org.hibernate.binder.TypeBinder` into a supported SPI package only after
-  the target/facet contract is stable.
+  the target/facet contract is stable, then apply the deferred SPI package
+  inversion above.
 
 == Minimal First Slice
 

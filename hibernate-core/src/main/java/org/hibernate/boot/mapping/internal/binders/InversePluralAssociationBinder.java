@@ -132,10 +132,10 @@ class InversePluralAssociationBinder {
 			InversePluralAssociationBinding inverseBinding,
 			Table collectionTable,
 			ManyToOne owningElement) {
-		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding(
 				inverseBinding.ownerType().getHierarchy().getRoot()
 		);
-		if ( identifierBinding == null ) {
+		if ( entityIdentifierBinding == null ) {
 			throw new MappingException(
 					"Could not resolve identifier binding for inverse plural association owner - "
 							+ inverseBinding.ownerBinding().getEntityName()
@@ -146,7 +146,7 @@ class InversePluralAssociationBinder {
 				bindingState.getMetadataBuildingContext(),
 				collectionTable,
 				owningElement.isReferenceToPrimaryKey()
-						? identifierBinding.value()
+						? entityIdentifierBinding.value()
 						: (KeyValue) inverseBinding.ownerBinding()
 								.getReferencedProperty( owningElement.getReferencedPropertyName() )
 								.getValue()

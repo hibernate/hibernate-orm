@@ -8,7 +8,7 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.BasicType;
 
-/// Binding-layer contribution for a source-model `@TenantId` attribute.
+/// Binding-layer state for a source-model `@TenantId` attribute.
 ///
 /// This is an internal proof for a possible binding-layer replacement shape for
 /// `org.hibernate.binder.AttributeBinder`.  The proof is intentionally
@@ -17,13 +17,13 @@ import org.hibernate.type.BasicType;
 /// "an annotation contributes structured attribute semantics before
 /// compatibility objects are materialized".
 ///
-/// The contribution owns the semantic tenant-id source facts; materialization
+/// The binding owns the semantic tenant-id source facts; materialization
 /// later turns it into the compatibility outputs needed by filters and
 /// row-level-security support.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record TenantIdContribution(
+public record TenantIdBinding(
 		EntityTypeMetadata owner,
 		String attributeName,
 		MemberDetails member,

@@ -13,10 +13,10 @@ import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.CollationContribution;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.NaturalIdContribution;
-import org.hibernate.boot.mapping.internal.model.TenantIdContribution;
+import org.hibernate.boot.mapping.internal.model.TenantIdBinding;
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
-import org.hibernate.boot.mapping.internal.view.TenantIdContributionView;
+import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.mapping.Property;
@@ -154,16 +154,16 @@ public class StandardAttributeBindingTarget implements AttributeBindingTarget {
 			if ( rootClass == null ) {
 				throw new IllegalStateException( "@TenantId requires an entity materialization target" );
 			}
-			final var contribution = new TenantIdContribution(
+			final var tenantIdBinding = new TenantIdBinding(
 					entityType,
 					usage.attributeName(),
 					usage.member(),
 					usage.basicValueIntent(),
 					tenantIdType
 			);
-			context.bindingState().getBootBindingModel().addTenantIdContribution( entityType, contribution );
+			context.bindingState().getBootBindingModel().addTenantIdBinding( entityType, tenantIdBinding );
 			contributedProperty = new TenantIdMappingMaterializer().materializeTenantId(
-					new TenantIdContributionView( contribution ),
+					new TenantIdBindingView( tenantIdBinding ),
 					rootClass,
 					context.bindingOptions(),
 					context.bindingState(),

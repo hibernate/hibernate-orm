@@ -386,10 +386,10 @@ class CollectionIndexBinder {
 			);
 		}
 
-		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding(
 				targetTypeBinder.getManagedType().getHierarchy().getRoot()
 		);
-		if ( identifierBinding == null ) {
+		if ( entityIdentifierBinding == null ) {
 			throw new MappingException(
 					"Could not resolve identifier binding for entity-valued map key - "
 							+ targetTypeBinder.getTypeBinding().getEntityName()
@@ -400,7 +400,7 @@ class CollectionIndexBinder {
 		index.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		final boolean referenceToPrimaryKey = referencesPrimaryKey(
 				source.mapKeyJoinColumns(),
-				identifierBinding.columns()
+				entityIdentifierBinding.columns()
 		);
 		index.setReferenceToPrimaryKey( referenceToPrimaryKey );
 		index.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
@@ -409,15 +409,15 @@ class CollectionIndexBinder {
 		final List<MapKeyJoinColumn> orderedJoinColumns = referenceToPrimaryKey
 				? orderMapKeyJoinColumns(
 						source.mapKeyJoinColumns(),
-						identifierBinding.columns(),
+						entityIdentifierBinding.columns(),
 						collection.getRole()
 				)
 				: source.mapKeyJoinColumns();
-		final int columnCount = referenceToPrimaryKey ? identifierBinding.columns().size() : source.mapKeyJoinColumns().size();
+		final int columnCount = referenceToPrimaryKey ? entityIdentifierBinding.columns().size() : source.mapKeyJoinColumns().size();
 		for ( int i = 0; i < columnCount; i++ ) {
 			final MapKeyJoinColumn mapKeyJoinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
 			final String targetColumnName = referenceToPrimaryKey
-					? identifierBinding.columns().get( i ).getName()
+					? entityIdentifierBinding.columns().get( i ).getName()
 					: mapKeyJoinColumn.referencedColumnName();
 			final Column column = ColumnBinder.bindColumn(
 					ColumnSource.from( mapKeyJoinColumn ),

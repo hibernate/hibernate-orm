@@ -11,6 +11,7 @@ import org.hibernate.boot.mapping.internal.model.MappedSuperclassContribution;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
@@ -131,6 +132,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 						(EntityTypeMetadata) subType
 				);
 				getBindingState().getBootBindingModel().addMappedSuperclassContribution( contribution );
+				applyDeclaredIdentifierAndVersion( entityBinding );
 				// Transitional contribution-lite bridge: until PersistentClass derives inherited mapped-superclass
 				// state by traversing applied contributions, bind each declared property only into the nearest
 				// consuming entity.  Entity subclasses then inherit it through the normal entity closure.
@@ -150,6 +152,56 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				applyDeclaredPropertiesToNearestEntityConsumers( subType );
 			}
 		} );
+	}
+
+	private void applyDeclaredIdentifierAndVersion(PersistentClass entityBinding) {
+		final KeyMapping idMapping = getManagedType().getHierarchy().getIdMapping();
+		if ( declaresKeyAttribute( idMapping ) ) {
+			final var identifierProperty = entityBinding.getDeclaredIdentifierProperty();
+			if ( identifierProperty != null && declaresAttribute( identifierProperty.getName(), idMapping ) ) {
+				binding.setDeclaredIdentifierProperty( identifierProperty );
+			}
+			final var identifierMapper = entityBinding.getDeclaredIdentifierMapper();
+			if ( identifierMapper != null ) {
+				binding.setDeclaredIdentifierMapper( identifierMapper );
+			}
+		}
+
+		final var versionAttribute = getManagedType().getHierarchy().getVersionAttribute();
+		if ( declaresAttribute( versionAttribute ) ) {
+			final var versionProperty = entityBinding.getDeclaredVersion();
+			if ( versionProperty != null ) {
+				binding.setDeclaredVersion( versionProperty );
+			}
+		}
+	}
+
+	private boolean declaresKeyAttribute(KeyMapping keyMapping) {
+		final boolean[] declaresAttribute = new boolean[1];
+		keyMapping.forEachAttribute( (index, attribute) -> {
+			if ( declaresAttribute( attribute ) ) {
+				declaresAttribute[0] = true;
+			}
+		} );
+		return declaresAttribute[0];
+	}
+
+	private boolean declaresAttribute(String attributeName, KeyMapping keyMapping) {
+		final boolean[] declaresAttribute = new boolean[1];
+		keyMapping.forEachAttribute( (index, attribute) -> {
+			if ( attributeName.equals( attribute.getName() ) && declaresAttribute( attribute ) ) {
+				declaresAttribute[0] = true;
+			}
+		} );
+		return declaresAttribute[0];
+	}
+
+	private boolean declaresAttribute(org.hibernate.boot.mapping.internal.categorize.AttributeMetadata attribute) {
+		return attribute != null
+			&& attribute.getMember()
+					.getDeclaringType()
+					.getClassName()
+					.equals( getManagedType().getClassDetails().getClassName() );
 	}
 
 	private void applyMappedSuperclassProperty(Property property, PersistentClass entityBinding) {

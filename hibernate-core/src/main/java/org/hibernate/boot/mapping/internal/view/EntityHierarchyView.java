@@ -35,6 +35,26 @@ public record EntityHierarchyView(EntityHierarchyBinding binding) {
 		return binding.types();
 	}
 
+	/// Ordered managed types in this hierarchy, including mapped superclasses and
+	/// entities.
+	public List<ManagedTypeBinding> managedTypes() {
+		return binding.types()
+				.stream()
+				.map( EntityHierarchyBinding.Type::binding )
+				.toList();
+	}
+
+	/// Ordered managed-type views in this hierarchy, including mapped
+	/// superclasses and entities.
+	public List<ManagedTypeView> managedTypeViews() {
+		return binding.types()
+				.stream()
+				.map( EntityHierarchyBinding.Type::binding )
+				.map( StandardManagedTypeView::new )
+				.map( ManagedTypeView.class::cast )
+				.toList();
+	}
+
 	public List<EntityTypeBinding> entityTypes() {
 		return binding.types()
 				.stream()

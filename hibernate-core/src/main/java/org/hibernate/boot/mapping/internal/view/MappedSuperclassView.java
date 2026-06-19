@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.view;
 
-import org.hibernate.boot.mapping.internal.model.IdentifierContribution;
+import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassTypeBinding;
 
 import jakarta.annotation.Nullable;
@@ -15,5 +15,5 @@ import jakarta.annotation.Nullable;
 /// @author Steve Ebersole
 public record MappedSuperclassView(
 		MappedSuperclassTypeBinding binding,
-		@Nullable IdentifierContribution identifierContribution) implements IdentifiableTypeView {
+		@Nullable EntityIdentifierBinding entityIdentifierBinding) implements IdentifiableTypeView {
 }

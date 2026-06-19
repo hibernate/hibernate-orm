@@ -14,11 +14,11 @@ import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.mapping.internal.view.EntityHierarchyView;
 import org.hibernate.boot.mapping.internal.view.EntityView;
-import org.hibernate.boot.mapping.internal.view.IdentifierContributionView;
+import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
-import org.hibernate.boot.mapping.internal.view.TenantIdContributionView;
-import org.hibernate.boot.mapping.internal.view.VersionContributionView;
+import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
+import org.hibernate.boot.mapping.internal.view.VersionBindingView;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
@@ -43,9 +43,9 @@ import jakarta.persistence.MappedSuperclass;
 public class BootBindingModel {
 	private final Map<ClassDetails, ManagedTypeBinding> managedTypeBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, EntityHierarchyBinding> entityHierarchyBindings = new LinkedHashMap<>();
-	private final Map<EntityTypeMetadata, IdentifierContribution> identifierContributions = new LinkedHashMap<>();
-	private final Map<EntityTypeMetadata, VersionContribution> versionContributions = new LinkedHashMap<>();
-	private final Map<EntityTypeMetadata, TenantIdContribution> tenantIdContributions = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadata, EntityIdentifierBinding> entityIdentifierBindings = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadata, VersionBinding> versionBindings = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadata, TenantIdBinding> tenantIdBindings = new LinkedHashMap<>();
 	private final List<NaturalIdContribution> naturalIdContributions = new ArrayList<>();
 	private final List<CollationContribution> collationContributions = new ArrayList<>();
 	private final List<MappedSuperclassContribution> mappedSuperclassContributions = new ArrayList<>();
@@ -73,6 +73,13 @@ public class BootBindingModel {
 
 	public Collection<EntityHierarchyBinding> entityHierarchyBindings() {
 		return entityHierarchyBindings.values();
+	}
+
+	public List<EntityHierarchyView> entityHierarchyViews() {
+		return entityHierarchyBindings.values()
+				.stream()
+				.map( EntityHierarchyView::new )
+				.toList();
 	}
 
 	public @Nullable EntityHierarchyView getEntityHierarchyView(EntityTypeMetadata rootType) {
@@ -160,21 +167,28 @@ public class BootBindingModel {
 		return new ManagedTypeBinding( classDetails, ManagedTypeBinding.Kind.MAPPED_SUPERCLASS, accessType );
 	}
 
-	public void addIdentifierContribution(EntityTypeMetadata rootType, IdentifierContribution identifierContribution) {
-		identifierContributions.put( rootType, identifierContribution );
+	public void addEntityIdentifierBinding(EntityTypeMetadata rootType, EntityIdentifierBinding entityIdentifierBinding) {
+		entityIdentifierBindings.put( rootType, entityIdentifierBinding );
 	}
 
-	public @Nullable IdentifierContribution getIdentifierContribution(EntityTypeMetadata rootType) {
-		return identifierContributions.get( rootType );
+	public @Nullable EntityIdentifierBinding getEntityIdentifierBinding(EntityTypeMetadata rootType) {
+		return entityIdentifierBindings.get( rootType );
 	}
 
-	public Collection<IdentifierContribution> identifierContributions() {
-		return identifierContributions.values();
+	public Collection<EntityIdentifierBinding> entityIdentifierBindings() {
+		return entityIdentifierBindings.values();
 	}
 
-	public @Nullable IdentifierContributionView getIdentifierContributionView(EntityTypeMetadata rootType) {
-		final IdentifierContribution contribution = getIdentifierContribution( rootType );
-		return contribution == null ? null : new IdentifierContributionView( contribution );
+	public List<EntityIdentifierBindingView> entityIdentifierBindingViews() {
+		return entityIdentifierBindings.values()
+				.stream()
+				.map( EntityIdentifierBindingView::new )
+				.toList();
+	}
+
+	public @Nullable EntityIdentifierBindingView getEntityIdentifierBindingView(EntityTypeMetadata rootType) {
+		final EntityIdentifierBinding binding = getEntityIdentifierBinding( rootType );
+		return binding == null ? null : new EntityIdentifierBindingView( binding );
 	}
 
 	public @Nullable EntityView getEntityView(EntityTypeMetadata rootType) {
@@ -182,37 +196,44 @@ public class BootBindingModel {
 		if ( !( binding instanceof EntityTypeBinding entityBinding ) ) {
 			return null;
 		}
-		return new EntityView( entityBinding, getIdentifierContribution( rootType ) );
+		return new EntityView( entityBinding, getEntityIdentifierBinding( rootType ) );
 	}
 
-	public void addVersionContribution(EntityTypeMetadata rootType, VersionContribution versionContribution) {
-		versionContributions.put( rootType, versionContribution );
+	public void addVersionBinding(EntityTypeMetadata rootType, VersionBinding versionBinding) {
+		versionBindings.put( rootType, versionBinding );
 	}
 
-	public @Nullable VersionContribution getVersionContribution(EntityTypeMetadata rootType) {
-		return versionContributions.get( rootType );
+	public @Nullable VersionBinding getVersionBinding(EntityTypeMetadata rootType) {
+		return versionBindings.get( rootType );
 	}
 
-	public Collection<VersionContribution> versionContributions() {
-		return versionContributions.values();
+	public Collection<VersionBinding> versionBindings() {
+		return versionBindings.values();
 	}
 
-	public @Nullable VersionContributionView getVersionContributionView(EntityTypeMetadata rootType) {
-		final VersionContribution contribution = getVersionContribution( rootType );
-		return contribution == null ? null : new VersionContributionView( contribution );
+	public List<VersionBindingView> versionBindingViews() {
+		return versionBindings.values()
+				.stream()
+				.map( VersionBindingView::new )
+				.toList();
 	}
 
-	public void addTenantIdContribution(EntityTypeMetadata rootType, TenantIdContribution tenantIdContribution) {
-		tenantIdContributions.put( rootType, tenantIdContribution );
+	public @Nullable VersionBindingView getVersionBindingView(EntityTypeMetadata rootType) {
+		final VersionBinding binding = getVersionBinding( rootType );
+		return binding == null ? null : new VersionBindingView( binding );
 	}
 
-	public @Nullable TenantIdContribution getTenantIdContribution(EntityTypeMetadata rootType) {
-		return tenantIdContributions.get( rootType );
+	public void addTenantIdBinding(EntityTypeMetadata rootType, TenantIdBinding tenantIdBinding) {
+		tenantIdBindings.put( rootType, tenantIdBinding );
 	}
 
-	public @Nullable TenantIdContributionView getTenantIdContributionView(EntityTypeMetadata rootType) {
-		final TenantIdContribution contribution = getTenantIdContribution( rootType );
-		return contribution == null ? null : new TenantIdContributionView( contribution );
+	public @Nullable TenantIdBinding getTenantIdBinding(EntityTypeMetadata rootType) {
+		return tenantIdBindings.get( rootType );
+	}
+
+	public @Nullable TenantIdBindingView getTenantIdBindingView(EntityTypeMetadata rootType) {
+		final TenantIdBinding binding = getTenantIdBinding( rootType );
+		return binding == null ? null : new TenantIdBindingView( binding );
 	}
 
 	public void addNaturalIdContribution(NaturalIdContribution contribution) {

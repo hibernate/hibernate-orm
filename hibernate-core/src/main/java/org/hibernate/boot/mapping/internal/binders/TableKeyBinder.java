@@ -244,52 +244,52 @@ public class TableKeyBinder {
 
 	private IdentifierBinding resolveIdentifierBinding() {
 		final EntityTypeMetadata rootType = entityBinder.getManagedType().getHierarchy().getRoot();
-		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding( rootType );
-		if ( identifierBinding == null ) {
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding( rootType );
+		if ( entityIdentifierBinding == null ) {
 			throw new ModelsException( "Identifier binding not available for " + rootType.getEntityName() );
 		}
-		return identifierBinding;
+		return entityIdentifierBinding;
 	}
 
 	private ResolvedForeignKey resolveTableForeignKey(
 			DependantValue key,
 			String referencedEntityName,
-			IdentifierBinding identifierBinding,
+			IdentifierBinding entityIdentifierBinding,
 			String sourceRole) {
 		return ResolvedForeignKey.from(
 				key,
 				referencedEntityName,
 				SelectableOrderResolver.resolveByTargetOrder(
 						key.getColumns(),
-						targetIdentifierColumns( identifierBinding ),
+						targetIdentifierColumns( entityIdentifierBinding ),
 						sourceRole
 				)
 		);
 	}
 
-	private List<Column> targetIdentifierColumns(IdentifierBinding identifierBinding) {
-		if ( identifierBinding.value() instanceof SortableValue sortableValue ) {
+	private List<Column> targetIdentifierColumns(IdentifierBinding entityIdentifierBinding) {
+		if ( entityIdentifierBinding.value() instanceof SortableValue sortableValue ) {
 			sortableValue.sortProperties();
 		}
-		return identifierBinding.value().getColumns();
+		return entityIdentifierBinding.value().getColumns();
 	}
 
-	private DependantValue createDependentKeyValue(Table table, IdentifierBinding identifierBinding) {
-		return createDependentKeyValue( table, identifierBinding, List.of() );
+	private DependantValue createDependentKeyValue(Table table, IdentifierBinding entityIdentifierBinding) {
+		return createDependentKeyValue( table, entityIdentifierBinding, List.of() );
 	}
 
 	private DependantValue createDependentKeyValue(
 			Table table,
-			IdentifierBinding identifierBinding,
+			IdentifierBinding entityIdentifierBinding,
 			List<JoinColumn> joinColumns) {
 		final DependantValue key = new DependantValue(
 				bindingState.getMetadataBuildingContext(),
 				table,
-				identifierBinding.value()
+				entityIdentifierBinding.value()
 		);
 		key.setNullable( false );
 		key.setUpdateable( false );
-		final List<Column> targetColumns = targetIdentifierColumns( identifierBinding );
+		final List<Column> targetColumns = targetIdentifierColumns( entityIdentifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				joinColumns,
 				targetColumns,
@@ -339,17 +339,17 @@ public class TableKeyBinder {
 
 	private DependantValue createDependentKeyValue(
 			Table table,
-			IdentifierBinding identifierBinding,
+			IdentifierBinding entityIdentifierBinding,
 			AssociationTableBinding associationTableBinding) {
 		final DependantValue key = new DependantValue(
 				bindingState.getMetadataBuildingContext(),
 				table,
-				identifierBinding.value()
+				entityIdentifierBinding.value()
 		);
 		key.setNullable( false );
 		key.setUpdateable( false );
 
-		final List<Column> targetColumns = targetIdentifierColumns( identifierBinding );
+		final List<Column> targetColumns = targetIdentifierColumns( entityIdentifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				associationTableBinding.joinColumns(),
 				targetColumns,
@@ -371,17 +371,17 @@ public class TableKeyBinder {
 
 	private DependantValue createDependentKeyValue(
 			Table table,
-			IdentifierBinding identifierBinding,
+			IdentifierBinding entityIdentifierBinding,
 			CollectionTableBinding collectionTableBinding) {
 		final DependantValue key = new DependantValue(
 				bindingState.getMetadataBuildingContext(),
 				table,
-				identifierBinding.value()
+				entityIdentifierBinding.value()
 		);
 		key.setNullable( false );
 		key.setUpdateable( true );
 
-		final List<Column> targetColumns = targetIdentifierColumns( identifierBinding );
+		final List<Column> targetColumns = targetIdentifierColumns( entityIdentifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				collectionTableBinding.joinColumns(),
 				targetColumns,

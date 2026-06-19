@@ -105,7 +105,7 @@ public class BindingStateImpl implements BindingState {
 
 	private final Map<ClassDetails, ManagedTypeBinder> typeBinders = new HashMap<>();
 	private final Map<ClassDetails, IdentifiableTypeBinder> typeBindersBySuper = new HashMap<>();
-	private final Map<EntityTypeMetadata, IdentifierBinding> identifierBindings = new HashMap<>();
+	private final Map<EntityTypeMetadata, IdentifierBinding> entityIdentifierBindings = new HashMap<>();
 
 	public BindingStateImpl(MetadataBuildingContext metadataBuildingContext, MetadataCollector metadataCollector) {
 		this.metadataBuildingContext = metadataBuildingContext;
@@ -284,13 +284,13 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addIdentifierBinding(EntityTypeMetadata rootType, IdentifierBinding identifierBinding) {
-		identifierBindings.put( rootType, identifierBinding );
+	public void addIdentifierBinding(EntityTypeMetadata rootType, IdentifierBinding entityIdentifierBinding) {
+		entityIdentifierBindings.put( rootType, entityIdentifierBinding );
 	}
 
 	@Override
 	public IdentifierBinding getIdentifierBinding(EntityTypeMetadata rootType) {
-		return identifierBindings.get( rootType );
+		return entityIdentifierBindings.get( rootType );
 	}
 
 	@Override

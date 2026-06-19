@@ -12,7 +12,7 @@ import java.util.Set;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding;
-import org.hibernate.boot.mapping.internal.model.IdentifierContribution;
+import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
 import org.hibernate.boot.mapping.internal.materialize.IdentifierMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
@@ -109,7 +109,7 @@ public class IdentifierBinder {
 		final AttributeMetadata idAttribute = basicKeyMapping.getAttribute();
 		final MemberDetails idAttributeMember = idAttribute.getMember();
 
-		final IdentifierContribution identifierContribution = new IdentifierContribution(
+		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				typeMetadata,
 				false,
 				null
@@ -120,15 +120,15 @@ public class IdentifierBinder {
 				idAttributeMember,
 				IdentifierExtractionKind.DIRECT
 		);
-		identifierContribution.addAttribute( attributeBinding );
-		state.addIdentifierContribution( typeMetadata, identifierContribution );
+		entityIdentifierBinding.addAttribute( attributeBinding );
+		state.addEntityIdentifierBinding( typeMetadata, entityIdentifierBinding );
 
 		return identifierMappingMaterializer.materializeBasicIdentifier(
 				typeMetadata,
 				typeBinding,
 				basicKeyMapping,
 				table,
-				identifierContribution
+				entityIdentifierBinding
 		);
 	}
 
@@ -145,8 +145,8 @@ public class IdentifierBinder {
 				type.getAccessType(),
 				context
 		);
-		final IdentifierContribution identifierContribution = createAggregatedIdentifierContribution( type, componentSource );
-		state.addIdentifierContribution( type, identifierContribution );
+		final EntityIdentifierBinding entityIdentifierBinding = createAggregatedEntityIdentifierBinding( type, componentSource );
+		state.addEntityIdentifierBinding( type, entityIdentifierBinding );
 
 		return identifierMappingMaterializer.materializeAggregatedIdentifier(
 				type,
@@ -155,7 +155,7 @@ public class IdentifierBinder {
 				table,
 				keyType,
 				componentSource,
-				identifierContribution
+				entityIdentifierBinding
 		);
 	}
 
@@ -196,7 +196,7 @@ public class IdentifierBinder {
 			return bindAssociationIdClassIdentifier( idMapping, table, type, typeBinding );
 		}
 		final boolean noIdClassMapsId = !hasIdClass && hasMapsIdAttribute( type );
-		final IdentifierContribution identifierContribution = new IdentifierContribution(
+		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				hasIdClass,
 				idMapping.getIdClassType()
@@ -207,7 +207,7 @@ public class IdentifierBinder {
 					? resolveIdClassMember( idMapping, idAttribute )
 					: member;
 			final boolean idClassMemberIsToOne = idClassMember != null && isToOneMember( idClassMember );
-			identifierContribution.addAttribute( new IdentifierAttributeBinding(
+			entityIdentifierBinding.addAttribute( new IdentifierAttributeBinding(
 						idAttribute.getName(),
 						member,
 						idClassMember,
@@ -219,15 +219,15 @@ public class IdentifierBinder {
 			) );
 		}
 		if ( hasIdClass && !wholeDerivedIdClass ) {
-			identifierContribution.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
+			entityIdentifierBinding.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
 		}
-		state.addIdentifierContribution( type, identifierContribution );
+		state.addEntityIdentifierBinding( type, entityIdentifierBinding );
 		return identifierMappingMaterializer.materializeNonAggregatedIdentifier(
 				type,
 				typeBinding,
 				idMapping,
 				table,
-				identifierContribution,
+				entityIdentifierBinding,
 				hasIdClass,
 				wholeDerivedIdClass,
 				noIdClassMapsId
@@ -239,28 +239,28 @@ public class IdentifierBinder {
 			Table table,
 			EntityTypeMetadata type,
 			RootClass typeBinding) {
-		final IdentifierContribution identifierContribution = new IdentifierContribution(
+		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				true,
 				idMapping.getIdClassType()
 		);
 		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
-			identifierContribution.addAttribute( new IdentifierAttributeBinding(
+			entityIdentifierBinding.addAttribute( new IdentifierAttributeBinding(
 					idAttribute.getName(),
 					idAttribute.getMember(),
 					resolveIdClassMember( idMapping, idAttribute ),
 					IdentifierExtractionKind.DIRECT
 			) );
 		}
-		identifierContribution.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
-		state.addIdentifierContribution( type, identifierContribution );
+		entityIdentifierBinding.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
+		state.addEntityIdentifierBinding( type, entityIdentifierBinding );
 
 		return identifierMappingMaterializer.materializeScalarIdClassIdentifier(
 				type,
 				typeBinding,
 				idMapping,
 				table,
-				identifierContribution
+				entityIdentifierBinding
 		);
 	}
 
@@ -282,28 +282,28 @@ public class IdentifierBinder {
 			Table table,
 			EntityTypeMetadata type,
 			RootClass typeBinding) {
-		final IdentifierContribution identifierContribution = new IdentifierContribution(
+		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				true,
 				idMapping.getIdClassType()
 		);
 		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
-			identifierContribution.addAttribute( new IdentifierAttributeBinding(
+			entityIdentifierBinding.addAttribute( new IdentifierAttributeBinding(
 					idAttribute.getName(),
 					idAttribute.getMember(),
 					resolveIdClassMember( idMapping, idAttribute ),
 					IdentifierExtractionKind.DIRECT
 			) );
 		}
-		identifierContribution.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
-		state.addIdentifierContribution( type, identifierContribution );
+		entityIdentifierBinding.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
+		state.addEntityIdentifierBinding( type, entityIdentifierBinding );
 
 		return identifierMappingMaterializer.materializeEmbeddedIdClassIdentifier(
 				type,
 				typeBinding,
 				idMapping,
 				table,
-				identifierContribution
+				entityIdentifierBinding
 		);
 	}
 
@@ -312,7 +312,7 @@ public class IdentifierBinder {
 			Table table,
 			EntityTypeMetadata type,
 			RootClass typeBinding) {
-		final IdentifierContribution identifierContribution = new IdentifierContribution(
+		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				true,
 				idMapping.getIdClassType()
@@ -321,7 +321,7 @@ public class IdentifierBinder {
 			final MemberDetails idClassMember = resolveIdClassMember( idMapping, idAttribute );
 			final boolean associationIdentifier = idAttribute.getNature() == AttributeNature.TO_ONE
 					|| isToOneMember( idClassMember );
-			identifierContribution.addAttribute( new IdentifierAttributeBinding(
+			entityIdentifierBinding.addAttribute( new IdentifierAttributeBinding(
 					idAttribute.getName(),
 					idAttribute.getMember(),
 					idClassMember,
@@ -330,15 +330,15 @@ public class IdentifierBinder {
 							: IdentifierExtractionKind.DIRECT
 			) );
 		}
-		identifierContribution.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
-		state.addIdentifierContribution( type, identifierContribution );
+		entityIdentifierBinding.reorderAttributes( idClassMemberNames( idMapping.getIdClassType() ) );
+		state.addEntityIdentifierBinding( type, entityIdentifierBinding );
 
 		return identifierMappingMaterializer.materializeAssociationIdClassIdentifier(
 				type,
 				typeBinding,
 				idMapping,
 				table,
-				identifierContribution
+				entityIdentifierBinding
 		);
 	}
 
@@ -514,10 +514,10 @@ public class IdentifierBinder {
 		return null;
 	}
 
-	private IdentifierContribution createAggregatedIdentifierContribution(
+	private EntityIdentifierBinding createAggregatedEntityIdentifierBinding(
 			EntityTypeMetadata type,
 			ComponentSource componentSource) {
-		final IdentifierContribution identifierContribution = new IdentifierContribution(
+		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				false,
 				null
@@ -529,8 +529,8 @@ public class IdentifierBinder {
 					componentMember.member(),
 					IdentifierExtractionKind.DIRECT
 			);
-			identifierContribution.addAttribute( attributeBinding );
+			entityIdentifierBinding.addAttribute( attributeBinding );
 		}
-		return identifierContribution;
+		return entityIdentifierBinding;
 	}
 }

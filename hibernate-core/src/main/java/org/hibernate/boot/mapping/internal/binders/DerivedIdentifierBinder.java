@@ -79,16 +79,16 @@ class DerivedIdentifierBinder {
 	}
 
 	private void bindDerivedIdentifier(DerivedIdentifierBinding derivedIdentifierBinding) {
-		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding(
 				derivedIdentifierBinding.ownerType().getHierarchy().getRoot()
 		);
-		if ( identifierBinding == null ) {
+		if ( entityIdentifierBinding == null ) {
 			throw new MappingException(
 					"Could not resolve identifier binding for derived identifier owner - "
 							+ derivedIdentifierBinding.ownerBinding().getEntityName()
 			);
 		}
-		final Value identifierValue = resolveIdentifierValue( derivedIdentifierBinding, identifierBinding.value() );
+		final Value identifierValue = resolveIdentifierValue( derivedIdentifierBinding, entityIdentifierBinding.value() );
 		if ( !( identifierValue instanceof BasicValue
 				|| identifierValue instanceof Component
 				|| identifierValue instanceof ManyToOne ) ) {
@@ -118,7 +118,7 @@ class DerivedIdentifierBinder {
 				resolveTargetRuntimeColumns( derivedIdentifierBinding, targetColumns )
 		);
 		applyDerivedIdentifierGenerator( derivedIdentifierBinding, identifierValue );
-		reorderPrimaryKeyColumns( identifierBinding.value() );
+		reorderPrimaryKeyColumns( entityIdentifierBinding.value() );
 		for ( Column identifierColumn : runtimeIdentifierColumns ) {
 			derivedIdentifierBinding.value().addColumn( identifierColumn, false, false );
 		}

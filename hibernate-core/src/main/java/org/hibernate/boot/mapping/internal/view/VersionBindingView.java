@@ -6,30 +6,30 @@ package org.hibernate.boot.mapping.internal.view;
 
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
-import org.hibernate.boot.mapping.internal.model.VersionContribution;
+import org.hibernate.boot.mapping.internal.model.VersionBinding;
 import org.hibernate.models.spi.MemberDetails;
 
-/// Stable read view over a finalized version contribution.
+/// Stable read view over a finalized version binding.
 ///
 /// The view exposes version source facts and value intent without exposing the
 /// materialized `Property` or `BasicValue` as semantic state.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record VersionContributionView(VersionContribution contribution) {
+public record VersionBindingView(VersionBinding binding) {
 	public EntityTypeMetadata owner() {
-		return contribution.owner();
+		return binding.owner();
 	}
 
 	public String attributeName() {
-		return contribution.attributeName();
+		return binding.attributeName();
 	}
 
 	public MemberDetails member() {
-		return contribution.member();
+		return binding.member();
 	}
 
 	public BasicValueIntent valueIntent() {
-		return contribution.valueIntent();
+		return binding.valueIntent();
 	}
 }

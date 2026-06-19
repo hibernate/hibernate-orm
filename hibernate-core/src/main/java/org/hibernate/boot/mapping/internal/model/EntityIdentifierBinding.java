@@ -18,7 +18,7 @@ import jakarta.annotation.Nullable;
 
 /// Mutable binding state for an entity identifier.
 ///
-/// The contribution records the semantic identifier shape selected for an entity
+/// The binding records the semantic identifier shape selected for an entity
 /// hierarchy: whether it uses an id class, which id representation type is
 /// involved, and which identifier attributes participate.  Attribute order is
 /// kept as a source fact because id-class extraction, derived identifiers, and
@@ -27,13 +27,13 @@ import jakarta.annotation.Nullable;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class IdentifierContribution {
+public class EntityIdentifierBinding {
 	private final EntityTypeMetadata owner;
 	private final boolean idClass;
 	private final @Nullable ClassDetails idClassType;
 	private final List<IdentifierAttributeBinding> attributes = new ArrayList<>();
 
-	public IdentifierContribution(
+	public EntityIdentifierBinding(
 			EntityTypeMetadata owner,
 			boolean idClass,
 			@Nullable ClassDetails idClassType) {

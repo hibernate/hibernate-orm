@@ -142,7 +142,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	private final PersistentClass binding;
 
 	private final ModelBinders modelBinders;
-	private IdentifierBinding identifierBinding;
+	private IdentifierBinding entityIdentifierBinding;
 
 	public EntityTypeBinder(
 			EntityTypeMetadata type,
@@ -283,7 +283,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// completed root identifier shape in later key/FK phases.
 	public void bindIdentifier() {
 		if ( getHierarchyRelation() == EntityHierarchy.HierarchyRelation.ROOT ) {
-			identifierBinding = IdentifierBinder.bindIdentifier(
+			entityIdentifierBinding = IdentifierBinder.bindIdentifier(
 					getManagedType(),
 					(RootClass) getTypeBinding(),
 					modelBinders,
@@ -291,12 +291,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 					getOptions(),
 					getBindingContext()
 			);
-			getBindingState().addIdentifierBinding( getManagedType(), identifierBinding );
+			getBindingState().addIdentifierBinding( getManagedType(), entityIdentifierBinding );
 		}
 	}
 
 	public IdentifierBinding getIdentifierBinding() {
-		return identifierBinding;
+		return entityIdentifierBinding;
 	}
 
 	/// Resolve association-valued identifier attributes after all identifiers exist.

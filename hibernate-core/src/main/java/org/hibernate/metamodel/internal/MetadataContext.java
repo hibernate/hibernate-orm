@@ -571,7 +571,9 @@ public class MetadataContext {
 			final var managedType = (ManagedDomainType<T>) identifiableType;
 			final var attributeContainer = (AttributeContainer<T>) managedType;
 			final var declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
-			if ( declaredIdentifierProperty != null ) {
+			final var mappedSuperclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
+			if ( declaredIdentifierProperty != null
+					&& declaredIdentifierProperty != mappedSuperclassIdentifier ) {
 				final var idAttribute =
 						(SingularPersistentAttribute<T, ?>)
 								buildAttribute( declaredIdentifierProperty, identifiableType,
@@ -579,8 +581,7 @@ public class MetadataContext {
 				attributeContainer.getInFlightAccess().applyIdAttribute( idAttribute );
 			}
 			else {
-				final var superclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
-				if ( superclassIdentifier != null && superclassIdentifier.isGeneric() ) {
+				if ( mappedSuperclassIdentifier != null && mappedSuperclassIdentifier.isGeneric() ) {
 					// If the superclass identifier is generic, we have to build the attribute to register the concrete type
 					final var concreteIdentifier =
 							buildIdAttribute( identifiableType, persistentClass.getIdentifierProperty() );

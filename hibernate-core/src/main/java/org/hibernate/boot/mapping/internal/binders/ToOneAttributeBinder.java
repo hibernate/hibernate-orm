@@ -497,11 +497,11 @@ class ToOneAttributeBinder {
 			IdentifiableTypeMetadata ownerType,
 			Table associationTable,
 			BindingState bindingState) {
-		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding( ownerType.getHierarchy().getRoot() );
-		if ( identifierBinding == null || identifierBinding.table() != associationTable ) {
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding( ownerType.getHierarchy().getRoot() );
+		if ( entityIdentifierBinding == null || entityIdentifierBinding.table() != associationTable ) {
 			return List.of();
 		}
-		return identifierBinding.columns();
+		return entityIdentifierBinding.columns();
 	}
 
 	private static boolean isSharedIdentifierColumn(Column column, List<Column> identifierColumns, Database database) {
@@ -783,10 +783,10 @@ class ToOneAttributeBinder {
 			);
 		}
 
-		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding(
 				targetTypeBinder.getManagedType().getHierarchy().getRoot()
 		);
-		if ( identifierBinding == null ) {
+		if ( entityIdentifierBinding == null ) {
 			throw new MappingException(
 					"Could not resolve identifier binding for to-one target entity - "
 							+ targetTypeBinder.getTypeBinding().getEntityName()
@@ -797,9 +797,9 @@ class ToOneAttributeBinder {
 				targetTypeBinder.getTypeBinding().getEntityName(),
 				targetTypeBinder,
 				targetTypeBinder.getManagedType(),
-				identifierBinding.table(),
-				identifierBinding,
-				identifierBinding.columns()
+				entityIdentifierBinding.table(),
+				entityIdentifierBinding,
+				entityIdentifierBinding.columns()
 		);
 	}
 
@@ -819,13 +819,13 @@ class ToOneAttributeBinder {
 			EntityTypeBinder typeBinder,
 			EntityTypeMetadata entityNaming,
 			Table primaryTable,
-			IdentifierBinding identifierBinding,
+			IdentifierBinding entityIdentifierBinding,
 			List<Column> identifierColumns) {
 		@Override
 		public List<Column> identifierColumns() {
-			if ( identifierBinding.value() instanceof SortableValue sortableValue ) {
+			if ( entityIdentifierBinding.value() instanceof SortableValue sortableValue ) {
 				sortableValue.sortProperties();
-				return identifierBinding.value().getColumns();
+				return entityIdentifierBinding.value().getColumns();
 			}
 			if ( primaryTable.getPrimaryKey() != null
 					&& !primaryTable.getPrimaryKey().getColumns().isEmpty()

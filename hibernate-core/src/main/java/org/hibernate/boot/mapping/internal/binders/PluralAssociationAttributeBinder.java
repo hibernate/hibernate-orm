@@ -681,10 +681,10 @@ class PluralAssociationAttributeBinder {
 		final ClassDetails targetClassDetails = resolveTargetClassDetails( source );
 		final EntityTypeBinder targetTypeBinder = resolveTargetTypeBinder( targetClassDetails );
 
-		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding(
 				targetTypeBinder.getManagedType().getHierarchy().getRoot()
 		);
-		if ( identifierBinding == null ) {
+		if ( entityIdentifierBinding == null ) {
 			throw new MappingException(
 					"Could not resolve identifier binding for plural association target entity - "
 							+ targetTypeBinder.getTypeBinding().getEntityName()
@@ -696,7 +696,7 @@ class PluralAssociationAttributeBinder {
 				targetTypeBinder,
 				targetTypeBinder.getManagedType(),
 				targetTypeBinder.getTable(),
-				identifierBinding.columns()
+				entityIdentifierBinding.columns()
 		);
 	}
 

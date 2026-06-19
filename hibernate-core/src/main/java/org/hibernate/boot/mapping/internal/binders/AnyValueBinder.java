@@ -236,16 +236,16 @@ class AnyValueBinder {
 		Class<?> inferredKeyType = null;
 		for ( org.hibernate.annotations.AnyDiscriminatorValue discriminatorValue : source.discriminatorValues() ) {
 			final EntityTypeBinder targetTypeBinder = resolveTargetTypeBinder( discriminatorValue.entity(), source.member() );
-			final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+			final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding(
 					targetTypeBinder.getManagedType().getHierarchy().getRoot()
 			);
-			if ( identifierBinding == null ) {
+			if ( entityIdentifierBinding == null ) {
 				throw new MappingException(
 						"Could not resolve identifier binding for @Any target entity `"
 								+ targetTypeBinder.getTypeBinding().getEntityName() + "` - " + source.member().getName()
 				);
 			}
-			if ( !( identifierBinding.keyMapping() instanceof BasicKeyMapping basicKeyMapping ) ) {
+			if ( !( entityIdentifierBinding.keyMapping() instanceof BasicKeyMapping basicKeyMapping ) ) {
 				throw new UnsupportedOperationException(
 						"@Any key Java type inference requires basic target identifiers - "
 								+ targetTypeBinder.getTypeBinding().getEntityName() + " - " + source.member().getName()

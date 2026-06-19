@@ -8,7 +8,6 @@ import java.util.List;
 
 import jakarta.persistence.AccessType;
 
-import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.models.spi.ClassDetails;
@@ -32,13 +31,9 @@ public interface ManagedTypeView {
 		return binding().accessType();
 	}
 
-	default List<AttributeDeclarationBinding> declaredAttributes() {
-		return binding().declaredAttributes();
-	}
-
-	default List<AttributeBindingView> declaredAttributeViews() {
-		return binding().attributeUsages().stream()
-				.map( AttributeBindingView::new )
+	default List<AttributeDeclarationBindingView> declaredAttributeViews() {
+		return binding().declaredAttributes().stream()
+				.map( AttributeDeclarationBindingView::new )
 				.toList();
 	}
 

@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.view;
 
-import org.hibernate.boot.mapping.internal.model.IdentifierContribution;
+import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 
 import jakarta.annotation.Nullable;
 
@@ -13,10 +13,10 @@ import jakarta.annotation.Nullable;
 /// @since 9.0
 /// @author Steve Ebersole
 public interface IdentifiableTypeView extends ManagedTypeView {
-	@Nullable IdentifierContribution identifierContribution();
+	@Nullable EntityIdentifierBinding entityIdentifierBinding();
 
-	default @Nullable IdentifierContributionView identifierContributionView() {
-		final IdentifierContribution contribution = identifierContribution();
-		return contribution == null ? null : new IdentifierContributionView( contribution );
+	default @Nullable EntityIdentifierBindingView entityIdentifierBindingView() {
+		final EntityIdentifierBinding binding = entityIdentifierBinding();
+		return binding == null ? null : new EntityIdentifierBindingView( binding );
 	}
 }

@@ -12,12 +12,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.BootBindingModel;
-import org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding;
-import org.hibernate.boot.mapping.internal.model.IdentifierContribution;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
-import org.hibernate.boot.mapping.internal.model.VersionContribution;
+import org.hibernate.boot.mapping.internal.view.AttributeDeclarationBindingView;
+import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
+import org.hibernate.boot.mapping.internal.view.EntityHierarchyView;
+import org.hibernate.boot.mapping.internal.view.ManagedTypeView;
+import org.hibernate.boot.mapping.internal.view.StandardManagedTypeView;
+import org.hibernate.boot.mapping.internal.view.VersionBindingView;
 import org.hibernate.models.spi.ClassDetails;
 
 /// View-backed source for JPA static metamodel injection.
@@ -35,18 +37,18 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) 
 	}
 
 	public static JpaStaticMetamodelInjectionSource from(BootBindingModel bootBindingModel) {
-		final Map<ClassDetails, IdentifierContribution> identifierContributions = identifierContributionsByOwner( bootBindingModel );
-		final Map<ClassDetails, VersionContribution> versionContributions = versionContributionsByOwner( bootBindingModel );
+		final Map<ClassDetails, EntityIdentifierBindingView> entityIdentifierBindings = entityIdentifierBindingsByOwner( bootBindingModel );
+		final Map<ClassDetails, VersionBindingView> versionBindings = versionBindingsByOwner( bootBindingModel );
 		final List<ManagedType> managedTypes = new ArrayList<>();
 		final Set<ClassDetails> includedTypes = new LinkedHashSet<>();
-		for ( EntityHierarchyBinding hierarchyBinding : bootBindingModel.entityHierarchyBindings() ) {
-			for ( EntityHierarchyBinding.Type type : hierarchyBinding.types() ) {
+		for ( EntityHierarchyView hierarchyView : bootBindingModel.entityHierarchyViews() ) {
+			for ( ManagedTypeView typeView : hierarchyView.managedTypeViews() ) {
 				managedTypes.add( managedType(
-						type.binding(),
-						identifierContributions.get( hierarchyBinding.root().classDetails() ),
-						versionContributions.get( type.binding().classDetails() )
+						typeView,
+						entityIdentifierBindings.get( hierarchyView.root().classDetails() ),
+						versionBindings.get( typeView.classDetails() )
 				) );
-				includedTypes.add( type.binding().classDetails() );
+				includedTypes.add( typeView.classDetails() );
 			}
 		}
 		for ( ManagedTypeBinding binding : bootBindingModel.managedTypeBindings() ) {
@@ -56,9 +58,9 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) 
 			if ( binding.kind() == ManagedTypeBinding.Kind.ENTITY
 					|| binding.kind() == ManagedTypeBinding.Kind.MAPPED_SUPERCLASS ) {
 				managedTypes.add( managedType(
-						binding,
-						identifierContributions.get( binding.classDetails() ),
-						versionContributions.get( binding.classDetails() )
+						new StandardManagedTypeView( binding ),
+						entityIdentifierBindings.get( binding.classDetails() ),
+						versionBindings.get( binding.classDetails() )
 				) );
 			}
 		}
@@ -66,40 +68,40 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) 
 	}
 
 	private static ManagedType managedType(
-			ManagedTypeBinding binding,
-			IdentifierContribution identifierContribution,
-			VersionContribution versionContribution) {
+			ManagedTypeView managedTypeView,
+			EntityIdentifierBindingView entityIdentifierBinding,
+			VersionBindingView versionBinding) {
 		final LinkedHashSet<String> fieldNames = new LinkedHashSet<>();
-		for ( AttributeDeclarationBinding attribute : binding.declaredAttributes() ) {
+		for ( AttributeDeclarationBindingView attribute : managedTypeView.declaredAttributeViews() ) {
 			fieldNames.add( attribute.attributeName() );
 		}
-		if ( identifierContribution != null ) {
-			for ( var attribute : identifierContribution.attributes() ) {
+		if ( entityIdentifierBinding != null ) {
+			for ( var attribute : entityIdentifierBinding.attributes() ) {
 				fieldNames.add( attribute.attributeName() );
 			}
 		}
-		if ( versionContribution != null ) {
-			fieldNames.add( versionContribution.attributeName() );
+		if ( versionBinding != null ) {
+			fieldNames.add( versionBinding.attributeName() );
 		}
 		return new ManagedType(
-				binding.classDetails().toJavaClass(),
-				binding.kind(),
+				managedTypeView.classDetails().toJavaClass(),
+				managedTypeView.kind(),
 				fieldNames
 		);
 	}
 
-	private static Map<ClassDetails, IdentifierContribution> identifierContributionsByOwner(BootBindingModel bootBindingModel) {
-		final Map<ClassDetails, IdentifierContribution> result = new LinkedHashMap<>();
-		for ( IdentifierContribution contribution : bootBindingModel.identifierContributions() ) {
-			result.put( contribution.owner().getClassDetails(), contribution );
+	private static Map<ClassDetails, EntityIdentifierBindingView> entityIdentifierBindingsByOwner(BootBindingModel bootBindingModel) {
+		final Map<ClassDetails, EntityIdentifierBindingView> result = new LinkedHashMap<>();
+		for ( EntityIdentifierBindingView binding : bootBindingModel.entityIdentifierBindingViews() ) {
+			result.put( binding.owner().getClassDetails(), binding );
 		}
 		return result;
 	}
 
-	private static Map<ClassDetails, VersionContribution> versionContributionsByOwner(BootBindingModel bootBindingModel) {
-		final Map<ClassDetails, VersionContribution> result = new LinkedHashMap<>();
-		for ( VersionContribution contribution : bootBindingModel.versionContributions() ) {
-			result.put( contribution.owner().getClassDetails(), contribution );
+	private static Map<ClassDetails, VersionBindingView> versionBindingsByOwner(BootBindingModel bootBindingModel) {
+		final Map<ClassDetails, VersionBindingView> result = new LinkedHashMap<>();
+		for ( VersionBindingView binding : bootBindingModel.versionBindingViews() ) {
+			result.put( binding.owner().getClassDetails(), binding );
 		}
 		return result;
 	}

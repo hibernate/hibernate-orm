@@ -10,7 +10,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
 import org.hibernate.boot.mapping.internal.view.EntityView;
-import org.hibernate.boot.mapping.internal.view.IdentifierContributionView;
+import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
@@ -86,11 +86,11 @@ public class SimpleIdTests {
 							.containsExactly( "id" );
 
 					final EntityView entityView = entityView( context, BasicIdEntity.class );
-					final IdentifierContributionView identifierContribution = entityView.identifierContributionView();
-					assertThat( identifierContribution ).isNotNull();
-					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "id" );
-					assertThat( identifierContribution.identifierSelectableNames() ).containsExactly( "id" );
-					assertThat( identifierContribution.attribute( "id" ).extractionKind() )
+					final EntityIdentifierBindingView entityIdentifierBinding = entityView.entityIdentifierBindingView();
+					assertThat( entityIdentifierBinding ).isNotNull();
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "id" );
+					assertThat( entityIdentifierBinding.identifierSelectableNames() ).containsExactly( "id" );
+					assertThat( entityIdentifierBinding.attribute( "id" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
 				},
 				scope.getRegistry(),
@@ -136,14 +136,14 @@ public class SimpleIdTests {
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "id1", "id2" );
 					final EntityView entityView = entityView( context, AggregatedIdEntity.class );
-					final IdentifierContributionView identifierContribution = entityView.identifierContributionView();
-					assertThat( identifierContribution ).isNotNull();
-					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "id1", "id2" );
-					assertThat( identifierContribution.identifierSelectableNames() )
+					final EntityIdentifierBindingView entityIdentifierBinding = entityView.entityIdentifierBindingView();
+					assertThat( entityIdentifierBinding ).isNotNull();
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "id1", "id2" );
+					assertThat( entityIdentifierBinding.identifierSelectableNames() )
 							.containsExactly( "id1", "id2" );
-					assertThat( identifierContribution.attribute( "id1" ).extractionKind() )
+					assertThat( entityIdentifierBinding.attribute( "id1" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
-					assertThat( identifierContribution.attribute( "id2" ).extractionKind() )
+					assertThat( entityIdentifierBinding.attribute( "id2" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
 
 					final org.hibernate.mapping.Property naturalId = entityBinding.getProperty( "naturalId" );
@@ -201,16 +201,16 @@ public class SimpleIdTests {
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "id1", "id2" );
-					final IdentifierContributionView identifierContribution = identifierContribution(
+					final EntityIdentifierBindingView entityIdentifierBinding = entityIdentifierBinding(
 							context,
 							NonAggregatedIdEntity.class
 					);
-					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "id1", "id2" );
-					assertThat( identifierContribution.identifierSelectableNames() )
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "id1", "id2" );
+					assertThat( entityIdentifierBinding.identifierSelectableNames() )
 							.containsExactly( "id1", "id2" );
-					assertThat( identifierContribution.attribute( "id1" ).extractionKind() )
+					assertThat( entityIdentifierBinding.attribute( "id1" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
-					assertThat( identifierContribution.attribute( "id2" ).extractionKind() )
+					assertThat( entityIdentifierBinding.attribute( "id2" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
 				},
 				scope.getRegistry(),
@@ -234,16 +234,16 @@ public class SimpleIdTests {
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "code_part", "local_id" );
-					final IdentifierContributionView identifierContribution = identifierContribution(
+					final EntityIdentifierBindingView entityIdentifierBinding = entityIdentifierBinding(
 							context,
 							EmbeddedIdClassEntity.class
 					);
-					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "code", "localId" );
-					assertThat( identifierContribution.attribute( "code" ).extractionKind() )
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "code", "localId" );
+					assertThat( entityIdentifierBinding.attribute( "code" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
-					assertThat( identifierContribution.attribute( "code" ).selectableNames() )
+					assertThat( entityIdentifierBinding.attribute( "code" ).selectableNames() )
 							.containsExactly( "code_part" );
-					assertThat( identifierContribution.attribute( "localId" ).selectableNames() )
+					assertThat( entityIdentifierBinding.attribute( "localId" ).selectableNames() )
 							.containsExactly( "local_id" );
 				},
 				scope.getRegistry(),
@@ -397,16 +397,16 @@ public class SimpleIdTests {
 							.containsExactly( "parent_id" );
 					assertThat( parent.getColumnUpdateability() ).containsExactly( false );
 					assertThat( entityBinding.getTable().getForeignKeyCollection() ).hasSize( 1 );
-					final IdentifierContributionView identifierContribution = identifierContribution(
+					final EntityIdentifierBindingView entityIdentifierBinding = entityIdentifierBinding(
 							context,
 							AssociationIdChild.class
 					);
-					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "parent", "childId" );
-					assertThat( identifierContribution.attribute( "parent" ).extractionKind() )
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "parent", "childId" );
+					assertThat( entityIdentifierBinding.attribute( "parent" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.ASSOCIATION_TARGET_ID );
-					assertThat( identifierContribution.attribute( "parent" ).selectableNames() )
+					assertThat( entityIdentifierBinding.attribute( "parent" ).selectableNames() )
 							.containsExactly( "parent_id" );
-					assertThat( identifierContribution.attribute( "childId" ).extractionKind() )
+					assertThat( entityIdentifierBinding.attribute( "childId" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
 				},
 				scope.getRegistry(),
@@ -631,16 +631,16 @@ public class SimpleIdTests {
 							.containsExactly( "parent_id" );
 					assertThat( parent.getColumnInsertability() ).containsExactly( false );
 					assertThat( parent.getColumnUpdateability() ).containsExactly( false );
-					final IdentifierContributionView identifierContribution = identifierContribution(
+					final EntityIdentifierBindingView entityIdentifierBinding = entityIdentifierBinding(
 							context,
 							ToOneAttributeMapsIdChild.class
 					);
-					assertThat( identifierContribution.idAttributeNames() ).containsExactly( "parentRef", "childId" );
-					assertThat( identifierContribution.attribute( "parentRef" ).extractionKind() )
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "parentRef", "childId" );
+					assertThat( entityIdentifierBinding.attribute( "parentRef" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
-					assertThat( identifierContribution.attribute( "parentRef" ).selectableNames() )
+					assertThat( entityIdentifierBinding.attribute( "parentRef" ).selectableNames() )
 							.containsExactly( "parent_id" );
-					assertThat( identifierContribution.attribute( "childId" ).extractionKind() )
+					assertThat( entityIdentifierBinding.attribute( "childId" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
 				},
 				scope.getRegistry(),
@@ -695,20 +695,20 @@ public class SimpleIdTests {
 				org.hibernate.boot.mapping.internal.model.MappedSuperclassTypeBinding.class,
 				org.hibernate.boot.mapping.internal.model.EmbeddableTypeBinding.class,
 				org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding.class,
-				org.hibernate.boot.mapping.internal.model.IdentifierContribution.class,
+				org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding.class,
 				org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding.class
 		);
 	}
 
-	private static IdentifierContributionView identifierContribution(
+	private static EntityIdentifierBindingView entityIdentifierBinding(
 			DomainModelCheckContext context,
 			Class<?> entityClass) {
 		final EntityView entityView = entityView( context, entityClass );
-		final IdentifierContributionView identifierContributionView = entityView.identifierContributionView();
-		if ( identifierContributionView == null ) {
+		final EntityIdentifierBindingView entityIdentifierBindingView = entityView.entityIdentifierBindingView();
+		if ( entityIdentifierBindingView == null ) {
 			throw new AssertionError( "Could not locate identifier contribution for " + entityClass.getName() );
 		}
-		return identifierContributionView;
+		return entityIdentifierBindingView;
 	}
 
 	private static EntityView entityView(

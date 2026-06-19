@@ -10,8 +10,7 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding;
-import org.hibernate.boot.mapping.internal.model.IdentifierContribution;
-import org.hibernate.boot.mapping.internal.view.IdentifierContributionView;
+import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -135,7 +134,7 @@ class AssociationIdentifierBinder {
 				associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey().addColumn( column );
 			associationIdentifierBinding.identifierColumns().add( column );
 		}
-		syncIdentifierContributionSelectables( associationIdentifierBinding );
+		syncEntityIdentifierBindingSelectables( associationIdentifierBinding );
 		normalizePrimaryKeyColumnOrder( associationIdentifierBinding );
 		associationIdentifierBinding.value().setNonUpdatable();
 		( (SortableValue) associationIdentifierBinding.value() ).sortProperties();
@@ -160,15 +159,15 @@ class AssociationIdentifierBinder {
 		return true;
 	}
 
-	private void syncIdentifierContributionSelectables(AssociationIdentifierBinding associationIdentifierBinding) {
-		final IdentifierContribution identifierContribution = bindingState.getIdentifierContribution(
+	private void syncEntityIdentifierBindingSelectables(AssociationIdentifierBinding associationIdentifierBinding) {
+		final var entityIdentifierBinding = bindingState.getEntityIdentifierBinding(
 				associationIdentifierBinding.ownerType().getHierarchy().getRoot()
 		);
-		if ( identifierContribution == null ) {
+		if ( entityIdentifierBinding == null ) {
 			return;
 		}
 
-		final IdentifierAttributeBinding attribute = identifierContribution.getAttribute(
+		final IdentifierAttributeBinding attribute = entityIdentifierBinding.getAttribute(
 				associationIdentifierBinding.property().getName()
 		);
 		if ( attribute == null || !attribute.selectableNames().isEmpty() ) {
@@ -188,14 +187,14 @@ class AssociationIdentifierBinder {
 			return;
 		}
 
-		final IdentifierContributionView identifierContribution = bindingState.getIdentifierContributionView(
+		final EntityIdentifierBindingView entityIdentifierBinding = bindingState.getEntityIdentifierBindingView(
 				associationIdentifierBinding.ownerType().getHierarchy().getRoot()
 		);
-		final List<Column> identifierColumns = identifierContribution == null
+		final List<Column> identifierColumns = entityIdentifierBinding == null
 				? identifierBinding.columns()
 				: orderColumnsBySelectableNames(
 						identifierBinding.columns(),
-						identifierContribution.identifierSelectableNames()
+						entityIdentifierBinding.identifierSelectableNames()
 				);
 		associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey()
 				.reorderColumns( identifierColumns );

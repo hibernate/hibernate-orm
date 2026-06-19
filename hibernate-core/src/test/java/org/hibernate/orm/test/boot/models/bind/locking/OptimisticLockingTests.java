@@ -33,12 +33,12 @@ public class OptimisticLockingTests {
 		checkDomainModel(
 				(context) -> {
 					final var rootType = context.getCategorizedDomainModel().getEntityHierarchies().iterator().next().getRoot();
-					final var versionContribution = context.getBindingState()
+					final var versionBinding = context.getBindingState()
 							.getBootBindingModel()
-							.getVersionContributionView( rootType );
-					assertThat( versionContribution ).isNotNull();
-					assertThat( versionContribution.attributeName() ).isEqualTo( "version" );
-					assertThat( versionContribution.valueIntent().columnSource() ).isNull();
+							.getVersionBindingView( rootType );
+					assertThat( versionBinding ).isNotNull();
+					assertThat( versionBinding.attributeName() ).isEqualTo( "version" );
+					assertThat( versionBinding.valueIntent().columnSource() ).isNull();
 
 					var metadataCollector = context.getMetadataCollector();
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( VersionedEntity.class.getName() );
@@ -59,12 +59,12 @@ public class OptimisticLockingTests {
 		checkDomainModel(
 				(context) -> {
 					final var rootType = context.getCategorizedDomainModel().getEntityHierarchies().iterator().next().getRoot();
-					final var versionContribution = context.getBindingState()
+					final var versionBinding = context.getBindingState()
 							.getBootBindingModel()
-							.getVersionContributionView( rootType );
-					assertThat( versionContribution ).isNotNull();
-					assertThat( versionContribution.attributeName() ).isEqualTo( "version" );
-					assertThat( versionContribution.valueIntent().columnSource().nonEmptyName() ).isEqualTo( "revision" );
+							.getVersionBindingView( rootType );
+					assertThat( versionBinding ).isNotNull();
+					assertThat( versionBinding.attributeName() ).isEqualTo( "version" );
+					assertThat( versionBinding.valueIntent().columnSource().nonEmptyName() ).isEqualTo( "revision" );
 
 					var metadataCollector = context.getMetadataCollector();
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( VersionedEntityWithColumn.class.getName() );

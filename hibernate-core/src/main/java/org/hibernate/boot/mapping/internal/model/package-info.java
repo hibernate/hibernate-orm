@@ -7,7 +7,7 @@
 /// This package contains the mutable semantic state built from categorized
 /// Hibernate Models source facts.  It is the phase that records what the
 /// persistence unit says about managed types, attributes, identifiers,
-/// contributions, access strategies, paths, and ordering/correspondence facts
+/// access strategies, paths, and ordering/correspondence facts
 /// before those facts are consumed by later phases.
 ///
 /// The objects in this package are intentionally model-like, but they are not
@@ -29,6 +29,25 @@
 /// When a new field or method would mostly help create DDL structures, cache
 /// later-phase boot objects, or mirror mutable compatibility state, it belongs
 /// in a materializer or compatibility bridge rather than in this package.
+///
+/// Naming should make the layer boundary visible:
+///
+/// * `*Binding` is the default suffix for authoritative binding-model state:
+///   managed types, entity hierarchies, attribute declarations/usages,
+///   identifiers, versions, tenant identifiers, and other primary semantic
+///   nodes.
+/// * `*Intent` describes requested value/mapping facts that are not themselves
+///   mapping objects, such as basic, embedded, or to-one value shape.
+/// * `*Contribution` is reserved for the internal recorded effect of a
+///   contribution/capability operation against an existing binding.  For
+///   example, a future public binding SPI might expose a method such as
+///   `target.naturalId(...)`; ORM may record that operation as a
+///   `NaturalIdContribution`, but the contribution record itself is not the
+///   public extension contract.  A contribution should not be the primary owner
+///   of a managed type, attribute, identifier, or other core model node.
+/// * `*View` belongs in `org.hibernate.boot.mapping.internal.view` and exposes a
+///   stable read shape over binding-model state for materializers and other
+///   consumers.
 ///
 /// In the broader design this package belongs to an eventual
 /// `org.hibernate.boot.mapping` pipeline:

@@ -21,7 +21,7 @@ import org.hibernate.boot.mapping.internal.binders.EntityTypeBinder;
 import org.hibernate.boot.mapping.internal.binders.IdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.ModelBinders;
 import org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding;
-import org.hibernate.boot.mapping.internal.model.IdentifierContribution;
+import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
@@ -34,7 +34,7 @@ import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
-import org.hibernate.boot.mapping.internal.view.IdentifierContributionView;
+import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
@@ -71,13 +71,13 @@ import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 /// Transitional materialization boundary for entity identifiers.
 ///
 /// The horizontal binding model owns identifier semantics through
-/// [IdentifierContribution] and [IdentifierContributionView].  This class is the
+/// [EntityIdentifierBinding] and [EntityIdentifierBindingView].  This class is the
 /// named bridge that turns those facts, plus the mapping objects created by the
 /// existing worker binder, into the compatibility [IdentifierBinding] consumed by
 /// later boot phases.
 ///
 /// In the next slices, mapping object creation should move behind this boundary
-/// instead of being interleaved with semantic contribution collection in
+/// instead of being interleaved with semantic binding collection in
 /// [IdentifierBinder].
 ///
 /// @since 9.0
@@ -105,7 +105,7 @@ public class IdentifierMappingMaterializer {
 			RootClass typeBinding,
 			BasicKeyMapping basicKeyMapping,
 			Table table,
-			IdentifierContribution contribution) {
+			EntityIdentifierBinding binding) {
 		final AttributeMetadata idAttribute = basicKeyMapping.getAttribute();
 		final MemberDetails idAttributeMember = idAttribute.getMember();
 
@@ -118,9 +118,9 @@ public class IdentifierMappingMaterializer {
 
 		final Column column = bindIdColumn( idAttributeMember, idAttribute::getName, table, idValue );
 		CustomMappingBinder.callAttributeBinders( idAttributeMember, typeBinding, idProperty, state, context );
-		addSelectableName( contribution, idAttribute.getName(), column.getName() );
+		addSelectableName( binding, idAttribute.getName(), column.getName() );
 
-		return materializeIdentifierBinding(
+		return materializeEntityIdentifierBinding(
 				typeMetadata,
 				typeBinding,
 				basicKeyMapping,
@@ -128,7 +128,7 @@ public class IdentifierMappingMaterializer {
 				idProperty,
 				table,
 				List.of( column ),
-				contribution
+				binding
 		);
 	}
 
@@ -139,7 +139,7 @@ public class IdentifierMappingMaterializer {
 			Table table,
 			ClassDetails keyType,
 			ComponentSource componentSource,
-			IdentifierContribution contribution) {
+			EntityIdentifierBinding binding) {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
 		idValue.setFlattened( false );
@@ -176,9 +176,9 @@ public class IdentifierMappingMaterializer {
 				aggregatedKeyMapping.getAttribute().getMember(),
 				state.getMetadataBuildingContext()
 		);
-		addAggregatedSelectableNames( contribution, idValue, componentSource );
+		addAggregatedSelectableNames( binding, idValue, componentSource );
 
-		return materializeIdentifierBinding(
+		return materializeEntityIdentifierBinding(
 				type,
 				typeBinding,
 				aggregatedKeyMapping,
@@ -186,7 +186,7 @@ public class IdentifierMappingMaterializer {
 				idProperty,
 				table,
 				columns,
-				contribution
+				binding
 		);
 	}
 
@@ -195,7 +195,7 @@ public class IdentifierMappingMaterializer {
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			IdentifierContribution contribution) {
+			EntityIdentifierBinding binding) {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
 		idValue.setFlattened( true );
@@ -216,7 +216,7 @@ public class IdentifierMappingMaterializer {
 		final List<Column> columns = new java.util.ArrayList<>( idMapping.getIdAttributes().size() );
 		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
 			final MemberDetails member = idAttribute.getMember();
-			final IdentifierAttributeBinding attribute = contribution.getAttribute( idAttribute.getName() );
+			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			final MemberDetails idClassMember = attribute.idRepresentationMember();
 
 			final BasicValue basicValue = createBasicIdValue( table, member );
@@ -236,10 +236,10 @@ public class IdentifierMappingMaterializer {
 
 			final Column column = bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue );
 			columns.add( column );
-			addSelectableName( contribution, idAttribute.getName(), column.getName() );
+			addSelectableName( binding, idAttribute.getName(), column.getName() );
 		}
 
-		return materializeIdentifierBinding(
+		return materializeEntityIdentifierBinding(
 				type,
 				typeBinding,
 				idMapping,
@@ -247,7 +247,7 @@ public class IdentifierMappingMaterializer {
 				null,
 				table,
 				columns,
-				contribution
+				binding
 		);
 	}
 
@@ -256,13 +256,13 @@ public class IdentifierMappingMaterializer {
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			IdentifierContribution contribution) {
+			EntityIdentifierBinding binding) {
 		final IdClassMappingParts mappingParts = createIdClassMappingParts( typeBinding, idMapping, table );
 		final List<Column> columns = new java.util.ArrayList<>( idMapping.getIdAttributes().size() );
 
 		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
 			final MemberDetails member = idAttribute.getMember();
-			final IdentifierAttributeBinding attribute = contribution.getAttribute( idAttribute.getName() );
+			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			final MemberDetails idClassMember = attribute.idRepresentationMember();
 			if ( idAttribute.getNature() == AttributeNature.BASIC ) {
 				final BasicValue basicValue = createBasicIdValue( table, member );
@@ -282,7 +282,7 @@ public class IdentifierMappingMaterializer {
 
 				final Column column = bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue );
 				columns.add( column );
-				addSelectableName( contribution, idAttribute.getName(), column.getName() );
+				addSelectableName( binding, idAttribute.getName(), column.getName() );
 			}
 			else if ( idAttribute.getNature() == AttributeNature.EMBEDDED ) {
 				final Component idClassComponent = createEmbeddedIdClassComponent(
@@ -308,12 +308,12 @@ public class IdentifierMappingMaterializer {
 
 				for ( Column column : idClassComponent.getColumns() ) {
 					columns.add( column );
-					addSelectableName( contribution, idAttribute.getName(), column.getName() );
+					addSelectableName( binding, idAttribute.getName(), column.getName() );
 				}
 			}
 		}
 
-		return materializeIdentifierBinding(
+		return materializeEntityIdentifierBinding(
 				type,
 				typeBinding,
 				idMapping,
@@ -321,7 +321,7 @@ public class IdentifierMappingMaterializer {
 				null,
 				table,
 				columns,
-				contribution
+				binding
 		);
 	}
 
@@ -330,12 +330,12 @@ public class IdentifierMappingMaterializer {
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			IdentifierContribution contribution) {
+			EntityIdentifierBinding binding) {
 		final IdClassMappingParts mappingParts = createIdClassMappingParts( typeBinding, idMapping, table );
 		final List<Column> columns = new ArrayList<>( idMapping.getIdAttributes().size() );
 
 		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
-			final IdentifierAttributeBinding attribute = contribution.getAttribute( idAttribute.getName() );
+			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			if ( idAttribute.getNature() == AttributeNature.BASIC && !isToOneMember( attribute.idRepresentationMember() ) ) {
 				materializeBasicIdClassAttribute(
 						typeBinding,
@@ -344,7 +344,7 @@ public class IdentifierMappingMaterializer {
 						idAttribute,
 						attribute.idRepresentationMember(),
 						columns,
-						contribution
+						binding
 				);
 			}
 			else if ( idAttribute.getNature() == AttributeNature.EMBEDDED ) {
@@ -356,7 +356,7 @@ public class IdentifierMappingMaterializer {
 						idAttribute,
 						attribute.idRepresentationMember(),
 						columns,
-						contribution
+						binding
 				);
 			}
 			else {
@@ -372,7 +372,7 @@ public class IdentifierMappingMaterializer {
 			}
 		}
 
-		return materializeIdentifierBinding(
+		return materializeEntityIdentifierBinding(
 				type,
 				typeBinding,
 				idMapping,
@@ -380,7 +380,7 @@ public class IdentifierMappingMaterializer {
 				null,
 				table,
 				columns,
-				contribution
+				binding
 		);
 	}
 
@@ -389,7 +389,7 @@ public class IdentifierMappingMaterializer {
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			IdentifierContribution contribution,
+			EntityIdentifierBinding binding,
 			boolean hasIdClass,
 			boolean wholeDerivedIdClass,
 			boolean noIdClassMapsId) {
@@ -434,7 +434,7 @@ public class IdentifierMappingMaterializer {
 
 		final List<Column> columns = new ArrayList<>( idMapping.getIdAttributes().size() );
 		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
-			final IdentifierAttributeBinding attribute = contribution.getAttribute( idAttribute.getName() );
+			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			final MemberDetails member = idAttribute.getMember();
 			final MemberDetails idClassMember = attribute.idRepresentationMember();
 			if ( idAttribute.getNature() == AttributeNature.BASIC && !isToOneMember( idClassMember ) ) {
@@ -463,7 +463,7 @@ public class IdentifierMappingMaterializer {
 						? bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue )
 						: bindIdColumn( member, idAttribute::getName, table, basicValue );
 				columns.add( column );
-				addSelectableName( contribution, idAttribute.getName(), column.getName() );
+				addSelectableName( binding, idAttribute.getName(), column.getName() );
 			}
 			else if ( idAttribute.getNature() == AttributeNature.EMBEDDED ) {
 				if ( !hasIdClass || wholeDerivedIdClass ) {
@@ -480,7 +480,7 @@ public class IdentifierMappingMaterializer {
 						idAttribute,
 						idClassMember,
 						columns,
-						contribution
+						binding
 				);
 			}
 			else if ( idAttribute.getNature() == AttributeNature.TO_ONE || isToOneMember( idClassMember ) ) {
@@ -534,7 +534,7 @@ public class IdentifierMappingMaterializer {
 			}
 		}
 
-		return materializeIdentifierBinding(
+		return materializeEntityIdentifierBinding(
 				type,
 				typeBinding,
 				idMapping,
@@ -542,11 +542,11 @@ public class IdentifierMappingMaterializer {
 				null,
 				table,
 				columns,
-				contribution
+				binding
 		);
 	}
 
-	public IdentifierBinding materializeIdentifierBinding(
+	public IdentifierBinding materializeEntityIdentifierBinding(
 			EntityTypeMetadata entityType,
 			RootClass rootClass,
 			KeyMapping keyMapping,
@@ -554,8 +554,8 @@ public class IdentifierMappingMaterializer {
 			@Nullable Property identifierProperty,
 			Table table,
 			List<Column> columns,
-			IdentifierContribution contribution) {
-		final IdentifierContributionView view = new IdentifierContributionView( contribution );
+			EntityIdentifierBinding binding) {
+		final EntityIdentifierBindingView view = new EntityIdentifierBindingView( binding );
 		view.identifierSelectableNames();
 		return new IdentifierBinding(
 				entityType,
@@ -618,7 +618,7 @@ public class IdentifierMappingMaterializer {
 			AttributeMetadata idAttribute,
 			MemberDetails idClassMember,
 			List<Column> columns,
-			IdentifierContribution contribution) {
+			EntityIdentifierBinding binding) {
 		final MemberDetails member = idAttribute.getMember();
 		final BasicValue basicValue = createBasicIdValue( table, member );
 		final Property rootProperty = createProperty( idAttribute.getName(), basicValue, member );
@@ -637,7 +637,7 @@ public class IdentifierMappingMaterializer {
 
 		final Column column = bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue );
 		columns.add( column );
-		addSelectableName( contribution, idAttribute.getName(), column.getName() );
+		addSelectableName( binding, idAttribute.getName(), column.getName() );
 	}
 
 	private void materializeEmbeddedIdClassAttribute(
@@ -648,7 +648,7 @@ public class IdentifierMappingMaterializer {
 			AttributeMetadata idAttribute,
 			MemberDetails idClassMember,
 			List<Column> columns,
-			IdentifierContribution contribution) {
+			EntityIdentifierBinding binding) {
 		final MemberDetails member = idAttribute.getMember();
 		final Component idClassComponent = createEmbeddedIdClassComponent(
 				idAttribute,
@@ -673,7 +673,7 @@ public class IdentifierMappingMaterializer {
 
 		for ( Column column : idClassComponent.getColumns() ) {
 			columns.add( column );
-			addSelectableName( contribution, idAttribute.getName(), column.getName() );
+			addSelectableName( binding, idAttribute.getName(), column.getName() );
 		}
 	}
 
@@ -1061,22 +1061,22 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private void addAggregatedSelectableNames(
-			IdentifierContribution contribution,
+			EntityIdentifierBinding binding,
 			Component idValue,
 			ComponentSource componentSource) {
 		for ( ComponentSource.ComponentMember componentMember : componentSource.members() ) {
 			final Property property = idValue.getProperty( componentMember.attributeName() );
 			for ( Column column : property.getValue().getColumns() ) {
-				addSelectableName( contribution, componentMember.attributeName(), column.getName() );
+				addSelectableName( binding, componentMember.attributeName(), column.getName() );
 			}
 		}
 	}
 
 	private void addSelectableName(
-			IdentifierContribution contribution,
+			EntityIdentifierBinding binding,
 			String attributeName,
 			String selectableName) {
-		final IdentifierAttributeBinding attribute = contribution.getAttribute( attributeName );
+		final IdentifierAttributeBinding attribute = binding.getAttribute( attributeName );
 		if ( attribute != null ) {
 			attribute.addSelectableName( selectableName );
 		}

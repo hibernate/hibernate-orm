@@ -172,9 +172,9 @@ class EntityInsertMutationPlanner {
 			Object id,
 			boolean hasStateDependentGenerator,
 			SharedSessionContractImplementor session) {
-		final boolean forceIdentifierBinding = entityPersister.getGenerator().generatedOnExecution() && id != null;
-		return entityPersister.isDynamicInsert() || forceIdentifierBinding || hasStateDependentGenerator
-				? generateDynamicInsertOperations( effectiveInsertability, entity, session, forceIdentifierBinding )
+		final boolean forceEntityIdentifierBinding = entityPersister.getGenerator().generatedOnExecution() && id != null;
+		return entityPersister.isDynamicInsert() || forceEntityIdentifierBinding || hasStateDependentGenerator
+				? generateDynamicInsertOperations( effectiveInsertability, entity, session, forceEntityIdentifierBinding )
 				: staticInsertOperations;
 	}
 
@@ -285,7 +285,7 @@ class EntityInsertMutationPlanner {
 			boolean[] attributeInclusions,
 			Object object,
 			SharedSessionContractImplementor session,
-			boolean forceIdentifierBinding) {
+			boolean forceEntityIdentifierBinding) {
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
@@ -321,18 +321,18 @@ class EntityInsertMutationPlanner {
 		entityPersister.addDiscriminatorToInsertGroup( builders::get );
 		entityPersister.addSoftDeleteToInsertGroup( builders::get );
 		addTemporalToInsertGroup( builders );
-		addKeysToInsertGroup( builders, dialect, forceIdentifierBinding );
+		addKeysToInsertGroup( builders, dialect, forceEntityIdentifierBinding );
 	}
 
 	private void addKeysToInsertGroup(
 			Map<String, TableInsertBuilder> builders,
 			Dialect dialect,
-			boolean forceIdentifierBinding) {
+			boolean forceEntityIdentifierBinding) {
 		builders.forEach( (name, builder) -> {
 			final var tableMapping = builder.getMutatingTable().getTableMapping();
 			if ( tableMapping.isIdentifierTable()
 					&& entityPersister.isIdentifierAssignedByInsert()
-					&& !forceIdentifierBinding ) {
+					&& !forceEntityIdentifierBinding ) {
 				assert entityPersister.getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister.getGenerator();
 				final boolean[] columnInclusions = generator.getColumnInclusions( dialect, INSERT );
@@ -405,7 +405,7 @@ class EntityInsertMutationPlanner {
 			boolean[] insertable,
 			Object object,
 			SharedSessionContractImplementor session,
-			boolean forceIdentifierBinding) {
+			boolean forceEntityIdentifierBinding) {
 		final Map<String, TableInsertBuilder> operationBuilders = CollectionHelper.linkedMapOfSize( entityPersister.getTableDescriptors().length );
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			operationBuilders.put(
@@ -419,7 +419,7 @@ class EntityInsertMutationPlanner {
 				insertable,
 				object,
 				session,
-				forceIdentifierBinding
+				forceEntityIdentifierBinding
 		);
 
 		final Map<String, TableInsert> operations = CollectionHelper.linkedMapOfSize( operationBuilders.size() );

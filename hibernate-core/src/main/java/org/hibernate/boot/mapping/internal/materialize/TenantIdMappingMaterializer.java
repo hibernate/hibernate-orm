@@ -7,7 +7,7 @@ package org.hibernate.boot.mapping.internal.materialize;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
-import org.hibernate.boot.mapping.internal.view.TenantIdContributionView;
+import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -45,7 +45,7 @@ public class TenantIdMappingMaterializer {
 	public static final String PARAMETER_NAME = "tenantId";
 
 	public Property materializeTenantId(
-			TenantIdContributionView contribution,
+			TenantIdBindingView contribution,
 			RootClass typeBinding,
 			BindingOptions bindingOptions,
 			BindingState bindingState,

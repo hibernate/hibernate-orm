@@ -13,7 +13,7 @@ import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
 import org.hibernate.boot.mapping.internal.relational.TableOwner;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.model.BootBindingModel;
-import org.hibernate.boot.mapping.internal.model.IdentifierContribution;
+import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTargetBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
@@ -27,7 +27,7 @@ import org.hibernate.boot.mapping.internal.binders.InverseToOneAssociationBindin
 import org.hibernate.boot.mapping.internal.binders.ManagedTypeBinder;
 import org.hibernate.boot.mapping.internal.binders.PropertyMapKeyBinding;
 import org.hibernate.boot.mapping.internal.binders.TableForeignKeyBinding;
-import org.hibernate.boot.mapping.internal.view.IdentifierContributionView;
+import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
@@ -191,7 +191,7 @@ public interface BindingState {
 	void forEachPropertyMapKeyBinding(java.util.function.Consumer<PropertyMapKeyBinding> consumer);
 
 	/// Register an association-valued identifier attribute to resolve after identifiers.
-	void addAssociationIdentifierBinding(AssociationIdentifierBinding associationIdentifierBinding);
+	void addAssociationIdentifierBinding(AssociationIdentifierBinding associationEntityIdentifierBinding);
 
 	/// Visit association-valued identifier attributes waiting for late binding.
 	void forEachAssociationIdentifierBinding(java.util.function.Consumer<AssociationIdentifierBinding> consumer);
@@ -203,7 +203,7 @@ public interface BindingState {
 	void forEachAssociationTargetBinding(java.util.function.Consumer<AssociationTargetBinding> consumer);
 
 	/// Register a derived identifier association to resolve after member binding.
-	void addDerivedIdentifierBinding(DerivedIdentifierBinding derivedIdentifierBinding);
+	void addDerivedIdentifierBinding(DerivedIdentifierBinding derivedEntityIdentifierBinding);
 
 	/// Visit derived identifier associations waiting for late binding.
 	void forEachDerivedIdentifierBinding(java.util.function.Consumer<DerivedIdentifierBinding> consumer);
@@ -238,19 +238,19 @@ public interface BindingState {
 	/// Resolve the identifier binding for an entity hierarchy root.
 	IdentifierBinding getIdentifierBinding(EntityTypeMetadata rootType);
 
-	/// Register semantic identifier contribution state for an entity root.
-	default void addIdentifierContribution(EntityTypeMetadata rootType, IdentifierContribution identifierContribution) {
-		getBootBindingModel().addIdentifierContribution( rootType, identifierContribution );
+	/// Register semantic entity-identifier binding state for an entity root.
+	default void addEntityIdentifierBinding(EntityTypeMetadata rootType, EntityIdentifierBinding entityIdentifierBinding) {
+		getBootBindingModel().addEntityIdentifierBinding( rootType, entityIdentifierBinding );
 	}
 
-	/// Resolve semantic identifier contribution state for an entity root.
-	default IdentifierContribution getIdentifierContribution(EntityTypeMetadata rootType) {
-		return getBootBindingModel().getIdentifierContribution( rootType );
+	/// Resolve semantic entity-identifier binding state for an entity root.
+	default EntityIdentifierBinding getEntityIdentifierBinding(EntityTypeMetadata rootType) {
+		return getBootBindingModel().getEntityIdentifierBinding( rootType );
 	}
 
-	/// Resolve the finalized identifier contribution view for an entity root.
-	default IdentifierContributionView getIdentifierContributionView(EntityTypeMetadata rootType) {
-		return getBootBindingModel().getIdentifierContributionView( rootType );
+	/// Resolve the finalized entity-identifier binding view for an entity root.
+	default EntityIdentifierBindingView getEntityIdentifierBindingView(EntityTypeMetadata rootType) {
+		return getBootBindingModel().getEntityIdentifierBindingView( rootType );
 	}
 
 

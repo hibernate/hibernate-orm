@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.jpa;
 
 import java.util.Set;
 
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
@@ -34,7 +35,7 @@ public class JpaStaticMetamodelInjection {
 		for ( var managedTypeSource : source.managedTypes() ) {
 			final ManagedDomainType<?> managedType =
 					context.locateManagedType( managedTypeSource.javaType(), managedTypeSource.kind() );
-			if ( managedType == null || managedType.getJavaType() == null ) {
+			if ( managedType == null || managedType.getRepresentationMode() == RepresentationMode.MAP ) {
 				continue;
 			}
 

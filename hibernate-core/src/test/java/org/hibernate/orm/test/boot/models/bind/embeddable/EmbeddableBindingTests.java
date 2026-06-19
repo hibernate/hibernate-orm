@@ -9,11 +9,11 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.boot.models.mapping.internal.model.AttributeDeclarationBinding;
-import org.hibernate.boot.models.mapping.internal.model.AttributeUsageBinding;
-import org.hibernate.boot.models.mapping.internal.model.ComponentMemberBinding;
-import org.hibernate.boot.models.mapping.internal.model.EmbeddableAttributeDeclarationBinding;
-import org.hibernate.boot.models.mapping.internal.sources.ComponentSource;
+import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
+import org.hibernate.boot.mapping.internal.model.EmbeddableAttributeDeclarationBinding;
+import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 
 import org.hibernate.annotations.Collate;

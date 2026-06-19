@@ -11,8 +11,8 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.FilterDetails;
-import org.hibernate.boot.models.mapping.internal.xml.FilterProcessing;
-import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.FilterProcessing;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 

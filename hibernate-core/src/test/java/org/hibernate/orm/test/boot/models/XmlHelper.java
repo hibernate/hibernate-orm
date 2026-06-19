@@ -14,7 +14,7 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.models.mapping.internal.xml.XmlResourceException;
+import org.hibernate.boot.mapping.internal.xml.XmlResourceException;
 import org.hibernate.models.spi.ClassLoading;
 
 import static org.hibernate.boot.jaxb.internal.MappingBinder.NON_VALIDATING;

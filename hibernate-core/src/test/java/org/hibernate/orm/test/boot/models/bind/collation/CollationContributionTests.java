@@ -5,9 +5,9 @@
 package org.hibernate.orm.test.boot.models.bind.collation;
 
 import org.hibernate.annotations.Collate;
-import org.hibernate.boot.models.mapping.internal.view.CollationContributionView;
-import org.hibernate.boot.models.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.models.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.view.CollationContributionView;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;

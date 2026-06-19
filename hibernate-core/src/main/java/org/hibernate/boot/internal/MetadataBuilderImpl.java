@@ -34,7 +34,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
-import org.hibernate.boot.models.mapping.internal.xml.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.pipeline.internal.MetadataResolver;
 import org.hibernate.boot.pipeline.internal.ResolvedMetadataImplementor;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;

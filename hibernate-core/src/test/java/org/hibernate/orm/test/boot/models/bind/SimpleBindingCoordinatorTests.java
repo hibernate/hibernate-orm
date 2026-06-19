@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.boot.models.bind;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.models.mapping.internal.relational.PhysicalTable;
-import org.hibernate.boot.models.mapping.internal.relational.SecondaryTable;
+import org.hibernate.boot.mapping.internal.relational.PhysicalTable;
+import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;

@@ -220,7 +220,7 @@ XML bindings to discover mapped classes, dynamic model names, metadata-complete
 contributions, and deferred overlay work.  As this integrates upstream, it
 probably makes sense to move the remaining XML processing contracts such as
 `XmlPreProcessingResult`, `XmlProcessor`, and `XmlProcessingResult` under
-`org.hibernate.boot.models.mapping.internal.categorize`.
+`org.hibernate.boot.mapping.internal.categorize`.
 
 More precisely, XML pre-processing and processing are source-interpretation
 concerns.  They sit between raw source collection and categorization in the

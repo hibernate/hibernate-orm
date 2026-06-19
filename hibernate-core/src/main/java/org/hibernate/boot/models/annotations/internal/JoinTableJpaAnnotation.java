@@ -12,21 +12,21 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
-import org.hibernate.boot.models.mapping.internal.xml.db.ForeignKeyProcessing;
-import org.hibernate.boot.models.mapping.internal.xml.db.JoinColumnProcessing;
-import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.db.ForeignKeyProcessing;
+import org.hibernate.boot.mapping.internal.xml.db.JoinColumnProcessing;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.applyCatalog;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.applyOptionalString;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.applySchema;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.collectCheckConstraints;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.collectIndexes;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.collectUniqueConstraints;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.applyCatalog;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.applyOptionalString;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.applySchema;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectCheckConstraints;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectIndexes;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectUniqueConstraints;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")

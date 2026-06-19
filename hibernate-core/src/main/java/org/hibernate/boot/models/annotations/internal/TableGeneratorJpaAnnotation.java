@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.models.annotations.spi.IndexCollector;
 import org.hibernate.boot.models.annotations.spi.UniqueConstraintCollector;
-import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -18,8 +18,8 @@ import jakarta.persistence.TableGenerator;
 
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.collectIndexes;
-import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.collectUniqueConstraints;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectIndexes;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectUniqueConstraints;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")

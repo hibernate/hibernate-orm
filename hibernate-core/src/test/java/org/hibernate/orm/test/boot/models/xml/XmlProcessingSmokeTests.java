@@ -10,18 +10,18 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.models.mapping.internal.categorize.CategorizedDomainModel;
-import org.hibernate.boot.models.mapping.internal.categorize.DomainModelCategorizer;
-import org.hibernate.boot.models.mapping.internal.categorize.FetchProfileRegistration;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
+import org.hibernate.boot.mapping.internal.categorize.FetchProfileRegistration;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.pipeline.internal.source.AvailableResources;
 import org.hibernate.boot.pipeline.internal.source.AvailableResourcesContext;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
-import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContextImpl;
-import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentImpl;
-import org.hibernate.boot.models.mapping.internal.xml.XmlPreProcessingResultImpl;
-import org.hibernate.boot.models.mapping.internal.xml.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContextImpl;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentImpl;
+import org.hibernate.boot.mapping.internal.xml.XmlPreProcessingResultImpl;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.models.internal.StringTypeDescriptor;
 import org.hibernate.models.spi.ClassDetails;
@@ -198,8 +198,8 @@ public class XmlProcessingSmokeTests {
 				metadataBuildingContext
 		);
 
-		final org.hibernate.boot.models.mapping.internal.categorize.GlobalRegistrationsImpl globalRegistrations =
-				(org.hibernate.boot.models.mapping.internal.categorize.GlobalRegistrationsImpl) categorizedDomainModel.getGlobalRegistrations();
+		final org.hibernate.boot.mapping.internal.categorize.GlobalRegistrationsImpl globalRegistrations =
+				(org.hibernate.boot.mapping.internal.categorize.GlobalRegistrationsImpl) categorizedDomainModel.getGlobalRegistrations();
 
 		assertThat( globalRegistrations.getConverterRegistrations() ).hasSize( 2 );
 		assertThat( globalRegistrations.getImportedRenames() )

@@ -6,7 +6,7 @@ package org.hibernate.boot.internal;
 
 import java.util.EnumSet;
 
-import org.hibernate.boot.models.mapping.internal.xml.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;

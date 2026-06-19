@@ -10,7 +10,7 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.internal.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.boot.models.mapping.internal.xml.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;

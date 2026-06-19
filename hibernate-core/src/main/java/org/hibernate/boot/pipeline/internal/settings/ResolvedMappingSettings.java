@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.models.mapping.BindingSettings;
+import org.hibernate.boot.mapping.BindingSettings;
 
 import jakarta.persistence.FetchType;
 

@@ -7,8 +7,8 @@ package org.hibernate.orm.test.boot.models.categorize;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.models.mapping.internal.categorize.DomainModelCategorizer;
-import org.hibernate.boot.models.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
+import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.pipeline.internal.source.AvailableResources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;

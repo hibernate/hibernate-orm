@@ -795,14 +795,14 @@ produce a named finalized view/product.
 == Package Placement
 
 The source-to-mapping pipeline now lives under
-`org.hibernate.boot.models.mapping`.  This is the containing package for the
+`org.hibernate.boot.mapping`.  This is the containing package for the
 phases that turn boot model resources into the resolved boot mapping model.
 
 The broader architecture is larger than "binding" as a single phase.
-`org.hibernate.boot.models.mapping.internal.xml`, `org.hibernate.boot.models.mapping.internal.categorize`,
-`org.hibernate.boot.models.mapping.internal.binders`, `org.hibernate.boot.models.mapping.internal.model`,
-`org.hibernate.boot.models.mapping.internal.view`, and
-`org.hibernate.boot.models.mapping.internal.materialize` are all phases in the same flow:
+`org.hibernate.boot.mapping.internal.xml`, `org.hibernate.boot.mapping.internal.categorize`,
+`org.hibernate.boot.mapping.internal.binders`, `org.hibernate.boot.mapping.internal.model`,
+`org.hibernate.boot.mapping.internal.view`, and
+`org.hibernate.boot.mapping.internal.materialize` are all phases in the same flow:
 
 [source]
 ----
@@ -824,7 +824,7 @@ binding look like unrelated subsystems.
 
 [source]
 ----
-org.hibernate.boot.models.mapping
+org.hibernate.boot.mapping
     internal
         xml
         categorize
@@ -859,21 +859,21 @@ all live under `internal`:
 * `internal.extension`: internal proof contracts for a possible future
   supported binding extension SPI.
 
-Internal proof packages such as `org.hibernate.boot.models.mapping.internal.extension`
+Internal proof packages such as `org.hibernate.boot.mapping.internal.extension`
 should not dictate the eventual public SPI placement.  They are rehearsal
 packages used to validate the shape before freezing a supported contract.
 
 [source]
 ----
-org.hibernate.boot.models.mapping.internal.context
+org.hibernate.boot.mapping.internal.context
     BindingStateImpl
 
-org.hibernate.boot.models.mapping.internal.context
+org.hibernate.boot.mapping.internal.context
     BindingContext
     BindingState
     BindingOptions
 
-org.hibernate.boot.models.mapping.internal.binders
+org.hibernate.boot.mapping.internal.binders
     BindingCoordinator
     EntityTypeBinder
     IdentifierBinder
@@ -881,7 +881,7 @@ org.hibernate.boot.models.mapping.internal.binders
     ToOneAttributeBinder
     ...
 
-org.hibernate.boot.models.mapping.internal.model
+org.hibernate.boot.mapping.internal.model
     BootBindingModel
     ManagedTypeBinding
     EntityTypeBinding
@@ -894,30 +894,30 @@ org.hibernate.boot.models.mapping.internal.model
     EmbeddableContribution
     MappedSuperclassContribution
 
-org.hibernate.boot.models.mapping.internal.view
+org.hibernate.boot.mapping.internal.view
     ManagedTypeView
     IdentifiableTypeView
     EntityView
     MappedSuperclassView
     EmbeddableView
 
-org.hibernate.boot.models.mapping.internal.materialize
+org.hibernate.boot.mapping.internal.materialize
     IdentifierMappingMaterializer
     PropertyMappingMaterializer
     EmbeddableMappingMaterializer
     BasicValueMappingMaterializer
 
-org.hibernate.boot.models.mapping.internal.relational
+org.hibernate.boot.mapping.internal.relational
     TableReference
     TableOwner
     PhysicalTable
     SecondaryTable
 
-org.hibernate.boot.models.mapping.internal.binders
+org.hibernate.boot.mapping.internal.binders
     SelectableCorrespondence
     SelectableOrderResolution
 
-org.hibernate.boot.models.mapping.internal.extension
+org.hibernate.boot.mapping.internal.extension
     AttributeBindingContributor
     AttributeBindingTarget
     BindingContributionContext
@@ -938,7 +938,7 @@ The important separation is:
 
 The current audit result is:
 
-* There is no supported user API in `org.hibernate.boot.models.mapping`.
+* There is no supported user API in `org.hibernate.boot.mapping`.
 * All currently implemented pipeline packages are under `mapping.internal`
   because they are for Hibernate code only, even when classes are Java-`public`
   for cross-package access.
@@ -952,7 +952,7 @@ The current audit result is:
   after the target/facet model is stable.
 
 `model` is used for now because `binding` was too easily confused with the
-overall `org.hibernate.boot.models.mapping` subsystem and the binder worker layer.
+overall `org.hibernate.boot.mapping` subsystem and the binder worker layer.
 These products are still boot binding products, not runtime model parts and not
 final mapping objects.
 

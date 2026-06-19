@@ -9,7 +9,7 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.EntityListener;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 

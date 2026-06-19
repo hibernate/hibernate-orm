@@ -5,9 +5,9 @@
 package org.hibernate.orm.test.boot.models.bind.naturalid;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.boot.models.mapping.internal.view.NaturalIdContributionView;
-import org.hibernate.boot.models.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.models.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;

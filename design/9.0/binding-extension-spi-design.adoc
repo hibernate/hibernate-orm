@@ -88,7 +88,7 @@ the API/SPI/internal taxonomy.
 The implementation may adapt those public contracts to internal binding-model
 objects, contribution records, pending work items, materializers, or
 `org.hibernate.mapping` compatibility objects.  But no public contributor should
-need to import `org.hibernate.boot.models.mapping.internal.*`, and no public
+need to import `org.hibernate.boot.mapping.internal.*`, and no public
 target should leak an internal model object as a return type.
 
 This applies equally to the not-yet-modeled `TypeBinder` replacement.  A public
@@ -299,7 +299,7 @@ without exposing `PersistentClass` or `Component`.
 == Evidence From Internal Proofs
 
 ORM has an internal rehearsal of this shape under
-`org.hibernate.boot.models.mapping.internal.extension`.  It is intentionally not a
+`org.hibernate.boot.mapping.internal.extension`.  It is intentionally not a
 supported extension contract.  Its purpose is to route built-in annotations
 through an SPI-shaped adapter before freezing the public API.
 

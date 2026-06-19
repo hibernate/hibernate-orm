@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.pipeline.internal;
 
-import org.hibernate.boot.models.mapping.internal.context.BindingState;
-import org.hibernate.boot.models.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
 import org.hibernate.boot.spi.MetadataImplementor;
 
 /// Resolved ORM boot metadata and associated boot-model products.

@@ -8,7 +8,7 @@ import java.util.EnumSet;
 
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.models.mapping.internal.xml.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.CollectionClassification;
 

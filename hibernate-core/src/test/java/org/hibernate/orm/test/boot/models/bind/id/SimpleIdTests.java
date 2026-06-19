@@ -8,14 +8,14 @@ import java.util.Set;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.models.mapping.internal.model.IdentifierExtractionKind;
-import org.hibernate.boot.models.mapping.internal.view.EntityView;
-import org.hibernate.boot.models.mapping.internal.view.IdentifierContributionView;
-import org.hibernate.boot.models.mapping.internal.categorize.AggregatedKeyMapping;
-import org.hibernate.boot.models.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.models.mapping.internal.categorize.BasicKeyMapping;
-import org.hibernate.boot.models.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.models.mapping.internal.categorize.NonAggregatedKeyMapping;
+import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
+import org.hibernate.boot.mapping.internal.view.EntityView;
+import org.hibernate.boot.mapping.internal.view.IdentifierContributionView;
+import org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
+import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
@@ -687,14 +687,14 @@ public class SimpleIdTests {
 	@Test
 	void testHorizontalBindingContractsDoNotExposeMappingModelTypes() {
 		assertNoMappingModelLeakage(
-				org.hibernate.boot.models.mapping.internal.model.BootBindingModel.class,
-				org.hibernate.boot.models.mapping.internal.model.ManagedTypeBinding.class,
-				org.hibernate.boot.models.mapping.internal.model.EntityTypeBinding.class,
-				org.hibernate.boot.models.mapping.internal.model.MappedSuperclassTypeBinding.class,
-				org.hibernate.boot.models.mapping.internal.model.EmbeddableTypeBinding.class,
-				org.hibernate.boot.models.mapping.internal.model.IdentifiableAttributeDeclarationBinding.class,
-				org.hibernate.boot.models.mapping.internal.model.IdentifierContribution.class,
-				org.hibernate.boot.models.mapping.internal.model.IdentifierAttributeBinding.class
+				org.hibernate.boot.mapping.internal.model.BootBindingModel.class,
+				org.hibernate.boot.mapping.internal.model.ManagedTypeBinding.class,
+				org.hibernate.boot.mapping.internal.model.EntityTypeBinding.class,
+				org.hibernate.boot.mapping.internal.model.MappedSuperclassTypeBinding.class,
+				org.hibernate.boot.mapping.internal.model.EmbeddableTypeBinding.class,
+				org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding.class,
+				org.hibernate.boot.mapping.internal.model.IdentifierContribution.class,
+				org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding.class
 		);
 	}
 

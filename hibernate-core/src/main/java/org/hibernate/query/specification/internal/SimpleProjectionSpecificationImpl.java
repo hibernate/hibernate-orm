@@ -28,37 +28,45 @@ import java.util.Map;
 /**
  * @author Gavin King
  */
-public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionSpecification<T,X>, JpaTypedQueryReference<X> {
+public class SimpleProjectionSpecificationImpl<T,X>
+		implements SimpleProjectionSpecification<T,X>, JpaTypedQueryReference<X> {
 
 	private final SelectionSpecification<T> selectionSpecification;
 	private final Path<T, X> path;
 	private final SingularAttribute<? super T, X> attribute;
 
-	public SimpleProjectionSpecificationImpl(SelectionSpecification<T> specification, Path<T, X> path) {
+	public SimpleProjectionSpecificationImpl(
+			@Nonnull SelectionSpecification<T> specification,
+			@Nonnull Path<T, X> path) {
 		this.selectionSpecification = specification;
 		this.path = path;
 		this.attribute = null;
 	}
 
-	public SimpleProjectionSpecificationImpl(SelectionSpecification<T> specification, SingularAttribute<? super T, X> attribute) {
+	public SimpleProjectionSpecificationImpl(
+			@Nonnull SelectionSpecification<T> specification,
+			@Nonnull SingularAttribute<? super T, X> attribute) {
 		this.selectionSpecification = specification;
 		this.attribute = attribute;
 		this.path = null;
 	}
 
+	@Nonnull
 	@Override
-	public QuerySpecification<T> restrict(Restriction<? super T> restriction) {
+	public QuerySpecification<T> restrict(@Nonnull Restriction<? super T> restriction) {
 		throw new UnsupportedOperationException( "This is not supported yet!" );
 	}
 
+	@Nonnull
 	@Override
-	public SelectionQuery<X> createQuery(EntityHandler entityHandler) {
+	public SelectionQuery<X> createQuery(@Nonnull EntityHandler entityHandler) {
 		return entityHandler.unwrap( SharedSessionContract.class )
 				.createQuery( buildCriteria( entityHandler.getCriteriaBuilder() ) );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaQuery<X> buildCriteria(CriteriaBuilder builder) {
+	public CriteriaQuery<X> buildCriteria(@Nonnull CriteriaBuilder builder) {
 		var impl = (SelectionSpecificationImpl<T>) selectionSpecification;
 		// TODO: handle HQL, existing criteria
 		final var tupleQuery =
@@ -77,13 +85,15 @@ public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionS
 		return tupleQuery;
 	}
 
+	@Nonnull
 	@Override
-	public SimpleProjectionSpecification<T,X> validate(CriteriaBuilder builder) {
+	public SimpleProjectionSpecification<T,X> validate(@Nonnull CriteriaBuilder builder) {
 		selectionSpecification.validate( builder );
 		// TODO: validate projection
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public TypedQueryReference<X> reference() {
 		return this;
@@ -116,11 +126,13 @@ public class SimpleProjectionSpecificationImpl<T,X> implements SimpleProjectionS
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public String getEntityGraphName() {
 		return "";
 	}

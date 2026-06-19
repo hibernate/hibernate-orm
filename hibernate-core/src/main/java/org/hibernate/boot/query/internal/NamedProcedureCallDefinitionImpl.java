@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
@@ -48,15 +49,15 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	private final ParameterDefinitions parameterDefinitions;
 	private final Map<String, Object> hints;
 
-	public NamedProcedureCallDefinitionImpl(NamedStoredProcedureQuery annotation) {
-		this.registeredName = annotation.name();
-		this.procedureName = annotation.procedureName();
-		this.hints = new QueryHintDefinition( registeredName, annotation.hints() ).getHintsMap();
+	public NamedProcedureCallDefinitionImpl(@Nonnull NamedStoredProcedureQuery annotation) {
+		registeredName = annotation.name();
+		procedureName = annotation.procedureName();
+		hints = new QueryHintDefinition( registeredName, annotation.hints() ).getHintsMap();
 
-		this.resultClasses = annotation.resultClasses();
-		this.resultSetMappings = annotation.resultSetMappings();
+		resultClasses = annotation.resultClasses();
+		resultSetMappings = annotation.resultSetMappings();
 
-		this.parameterDefinitions = new ParameterDefinitions( annotation.parameters() );
+		parameterDefinitions = new ParameterDefinitions( annotation.parameters() );
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -71,11 +72,13 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		}
 	}
 
+	@Nonnull
 	@Override
 	public String getRegistrationName() {
 		return registeredName;
 	}
 
+	@Nullable
 	@Override
 	public FlushMode getQueryFlushMode() {
 		return null;
@@ -87,28 +90,33 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public String getProcedureName() {
 		return procedureName;
 	}
 
+	@Nullable
 	@Override
 	public Timeout getTimeout() {
 		return null;
 	}
 
+	@Nullable
 	@Override
 	public String getComment() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public Map<String, Object> getHints() {
 		return hints;
 	}
 
+	@Nonnull
 	@Override
-	public NamedCallableQueryMemento resolve(SessionFactoryImplementor sessionFactory) {
+	public NamedCallableQueryMemento resolve(@Nonnull SessionFactoryImplementor sessionFactory) {
 		final Set<String> collectedQuerySpaces = new HashSet<>();
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Timeout;
 
 import java.util.Map;
@@ -14,9 +16,12 @@ import java.util.Map;
 ///
 /// @author Steve Ebersole
 public interface JpaReference {
+	@Nullable
 	String getName();
 
+	@Nullable
 	Timeout getTimeout();
 
+	@Nonnull
 	Map<String, Object> getHints();
 }

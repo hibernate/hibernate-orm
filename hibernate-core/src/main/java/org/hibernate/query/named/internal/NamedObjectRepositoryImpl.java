@@ -4,11 +4,12 @@
  */
 package org.hibernate.query.named.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Statement;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.boot.Metadata;
@@ -57,10 +58,10 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	private final Map<String, NamedResultSetMappingMemento> resultSetMappingMementoMap;
 
 	public NamedObjectRepositoryImpl(
-			Map<String,NamedSelectionMemento<?>> selectionMementos,
-			Map<String,NamedMutationMemento<?>> mutationMementos,
-			Map<String,NamedCallableQueryMemento> callableMementoMap,
-			Map<String,NamedResultSetMappingMemento> resultSetMappingMementoMap) {
+			@Nonnull Map<String,NamedSelectionMemento<?>> selectionMementos,
+			@Nonnull Map<String,NamedMutationMemento<?>> mutationMementos,
+			@Nonnull Map<String,NamedCallableQueryMemento> callableMementoMap,
+			@Nonnull Map<String,NamedResultSetMappingMemento> resultSetMappingMementoMap) {
 		this.selectionMementos = selectionMementos;
 		this.mutationMementos = mutationMementos;
 		this.callableMementoMap = callableMementoMap;
@@ -68,7 +69,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public <R> NamedQueryMemento<R> findQueryMementoByName(String name, boolean includeProcedureCalls) {
+	@Nullable
+	public <R> NamedQueryMemento<R> findQueryMementoByName(@Nonnull String name, boolean includeProcedureCalls) {
 		NamedQueryMemento<?> match = selectionMementos.get( name );
 		if ( match == null ) {
 			match = mutationMementos.get( name );
@@ -81,7 +83,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public <R> @Nonnull NamedQueryMemento<R> getQueryMementoByName(String name, boolean includeProcedureCalls) {
+	@Nonnull
+	public <R> NamedQueryMemento<R> getQueryMementoByName(@Nonnull String name, boolean includeProcedureCalls) {
 		final var match = findQueryMementoByName( name, includeProcedureCalls );
 		if ( match == null ) {
 			throw new UnknownNamedQueryException( name );
@@ -91,20 +94,23 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public <R> NamedSelectionMemento<R> getSelectionQueryMemento(String name) {
+	@Nullable
+	public <R> NamedSelectionMemento<R> getSelectionQueryMemento(@Nonnull String name) {
 		//noinspection unchecked
 		return (NamedSelectionMemento<R>) selectionMementos.get( name );
 	}
 
 	@Override
-	public <R> NamedMutationMemento<R> getMutationQueryMemento(String name) {
+	@Nullable
+	public <R> NamedMutationMemento<R> getMutationQueryMemento(@Nonnull String name) {
 		//noinspection unchecked
 		return (NamedMutationMemento<R>) mutationMementos.get( name );
 	}
 
 	@Override
+	@Nonnull
 	@SuppressWarnings("unchecked")
-	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
+	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(@Nonnull Class<R> resultType) {
 		final Map<String, TypedQueryReference<R>> matches = mapOfSize( selectionMementos.size() );
 		for ( var entry : selectionMementos.entrySet() ) {
 			if ( resultType.equals( entry.getValue().getResultType() ) ) {
@@ -115,12 +121,13 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public void forEachNamedQuery(BiConsumer<String,? super TypedQueryReference<?>> action) {
+	public void forEachNamedQuery(@Nonnull BiConsumer<String,? super TypedQueryReference<?>> action) {
 		selectionMementos.forEach( action );
 	}
 
 	@Override
-	public <R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query) {
+	@Nonnull
+	public <R> TypedQueryReference<R> registerNamedQuery(@Nonnull String name, @Nonnull TypedQuery<R> query) {
 		try {
 			final var refProducer = query.unwrap( TypedQueryReferenceProducer.class );
 			final var ref = refProducer.toSelectionMemento( name );
@@ -134,12 +141,14 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, StatementReference> getNamedMutations() {
 		return Collections.unmodifiableMap( mutationMementos );
 	}
 
 	@Override
-	public @Nonnull StatementReference registerNamedMutation(String name, Statement statement) {
+	@Nonnull
+	public StatementReference registerNamedMutation(@Nonnull String name, @Nonnull Statement statement) {
 		try {
 			final var refProducer = statement.unwrap( StatementReferenceProducer.class );
 			final var ref = refProducer.toMutationMemento( name );
@@ -152,7 +161,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public void forEachNamedMutation(BiConsumer<String,? super StatementReference> action) {
+	public void forEachNamedMutation(@Nonnull BiConsumer<String,? super StatementReference> action) {
 		mutationMementos.forEach( action );
 	}
 
@@ -160,17 +169,20 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	// callable mementos
 
 	@Override
-	public NamedCallableQueryMemento getCallableQueryMemento(String name) {
+	@Nullable
+	public NamedCallableQueryMemento getCallableQueryMemento(@Nonnull String name) {
 		return callableMementoMap.get( name );
 	}
 
 	@Override
-	public void visitCallableQueryMementos(Consumer<NamedCallableQueryMemento> action) {
+	public void visitCallableQueryMementos(@Nonnull Consumer<NamedCallableQueryMemento> action) {
 		callableMementoMap.values().forEach( action );
 	}
 
 	@Override
-	public synchronized void registerCallableQueryMemento(String name, NamedCallableQueryMemento memento) {
+	public synchronized void registerCallableQueryMemento(
+			@Nonnull String name,
+			@Nonnull NamedCallableQueryMemento memento) {
 		callableMementoMap.put( name, memento );
 	}
 
@@ -179,17 +191,20 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	// Result-set mapping mementos
 
 	@Override
-	public NamedResultSetMappingMemento getResultSetMappingMemento(String mappingName) {
+	@Nullable
+	public NamedResultSetMappingMemento getResultSetMappingMemento(@Nonnull String mappingName) {
 		return resultSetMappingMementoMap.get( mappingName );
 	}
 
 	@Override
-	public void visitResultSetMappingMementos(Consumer<NamedResultSetMappingMemento> action) {
+	public void visitResultSetMappingMementos(@Nonnull Consumer<NamedResultSetMappingMemento> action) {
 		resultSetMappingMementoMap.values().forEach( action );
 	}
 
 	@Override
-	public void registerResultSetMappingMemento(String name, NamedResultSetMappingMemento memento) {
+	public void registerResultSetMappingMemento(
+			@Nonnull String name,
+			@Nonnull NamedResultSetMappingMemento memento) {
 		resultSetMappingMementoMap.put( name, memento );
 	}
 
@@ -198,10 +213,11 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	// Prepare repository for use
 
 	@Override
+	@Nullable
 	public NamedQueryMemento<?> resolve(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor bootMetamodel,
-			String registrationName) {
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nonnull MetadataImplementor bootMetamodel,
+			@Nonnull String registrationName) {
 		NamedQueryMemento<?> namedQuery = selectionMementos.get( registrationName );
 		if ( namedQuery != null ) {
 			return namedQuery;
@@ -233,7 +249,10 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		return null;
 	}
 
-	private NamedQueryMemento<?> handleNamedHqlDefinition(NamedHqlQueryDefinition<?> namedHqlQueryDefinition, SessionFactoryImplementor sessionFactory) {
+	@Nonnull
+	private NamedQueryMemento<?> handleNamedHqlDefinition(
+			@Nonnull NamedHqlQueryDefinition<?> namedHqlQueryDefinition,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		var memento = namedHqlQueryDefinition.resolve( sessionFactory );
 		if ( memento instanceof NamedSelectionMemento<?> selectionMemento ) {
 			selectionMementos.put( namedHqlQueryDefinition.getName(), selectionMemento );
@@ -244,7 +263,10 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		return memento;
 	}
 
-	private NamedNativeQueryMemento<?> handleNamedNativeDefinition(NamedNativeQueryDefinition<?> namedNativeQueryDefinition, SessionFactoryImplementor sessionFactory) {
+	@Nonnull
+	private NamedNativeQueryMemento<?> handleNamedNativeDefinition(
+			@Nonnull NamedNativeQueryDefinition<?> namedNativeQueryDefinition,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var memento = namedNativeQueryDefinition.resolve( sessionFactory );
 		if ( memento instanceof NamedSelectionMemento<?> selectionMemento ) {
 			selectionMementos.put( namedNativeQueryDefinition.getName(), selectionMemento );
@@ -256,7 +278,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public void prepare(SessionFactoryImplementor sessionFactory, Metadata bootMetamodel) {
+	public void prepare(@Nonnull SessionFactoryImplementor sessionFactory, @Nonnull Metadata bootMetamodel) {
 		bootMetamodel.visitNamedHqlQueryDefinitions( definition ->
 				handleNamedHqlDefinition( definition, sessionFactory )
 		);
@@ -284,7 +306,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	// Named query checking
 
 	@Override
-	public void validateNamedQueries(QueryEngine queryEngine) {
+	public void validateNamedQueries(@Nonnull QueryEngine queryEngine) {
 		final var errors = checkNamedQueries( queryEngine );
 		if ( !errors.isEmpty() ) {
 			int i = 0;
@@ -302,7 +324,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public Map<String, HibernateException> checkNamedQueries(QueryEngine queryEngine) {
+	@Nonnull
+	public Map<String, HibernateException> checkNamedQueries(@Nonnull QueryEngine queryEngine) {
 		final Map<String,HibernateException> errors = new HashMap<>();
 
 		LOG.tracef( "Checking %s named selection queries", selectionMementos.size() );

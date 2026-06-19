@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -69,9 +70,10 @@ public interface SimpleProjectionSpecification<T,X> extends QuerySpecification<T
 	 * Create a new {@code ProjectionSpecification} which augments the given
 	 * {@link SelectionSpecification}.
 	 */
+	@Nonnull
 	static <T,X> SimpleProjectionSpecification<T,X> create(
-			SelectionSpecification<T> selectionSpecification,
-			Path<T,X> projectedPath) {
+			@Nonnull SelectionSpecification<T> selectionSpecification,
+			@Nonnull Path<T,X> projectedPath) {
 		return new SimpleProjectionSpecificationImpl<>( selectionSpecification, projectedPath );
 	}
 
@@ -79,9 +81,10 @@ public interface SimpleProjectionSpecification<T,X> extends QuerySpecification<T
 	 * Create a new {@code ProjectionSpecification} which augments the given
 	 * {@link SelectionSpecification}.
 	 */
+	@Nonnull
 	static <T,X> SimpleProjectionSpecification<T,X> create(
-			SelectionSpecification<T> selectionSpecification,
-			SingularAttribute<? super T,X> projectedAttribute) {
+			@Nonnull SelectionSpecification<T> selectionSpecification,
+			@Nonnull SingularAttribute<? super T,X> projectedAttribute) {
 		return new SimpleProjectionSpecificationImpl<>( selectionSpecification, projectedAttribute );
 	}
 
@@ -89,8 +92,9 @@ public interface SimpleProjectionSpecification<T,X> extends QuerySpecification<T
 	 * Create a new {@code ProjectionSpecification} which augments the given
 	 * {@link SelectionSpecification} with a {@code count(*)}.
 	 */
+	@Nonnull
 	static <T> SimpleProjectionSpecification<T,Long> count(
-			SelectionSpecification<T> selectionSpecification) {
+			@Nonnull SelectionSpecification<T> selectionSpecification) {
 		return new CountProjectionSpecificationImpl<>( selectionSpecification );
 	}
 
@@ -98,20 +102,25 @@ public interface SimpleProjectionSpecification<T,X> extends QuerySpecification<T
 	 * Create a new {@code ProjectionSpecification} which augments the given
 	 * {@link SelectionSpecification} with an {@code exists()}.
 	 */
+	@Nonnull
 	static <T> SimpleProjectionSpecification<T,Boolean> exists(
-			SelectionSpecification<T> selectionSpecification) {
+			@Nonnull SelectionSpecification<T> selectionSpecification) {
 		return new ExistsProjectionSpecificationImpl<>( selectionSpecification );
 	}
 
+	@Nonnull
 	@Override
-	SelectionQuery<X> createQuery(EntityHandler entityHandler);
+	SelectionQuery<X> createQuery(@Nonnull EntityHandler entityHandler);
 
+	@Nonnull
 	@Override
-	CriteriaQuery<X> buildCriteria(CriteriaBuilder builder);
+	CriteriaQuery<X> buildCriteria(@Nonnull CriteriaBuilder builder);
 
+	@Nonnull
 	@Override
 	TypedQueryReference<X> reference();
 
+	@Nonnull
 	@Override
-	SimpleProjectionSpecification<T,X> validate(CriteriaBuilder builder);
+	SimpleProjectionSpecification<T,X> validate(@Nonnull CriteriaBuilder builder);
 }

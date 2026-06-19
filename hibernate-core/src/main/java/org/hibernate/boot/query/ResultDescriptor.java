@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.named.spi.ResultMemento;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -18,5 +19,6 @@ public interface ResultDescriptor {
 	 * Resolve the descriptor into a memento capable of being stored in the
 	 * {@link NamedObjectRepository}
 	 */
-	ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext);
+	@Nonnull
+	ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext);
 }

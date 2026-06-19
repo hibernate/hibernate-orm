@@ -4,9 +4,10 @@
  */
 package org.hibernate.query.named.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
-import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -28,52 +29,69 @@ public class NativeSelectionMementoImpl<R>
 		extends AbstractSelectionMemento<R>
 		implements NamedNativeQueryMemento<R>, Serializable {
 	private final String sqlString;
-	private final String resultSetMappingName;
-	private final Set<String> synchronizationSpaces;
+	private final @Nullable String resultSetMappingName;
+	private final @Nullable Set<String> synchronizationSpaces;
 
 	public NativeSelectionMementoImpl(
-			String name, String sqlString,
-			@Nullable Class<R> queryType, String resultSetMappingName, Set<String> synchronizationSpaces,
-			FlushMode flushMode, Timeout timeout, String comment,
-			Boolean readOnly, Integer fetchSize, Integer firstRow, Integer maxRows,
-			Boolean cacheable, CacheMode cacheMode, String cacheRegion,
-			LockMode lockMode, PessimisticLockScope lockScope, Timeout lockTimeout, Locking.FollowOn followOnLockingStrategy,
-			Map<String, Object> hints) {
+			@Nonnull String name,
+			@Nonnull String sqlString,
+			@Nullable Class<R> queryType,
+			@Nullable String resultSetMappingName,
+			@Nullable Set<String> synchronizationSpaces,
+			@Nullable FlushMode flushMode,
+			@Nullable Timeout timeout,
+			@Nullable String comment,
+			@Nullable Boolean readOnly,
+			@Nullable Integer fetchSize,
+			@Nullable Integer firstRow,
+			@Nullable Integer maxRows,
+			@Nullable Boolean cacheable,
+			@Nullable CacheMode cacheMode,
+			@Nullable String cacheRegion,
+			@Nullable LockMode lockMode,
+			@Nullable PessimisticLockScope lockScope,
+			@Nullable Timeout lockTimeout,
+			@Nullable Locking.FollowOn followOnLockingStrategy,
+			@Nonnull Map<String, Object> hints) {
 		super( name, queryType, flushMode, timeout, comment, readOnly, fetchSize, firstRow, maxRows, cacheable,
-				cacheMode,
-				cacheRegion, lockMode, lockScope, lockTimeout, followOnLockingStrategy, hints );
+				cacheMode, cacheRegion, lockMode, lockScope, lockTimeout, followOnLockingStrategy, hints );
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;
 		this.synchronizationSpaces = synchronizationSpaces;
 	}
 
-	public NativeSelectionMementoImpl(String name, NativeSelectionMementoImpl<R> original) {
+	public NativeSelectionMementoImpl(@Nonnull String name, @Nonnull NativeSelectionMementoImpl<R> original) {
 		super( name, original );
 		this.sqlString = original.sqlString;
 		this.resultSetMappingName = original.resultSetMappingName;
 		this.synchronizationSpaces = original.synchronizationSpaces;
 	}
 
+	@Nonnull
 	@Override
 	public String getSqlString() {
 		return sqlString;
 	}
 
+	@Nonnull
 	@Override
 	public String getOriginalSqlString() {
 		return getSqlString();
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionString() {
 		return getSqlString();
 	}
 
+	@Nullable
 	@Override
 	public String getResultMappingName() {
 		return resultSetMappingName;
 	}
 
+	@Nullable
 	@Override
 	public Set<String> getQuerySpaces() {
 		return synchronizationSpaces;
@@ -85,39 +103,45 @@ public class NativeSelectionMementoImpl<R>
 		return null;
 	}
 
+	@Nonnull
 	@Override
-	public NativeSelectionMementoImpl<R> makeCopy(String name) {
+	public NativeSelectionMementoImpl<R> makeCopy(@Nonnull String name) {
 		return new NativeSelectionMementoImpl<>( name, this );
 	}
 
 	@Override
-	public void validate(QueryEngine queryEngine) {
+	public void validate(@Nonnull QueryEngine queryEngine) {
 		// nothing to do
 	}
 
+	@Nonnull
 	@Override
-	public NativeQueryImplementor<R> toSelectionQuery(SharedSessionContractImplementor session) {
+	public NativeQueryImplementor<R> toSelectionQuery(@Nonnull SharedSessionContractImplementor session) {
 		return toSelectionQuery( session, null );
 	}
 
+	@Nonnull
 	@Override
-	public <X> NativeQueryImplementor<X> toSelectionQuery(SharedSessionContractImplementor session, Class<X> javaType) {
+	public <X> NativeQueryImplementor<X> toSelectionQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<X> javaType) {
 		return new NativeQueryImpl<>( this, javaType, null, session );
 	}
 
+	@Nonnull
 	@Override
-	public NativeQueryImplementor<R> toQuery(SharedSessionContractImplementor session) {
+	public NativeQueryImplementor<R> toQuery(@Nonnull SharedSessionContractImplementor session) {
 		return toSelectionQuery( session );
 	}
 
+	@Nonnull
 	@Override
-	public <T> NativeQueryImplementor<T> toQuery(SharedSessionContractImplementor session, String resultSetMapping) {
+	public <T> NativeQueryImplementor<T> toQuery(@Nonnull SharedSessionContractImplementor session, @Nullable String resultSetMapping) {
 		//noinspection unchecked,rawtypes
 		return new NativeQueryImpl( this, null, resultSetMapping, session );
 	}
 
+	@Nonnull
 	@Override
-	public <X> NativeQueryImplementor<X> toQuery(SharedSessionContractImplementor session, Class<X> javaType) {
+	public <X> NativeQueryImplementor<X> toQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<X> javaType) {
 		return toSelectionQuery( session, javaType );
 	}
 }

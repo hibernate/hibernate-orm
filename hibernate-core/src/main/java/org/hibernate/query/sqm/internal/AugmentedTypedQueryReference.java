@@ -53,6 +53,7 @@ public final class AugmentedTypedQueryReference<T> implements JpaTypedQueryRefer
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return reference.getName();
 	}
@@ -96,6 +97,7 @@ public final class AugmentedTypedQueryReference<T> implements JpaTypedQueryRefer
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return reference instanceof JpaTypedQueryReference<?> jpaReference
 				? jpaReference.getTimeout()

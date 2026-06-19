@@ -126,6 +126,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
           MAVEN_CENTRAL_FALLBACK: "true"
+          JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
@@ -254,6 +255,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
           MAVEN_CENTRAL_FALLBACK: "true"
+          JPA_PREVIEW: "true"
           RUNID: ${{ github.run_number }}
           TESTPILOT_CONNECTION_STRING_SUFFIX: ${{ steps.create_database.outputs.connection_string_suffix }}
           TESTPILOT_PASSWORD: ${{ steps.create_database.outputs.database_password }}
@@ -394,6 +396,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
           MAVEN_CENTRAL_FALLBACK: "true"
+          JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
@@ -608,6 +611,7 @@ jobs:
         env:
           MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
           MAVEN_CENTRAL_FALLBACK: "true"
+          JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
@@ -702,6 +706,7 @@ jobs:
         env:
           MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
           MAVEN_CENTRAL_FALLBACK: "true"
+          JPA_PREVIEW: "true"
 
       - name: Store build info for Sonar scanning
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

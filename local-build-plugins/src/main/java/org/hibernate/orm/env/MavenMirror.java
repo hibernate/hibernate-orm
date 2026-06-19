@@ -8,6 +8,8 @@ import org.gradle.api.Action;
 import org.gradle.api.artifacts.dsl.RepositoryHandler;
 import org.gradle.api.artifacts.repositories.RepositoryContentDescriptor;
 
+import java.net.URI;
+
 /**
  * Configures Maven Central or a mirror of it, based on the {@code MAVEN_MIRROR} environment
  * variable or system property. Optionally supports authentication via
@@ -39,6 +41,26 @@ public class MavenMirror {
 
 	public static void maybeAddMavenLocal(RepositoryHandler repositories) {
 		maybeAddMavenLocal( repositories, null );
+	}
+
+	/**
+	 * Adds the Maven Central Snapshots repository.
+	 * Useful for running against current snapshots of Jakarta APIs.
+	 *
+	 * @param contentFilter optional content filter, e.g. {@code c -> c.includeGroup("jakarta.persistence")}
+	 */
+	public static void maybeAddMavenCentralSnapshots(RepositoryHandler repositories, Action<RepositoryContentDescriptor> contentFilter) {
+		repositories.maven( repo -> {
+			repo.setName( "Central Portal Snapshots" );
+			repo.setUrl( URI.create( "https://central.sonatype.com/repository/maven-snapshots/" ) );
+			if ( contentFilter != null ) {
+				repo.content( contentFilter );
+			}
+		} );
+	}
+
+	public static void maybeAddMavenCentralSnapshots(RepositoryHandler repositories) {
+		maybeAddMavenCentralSnapshots( repositories, null );
 	}
 
 	/**

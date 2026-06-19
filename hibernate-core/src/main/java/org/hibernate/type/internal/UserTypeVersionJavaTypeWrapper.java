@@ -6,6 +6,7 @@ package org.hibernate.type.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -35,5 +36,15 @@ public class UserTypeVersionJavaTypeWrapper<J> extends UserTypeJavaTypeWrapper<J
 			Integer scale,
 			SharedSessionContractImplementor session) {
 		return ( (UserVersionType<J>) userType ).next( current, session );
+	}
+
+	@Override
+	public J seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return ( (UserVersionType<J>) userType ).seed( options );
+	}
+
+	@Override
+	public J next(J current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return ( (UserVersionType<J>) userType ).next( current, options );
 	}
 }

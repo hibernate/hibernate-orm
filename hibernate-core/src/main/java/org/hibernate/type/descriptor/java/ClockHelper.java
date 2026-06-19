@@ -7,6 +7,7 @@ package org.hibernate.type.descriptor.java;
 import java.time.Clock;
 import java.time.Duration;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
 
@@ -33,13 +34,20 @@ public class ClockHelper {
 	}
 
 	public static Clock forPrecision(Integer precision, SharedSessionContractImplementor session, int maxPrecision) {
+		return forPrecision( precision, session.getSessionFactory(), maxPrecision );
+	}
+
+	public static Clock forPrecision(Integer precision, SessionFactoryImplementor factory) {
+		return forPrecision( precision, factory, 9 );
+	}
+
+	public static Clock forPrecision(Integer precision, SessionFactoryImplementor factory, int maxPrecision) {
 		final int resolvedPrecision =
 				precision == null
-						? session.getJdbcServices().getDialect().getDefaultTimestampPrecision()
+						? factory.getJdbcServices().getDialect().getDefaultTimestampPrecision()
 						: precision;
 		final var baseClock = (Clock)
-				session.getFactory().getProperties()
-						.get( CurrentTimestampGeneration.CLOCK_SETTING_NAME );
+				factory.getProperties().get( CurrentTimestampGeneration.CLOCK_SETTING_NAME );
 		return forPrecision( baseClock, resolvedPrecision, maxPrecision );
 	}
 

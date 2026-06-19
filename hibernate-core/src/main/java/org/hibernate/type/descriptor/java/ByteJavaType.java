@@ -208,4 +208,13 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		return ZERO;
 	}
 
+	@Override
+	public Byte seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return ZERO;
+	}
+
+	@Override
+	public Byte next(Byte current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return (byte) ( current + 1 );
+	}
 }

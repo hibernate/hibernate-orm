@@ -7,6 +7,7 @@ package org.hibernate.engine.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 
 
@@ -42,7 +43,7 @@ public final class Versioning {
 						? versionMapping.getTemporalPrecision()
 						: versionMapping.getPrecision(),
 				versionMapping.getScale(),
-				session
+				(WrapperOptions) session
 		);
 		VersionLogger.INSTANCE.seed( seed );
 		return seed;

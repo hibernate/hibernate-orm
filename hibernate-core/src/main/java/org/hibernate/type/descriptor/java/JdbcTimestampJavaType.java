@@ -270,6 +270,15 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 		return Timestamp.from( ClockHelper.forPrecision( precision, session ).instant() );
 	}
 
+	@Override
+	public Timestamp seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return Timestamp.from( ClockHelper.forPrecision( precision, options.getSessionFactory() ).instant() );
+	}
+
+	@Override
+	public Timestamp next(Timestamp current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return seed( length, precision, scale, options );
+	}
 
 	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Timestamp> {
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();

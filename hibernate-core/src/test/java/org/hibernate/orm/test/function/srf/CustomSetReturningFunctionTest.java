@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(OracleDialect.class)
-@RequiresDialect(DB2Dialect.class)
+@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(SybaseASEDialect.class)
 @RequiresDialect(HANADialect.class)

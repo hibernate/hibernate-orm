@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import jakarta.persistence.JoinColumn;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.graph.GraphSemantic;
@@ -386,9 +387,11 @@ public class LoadAndFetchGraphAssociationNotExplicitlySpecifiedTest {
 		private String name;
 
 		@OneToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "lazy_one_id")
 		private RootEntity inverseSideOfLazyOneToOneUnowned;
 
 		@OneToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "eager_one_id")
 		private RootEntity inverseSideOfEagerOneToOneUnowned;
 
 		public ContainedEntity() {

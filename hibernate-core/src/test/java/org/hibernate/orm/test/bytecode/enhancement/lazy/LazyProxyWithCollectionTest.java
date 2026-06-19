@@ -7,6 +7,7 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.JoinColumn;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -134,6 +135,7 @@ public class LazyProxyWithCollectionTest {
 		String name;
 
 		@OneToMany
+		@JoinColumn(name = "child_id")
 		Set<Child> children = new HashSet<>();
 
 		Child() {

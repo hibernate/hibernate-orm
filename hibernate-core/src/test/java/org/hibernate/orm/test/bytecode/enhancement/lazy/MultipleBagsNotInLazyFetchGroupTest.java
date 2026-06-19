@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.JoinColumn;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -71,11 +72,11 @@ public class MultipleBagsNotInLazyFetchGroupTest {
 
 		String text;
 
-		@CollectionTable(name = "SOME_STRINGS")
+		@CollectionTable(name = "SOME_STRINGS", joinColumns = @JoinColumn(name = "STRINGS_ENTITY_ID"))
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings;
 
-		@CollectionTable(name = "SOME_STRINGS_TWO")
+		@CollectionTable(name = "SOME_STRINGS_TWO", joinColumns = @JoinColumn(name = "STRINGS_ENTITY_ID"))
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings2;
 	}

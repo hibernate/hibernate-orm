@@ -120,12 +120,12 @@ class ManyToOneRefColumnNameTest {
 		@Id @GeneratedValue
 		long id;
 
-		@JoinColumn(referencedColumnName = "singleKey")
+		@JoinColumn(name = "singleKey", referencedColumnName = "singleKey")
 		@ManyToOne
 		That thatBySingleKey;
 
-		@JoinColumn(referencedColumnName = "compositeKeyOne")
-		@JoinColumn(referencedColumnName = "compositeKeyTwo")
+		@JoinColumn(name = "compositeKeyOne", referencedColumnName = "compositeKeyOne")
+		@JoinColumn(name = "compositeKeyTwo", referencedColumnName = "compositeKeyTwo")
 		@ManyToOne
 		That thatByCompositeKey;
 	}

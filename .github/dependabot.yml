@@ -161,6 +161,17 @@ updates:
       # (see https://central.sonatype.com/artifact/org.apache.maven/maven-embedder/3.9.9/dependencies)
       - dependency-name: "org.slf4j:*"
         update-types: ["version-update:semver-major"]
+      # Doesn't seem to work
+      - dependency-name: "com.google.cloud:google-cloud-spanner-jdbc"
+        versions: ["2.40.0"]
+      # Breaks documentation building for some reason
+      - dependency-name: "org.asciidoctor:asciidoctorj"
+        versions: ["3.0.1"]
+      # Jackson XML 3.2.0 has a bug that makes the upgrade impossible
+      - dependency-name: "tools.jackson.core:jackson-databind"
+        versions: ["3.2.0"]
+      - dependency-name: "tools.jackson.dataformat:jackson-dataformat-xml"
+        versions: ["3.2.0"]
   # Monitor docker images in compose files for database version updates
   - package-ecosystem: docker-compose
     directories:

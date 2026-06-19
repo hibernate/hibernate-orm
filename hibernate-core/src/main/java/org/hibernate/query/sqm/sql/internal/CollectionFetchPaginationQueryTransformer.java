@@ -409,7 +409,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			@Override
 			public void accept(int idx, SelectableMapping selectable) {
 				if ( primaryTableExpr.equals( selectable.getContainingTableExpression() ) ) {
-					final String columnName = selectable.getSelectionExpression();
+					final String columnName = getDerivedTableColumnName( selectable, seen, columnNames.size() );
 					if ( seen.add( columnName ) ) {
 						sqlSelections.add(
 								new ResolvedSqlSelection(
@@ -434,6 +434,20 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			versionMapping.forEachSelectable( projector );
 		}
 		primaryEntity.forEachSelectable( projector );
+	}
+
+	private static String getDerivedTableColumnName(SelectableMapping selectable, Set<String> seen, int columnIndex) {
+		if ( !selectable.isFormula() ) {
+			return selectable.getSelectionExpression();
+		}
+		// Formula selection expressions may contain SQL and the Template placeholder;
+		// use a simple derived-table column alias instead of the formula text.
+		String formulaName = "hib_formula_" + columnIndex;
+		int disambiguator = 1;
+		while ( seen.contains( formulaName ) ) {
+			formulaName = "hib_formula_" + columnIndex + '_' + disambiguator++;
+		}
+		return formulaName;
 	}
 
 	private static void addAbsorbedSelections(

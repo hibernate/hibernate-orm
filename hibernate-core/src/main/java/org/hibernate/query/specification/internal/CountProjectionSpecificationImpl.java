@@ -32,23 +32,26 @@ public class CountProjectionSpecificationImpl<T> implements SimpleProjectionSpec
 
 	private final SelectionSpecification<T> selectionSpecification;
 
-	public CountProjectionSpecificationImpl(SelectionSpecification<T> specification) {
+	public CountProjectionSpecificationImpl(@Nonnull SelectionSpecification<T> specification) {
 		this.selectionSpecification = specification;
 	}
 
+	@Nonnull
 	@Override
-	public QuerySpecification<T> restrict(Restriction<? super T> restriction) {
+	public QuerySpecification<T> restrict(@Nonnull Restriction<? super T> restriction) {
 		throw new UnsupportedOperationException( "This is not supported yet!" );
 	}
 
+	@Nonnull
 	@Override
-	public SelectionQuery<Long> createQuery(EntityHandler entityHandler) {
+	public SelectionQuery<Long> createQuery(@Nonnull EntityHandler entityHandler) {
 		return entityHandler.unwrap( SharedSessionContract.class )
 				.createQuery( buildCriteria( entityHandler.getCriteriaBuilder() ) );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaQuery<Long> buildCriteria(CriteriaBuilder builder) {
+	public CriteriaQuery<Long> buildCriteria(@Nonnull CriteriaBuilder builder) {
 		var impl = (SelectionSpecificationImpl<T>) selectionSpecification;
 		// TODO: handle HQL, existing criteria
 		final var tupleQuery =
@@ -62,12 +65,14 @@ public class CountProjectionSpecificationImpl<T> implements SimpleProjectionSpec
 		return tupleQuery;
 	}
 
+	@Nonnull
 	@Override
-	public SimpleProjectionSpecification<T,Long> validate(CriteriaBuilder builder) {
+	public SimpleProjectionSpecification<T,Long> validate(@Nonnull CriteriaBuilder builder) {
 		selectionSpecification.validate( builder );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public TypedQueryReference<Long> reference() {
 		return this;

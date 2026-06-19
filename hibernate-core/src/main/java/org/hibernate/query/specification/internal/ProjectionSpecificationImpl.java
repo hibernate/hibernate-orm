@@ -43,37 +43,42 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	private final SelectionSpecification<T> selectionSpecification;
 	private final List<BiFunction<SqmSelectStatement<Object[]>, SqmRoot<T>, SqmSelectableNode<?>>> specifications = new ArrayList<>();
 
-	public ProjectionSpecificationImpl(SelectionSpecification<T> selectionSpecification) {
+	public ProjectionSpecificationImpl(@Nonnull SelectionSpecification<T> selectionSpecification) {
 		this.selectionSpecification = selectionSpecification;
 	}
 
+	@Nonnull
 	@Override
-	public <X> Element<X> select(SingularAttribute<T, X> attribute) {
+	public <X> Element<X> select(@Nonnull SingularAttribute<T, X> attribute) {
 		final int position = specifications.size();
 		specifications.add( (select, root) -> root.get( attribute ) );
 		return tuple -> cast( attribute.getJavaType(), tuple[position] );
 	}
 
+	@Nonnull
 	@Override
-	public <X> Element<X> select(Path<T, X> path) {
+	public <X> Element<X> select(@Nonnull Path<T, X> path) {
 		final int position = specifications.size();
 		specifications.add( (select, root) -> (SqmPath<X>) path.path( root ) );
 		return tuple -> cast( path.getType(), tuple[position] );
 	}
 
+	@Nonnull
 	@Override
-	public QuerySpecification<Object[]> restrict(Restriction<? super Object[]> restriction) {
+	public QuerySpecification<Object[]> restrict(@Nonnull Restriction<? super Object[]> restriction) {
 		throw new UnsupportedOperationException( "This is not supported yet!" );
 	}
 
+	@Nonnull
 	@Override
-	public SelectionQuery<Object[]> createQuery(EntityHandler entityHandler) {
+	public SelectionQuery<Object[]> createQuery(@Nonnull EntityHandler entityHandler) {
 		return entityHandler.unwrap( SharedSessionContract.class )
 				.createQuery( buildCriteria( entityHandler.getCriteriaBuilder() ) );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaQuery<Object[]> buildCriteria(CriteriaBuilder builder) {
+	public CriteriaQuery<Object[]> buildCriteria(@Nonnull CriteriaBuilder builder) {
 		var impl = (SelectionSpecificationImpl<T>) selectionSpecification;
 		// TODO: handle HQL, existing criteria
 		final var tupleQuery =
@@ -92,13 +97,15 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 		return tupleQuery;
 	}
 
+	@Nonnull
 	@Override
-	public ProjectionSpecification<T> validate(CriteriaBuilder builder) {
+	public ProjectionSpecification<T> validate(@Nonnull CriteriaBuilder builder) {
 		selectionSpecification.validate( builder );
 		// TODO: validate projection
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public TypedQueryReference<Object[]> reference() {
 		return this;
@@ -123,6 +130,7 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return null;
 	}

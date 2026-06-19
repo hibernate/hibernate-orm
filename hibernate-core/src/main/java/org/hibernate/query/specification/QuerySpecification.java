@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Reference;
@@ -51,12 +52,14 @@ public interface QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	QuerySpecification<T> restrict(Restriction<? super T> restriction);
+	@Nonnull
+	QuerySpecification<T> restrict(@Nonnull Restriction<? super T> restriction);
 
 	/**
 	 * Finalize the building and create executable query instance.
 	 */
-	CommonQueryContract createQuery(EntityHandler entityHandler);
+	@Nonnull
+	CommonQueryContract createQuery(@Nonnull EntityHandler entityHandler);
 
 	/**
 	 * Build a {@link CommonAbstractCriteria criteria query}
@@ -68,7 +71,8 @@ public interface QuerySpecification<T> {
 	 *
 	 * @return a new criteria query
 	 */
-	CommonAbstractCriteria buildCriteria(CriteriaBuilder builder);
+	@Nonnull
+	CommonAbstractCriteria buildCriteria(@Nonnull CriteriaBuilder builder);
 
 	/**
 	 * Validate the query.
@@ -76,12 +80,14 @@ public interface QuerySpecification<T> {
 	 * @return {@code this} if everything is fine
 	 * @throws RuntimeException if it ain't all good
 	 */
-	QuerySpecification<T> validate(CriteriaBuilder builder);
+	@Nonnull
+	QuerySpecification<T> validate(@Nonnull CriteriaBuilder builder);
 
 	/**
 	 * Obtain a {@linkplain TypedQueryReference reference}
 	 * to this specification which may be passed along to
 	 * {@link EntityManager#createQuery(TypedQueryReference)}.
 	 */
+	@Nonnull
 	Reference reference();
 }

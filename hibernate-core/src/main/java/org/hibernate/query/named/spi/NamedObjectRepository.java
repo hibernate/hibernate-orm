@@ -47,12 +47,13 @@ public interface NamedObjectRepository {
 	 * @see org.hibernate.SessionFactory#addNamedQuery(String, TypedQuery)
 	 * @see org.hibernate.query.SelectionQuery
 	 */
-	<R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType);
+	@Nonnull
+	<R> Map<String, TypedQueryReference<R>> getNamedQueries(@Nonnull Class<R> resultType);
 
 	/**
 	 * Perform an action for all registered selection-query references.
 	 */
-	void forEachNamedQuery(BiConsumer<String,? super TypedQueryReference<?>> action);
+	void forEachNamedQuery(@Nonnull BiConsumer<String,? super TypedQueryReference<?>> action);
 
 	/**
 	 * Registers the given selection-query using the given name,
@@ -64,7 +65,8 @@ public interface NamedObjectRepository {
 	 * @see org.hibernate.SessionFactory#addNamedQuery(String, TypedQuery)
 	 * @see org.hibernate.Session#createQuery(TypedQueryReference)
 	 */
-	<R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query);
+	@Nonnull
+	<R> TypedQueryReference<R> registerNamedQuery(@Nonnull String name, @Nonnull TypedQuery<R> query);
 
 	/**
 	 * Returns all mutation-query references keyed by registration name.
@@ -76,12 +78,13 @@ public interface NamedObjectRepository {
 	 * @see org.hibernate.SessionFactory#addNamedStatement(String, Statement)
 	 * @see org.hibernate.query.MutationQuery
 	 */
+	@Nonnull
 	Map<String, StatementReference> getNamedMutations();
 
 	/**
 	 * Perform an action for all registered mutation-query references.
 	 */
-	void forEachNamedMutation(BiConsumer<String,? super StatementReference> action);
+	void forEachNamedMutation(@Nonnull BiConsumer<String,? super StatementReference> action);
 
 	/**
 	 * Registers the given mutation-query using the given name, returning
@@ -93,14 +96,16 @@ public interface NamedObjectRepository {
 	 * @see org.hibernate.SessionFactory#addNamedStatement(String, Statement)
 	 * @see org.hibernate.Session#createStatement(StatementReference)
 	 */
-	@Nonnull StatementReference registerNamedMutation(String name, Statement statement);
+	@Nonnull
+	StatementReference registerNamedMutation(@Nonnull String name, @Nonnull Statement statement);
 
 	/**
 	 * Find a query registration by name, regardless of query type.
 	 *
 	 * @return The query registration, or {@code null} if one could not be found
 	 */
-	<R> @Nullable NamedQueryMemento<R> findQueryMementoByName(String name, boolean includeProcedureCalls);
+	@Nullable
+	<R> NamedQueryMemento<R> findQueryMementoByName(@Nonnull String name, boolean includeProcedureCalls);
 
 	/**
 	 * Find a query registration by name, regardless of query type, throwing
@@ -110,22 +115,32 @@ public interface NamedObjectRepository {
 	 *
 	 * @throws UnknownNamedQueryException If one could not be found under that name.
 	 */
-	<R> @Nonnull NamedQueryMemento<R> getQueryMementoByName(String name, boolean includeProcedureCalls);
+	@Nonnull
+	<R> NamedQueryMemento<R> getQueryMementoByName(@Nonnull String name, boolean includeProcedureCalls);
 
-	<R> NamedSelectionMemento<R> getSelectionQueryMemento(String name);
-	<R> NamedMutationMemento<R> getMutationQueryMemento(String name);
+	@Nullable
+	<R> NamedSelectionMemento<R> getSelectionQueryMemento(@Nonnull String name);
 
-	NamedCallableQueryMemento getCallableQueryMemento(String name);
-	void visitCallableQueryMementos(Consumer<NamedCallableQueryMemento> action);
-	void registerCallableQueryMemento(String name, NamedCallableQueryMemento memento);
+	@Nullable
+	<R> NamedMutationMemento<R> getMutationQueryMemento(@Nonnull String name);
+
+	@Nullable
+	NamedCallableQueryMemento getCallableQueryMemento(@Nonnull String name);
+
+	void visitCallableQueryMementos(@Nonnull Consumer<NamedCallableQueryMemento> action);
+
+	void registerCallableQueryMemento(@Nonnull String name, @Nonnull NamedCallableQueryMemento memento);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named ResultSetMapping memento
 
-	NamedResultSetMappingMemento getResultSetMappingMemento(String mappingName);
-	void visitResultSetMappingMementos(Consumer<NamedResultSetMappingMemento> action);
-	void registerResultSetMappingMemento(String name, NamedResultSetMappingMemento memento);
+	@Nullable
+	NamedResultSetMappingMemento getResultSetMappingMemento(@Nonnull String mappingName);
+
+	void visitResultSetMappingMementos(@Nonnull Consumer<NamedResultSetMappingMemento> action);
+
+	void registerResultSetMappingMemento(@Nonnull String name, @Nonnull NamedResultSetMappingMemento memento);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -134,26 +149,28 @@ public interface NamedObjectRepository {
 	/**
 	 * Perform a validity check on all named queries
 	 */
-	Map<String, HibernateException> checkNamedQueries(QueryEngine queryPlanCache);
+	@Nonnull
+	Map<String, HibernateException> checkNamedQueries(@Nonnull QueryEngine queryPlanCache);
 
 	/**
 	 * Validate the named queries and throw an exception if any are broken
 	 */
-	void validateNamedQueries(QueryEngine queryEngine);
+	void validateNamedQueries(@Nonnull QueryEngine queryEngine);
 
 	/**
 	 * Resolve the named query with the given name.
 	 */
+	@Nullable
 	NamedQueryMemento<?> resolve(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor bootMetamodel,
-			String registrationName);
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nonnull MetadataImplementor bootMetamodel,
+			@Nonnull String registrationName);
 
 	/**
 	 * Prepare for runtime use
 	 */
 	// TODO: avoid passing in the whole SessionFactory here, it's not necessary
-	void prepare(SessionFactoryImplementor sessionFactory, Metadata bootMetamodel);
+	void prepare(@Nonnull SessionFactoryImplementor sessionFactory, @Nonnull Metadata bootMetamodel);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

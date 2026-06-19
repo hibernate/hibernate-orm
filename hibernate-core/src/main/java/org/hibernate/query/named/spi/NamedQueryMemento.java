@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.named.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,50 +27,63 @@ public interface NamedQueryMemento<T> extends JpaReference {
 	/**
 	 * The name under which the query is registered
 	 */
+	@Nonnull
 	String getRegistrationName();
 
+	@Nullable
 	FlushMode getFlushMode();
 
+	@Nullable
 	Timeout getTimeout();
 
+	@Nullable
 	String getComment();
 
+	@Nonnull
 	Map<String, Object> getHints();
 
-	void validate(QueryEngine queryEngine);
+	void validate(@Nonnull QueryEngine queryEngine);
 
 	/**
 	 * Makes a copy of the memento using the specified registration name
 	 */
-	NamedQueryMemento<T> makeCopy(String name);
+	@Nonnull
+	NamedQueryMemento<T> makeCopy(@Nonnull String name);
 
 	/// Create a [selection queries][SelectionQueryImplementor] based on this reference's definition.
-	SelectionQueryImplementor<T> toSelectionQuery(SharedSessionContractImplementor session);
+	@Nonnull
+	SelectionQueryImplementor<T> toSelectionQuery(@Nonnull SharedSessionContractImplementor session);
 
 	/// Create a [selection queries][SelectionQueryImplementor] based on this reference's definition with the give result type.
-	<X> SelectionQueryImplementor<X> toSelectionQuery(SharedSessionContractImplementor session, Class<X> javaType);
+	@Nonnull
+	<X> SelectionQueryImplementor<X> toSelectionQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<X> javaType);
 
 	/// Create a [mutation queries][MutationQueryImplementor] based on this memento's definition.
-	MutationQueryImplementor<T> toMutationQuery(SharedSessionContractImplementor session);
+	@Nonnull
+	MutationQueryImplementor<T> toMutationQuery(@Nonnull SharedSessionContractImplementor session);
 
 	/// Create a [mutation queries][MutationQueryImplementor] based on this memento's definition.
-	<X> MutationQueryImplementor<X> toMutationQuery(SharedSessionContractImplementor session, Class<X> targetType);
+	@Nonnull
+	<X> MutationQueryImplementor<X> toMutationQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<X> targetType);
 
 	/// Create a [QueryImplementor] reference.  Used in cases where we do not know
 	/// up front if we have a selection or mutation query.
 	///
 	/// @see #toSelectionQuery
 	/// @see #toMutationQuery
-	QueryImplementor<T> toQuery(SharedSessionContractImplementor session);
+	@Nonnull
+	QueryImplementor<T> toQuery(@Nonnull SharedSessionContractImplementor session);
 
 	/// Create a [QueryImplementor] reference.  Used in cases where we do not know
 	/// up front if we have a selection or mutation query.
 	///
 	/// @see #toSelectionQuery
 	/// @see #toMutationQuery
-	<X> QueryImplementor<X> toQuery(SharedSessionContractImplementor session, Class<X> javaType);
+	@Nonnull
+	<X> QueryImplementor<X> toQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<X> javaType);
 
 	interface ParameterMemento {
-		QueryParameterImplementor<?> resolve(SharedSessionContractImplementor session);
+		@Nonnull
+		QueryParameterImplementor<?> resolve(@Nonnull SharedSessionContractImplementor session);
 	}
 }

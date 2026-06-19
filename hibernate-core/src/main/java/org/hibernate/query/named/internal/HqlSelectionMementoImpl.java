@@ -4,9 +4,10 @@
  */
 package org.hibernate.query.named.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
-import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -36,30 +37,30 @@ public class HqlSelectionMementoImpl<R>
 		extends AbstractSelectionMemento<R>
 		implements SqmSelectionMemento<R>, Serializable {
 	private final String hqlString;
-	private final String entityGraphName;
-	private final Map<String, String> parameterTypes;
+	private final @Nullable String entityGraphName;
+	private final @Nullable Map<String, String> parameterTypes;
 
 	public HqlSelectionMementoImpl(
-			String name,
-			String hqlString,
+			@Nonnull String name,
+			@Nonnull String hqlString,
 			@Nullable Class<R> resultType,
-			String entityGraphName,
-			FlushMode flushMode,
-			Timeout timeout,
-			String comment,
-			Boolean readOnly,
-			Integer fetchSize,
-			Integer firstResult,
-			Integer maxResults,
-			Boolean cacheable,
-			CacheMode cacheMode,
-			String cacheRegion,
-			LockMode lockMode,
-			PessimisticLockScope lockScope,
-			Timeout lockTimeout,
-			Locking.FollowOn followOnLockingStrategy,
-			Map<String, String> parameterTypes,
-			Map<String, Object> hints) {
+			@Nullable String entityGraphName,
+			@Nullable FlushMode flushMode,
+			@Nullable Timeout timeout,
+			@Nullable String comment,
+			@Nullable Boolean readOnly,
+			@Nullable Integer fetchSize,
+			@Nullable Integer firstResult,
+			@Nullable Integer maxResults,
+			@Nullable Boolean cacheable,
+			@Nullable CacheMode cacheMode,
+			@Nullable String cacheRegion,
+			@Nullable LockMode lockMode,
+			@Nullable PessimisticLockScope lockScope,
+			@Nullable Timeout lockTimeout,
+			@Nullable Locking.FollowOn followOnLockingStrategy,
+			@Nullable Map<String, String> parameterTypes,
+			@Nonnull Map<String, Object> hints) {
 		super( name, resultType,
 				flushMode, timeout, comment,
 				readOnly, fetchSize, firstResult, maxResults,
@@ -71,23 +72,26 @@ public class HqlSelectionMementoImpl<R>
 		this.parameterTypes = parameterTypes;
 	}
 
-	public HqlSelectionMementoImpl(String name, HqlSelectionMementoImpl<R> original) {
+	public HqlSelectionMementoImpl(@Nonnull String name, @Nonnull HqlSelectionMementoImpl<R> original) {
 		super( name, original );
 		this.hqlString = original.hqlString;
 		this.entityGraphName = original.entityGraphName;
 		this.parameterTypes = original.parameterTypes;
 	}
 
+	@Nonnull
 	@Override
 	public String getHqlString() {
 		return hqlString;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionString() {
 		return getHqlString();
 	}
 
+	@Nullable
 	@Override
 	public SqmStatement<R> getSqmStatement() {
 		return null;
@@ -105,29 +109,33 @@ public class HqlSelectionMementoImpl<R>
 		return entityGraphName;
 	}
 
+	@Nullable
 	@Override
 	public Map<String, String> getAnticipatedParameterTypes() {
 		return parameterTypes;
 	}
 
+	@Nonnull
 	@Override
-	public NamedSqmQueryMemento<R> makeCopy(String name) {
+	public NamedSqmQueryMemento<R> makeCopy(@Nonnull String name) {
 		return new HqlSelectionMementoImpl<>( name, this );
 	}
 
 	@Override
-	public void validate(QueryEngine queryEngine) {
+	public void validate(@Nonnull QueryEngine queryEngine) {
 		final var interpretationCache = queryEngine.getInterpretationCache();
 		interpretationCache.resolveHqlInterpretation( hqlString, getResultType(), queryEngine.getHqlTranslator() );
 	}
 
+	@Nonnull
 	@Override
-	public SelectionQueryImplementor<R> toSelectionQuery(SharedSessionContractImplementor session) {
+	public SelectionQueryImplementor<R> toSelectionQuery(@Nonnull SharedSessionContractImplementor session) {
 		return toSelectionQuery( session, queryType );
 	}
 
+	@Nonnull
 	@Override
-	public <T> SelectionQueryImplementor<T> toSelectionQuery(SharedSessionContractImplementor session, Class<T> javaType) {
+	public <T> SelectionQueryImplementor<T> toSelectionQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<T> javaType) {
 		final HqlInterpretation<T> interpretation = QueryHelper.interpretation( this, javaType, session );
 		return new SelectionQueryImpl<>( this, interpretation, javaType, session );
 	}

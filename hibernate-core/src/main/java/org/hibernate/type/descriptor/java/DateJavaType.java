@@ -227,6 +227,16 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		return Timestamp.from( ClockHelper.forPrecision( precision, session ).instant() );
 	}
 
+	@Override
+	public Date seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return Timestamp.from( ClockHelper.forPrecision( precision, options.getSessionFactory() ).instant() );
+	}
+
+	@Override
+	public Date next(Date current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return seed( length, precision, scale, options );
+	}
+
 	private static Timestamp toTimestamp(Date date) {
 		return date instanceof Timestamp timestamp
 				? timestamp

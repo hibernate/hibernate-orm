@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Parameter bind specification used for optimistic lock version seeding (from insert statements).
@@ -47,7 +48,7 @@ public class VersionTypeSeedParameterSpecification extends AbstractJdbcParameter
 						executionContext.getSession()
 				),
 				startPosition,
-				executionContext.getSession()
+				(WrapperOptions) executionContext.getSession()
 		);
 	}
 }

@@ -225,4 +225,13 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 		return ZERO;
 	}
 
+	@Override
+	public Long seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return ZERO;
+	}
+
+	@Override
+	public Long next(Long current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return current + 1L;
+	}
 }

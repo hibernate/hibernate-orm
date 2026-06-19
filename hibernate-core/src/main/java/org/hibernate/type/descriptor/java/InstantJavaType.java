@@ -214,7 +214,16 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			Integer precision,
 			Integer scale,
 			SharedSessionContractImplementor session) {
-		return Instant.now( ClockHelper.forPrecision( precision, session ) );
+		return seed( length, precision, scale, session );
 	}
 
+	@Override
+	public Instant seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return Instant.now( ClockHelper.forPrecision( precision, options.getSessionFactory() ) );
+	}
+
+	@Override
+	public Instant next(Instant current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return seed( length, precision, scale, options );
+	}
 }

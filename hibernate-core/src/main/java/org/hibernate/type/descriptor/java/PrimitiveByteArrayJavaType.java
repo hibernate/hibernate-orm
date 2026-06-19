@@ -193,6 +193,20 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		return current;
 	}
 
+	@Override
+	public byte[] seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		// Note: simply returns null for seed() and next() as the only known
+		// 		application of binary types for versioning is for use with the
+		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
+		// 		are completely db-generated values...
+		return null;
+	}
+
+	@Override
+	public byte[] next(byte[] current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return current;
+	}
+
 	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<byte[]> {
 		@Override
 		protected byte[] deepCopyNotNull(byte[] value) {

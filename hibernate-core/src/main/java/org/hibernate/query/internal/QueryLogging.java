@@ -21,6 +21,7 @@ import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -38,6 +39,12 @@ public interface QueryLogging extends BasicLogger {
 
 	Logger QUERY_LOGGER = Logger.getLogger( LOGGER_NAME );
 	QueryLogging QUERY_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), QueryLogging.class, LOGGER_NAME, Locale.ROOT );
+	QueryLogging QUERY_PLAN_CACHE_MESSAGE_LOGGER = Logger.getMessageLogger(
+			MethodHandles.lookup(),
+			QueryLogging.class,
+			subLoggerName( "plan.cache" ),
+			Locale.ROOT
+	);
 
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + '.' + subName;
@@ -58,4 +65,24 @@ public interface QueryLogging extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory", id = 90003004)
 	void firstOrMaxResultsSpecifiedWithCollectionFetch();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Starting query interpretation cache (size %s)", id = 90003005)
+	void startingQueryInterpretationCache(int maxQueryPlanCount);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Resolving cached query plan for [%s]", id = 90003006)
+	void resolvingCachedQueryPlan(Object key);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Resolving HQL interpretation for [%s]", id = 90003007)
+	void resolvingHqlInterpretation(String queryString);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Resolving native query parameters for [%s]", id = 90003008)
+	void resolvingNativeQueryParameters(String queryString);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Destroying query interpretation cache", id = 90003009)
+	void destroyingQueryInterpretationCache();
 }

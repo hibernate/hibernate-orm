@@ -3481,11 +3481,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 		}
-		else {
-			// No need to do anything else for embeddables
-			return;
-		}
-
+		// Else no need to do anything else for embeddables
 	}
 
 	private boolean contextAllowsTreatOrFilterEntityNameUse() {
@@ -4220,8 +4216,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void prepareForSelection(SqmPath<?> selectionPath) {
-		// Don't create joins for plural part paths as that will be handled
-		// through a cardinality preserving mechanism in visitIndexAggregateFunction/visitElementAggregateFunction
+		// Don't create joins for plural part paths as that will be handled through a
+		// cardinality-preserving mechanism in visitIndexAggregateFunction/visitElementAggregateFunction
 		final var path =
 				selectionPath instanceof AbstractSqmSpecificPluralPartPath<?>
 						? selectionPath.getLhs().getLhs()
@@ -5013,9 +5009,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var navigablePath = functionPath.getNavigablePath();
 		final var tableGroup = getFromClauseAccess().findTableGroup( navigablePath );
 		if ( tableGroup == null ) {
-			final var functionExpression = (Expression) functionPath.getFunction().accept( this );
-			final var jdbcType = functionExpression.getExpressionType().getSingleJdbcMapping().getJdbcType();
-			if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
+			final var functionExpression =
+					(Expression) functionPath.getFunction().accept( this );
+			if ( functionExpression.getExpressionType().getSingleJdbcMapping().getJdbcType()
+					instanceof AggregateJdbcType aggregateJdbcType ) {
 				final var embeddableFunctionTableGroup =
 						new EmbeddableFunctionTableGroup(
 								navigablePath,
@@ -6094,9 +6091,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private MappingModelExpressible<?> literalExpressible
 			(SqmLiteral<?> literal, MappingModelExpressible<?> inferableExpressible) {
 		final var localExpressible =
-				resolveMappingModelExpressible( literal,
+				resolveMappingModelExpressible(
+						literal,
 						getMappingMetamodel(),
-						getFromClauseAccess() == null ? null : getFromClauseAccess()::findTableGroup );
+						getFromClauseAccess() == null
+								? null
+								: getFromClauseAccess()::findTableGroup
+				);
 		if ( localExpressible == null ) {
 			return getElementExpressible( inferableExpressible );
 		}
@@ -6315,7 +6316,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				: (MappingModelExpressible<?>) mappingModelExpressible;
 	}
 
-	private MappingModelExpressible<?> getElementExpressible(MappingModelExpressible<?> mappingModelExpressible) {
+	private <U> MappingModelExpressible<U> getElementExpressible(MappingModelExpressible<U> mappingModelExpressible) {
 		return mappingModelExpressible instanceof PluralAttributeMapping pluralAttributeMapping
 				? pluralAttributeMapping.getElementDescriptor()
 				: mappingModelExpressible;

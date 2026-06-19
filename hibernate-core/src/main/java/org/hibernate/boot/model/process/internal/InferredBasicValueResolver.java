@@ -152,13 +152,15 @@ public class InferredBasicValueResolver {
 
 				if ( registeredType != null ) {
 					// so here is the legacy resolution
-					jdbcMapping = resolveSqlTypeIndicators( stdIndicators, registeredType, registeredType.getJavaTypeDescriptor() );
+					jdbcMapping =
+							resolveSqlTypeIndicators( stdIndicators, registeredType,
+									registeredType.getJavaTypeDescriptor() );
 				}
 				else {
 					// there was not a "legacy" BasicType registration,
 					// so use `JavaType#getRecommendedJdbcType`, if one,
 					// to create a mapping
-					final JdbcType recommendedJdbcType =
+					final var recommendedJdbcType =
 							recommendedJdbcType( resolvedJavaType, stdIndicators, buildingContext, reflectedJtd );
 					if ( recommendedJdbcType != null ) {
 						jdbcMapping = resolveSqlTypeIndicators(
@@ -181,26 +183,9 @@ public class InferredBasicValueResolver {
 		else {
 			if ( explicitJdbcType != null ) {
 				// we have an explicit STD, but no JTD - infer JTD
-				// NOTE: yes it's an odd case, but easy to implement here, so...
-				Integer length = null;
-				Integer scale = null;
-				if ( selectable instanceof Column column ) {
-					if ( column.getPrecision() != null && column.getPrecision() > 0 ) {
-						length = column.getPrecision();
-						scale = column.getScale();
-					}
-					else if ( column.getLength() != null ) {
-						if ( column.getLength() > (long) Integer.MAX_VALUE ) {
-							length = Integer.MAX_VALUE;
-						}
-						else {
-							length = column.getLength().intValue();
-						}
-					}
-				}
-
+				// NOTE: yes, it's an odd case, but easy to implement here, so...
 				final var recommendedJavaType =
-						explicitJdbcType.getRecommendedJavaType( length, scale, typeConfiguration );
+						recommendedJavaType( explicitJdbcType, selectable, typeConfiguration );
 				// TODO: check this type cast
 				final var recommendedJtd = (JavaType<T>) recommendedJavaType;
 				jdbcMapping = resolveSqlTypeIndicators(
@@ -241,6 +226,36 @@ public class InferredBasicValueResolver {
 		);
 	}
 
+	private static JavaType<?> recommendedJavaType(
+			JdbcType explicitJdbcType,
+			Selectable selectable,
+			TypeConfiguration typeConfiguration) {
+		final Integer length;
+		final Integer scale;
+		if ( selectable instanceof Column column ) {
+			if ( column.getPrecision() != null && column.getPrecision() > 0 ) {
+				length = column.getPrecision();
+				scale = column.getScale();
+			}
+			else if ( column.getLength() != null ) {
+				if ( column.getLength() > (long) Integer.MAX_VALUE ) {
+					length = Integer.MAX_VALUE;
+				}
+				else {
+					length = column.getLength().intValue();
+				}
+				scale = null;
+			}
+			else {
+				length = scale = null;
+			}
+		}
+		else {
+			length = scale = null;
+		}
+		return explicitJdbcType.getRecommendedJavaType( length, scale, typeConfiguration );
+	}
+
 	private static <T> JdbcType recommendedJdbcType(
 			Type resolvedJavaType,
 			JdbcTypeIndicators stdIndicators,
@@ -270,8 +285,8 @@ public class InferredBasicValueResolver {
 			JavaType<T> reflectedJtd,
 			BootstrapContext bootstrapContext,
 			Dialect dialect) {
-		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final var basicTypeRegistry =
+				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
 		if ( reflectedJtd instanceof BasicPluralJavaType<?> pluralJavaType ) {
 			final var registeredType =
 					pluralBasicType(
@@ -303,13 +318,12 @@ public class InferredBasicValueResolver {
 			BasicPluralJavaType<E> pluralJavaType,
 			BootstrapContext bootstrapContext,
 			Dialect dialect) {
-		final var elementJavaType = pluralJavaType.getElementJavaType();
 		final var registeredElementType = registeredElementType(
 				explicitJdbcType,
 				explicitMutabilityPlanAccess,
 				stdIndicators,
 				bootstrapContext,
-				elementJavaType
+				pluralJavaType.getElementJavaType()
 		);
 		if ( registeredElementType == null ) {
 			return null;

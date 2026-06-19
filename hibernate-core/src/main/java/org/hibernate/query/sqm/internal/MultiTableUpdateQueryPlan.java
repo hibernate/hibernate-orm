@@ -12,7 +12,8 @@ import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 /**
  * @author Steve Ebersole
  */
-public class MultiTableUpdateQueryPlan extends AbstractMultiTableMutationQueryPlan<SqmUpdateStatement<?>, SqmMultiTableMutationStrategy> {
+public class MultiTableUpdateQueryPlan
+		extends AbstractMultiTableMutationQueryPlan<SqmUpdateStatement<?>, SqmMultiTableMutationStrategy> {
 
 	public MultiTableUpdateQueryPlan(
 			SqmUpdateStatement<?> sqmUpdate,

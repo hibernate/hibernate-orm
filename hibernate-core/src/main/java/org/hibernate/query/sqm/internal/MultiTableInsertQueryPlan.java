@@ -12,7 +12,8 @@ import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
 /**
  * @author Christian Beikov
  */
-public class MultiTableInsertQueryPlan extends AbstractMultiTableMutationQueryPlan<SqmInsertStatement<?>, SqmMultiTableInsertStrategy> {
+public class MultiTableInsertQueryPlan
+		extends AbstractMultiTableMutationQueryPlan<SqmInsertStatement<?>, SqmMultiTableInsertStrategy> {
 
 	public MultiTableInsertQueryPlan(
 			SqmInsertStatement<?> sqmInsert,

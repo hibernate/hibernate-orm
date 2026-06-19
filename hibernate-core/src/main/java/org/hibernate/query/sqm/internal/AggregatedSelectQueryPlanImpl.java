@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
@@ -15,6 +14,8 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.results.spi.ResultsConsumer;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Steve Ebersole
@@ -36,12 +37,12 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 		final Limit effectiveLimit = executionContext.getQueryOptions().getEffectiveLimit();
 		final int maxRowsJpa = effectiveLimit.getMaxRowsJpa();
 		if ( maxRowsJpa == 0 ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 		int elementsToSkip = effectiveLimit.getFirstRowJpa();
 		final List<R> overallResults = new ArrayList<>();
 
-		for ( SelectQueryPlan<R> aggregatedQueryPlan : aggregatedQueryPlans ) {
+		for ( var aggregatedQueryPlan : aggregatedQueryPlans ) {
 			final List<R> list = aggregatedQueryPlan.performList( executionContext );
 			final int size = list.size();
 			if ( size <= elementsToSkip ) {

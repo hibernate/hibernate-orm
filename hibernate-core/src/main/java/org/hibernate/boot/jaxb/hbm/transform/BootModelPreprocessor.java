@@ -71,7 +71,7 @@ public class BootModelPreprocessor {
 				final String componentRole = rootClass.getEntityName() + ".id";
 				buildComponentEntries( componentRole, component, transformationState );
 				registerCompositeIdMappableAttributes(
-						rootClass.getEntityName(), "id", component, transformationState
+						rootClass.getEntityName(), null, component, transformationState
 				);
 			}
 		}
@@ -134,9 +134,12 @@ public class BootModelPreprocessor {
 			TransformationState transformationState) {
 		component.getProperties().forEach( property -> {
 			if ( property.getValue() instanceof ToOne toOne ) {
+				final String attributePath = idPropertyName != null
+						? idPropertyName + "." + property.getName()
+						: property.getName();
 				transformationState.registerMappableAttributesByColumns(
 						entityName,
-						idPropertyName + "." + property.getName(),
+						attributePath,
 						toOne.getSelectables()
 				);
 			}

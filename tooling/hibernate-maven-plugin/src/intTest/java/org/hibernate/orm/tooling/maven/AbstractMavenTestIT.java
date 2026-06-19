@@ -31,27 +31,54 @@ public abstract class AbstractMavenTestIT {
 		mavenCli = new MavenCli( classWorld );
 		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
 		String mavenMirrorUsername = System.getenv( "MAVEN_MIRROR_USERNAME" );
+		mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
+		StringBuilder settings = new StringBuilder( "<settings>\n" );
 		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
-			mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
-			Files.writeString( mavenSettingsFile,
-					"<settings>\n" +
-					"  <mirrors>\n" +
-					"    <mirror>\n" +
-					"      <id>ci-mirror</id>\n" +
-					"      <mirrorOf>central</mirrorOf>\n" +
-					"      <url>${env.MAVEN_MIRROR}</url>\n" +
-					"    </mirror>\n" +
-					"  </mirrors>\n" +
-					( mavenMirrorUsername == null ? "" :
-							"  <servers>\n" +
-							"    <server>\n" +
-							"      <id>ci-mirror</id>\n" +
-							"      <username>${env.MAVEN_MIRROR_USERNAME}</username>\n" +
-							"      <password>${env.MAVEN_MIRROR_PASSWORD}</password>\n" +
-							"    </server>\n" +
-							"  </servers>" ) +
-					"</settings>\n" );
+			settings.append( """
+					<mirrors>
+						<mirror>
+						<id>ci-mirror</id>
+						<mirrorOf>central</mirrorOf>
+						<url>${env.MAVEN_MIRROR}</url>
+						</mirror>
+					</mirrors>
+					""" );
+			if ( mavenMirrorUsername != null ) {
+				settings.append( """
+						<servers>
+							<server>
+							<id>ci-mirror</id>
+							<username>${env.MAVEN_MIRROR_USERNAME}</username>
+							<password>${env.MAVEN_MIRROR_PASSWORD}</password>
+							</server>
+						</servers>
+						""" );
+			}
 		}
+		settings.append( """
+				<profiles>
+					<profile>
+					<id>central-snapshots</id>
+					<repositories>
+						<repository>
+						<id>central-portal-snapshots</id>
+						<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+						<snapshots>
+							<enabled>true</enabled>
+						</snapshots>
+						<releases>
+							<enabled>false</enabled>
+						</releases>
+						</repository>
+					</repositories>
+					</profile>
+				</profiles>
+				<activeProfiles>
+					<activeProfile>central-snapshots</activeProfile>
+				</activeProfiles>
+				""" );
+		settings.append( "</settings>\n" );
+		Files.writeString( mavenSettingsFile, settings.toString() );
 	}
 
 	@AfterAll

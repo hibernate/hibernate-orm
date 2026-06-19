@@ -28,21 +28,9 @@ dependencyResolutionManagement {
         // TODO Move to infra overrides instead;
         //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
         org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it)
-        if ( !org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it) ) {
-            // temporary for 4.0 snapshot testing
-            maven {
-                url = "https://central.sonatype.com/repository/maven-snapshots/"
-            }
-
-            if (System.getProperty('JPA_PREVIEW') != null) {
-                maven {
-                    url = "https://jakarta.oss.sonatype.org/content/repositories/releases/"
-                }
-                // Needed for the SNAPSHOT versions of Jakarta Persistence
-                maven {
-                    url = "https://central.sonatype.com/repository/maven-snapshots/"
-                }
-            }
+        org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
+        org.hibernate.orm.env.MavenMirror.maybeAddMavenCentralSnapshots(it) { content ->
+            content.includeGroup "jakarta.persistence"
         }
 
         //Allow loading additional dependencies from a local path;

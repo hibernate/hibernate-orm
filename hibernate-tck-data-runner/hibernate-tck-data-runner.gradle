@@ -12,12 +12,9 @@ description = 'Hibernate ORM\'s Jakarta Data TCK runner'
 
 repositories {
     org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it)
-    maven {
-        name = "Central Portal Snapshots"
-        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-        content {
-            includeGroup "jakarta.data"
-        }
+    org.hibernate.orm.env.MavenMirror.maybeAddMavenCentralSnapshots(it) { content ->
+        content.includeGroup "jakarta.persistence"
+        content.includeGroup "jakarta.data"
     }
     org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
 }

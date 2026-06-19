@@ -5,8 +5,10 @@
 package org.hibernate.boot.jaxb.hbm.transform;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
@@ -149,7 +151,39 @@ public class HbmXmlTransformerComponentHandler {
 				}
 			}
 		}
+
+		transferEmbeddableTransients( embeddableClassName, componentTypeInfo, embeddable );
+
 		return embeddable;
+	}
+
+	private void transferEmbeddableTransients(
+			String embeddableClassName,
+			ComponentTypeInfo componentTypeInfo,
+			JaxbEmbeddableImpl embeddable) {
+		if ( embeddableClassName == null || componentTypeInfo == null ) {
+			return;
+		}
+
+		final var component = componentTypeInfo.getComponent();
+		final Set<String> mappedPropertyNames = new HashSet<>();
+		component.getProperties().forEach( p -> mappedPropertyNames.add( p.getName() ) );
+
+		try {
+			final var javaClass = component.getComponentClass();
+			if ( javaClass == null ) {
+				return;
+			}
+
+			final boolean fieldAccess = component.getParentProperty() == null;
+			final Set<String> transientNames = TransformationHelper.discoverUnmappedPropertyNames(
+					javaClass, mappedPropertyNames, fieldAccess
+			);
+			TransformationHelper.addTransients( transientNames, embeddable.getAttributes().getTransients() );
+		}
+		catch (Exception e) {
+			// if we can't load the class, skip transient generation
+		}
 	}
 
 	public String determineEmbeddableName(String componentClassName, String attributeName) {

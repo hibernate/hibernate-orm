@@ -4,12 +4,16 @@
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
@@ -36,6 +40,58 @@ public class TransformationHelper {
 		final T value = source.get();
 		if ( value != null ) {
 			target.accept( value );
+		}
+	}
+
+	static Set<String> discoverUnmappedPropertyNames(
+			Class<?> javaClass,
+			Set<String> mappedPropertyNames,
+			boolean fieldAccess) {
+		final Set<String> transientNames = new HashSet<>();
+		if ( fieldAccess ) {
+			for ( var field : javaClass.getDeclaredFields() ) {
+				if ( !mappedPropertyNames.contains( field.getName() ) ) {
+					transientNames.add( field.getName() );
+				}
+			}
+		}
+		else {
+			final var setterNames = new HashSet<String>();
+			for ( var method : javaClass.getMethods() ) {
+				if ( method.getParameterCount() == 1
+						&& method.getName().startsWith( "set" ) && method.getName().length() > 3 ) {
+					setterNames.add( StringHelper.decapitalize( method.getName().substring( 3 ) ) );
+				}
+			}
+			for ( var method : javaClass.getMethods() ) {
+				if ( method.getParameterCount() != 0 ) {
+					continue;
+				}
+				String propertyName = null;
+				final String methodName = method.getName();
+				if ( methodName.startsWith( "get" ) && methodName.length() > 3 ) {
+					propertyName = StringHelper.decapitalize( methodName.substring( 3 ) );
+				}
+				else if ( methodName.startsWith( "is" ) && methodName.length() > 2
+						&& ( method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class ) ) {
+					propertyName = StringHelper.decapitalize( methodName.substring( 2 ) );
+				}
+				if ( propertyName != null
+						&& setterNames.contains( propertyName )
+						&& !mappedPropertyNames.contains( propertyName )
+						&& !propertyName.equals( "class" ) ) {
+					transientNames.add( propertyName );
+				}
+			}
+		}
+		return transientNames;
+	}
+
+	static void addTransients(Set<String> transientNames, List<JaxbTransientImpl> target) {
+		for ( var name : transientNames ) {
+			final var transientMapping = new JaxbTransientImpl();
+			transientMapping.setName( name );
+			target.add( transientMapping );
 		}
 	}
 

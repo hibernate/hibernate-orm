@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.query.internal.QueryLogging.QUERY_PLAN_CACHE_MESSAGE_LOGGER;
 
 /**
  * Standard QueryInterpretationCache implementation
@@ -30,8 +30,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class QueryInterpretationCacheStandardImpl implements QueryInterpretationCache {
-	private static final Logger LOG = QueryLogging.subLogger( "plan.cache" );
-
 	/**
 	 * the cache of the actual plans...
 	 */
@@ -44,7 +42,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	private StatisticsImplementor statistics;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
-		LOG.tracef( "Starting query interpretation cache (size %s)", maxQueryPlanCount );
+		QUERY_PLAN_CACHE_MESSAGE_LOGGER.startingQueryInterpretationCache( maxQueryPlanCount );
 		final var cacheFactory = serviceRegistry.requireService( InternalCacheFactory.class );
 		this.queryPlanCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.hqlInterpretationCache = cacheFactory.createInternalCache( maxQueryPlanCount );
@@ -80,7 +78,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	public <K extends Key, R> SelectQueryPlan<R> resolveSelectQueryPlan(
 			K key,
 			Function<K, SelectQueryPlan<R>> creator) {
-		LOG.tracef( "Resolving cached query plan for [%s]", key );
+		QUERY_PLAN_CACHE_MESSAGE_LOGGER.resolvingCachedQueryPlan( key );
 		final var statistics = getStatistics();
 		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
 
@@ -115,7 +113,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			String queryString,
 			Class<R> expectedResultType,
 			HqlTranslator translator) {
-		LOG.tracef( "Resolving HQL interpretation for [%s]", queryString );
+		QUERY_PLAN_CACHE_MESSAGE_LOGGER.resolvingHqlInterpretation( queryString );
 		final var statistics = getStatistics();
 
 		final Object cacheKey =
@@ -187,7 +185,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	public ParameterInterpretation resolveNativeQueryParameters(
 			String queryString,
 			Function<String, ParameterInterpretation> creator) {
-		LOG.tracef( "Resolving native query parameters for [%s]", queryString );
+		QUERY_PLAN_CACHE_MESSAGE_LOGGER.resolvingNativeQueryParameters( queryString );
 		return nativeQueryParamCache.computeIfAbsent( queryString, creator );
 	}
 
@@ -198,7 +196,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	@Override
 	public void close() {
-		LOG.trace( "Destroying query interpretation cache" );
+		QUERY_PLAN_CACHE_MESSAGE_LOGGER.destroyingQueryInterpretationCache();
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();

@@ -20,7 +20,7 @@ public class AggregatedNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 	@Override
 	public int executeUpdate(DomainQueryExecutionContext executionContext) {
 		int updated = 0;
-		for ( NonSelectQueryPlan aggregatedQueryPlan : aggregatedQueryPlans ) {
+		for ( var aggregatedQueryPlan : aggregatedQueryPlans ) {
 			updated += aggregatedQueryPlan.executeUpdate( executionContext );
 		}
 		return updated;

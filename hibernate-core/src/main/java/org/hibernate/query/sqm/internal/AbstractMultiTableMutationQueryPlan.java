@@ -50,19 +50,14 @@ public abstract class AbstractMultiTableMutationQueryPlan<S extends SqmDmlStatem
 
 	// For Hibernate Reactive
 	protected Interpretation getInterpretation(DomainQueryExecutionContext context) {
-		Interpretation builtInterpretation = null;
 		MultiTableHandler localCopy = handler;
-
+		final Interpretation builtInterpretation;
 		if ( localCopy == null ) {
 			synchronized (this) {
 				localCopy = handler;
 				if ( localCopy == null ) {
-					final MultiTableHandlerBuildResult buildResult = buildHandler(
-							statement,
-							domainParameterXref,
-							strategy,
-							context
-					);
+					final var buildResult =
+							buildHandler( statement, domainParameterXref, strategy, context );
 					builtInterpretation = new Interpretation(
 							buildResult.multiTableHandler(),
 							buildResult.firstJdbcParameterBindings()
@@ -78,8 +73,9 @@ public abstract class AbstractMultiTableMutationQueryPlan<S extends SqmDmlStatem
 		else {
 			builtInterpretation = updateInterpretation( localCopy, context );
 		}
-		return builtInterpretation != null ? builtInterpretation
-				: new Interpretation( localCopy, localCopy.createJdbcParameterBindings( context ) );
+		return builtInterpretation == null
+				? new Interpretation( localCopy, localCopy.createJdbcParameterBindings( context ) )
+				: builtInterpretation;
 	}
 
 	private @Nullable Interpretation updateInterpretation(
@@ -90,16 +86,12 @@ public abstract class AbstractMultiTableMutationQueryPlan<S extends SqmDmlStatem
 		// If the translation depends on parameter bindings or it isn't compatible with the current query options,
 		// we have to rebuild the JdbcSelect, which is still better than having to translate from SQM to SQL AST again
 		if ( localCopy.dependsOnParameterBindings() ) {
-			final JdbcParameterBindings jdbcParameterBindings = localCopy.createJdbcParameterBindings( context );
+			final var jdbcParameterBindings = localCopy.createJdbcParameterBindings( context );
 			// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
 			// We could avoid this by putting the lock options into the cache key
 			if ( !localCopy.isCompatibleWith( jdbcParameterBindings, context.getQueryOptions() ) ) {
-				final MultiTableHandlerBuildResult buildResult = buildHandler(
-						statement,
-						domainParameterXref,
-						strategy,
-						context
-				);
+				final var buildResult =
+						buildHandler( statement, domainParameterXref, strategy, context );
 				localCopy = buildResult.multiTableHandler();
 				builtInterpretation = new Interpretation(
 						buildResult.multiTableHandler(),

@@ -182,7 +182,7 @@ public class SqmMappingModelHelper {
 
 		// see if the LHS is treated
 		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> treatedPath ) {
-			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
+			final var treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				final EntityPersister container = domainModel.findEntityDescriptor( treatTarget.getTypeName() );
 				return container.findSubPart( sqmPath.getNavigablePath().getLocalName(), container );
@@ -191,33 +191,32 @@ public class SqmMappingModelHelper {
 
 		// Plural path parts are not joined and thus also have no table group
 		if ( sqmPath instanceof AbstractSqmSpecificPluralPartPath<?> ) {
-			final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getLhs().getNavigablePath() );
-			final ModelPartContainer pluralPart = (ModelPartContainer) lhsTableGroup.getModelPart().findSubPart(
+			final var lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getLhs().getNavigablePath() );
+			final var pluralPart = (ModelPartContainer) lhsTableGroup.getModelPart().findSubPart(
 					sqmPath.getLhs().getReferencedPathSource().getPathName(),
 					null
 			);
-			final CollectionPart collectionPart = (CollectionPart) pluralPart.findSubPart(
+			final var collectionPart = (CollectionPart) pluralPart.findSubPart(
 					sqmPath.getReferencedPathSource()
 							.getPathName(),
 					null
 			);
 			// For entity collection parts, we must return the entity mapping type,
 			// as that is the mapping type of the expression
-			if ( collectionPart instanceof EntityCollectionPart ) {
-				return ( (EntityCollectionPart) collectionPart ).getAssociatedEntityMappingType();
-			}
-			return collectionPart;
+			return collectionPart instanceof EntityCollectionPart entityCollectionPart
+					? entityCollectionPart.getAssociatedEntityMappingType()
+					: collectionPart;
 		}
 
 		if ( sqmPath.getLhs() == null ) {
-			final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
+			final var referencedPathSource = sqmPath.getReferencedPathSource();
 			if ( referencedPathSource instanceof EntityDomainType<?> entityDomainType ) {
 				return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
 			assert referencedPathSource instanceof SqmCteTable<?>;
 			return null;
 		}
-		final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );
+		final var lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );
 		final ModelPartContainer modelPart;
 		if ( lhsTableGroup == null ) {
 			modelPart = (ModelPartContainer) resolveSqmPath( sqmPath.getLhs(), domainModel, tableGroupLocator );
@@ -249,7 +248,7 @@ public class SqmMappingModelHelper {
 			SqmToSqlAstConverter converter) {
 		final SqmPath<?> parentPath = sqmPath.getLhs();
 		if ( parentPath instanceof SqmTreatedPath<?, ?> treatedPath ) {
-			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
+			final var treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				return resolveEntityPersister(
 						( (EntityDomainType<?>) treatTarget ),

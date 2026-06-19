@@ -12,7 +12,8 @@ import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 /**
  * @author Steve Ebersole
  */
-public class MultiTableDeleteQueryPlan extends AbstractMultiTableMutationQueryPlan<SqmDeleteStatement<?>, SqmMultiTableMutationStrategy> {
+public class MultiTableDeleteQueryPlan
+		extends AbstractMultiTableMutationQueryPlan<SqmDeleteStatement<?>, SqmMultiTableMutationStrategy> {
 
 	public MultiTableDeleteQueryPlan(
 			SqmDeleteStatement<?> sqmDelete,

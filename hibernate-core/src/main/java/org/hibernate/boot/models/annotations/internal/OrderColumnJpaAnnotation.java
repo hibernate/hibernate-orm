@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 

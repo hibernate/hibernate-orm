@@ -9,8 +9,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CheckConstraintCollector;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
-import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper;
+import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 

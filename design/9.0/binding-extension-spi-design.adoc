@@ -65,6 +65,37 @@ The public SPI must not expose:
 * internal materializers;
 * mutable `org.hibernate.mapping` compatibility objects as the primary contract.
 
+== SPI Closure Requirement
+
+When this rehearsal becomes a supported SPI, the SPI boundary must be closed.
+That means every type exposed by, accepted by, or returned from the public
+contracts must itself be a supported API/SPI type or a stable JDK/Jakarta type.
+
+For example, if public contracts include:
+
+* `AttributeBindingContributor`;
+* `AttributeBindingTarget`;
+* future managed-type / type-binder contributor contracts;
+* target facets such as `AttributeOptions`, `ValueBindingTarget`,
+  `SelectableBindingTarget`, `AssociationBindingTarget`, or
+  `ComponentBindingTarget`;
+* context objects such as `BindingContributionContext`;
+
+then those targets, facets, source views, diagnostics objects, command objects,
+and any value objects they expose must also live in supported packages and obey
+the API/SPI/internal taxonomy.
+
+The implementation may adapt those public contracts to internal binding-model
+objects, contribution records, pending work items, materializers, or
+`org.hibernate.mapping` compatibility objects.  But no public contributor should
+need to import `org.hibernate.boot.models.mapping.internal.*`, and no public
+target should leak an internal model object as a return type.
+
+This applies equally to the not-yet-modeled `TypeBinder` replacement.  A public
+managed-type contributor cannot expose internal managed-type bindings, internal
+embeddable/mapped-superclass contribution objects, or internal materialization
+products.  It needs its own SPI-safe managed-type target and facets.
+
 == Attribute Contributor Shape
 
 A possible replacement for `AttributeBinder` is:
@@ -268,7 +299,7 @@ without exposing `PersistentClass` or `Component`.
 == Evidence From Internal Proofs
 
 ORM has an internal rehearsal of this shape under
-`org.hibernate.boot.models.bind.internal.spi`.  It is intentionally not a
+`org.hibernate.boot.models.mapping.internal.extension`.  It is intentionally not a
 supported extension contract.  Its purpose is to route built-in annotations
 through an SPI-shaped adapter before freezing the public API.
 

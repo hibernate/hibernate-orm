@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
+import org.hibernate.boot.models.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.models.mapping.internal.categorize.EntityHierarchy;
+import org.hibernate.boot.models.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.models.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.MappedSuperclass;

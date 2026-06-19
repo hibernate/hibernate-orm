@@ -11,7 +11,7 @@ import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.models.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.dialect.TimeZoneSupport;

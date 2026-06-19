@@ -794,17 +794,21 @@ produce a named finalized view/product.
 
 == Package Placement
 
-The current implementation can continue to live under
-`org.hibernate.boot.models.bind` while the model is still forming.  The broader
-architecture, however, is larger than "binding" as a single phase.
+The source-to-mapping pipeline now lives under
+`org.hibernate.boot.models.mapping`.  This is the containing package for the
+phases that turn boot model resources into the resolved boot mapping model.
 
-`org.hibernate.boot.models.xml`, `org.hibernate.boot.models.categorize`, and
-`org.hibernate.boot.models.bind` are all phases in the same flow:
+The broader architecture is larger than "binding" as a single phase.
+`org.hibernate.boot.models.mapping.internal.xml`, `org.hibernate.boot.models.mapping.internal.categorize`,
+`org.hibernate.boot.models.mapping.internal.binders`, `org.hibernate.boot.models.mapping.internal.model`,
+`org.hibernate.boot.models.mapping.internal.view`, and
+`org.hibernate.boot.models.mapping.internal.materialize` are all phases in the same flow:
 
 [source]
 ----
 AvailableResources
-    -> XML/annotation source normalization
+    -> resource discovery
+    -> XML/annotation source normalization and overlay
     -> categorization
     -> binding model population/resolution
     -> finalized views
@@ -816,68 +820,107 @@ of source-processing phases into the mapping model".  Package names should
 eventually make that pipeline visible instead of making XML, categorization, and
 binding look like unrelated subsystems.
 
-Target package direction:
+=== Current Layout
 
 [source]
 ----
 org.hibernate.boot.models.mapping
-    resources
-    xml
-    categorize
-    binders
-    model
-    view
-    materialize
-    spi
+    internal
+        xml
+        categorize
+        binders
+        model
+        view
+        materialize
+        sources
+        relational
+        context
+        extension
 ----
 
-The exact root name is provisional.  `mapping` is attractive because the pipeline
-turns boot model resources into `org.hibernate.mapping`; `pipeline` is also
-reasonable but more generic.
+`mapping` is the chosen root because the pipeline turns boot model resources into
+`org.hibernate.mapping`, and because the long-term goal is for
+`org.hibernate.mapping` itself to become the resolved boot mapping model.
 
-Near-term package layout under the existing root:
+Package names express both phase responsibility and Hibernate's package
+taxonomy.  Since these contracts are currently for Hibernate code only, they
+all live under `internal`:
 
+* `internal.xml`: XML transformation, annotation clearing, and overlay;
+* `internal.categorize`: managed-type and attribute categorization;
+* `internal.binders`: phase/action classes that populate binding state;
+* `internal.model`: mutable binding/finalization state;
+* `internal.view`: stable read contracts over finalized state;
+* `internal.materialize`: population of `org.hibernate.mapping`;
+* `internal.sources`: source-context objects consumed by binders/materializers;
+* `internal.relational`: binding-time table-reference vocabulary shared by
+  categorization, context, and binders;
+* `internal.context`: shared pipeline context contracts, state, and adapters;
+* `internal.extension`: internal proof contracts for a possible future
+  supported binding extension SPI.
+
+Internal proof packages such as `org.hibernate.boot.models.mapping.internal.extension`
+should not dictate the eventual public SPI placement.  They are rehearsal
+packages used to validate the shape before freezing a supported contract.
 
 [source]
 ----
-org.hibernate.boot.models.bind.internal
-    BindingCoordinator
+org.hibernate.boot.models.mapping.internal.context
     BindingStateImpl
 
-org.hibernate.boot.models.bind.internal.binders
+org.hibernate.boot.models.mapping.internal.context
+    BindingContext
+    BindingState
+    BindingOptions
+
+org.hibernate.boot.models.mapping.internal.binders
+    BindingCoordinator
     EntityTypeBinder
     IdentifierBinder
     ComponentBinder
     ToOneAttributeBinder
     ...
 
-org.hibernate.boot.models.bind.internal.model
+org.hibernate.boot.models.mapping.internal.model
     BootBindingModel
     ManagedTypeBinding
     EntityTypeBinding
     MappedSuperclassTypeBinding
     EmbeddableTypeBinding
-    AttributeBinding
-    ValueBinding
-    SelectableBinding
+    AttributeDeclarationBinding
+    AttributeUsageBinding
+    ValueIntent
     IdentifierContribution
     EmbeddableContribution
     MappedSuperclassContribution
 
-org.hibernate.boot.models.bind.internal.view
+org.hibernate.boot.models.mapping.internal.view
     ManagedTypeView
     IdentifiableTypeView
     EntityView
     MappedSuperclassView
     EmbeddableView
-    PropertyClosureView
-    SelectableOrderView
 
-org.hibernate.boot.models.bind.internal.materialize
-    MappingModelMaterializer
-    PersistentClassMaterializer
-    ComponentMaterializer
-    TableKeyMaterializer
+org.hibernate.boot.models.mapping.internal.materialize
+    IdentifierMappingMaterializer
+    PropertyMappingMaterializer
+    EmbeddableMappingMaterializer
+    BasicValueMappingMaterializer
+
+org.hibernate.boot.models.mapping.internal.relational
+    TableReference
+    TableOwner
+    PhysicalTable
+    SecondaryTable
+
+org.hibernate.boot.models.mapping.internal.binders
+    SelectableCorrespondence
+    SelectableOrderResolution
+
+org.hibernate.boot.models.mapping.internal.extension
+    AttributeBindingContributor
+    AttributeBindingTarget
+    BindingContributionContext
 ----
 
 The important separation is:
@@ -885,18 +928,48 @@ The important separation is:
 * `binders` are phase/action classes;
 * `model` objects are mutable boot binding state;
 * `view` contracts are finalized read APIs over binding state;
-* `materialize` turns views into `org.hibernate.mapping` objects.
+* `materialize` turns views into `org.hibernate.mapping` objects;
+* `relational` is shared relational vocabulary, not a phase worker package;
+* `context` contains shared pipeline context contracts and implementations;
+* `extension` is a proof package for the eventual public SPI shape, not a
+  supported extension package.
+
+=== API / SPI / Internal Audit
+
+The current audit result is:
+
+* There is no supported user API in `org.hibernate.boot.models.mapping`.
+* All currently implemented pipeline packages are under `mapping.internal`
+  because they are for Hibernate code only, even when classes are Java-`public`
+  for cross-package access.
+* Former phase-contract packages named `categorize.spi`, `context.spi`, and
+  `xml.spi` were moved under internal packages because they are not supported
+  integrator SPIs by Hibernate's package taxonomy.
+* `internal.extension` keeps the proof of the future binding-extension SPI away
+  from a future supported `mapping.spi`.
+* A future supported replacement for `org.hibernate.binder.AttributeBinder` and
+  `org.hibernate.binder.TypeBinder` should get a clean public/SPI package only
+  after the target/facet model is stable.
 
 `model` is used for now because `binding` was too easily confused with the
-overall `org.hibernate.boot.models.bind` subsystem and the binder worker layer.
+overall `org.hibernate.boot.models.mapping` subsystem and the binder worker layer.
 These products are still boot binding products, not runtime model parts and not
 final mapping objects.
 
-Do not perform a wholesale package rename until the horizontal model is doing
-more real work.  Renaming XML, categorization, and binding too early would create
-large import churn without proving the semantic model.  For now, capture the
-direction and keep local package choices aligned with the eventual phase
-separation.
+=== Follow-Up Package Rule
+
+Avoid additional package churn unless it clarifies a real phase boundary or
+removes a misleading dependency direction.
+
+For now:
+
+* keep new horizontal binding contracts in `mapping.internal.model`;
+* keep finalized read contracts in `mapping.internal.view`;
+* keep mapping-object population in `mapping.internal.materialize`;
+* keep the internal SPI proof isolated in `mapping.internal.extension`;
+* move any future public replacement for `org.hibernate.binder.AttributeBinder`
+  or `org.hibernate.binder.TypeBinder` into a supported SPI package only after
+  the target/facet contract is stable.
 
 == Minimal First Slice
 

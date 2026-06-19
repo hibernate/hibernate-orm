@@ -7,12 +7,12 @@ package org.hibernate.orm.test.boot.models.bind.mappedsuper;
 import java.util.Set;
 
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.models.bind.internal.model.IdentifiableAttributeDeclarationBinding;
-import org.hibernate.boot.models.bind.internal.model.AttributeUsageBinding;
-import org.hibernate.boot.models.bind.internal.model.ManagedTypeBinding;
-import org.hibernate.boot.models.bind.internal.model.StandardAttributeUsageBinding;
-import org.hibernate.boot.models.categorize.spi.BasicKeyMapping;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
+import org.hibernate.boot.models.mapping.internal.model.IdentifiableAttributeDeclarationBinding;
+import org.hibernate.boot.models.mapping.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.models.mapping.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.models.mapping.internal.model.StandardAttributeUsageBinding;
+import org.hibernate.boot.models.mapping.internal.categorize.BasicKeyMapping;
+import org.hibernate.boot.models.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;

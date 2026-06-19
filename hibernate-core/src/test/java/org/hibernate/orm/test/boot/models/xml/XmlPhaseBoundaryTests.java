@@ -6,7 +6,7 @@ package org.hibernate.orm.test.boot.models.xml;
 
 import java.util.List;
 
-import org.hibernate.boot.models.categorize.spi.DomainModelCategorizer;
+import org.hibernate.boot.models.mapping.internal.categorize.DomainModelCategorizer;
 import org.hibernate.boot.pipeline.internal.source.AvailableResources;
 import org.hibernate.orm.test.boot.models.XmlHelper;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
@@ -71,7 +71,7 @@ public class XmlPhaseBoundaryTests {
 				} );
 	}
 
-	private static org.hibernate.boot.models.categorize.spi.CategorizedDomainModel categorize(
+	private static org.hibernate.boot.models.mapping.internal.categorize.CategorizedDomainModel categorize(
 			String mappingResource,
 			ServiceRegistryScope scope) {
 		final var metadataBuildingContext = new MetadataBuildingContextTestingImpl( scope.getRegistry() );

@@ -110,19 +110,16 @@ generate the `customer` table DDL and build the runtime SessionFactory.
 | link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/package-info.java[`o.h.boot.pipeline.internal.source`]
 | Source inventory: `AvailableResources`
 
-| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/package-info.java[`o.h.boot.models.categorize.spi`]
-| Public categorization contracts: `CategorizedDomainModel`, `EntityHierarchy`, and related contracts
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/mapping/internal/categorize/package-info.java[`o.h.boot.models.mapping.internal.categorize`]
+| Internal categorization contracts and implementation: `CategorizedDomainModel`, `EntityHierarchy`, collector, hierarchy builder, and inheritance state
 
-| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal[`o.h.boot.models.categorize.internal`]
-| Categorization implementation: collector, hierarchy builder, and inheritance state
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/mapping/internal/context/package-info.java[`o.h.boot.models.mapping.internal.context`]
+| Internal mapping context contracts and state shared by pipeline phases
 
-| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/package-info.java[`o.h.boot.models.bind.spi`]
-| Public binding contract: `BindingCoordinator`
-
-| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/package-info.java[`o.h.boot.models.bind.internal.binders`]
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/mapping/internal/binders/package-info.java[`o.h.boot.models.mapping.internal.binders`]
 | Type and attribute binders, including binding phases
 
-| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/sources[`o.h.boot.models.bind.internal.sources`]
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/models/mapping/internal/sources/package-info.java[`o.h.boot.models.mapping.internal.sources`]
 | Source descriptors that normalize annotation/XML facts for binders
 |===
 

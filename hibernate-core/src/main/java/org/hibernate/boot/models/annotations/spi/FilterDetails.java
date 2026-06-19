@@ -5,7 +5,7 @@
 package org.hibernate.boot.models.annotations.spi;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
 
 /**
  * Commonality for filter annotations

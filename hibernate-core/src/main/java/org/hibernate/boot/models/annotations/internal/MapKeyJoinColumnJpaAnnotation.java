@@ -10,15 +10,15 @@ import java.util.Map;
 import jakarta.persistence.CheckConstraint;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.models.mapping.internal.xml.db.ForeignKeyProcessing;
+import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.MapKeyJoinColumn;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectCheckConstraints;
+import static org.hibernate.boot.models.mapping.internal.xml.XmlAnnotationHelper.collectCheckConstraints;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")

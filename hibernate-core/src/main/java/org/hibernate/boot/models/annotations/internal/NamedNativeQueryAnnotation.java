@@ -13,7 +13,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.models.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MutableClassDetails;

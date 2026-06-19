@@ -1,0 +1,131 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.models.mapping.internal.categorize;
+
+import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+
+import static org.hibernate.boot.models.mapping.internal.categorize.CategorizationHelper.determineAttributeNature;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+
+/// Models metadata about a JPA {@linkplain jakarta.persistence.metamodel.ManagedType managed-type}.
+///
+/// @since 9.0
+/// @author Hardy Ferentschik
+/// @author Steve Ebersole
+/// @author Brett Meyer
+public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata {
+	private final ClassDetails classDetails;
+	private final CategorizationContext modelContext;
+
+	/// This form is intended for construction of the root of an entity hierarchy
+	/// and its mapped-superclasses
+	public AbstractManagedTypeMetadata(ClassDetails classDetails, CategorizationContext modelContext) {
+		this.classDetails = classDetails;
+		this.modelContext = modelContext;
+	}
+
+	public ClassDetails getClassDetails() {
+		return classDetails;
+	}
+
+	public CategorizationContext getModelContext() {
+		return modelContext;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		AbstractManagedTypeMetadata that = (AbstractManagedTypeMetadata) o;
+		return Objects.equals( classDetails.getName(), that.classDetails.getName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( classDetails );
+	}
+
+	@Override
+	public String toString() {
+		return "ManagedTypeMetadata(" + classDetails.getName() + ")";
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// attribute handling
+
+	protected abstract List<AttributeMetadata> attributeList();
+
+	@Override
+	public int getNumberOfAttributes() {
+		return attributeList().size();
+	}
+
+	@Override
+	public Collection<AttributeMetadata> getAttributes() {
+		return attributeList();
+	}
+
+	@Override
+	public AttributeMetadata findAttribute(String name) {
+		final List<AttributeMetadata> attributeList = attributeList();
+		for ( int i = 0; i < attributeList.size(); i++ ) {
+			final AttributeMetadata attribute = attributeList.get( i );
+			if ( attribute.getName().equals( name ) ) {
+				return attribute;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public void forEachAttribute(IndexedConsumer<AttributeMetadata> consumer) {
+		for ( int i = 0; i < attributeList().size(); i++ ) {
+			consumer.accept( i, attributeList().get( i ) );
+		}
+	}
+
+	protected List<AttributeMetadata> resolveAttributes(AllMemberConsumer memberConsumer) {
+		final List<MemberDetails> backingMembers = getModelContext()
+				.getPersistentAttributeMemberResolver()
+				.resolveAttributesMembers( classDetails, getAccessType(), memberConsumer, modelContext );
+
+		final List<AttributeMetadata> attributeList = arrayList( backingMembers.size() );
+
+		for ( MemberDetails backingMember : backingMembers ) {
+			var memberType = backingMember.getType().determineRelativeType( classDetails );
+			var attributeNature = determineAttributeNature( backingMember, memberType );
+			final AttributeMetadata attribute = new AttributeMetadataImpl(
+					backingMember.resolveAttributeName(),
+					attributeNature,
+					backingMember
+			);
+			attributeList.add( attribute );
+		}
+
+		return attributeList;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Stuff affecting attributes built from this managed type.
+
+	public boolean canAttributesBeInsertable() {
+		return true;
+	}
+
+	public boolean canAttributesBeUpdatable() {
+		return true;
+	}
+}

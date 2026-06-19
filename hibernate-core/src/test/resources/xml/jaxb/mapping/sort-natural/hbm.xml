@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.sortnatural">
+	<class name="Person">
+		<id name="id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="name"/>
+		<set name="nickNames" table="person_nick_names" sort="natural">
+			<key column="person_id"/>
+			<element column="nick_name" type="string"/>
+		</set>
+	</class>
+</hibernate-mapping>

@@ -2535,9 +2535,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void collectRootPathsForLocking(SqmDynamicInstantiation<?> dynamicInstantiation) {
-		dynamicInstantiation.getArguments().forEach( ( argument ) -> {
-			collectRootPathsForLocking( argument.getSelectableNode() );
-		} );
+		dynamicInstantiation.getArguments()
+				.forEach( argument -> collectRootPathsForLocking( argument.getSelectableNode() ) );
 	}
 
 	private void inferTargetPath(int index) {
@@ -6208,11 +6207,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new QueryLiteral<>( sqlLiteralValue( converter, literal.getLiteralValue() ), basicValuedMapping );
 	}
 
-	private <D> Object sqlLiteralValue(BasicValueConverter<?,?> converter, D value) {
-		final var valueConverter = (BasicValueConverter<D, ?>) converter;
+	private Object sqlLiteralValue(BasicValueConverter<?,?> valueConverter, Object value) {
 		// For converted query literals, we support both, the domain and relational java type
 		if ( value == null || valueConverter.getDomainJavaType().isInstance( value ) ) {
-			return valueConverter.toRelationalValue( value );
+			return toRelationalValue( valueConverter, value );
 		}
 		else if ( valueConverter.getRelationalJavaType().isInstance( value ) ) {
 			return value;
@@ -6240,38 +6238,38 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
+	private static <D> Object toRelationalValue(BasicValueConverter<D, ?> valueConverter, Object value) {
+		return valueConverter.toRelationalValue( valueConverter.getDomainJavaType().cast( value ) );
+	}
+
 	private <E> EntityTypeLiteral entityTypeLiteral(SqmLiteral<E> literal, DiscriminatorMapping inferableExpressible) {
 		final E literalValue = literal.getLiteralValue();
-		final EntityPersister entityDescriptor;
-		if ( literalValue instanceof Class<?> clazz ) {
-			entityDescriptor = getMappingMetamodel().findEntityDescriptor( clazz );
-		}
-		else {
-			@SuppressWarnings("unchecked")
-			final var valueConverter =
-					(DiscriminatorConverter<?, E>)
-							inferableExpressible.getValueConverter();
-			entityDescriptor =
-					discriminatorValueDetails( valueConverter, literalValue )
-							.getIndicatedEntity().getEntityPersister();
-		}
+		final var entityDescriptor =
+				literalValue instanceof Class<?> clazz
+						? getMappingMetamodel().findEntityDescriptor( clazz )
+						: discriminatorValueDetails( inferableExpressible.getValueConverter(), literalValue )
+								.getIndicatedEntity().getEntityPersister();
 		return new EntityTypeLiteral( entityDescriptor );
 	}
 
-	private <E> DiscriminatorValueDetails discriminatorValueDetails(DiscriminatorConverter<?, E> valueConverter, E literalValue) {
+	private <E> DiscriminatorValueDetails discriminatorValueDetails(
+			DiscriminatorConverter<?, E> valueConverter, Object literalValue) {
 		if ( valueConverter.getDomainJavaType().isInstance( literalValue ) ) {
 			return valueConverter.getDetailsForDiscriminatorValue( literalValue );
 		}
-		else if ( valueConverter.getRelationalJavaType().isInstance( literalValue ) ) {
-			return valueConverter.getDetailsForRelationalForm( literalValue );
-		}
 		else {
-			// Special case when passing the discriminator value as e.g. string literal,
-			// but the expected relational type is Character.
-			// In this case, we use wrap to transform the value to the correct type
-			final E relationalForm =
-					valueConverter.getRelationalJavaType()
-							.wrap( literalValue, creationContext.getWrapperOptions() );
+			final E relationalForm;
+			if ( valueConverter.getRelationalJavaType().isInstance( literalValue ) ) {
+				relationalForm = valueConverter.getRelationalJavaType().cast( literalValue );
+			}
+			else {
+				// Special case when passing the discriminator value as, for example,
+				// a string literal, but the expected relational type is Character.
+				// In this case, we use wrap to transform the value to the correct type.
+				relationalForm =
+						valueConverter.getRelationalJavaType()
+								.wrap( literalValue, creationContext.getWrapperOptions() );
+			}
 			return valueConverter.getDetailsForRelationalForm( relationalForm );
 		}
 	}
@@ -7450,10 +7448,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return magnitude;
 	}
 
-	@SuppressWarnings("unchecked")
 	static boolean isOne(Expression scale) {
-		return scale instanceof QueryLiteral
-			&& ( (QueryLiteral<Number>) scale ).getLiteralValue().longValue() == 1L;
+		return scale instanceof QueryLiteral<?> literal
+			&& literal.getLiteralValue() instanceof Number number
+			&& number.longValue() == 1L;
 	}
 
 	@Override
@@ -8663,20 +8661,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private void handleTypeComparison(InListPredicate inPredicate) {
 		if ( inPredicate.getTestExpression() instanceof DiscriminatorPathInterpretation<?> typeExpression ) {
-			boolean containsNonLiteral = false;
-			for ( var listExpression : inPredicate.getListExpressions() ) {
-				if ( !( listExpression instanceof EntityTypeLiteral ) ) {
-					containsNonLiteral = true;
+			final var listExpressions = inPredicate.getListExpressions();
+			List<EntityTypeLiteral> typeLiterals = new ArrayList<>( listExpressions.size() );
+			for ( var listExpression : listExpressions ) {
+				if ( listExpression instanceof EntityTypeLiteral typeLiteral ) {
+					typeLiterals.add( typeLiteral );
+				}
+				else {
+					typeLiterals = null;
 					break;
 				}
 			}
-			//noinspection unchecked
 			handleTypeComparison(
 					typeExpression,
-					containsNonLiteral
-							? null
-							: (List<EntityTypeLiteral>) (List<?>)
-									inPredicate.getListExpressions(),
+					typeLiterals,
 					!inPredicate.isNegated()
 			);
 		}
@@ -8713,7 +8711,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				: null;
 	}
 
-	@SuppressWarnings( "rawtypes" )
 	private InListPredicate processInSingleParameter(
 			SqmInListPredicate<?> sqmPredicate,
 			SqmParameter<?> sqmParameter,

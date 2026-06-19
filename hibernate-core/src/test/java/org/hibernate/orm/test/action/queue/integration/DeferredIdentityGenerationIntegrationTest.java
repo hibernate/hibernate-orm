@@ -6,6 +6,8 @@ package org.hibernate.orm.test.action.queue.integration;
 
 import org.hibernate.cfg.FlushSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -29,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		IdentityGenerationIntegrationTest.IdentityChild.class
 })
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @ServiceRegistry(settings = {
 		@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 		@Setting(name = FlushSettings.GRAPH_DEFER_IDENTITY_INSERTS, value = "true")

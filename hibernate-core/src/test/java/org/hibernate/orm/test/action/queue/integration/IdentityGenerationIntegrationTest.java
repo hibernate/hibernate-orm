@@ -7,6 +7,8 @@ package org.hibernate.orm.test.action.queue.integration;
 import jakarta.persistence.*;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -33,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 		IdentityGenerationIntegrationTest.IdentityChildOfRegular.class
 })
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class IdentityGenerationIntegrationTest {
 
 	@AfterEach

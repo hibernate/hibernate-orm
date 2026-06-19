@@ -115,10 +115,15 @@ public class CommonFunctionFactory {
 	 * For databases where the first parameter is the base
 	 */
 	public void log() {
+		log( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void log(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "log" )
 				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
 				.setInvariantType(doubleType)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -243,10 +248,15 @@ public class CommonFunctionFactory {
 	 * For Oracle, HANA
 	 */
 	public void radians_acos() {
+		radians_acos( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void radians_acos(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.patternDescriptorBuilder( "radians", "(?1*acos(-1)/180)" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount(1)
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -262,10 +272,15 @@ public class CommonFunctionFactory {
 	 * For Oracle, HANA
 	 */
 	public void degrees_acos() {
+		degrees_acos( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void degrees_acos(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.patternDescriptorBuilder( "degrees", "(?1/acos(-1)*180)" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount(1)
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -710,17 +725,23 @@ public class CommonFunctionFactory {
 	}
 
 	public void pad() {
+		pad( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void pad(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "lpad" )
 				.setInvariantType(stringType)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, STRING)
 				.setArgumentListSignature( "(STRING string, INTEGER length[, STRING padding])" )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "rpad" )
 				.setInvariantType(stringType)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, STRING)
 				.setArgumentListSignature( "(STRING string, INTEGER length[, STRING padding])" )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -835,15 +856,24 @@ public class CommonFunctionFactory {
 	}
 
 	public void repeat_rpad() {
-		repeat_rpad( "length" );
+		repeat_rpad( SqlAstNodeRenderingMode.DEFAULT );
 	}
 
 	public void repeat_rpad(String lengthFunctionName) {
+		repeat_rpad( lengthFunctionName, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void repeat_rpad(SqlAstNodeRenderingMode argumentRenderingMode) {
+		repeat_rpad( "length", argumentRenderingMode );
+	}
+
+	public void repeat_rpad(String lengthFunctionName, SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*" + lengthFunctionName + "(?1),?1)" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -863,17 +893,23 @@ public class CommonFunctionFactory {
 	}
 
 	public void leftRight_substr() {
+		leftRight_substr( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void leftRight_substr(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 		functionRegistry.patternDescriptorBuilder( "right", "substr(?1,-?2)" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -1402,12 +1438,17 @@ public class CommonFunctionFactory {
 	 * Almost every database
 	 */
 	public void concat_pipeOperator() {
+		concat_pipeOperator( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void concat_pipeOperator(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.patternDescriptorBuilder( "concat", "(?1||?2...)" )
 				.setInvariantType(stringType)
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver(
 						StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, STRING )
 				)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
 				.register();
 	}
@@ -1566,46 +1607,57 @@ public class CommonFunctionFactory {
 	}
 
 	public void trigonometry() {
+		trigonometry( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void trigonometry(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "sin" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "cos" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "tan" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "asin" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "acos" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "atan" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "atan2" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(NUMERIC, NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -1621,9 +1673,14 @@ public class CommonFunctionFactory {
 	}
 
 	public void coalesce() {
+		coalesce( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void coalesce(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "coalesce" )
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -1639,9 +1696,14 @@ public class CommonFunctionFactory {
 	}
 
 	public void nullif() {
+		nullif( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void nullif(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "nullif" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -1649,10 +1711,15 @@ public class CommonFunctionFactory {
 	 * ANSI SQL-style
 	 */
 	public void length_characterLength() {
+		length_characterLength( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void length_characterLength(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "character_length" )
 				.setInvariantType(integerType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
@@ -1848,11 +1915,16 @@ public class CommonFunctionFactory {
 	 * Oracle, and many others
 	 */
 	public void substring_substr() {
+		substring_substr( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void substring_substr(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "substring", "substr" )
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
 				.setInvariantType(stringType)
 				.setArgumentCountBetween( 2, 3 )
 				.setParameterTypes(STRING, INTEGER, INTEGER)
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -1911,11 +1983,16 @@ public class CommonFunctionFactory {
 	}
 
 	public void replace() {
+		replace( SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void replace(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "replace" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 3 )
 				.setParameterTypes(STRING, STRING, STRING)
 				.setArgumentListSignature( "(STRING string, STRING pattern, STRING replacement)" )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 
@@ -2345,6 +2422,15 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void power(SqlAstNodeRenderingMode argumentRenderingMode) {
+		functionRegistry.namedDescriptorBuilder( "power" )
+				.setInvariantType(doubleType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setArgumentRenderingMode( argumentRenderingMode )
+				.register();
+	}
+
 	/**
 	 * power() for Spanner
 	 */
@@ -2456,10 +2542,15 @@ public class CommonFunctionFactory {
 	}
 
 	public void hex(String pattern) {
+		hex( pattern, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public void hex(String pattern, SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.patternDescriptorBuilder( "hex", pattern )
 				.setInvariantType(stringType)
 				.setParameterTypes( BINARY )
 				.setExactArgumentCount( 1 )
+				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 	}
 

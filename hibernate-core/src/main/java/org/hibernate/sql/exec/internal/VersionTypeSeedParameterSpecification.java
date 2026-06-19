@@ -30,6 +30,10 @@ public class VersionTypeSeedParameterSpecification extends AbstractJdbcParameter
 		this.versionMapping = versionMapping;
 	}
 
+	public EntityVersionMapping getVersionMapping() {
+		return versionMapping;
+	}
+
 	@Override
 	public void bindParameterValue(
 			PreparedStatement statement,

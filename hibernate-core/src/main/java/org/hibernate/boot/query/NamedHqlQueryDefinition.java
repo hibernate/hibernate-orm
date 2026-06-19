@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 
@@ -18,9 +19,11 @@ import org.hibernate.query.named.spi.NamedSqmQueryMemento;
  * @author Gavin King
  */
 public interface NamedHqlQueryDefinition<E> extends NamedQueryDefinition<E> {
+	@Nonnull
 	String getHqlString();
 
+	@Nonnull
 	@Override
-	NamedSqmQueryMemento<E> resolve(SessionFactoryImplementor factory);
+	NamedSqmQueryMemento<E> resolve(@Nonnull SessionFactoryImplementor factory);
 
 }

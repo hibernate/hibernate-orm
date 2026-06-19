@@ -4,9 +4,10 @@
  */
 package org.hibernate.query.named.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
-import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -33,30 +34,30 @@ public class CriteriaSelectionMementoImpl<R>
 		implements SqmSelectionMemento<R>, Serializable {
 
 	private final SqmSelectStatement<R> selectAst;
-	private final String entityGraphName;
-	private final Map<String, String> parameterTypes;
+	private final @Nullable String entityGraphName;
+	private final @Nullable Map<String, String> parameterTypes;
 
 	public CriteriaSelectionMementoImpl(
-			String name,
+			@Nonnull String name,
 			@Nullable Class<R> resultType,
-			String entityGraphName,
-			SqmStatement<R> sqmStatement,
-			Integer firstResult,
-			Integer maxResults,
-			Boolean cacheable,
-			String cacheRegion,
-			CacheMode cacheMode,
-			FlushMode flushMode,
-			Boolean readOnly,
-			LockMode lockMode,
-			PessimisticLockScope lockScope,
-			Timeout lockTimeout,
-			Locking.FollowOn followOnLockingStrategy,
-			Timeout timeout,
-			Integer fetchSize,
-			String comment,
-			Map<String, String> parameterTypes,
-			Map<String, Object> hints) {
+			@Nullable String entityGraphName,
+			@Nonnull SqmStatement<R> sqmStatement,
+			@Nullable Integer firstResult,
+			@Nullable Integer maxResults,
+			@Nullable Boolean cacheable,
+			@Nullable String cacheRegion,
+			@Nullable CacheMode cacheMode,
+			@Nullable FlushMode flushMode,
+			@Nullable Boolean readOnly,
+			@Nullable LockMode lockMode,
+			@Nullable PessimisticLockScope lockScope,
+			@Nullable Timeout lockTimeout,
+			@Nullable Locking.FollowOn followOnLockingStrategy,
+			@Nullable Timeout timeout,
+			@Nullable Integer fetchSize,
+			@Nullable String comment,
+			@Nullable Map<String, String> parameterTypes,
+			@Nonnull Map<String, Object> hints) {
 		super( name, resultType,
 				flushMode, timeout, comment,
 				readOnly, fetchSize, firstResult, maxResults,
@@ -68,28 +69,32 @@ public class CriteriaSelectionMementoImpl<R>
 		this.parameterTypes = parameterTypes;
 	}
 
-	public CriteriaSelectionMementoImpl(String name, CriteriaSelectionMementoImpl<R> original) {
+	public CriteriaSelectionMementoImpl(@Nonnull String name, @Nonnull CriteriaSelectionMementoImpl<R> original) {
 		super( name, original );
 		this.selectAst = original.selectAst;
 		this.entityGraphName = original.entityGraphName;
 		this.parameterTypes = original.parameterTypes;
 	}
 
+	@Nonnull
 	@Override
 	public String getHqlString() {
 		return CRITERIA_HQL_STRING;
 	}
 
+	@Nonnull
 	@Override
 	public String getSelectionString() {
 		return getHqlString();
 	}
 
+	@Nonnull
 	@Override
 	public SqmStatement<R> getSqmStatement() {
 		return selectAst;
 	}
 
+	@Nullable
 	@Override
 	public Map<String, String> getAnticipatedParameterTypes() {
 		return parameterTypes;
@@ -101,29 +106,37 @@ public class CriteriaSelectionMementoImpl<R>
 		return null;
 	}
 
+	@Nonnull
 	@Override
-	public NamedSqmQueryMemento<R> makeCopy(String name) {
+	public NamedSqmQueryMemento<R> makeCopy(@Nonnull String name) {
 		return new CriteriaSelectionMementoImpl<>( name, this );
 	}
 
 	@Override
-	public void validate(QueryEngine queryEngine) {
+	public void validate(@Nonnull QueryEngine queryEngine) {
 		// nothing to do
 	}
 
+	@Nonnull
 	@Override
-	public SelectionQueryImplementor<R> toSelectionQuery(SharedSessionContractImplementor session) {
+	public SelectionQueryImplementor<R> toSelectionQuery(@Nonnull SharedSessionContractImplementor session) {
 		return toSelectionQuery( session, queryType );
 	}
 
+	@Nonnull
 	@Override
-	public <T> SelectionQueryImplementor<T> toSelectionQuery(SharedSessionContractImplementor session, Class<T> javaType) {
+	public <T> SelectionQueryImplementor<T> toSelectionQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<T> javaType) {
 		checkResultType( javaType, selectAst );
 		//noinspection rawtypes,unchecked
 		return new SelectionQueryImpl( this, selectAst, javaType, session );
 	}
 
-	private static <T> void checkResultType(Class<T> resultType, SqmSelectStatement<?> selectStatement) {
+	private static <T> void checkResultType(
+			@Nullable Class<T> resultType,
+			@Nonnull SqmSelectStatement<?> selectStatement) {
+		if ( resultType == null ) {
+			return;
+		}
 		final Class<?> expectedResultType = selectStatement.getResultType();
 		if ( expectedResultType != Object.class
 			&& !resultType.isAssignableFrom( expectedResultType ) ) {

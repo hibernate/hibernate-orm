@@ -48,5 +48,6 @@ public interface JpaTypedQueryReference<R> extends JpaReference, TypedQueryRefer
 	}
 
 	@Override
+	@Nullable
 	Timeout getTimeout();
 }

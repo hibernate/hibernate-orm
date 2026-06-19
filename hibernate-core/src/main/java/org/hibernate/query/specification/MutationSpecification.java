@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
@@ -48,8 +49,9 @@ import org.hibernate.query.restriction.Restriction;
 @Incubating
 public interface MutationSpecification<T> extends QuerySpecification<T> {
 
+	@Nonnull
 	@Override
-	MutationSpecification<T> restrict(Restriction<? super T> restriction);
+	MutationSpecification<T> restrict(@Nonnull Restriction<? super T> restriction);
 
 	/**
 	 * A function capable of modifying or augmenting a criteria query.
@@ -58,7 +60,9 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 */
 	@FunctionalInterface
 	interface Augmentation<T> {
-		void augment(CriteriaBuilder builder, CommonAbstractCriteria query, Root<T> mutationTarget);
+		void augment(@Nonnull CriteriaBuilder builder,
+					@Nonnull CommonAbstractCriteria query,
+					@Nonnull Root<T> mutationTarget);
 	}
 
 	/**
@@ -68,20 +72,25 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	MutationSpecification<T> augment(Augmentation<T> augmentation);
+	@Nonnull
+	MutationSpecification<T> augment(@Nonnull Augmentation<T> augmentation);
 
 	/**
 	 * Finalize the building and create the {@linkplain MutationQuery} instance.
 	 */
+	@Nonnull
 	@Override
-	MutationQuery createQuery(EntityHandler entityHandler);
+	MutationQuery createQuery(@Nonnull EntityHandler entityHandler);
 
+	@Nonnull
 	@Override
-	CriteriaStatement<T> buildCriteria(CriteriaBuilder builder);
+	CriteriaStatement<T> buildCriteria(@Nonnull CriteriaBuilder builder);
 
+	@Nonnull
 	@Override
-	MutationSpecification<T> validate(CriteriaBuilder builder);
+	MutationSpecification<T> validate(@Nonnull CriteriaBuilder builder);
 
+	@Nonnull
 	@Override
 	StatementReference reference();
 
@@ -99,7 +108,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * @throws IllegalMutationQueryException Only {@code update} and {@code delete} are supported;
 	 * this method will throw an exception if the given HQL query is not an {@code update} or {@code delete}.
 	 */
-	static <T> MutationSpecification<T> create(Class<T> mutationTarget, String hql) {
+	@Nonnull
+	static <T> MutationSpecification<T> create(@Nonnull Class<T> mutationTarget, @Nonnull String hql) {
 		return new MutationSpecificationImpl<>( hql, mutationTarget );
 	}
 
@@ -115,7 +125,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 8.0
 	 */
-	static <T> MutationSpecification<T> create(StatementReference statementReference) {
+	@Nonnull
+	static <T> MutationSpecification<T> create(@Nonnull StatementReference statementReference) {
 		return new MutationSpecificationImpl<>( statementReference );
 	}
 
@@ -130,7 +141,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @see UpdateSpecification#create(CriteriaUpdate)
 	 */
-	static <T> MutationSpecification<T> create(CriteriaUpdate<T> criteriaUpdate) {
+	@Nonnull
+	static <T> MutationSpecification<T> create(@Nonnull CriteriaUpdate<T> criteriaUpdate) {
 		return new MutationSpecificationImpl<>( criteriaUpdate );
 	}
 
@@ -145,7 +157,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @see DeleteSpecification#create(CriteriaDelete)
 	 */
-	static <T> MutationSpecification<T> create(CriteriaDelete<T> criteriaDelete) {
+	@Nonnull
+	static <T> MutationSpecification<T> create(@Nonnull CriteriaDelete<T> criteriaDelete) {
 		return new MutationSpecificationImpl<>( criteriaDelete );
 	}
 }

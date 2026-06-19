@@ -72,7 +72,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	private final MutationType type;
 	private final StatementReference statementReference;
 
-	public MutationSpecificationImpl(String hql, Class<T> mutationTarget) {
+	public MutationSpecificationImpl(@Nonnull String hql, @Nonnull Class<T> mutationTarget) {
 		this.hql = hql;
 		this.mutationTarget = mutationTarget;
 		this.deleteOrUpdateStatement = null;
@@ -80,7 +80,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		this.statementReference = null;
 	}
 
-	public MutationSpecificationImpl(CriteriaUpdate<T> criteriaQuery) {
+	public MutationSpecificationImpl(@Nonnull CriteriaUpdate<T> criteriaQuery) {
 		this.deleteOrUpdateStatement = (SqmUpdateStatement<T>) criteriaQuery;
 		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
 		this.hql = null;
@@ -88,7 +88,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		this.statementReference = null;
 	}
 
-	public MutationSpecificationImpl(CriteriaDelete<T> criteriaQuery) {
+	public MutationSpecificationImpl(@Nonnull CriteriaDelete<T> criteriaQuery) {
 		this.deleteOrUpdateStatement = (SqmDeleteStatement<T>) criteriaQuery;
 		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
 		this.hql = null;
@@ -96,7 +96,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		this.statementReference = null;
 	}
 
-	public MutationSpecificationImpl(MutationType type, Class<T> mutationTarget) {
+	public MutationSpecificationImpl(@Nonnull MutationType type, @Nonnull Class<T> mutationTarget) {
 		this.deleteOrUpdateStatement = null;
 		this.mutationTarget = mutationTarget;
 		this.hql = null;
@@ -104,7 +104,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		this.statementReference = null;
 	}
 
-	public MutationSpecificationImpl(StatementReference statementReference) {
+	public MutationSpecificationImpl(@Nonnull StatementReference statementReference) {
 		this.deleteOrUpdateStatement = null;
 		this.mutationTarget = null;
 		this.hql = null;
@@ -125,6 +125,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return statementReference instanceof JpaStatementReference<?> jpaStatementReference
 				? jpaStatementReference.getTimeout()
@@ -155,13 +156,15 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		return statementReference == null ? emptySet() : statementReference.getOptions();
 	}
 
+	@Nonnull
 	@Override
 	public StatementReference reference() {
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public MutationSpecification<T> restrict(Restriction<? super T> restriction) {
+	public MutationSpecification<T> restrict(@Nonnull Restriction<? super T> restriction) {
 		specifications.add( (sqmStatement, mutationTargetRoot) -> {
 			final var sqmPredicate = (SqmPredicate)
 					restriction.toPredicate( mutationTargetRoot,
@@ -171,14 +174,16 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public MutationSpecification<T> augment(Augmentation<T> augmentation) {
+	public MutationSpecification<T> augment(@Nonnull Augmentation<T> augmentation) {
 		specifications.add( (sqmStatement, mutationTargetRoot) ->
 				augmentation.augment( sqmStatement.nodeBuilder(), sqmStatement, mutationTargetRoot ) );
 		return this;
 	}
 
-	public MutationQueryImplementor<T> createQuery(SharedSessionContract session) {
+	@Nonnull
+	public MutationQueryImplementor<T> createQuery(@Nonnull SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final var buildResult = build( sessionImpl.getFactory().getQueryEngine() );
 		final var query =
@@ -192,7 +197,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		return query;
 	}
 
-	private void setHintsAndOptions(MutationQueryImpl<T> query) {
+	private void setHintsAndOptions(@Nonnull MutationQueryImpl<T> query) {
 		final var hints = statementReference.getHints();
 		if ( hints != null ) {
 			hints.forEach( query::setHint );
@@ -202,11 +207,12 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 
 
 	private record SqmBuildResult<T>(
-			SqmDeleteOrUpdateStatement<T> sqmStatement,
-			NamedSqmQueryMemento<?> sqmMemento) {
+			@Nonnull SqmDeleteOrUpdateStatement<T> sqmStatement,
+			@Nullable NamedSqmQueryMemento<?> sqmMemento) {
 	}
 
-	private SqmBuildResult<T> build(QueryEngine queryEngine) {
+	@Nonnull
+	private SqmBuildResult<T> build(@Nonnull QueryEngine queryEngine) {
 		final SqmDeleteOrUpdateStatement<T> sqmStatement;
 		final SqmRoot<T> mutationTargetRoot;
 		final NamedSqmQueryMemento<?> sqmMemento;
@@ -252,19 +258,22 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		return new SqmBuildResult<>( sqmStatement, sqmMemento );
 	}
 
+	@Nonnull
 	@Override
-	public MutationQueryImplementor<T> createQuery(EntityHandler entityHandler) {
+	public MutationQueryImplementor<T> createQuery(@Nonnull EntityHandler entityHandler) {
 		return createQuery( (SharedSessionContract) entityHandler );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaStatement<T> buildCriteria(CriteriaBuilder builder) {
+	public CriteriaStatement<T> buildCriteria(@Nonnull CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() ).sqmStatement;
 	}
 
+	@Nonnull
 	@Override
-	public MutationSpecification<T> validate(CriteriaBuilder builder) {
+	public MutationSpecification<T> validate(@Nonnull CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
 		final var statement = build( nodeBuilder.getQueryEngine() ).sqmStatement;
 		( (AbstractSqmDmlStatement<?>) statement ).validate( hql );
@@ -275,7 +284,10 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	 * Used during construction to parse/interpret the incoming HQL
 	 * and produce the corresponding SQM tree.
 	 */
-	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(String hql, QueryEngine queryEngine) {
+	@Nonnull
+	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(
+			@Nonnull String hql,
+			@Nonnull QueryEngine queryEngine) {
 		final HqlInterpretation<T> hqlInterpretation =
 				queryEngine.getInterpretationCache()
 						// FIXME : unchecked cast
@@ -297,9 +309,10 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	 * Used during construction to resolve an incoming named statement reference
 	 * and produce the corresponding SQM tree.
 	 */
+	@Nonnull
 	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(
-			NamedSqmQueryMemento<?> sqmMemento,
-			QueryEngine queryEngine) {
+			@Nonnull NamedSqmQueryMemento<?> sqmMemento,
+			@Nonnull QueryEngine queryEngine) {
 		final var sqmStatement = sqmMemento.getSqmStatement();
 		if ( sqmStatement == null ) {
 			return resolveSqmTree( sqmMemento.getHqlString(), queryEngine );
@@ -317,9 +330,10 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 
 	}
 
+	@Nonnull
 	private static <T> NamedSqmQueryMemento<T> resolveSqmMutationMemento(
-			StatementReference statementReference,
-			QueryEngine queryEngine) {
+			@Nonnull StatementReference statementReference,
+			@Nonnull QueryEngine queryEngine) {
 		final NamedQueryMemento<T> namedMemento =
 				queryEngine.getNamedObjectRepository()
 						// FIXME: unchecked cast
@@ -340,9 +354,10 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	 * Used during construction. Mainly used to group extracting and
 	 * validating the root.
 	 */
+	@Nonnull
 	private static <T> SqmRoot<T> resolveSqmRoot(
-			SqmDeleteOrUpdateStatement<T> sqmStatement,
-			Class<T> mutationTarget) {
+			@Nonnull SqmDeleteOrUpdateStatement<T> sqmStatement,
+			@Nonnull Class<T> mutationTarget) {
 		final var mutationTargetRoot = sqmStatement.getTarget();
 		final var javaType = mutationTargetRoot.getJavaType();
 		if ( javaType != null && !mutationTarget.isAssignableFrom( javaType ) ) {

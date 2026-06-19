@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.Timeout;
@@ -11,7 +12,6 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.annotation.Nonnull;
 import org.hibernate.QueryException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -57,35 +57,38 @@ import static org.hibernate.query.sqm.tree.spi.SqmCopyContext.simpleContext;
  *
  * @author Steve Ebersole
  */
-public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>, JpaTypedQueryReference<T> {
+public class SelectionSpecificationImpl<T>
+		implements SelectionSpecification<T>, JpaTypedQueryReference<T> {
 	private final Class<T> resultType;
 	private final String hql;
 	private final CriteriaQuery<T> criteriaQuery;
 	private final TypedQueryReference<? super T> typedQueryReference;
 	private final List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<? extends T>>> specifications = new ArrayList<>();
 
-	public SelectionSpecificationImpl(Class<T> resultType) {
+	public SelectionSpecificationImpl(@Nonnull Class<T> resultType) {
 		this.resultType = resultType;
 		this.hql = null;
 		this.criteriaQuery = null;
 		this.typedQueryReference = null;
 	}
 
-	public SelectionSpecificationImpl(String hql, Class<T> resultType) {
+	public SelectionSpecificationImpl(@Nonnull String hql, @Nonnull Class<T> resultType) {
 		this.resultType = resultType;
 		this.hql = hql;
 		this.criteriaQuery = null;
 		this.typedQueryReference = null;
 	}
 
-	public SelectionSpecificationImpl(CriteriaQuery<T> criteriaQuery) {
+	public SelectionSpecificationImpl(@Nonnull CriteriaQuery<T> criteriaQuery) {
 		this.resultType = criteriaQuery.getResultType();
 		this.hql = null;
 		this.criteriaQuery = criteriaQuery;
 		this.typedQueryReference = null;
 	}
 
-	public SelectionSpecificationImpl(TypedQueryReference<? super T> typedQueryReference, Class<T> resultType) {
+	public SelectionSpecificationImpl(
+			@Nonnull TypedQueryReference<? super T> typedQueryReference,
+			@Nonnull Class<T> resultType) {
 		this.resultType = resultType;
 		this.hql = null;
 		this.criteriaQuery = null;
@@ -134,17 +137,20 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return typedQueryReference == null ? emptySet() : typedQueryReference.getOptions();
 	}
 
+	@Nonnull
 	@Override
 	public TypedQueryReference<T> reference() {
 		return this;
 	}
 
+	@Nonnull
 	public List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<? extends T>>> getSpecifications() {
 		return specifications;
 	}
 
+	@Nonnull
 	@Override
-	public SelectionSpecification<T> restrict(Restriction<? super T> restriction) {
+	public SelectionSpecification<T> restrict(@Nonnull Restriction<? super T> restriction) {
 		specifications.add( (sqmStatement, root) -> {
 			final var sqmPredicate = SqmUtil.restriction( sqmStatement, resultType, restriction );
 			sqmStatement.getQuerySpec().applyPredicate( sqmPredicate );
@@ -152,8 +158,9 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SelectionSpecification<T> augment(Augmentation<T> augmentation) {
+	public SelectionSpecification<T> augment(@Nonnull Augmentation<T> augmentation) {
 		specifications.add( (sqmStatement, root) -> {
 			if ( !( sqmStatement instanceof SqmSelectStatement<T> selectStatement ) ) {
 				throw new IllegalStateException( "Cannot augment a subquery" );
@@ -163,20 +170,23 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SelectionSpecification<T> fetch(Path<T, ?> fetchPath) {
+	public SelectionSpecification<T> fetch(@Nonnull Path<T, ?> fetchPath) {
 		specifications.add( (sqmStatement, root) -> fetchPath.fetch( root ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SelectionSpecification<T> sort(Order<? super T> order) {
+	public SelectionSpecification<T> sort(@Nonnull Order<? super T> order) {
 		specifications.add( (sqmStatement, root) -> addOrder( order, sqmStatement ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public final SelectionSpecification<T> resort(Order<? super T> order) {
+	public final SelectionSpecification<T> resort(@Nonnull Order<? super T> order) {
 		specifications.add( (sqmStatement, root) -> {
 			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
 			addOrder( order, sqmStatement );
@@ -184,8 +194,9 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public final SelectionSpecification<T> resort(List<? extends Order<? super T>> orders) {
+	public final SelectionSpecification<T> resort(@Nonnull List<? extends Order<? super T>> orders) {
 		specifications.add( (sqmStatement, root) -> {
 			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
 			orders.forEach( order -> addOrder( order, sqmStatement ) );
@@ -193,7 +204,9 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
-	private static <T> void addOrder(Order<? super T> order, AbstractSqmSelectQuery<T> sqmStatement) {
+	private static <T> void addOrder(
+			@Nonnull Order<? super T> order,
+			@Nonnull AbstractSqmSelectQuery<T> sqmStatement) {
 		final var sortSpecification = SqmUtil.sortSpecification( sqmStatement, order );
 		final var querySpec = sqmStatement.getQuerySpec();
 		if ( querySpec.getOrderByClause() == null ) {
@@ -202,7 +215,8 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		querySpec.getOrderByClause().addSortSpecification( sortSpecification );
 	}
 
-	public SelectionQueryImplementor<T> createQuery(SharedSessionContract session) {
+	@Nonnull
+	public SelectionQueryImplementor<T> createQuery(@Nonnull SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final var buildResult = build( sessionImpl.getFactory().getQueryEngine() );
 		final var query = createSelectionQuery( buildResult, sessionImpl );
@@ -213,14 +227,16 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return query;
 	}
 
-	private @Nonnull SelectionQueryImplementor<T> createSelectionQuery
-			(SqmBuildResult<T> buildResult, SharedSessionContractImplementor session) {
+	@Nonnull
+	private SelectionQueryImplementor<T> createSelectionQuery(
+			@Nonnull SqmBuildResult<T> buildResult,
+			@Nonnull SharedSessionContractImplementor session) {
 		return buildResult.sqmMemento == null
 				? new SelectionQueryImpl<>( buildResult.sqmStatement, false, resultType, session )
 				: new SelectionQueryImpl<>( buildResult.sqmMemento, buildResult.sqmStatement, resultType, session );
 	}
 
-	private void setHintsAndOptions(SelectionQueryImplementor<T> query) {
+	private void setHintsAndOptions(@Nonnull SelectionQueryImplementor<T> query) {
 		final var hints = typedQueryReference.getHints();
 		if ( hints != null ) {
 			hints.forEach( query::setHint );
@@ -235,11 +251,12 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	private record SqmBuildResult<T>(
-			SqmSelectStatement<T> sqmStatement,
-			NamedSqmQueryMemento<T> sqmMemento) {
+			@Nonnull SqmSelectStatement<T> sqmStatement,
+			@Nullable NamedSqmQueryMemento<T> sqmMemento) {
 	}
 
-	private SqmBuildResult<T> build(QueryEngine queryEngine) {
+	@Nonnull
+	private SqmBuildResult<T> build(@Nonnull QueryEngine queryEngine) {
 		final SqmSelectStatement<T> sqmStatement;
 		final SqmRoot<? extends T> sqmRoot;
 		final NamedSqmQueryMemento<T> sqmMemento;
@@ -279,19 +296,22 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return new SqmBuildResult<>( sqmStatement, sqmMemento );
 	}
 
+	@Nonnull
 	@Override
-	public SelectionQuery<T> createQuery(EntityHandler entityHandler) {
+	public SelectionQuery<T> createQuery(@Nonnull EntityHandler entityHandler) {
 		return createQuery( (SharedSessionContract) entityHandler );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaQuery<T> buildCriteria(CriteriaBuilder builder) {
+	public CriteriaQuery<T> buildCriteria(@Nonnull CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() ).sqmStatement;
 	}
 
+	@Nonnull
 	@Override
-	public SelectionSpecification<T> validate(CriteriaBuilder builder) {
+	public SelectionSpecification<T> validate(@Nonnull CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
 		final var statement = build( nodeBuilder.getQueryEngine() ).sqmStatement;
 		final var queryPart = statement.getQueryPart();
@@ -306,7 +326,11 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	 * Used during construction to parse/interpret the incoming HQL
 	 * and produce the corresponding SQM tree.
 	 */
-	private static <T> SqmSelectStatement<T> resolveSqmTree(String hql, Class<T> resultType, QueryEngine queryEngine) {
+	@Nonnull
+	private static <T> SqmSelectStatement<T> resolveSqmTree(
+			@Nonnull String hql,
+			@Nonnull Class<T> resultType,
+			@Nonnull QueryEngine queryEngine) {
 		final var hqlInterpretation =
 				queryEngine.getInterpretationCache()
 						.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
@@ -327,10 +351,11 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	 * Used during construction to resolve an incoming named query reference
 	 * and produce the corresponding SQM tree.
 	 */
+	@Nonnull
 	private static <T> SqmSelectStatement<T> resolveSqmTree(
-			NamedSqmQueryMemento<?> sqmMemento,
-			Class<T> resultType,
-			QueryEngine queryEngine) {
+			@Nonnull NamedSqmQueryMemento<?> sqmMemento,
+			@Nonnull Class<T> resultType,
+			@Nonnull QueryEngine queryEngine) {
 		final var sqmStatement = sqmMemento.getSqmStatement();
 		if ( sqmStatement == null ) {
 			return resolveSqmTree( sqmMemento.getHqlString(), resultType, queryEngine );
@@ -347,9 +372,10 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		}
 	}
 
+	@Nonnull
 	private static <T> NamedSqmQueryMemento<T> resolveSqmSelectionMemento(
-			TypedQueryReference<? super T> typedQueryReference,
-			QueryEngine queryEngine) {
+			@Nonnull TypedQueryReference<? super T> typedQueryReference,
+			@Nonnull QueryEngine queryEngine) {
 		final NamedQueryMemento<T> namedMemento =
 				queryEngine.getNamedObjectRepository()
 						//FIXME: unchecked cast
@@ -370,7 +396,11 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	 * Used during construction. Mainly used to group extracting and
 	 * validating the root.
 	 */
-	private SqmRoot<? extends T> extractRoot(SqmSelectStatement<T> sqmStatement, Class<T> resultType, String hql) {
+	@Nonnull
+	private SqmRoot<? extends T> extractRoot(
+			@Nonnull SqmSelectStatement<T> sqmStatement,
+			@Nonnull Class<T> resultType,
+			@Nonnull String hql) {
 		final var sqmRoots = sqmStatement.getQuerySpec().getRoots();
 		if ( sqmRoots.isEmpty() ) {
 			throw new QueryException( "Query did not define any roots", hql );
@@ -385,7 +415,11 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		//validateResultType( sqmStatement, sqmRoot, resultType, hql );
 	}
 
-	private SqmRoot<? extends T> validateRoot(SqmRoot<?> sqmRoot, Class<T> resultType, String hql) {
+	@Nonnull
+	private SqmRoot<? extends T> validateRoot(
+			@Nonnull SqmRoot<?> sqmRoot,
+			@Nonnull Class<T> resultType,
+			@Nonnull String hql) {
 		final var javaType = sqmRoot.getJavaType();
 		if ( javaType != null
 				&& !Map.class.isAssignableFrom( javaType )

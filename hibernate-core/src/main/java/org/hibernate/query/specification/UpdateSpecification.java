@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.Incubating;
@@ -44,7 +45,8 @@ public interface UpdateSpecification<T> extends MutationSpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	UpdateSpecification<T> assign(Assignment<? super T> assignment);
+	@Nonnull
+	UpdateSpecification<T> assign(@Nonnull Assignment<? super T> assignment);
 
 	/**
 	 * Sets the assignments to fields or properties of the target entity.
@@ -55,16 +57,20 @@ public interface UpdateSpecification<T> extends MutationSpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	UpdateSpecification<T> reassign(List<? extends Assignment<? super T>> assignments);
+	@Nonnull
+	UpdateSpecification<T> reassign(@Nonnull List<? extends Assignment<? super T>> assignments);
 
+	@Nonnull
 	@Override
-	UpdateSpecification<T> restrict(Restriction<? super T> restriction);
+	UpdateSpecification<T> restrict(@Nonnull Restriction<? super T> restriction);
 
+	@Nonnull
 	@Override
-	UpdateSpecification<T> augment(Augmentation<T> augmentation);
+	UpdateSpecification<T> augment(@Nonnull Augmentation<T> augmentation);
 
+	@Nonnull
 	@Override
-	UpdateSpecification<T> validate(CriteriaBuilder builder);
+	UpdateSpecification<T> validate(@Nonnull CriteriaBuilder builder);
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,
@@ -75,7 +81,8 @@ public interface UpdateSpecification<T> extends MutationSpecification<T> {
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
 	 */
-	static <T> UpdateSpecification<T> create(Class<T> targetEntityClass) {
+	@Nonnull
+	static <T> UpdateSpecification<T> create(@Nonnull Class<T> targetEntityClass) {
 		return new UpdateSpecificationImpl<>( targetEntityClass );
 	}
 
@@ -89,7 +96,8 @@ public interface UpdateSpecification<T> extends MutationSpecification<T> {
 	 *
 	 * @param <T> The root entity type for the mutation (the "target").
 	 */
-	static <T> UpdateSpecification<T> create(CriteriaUpdate<T> criteriaUpdate) {
+	@Nonnull
+	static <T> UpdateSpecification<T> create(@Nonnull CriteriaUpdate<T> criteriaUpdate) {
 		return new UpdateSpecificationImpl<>( criteriaUpdate );
 	}
 

@@ -4,6 +4,8 @@
  */
 package org.hibernate.procedure.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
@@ -35,32 +37,32 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 	private final ParameterStrategy parameterStrategy;
 	private final List<NamedCallableQueryMemento.ParameterMemento> parameterMementos;
 
-	private final String[] resultSetMappingNames;
-	private final Class<?>[] resultSetMappingClasses;
+	private final @Nullable String[] resultSetMappingNames;
+	private final @Nullable Class<?>[] resultSetMappingClasses;
 
-	private final Set<String> querySpaces;
+	private final @Nullable Set<String> querySpaces;
 
 
 	/**
 	 * Constructs a ProcedureCallImpl
 	 */
 	public NamedCallableQueryMementoImpl(
-			String name,
-			String callableName,
-			ParameterStrategy parameterStrategy,
-			List<NamedCallableQueryMemento.ParameterMemento> parameterMementos,
-			String[] resultSetMappingNames,
-			Class<?>[] resultSetMappingClasses,
-			Set<String> querySpaces,
-			Boolean cacheable,
-			String cacheRegion,
-			CacheMode cacheMode,
-			FlushMode flushMode,
-			Boolean readOnly,
-			Timeout timeout,
-			Integer fetchSize,
-			String comment,
-			Map<String, Object> hints) {
+			@Nonnull String name,
+			@Nonnull String callableName,
+			@Nonnull ParameterStrategy parameterStrategy,
+			@Nonnull List<NamedCallableQueryMemento.ParameterMemento> parameterMementos,
+			@Nullable String[] resultSetMappingNames,
+			@Nullable Class<?>[] resultSetMappingClasses,
+			@Nullable Set<String> querySpaces,
+			@Nullable Boolean cacheable,
+			@Nullable String cacheRegion,
+			@Nullable CacheMode cacheMode,
+			@Nullable FlushMode flushMode,
+			@Nullable Boolean readOnly,
+			@Nullable Timeout timeout,
+			@Nullable Integer fetchSize,
+			@Nullable String comment,
+			@Nonnull Map<String, Object> hints) {
 		super(
 				name,
 				Object.class,
@@ -77,7 +79,7 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 		this.querySpaces = querySpaces;
 	}
 
-	public NamedCallableQueryMementoImpl(String name, NamedCallableQueryMementoImpl original) {
+	public NamedCallableQueryMementoImpl(@Nonnull String name, @Nonnull NamedCallableQueryMementoImpl original) {
 		super( name, original );
 
 		this.callableName = original.callableName;
@@ -88,87 +90,100 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 		this.querySpaces = original.querySpaces;
 	}
 
+	@Nonnull
 	@Override
 	public String getCallableName() {
 		return callableName;
 	}
 
 	@Override
+	@Nonnull
 	public List<NamedCallableQueryMemento.ParameterMemento> getParameterMementos() {
 		return parameterMementos;
 	}
 
 	@Override
+	@Nonnull
 	public ParameterStrategy getParameterStrategy() {
 		return parameterStrategy;
 	}
 
 	@Override
+	@Nullable
 	public String[] getResultSetMappingNames() {
 		return resultSetMappingNames;
 	}
 
 	@Override
+	@Nullable
 	public Class<?>[] getResultSetMappingClasses() {
 		return resultSetMappingClasses;
 	}
 
+	@Nullable
 	@Override
 	public Set<String> getQuerySpaces() {
 		return querySpaces;
 	}
 
+	@Nonnull
 	@Override
-	public ProcedureCallImplementor makeProcedureCall(SharedSessionContractImplementor session) {
-		return new ProcedureCallImpl( session, this );
+	public ProcedureCallImplementor makeProcedureCall(@Nonnull SharedSessionContractImplementor session) {
+		return new ProcedureCallImpl<>( session, this );
 	}
 
+	@Nonnull
 	@Override
 	public ProcedureCallImplementor makeProcedureCall(
-			SharedSessionContractImplementor session,
-			String... resultSetMappingNames) {
-		return new ProcedureCallImpl( session, this, resultSetMappingNames );
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull String... resultSetMappingNames) {
+		return new ProcedureCallImpl<>( session, this, resultSetMappingNames );
 	}
 
+	@Nonnull
 	@Override
-	public ProcedureCallImplementor toQuery(SharedSessionContractImplementor session) {
+	public ProcedureCallImplementor toQuery(@Nonnull SharedSessionContractImplementor session) {
 		return makeProcedureCall( session );
 	}
 
+	@Nonnull
 	@Override
-	public <T> ProcedureCallImplementor toQuery(SharedSessionContractImplementor session, Class<T> javaType) {
+	public <T> ProcedureCallImplementor<T> toQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<T> javaType) {
 		return makeProcedureCall( session );
 	}
 
+	@Nonnull
 	@Override
-	public MutationQueryImplementor<Object> toMutationQuery(SharedSessionContractImplementor session) {
+	public MutationQueryImplementor<Object> toMutationQuery(@Nonnull SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "ProcedureCall cannot be treated as a mutation query" );
 	}
 
+	@Nonnull
 	@Override
-	public <T> MutationQueryImplementor<T> toMutationQuery(SharedSessionContractImplementor session, Class<T> targetType) {
+	public <T> MutationQueryImplementor<T> toMutationQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<T> targetType) {
 		throw new UnsupportedOperationException( "ProcedureCall cannot be treated as a mutation query" );
 	}
 
+	@Nonnull
 	@Override
-	public SelectionQueryImplementor<Object> toSelectionQuery(SharedSessionContractImplementor session) {
+	public SelectionQueryImplementor<Object> toSelectionQuery(@Nonnull SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException( "ProcedureCall cannot be treated as a selection query" );
 	}
 
+	@Nonnull
 	@Override
-	public <T> SelectionQueryImplementor<T> toSelectionQuery(SharedSessionContractImplementor session, Class<T> javaType) {
+	public <T> SelectionQueryImplementor<T> toSelectionQuery(@Nonnull SharedSessionContractImplementor session, @Nullable Class<T> javaType) {
 		throw new UnsupportedOperationException( "ProcedureCall cannot be treated as a selection query" );
 	}
 
-
-
+	@Nonnull
 	@Override
-	public NamedQueryMemento<Object> makeCopy(String name) {
+	public NamedQueryMemento<Object> makeCopy(@Nonnull String name) {
 		return new NamedCallableQueryMementoImpl( name, this );
 	}
 
 	@Override
-	public void validate(QueryEngine queryEngine) {
+	public void validate(@Nonnull QueryEngine queryEngine) {
 		// anything to do?
 	}
 
@@ -176,21 +191,21 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 	 * A "disconnected" copy of the metadata for a parameter, that can be used in ProcedureCallMementoImpl.
 	 */
 	public static class ParameterMementoImpl<T> implements NamedCallableQueryMemento.ParameterMemento {
-		private final Integer position;
-		private final String name;
+		private final @Nullable Integer position;
+		private final @Nullable String name;
 		private final ParameterMode mode;
 		private final Class<T> type;
-		private final BindableType<T> hibernateType;
+		private final @Nullable BindableType<T> hibernateType;
 
 		/**
 		 * Create the memento
 		 */
 		public ParameterMementoImpl(
-				int position,
-				String name,
-				ParameterMode mode,
-				Class<T> type,
-				BindableType<T> hibernateType) {
+				@Nullable Integer position,
+				@Nullable String name,
+				@Nonnull ParameterMode mode,
+				@Nonnull Class<T> type,
+				@Nullable BindableType<T> hibernateType) {
 			this.position = position;
 			this.name = name;
 			this.mode = mode;
@@ -198,28 +213,34 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 			this.hibernateType = hibernateType;
 		}
 
+		@Nullable
 		public Integer getPosition() {
 			return position;
 		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}
 
+		@Nonnull
 		public ParameterMode getMode() {
 			return mode;
 		}
 
+		@Nonnull
 		public Class<T> getType() {
 			return type;
 		}
 
+		@Nullable
 		public BindableType<T> getHibernateType() {
 			return hibernateType;
 		}
 
 		@Override
-		public ProcedureParameterImplementor<T> resolve(SharedSessionContractImplementor session) {
+		@Nonnull
+		public ProcedureParameterImplementor<T> resolve(@Nonnull SharedSessionContractImplementor session) {
 			if ( getName() != null ) {
 				return new ProcedureParameterImpl<>(
 						getName(),
@@ -246,7 +267,9 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 		 *
 		 * @return The memento
 		 */
-		public static <U> ParameterMementoImpl<U> fromRegistration(ProcedureParameterImplementor<U> registration) {
+		@Nonnull
+		public static <U> ParameterMementoImpl<U> fromRegistration(
+				@Nonnull ProcedureParameterImplementor<U> registration) {
 			return new ParameterMementoImpl<>(
 					registration.getPosition(),
 					registration.getName(),

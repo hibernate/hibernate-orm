@@ -25,8 +25,12 @@ public abstract class AbstractNamedQueryDefinition<T> implements NamedQueryDefin
 	protected final Map<String,Object> hints;
 
 	public AbstractNamedQueryDefinition(
-			String name, String location,
-			FlushMode flushMode, Timeout timeout, String comment, Map<String, Object> hints) {
+			@Nonnull String name,
+			@Nullable String location,
+			@Nullable FlushMode flushMode,
+			@Nullable Timeout timeout,
+			@Nullable String comment,
+			@Nonnull Map<String, Object> hints) {
 		this.name = name;
 		this.location = location;
 		this.flushMode = flushMode;
@@ -35,21 +39,25 @@ public abstract class AbstractNamedQueryDefinition<T> implements NamedQueryDefin
 		this.hints = hints;
 	}
 
+	@Nonnull
 	@Override
 	public String getRegistrationName() {
 		return name;
 	}
 
+	@Nullable
 	@Override
 	public FlushMode getQueryFlushMode() {
 		return flushMode;
 	}
 
+	@Nullable
 	@Override
 	public Timeout getTimeout() {
 		return timeout;
 	}
 
+	@Nullable
 	@Override
 	public String getComment() {
 		return comment;
@@ -61,8 +69,9 @@ public abstract class AbstractNamedQueryDefinition<T> implements NamedQueryDefin
 		return hints;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable String getLocation() {
+	public String getLocation() {
 		return location;
 	}
 }

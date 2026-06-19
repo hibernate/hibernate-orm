@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import org.hibernate.query.restriction.Restriction;
@@ -16,28 +17,31 @@ public class DeleteSpecificationImpl<T>
 		extends MutationSpecificationImpl<T>
 		implements DeleteSpecification<T> {
 
-	public DeleteSpecificationImpl(Class<T> mutationTarget) {
+	public DeleteSpecificationImpl(@Nonnull Class<T> mutationTarget) {
 		super( MutationType.DELETE, mutationTarget );
 	}
 
-	public DeleteSpecificationImpl(CriteriaDelete<T> criteriaQuery) {
+	public DeleteSpecificationImpl(@Nonnull CriteriaDelete<T> criteriaQuery) {
 		super( criteriaQuery );
 	}
 
-@Override
-	public DeleteSpecification<T> restrict(Restriction<? super T> restriction) {
+	@Nonnull
+	@Override
+	public DeleteSpecification<T> restrict(@Nonnull Restriction<? super T> restriction) {
 		super.restrict( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public DeleteSpecification<T> augment(Augmentation<T> augmentation) {
+	public DeleteSpecification<T> augment(@Nonnull Augmentation<T> augmentation) {
 		super.augment( augmentation );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public DeleteSpecification<T> validate(CriteriaBuilder builder) {
+	public DeleteSpecification<T> validate(@Nonnull CriteriaBuilder builder) {
 		super.validate( builder );
 		return this;
 	}

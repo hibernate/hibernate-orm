@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 
@@ -19,8 +20,10 @@ public interface NamedProcedureCallDefinition extends NamedQueryDefinition<Objec
 	/**
 	 * The name of the underlying database procedure or function name
 	 */
+	@Nonnull
 	String getProcedureName();
 
 	@Override
-	NamedCallableQueryMemento resolve(SessionFactoryImplementor factory);
+	@Nonnull
+	NamedCallableQueryMemento resolve(@Nonnull SessionFactoryImplementor factory);
 }

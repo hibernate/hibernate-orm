@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
@@ -25,6 +26,7 @@ public interface NamedResultSetMappingDescriptor {
 	/**
 	 * The name under which the result-set-mapping is to be registered
 	 */
+	@Nonnull
 	String getRegistrationName();
 
 	/**
@@ -43,5 +45,6 @@ public interface NamedResultSetMappingDescriptor {
 	 *
 	 * @see QueryEngine#getNamedObjectRepository()
 	 */
-	NamedResultSetMappingMemento resolve(ResultSetMappingResolutionContext resolutionContext);
+	@Nonnull
+	NamedResultSetMappingMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext);
 }

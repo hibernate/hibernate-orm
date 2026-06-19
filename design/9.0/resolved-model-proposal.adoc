@@ -200,6 +200,17 @@ option/selectable intent.  Existing binders may still materialize legacy
 attribute semantics such as natural-id, lazy group, and collation should be
 recorded in the binding node before materialization.
 
+The current bridge records `ValueIntent` for ordinary identifiable basic,
+embedded, to-one, singular any-valued, and collection-valued attributes, plus
+embeddable component members.  Collection-valued intent is deliberately an
+aggregate: it records the collection source/classification and nests the value
+intents for the user-visible parts such as element, list index, map key, and
+id-bag identifier.  Owner-key, join-table, and foreign-key facts remain support
+facts on the collection source/table binding path rather than pretending to be
+attribute values.  Plural members inside component binding still use the
+transitional binder path until component collection usages are lifted into the
+same binding/view/materialization model.
+
 == Extension Point Migration
 
 See link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
@@ -914,6 +925,7 @@ org.hibernate.boot.mapping.internal.model
     AttributeDeclarationBinding
     AttributeUsageBinding
     ValueIntent
+    CollectionValueIntent
     EntityIdentifierBinding
     VersionBinding
     TenantIdBinding

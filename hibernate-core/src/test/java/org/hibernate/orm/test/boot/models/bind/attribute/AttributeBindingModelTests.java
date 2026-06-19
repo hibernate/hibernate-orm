@@ -31,6 +31,8 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -42,9 +44,12 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AccessType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -125,6 +130,22 @@ public class AttributeBindingModelTests {
 					assertThat( transformedName.basicValueIntent().customWriteExpression() )
 							.isEqualTo( "upper(?)" );
 
+					final AttributeBindingView embeddedFacts = attribute( managedTypeBinding, "embeddedFacts" );
+					assertThat( embeddedFacts.valueIntent() ).isSameAs( embeddedFacts.embeddedValueIntent() );
+					assertThat( embeddedFacts.embeddedValueIntent().memberType().determineRawClass().toJavaClass() )
+							.isEqualTo( EmbeddedFacts.class );
+					assertThat( embeddedFacts.embeddedValueIntent().path() ).isEqualTo( "embeddedFacts" );
+					assertThat( embeddedFacts.embeddedValueIntent().fullPath() )
+							.isEqualTo( AttributeBoundEntity.class.getName() + ".embeddedFacts" );
+
+					final AttributeBindingView parent = attribute( managedTypeBinding, "parent" );
+					assertThat( parent.valueIntent() ).isSameAs( parent.toOneValueIntent() );
+					assertThat( parent.toOneValueIntent().memberType().determineRawClass().toJavaClass() )
+							.isEqualTo( AttributeParent.class );
+					assertThat( parent.toOneValueIntent().path() ).isEqualTo( "parent" );
+					assertThat( parent.toOneValueIntent().fullPath() )
+							.isEqualTo( AttributeBoundEntity.class.getName() + ".parent" );
+
 					final PersistentClass entityBinding = context.getMetadataCollector()
 							.getEntityBinding( AttributeBoundEntity.class.getName() );
 					assertThat( entityBinding.getProperty( "code" ).isNaturalIdentifier() ).isTrue();
@@ -167,9 +188,18 @@ public class AttributeBindingModelTests {
 					final Property customBound = entityBinding.getProperty( "customBound" );
 					assertThat( customBound.isUpdatable() ).isFalse();
 					assertThat( CompatibilityBoundBinder.callCount ).hasValue( 1 );
+
+					assertThat( entityBinding.getProperty( "embeddedFacts" ).getValue() )
+							.isInstanceOf( Component.class );
+					assertThat( entityBinding.getProperty( "parent" ).getValue() )
+							.isInstanceOf( ManyToOne.class );
+					assertThat( ( (ManyToOne) entityBinding.getProperty( "parent" ).getValue() ).getColumns() )
+							.extracting( Column::getName )
+							.containsExactly( "parent_fk" );
 				},
 				scope.getRegistry(),
-				AttributeBoundEntity.class
+				AttributeBoundEntity.class,
+				AttributeParent.class
 		);
 	}
 
@@ -231,8 +261,26 @@ public class AttributeBindingModelTests {
 		@ColumnTransformer(forColumn = "transformed_name", read = "lower(transformed_name)", write = "upper(?)")
 		private String transformedName;
 
+		@Embedded
+		private EmbeddedFacts embeddedFacts;
+
+		@jakarta.persistence.ManyToOne
+		@JoinColumn(name = "parent_fk")
+		private AttributeParent parent;
+
 		@CompatibilityBound
 		private String customBound;
+	}
+
+	@Embeddable
+	public static class EmbeddedFacts {
+		private String detail;
+	}
+
+	@Entity(name = "AttributeParent")
+	public static class AttributeParent {
+		@Id
+		private Integer id;
 	}
 
 	public static class CustomMutabilityPlan implements MutabilityPlan<String> {

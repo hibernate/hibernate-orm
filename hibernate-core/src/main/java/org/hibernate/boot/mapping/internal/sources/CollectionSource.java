@@ -306,7 +306,7 @@ public record CollectionSource(
 			if ( isOrdered( member ) && !hasListIndexSource( member ) ) {
 				return CollectionClassification.BAG;
 			}
-			return defaultListSemantics;
+			return CollectionClassification.LIST;
 		}
 		if ( java.util.Map.class.isAssignableFrom( collectionType ) ) {
 			if ( isSorted( member, collectionType ) ) {

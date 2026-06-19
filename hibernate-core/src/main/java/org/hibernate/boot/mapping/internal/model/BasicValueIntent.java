@@ -5,6 +5,7 @@
 package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.annotations.Array;
+import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
@@ -84,6 +85,55 @@ public record BasicValueIntent(
 				true,
 				member.member(),
 				source.conversion( member.path(), member.member() )
+		);
+	}
+
+	public static BasicValueIntent fromCollectionElement(
+			org.hibernate.boot.mapping.internal.sources.CollectionSource source) {
+		return columnIntent(
+				source.elementColumn() == null ? null : ColumnSource.from( source.elementColumn() ),
+				null,
+				true,
+				true,
+				source.member(),
+				directConversion( source.member() )
+		);
+	}
+
+	public static BasicValueIntent fromListIndex(
+			org.hibernate.boot.mapping.internal.sources.CollectionSource source) {
+		return columnIntent(
+				ColumnSource.from( source.orderColumn() ),
+				null,
+				source.orderColumn() == null || source.orderColumn().insertable(),
+				source.orderColumn() == null || source.orderColumn().updatable(),
+				source.member(),
+				null
+		);
+	}
+
+	public static BasicValueIntent fromMapKey(
+			org.hibernate.boot.mapping.internal.sources.CollectionSource source) {
+		return columnIntent(
+				ColumnSource.from( source.mapKeyColumn() ),
+				null,
+				true,
+				true,
+				source.member(),
+				directConversion( source.member() )
+		);
+	}
+
+	public static BasicValueIntent fromCollectionId(
+			org.hibernate.boot.mapping.internal.sources.CollectionSource source) {
+		final CollectionId collectionId = source.member().getDirectAnnotationUsage( CollectionId.class );
+		return columnIntent(
+				collectionId == null ? null : ColumnSource.from( collectionId.column() ),
+				null,
+				true,
+				true,
+				source.member(),
+				null
 		);
 	}
 

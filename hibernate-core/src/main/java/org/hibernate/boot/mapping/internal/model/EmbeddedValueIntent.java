@@ -32,4 +32,12 @@ public record EmbeddedValueIntent(
 				member.fullPath()
 		);
 	}
+
+	public static EmbeddedValueIntent fromAttribute(TypeDetails memberType, String attributeName, String sourceRole) {
+		return new EmbeddedValueIntent(
+				memberType,
+				attributeName,
+				sourceRole
+		);
+	}
 }

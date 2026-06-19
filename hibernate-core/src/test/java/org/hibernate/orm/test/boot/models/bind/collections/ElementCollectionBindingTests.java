@@ -47,6 +47,12 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -113,7 +119,15 @@ public class ElementCollectionBindingTests {
 					assertThat( property.getValue() ).isInstanceOf( org.hibernate.mapping.Set.class );
 					final Collection collection = (Collection) property.getValue();
 					final BasicValue element = (BasicValue) collection.getElement();
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							SetOwner.class,
+							"labels"
+					);
 
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( BasicValueIntent.class );
+					assertThat( collectionIntent.indexIntent() ).isNull();
+					assertThat( collectionIntent.collectionIdIntent() ).isNull();
 					assertThat( collection.getRole() ).isEqualTo( SetOwner.class.getName() + ".labels" );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "set_owner_labels" );
 					assertThat( collection.getCollectionTable().getOptions() ).isEqualTo( "collection table options" );
@@ -200,7 +214,14 @@ public class ElementCollectionBindingTests {
 					final org.hibernate.mapping.List collection = (org.hibernate.mapping.List) property.getValue();
 					final BasicValue element = (BasicValue) collection.getElement();
 					final BasicValue index = (BasicValue) collection.getIndex();
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							ListOwner.class,
+							"labels"
+					);
 
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( BasicValueIntent.class );
+					assertThat( collectionIntent.indexIntent() ).isInstanceOf( BasicValueIntent.class );
 					assertThat( collection.getRole() ).isEqualTo( ListOwner.class.getName() + ".labels" );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "list_owner_labels" );
 					assertThat( collection.getKey().getColumns() )
@@ -363,7 +384,14 @@ public class ElementCollectionBindingTests {
 					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) property.getValue();
 					final BasicValue identifier = (BasicValue) collection.getIdentifier();
 					final BasicValue element = (BasicValue) collection.getElement();
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							IdBagOwner.class,
+							"labels"
+					);
 
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( BasicValueIntent.class );
+					assertThat( collectionIntent.collectionIdIntent() ).isInstanceOf( BasicValueIntent.class );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "idbag_owner_labels" );
 					assertThat( identifier.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
@@ -653,7 +681,14 @@ public class ElementCollectionBindingTests {
 					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) property.getValue();
 					final BasicValue key = (BasicValue) collection.getIndex();
 					final BasicValue element = (BasicValue) collection.getElement();
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							MapOwner.class,
+							"labels"
+					);
 
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( BasicValueIntent.class );
+					assertThat( collectionIntent.indexIntent() ).isInstanceOf( BasicValueIntent.class );
 					assertThat( collection.getRole() ).isEqualTo( MapOwner.class.getName() + ".labels" );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "map_owner_labels" );
 					assertThat( collection.getKey().getColumns() )
@@ -929,7 +964,13 @@ public class ElementCollectionBindingTests {
 							.getEntityBinding( EmbeddableElementOwner.class.getName() );
 					final Collection collection = (Collection) entityBinding.getProperty( "addresses" ).getValue();
 					final Component element = (Component) collection.getElement();
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							EmbeddableElementOwner.class,
+							"addresses"
+					);
 
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( EmbeddedValueIntent.class );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "owner_addresses" );
 					assertThat( collection.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
@@ -2080,6 +2121,37 @@ public class ElementCollectionBindingTests {
 	public enum LabelKind {
 		PRIMARY,
 		SECONDARY
+	}
+
+	private static CollectionValueIntent collectionIntent(
+			BootBindingModel bootBindingModel,
+			Class<?> javaType,
+			String attributeName) {
+		final AttributeBindingView attributeBindingView = attribute(
+				managedTypeBinding( bootBindingModel, javaType ),
+				attributeName
+		);
+		assertThat( attributeBindingView.valueIntent() ).isSameAs( attributeBindingView.collectionValueIntent() );
+		assertThat( attributeBindingView.collectionValueIntent() ).isNotNull();
+		return attributeBindingView.collectionValueIntent();
+	}
+
+	private static ManagedTypeBinding managedTypeBinding(BootBindingModel bootBindingModel, Class<?> javaType) {
+		for ( ManagedTypeBinding managedTypeBinding : bootBindingModel.managedTypeBindings() ) {
+			if ( managedTypeBinding.classDetails().toJavaClass().equals( javaType ) ) {
+				return managedTypeBinding;
+			}
+		}
+		throw new AssertionError( "Could not locate managed type binding " + javaType.getName() );
+	}
+
+	private static AttributeBindingView attribute(ManagedTypeBinding managedTypeBinding, String name) {
+		for ( var attributeUsage : managedTypeBinding.attributeUsages() ) {
+			if ( attributeUsage.attributeName().equals( name ) ) {
+				return new AttributeBindingView( attributeUsage );
+			}
+		}
+		throw new AssertionError( "Could not locate attribute binding " + name );
 	}
 
 	public record LabelCode(String code) {

@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
-import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -392,56 +389,14 @@ public class TableKeyBinder {
 		final boolean updateable = collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany;
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
 			final Column identifierColumn = targetColumns.get( i );
-			key.addColumn(
-					bindKeyColumn(
-							table,
-							identifierColumn,
-							orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i ),
-							() -> implicitCollectionKeyColumnName( identifierColumn )
-					),
-					true,
-					updateable
-			);
+			final Column keyColumn = orderedJoinColumns.isEmpty()
+					? copyKeyColumn( identifierColumn )
+					: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) );
+			table.addColumn( keyColumn );
+			key.addColumn( keyColumn, true, updateable );
 		}
 		key.sortProperties();
 		return key;
-	}
-
-	private String implicitCollectionKeyColumnName(Column identifierColumn) {
-		return entityBinder.getBindingContext()
-				.getImplicitNamingStrategy()
-				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
-					@Override
-					public Nature getNature() {
-						return Nature.ENTITY_COLLECTION;
-					}
-
-					@Override
-					public EntityTypeMetadata getEntityNaming() {
-						return entityBinder.getManagedType();
-					}
-
-					@Override
-					public AttributePath getAttributePath() {
-						return null;
-					}
-
-					@Override
-					public Identifier getReferencedTableName() {
-						return bindingState.getDatabase().toIdentifier( entityBinder.getTypeBinding().getTable().getName() );
-					}
-
-					@Override
-					public Identifier getReferencedColumnName() {
-						return identifierColumn.getNameIdentifier( bindingState.getDatabase() );
-					}
-
-					@Override
-					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
-					}
-				} )
-				.render( bindingState.getDatabase().getDialect() );
 	}
 
 	private Column copyKeyColumn(Column source) {

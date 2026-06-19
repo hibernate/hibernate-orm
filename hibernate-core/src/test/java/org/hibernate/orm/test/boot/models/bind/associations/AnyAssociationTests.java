@@ -24,6 +24,10 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
@@ -63,6 +67,18 @@ public class AnyAssociationTests {
 	void testExplicitAnyAssociation(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
+					final AttributeBindingView targetBinding = attribute(
+							managedTypeBinding( context.getBindingState().getBootBindingModel(), Holder.class ),
+							"target"
+					);
+					assertThat( targetBinding.valueIntent() ).isSameAs( targetBinding.anyValueIntent() );
+					assertThat( targetBinding.anyValueIntent() ).isInstanceOf( AnyValueIntent.class );
+					assertThat( targetBinding.anyValueIntent().source().member().getName() ).isEqualTo( "target" );
+					assertThat( targetBinding.anyValueIntent().source().effectiveOptional() ).isFalse();
+					assertThat( targetBinding.anyValueIntent().source().keyColumns() )
+							.extracting( JoinColumn::name )
+							.containsExactly( "target_id" );
+
 					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
 							.getEntityBinding( Holder.class.getName() );
 					final Property property = entityBinding.getProperty( "target" );
@@ -88,6 +104,26 @@ public class AnyAssociationTests {
 				TargetOne.class,
 				TargetTwo.class
 		);
+	}
+
+	private static ManagedTypeBinding managedTypeBinding(
+			org.hibernate.boot.mapping.internal.model.BootBindingModel bootBindingModel,
+			Class<?> javaType) {
+		for ( ManagedTypeBinding managedTypeBinding : bootBindingModel.managedTypeBindings() ) {
+			if ( managedTypeBinding.classDetails().toJavaClass().equals( javaType ) ) {
+				return managedTypeBinding;
+			}
+		}
+		throw new AssertionError( "Could not locate managed type binding " + javaType.getName() );
+	}
+
+	private static AttributeBindingView attribute(ManagedTypeBinding managedTypeBinding, String name) {
+		for ( var attributeUsage : managedTypeBinding.attributeUsages() ) {
+			if ( attributeUsage.attributeName().equals( name ) ) {
+				return new AttributeBindingView( attributeUsage );
+			}
+		}
+		throw new AssertionError( "Could not locate attribute binding " + name );
 	}
 
 	@Test
@@ -426,7 +462,14 @@ public class AnyAssociationTests {
 					final Property property = entityBinding.getProperty( "targets" );
 					final Collection collection = (Collection) property.getValue();
 					final org.hibernate.mapping.Any element = (org.hibernate.mapping.Any) collection.getElement();
+					final AttributeBindingView targetsBinding = attribute(
+							managedTypeBinding( context.getBindingState().getBootBindingModel(), ManyHolder.class ),
+							"targets"
+					);
+					final CollectionValueIntent collectionIntent = targetsBinding.collectionValueIntent();
 
+					assertThat( targetsBinding.valueIntent() ).isSameAs( collectionIntent );
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( AnyValueIntent.class );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "many_holder_targets" );
 					assertThat( collection.getKey().getColumns() ).extracting( Column::getName )
 							.containsExactly( "holder_id" );

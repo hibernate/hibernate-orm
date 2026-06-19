@@ -38,4 +38,17 @@ public record ToOneValueIntent(
 				source.associationOverride( member.path() )
 		);
 	}
+
+	public static ToOneValueIntent fromAttribute(
+			TypeDetails memberType,
+			String attributeName,
+			String sourceRole,
+			AssociationOverride associationOverride) {
+		return new ToOneValueIntent(
+				memberType,
+				attributeName,
+				sourceRole,
+				associationOverride
+		);
+	}
 }

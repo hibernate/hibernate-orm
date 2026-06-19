@@ -16,6 +16,11 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
+import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -382,7 +387,13 @@ public class ToOneAssociationTests {
 							.getEntityBinding( ManyToManyOwner.class.getName() );
 					final Collection collection = (Collection) entityBinding.getProperty( "parents" ).getValue();
 					final ManyToOne element = (ManyToOne) collection.getElement();
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							ManyToManyOwner.class,
+							"parents"
+					);
 
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( ToOneValueIntent.class );
 					assertThat( collection ).isInstanceOf( org.hibernate.mapping.Set.class );
 					assertThat( collection.getRole() ).isEqualTo( ManyToManyOwner.class.getName() + ".parents" );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "owner_parent_sets" );
@@ -986,7 +997,13 @@ public class ToOneAssociationTests {
 							.getEntityBinding( OneToManyJoinTableOwner.class.getName() );
 					final Collection collection = (Collection) entityBinding.getProperty( "children" ).getValue();
 					final ManyToOne element = (ManyToOne) collection.getElement();
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							OneToManyJoinTableOwner.class,
+							"children"
+					);
 
+					assertThat( collectionIntent.elementIntent() ).isInstanceOf( ToOneValueIntent.class );
 					assertThat( collection ).isInstanceOf( org.hibernate.mapping.Set.class );
 					assertThat( collection.getRole() ).isEqualTo( OneToManyJoinTableOwner.class.getName() + ".children" );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "owner_child_links" );
@@ -2095,6 +2112,37 @@ public class ToOneAssociationTests {
 				inverseJoinColumns = @JoinColumn(name = "parent_id", referencedColumnName = "id")
 		)
 		private Parent parent;
+	}
+
+	private static CollectionValueIntent collectionIntent(
+			BootBindingModel bootBindingModel,
+			Class<?> javaType,
+			String attributeName) {
+		final AttributeBindingView attributeBindingView = attribute(
+				managedTypeBinding( bootBindingModel, javaType ),
+				attributeName
+		);
+		assertThat( attributeBindingView.valueIntent() ).isSameAs( attributeBindingView.collectionValueIntent() );
+		assertThat( attributeBindingView.collectionValueIntent() ).isNotNull();
+		return attributeBindingView.collectionValueIntent();
+	}
+
+	private static ManagedTypeBinding managedTypeBinding(BootBindingModel bootBindingModel, Class<?> javaType) {
+		for ( ManagedTypeBinding managedTypeBinding : bootBindingModel.managedTypeBindings() ) {
+			if ( managedTypeBinding.classDetails().toJavaClass().equals( javaType ) ) {
+				return managedTypeBinding;
+			}
+		}
+		throw new AssertionError( "Could not locate managed type binding " + javaType.getName() );
+	}
+
+	private static AttributeBindingView attribute(ManagedTypeBinding managedTypeBinding, String name) {
+		for ( var attributeUsage : managedTypeBinding.attributeUsages() ) {
+			if ( attributeUsage.attributeName().equals( name ) ) {
+				return new AttributeBindingView( attributeUsage );
+			}
+		}
+		throw new AssertionError( "Could not locate attribute binding " + name );
 	}
 
 	@Embeddable

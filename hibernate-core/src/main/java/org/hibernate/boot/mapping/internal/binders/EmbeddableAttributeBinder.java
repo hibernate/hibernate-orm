@@ -14,6 +14,7 @@ import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterial
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
+import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -45,6 +46,7 @@ import jakarta.persistence.DiscriminatorValue;
 /// @author Steve Ebersole
 class EmbeddableAttributeBinder {
 	private final IdentifiableTypeMetadata ownerType;
+	private final AttributeBindingView attributeBinding;
 	private final PersistentClass ownerBinding;
 	private final AttributeMetadata attributeMetadata;
 	private final Table primaryTable;
@@ -57,6 +59,7 @@ class EmbeddableAttributeBinder {
 
 	EmbeddableAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			AttributeMetadata attributeMetadata,
 			Table primaryTable,
@@ -66,6 +69,7 @@ class EmbeddableAttributeBinder {
 			BindingContext bindingContext) {
 		this(
 				ownerType,
+				attributeBinding,
 				ownerBinding,
 				attributeMetadata,
 				primaryTable,
@@ -79,6 +83,7 @@ class EmbeddableAttributeBinder {
 
 	EmbeddableAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			AttributeMetadata attributeMetadata,
 			Table primaryTable,
@@ -88,6 +93,7 @@ class EmbeddableAttributeBinder {
 			BindingContext bindingContext,
 			boolean registerCollectionBindings) {
 		this.ownerType = ownerType;
+		this.attributeBinding = attributeBinding;
 		this.ownerBinding = ownerBinding;
 		this.attributeMetadata = attributeMetadata;
 		this.primaryTable = primaryTable;
@@ -99,7 +105,7 @@ class EmbeddableAttributeBinder {
 	}
 
 	Component bind(Property property) {
-		final MemberDetails member = attributeMetadata.getMember();
+		final MemberDetails member = attributeBinding.member();
 		componentSource = ComponentSource.embeddedAttribute(
 				member,
 				ownerType.getClassDetails(),
@@ -113,7 +119,7 @@ class EmbeddableAttributeBinder {
 				ownerBinding,
 				componentTable,
 				ownerType.getClassDetails().getClassName(),
-				attributeMetadata.getName()
+				attributeBinding.attributeName()
 		);
 		bindDiscriminator( component, componentTable );
 
@@ -154,7 +160,7 @@ class EmbeddableAttributeBinder {
 		discriminator.setTypeName( String.class.getName() );
 		final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
 				null,
-				() -> attributeMetadata.getName() + "_DTYPE",
+				() -> attributeBinding.attributeName() + "_DTYPE",
 				false,
 				true
 		);
@@ -216,7 +222,7 @@ class EmbeddableAttributeBinder {
 					"Could not resolve @EmbeddedTable table `%s` for %s.%s",
 					embeddedTable.value(),
 					attributeMember.getDeclaringType().getName(),
-					attributeMetadata.getName()
+					attributeBinding.attributeName()
 			) );
 		}
 		return tableReference.binding();
@@ -230,7 +236,7 @@ class EmbeddableAttributeBinder {
 					"Could not resolve table `%s` for embeddable attribute %s.%s",
 					tableName,
 					attributeMember.getDeclaringType().getName(),
-					attributeMetadata.getName()
+					attributeBinding.attributeName()
 			) );
 		}
 		final Table table = tableReference.binding();
@@ -238,7 +244,7 @@ class EmbeddableAttributeBinder {
 			throw new MappingException( String.format( Locale.ROOT,
 					"Embeddable attributes cannot span multiple tables - %s.%s",
 					attributeMember.getDeclaringType().getName(),
-					attributeMetadata.getName()
+					attributeBinding.attributeName()
 			) );
 		}
 		result[0] = table;

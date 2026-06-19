@@ -11,6 +11,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -55,6 +56,7 @@ class PluralAssociationAttributeBinder {
 	private final BindingContext bindingContext;
 	private final String collectionRolePath;
 	private final AssociationOverride associationOverride;
+	private final CollectionValueIntent collectionValueIntent;
 	private final boolean registerCollectionBindings;
 
 	PluralAssociationAttributeBinder(
@@ -74,6 +76,7 @@ class PluralAssociationAttributeBinder {
 				bindingState,
 				bindingContext,
 				attributeMetadata.getName(),
+				null,
 				null,
 				true
 		);
@@ -97,6 +100,7 @@ class PluralAssociationAttributeBinder {
 				bindingState,
 				bindingContext,
 				collectionRolePath,
+				null,
 				null,
 				true
 		);
@@ -122,6 +126,7 @@ class PluralAssociationAttributeBinder {
 				bindingContext,
 				collectionRolePath,
 				associationOverride,
+				null,
 				true
 		);
 	}
@@ -137,6 +142,33 @@ class PluralAssociationAttributeBinder {
 			String collectionRolePath,
 			AssociationOverride associationOverride,
 			boolean registerCollectionBindings) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				collectionRolePath,
+				associationOverride,
+				null,
+				registerCollectionBindings
+		);
+	}
+
+	PluralAssociationAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath,
+			AssociationOverride associationOverride,
+			CollectionValueIntent collectionValueIntent,
+			boolean registerCollectionBindings) {
 		this.ownerType = ownerType;
 		this.ownerBinding = ownerBinding;
 		this.attributeMetadata = attributeMetadata;
@@ -146,16 +178,19 @@ class PluralAssociationAttributeBinder {
 		this.bindingContext = bindingContext;
 		this.collectionRolePath = collectionRolePath;
 		this.associationOverride = associationOverride;
+		this.collectionValueIntent = collectionValueIntent;
 		this.registerCollectionBindings = registerCollectionBindings;
 	}
 
 	Collection bindManyToMany(Property property) {
-		final CollectionSource source = CollectionSource.manyToMany(
-				attributeMetadata.getMember(),
-				associationOverride,
-				bindingOptions.getDefaultListSemantics(),
-				bindingContext.getBootstrapContext().getModelsContext()
-		);
+		final CollectionSource source = collectionValueIntent == null
+				? CollectionSource.manyToMany(
+						attributeMetadata.getMember(),
+						associationOverride,
+						bindingOptions.getDefaultListSemantics(),
+						bindingContext.getBootstrapContext().getModelsContext()
+				)
+				: collectionValueIntent.source();
 		final ManyToMany manyToMany = source.manyToMany();
 		if ( manyToMany != null && StringHelper.isNotEmpty( manyToMany.mappedBy() ) ) {
 			return bindInverseManyToMany( source, manyToMany.mappedBy(), property );
@@ -164,12 +199,14 @@ class PluralAssociationAttributeBinder {
 	}
 
 	Collection bindOneToMany(Property property) {
-		final CollectionSource source = CollectionSource.oneToMany(
-				attributeMetadata.getMember(),
-				associationOverride,
-				bindingOptions.getDefaultListSemantics(),
-				bindingContext.getBootstrapContext().getModelsContext()
-		);
+		final CollectionSource source = collectionValueIntent == null
+				? CollectionSource.oneToMany(
+						attributeMetadata.getMember(),
+						associationOverride,
+						bindingOptions.getDefaultListSemantics(),
+						bindingContext.getBootstrapContext().getModelsContext()
+				)
+				: collectionValueIntent.source();
 		final OneToMany oneToMany = source.oneToMany();
 		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			return bindInverseOneToMany( source, oneToMany.mappedBy(), property );
@@ -181,11 +218,13 @@ class PluralAssociationAttributeBinder {
 	}
 
 	Collection bindManyToAny(Property property) {
-		final CollectionSource source = CollectionSource.manyToAny(
-				attributeMetadata.getMember(),
-				bindingOptions.getDefaultListSemantics(),
-				bindingContext.getBootstrapContext().getModelsContext()
-		);
+		final CollectionSource source = collectionValueIntent == null
+				? CollectionSource.manyToAny(
+						attributeMetadata.getMember(),
+						bindingOptions.getDefaultListSemantics(),
+						bindingContext.getBootstrapContext().getModelsContext()
+				)
+				: collectionValueIntent.source();
 		return bindManyToAny( source, property );
 	}
 

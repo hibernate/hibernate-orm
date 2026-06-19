@@ -20,6 +20,7 @@ import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.boot.mapping.internal.sources.ToOneSource.JoinColumnOrFormulaSource;
+import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -69,6 +70,7 @@ import jakarta.persistence.MapsId;
 /// @author Steve Ebersole
 class ToOneAttributeBinder {
 	private final IdentifiableTypeMetadata ownerType;
+	private final AttributeBindingView attributeBinding;
 	private final PersistentClass ownerBinding;
 	private final AttributeMetadata attributeMetadata;
 	private final Table primaryTable;
@@ -79,6 +81,7 @@ class ToOneAttributeBinder {
 
 	ToOneAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			AttributeMetadata attributeMetadata,
 			Table primaryTable,
@@ -87,6 +90,7 @@ class ToOneAttributeBinder {
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		this.ownerType = ownerType;
+		this.attributeBinding = attributeBinding;
 		this.ownerBinding = ownerBinding;
 		this.attributeMetadata = attributeMetadata;
 		this.primaryTable = primaryTable;
@@ -97,14 +101,15 @@ class ToOneAttributeBinder {
 	}
 
 	Value bind(Property property) {
-		final MemberDetails member = attributeMetadata.getMember();
-		final AssociationOverride associationOverride = locateAssociationOverride();
+		final MemberDetails member = attributeBinding.member();
+		final AssociationOverride associationOverride = attributeBinding.toOneValueIntent().associationOverride();
 		final ToOneSource source = ToOneSource.create(
 				member,
 				ownerType.getClassDetails().getClassName(),
-				attributeMetadata.getName(),
+				attributeBinding.attributeName(),
 				associationOverride,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getBootstrapContext().getModelsContext(),
+				attributeBinding.resolvedType()
 		);
 		if ( source.isInverseOneToOne() ) {
 			return bindInverseOneToOne( source, property );
@@ -114,7 +119,7 @@ class ToOneAttributeBinder {
 				ownerType,
 				ownerBinding,
 				ownerType.getClassDetails().getClassName(),
-				attributeMetadata.getName(),
+				attributeBinding.attributeName(),
 				member,
 				property,
 				primaryTable,
@@ -123,34 +128,6 @@ class ToOneAttributeBinder {
 				bindingState,
 				bindingContext
 		);
-	}
-
-	private AssociationOverride locateAssociationOverride() {
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
-		final String attributeName = attributeMetadata.getName();
-		AssociationOverride result = locateAssociationOverride( ownerType.getHierarchy().getRoot().getClassDetails(), attributeName, modelsContext );
-		if ( ownerType.getClassDetails() != ownerType.getHierarchy().getRoot().getClassDetails() ) {
-			final AssociationOverride ownerOverride = locateAssociationOverride( ownerType.getClassDetails(), attributeName, modelsContext );
-			if ( ownerOverride != null ) {
-				result = ownerOverride;
-			}
-		}
-		return result;
-	}
-
-	private static AssociationOverride locateAssociationOverride(
-			ClassDetails type,
-			String attributeName,
-			org.hibernate.models.spi.ModelsContext modelsContext) {
-		if ( type == null ) {
-			return null;
-		}
-		for ( AssociationOverride override : type.getRepeatedAnnotationUsages( AssociationOverride.class, modelsContext ) ) {
-			if ( attributeName.equals( override.name() ) ) {
-				return override;
-			}
-		}
-		return null;
 	}
 
 	static ManyToOne bindToOne(
@@ -375,15 +352,15 @@ class ToOneAttributeBinder {
 				primaryTable,
 				ownerBinding
 		);
-		value.setPropertyName( attributeMetadata.getName() );
+		value.setPropertyName( attributeBinding.attributeName() );
 		value.setReferencedEntityName( target.entityName() );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		value.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeBinding.attributeName() );
 		value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
 		value.setConstrained( !source.optional() );
 		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
 		value.setMappedByProperty( source.oneToOne().mappedBy() );
-		applyOnDelete( attributeMetadata.getMember(), value );
+		applyOnDelete( attributeBinding.member(), value );
 		property.setOptional( source.optional() );
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
 

@@ -87,4 +87,14 @@ public interface AttributeUsageBinding {
 	default ToOneValueIntent toOneValueIntent() {
 		return valueIntent() instanceof ToOneValueIntent toOneValueIntent ? toOneValueIntent : null;
 	}
+
+	/// Narrow [#valueIntent()] to an any-valued intent when applicable.
+	default AnyValueIntent anyValueIntent() {
+		return valueIntent() instanceof AnyValueIntent anyValueIntent ? anyValueIntent : null;
+	}
+
+	/// Narrow [#valueIntent()] to a collection-valued intent when applicable.
+	default CollectionValueIntent collectionValueIntent() {
+		return valueIntent() instanceof CollectionValueIntent collectionValueIntent ? collectionValueIntent : null;
+	}
 }

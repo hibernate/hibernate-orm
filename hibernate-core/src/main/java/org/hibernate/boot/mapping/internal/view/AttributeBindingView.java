@@ -9,9 +9,13 @@ import jakarta.persistence.AccessType;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
 import org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.model.ValueIntent;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.models.spi.MemberDetails;
@@ -116,6 +120,22 @@ public record AttributeBindingView(AttributeUsageBinding binding) {
 
 	public BasicValueIntent basicValueIntent() {
 		return binding.basicValueIntent();
+	}
+
+	public EmbeddedValueIntent embeddedValueIntent() {
+		return binding.embeddedValueIntent();
+	}
+
+	public ToOneValueIntent toOneValueIntent() {
+		return binding.toOneValueIntent();
+	}
+
+	public AnyValueIntent anyValueIntent() {
+		return binding.anyValueIntent();
+	}
+
+	public CollectionValueIntent collectionValueIntent() {
+		return binding.collectionValueIntent();
 	}
 
 	private IdentifiableAttributeDeclarationBinding attributeDeclaration() {

@@ -11,7 +11,12 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
+import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
+import org.hibernate.boot.mapping.internal.model.ValueIntent;
 import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
 import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
 import org.hibernate.boot.mapping.internal.extension.NaturalIdAttributeContributor;
@@ -32,14 +37,10 @@ import org.hibernate.models.spi.MemberDetails;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
-import static org.hibernate.boot.models.AttributeNature.ANY;
-import static org.hibernate.boot.models.AttributeNature.BASIC;
-import static org.hibernate.boot.models.AttributeNature.EMBEDDED;
 import static org.hibernate.boot.models.AttributeNature.ELEMENT_COLLECTION;
 import static org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;
 import static org.hibernate.boot.models.AttributeNature.MANY_TO_MANY;
 import static org.hibernate.boot.models.AttributeNature.ONE_TO_MANY;
-import static org.hibernate.boot.models.AttributeNature.TO_ONE;
 
 /// Binds one persistent attribute into a Hibernate [Property].
 ///
@@ -110,14 +111,16 @@ public class AttributeBinder {
 				attributeBinding.member()
 		);
 
-		if ( attributeMetadata.getNature() == BASIC ) {
+		final ValueIntent valueIntent = attributeBinding.valueIntent();
+		if ( valueIntent instanceof BasicValueIntent ) {
 			final var basicValue = createBasicValue( primaryTable );
 			binding.setValue( basicValue );
 			attributeTable = basicValue.getTable();
 		}
-		else if ( attributeMetadata.getNature() == TO_ONE ) {
+		else if ( valueIntent instanceof ToOneValueIntent ) {
 			final var toOneValue = new ToOneAttributeBinder(
 					ownerType,
+					attributeBinding,
 					ownerBinding,
 					attributeMetadata,
 					primaryTable,
@@ -129,9 +132,10 @@ public class AttributeBinder {
 			binding.setValue( toOneValue );
 			attributeTable = toOneValue.getTable();
 		}
-		else if ( attributeMetadata.getNature() == EMBEDDED ) {
+		else if ( valueIntent instanceof EmbeddedValueIntent ) {
 			final var componentValue = new EmbeddableAttributeBinder(
 					ownerType,
+					attributeBinding,
 					ownerBinding,
 					attributeMetadata,
 					primaryTable,
@@ -149,61 +153,11 @@ public class AttributeBinder {
 			);
 			attributeTable = componentValue.getTable();
 		}
-		else if ( attributeMetadata.getNature() == ELEMENT_COLLECTION ) {
-			final var collectionValue = new ElementCollectionAttributeBinder(
-					ownerType,
-					ownerBinding,
-					attributeMetadata,
-						modelBinders,
-						bindingOptions,
-						bindingState,
-						bindingContext,
-						attributeBinding.attributeName(),
-						registerCollectionBindings
-				).bind( binding );
-			binding.setValue( collectionValue );
-			binding.setOptional( true );
-			attributeTable = collectionValue.getCollectionTable();
-		}
-		else if ( attributeMetadata.getNature() == MANY_TO_MANY ) {
-			final var collectionValue = new PluralAssociationAttributeBinder(
-					ownerType,
-					ownerBinding,
-					attributeMetadata,
-					modelBinders,
-					bindingOptions,
-					bindingState,
-					bindingContext,
-					attributeBinding.attributeName(),
-					null,
-					registerCollectionBindings
-			).bindManyToMany( binding );
-			binding.setValue( collectionValue );
-			binding.setOptional( true );
-			attributeTable = collectionValue.getCollectionTable();
-		}
-		else if ( attributeMetadata.getNature() == ONE_TO_MANY ) {
-			final var collectionValue = new PluralAssociationAttributeBinder(
-					ownerType,
-					ownerBinding,
-					attributeMetadata,
-					modelBinders,
-					bindingOptions,
-					bindingState,
-					bindingContext,
-					attributeBinding.attributeName(),
-					null,
-					registerCollectionBindings
-			).bindOneToMany( binding );
-			binding.setValue( collectionValue );
-			binding.setOptional( true );
-			attributeTable = collectionValue.getCollectionTable();
-		}
-		else if ( attributeMetadata.getNature() == ANY ) {
+		else if ( valueIntent instanceof AnyValueIntent ) {
 			final var anyValue = new AnyAttributeBinder(
 					ownerType,
+					attributeBinding,
 					ownerBinding,
-					attributeMetadata,
 					modelBinders,
 					bindingOptions,
 					bindingState,
@@ -212,19 +166,13 @@ public class AttributeBinder {
 			binding.setValue( anyValue );
 			attributeTable = anyValue.getTable();
 		}
-		else if ( attributeMetadata.getNature() == MANY_TO_ANY ) {
-			final var collectionValue = new PluralAssociationAttributeBinder(
-					ownerType,
+		else if ( valueIntent instanceof CollectionValueIntent collectionValueIntent ) {
+			final var collectionValue = bindCollectionValue(
+					collectionValueIntent,
 					ownerBinding,
-					attributeMetadata,
 					modelBinders,
-					bindingOptions,
-					bindingState,
-					bindingContext,
-					attributeBinding.attributeName(),
-					null,
 					registerCollectionBindings
-			).bindManyToAny( binding );
+			);
 			binding.setValue( collectionValue );
 			binding.setOptional( true );
 			attributeTable = collectionValue.getCollectionTable();
@@ -244,6 +192,49 @@ public class AttributeBinder {
 
 	public Table getTable() {
 		return attributeTable;
+	}
+
+	private org.hibernate.mapping.Collection bindCollectionValue(
+			CollectionValueIntent collectionValueIntent,
+			PersistentClass ownerBinding,
+			ModelBinders modelBinders,
+			boolean registerCollectionBindings) {
+		if ( collectionValueIntent.nature() == ELEMENT_COLLECTION ) {
+			return new ElementCollectionAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext,
+					attributeBinding.attributeName(),
+					collectionValueIntent,
+					registerCollectionBindings
+			).bind( binding );
+		}
+
+		final PluralAssociationAttributeBinder pluralAssociationAttributeBinder = new PluralAssociationAttributeBinder(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				attributeBinding.attributeName(),
+				null,
+				collectionValueIntent,
+				registerCollectionBindings
+		);
+		return switch ( collectionValueIntent.nature() ) {
+			case MANY_TO_MANY -> pluralAssociationAttributeBinder.bindManyToMany( binding );
+			case ONE_TO_MANY -> pluralAssociationAttributeBinder.bindOneToMany( binding );
+			case MANY_TO_ANY -> pluralAssociationAttributeBinder.bindManyToAny( binding );
+			default -> throw new UnsupportedOperationException(
+					"Unsupported collection-valued attribute - " + attributeBinding.sourceRole()
+			);
+		};
 	}
 
 	private void applyNaturalId(Property property) {

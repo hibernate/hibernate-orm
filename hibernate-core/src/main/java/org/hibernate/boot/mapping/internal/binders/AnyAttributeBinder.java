@@ -9,10 +9,10 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
+import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
@@ -38,8 +38,8 @@ import jakarta.persistence.JoinTable;
 /// @author Steve Ebersole
 class AnyAttributeBinder {
 	private final IdentifiableTypeMetadata ownerType;
+	private final AttributeBindingView attributeBinding;
 	private final PersistentClass ownerBinding;
-	private final AttributeMetadata attributeMetadata;
 	private final ModelBinders modelBinders;
 	private final BindingOptions bindingOptions;
 	private final BindingState bindingState;
@@ -47,15 +47,15 @@ class AnyAttributeBinder {
 
 	AnyAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		this.ownerType = ownerType;
+		this.attributeBinding = attributeBinding;
 		this.ownerBinding = ownerBinding;
-		this.attributeMetadata = attributeMetadata;
 		this.modelBinders = modelBinders;
 		this.bindingOptions = bindingOptions;
 		this.bindingState = bindingState;
@@ -63,13 +63,13 @@ class AnyAttributeBinder {
 	}
 
 	Any bind(Property property, Table table) {
-		final AnySource source = AnySource.create( attributeMetadata.getMember(), bindingContext, bindingState );
+		final AnySource source = attributeBinding.anyValueIntent().source();
 		final Table valueTable = source.joinTable() == null ? table : bindAssociationTable( source, table );
 		final Any value = new AnyValueBinder(
 				bindingOptions,
 				bindingState,
 				bindingContext
-		).bind( source, attributeMetadata.getName(), valueTable );
+		).bind( source, attributeBinding.attributeName(), valueTable );
 		property.setOptional( source.effectiveOptional() );
 		property.setCascade( source.cascades() );
 		return value;
@@ -83,7 +83,7 @@ class AnyAttributeBinder {
 					.bindOwnedTable(
 							resolveOwnerEntityType(),
 							ownerTable,
-							attributeMetadata.getName(),
+							attributeBinding.attributeName(),
 							joinTable
 					)
 					.binding();
@@ -93,7 +93,7 @@ class AnyAttributeBinder {
 					.bindAssociationTable(
 							resolveOwnerEntityType(),
 							ownerTable,
-							attributeMetadata.getName(),
+							attributeBinding.attributeName(),
 							resolveOwnerEntityType(),
 							ownerTable,
 							joinTable

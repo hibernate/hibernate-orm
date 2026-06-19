@@ -10,11 +10,17 @@ import java.util.function.Consumer;
 
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
+import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
 import org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.StandardAttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.model.ValueIntent;
+import org.hibernate.boot.mapping.internal.sources.AnySource;
+import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
@@ -29,8 +35,10 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.TypeDetails;
 
+import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 
@@ -280,18 +288,112 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				ownerType.getClassDetails().getName() + "." + attributeName,
 				attributeName,
 				attributeMetadata.getNature(),
-				valueIntent( attributeMetadata )
+				valueIntent( ownerType, attributeMetadata )
 		);
 	}
 
-	private ValueIntent valueIntent(AttributeMetadata attributeMetadata) {
-		return attributeMetadata.getNature() == AttributeNature.BASIC
-				? BasicValueIntent.fromAttribute(
-						attributeMetadata.getMember(),
-						getBindingState(),
-						getBindingContext()
-				)
-				: null;
+	private ValueIntent valueIntent(IdentifiableTypeMetadata ownerType, AttributeMetadata attributeMetadata) {
+		final String attributeName = attributeMetadata.getName();
+		final String sourceRole = ownerType.getClassDetails().getName() + "." + attributeName;
+		return switch ( attributeMetadata.getNature() ) {
+			case BASIC -> BasicValueIntent.fromAttribute(
+					attributeMetadata.getMember(),
+					getBindingState(),
+					getBindingContext()
+			);
+			case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
+					attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() ),
+					attributeName,
+					sourceRole
+			);
+			case TO_ONE -> ToOneValueIntent.fromAttribute(
+					attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() ),
+					attributeName,
+					sourceRole,
+					locateAssociationOverride( ownerType, attributeName )
+			);
+			case ANY -> new AnyValueIntent(
+					AnySource.create(
+							attributeMetadata.getMember(),
+							getBindingContext(),
+							getBindingState()
+					)
+			);
+			case ELEMENT_COLLECTION, MANY_TO_MANY, ONE_TO_MANY, MANY_TO_ANY -> CollectionValueIntent.fromAttribute(
+					collectionSource( ownerType, attributeMetadata ),
+					sourceRole,
+					attributeName,
+					getBindingState(),
+					getBindingContext()
+			);
+			default -> null;
+		};
+	}
+
+	private CollectionSource collectionSource(
+			IdentifiableTypeMetadata ownerType,
+			AttributeMetadata attributeMetadata) {
+		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		return switch ( attributeMetadata.getNature() ) {
+			case ELEMENT_COLLECTION -> CollectionSource.elementCollection(
+					attributeMetadata.getMember(),
+					getBindingContext().getClassDetailsRegistry().resolveClassDetails( ownerType.getClassDetails().getName() ),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
+					getOptions().getDefaultListSemantics(),
+					modelsContext
+			);
+			case MANY_TO_MANY -> CollectionSource.manyToMany(
+					attributeMetadata.getMember(),
+					locateAssociationOverride( ownerType, attributeMetadata.getName() ),
+					getOptions().getDefaultListSemantics(),
+					modelsContext
+			);
+			case ONE_TO_MANY -> CollectionSource.oneToMany(
+					attributeMetadata.getMember(),
+					locateAssociationOverride( ownerType, attributeMetadata.getName() ),
+					getOptions().getDefaultListSemantics(),
+					modelsContext
+			);
+			case MANY_TO_ANY -> CollectionSource.manyToAny(
+					attributeMetadata.getMember(),
+					getOptions().getDefaultListSemantics(),
+					modelsContext
+			);
+			default -> throw new IllegalArgumentException(
+					"Attribute is not collection-valued - " + attributeMetadata.getName()
+			);
+		};
+	}
+
+	private AssociationOverride locateAssociationOverride(
+			IdentifiableTypeMetadata ownerType,
+			String attributeName) {
+		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final ClassDetails ownerClassDetails = ownerType.getClassDetails();
+		final ClassDetails rootClassDetails = ownerType.getHierarchy().getRoot().getClassDetails();
+		AssociationOverride result = locateAssociationOverride( rootClassDetails, attributeName, modelsContext );
+		if ( ownerClassDetails != rootClassDetails ) {
+			final AssociationOverride ownerOverride = locateAssociationOverride( ownerClassDetails, attributeName, modelsContext );
+			if ( ownerOverride != null ) {
+				result = ownerOverride;
+			}
+		}
+		return result;
+	}
+
+	private static AssociationOverride locateAssociationOverride(
+			ClassDetails type,
+			String attributeName,
+			org.hibernate.models.spi.ModelsContext modelsContext) {
+		if ( type == null ) {
+			return null;
+		}
+		for ( AssociationOverride override : type.getRepeatedAnnotationUsages( AssociationOverride.class, modelsContext ) ) {
+			if ( attributeName.equals( override.name() ) ) {
+				return override;
+			}
+		}
+		return null;
 	}
 
 	private AttributeDeclarationBinding resolveAttributeDeclaration(

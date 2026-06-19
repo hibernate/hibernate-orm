@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -60,6 +61,7 @@ class ElementCollectionAttributeBinder {
 	private final BindingState bindingState;
 	private final BindingContext bindingContext;
 	private final String collectionRolePath;
+	private final CollectionValueIntent collectionValueIntent;
 	private final boolean registerCollectionBindings;
 
 	ElementCollectionAttributeBinder(
@@ -79,6 +81,7 @@ class ElementCollectionAttributeBinder {
 				bindingState,
 				bindingContext,
 				attributeMetadata.getName(),
+				null,
 				true
 		);
 	}
@@ -101,6 +104,7 @@ class ElementCollectionAttributeBinder {
 				bindingState,
 				bindingContext,
 				collectionRolePath,
+				null,
 				true
 		);
 	}
@@ -115,6 +119,31 @@ class ElementCollectionAttributeBinder {
 			BindingContext bindingContext,
 			String collectionRolePath,
 			boolean registerCollectionBindings) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				collectionRolePath,
+				null,
+				registerCollectionBindings
+		);
+	}
+
+	ElementCollectionAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath,
+			CollectionValueIntent collectionValueIntent,
+			boolean registerCollectionBindings) {
 		this.ownerType = ownerType;
 		this.ownerBinding = ownerBinding;
 		this.attributeMetadata = attributeMetadata;
@@ -123,19 +152,22 @@ class ElementCollectionAttributeBinder {
 		this.bindingState = bindingState;
 		this.bindingContext = bindingContext;
 		this.collectionRolePath = collectionRolePath;
+		this.collectionValueIntent = collectionValueIntent;
 		this.registerCollectionBindings = registerCollectionBindings;
 	}
 
-		Collection bind(Property property) {
-			final CollectionSource source = CollectionSource.elementCollection(
-					attributeMetadata.getMember(),
-					bindingContext.getClassDetailsRegistry().resolveClassDetails( ownerBinding.getClassName() ),
-					ownerType.getHierarchy().getRoot().getClassDetails(),
-					bindingOptions.getDefaultListSemantics(),
-					bindingContext.getBootstrapContext().getModelsContext()
-			);
-			final CollectionTable collectionTable = source.collectionTable();
-			final Table table = registerCollectionBindings ? bindCollectionTable( source ) : createDeclarationOnlyTable();
+	Collection bind(Property property) {
+		final CollectionSource source = collectionValueIntent == null
+				? CollectionSource.elementCollection(
+						attributeMetadata.getMember(),
+						bindingContext.getClassDetailsRegistry().resolveClassDetails( ownerBinding.getClassName() ),
+						ownerType.getHierarchy().getRoot().getClassDetails(),
+						bindingOptions.getDefaultListSemantics(),
+						bindingContext.getBootstrapContext().getModelsContext()
+				)
+				: collectionValueIntent.source();
+		final CollectionTable collectionTable = source.collectionTable();
+		final Table table = registerCollectionBindings ? bindCollectionTable( source ) : createDeclarationOnlyTable();
 		final Collection collection = createCollection( source );
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );

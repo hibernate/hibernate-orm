@@ -13,7 +13,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.metamodel.mapping.DiscriminatorValue.Literal;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
@@ -22,7 +21,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,20 +43,19 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class JoinedSubclassWithExplicitDiscriminatorTest {
 
 	@Test
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is a keyword in Altibase and escaped here")
 	public void metadataAssertions(SessionFactoryScope scope) {
 		EntityPersister p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "string", dogPersister.getDiscriminatorType().getName() );
-		assertEquals( "type", dogPersister.getDiscriminatorColumnName() );
+		assertEquals( "animal_type", dogPersister.getDiscriminatorColumnName() );
 		assertEquals( new Literal("dog"), dogPersister.getDiscriminatorValue() );
 
 		p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "string", catPersister.getDiscriminatorType().getName() );
-		assertEquals( "type", catPersister.getDiscriminatorColumnName() );
+		assertEquals( "animal_type", catPersister.getDiscriminatorColumnName() );
 		assertEquals( new Literal("cat"), catPersister.getDiscriminatorValue() );
 	}
 
@@ -100,7 +97,8 @@ public class JoinedSubclassWithExplicitDiscriminatorTest {
 	@Entity(name = "Animal")
 	@Table(name = "animal")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	@DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
+	// Use a non-keyword name so the discriminator mapping is portable across dialects.
+	@DiscriminatorColumn(name = "animal_type", discriminatorType = DiscriminatorType.STRING)
 	@DiscriminatorValue(value = "???animal???")
 	public static abstract class Animal {
 		@Id

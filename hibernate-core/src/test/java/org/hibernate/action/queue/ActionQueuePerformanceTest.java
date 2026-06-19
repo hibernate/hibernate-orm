@@ -111,6 +111,7 @@ public class ActionQueuePerformanceTest {
 	/// Test simple inserts with no FK dependencies
 	@DomainModel(annotatedClasses = SimpleEntity.class)
 	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 	@ServiceRegistry(settings = {
 			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
 			// make it apples/apples
@@ -126,6 +127,7 @@ public class ActionQueuePerformanceTest {
 
 	@DomainModel(annotatedClasses = SimpleEntity.class)
 	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"))
 	public static class SimpleGraphTest {
 		@Test
@@ -137,6 +139,7 @@ public class ActionQueuePerformanceTest {
 	/// Test parent-child inserts with FK dependencies
 	@DomainModel(annotatedClasses = {Parent.class, Child.class})
 	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 	@ServiceRegistry(settings = {
 			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
 			// make it apples/apples
@@ -152,6 +155,7 @@ public class ActionQueuePerformanceTest {
 
 	@DomainModel(annotatedClasses = {Parent.class, Child.class})
 	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"))
 	public static class ParentChildGraphTest {
 		@Test
@@ -163,6 +167,7 @@ public class ActionQueuePerformanceTest {
 	/// Test self-referencing FKs (tree structure)
 	@DomainModel(annotatedClasses = Node.class)
 	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 	@ServiceRegistry(settings = {
 			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
 			// make it apples/apples
@@ -178,6 +183,7 @@ public class ActionQueuePerformanceTest {
 
 	@DomainModel(annotatedClasses = Node.class)
 	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"))
 	public static class SelfRefGraphTest {
 		@Test

@@ -6,6 +6,7 @@ package org.hibernate.orm.test.locking.options;
 
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Hibernate;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -44,6 +45,8 @@ import static org.hibernate.orm.test.locking.options.Helper.Table.REPORT_LABELS;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-19336" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-19459" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
+@SkipForDialect(dialectClass = AltibaseDialect.class,
+		reason = "Altibase lock-wait probes can leave interrupted async DML in a state that interferes with schema truncation cleanup")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
 		versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )

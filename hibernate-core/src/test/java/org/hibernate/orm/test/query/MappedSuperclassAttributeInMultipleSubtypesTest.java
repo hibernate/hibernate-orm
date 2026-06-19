@@ -6,6 +6,8 @@ package org.hibernate.orm.test.query;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.query.PathException;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -14,7 +16,6 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,11 @@ public class MappedSuperclassAttributeInMultipleSubtypesTest {
 			final BasicEntity basicEntity = new BasicEntity( 1, "basic" );
 			session.persist( basicEntity );
 			session.persist( new ChildOne( 1L, "test", 1, basicEntity ) );
+			if ( session.getDialect() instanceof AltibaseDialect ) {
+				// Split the setup insert batch because Altibase JDBC rejects changing
+				// the bind type for the same parameter index between ChildOne and ChildTwo.
+				session.flush();
+			}
 			session.persist( new ChildTwo( 2L, "test", 1D, basicEntity ) );
 		} );
 	}

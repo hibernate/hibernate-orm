@@ -566,7 +566,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appliedParameterBindings.put( parameter, null );
 		}
 		else {
-			final JdbcMapping bindType = binding.getBindType();
+			// If the binding has no explicit type, fall back to the SQL AST parameter's expression type.
+			final JdbcMapping bindType = binding.getBindType() == null
+					? parameter.getExpressionType().getSingleJdbcMapping()
+					: binding.getBindType();
 			//noinspection unchecked
 			final Object value = ( (JavaType<Object>) bindType.getJdbcJavaType() )
 					.getMutabilityPlan()

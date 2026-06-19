@@ -49,11 +49,13 @@ class CriteriaPlanTest {
 
 	public Author populateData(SessionImplementor entityManager) {
 		final Author author = new Author();
+		author.authorId = 1L;
 		author.name = "David Gourley";
 		entityManager.persist(author);
 
 		for (int i = 0; i < 5; i++) {
 			final Book book = new Book();
+			book.bookId = i + 1L;
 			book.name = "HTTP Definitive guide " + i;
 			book.author = author;
 			entityManager.persist(book);
@@ -67,7 +69,6 @@ class CriteriaPlanTest {
 	@Table(name = "Author")
 	public static class Author {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		public Long authorId;
 
 		@Column
@@ -100,7 +101,6 @@ class CriteriaPlanTest {
 	@Table(name = "Book")
 	public static class Book {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		public Long bookId;
 
 		@Column

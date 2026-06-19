@@ -7,8 +7,6 @@ package org.hibernate.orm.test.merge;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -48,7 +46,7 @@ public class BidirectionalOneToManyMergeTest {
 	public void testMerge(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Post post = entityManager.find( Post.class, 1L );
-			post.addComment( new PostComment( "This post rocks!", post ) );
+			post.addComment( new PostComment( "This post rocks!", post ).setId( 1L ) );
 			post.getComments().isEmpty();
 			entityManager.merge( post );
 		} );
@@ -118,7 +116,6 @@ public class BidirectionalOneToManyMergeTest {
 	public static class PostComment {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
 		private String review;

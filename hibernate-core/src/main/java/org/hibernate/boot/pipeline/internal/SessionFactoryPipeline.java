@@ -162,7 +162,8 @@ public class SessionFactoryPipeline {
 					constructionSettings,
 					identity,
 					options,
-					metadata.getBootstrapContext()
+					metadata.getBootstrapContext(),
+					resolvedMetadata.bindingState().getBootBindingModel()
 			);
 		}
 		throw new IllegalArgumentException(

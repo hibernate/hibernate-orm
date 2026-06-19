@@ -4,21 +4,19 @@
  */
 package org.hibernate.boot.mapping.internal.view;
 
-import org.hibernate.boot.mapping.internal.model.TenantIdContribution;
-import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
+import org.hibernate.boot.mapping.internal.model.VersionContribution;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.type.BasicType;
 
-/// Stable read view over a finalized tenant-id contribution.
+/// Stable read view over a finalized version contribution.
 ///
-/// The view exposes tenant-id source facts without exposing the materialized
-/// `Property`, `BasicValue`, filter, or row-level-security mapping objects as
-/// semantic state.
+/// The view exposes version source facts and value intent without exposing the
+/// materialized `Property` or `BasicValue` as semantic state.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record TenantIdContributionView(TenantIdContribution contribution) {
+public record VersionContributionView(VersionContribution contribution) {
 	public EntityTypeMetadata owner() {
 		return contribution.owner();
 	}
@@ -33,9 +31,5 @@ public record TenantIdContributionView(TenantIdContribution contribution) {
 
 	public BasicValueIntent valueIntent() {
 		return contribution.valueIntent();
-	}
-
-	public BasicType<?> tenantIdType() {
-		return contribution.tenantIdType();
 	}
 }

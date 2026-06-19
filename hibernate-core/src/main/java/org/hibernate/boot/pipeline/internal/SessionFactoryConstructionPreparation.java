@@ -6,6 +6,7 @@ package org.hibernate.boot.pipeline.internal;
 
 import java.util.Objects;
 
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -25,6 +26,7 @@ public record SessionFactoryConstructionPreparation(
 		SessionFactoryConstructionIdentity identity,
 		SessionFactoryOptions options,
 		BootstrapContext bootstrapContext,
+		BootBindingModel bootBindingModel,
 		SessionFactoryRuntimePreparation runtimePreparation) {
 
 	public SessionFactoryConstructionPreparation {
@@ -41,6 +43,7 @@ public record SessionFactoryConstructionPreparation(
 				state.identity(),
 				state.options(),
 				state.bootstrapContext(),
+				state.bootBindingModel(),
 				SessionFactoryRuntimePreparation.prepare(
 						state.metadata(),
 						state.resolvedSettings(),
@@ -59,6 +62,7 @@ public record SessionFactoryConstructionPreparation(
 				null,
 				options,
 				bootstrapContext,
+				null,
 				SessionFactoryRuntimePreparation.prepare( metadata, options, bootstrapContext )
 		);
 	}

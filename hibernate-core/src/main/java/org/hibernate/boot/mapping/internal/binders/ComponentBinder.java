@@ -6,25 +6,21 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.BiConsumer;
 
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
-import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
-import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer.MaterializedBasicValue;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
-import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
 import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
 import org.hibernate.boot.mapping.internal.extension.StandardAttributeBindingTarget;
-import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
-import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
@@ -36,8 +32,6 @@ import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Collection;
@@ -50,12 +44,10 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.AssociationOverride;
-import jakarta.persistence.Basic;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /// Shared support for binding component-valued mappings.
 ///
@@ -76,6 +68,7 @@ public class ComponentBinder {
 	private final BindingOptions options;
 	private final BindingContext context;
 	private final EmbeddableMappingMaterializer embeddableMappingMaterializer;
+	private final BasicValueMappingMaterializer basicValueMappingMaterializer;
 	private final PropertyMappingMaterializer propertyMappingMaterializer;
 
 	public ComponentBinder(
@@ -88,6 +81,7 @@ public class ComponentBinder {
 		this.options = options;
 		this.context = context;
 		this.embeddableMappingMaterializer = new EmbeddableMappingMaterializer( state );
+		this.basicValueMappingMaterializer = new BasicValueMappingMaterializer();
 		this.propertyMappingMaterializer = new PropertyMappingMaterializer();
 	}
 
@@ -280,41 +274,16 @@ public class ComponentBinder {
 				continue;
 			}
 
-			final BasicValue basicValue = createBasicValue( table );
-			final Property property = propertyMappingMaterializer.createProperty( attributeName, basicValue, member );
-			final BasicValueIntent basicValueIntent = componentMember.basicValueIntent();
-			if ( basicValueIntent.isFormula() ) {
-				basicValue.addFormula( new org.hibernate.mapping.Formula( basicValueIntent.formulaExpression() ) );
-				property.setOptional( true );
-				property.setInsertable( false );
-				property.setUpdatable( false );
-				BasicValueBinder.bindBasicValue(
-						BasicValueSource.embeddableMember( member, basicValueIntent.conversion() ),
-						property,
-						basicValue,
-						options,
-						state,
-						context
-				);
-				component.addProperty( property, componentMember.declaringType() );
-				applyCollation( ownerType, componentMember, property );
-				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-				continue;
-			}
-			final Column column = bindColumn(
-					() -> implicitBasicColumnName( source, componentMember ),
-					basicValue,
-					basicValueIntent.columnSource(),
+			final Property property = propertyMappingMaterializer.createProperty( attributeName, null, member );
+			final MaterializedBasicValue basicValue = basicValueMappingMaterializer.createComponentMemberBasicValue(
+					source,
+					componentMember,
+					property,
+					table,
 					columnNamingPatterns,
 					uniqueByDefault,
 					nullableByDefault,
-					updatable
-			);
-			applyBasicOptionality( member, componentMember.type(), property, column );
-			BasicValueBinder.bindBasicValue(
-					BasicValueSource.embeddableMember( member, componentMember.type(), basicValueIntent.conversion() ),
-					property,
-					basicValue,
+					updatable,
 					options,
 					state,
 					context
@@ -322,32 +291,14 @@ public class ComponentBinder {
 			component.addProperty( property, componentMember.declaringType() );
 			applyCollation( ownerType, componentMember, property );
 			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-			columnConsumer.accept( member, column );
-			columns.add( column );
+			if ( basicValue.column() != null ) {
+				final Column column = basicValue.column();
+				columnConsumer.accept( member, column );
+				columns.add( column );
+			}
 		}
 		CustomMappingBinder.callTypeBinders( source.componentType(), component, state, context );
 		return columns;
-	}
-
-	private String implicitBasicColumnName(ComponentSource source, ComponentMemberBinding member) {
-		return context.getImplicitNamingStrategy()
-				.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
-					@Override
-					public AttributePath getAttributePath() {
-						return member.namingPath();
-					}
-
-					@Override
-					public boolean isCollectionElement() {
-						return source.kind() == ComponentSource.Kind.COLLECTION_ELEMENT;
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return state.getMetadataBuildingContext();
-					}
-				} )
-				.getText();
 	}
 
 	private void applyCollation(
@@ -543,12 +494,6 @@ public class ComponentBinder {
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToOne.class );
 	}
 
-	private BasicValue createBasicValue(Table table) {
-		final BasicValue basicValue = new BasicValue( state.getMetadataBuildingContext(), table );
-		basicValue.setTable( table );
-		return basicValue;
-	}
-
 	private static EntityTypeMetadata resolveOwnerEntityType(IdentifiableTypeMetadata ownerType) {
 		if ( ownerType instanceof EntityTypeMetadata entityType ) {
 			return entityType;
@@ -558,34 +503,6 @@ public class ComponentBinder {
 
 	private FetchType effectiveFetchType(ToOneSource source) {
 		return source.effectiveFetchType( options.getDefaultToOneFetchType() );
-	}
-
-	private void applyBasicOptionality(MemberDetails member, TypeDetails memberType, Property property, Column column) {
-		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
-		final boolean optionalByType = memberType.getTypeKind() != TypeDetails.Kind.PRIMITIVE;
-		final boolean optionalByBasic = basic == null || basic.optional();
-		final boolean optionalByColumn = column == null || column.isNullable();
-		property.setOptional( optionalByType && optionalByBasic && optionalByColumn );
-	}
-
-	private Column bindColumn(
-			java.util.function.Supplier<String> implicitName,
-			BasicValue basicValue,
-			ColumnSource columnSource,
-			List<String> columnNamingPatterns,
-			boolean uniqueByDefault,
-			boolean nullableByDefault,
-			boolean updatable) {
-		final Column column = ColumnBinder.bindColumn(
-				columnSource,
-				implicitName,
-				uniqueByDefault,
-				nullableByDefault
-		);
-		column.setName( applyColumnNamingPatterns( column.getName(), columnNamingPatterns ) );
-		basicValue.addColumn( column, true, updatable );
-		basicValue.getTable().addColumn( column );
-		return column;
 	}
 
 	private record ComponentAttributeMetadata(
@@ -643,18 +560,4 @@ public class ComponentBinder {
 		return result;
 	}
 
-	private static String applyColumnNamingPatterns(String name, List<String> patterns) {
-		if ( patterns.isEmpty() ) {
-			return name;
-		}
-
-		String result = name;
-		for ( int i = patterns.size() - 1; i >= 0; i-- ) {
-			final String pattern = patterns.get( i );
-			if ( isNotEmpty( pattern ) ) {
-				result = String.format( Locale.ROOT, pattern, result );
-			}
-		}
-		return result;
-	}
 }

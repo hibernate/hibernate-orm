@@ -6,11 +6,14 @@ package org.hibernate.orm.test.boot.models.bind.mappedsuper;
 
 import java.util.Set;
 
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding;
+import org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.StandardAttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.view.EntityHierarchyView;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.cache.spi.access.AccessType;
@@ -71,6 +74,13 @@ public class MappedSuperclassTests {
 					final var metadataCollector = context.getMetadataCollector();
 					final MappedSuperclass superBinding = metadataCollector.getMappedSuperclass( HierarchySuper.class );
 					final PersistentClass rootBinding = metadataCollector.getEntityBinding( HierarchyRoot.class.getName() );
+					final EntityHierarchy categorizedHierarchy = context.getCategorizedDomainModel()
+							.getEntityHierarchies()
+							.iterator()
+							.next();
+					final EntityHierarchyView hierarchyView = context.getBindingState()
+							.getBootBindingModel()
+							.getEntityHierarchyView( categorizedHierarchy.getRoot() );
 
 					assertThat( rootBinding.getMappedClass() ).isEqualTo( HierarchyRoot.class );
 					assertThat( rootBinding.getSuperMappedSuperclass() ).isSameAs( superBinding );
@@ -85,6 +95,32 @@ public class MappedSuperclassTests {
 					assertThat( rootBinding.getIdentifier() ).isNotNull();
 					assertThat( rootBinding.getIdentifierProperty() ).isNotNull();
 					assertThat( rootBinding.getIdentifierProperty().getColumns() ).hasSize( 1 );
+
+					assertThat( hierarchyView ).isNotNull();
+					assertThat( hierarchyView.root().classDetails().toJavaClass() ).isEqualTo( HierarchyRoot.class );
+					assertThat( hierarchyView.absoluteRoot().classDetails().toJavaClass() ).isEqualTo( HierarchySuper.class );
+					assertThat( hierarchyView.inheritanceType() ).isEqualTo( InheritanceType.JOINED );
+					assertThat( hierarchyView.entityTypes() )
+							.extracting( (type) -> (Object) type.classDetails().toJavaClass() )
+							.containsExactly( HierarchyRoot.class );
+					assertThat( hierarchyView.mappedSuperclassTypes() )
+							.extracting( (type) -> (Object) type.classDetails().toJavaClass() )
+							.containsExactly( HierarchySuper.class );
+					assertThat( hierarchyView.types() )
+							.extracting( EntityHierarchyBinding.Type::relation )
+							.containsExactly( EntityHierarchyBinding.Relation.SUPER, EntityHierarchyBinding.Relation.ROOT );
+
+					final JpaStaticMetamodelInjectionSource metamodelInjectionSource =
+							JpaStaticMetamodelInjectionSource.from( context.getBindingState().getBootBindingModel() );
+					assertThat( metamodelInjectionSource.managedTypes() )
+							.extracting( JpaStaticMetamodelInjectionSource.ManagedType::javaType )
+							.containsExactly( HierarchySuper.class, HierarchyRoot.class );
+					assertThat( metamodelInjectionSource.managedTypes().get( 0 ).kind() )
+							.isEqualTo( ManagedTypeBinding.Kind.MAPPED_SUPERCLASS );
+					assertThat( metamodelInjectionSource.managedTypes().get( 0 ).fieldNames() )
+							.contains( "id", "name" );
+					assertThat( metamodelInjectionSource.managedTypes().get( 1 ).kind() )
+							.isEqualTo( ManagedTypeBinding.Kind.ENTITY );
 				},
 				scope.getRegistry(),
 				HierarchyRoot.class,

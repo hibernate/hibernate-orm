@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionRequest;
 import org.hibernate.boot.pipeline.spi.SessionFactoryProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -46,12 +47,30 @@ public final class SessionFactoryConstructionCoordinator {
 			SessionFactoryConstructionIdentity identity,
 			SessionFactoryOptions options,
 			BootstrapContext bootstrapContext) {
+		return buildSessionFactory(
+				metadata,
+				resolvedSettings,
+				identity,
+				options,
+				bootstrapContext,
+				null
+		);
+	}
+
+	public static SessionFactoryImplementor buildSessionFactory(
+			MetadataImplementor metadata,
+			ResolvedSessionFactorySettings resolvedSettings,
+			SessionFactoryConstructionIdentity identity,
+			SessionFactoryOptions options,
+			BootstrapContext bootstrapContext,
+			BootBindingModel bootBindingModel) {
 		final var state = new SessionFactoryConstructionState(
 				metadata,
 				resolvedSettings,
 				identity,
 				options,
-				bootstrapContext
+				bootstrapContext,
+				bootBindingModel
 		);
 		final var request = new ConstructionRequest( state );
 		final var producer = resolveProducer( request.getServiceRegistry() );

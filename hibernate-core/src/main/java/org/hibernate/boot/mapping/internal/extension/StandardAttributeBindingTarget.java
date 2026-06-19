@@ -158,6 +158,7 @@ public class StandardAttributeBindingTarget implements AttributeBindingTarget {
 					entityType,
 					usage.attributeName(),
 					usage.member(),
+					usage.basicValueIntent(),
 					tenantIdType
 			);
 			context.bindingState().getBootBindingModel().addTenantIdContribution( entityType, contribution );

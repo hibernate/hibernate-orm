@@ -43,6 +43,7 @@ import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -257,6 +258,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				null,
 				options,
 				bootstrapContext,
+				null,
 				preparation
 		) );
 	}
@@ -274,6 +276,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				identity,
 				options,
 				bootstrapContext,
+				null,
 				preparation
 		) );
 	}
@@ -357,10 +360,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
 			mappingMetamodelImpl.finishInitialization( new ModelCreationContext(
 					bootstrapContext,
-					bootMetamodel,
-					mappingMetamodelImpl,
-					typeConfiguration,
-					graphPlanningOptions
+				bootMetamodel,
+				mappingMetamodelImpl,
+				typeConfiguration,
+				graphPlanningOptions,
+				constructionPreparation.bootBindingModel()
 			) );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
@@ -1470,18 +1474,21 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final MappingMetamodelImplementor mappingMetamodel;
 		private final TypeConfiguration typeConfiguration;
 		private final PlanningOptions graphPlanningOptions;
+		private final BootBindingModel bootBindingModel;
 
 		private ModelCreationContext(
 				BootstrapContext bootstrapContext,
 				MetadataImplementor bootMetamodel,
 				MappingMetamodelImplementor mappingMetamodel,
 				TypeConfiguration typeConfiguration,
-				PlanningOptions graphPlanningOptions) {
+				PlanningOptions graphPlanningOptions,
+				BootBindingModel bootBindingModel) {
 			this.bootstrapContext = bootstrapContext;
 			this.bootMetamodel = bootMetamodel;
 			this.mappingMetamodel = mappingMetamodel;
 			this.typeConfiguration = typeConfiguration;
 			this.graphPlanningOptions = graphPlanningOptions;
+			this.bootBindingModel = bootBindingModel;
 			generators = new HashMap<>();
 		}
 
@@ -1499,6 +1506,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public MetadataImplementor getBootModel() {
 			return bootMetamodel;
+		}
+
+		@Override
+		public BootBindingModel getBootBindingModel() {
+			return bootBindingModel;
 		}
 
 		@Override

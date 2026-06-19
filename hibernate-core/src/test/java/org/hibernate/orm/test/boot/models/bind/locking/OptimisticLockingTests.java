@@ -32,6 +32,14 @@ public class OptimisticLockingTests {
 	void testVersionAttribute(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
+					final var rootType = context.getCategorizedDomainModel().getEntityHierarchies().iterator().next().getRoot();
+					final var versionContribution = context.getBindingState()
+							.getBootBindingModel()
+							.getVersionContributionView( rootType );
+					assertThat( versionContribution ).isNotNull();
+					assertThat( versionContribution.attributeName() ).isEqualTo( "version" );
+					assertThat( versionContribution.valueIntent().columnSource() ).isNull();
+
 					var metadataCollector = context.getMetadataCollector();
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( VersionedEntity.class.getName() );
 					assertThat( entityBinding.getVersion() ).isNotNull();
@@ -50,6 +58,14 @@ public class OptimisticLockingTests {
 	void testVersionAttributeWithColumn(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
+					final var rootType = context.getCategorizedDomainModel().getEntityHierarchies().iterator().next().getRoot();
+					final var versionContribution = context.getBindingState()
+							.getBootBindingModel()
+							.getVersionContributionView( rootType );
+					assertThat( versionContribution ).isNotNull();
+					assertThat( versionContribution.attributeName() ).isEqualTo( "version" );
+					assertThat( versionContribution.valueIntent().columnSource().nonEmptyName() ).isEqualTo( "revision" );
+
 					var metadataCollector = context.getMetadataCollector();
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( VersionedEntityWithColumn.class.getName() );
 					assertThat( entityBinding.getVersion() ).isNotNull();

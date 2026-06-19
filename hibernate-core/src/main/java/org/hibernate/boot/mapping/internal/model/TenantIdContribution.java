@@ -27,5 +27,6 @@ public record TenantIdContribution(
 		EntityTypeMetadata owner,
 		String attributeName,
 		MemberDetails member,
+		BasicValueIntent valueIntent,
 		BasicType<?> tenantIdType) {
 }

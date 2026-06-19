@@ -33,8 +33,10 @@ import org.hibernate.boot.model.internal.GeneratorParameters;
 import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.mapping.ModelBindingLogging;
+import org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding;
 import org.hibernate.boot.mapping.internal.model.EntityTypeBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddableTypeBinding;
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassTypeBinding;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
@@ -146,6 +148,7 @@ public class BindingCoordinator {
 					binders.add( createIdentifiableTypeBinder( type, superType, entityHierarchy, relation ) );
 				}
 			} );
+			registerEntityHierarchyBinding( hierarchy );
 		} );
 
 		runPhase( binders, TypeBindingPhase.Tables.class, TypeBindingPhase.Tables::bindTables );
@@ -184,6 +187,45 @@ public class BindingCoordinator {
 				);
 			}
 		} );
+	}
+
+	private void registerEntityHierarchyBinding(EntityHierarchy hierarchy) {
+		final EntityTypeBinding rootBinding = (EntityTypeBinding) bindingState.getBootBindingModel()
+				.getManagedTypeBinding( hierarchy.getRoot().getClassDetails() );
+		final ManagedTypeBinding absoluteRootBinding = bindingState.getBootBindingModel()
+				.getManagedTypeBinding( hierarchy.getAbsoluteRoot().getClassDetails() );
+		final List<EntityHierarchyBinding.Type> types = new ArrayList<>();
+		hierarchy.forEachType( (type, superType, entityHierarchy, relation) -> {
+			final ManagedTypeBinding typeBinding = bindingState.getBootBindingModel()
+					.getManagedTypeBinding( type.getClassDetails() );
+			final ManagedTypeBinding superTypeBinding = superType == null
+					? null
+					: bindingState.getBootBindingModel().getManagedTypeBinding( superType.getClassDetails() );
+			types.add( new EntityHierarchyBinding.Type(
+					typeBinding,
+					superTypeBinding,
+					toBindingRelation( relation )
+			) );
+		} );
+		bindingState.getBootBindingModel().addEntityHierarchyBinding(
+				hierarchy.getRoot(),
+				new EntityHierarchyBinding(
+						rootBinding,
+						absoluteRootBinding,
+						types,
+						hierarchy.getInheritanceType(),
+						hierarchy.getDefaultAccessType(),
+						hierarchy.getOptimisticLockStyle()
+				)
+		);
+	}
+
+	private EntityHierarchyBinding.Relation toBindingRelation(EntityHierarchy.HierarchyRelation relation) {
+		return switch ( relation ) {
+			case SUPER -> EntityHierarchyBinding.Relation.SUPER;
+			case ROOT -> EntityHierarchyBinding.Relation.ROOT;
+			case SUB -> EntityHierarchyBinding.Relation.SUB;
+		};
 	}
 
 	private jakarta.persistence.AccessType defaultAccessType(ClassDetails type) {

@@ -4,25 +4,19 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Collate;
-import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
-import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
 import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
 import org.hibernate.boot.mapping.internal.extension.NaturalIdAttributeContributor;
 import org.hibernate.boot.mapping.internal.extension.StandardAttributeBindingTarget;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
-import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -33,12 +27,9 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.type.descriptor.java.MutabilityPlan;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.ExcludedFromVersioning;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.models.AttributeNature.ANY;
@@ -49,7 +40,6 @@ import static org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;
 import static org.hibernate.boot.models.AttributeNature.MANY_TO_MANY;
 import static org.hibernate.boot.models.AttributeNature.ONE_TO_MANY;
 import static org.hibernate.boot.models.AttributeNature.TO_ONE;
-import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 
 /// Binds one persistent attribute into a Hibernate [Property].
 ///
@@ -328,65 +318,7 @@ public class AttributeBinder {
 		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> member.getType().determineRawClass().toJavaClass() );
 	}
 
-	public static void bindOptimisticLocking(
-			MemberDetails member,
-			Property property,
-			@SuppressWarnings("unused") BasicValue basicValue,
-			@SuppressWarnings("unused") BindingOptions bindingOptions,
-			@SuppressWarnings("unused") BindingState bindingState,
-			@SuppressWarnings("unused") BindingContext bindingContext) {
-		final var annotationUsage = member.getDirectAnnotationUsage( OptimisticLock.class );
-		if ( annotationUsage != null ) {
-			if ( annotationUsage.excluded() ) {
-				property.setOptimisticLocked( false );
-				return;
-			}
-		}
-		if ( member.hasDirectAnnotationUsage( ExcludedFromVersioning.class ) ) {
-			property.setOptimisticLocked( false );
-			return;
-		}
-
-		property.setOptimisticLocked( true );
-	}
-
-	public static void bindMutability(
-			MemberDetails member,
-			Property property,
-			BasicValue basicValue,
-			@SuppressWarnings("unused") BindingOptions bindingOptions,
-			@SuppressWarnings("unused") BindingState bindingState,
-			@SuppressWarnings("unused") BindingContext bindingContext) {
-		final var mutabilityAnn = member.getDirectAnnotationUsage( Mutability.class );
-		final var immutableAnn = member.getDirectAnnotationUsage( Immutable.class );
-
-		if ( immutableAnn != null ) {
-			if ( mutabilityAnn != null ) {
-				throw new AnnotationPlacementException(
-						"Illegal combination of @Mutability and @Immutable - " + member.getName()
-				);
-			}
-
-			property.setUpdatable( false );
-		}
-		else if ( mutabilityAnn != null ) {
-			basicValue.setExplicitMutabilityPlanAccess( (typeConfiguration) -> {
-				//noinspection unchecked
-				final Class<MutabilityPlan<?>> javaClass = (Class<MutabilityPlan<?>>) mutabilityAnn.value();
-				try {
-					return javaClass.getConstructor().newInstance();
-				}
-				catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-					final ModelsException modelsException = new ModelsException( "Error instantiating local @MutabilityPlan - " + member.getName() );
-					modelsException.addSuppressed( e );
-					throw modelsException;
-				}
-			} );
-		}
-	}
-
-
-	public static org.hibernate.mapping.Column processColumn(
+	public static ProcessedSelectable processSelectable(
 			AttributeBindingView attributeBinding,
 			Property property,
 			BasicValue basicValue,
@@ -395,17 +327,28 @@ public class AttributeBinder {
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final BasicValueIntent selectableIntent = attributeBinding.basicValueIntent();
+		return processSelectable( selectableIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
+	}
+
+	public static ProcessedSelectable processSelectable(
+			BasicValueIntent selectableIntent,
+			Property property,
+			BasicValue basicValue,
+			Table primaryTable,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		if ( selectableIntent.isFormula() ) {
 			basicValue.setTable( primaryTable );
 			basicValue.addFormula( new org.hibernate.mapping.Formula( selectableIntent.formulaExpression() ) );
-			return null;
+			return ProcessedSelectable.formula();
 		}
 
 		final var column = ColumnBinder.bindColumn( selectableIntent.columnSource(), property::getName );
 		if ( selectableIntent.arrayLength() != null ) {
 			column.setArrayLength( selectableIntent.arrayLength() );
 		}
-		applyColumnTransformer( attributeBinding, property, column );
+		applyColumnTransformer( selectableIntent, property, column );
 
 		final String tableName = selectableIntent.tableName();
 		if ( tableName == null || tableName.isEmpty() ) {
@@ -424,63 +367,13 @@ public class AttributeBinder {
 		basicValue.addColumn( column, insertable, updatable );
 		basicValue.getTable().addColumn( column );
 
-		return column;
-	}
-
-	public static org.hibernate.mapping.Column processColumn(
-			MemberDetails member,
-			Property property,
-			BasicValue basicValue,
-			Table primaryTable,
-			BindingOptions bindingOptions,
-			BindingState bindingState,
-			BindingContext bindingContext) {
-		final var formulaAnn = getOverridableAnnotation(
-				member,
-				org.hibernate.annotations.Formula.class,
-				bindingState.getDatabase().getDialect(),
-				bindingContext.getBootstrapContext().getModelsContext()
-		);
-		if ( formulaAnn != null ) {
-			basicValue.setTable( primaryTable );
-			basicValue.addFormula( new org.hibernate.mapping.Formula( formulaAnn.value() ) );
-			return null;
-		}
-
-		// todo : implicit column
-		final var columnAnn = member.getDirectAnnotationUsage( Column.class );
-		final var column = ColumnBinder.bindColumn( ColumnSource.from( columnAnn ), property::getName );
-		final var arrayAnn = member.getDirectAnnotationUsage( org.hibernate.annotations.Array.class );
-		if ( arrayAnn != null ) {
-			column.setArrayLength( arrayAnn.length() );
-		}
-		applyColumnTransformer( member, property, column );
-
-		var tableName = columnAnn == null ? "" : columnAnn.table();
-		if ( "".equals( tableName ) || tableName == null ) {
-			basicValue.setTable( primaryTable );
-		}
-		else {
-			final Identifier identifier = Identifier.toIdentifier( tableName );
-			final TableReference tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
-			basicValue.setTable( tableByName.binding() );
-		}
-
-		final boolean insertable = columnAnn == null || columnAnn.insertable();
-		final boolean updatable = columnAnn == null || columnAnn.updatable();
-		property.setInsertable( insertable );
-		property.setUpdatable( updatable );
-		basicValue.addColumn( column, insertable, updatable );
-		basicValue.getTable().addColumn( column );
-
-		return column;
+		return ProcessedSelectable.column( column );
 	}
 
 	private static void applyColumnTransformer(
-			AttributeBindingView attributeBinding,
+			BasicValueIntent selectableIntent,
 			Property property,
 			org.hibernate.mapping.Column column) {
-		final BasicValueIntent selectableIntent = attributeBinding.basicValueIntent();
 		final String targetColumnName = selectableIntent.columnTransformerName();
 		if ( targetColumnName != null
 				&& !targetColumnName.isBlank()
@@ -503,34 +396,26 @@ public class AttributeBinder {
 		column.setCustomWrite( writeExpression == null || writeExpression.isBlank() ? null : writeExpression );
 	}
 
-	private static void applyColumnTransformer(
-			MemberDetails member,
-			Property property,
-			org.hibernate.mapping.Column column) {
-		final var transformerAnn = member.getDirectAnnotationUsage( org.hibernate.annotations.ColumnTransformer.class );
-		if ( transformerAnn == null ) {
-			return;
+	/// The selectable materialized for a basic value intent.
+	///
+	/// Formula-valued intents do not produce a column.  Callers that require a
+	/// physical column, such as version binding, should call [#requireColumn]
+	/// instead of interpreting a nullable column return value.
+	public record ProcessedSelectable(@Nullable org.hibernate.mapping.Column column) {
+		public static ProcessedSelectable column(org.hibernate.mapping.Column column) {
+			return new ProcessedSelectable( column );
 		}
 
-		final String targetColumnName = transformerAnn.forColumn();
-		if ( targetColumnName != null
-				&& !targetColumnName.isBlank()
-				&& !targetColumnName.equals( column.getName() ) ) {
-			return;
+		public static ProcessedSelectable formula() {
+			return new ProcessedSelectable( null );
 		}
 
-		final String writeExpression = transformerAnn.write();
-		if ( writeExpression != null
-				&& !writeExpression.isBlank()
-				&& org.hibernate.internal.util.StringHelper.count( writeExpression, '?' ) != 1 ) {
-			throw new AnnotationException(
-					"Write expression in '@ColumnTransformer' for property '" + property.getName()
-							+ "' and column '" + column.getName() + "' must contain exactly one placeholder character ('?')"
-			);
+		public org.hibernate.mapping.Column requireColumn(String role) {
+			if ( column == null ) {
+				throw new MappingException( "Expected a physical column while materializing '" + role + "', but found a formula" );
+			}
+			return column;
 		}
-
-		column.setResolvedCustomRead( transformerAnn.read().isBlank() ? null : transformerAnn.read() );
-		column.setCustomWrite( writeExpression == null || writeExpression.isBlank() ? null : writeExpression );
 	}
 
 }

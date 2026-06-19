@@ -688,6 +688,8 @@ public class SimpleIdTests {
 	void testHorizontalBindingContractsDoNotExposeMappingModelTypes() {
 		assertNoMappingModelLeakage(
 				org.hibernate.boot.mapping.internal.model.BootBindingModel.class,
+				org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding.class,
+				org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding.Type.class,
 				org.hibernate.boot.mapping.internal.model.ManagedTypeBinding.class,
 				org.hibernate.boot.mapping.internal.model.EntityTypeBinding.class,
 				org.hibernate.boot.mapping.internal.model.MappedSuperclassTypeBinding.class,

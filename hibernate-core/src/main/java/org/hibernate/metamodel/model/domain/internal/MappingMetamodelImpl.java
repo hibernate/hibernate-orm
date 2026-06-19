@@ -214,7 +214,8 @@ public class MappingMetamodelImpl
 				determineJpaStaticMetaModelPopulationSetting( settings ),
 				determineJpaMetaModelPopulationSetting( settings ),
 				bootModel.getNamedEntityGraphs().values(),
-				context
+				context,
+				context.getBootBindingModel()
 		);
 	}
 

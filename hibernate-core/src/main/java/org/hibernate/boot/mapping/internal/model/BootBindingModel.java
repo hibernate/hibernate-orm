@@ -12,11 +12,13 @@ import java.util.Map;
 
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
+import org.hibernate.boot.mapping.internal.view.EntityHierarchyView;
 import org.hibernate.boot.mapping.internal.view.EntityView;
 import org.hibernate.boot.mapping.internal.view.IdentifierContributionView;
 import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.view.TenantIdContributionView;
+import org.hibernate.boot.mapping.internal.view.VersionContributionView;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
@@ -40,7 +42,9 @@ import jakarta.persistence.MappedSuperclass;
 /// @author Steve Ebersole
 public class BootBindingModel {
 	private final Map<ClassDetails, ManagedTypeBinding> managedTypeBindings = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadata, EntityHierarchyBinding> entityHierarchyBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, IdentifierContribution> identifierContributions = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadata, VersionContribution> versionContributions = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, TenantIdContribution> tenantIdContributions = new LinkedHashMap<>();
 	private final List<NaturalIdContribution> naturalIdContributions = new ArrayList<>();
 	private final List<CollationContribution> collationContributions = new ArrayList<>();
@@ -57,6 +61,23 @@ public class BootBindingModel {
 
 	public Collection<ManagedTypeBinding> managedTypeBindings() {
 		return managedTypeBindings.values();
+	}
+
+	public void addEntityHierarchyBinding(EntityTypeMetadata rootType, EntityHierarchyBinding binding) {
+		entityHierarchyBindings.put( rootType, binding );
+	}
+
+	public @Nullable EntityHierarchyBinding getEntityHierarchyBinding(EntityTypeMetadata rootType) {
+		return entityHierarchyBindings.get( rootType );
+	}
+
+	public Collection<EntityHierarchyBinding> entityHierarchyBindings() {
+		return entityHierarchyBindings.values();
+	}
+
+	public @Nullable EntityHierarchyView getEntityHierarchyView(EntityTypeMetadata rootType) {
+		final EntityHierarchyBinding binding = getEntityHierarchyBinding( rootType );
+		return binding == null ? null : new EntityHierarchyView( binding );
 	}
 
 	public @Nullable AttributeDeclarationBinding findAttributeDeclaration(
@@ -147,6 +168,10 @@ public class BootBindingModel {
 		return identifierContributions.get( rootType );
 	}
 
+	public Collection<IdentifierContribution> identifierContributions() {
+		return identifierContributions.values();
+	}
+
 	public @Nullable IdentifierContributionView getIdentifierContributionView(EntityTypeMetadata rootType) {
 		final IdentifierContribution contribution = getIdentifierContribution( rootType );
 		return contribution == null ? null : new IdentifierContributionView( contribution );
@@ -158,6 +183,23 @@ public class BootBindingModel {
 			return null;
 		}
 		return new EntityView( entityBinding, getIdentifierContribution( rootType ) );
+	}
+
+	public void addVersionContribution(EntityTypeMetadata rootType, VersionContribution versionContribution) {
+		versionContributions.put( rootType, versionContribution );
+	}
+
+	public @Nullable VersionContribution getVersionContribution(EntityTypeMetadata rootType) {
+		return versionContributions.get( rootType );
+	}
+
+	public Collection<VersionContribution> versionContributions() {
+		return versionContributions.values();
+	}
+
+	public @Nullable VersionContributionView getVersionContributionView(EntityTypeMetadata rootType) {
+		final VersionContribution contribution = getVersionContribution( rootType );
+		return contribution == null ? null : new VersionContributionView( contribution );
 	}
 
 	public void addTenantIdContribution(EntityTypeMetadata rootType, TenantIdContribution tenantIdContribution) {

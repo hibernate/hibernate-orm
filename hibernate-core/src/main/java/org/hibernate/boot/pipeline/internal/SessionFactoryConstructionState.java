@@ -6,6 +6,7 @@ package org.hibernate.boot.pipeline.internal;
 
 import java.util.Objects;
 
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -23,7 +24,8 @@ record SessionFactoryConstructionState(
 		ResolvedSessionFactorySettings resolvedSettings,
 		SessionFactoryConstructionIdentity identity,
 		SessionFactoryOptions options,
-		BootstrapContext bootstrapContext) {
+		BootstrapContext bootstrapContext,
+		BootBindingModel bootBindingModel) {
 
 	SessionFactoryConstructionState {
 		Objects.requireNonNull( metadata );

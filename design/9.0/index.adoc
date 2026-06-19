@@ -170,6 +170,28 @@ annotation binding, the boundary between supported SPI and internal binding
 model products, or how built-in annotation proofs such as `@TenantId`,
 `@NaturalId`, and `@Collate` inform the eventual public contract.
 
+link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+
+This is the design note for deriving JPA static metamodel injection work while
+the boot/mapping model is materialized from finalized binding views.  It records
+the target of a boot-time injection plan that is later consumed when runtime
+`ManagedDomainType` / `Attribute` values exist.
+
+Use this document when changing `JpaMetamodelImpl`, `MetadataContext`, static
+metamodel injection, or when deciding how the binding view layer should serve
+runtime-domain consumers in addition to `org.hibernate.mapping` materializers.
+
+link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
+
+This is the design note for storing and restoring boot-time model state.  It
+compares source/categorization snapshots, finalized binding snapshots, resolved
+`org.hibernate.mapping` snapshots, and side products such as static metamodel
+injection plans.
+
+Use this document when deciding whether a new binding or mapping product should
+be durable, how it should be keyed, or which bootstrap phases a future restored
+snapshot might skip.
+
 == How To Choose
 
 If the question is "what should the final bootstrap architecture look like?",
@@ -208,3 +230,10 @@ If the question is "is this annotation covered by the new pipeline?", use
 
 If the question is "what should replace AttributeBinder or TypeBinder?", use
 `binding-extension-spi-design.adoc`.
+
+If the question is "can static metamodel field selection be captured while
+building the boot/mapping model?", use
+`jpa-metamodel-view-materialization-design.adoc`.
+
+If the question is "can boot-time model state be stored and restored?", use
+`boot-model-snapshot-design.adoc`.

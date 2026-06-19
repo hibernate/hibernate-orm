@@ -9,6 +9,8 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjection;
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -48,6 +50,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
@@ -100,6 +104,7 @@ public class MetadataContext {
 	private final List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
 	private final MappingMetamodel metamodel;
 	private final ClassLoaderService classLoaderService;
+	private final JpaStaticMetamodelInjectionSource staticMetamodelInjectionSource;
 
 	public MetadataContext(
 			JpaMetamodelImplementor jpaMetamodel,
@@ -108,9 +113,11 @@ public class MetadataContext {
 			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
 			RuntimeModelCreationContext runtimeModelCreationContext,
-			ClassLoaderService classLoaderService) {
+			ClassLoaderService classLoaderService,
+			JpaStaticMetamodelInjectionSource staticMetamodelInjectionSource) {
 		this.jpaMetamodel = jpaMetamodel;
 		this.classLoaderService = classLoaderService;
+		this.staticMetamodelInjectionSource = staticMetamodelInjectionSource;
 		this.metamodel = mappingMetamodel;
 		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
@@ -172,6 +179,61 @@ public class MetadataContext {
 			mappedSuperClassTypeMap.put( mappedSuperclassType.getJavaType(), mappedSuperclassType );
 		}
 		return mappedSuperClassTypeMap;
+	}
+
+	public boolean isStaticMetamodelPopulationEnabled() {
+		return jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
+	}
+
+	public ManagedDomainType<?> locateManagedType(Class<?> javaType, ManagedTypeBinding.Kind kind) {
+		return switch ( kind ) {
+			case ENTITY -> locateEntityType( javaType );
+			case MAPPED_SUPERCLASS -> getMappedSuperclassTypeMap().get( javaType );
+			case EMBEDDABLE -> embeddables.get( javaType );
+		};
+	}
+
+	public void injectStaticMetamodelFields(
+			ManagedDomainType<?> managedType,
+			Class<?> metamodelClass,
+			Set<String> fieldNames) {
+		injectManagedType( managedType, metamodelClass );
+		for ( String fieldName : fieldNames ) {
+			final Attribute<?, ?> attribute = findStaticMetamodelAttribute( managedType, fieldName );
+			if ( attribute != null ) {
+				registerStaticMetamodelAttribute( metamodelClass, attribute );
+			}
+		}
+	}
+
+	private Attribute<?, ?> findStaticMetamodelAttribute(ManagedDomainType<?> managedType, String fieldName) {
+		final Attribute<?, ?> declaredAttribute = managedType.findDeclaredAttribute( fieldName );
+		if ( declaredAttribute != null ) {
+			return declaredAttribute;
+		}
+		if ( managedType instanceof IdentifiableDomainType<?> identifiableType ) {
+			final var identifierAttribute = identifiableType.findIdAttribute();
+			if ( identifierAttribute != null && identifierAttribute.getName().equals( fieldName ) ) {
+				return identifierAttribute;
+			}
+			final var versionAttribute = identifiableType.findVersionAttribute();
+			if ( versionAttribute != null && versionAttribute.getName().equals( fieldName ) ) {
+				return versionAttribute;
+			}
+			final Attribute<?, ?>[] idClassAttribute = new Attribute[1];
+			identifiableType.visitIdClassAttributes( (attribute) -> {
+				if ( attribute.getName().equals( fieldName ) ) {
+					idClassAttribute[0] = attribute;
+				}
+			} );
+			return idClassAttribute[0];
+		}
+		return null;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void registerStaticMetamodelAttribute(Class<?> metamodelClass, Attribute attribute) {
+		registerAttribute( metamodelClass, attribute, true );
 	}
 
 	public void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
@@ -287,9 +349,10 @@ public class MetadataContext {
 	public void wrapUp() {
 		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.wrappingUpMetadataContext();
 
-		final boolean staticMetamodelScanEnabled =
-				jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
+		final boolean staticMetamodelScanEnabled = isStaticMetamodelPopulationEnabled();
 		final Set<String> processedMetamodelClasses = new HashSet<>();
+		final boolean viewBackedStaticMetamodelInjection =
+				staticMetamodelScanEnabled && staticMetamodelInjectionSource != null;
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
@@ -321,7 +384,7 @@ public class MetadataContext {
 
 					( (AttributeContainer<?>) jpaMapping ).getInFlightAccess().finishUp();
 
-					if ( staticMetamodelScanEnabled ) {
+					if ( staticMetamodelScanEnabled && !viewBackedStaticMetamodelInjection ) {
 						populateStaticMetamodel( jpaMapping, processedMetamodelClasses );
 					}
 				}
@@ -357,7 +420,7 @@ public class MetadataContext {
 
 					( (AttributeContainer<?>) jpaType ).getInFlightAccess().finishUp();
 
-					if ( staticMetamodelScanEnabled ) {
+					if ( staticMetamodelScanEnabled && !viewBackedStaticMetamodelInjection ) {
 						populateStaticMetamodel( jpaType, processedMetamodelClasses );
 					}
 				}
@@ -373,6 +436,10 @@ public class MetadataContext {
 			}
 		}
 
+		if ( viewBackedStaticMetamodelInjection ) {
+			new JpaStaticMetamodelInjection( staticMetamodelInjectionSource )
+					.populate( this, processedMetamodelClasses );
+		}
 
 		while ( !embeddablesToProcess.isEmpty() ) {
 			final List<EmbeddableDomainType<?>> processingEmbeddables =

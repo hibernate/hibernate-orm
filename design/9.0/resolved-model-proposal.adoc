@@ -300,6 +300,30 @@ The public SPI target should eventually wrap the internal attribute
 binding/view layer.  It should not expose the proof contribution records
 directly.
 
+== Runtime Consumer Direction
+
+The resolved view layer should serve runtime-domain consumers as well as
+`org.hibernate.mapping` materialization.  The first concrete example is JPA
+static metamodel injection: the resolved pipeline can derive identifiable
+managed-type field names from `BootBindingModel` views while still resolving
+the injected values from the runtime JPA metamodel.
+
+The longer-term target is stronger than a second view-backed traversal near
+runtime JPA metamodel creation.  The boot/mapping-model materializer should
+eventually produce a role-aware static metamodel injection plan while it already
+walks finalized binding views.  Runtime JPA metamodel creation then consumes
+that plan once the runtime `ManagedDomainType` and `Attribute` objects exist.
+
+See link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+for the focused design.
+
+Snapshotting is a related but distinct concern.  The current binding model and
+current `org.hibernate.mapping` objects should not be treated as durable
+serialization formats as-is.  See
+link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`] for the
+separate design around finalized binding snapshots, resolved mapping snapshots,
+stable keys, and restoration boundaries.
+
 The internal proof adapter is allowed to live below the public-SPI boundary.
 Its job is to answer concrete design questions before the supported contract is
 frozen:

@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.materialize;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.view.TenantIdContributionView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
@@ -52,6 +53,7 @@ public class TenantIdMappingMaterializer {
 		return materializeTenantId(
 				contribution.attributeName(),
 				contribution.member(),
+				contribution.valueIntent(),
 				contribution.tenantIdType(),
 				typeBinding,
 				bindingOptions,
@@ -63,6 +65,7 @@ public class TenantIdMappingMaterializer {
 	private Property materializeTenantId(
 			String attributeName,
 			MemberDetails memberDetails,
+			BasicValueIntent valueIntent,
 			BasicType<?> tenantIdType,
 			RootClass typeBinding,
 			BindingOptions bindingOptions,
@@ -73,8 +76,9 @@ public class TenantIdMappingMaterializer {
 		final Property property = new PropertyMappingMaterializer().createProperty( attributeName, memberDetails );
 		typeBinding.addProperty( property );
 
-		new BasicValueMappingMaterializer().createTenantIdBasicValue(
+		new BasicValueMappingMaterializer().materializeTenantIdBasicValue(
 				memberDetails,
+				valueIntent,
 				property,
 				typeBinding.getRootTable(),
 				bindingOptions,

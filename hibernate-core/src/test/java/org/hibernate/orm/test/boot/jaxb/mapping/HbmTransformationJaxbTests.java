@@ -317,6 +317,26 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20598" )
+	public void testSortNaturalTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/sort-natural/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl personEntity = transformed.getEntities().get( 0 );
+			assertThat( personEntity.getAttributes().getElementCollectionAttributes() ).hasSize( 1 );
+
+			final var nickNames = personEntity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( nickNames.getName() ).isEqualTo( "nickNames" );
+			assertThat( nickNames.getSortNatural() )
+					.as( "sort='natural' should become <sort-natural/>, not sort='natural'" )
+					.isNotNull();
+			assertThat( nickNames.getSort() )
+					.as( "sort attribute should be null when sort-natural is used" )
+					.isNull();
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20596" )
 	public void testNonAggregatedCompositeIdKeyManyToOneTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/non-aggregate-key-many-to-one/hbm.xml", scope, (transformed) -> {

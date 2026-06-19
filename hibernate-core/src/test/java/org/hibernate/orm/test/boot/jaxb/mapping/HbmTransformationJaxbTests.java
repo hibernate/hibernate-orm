@@ -317,6 +317,24 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20599" )
+	public void testCompositeElementColumnTableTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			for ( JaxbBasicImpl basic : embeddable.getAttributes().getBasicAttributes() ) {
+				if ( basic.getColumn() != null ) {
+					assertThat( basic.getColumn().getTable() )
+							.as( "Column '%s' should not have a table attribute — it belongs to the collection table, not a secondary table",
+									basic.getName() )
+							.isNull();
+				}
+			}
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20598" )
 	public void testSortNaturalTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/sort-natural/hbm.xml", scope, (transformed) -> {

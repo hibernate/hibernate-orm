@@ -1298,6 +1298,10 @@ public class HbmXmlTransformer {
 		if ( persistentClass.getIdentifierProperty() != null ) {
 			mappedPropertyNames.add( persistentClass.getIdentifierProperty().getName() );
 		}
+		else if ( persistentClass instanceof RootClass rootClass
+				&& rootClass.getIdentifier() instanceof Component compositeId ) {
+			compositeId.getProperties().forEach( p -> mappedPropertyNames.add( p.getName() ) );
+		}
 		if ( persistentClass instanceof RootClass rootClass && rootClass.getVersion() != null ) {
 			mappedPropertyNames.add( rootClass.getVersion().getName() );
 		}
@@ -3068,8 +3072,11 @@ public class HbmXmlTransformer {
 						keyPropertyInfo
 				) );
 			}
-			else if ( hbmIdProperty instanceof JaxbHbmCompositeKeyManyToOneType ) {
-				handleUnsupported( "Transformation of <key-many-to-one/> not supported" );
+			else if ( hbmIdProperty instanceof JaxbHbmCompositeKeyManyToOneType hbmKeyManyToOne ) {
+				final PropertyInfo keyManyToOneInfo = componentTypeInfo.propertyInfoMap().get( hbmKeyManyToOne.getName() );
+				final var jaxbManyToOne = transformCompositeKeyManyToOne( hbmKeyManyToOne, keyManyToOneInfo );
+				jaxbManyToOne.setId( true );
+				mappingXmlEntity.getAttributes().getManyToOneAttributes().add( jaxbManyToOne );
 			}
 			else {
 				throw new AssertionFailure( "Unexpected non-aggregated composite id property kind : " + hbmIdProperty );

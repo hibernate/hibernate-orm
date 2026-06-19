@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
@@ -15,6 +16,7 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterial
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
@@ -176,13 +178,12 @@ public class ComponentBinder {
 			}
 
 			if ( isPluralMember( member ) ) {
+				validatePluralMemberAllowed( source, componentMember );
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
 				final Collection collection = bindPluralMember(
 						ownerType,
 						ownerBinding,
-						member,
-						componentMember.fullPath(),
-						componentMember.associationOverride(),
+						componentMember,
 						property,
 						registerCollectionBindings
 				);
@@ -400,14 +401,14 @@ public class ComponentBinder {
 	private Collection bindPluralMember(
 			IdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			MemberDetails member,
-			String memberPath,
-			AssociationOverride associationOverride,
+			ComponentMemberBinding componentMember,
 			Property property,
 			boolean registerCollectionBindings) {
+		final MemberDetails member = componentMember.member();
+		final CollectionValueIntent collectionValueIntent = componentMember.collectionValueIntent();
 		final AttributeMetadata attributeMetadata = new ComponentAttributeMetadata(
 				member.resolveAttributeName(),
-				determinePluralNature( member ),
+				componentMember.nature(),
 				member
 		);
 		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class ) ) {
@@ -419,7 +420,8 @@ public class ComponentBinder {
 					options,
 					state,
 					context,
-					memberPath,
+					componentMember.fullPath(),
+					collectionValueIntent,
 					registerCollectionBindings
 			).bind( property );
 		}
@@ -432,8 +434,9 @@ public class ComponentBinder {
 					options,
 					state,
 					context,
-					memberPath,
-					associationOverride,
+					componentMember.fullPath(),
+					componentMember.associationOverride(),
+					collectionValueIntent,
 					registerCollectionBindings
 			).bindOneToMany( property );
 		}
@@ -446,23 +449,26 @@ public class ComponentBinder {
 					options,
 					state,
 					context,
-					memberPath,
-					associationOverride,
+					componentMember.fullPath(),
+					componentMember.associationOverride(),
+					collectionValueIntent,
 					registerCollectionBindings
 			).bindManyToMany( property );
 		}
-		throw new UnsupportedOperationException( "Unsupported plural embeddable member - " + member.getName() );
-	}
-
-	private AttributeNature determinePluralNature(MemberDetails member) {
-		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class ) ) {
-			return AttributeNature.ELEMENT_COLLECTION;
-		}
-		if ( member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class ) ) {
-			return AttributeNature.ONE_TO_MANY;
-		}
-		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class ) ) {
-			return AttributeNature.MANY_TO_MANY;
+		if ( member.hasDirectAnnotationUsage( org.hibernate.annotations.ManyToAny.class ) ) {
+			return new PluralAssociationAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					options,
+					state,
+					context,
+					componentMember.fullPath(),
+					componentMember.associationOverride(),
+					collectionValueIntent,
+					registerCollectionBindings
+			).bindManyToAny( property );
 		}
 		throw new UnsupportedOperationException( "Unsupported plural embeddable member - " + member.getName() );
 	}
@@ -471,7 +477,8 @@ public class ComponentBinder {
 		return member.isPlural()
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class )
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class )
-				|| member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class );
+				|| member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ManyToAny.class );
 	}
 
 	private boolean isEmbeddedMember(MemberDetails member, TypeDetails memberType) {
@@ -492,6 +499,17 @@ public class ComponentBinder {
 	private boolean isToOneMember(MemberDetails member) {
 		return member.hasDirectAnnotationUsage( jakarta.persistence.ManyToOne.class )
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToOne.class );
+	}
+
+	private static void validatePluralMemberAllowed(
+			ComponentSource source,
+			ComponentMemberBinding componentMember) {
+		if ( source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
+			throw new AnnotationException(
+					"Embeddable identifier member '" + componentMember.fullPath()
+							+ "' is collection-valued; embeddables used as entity identifiers may not contain plural attributes"
+			);
+		}
 	}
 
 	private static EntityTypeMetadata resolveOwnerEntityType(IdentifiableTypeMetadata ownerType) {

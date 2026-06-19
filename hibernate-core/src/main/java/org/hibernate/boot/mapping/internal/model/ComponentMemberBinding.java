@@ -7,6 +7,7 @@ package org.hibernate.boot.mapping.internal.model;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
+import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.models.spi.ClassDetails;
@@ -227,6 +228,9 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class ) ) {
 			return AttributeNature.MANY_TO_MANY;
 		}
+		if ( member.hasDirectAnnotationUsage( org.hibernate.annotations.ManyToAny.class ) ) {
+			return AttributeNature.MANY_TO_ANY;
+		}
 		if ( member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
 				|| type.determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
 			return AttributeNature.EMBEDDED;
@@ -244,7 +248,37 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 			case BASIC -> BasicValueIntent.fromComponentMember( source, member, bindingState, bindingContext );
 			case EMBEDDED -> EmbeddedValueIntent.fromComponentMember( member );
 			case TO_ONE -> ToOneValueIntent.fromComponentMember( source, member );
+			case ELEMENT_COLLECTION, ONE_TO_MANY, MANY_TO_MANY, MANY_TO_ANY -> CollectionValueIntent.fromUsage(
+					collectionSource( source, member, nature, bindingContext ),
+					member.fullPath(),
+					member.path(),
+					bindingState,
+					bindingContext
+			);
 			default -> null;
+		};
+	}
+
+	private static CollectionSource collectionSource(
+			ComponentSource source,
+			ComponentSource.ComponentMember member,
+			AttributeNature nature,
+			BindingContext bindingContext) {
+		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		return switch ( nature ) {
+			case ELEMENT_COLLECTION -> CollectionSource.elementCollection( member.member(), modelsContext );
+			case ONE_TO_MANY -> CollectionSource.oneToMany(
+					member.member(),
+					source.associationOverride( member.path() ),
+					modelsContext
+			);
+			case MANY_TO_MANY -> CollectionSource.manyToMany(
+					member.member(),
+					source.associationOverride( member.path() ),
+					modelsContext
+			);
+			case MANY_TO_ANY -> CollectionSource.manyToAny( member.member(), modelsContext );
+			default -> throw new IllegalArgumentException( "Not a collection-valued component member - " + member.path() );
 		};
 	}
 

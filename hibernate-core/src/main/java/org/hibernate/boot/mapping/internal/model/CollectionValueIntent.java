@@ -58,6 +58,15 @@ public record CollectionValueIntent(
 			String attributePath,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		return fromUsage( source, sourceRole, attributePath, bindingState, bindingContext );
+	}
+
+	public static CollectionValueIntent fromUsage(
+			CollectionSource source,
+			String sourceRole,
+			String attributePath,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		return new CollectionValueIntent(
 				source,
 				source.nature(),

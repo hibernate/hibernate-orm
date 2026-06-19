@@ -11,8 +11,12 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddableAttributeDeclarationBinding;
+import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
+import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 
@@ -20,6 +24,7 @@ import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.annotations.Formula;
 import org.hibernate.boot.models.AttributeNature;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -33,14 +38,18 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Steve Ebersole
@@ -115,6 +124,61 @@ public class EmbeddableBindingTests {
 				.filter( (member) -> member.attributeName().equals( attributeName ) )
 				.findFirst()
 				.orElseThrow();
+	}
+
+	@Test
+	@ServiceRegistry
+	void testComponentPluralMemberValueIntents(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var contribution = context.getBindingState().getBootBindingModel()
+							.embeddableContributions()
+							.stream()
+							.filter( (candidate) -> candidate.componentType().getName().equals( ComponentPluralFacts.class.getName() ) )
+							.findFirst()
+							.orElseThrow();
+
+					final ComponentMemberBinding labels = componentMember( contribution.members(), "labels" );
+					assertThat( labels.nature() ).isEqualTo( AttributeNature.ELEMENT_COLLECTION );
+					assertThat( labels.valueIntent() ).isSameAs( labels.collectionValueIntent() );
+					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.LIST );
+					assertThat( labels.collectionValueIntent().elementIntent() ).isInstanceOf( BasicValueIntent.class );
+					assertThat( labels.collectionValueIntent().indexIntent() ).isInstanceOf( BasicValueIntent.class );
+					assertThat( labels.collectionValueIntent().sourceRole() ).isEqualTo( "facts.labels" );
+					assertThat( labels.collectionValueIntent().attributePath() ).isEqualTo( "labels" );
+
+					final ComponentMemberBinding parts = componentMember( contribution.members(), "parts" );
+					assertThat( parts.nature() ).isEqualTo( AttributeNature.ELEMENT_COLLECTION );
+					assertThat( parts.collectionValueIntent().elementIntent() ).isInstanceOf( EmbeddedValueIntent.class );
+
+					final ComponentMemberBinding children = componentMember( contribution.members(), "children" );
+					assertThat( children.nature() ).isEqualTo( AttributeNature.ONE_TO_MANY );
+					assertThat( children.collectionValueIntent().elementIntent() ).isInstanceOf( ToOneValueIntent.class );
+
+					final ComponentMemberBinding tags = componentMember( contribution.members(), "tags" );
+					final CollectionValueIntent tagsIntent = tags.collectionValueIntent();
+					assertThat( tags.nature() ).isEqualTo( AttributeNature.MANY_TO_MANY );
+					assertThat( tagsIntent.elementIntent() ).isInstanceOf( ToOneValueIntent.class );
+					assertThat( tagsIntent.classification() ).isEqualTo( CollectionClassification.SET );
+				},
+				scope.getRegistry(),
+				ComponentPluralOwner.class,
+				ComponentPluralChild.class,
+				ComponentPluralTag.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEmbeddedIdentifierRejectsPluralMember(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> BindingTestingHelper.checkDomainModel(
+				(context) -> {
+				},
+				scope.getRegistry(),
+				EmbeddedIdentifierWithPluralEntity.class
+		) )
+				.isInstanceOf( org.hibernate.AnnotationException.class )
+				.hasMessageContaining( "embeddables used as entity identifiers may not contain plural attributes" );
 	}
 
 	@Test
@@ -682,6 +746,29 @@ public class EmbeddableBindingTests {
 		private GenericAmount price;
 	}
 
+	@Entity(name = "ComponentPluralOwner")
+	@Table(name = "component_plural_owners")
+	public static class ComponentPluralOwner {
+		@Id
+		private Integer id;
+		@Embedded
+		private ComponentPluralFacts facts;
+	}
+
+	@Entity(name = "ComponentPluralChild")
+	@Table(name = "component_plural_children")
+	public static class ComponentPluralChild {
+		@Id
+		private Integer id;
+	}
+
+	@Entity(name = "ComponentPluralTag")
+	@Table(name = "component_plural_tags")
+	public static class ComponentPluralTag {
+		@Id
+		private Integer id;
+	}
+
 	@Entity(name = "Country")
 	@Table(name = "countries")
 	public static class Country {
@@ -781,6 +868,37 @@ public class EmbeddableBindingTests {
 		private String collated;
 		@jakarta.persistence.ManyToOne
 		private Country country;
+	}
+
+	@Embeddable
+	public static class ComponentPluralFacts {
+		@ElementCollection
+		private java.util.List<String> labels;
+		@ElementCollection
+		private java.util.List<ComponentPluralPart> parts;
+		@OneToMany
+		private java.util.List<ComponentPluralChild> children;
+		@ManyToMany
+		private java.util.Set<ComponentPluralTag> tags;
+	}
+
+	@Embeddable
+	public static class ComponentPluralPart {
+		private String name;
+	}
+
+	@Entity(name = "EmbeddedIdentifierWithPluralEntity")
+	@Table(name = "embedded_identifier_with_plural")
+	public static class EmbeddedIdentifierWithPluralEntity {
+		@EmbeddedId
+		private EmbeddedIdentifierWithPlural id;
+	}
+
+	@Embeddable
+	public static class EmbeddedIdentifierWithPlural {
+		private Integer id;
+		@ElementCollection
+		private java.util.List<String> labels;
 	}
 
 	@MappedSuperclass

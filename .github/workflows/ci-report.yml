@@ -49,12 +49,12 @@ jobs:
       # Checkout the target branch so that the Develocity plugin version matches
       # the one that was used to produce the build scan data.
       - name: Check out target branch
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
           ref: ${{ steps.determine_branch_ref.outputs.original_branch_ref }}
       - name: Set up JDK
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5.3.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -164,7 +164,7 @@ jobs:
           fi
       # Checkout target branch (from the main repository)
       - name: Check out target branch
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
           # By default, a workflow that is triggered with on workflow_run would run on the main (default) branch.
@@ -194,7 +194,7 @@ jobs:
           rm -rf gradlew*
 
       - name: Set up Java 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287 # v5.3.0
         with:
           java-version: 25
           distribution: temurin

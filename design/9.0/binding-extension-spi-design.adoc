@@ -267,6 +267,22 @@ without exposing `PersistentClass` or `Component`.
 
 == Evidence From Internal Proofs
 
+ORM has an internal rehearsal of this shape under
+`org.hibernate.boot.models.bind.internal.spi`.  It is intentionally not a
+supported extension contract.  Its purpose is to route built-in annotations
+through an SPI-shaped adapter before freezing the public API.
+
+The rehearsal contracts are deliberately small:
+
+* `AttributeBindingContributor` receives an annotation, an attribute target,
+  and a contribution context;
+* `AttributeBindingTarget` exposes capability facets instead of mapping
+  objects;
+* `BindingContributionContext` exposes binding services needed to translate the
+  contribution into ORM's current internal products;
+* `StandardAttributeBindingTarget` adapts those facet calls to today's
+  contribution records and compatibility materializers.
+
 The three internal proofs point to the capability/facet model:
 
 * `@TenantId` proves a complex attribute-triggered contribution with
@@ -280,6 +296,14 @@ The important lesson is not that the public SPI should expose
 Those records are internal storage/materialization details.  The lesson is that
 a contributor needs a stable attribute target with facets for the different
 things an annotation may affect.
+
+This also clarifies the role of the lingering internal `*Contribution` records.
+Some are core boot facts, such as identifiers or mapped-superclass
+applications.  Others are extension-shaped semantic contributions discovered
+from annotations.  The public SPI should target the latter category through
+facets such as `options()`, `selectables()`, and `entity()`, while ORM remains
+free to store them internally as records, pending work items, or direct
+materialization calls.
 
 == Compatibility Plan
 

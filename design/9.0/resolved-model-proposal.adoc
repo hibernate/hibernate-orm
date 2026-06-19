@@ -300,6 +300,23 @@ The public SPI target should eventually wrap the internal attribute
 binding/view layer.  It should not expose the proof contribution records
 directly.
 
+The internal proof adapter is allowed to live below the public-SPI boundary.
+Its job is to answer concrete design questions before the supported contract is
+frozen:
+
+* Does a facet-oriented target work for simple attribute options, selectable
+  decoration, and entity-wide side effects?
+* Which contribution records are actually general extension outputs, and which
+  are core boot-model facts?
+* Where does materialization need to remain an ORM-owned step rather than a
+  user extension responsibility?
+
+In the current proof, `@NaturalId`, `@Collate`, and `@TenantId` are invoked
+through an internal `AttributeBindingContributor` shape.  The target facets then
+translate those calls into the existing contribution records and materializers.
+That translation layer is useful precisely because it prevents the temporary
+records from becoming the public API.
+
 == Managed Type Bindings
 
 [source]

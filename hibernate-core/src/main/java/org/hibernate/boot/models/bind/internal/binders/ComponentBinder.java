@@ -9,23 +9,24 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 
+import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.models.bind.internal.materialize.CollationMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.ToOneMaterializationHelper;
 import org.hibernate.boot.models.bind.internal.model.BasicValueIntent;
-import org.hibernate.boot.models.bind.internal.model.CollationContribution;
 import org.hibernate.boot.models.bind.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.models.bind.internal.model.EmbeddedValueIntent;
 import org.hibernate.boot.models.bind.internal.model.ToOneValueIntent;
+import org.hibernate.boot.models.bind.internal.spi.BindingContributionContext;
+import org.hibernate.boot.models.bind.internal.spi.CollationAttributeContributor;
+import org.hibernate.boot.models.bind.internal.spi.StandardAttributeBindingTarget;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.boot.models.bind.internal.sources.ToOneSource;
-import org.hibernate.boot.models.bind.internal.view.CollationContributionView;
 import org.hibernate.boot.models.bind.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
@@ -353,19 +354,24 @@ public class ComponentBinder {
 			IdentifiableTypeMetadata ownerType,
 			ComponentMemberBinding componentMember,
 			Property property) {
-		if ( componentMember.collation() == null ) {
+		final Collate collate = componentMember.member().getDirectAnnotationUsage( Collate.class );
+		if ( collate == null ) {
 			return;
 		}
-		final var contribution = new CollationContribution(
-				ownerType,
-				componentMember.fullPath(),
-				componentMember.member(),
-				componentMember.collation()
+		final var contributionContext = new BindingContributionContext(
+				options,
+				state,
+				context
 		);
-		state.getBootBindingModel().addCollationContribution( contribution );
-		new CollationMappingMaterializer().materializeCollation(
-				new CollationContributionView( contribution ),
-				property
+		new CollationAttributeContributor().contribute(
+				collate,
+				StandardAttributeBindingTarget.forProperty(
+						ownerType,
+						componentMember,
+						property,
+						contributionContext
+				),
+				contributionContext
 		);
 	}
 

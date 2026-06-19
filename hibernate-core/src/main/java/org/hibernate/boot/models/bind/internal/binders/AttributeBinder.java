@@ -7,21 +7,21 @@ package org.hibernate.boot.models.bind.internal.binders;
 import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.bind.internal.materialize.BasicValueMappingMaterializer;
-import org.hibernate.boot.models.bind.internal.materialize.CollationMappingMaterializer;
-import org.hibernate.boot.models.bind.internal.materialize.NaturalIdMappingMaterializer;
 import org.hibernate.boot.models.bind.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.bind.internal.model.BasicValueIntent;
-import org.hibernate.boot.models.bind.internal.model.CollationContribution;
-import org.hibernate.boot.models.bind.internal.model.NaturalIdContribution;
+import org.hibernate.boot.models.bind.internal.spi.BindingContributionContext;
+import org.hibernate.boot.models.bind.internal.spi.CollationAttributeContributor;
+import org.hibernate.boot.models.bind.internal.spi.NaturalIdAttributeContributor;
+import org.hibernate.boot.models.bind.internal.spi.StandardAttributeBindingTarget;
 import org.hibernate.boot.models.bind.internal.view.AttributeBindingView;
-import org.hibernate.boot.models.bind.internal.view.CollationContributionView;
-import org.hibernate.boot.models.bind.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
@@ -257,36 +257,46 @@ public class AttributeBinder {
 	}
 
 	private void applyNaturalId(Property property) {
-		if ( !attributeBinding.isNaturalId() ) {
+		final NaturalId naturalId = attributeBinding.member().getDirectAnnotationUsage( NaturalId.class );
+		if ( naturalId == null ) {
 			return;
 		}
-		final var contribution = new NaturalIdContribution(
-				ownerType,
-				attributeBinding.attributeName(),
-				attributeBinding.member(),
-				attributeBinding.naturalIdMutable()
+		final var contributionContext = new BindingContributionContext(
+				bindingOptions,
+				bindingState,
+				bindingContext
 		);
-		bindingState.getBootBindingModel().addNaturalIdContribution( contribution );
-		new NaturalIdMappingMaterializer().materializeNaturalId(
-				new NaturalIdContributionView( contribution ),
-				property
+		new NaturalIdAttributeContributor().contribute(
+				naturalId,
+				StandardAttributeBindingTarget.forProperty(
+						ownerType,
+						attributeBinding.usageBinding(),
+						property,
+						contributionContext
+				),
+				contributionContext
 		);
 	}
 
 	private void applyCollation(Property property) {
-		if ( attributeBinding.collation() == null ) {
+		final Collate collate = attributeBinding.member().getDirectAnnotationUsage( Collate.class );
+		if ( collate == null ) {
 			return;
 		}
-		final var contribution = new CollationContribution(
-				ownerType,
-				attributeBinding.attributePath(),
-				attributeBinding.member(),
-				attributeBinding.collation()
+		final var contributionContext = new BindingContributionContext(
+				bindingOptions,
+				bindingState,
+				bindingContext
 		);
-		bindingState.getBootBindingModel().addCollationContribution( contribution );
-		new CollationMappingMaterializer().materializeCollation(
-				new CollationContributionView( contribution ),
-				property
+		new CollationAttributeContributor().contribute(
+				collate,
+				StandardAttributeBindingTarget.forProperty(
+						ownerType,
+						attributeBinding.usageBinding(),
+						property,
+						contributionContext
+				),
+				contributionContext
 		);
 	}
 

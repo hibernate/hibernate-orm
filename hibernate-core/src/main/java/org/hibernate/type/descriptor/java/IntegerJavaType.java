@@ -220,4 +220,13 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 		return current + 1;
 	}
 
+	@Override
+	public Integer seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return ZERO;
+	}
+
+	@Override
+	public Integer next(Integer current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return current + 1;
+	}
 }

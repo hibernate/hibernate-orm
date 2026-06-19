@@ -99,14 +99,11 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testIsEmpty() throws Exception {
-		//String hql = "from Animal a where not exists (from a.offspring)";
-		String hql = "from Animal a where not exists elements(a.offspring)";
+		String hql = "from Animal a where not exists (select 1 from a.offspring)";
 		String ejbql = "select object(a) from Animal a where a.offspring is empty";
-		//parse(hql);
-		//parse(ejbql);
 		assertEjbqlEqualsHql(ejbql, hql);
 
-		hql = "from Animal a where exists (from a.mother.father.offspring)";
+		hql = "from Animal a where exists (select 1 from a.mother.father.offspring)";
 		ejbql = "select object(a) from Animal a where a.mother.father.offspring is not empty";
 		assertEjbqlEqualsHql( ejbql, hql );
 	}

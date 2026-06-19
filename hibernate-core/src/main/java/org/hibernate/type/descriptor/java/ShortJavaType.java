@@ -214,4 +214,13 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		return (short) ( current + 1 );
 	}
 
+	@Override
+	public Short seed(Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return ZERO;
+	}
+
+	@Override
+	public Short next(Short current, Long length, Integer precision, Integer scale, WrapperOptions options) {
+		return (short) ( current + 1 );
+	}
 }

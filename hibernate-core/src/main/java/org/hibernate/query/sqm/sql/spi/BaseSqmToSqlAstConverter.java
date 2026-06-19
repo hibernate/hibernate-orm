@@ -957,12 +957,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 										length,
 										precision,
 										scale,
-										null
+										persister.getFactory().getWrapperOptions()
 								),
 								length,
 								precision,
 								scale,
-								null
+								persister.getFactory().getWrapperOptions()
 						),
 						versionType
 				),

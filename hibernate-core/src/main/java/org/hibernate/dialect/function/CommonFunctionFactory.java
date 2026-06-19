@@ -388,6 +388,24 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * DB2 z/OS
+	 */
+	public void trunc_truncTimestamp() {
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.TRUNC_TIMESTAMP,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration
+				)
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+	}
+
+	/**
 	 * HSQL
 	 */
 	public void trunc_dateTrunc_trunc() {
@@ -1843,6 +1861,18 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Function style without special keywords.
+	 */
+	public void position_function(boolean withCodeUnits) {
+		functionRegistry.patternDescriptorBuilder( "position", "position(?1,?2" + (withCodeUnits ? ",codeunits32" : "") + ")" )
+				.setInvariantType(integerType)
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(STRING, STRING)
+				.setArgumentListSignature( "(STRING pattern in STRING string)" )
+				.register();
+	}
+
 	public void locate() {
 		functionRegistry.namedDescriptorBuilder( "locate" )
 				.setInvariantType(integerType)
@@ -2446,7 +2476,19 @@ public class CommonFunctionFactory {
 	public void power_spanner() {
 		functionRegistry.patternDescriptorBuilder("power", "power(?1::float8, ?2::float8)")
 				.setExactArgumentCount(2)
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	/**
+	 * power() for DB2 z/OS
+	 */
+	public void power_db2z() {
+		functionRegistry.patternDescriptorBuilder("power", "power(?1, ?2)")
+				.setExactArgumentCount(2)
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_UNTYPED )
+				.setParameterTypes(NUMERIC, NUMERIC)
 				.setInvariantType(doubleType)
 				.register();
 	}
@@ -2853,6 +2895,18 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 2 )
 				.setParameterTypes( STRING, TEMPORAL )
 				.setArgumentListSignature( "(STRING field, TEMPORAL datetime)" )
+				.register();
+	}
+
+	/**
+	 * DB2 z/OS trunc_timestamp() function
+	 */
+	public void truncTimestamp() {
+		functionRegistry.patternDescriptorBuilder( "date_trunc", "trunc_timestamp(?1,?2)" )
+				.setReturnTypeResolver( useArgType( 1 ) )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( TEMPORAL, STRING )
+				.setArgumentListSignature( "(TEMPORAL datetime, STRING field)" )
 				.register();
 	}
 

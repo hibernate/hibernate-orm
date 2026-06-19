@@ -454,8 +454,7 @@ public class DB2Dialect extends Dialect {
 		) );
 
 		functionFactory.windowFunctions();
-		functionFactory.listagg( null );
-
+		registerListagg( functionFactory );
 		registerJsonFunctions( functionFactory );
 		registerXmlFunctions( functionFactory );
 
@@ -469,7 +468,11 @@ public class DB2Dialect extends Dialect {
 		functionFactory.regexpLike();
 	}
 
-	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+	protected void registerListagg(CommonFunctionFactory functionFactory) {
+		functionFactory.listagg( null );
+	}
+
+	protected void registerXmlFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
 		functionFactory.xmlforest();

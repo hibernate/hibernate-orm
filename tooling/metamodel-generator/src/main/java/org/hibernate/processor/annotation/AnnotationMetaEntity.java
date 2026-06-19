@@ -123,6 +123,7 @@ import static org.hibernate.query.hql.internal.HqlHelper.*;
 public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static final String ID_CLASS_MEMBER_NAME = "<ID_CLASS>";
+	private static final String ERROR_ANNOTATION_VALUE = "<error>";
 
 	private final ImportContext importContext;
 	private final @Nullable AnnotationMeta parent;
@@ -1558,19 +1559,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final var annotation =
 				castNonNull( getAnnotationMirror( memberOfClass, ORDER_BY ) );
 		final var annotationValue = getAnnotationValue( annotation );
-		if ( annotationValue != null ) {
-			final var fragment = annotationValue.getValue().toString();
-			if ( !fragment.isBlank() ) {
-				try {
-					OrderByFragmentTranslator.check( fragment );
-				}
-				catch (SyntaxException e) {
-					final var message = "Error in ordering: " + e.getMessage();
-					context.message( memberOfClass, annotation, annotationValue, message, Diagnostic.Kind.ERROR );
-				}
-				catch (Exception ignored) {
-					// do nothing with it
-				}
+		if ( annotationValue == null ) {
+			return;
+		}
+		final var fragment = annotationValue.getValue().toString();
+		if ( !fragment.isBlank() && !ERROR_ANNOTATION_VALUE.equals( fragment ) ) {
+			try {
+				OrderByFragmentTranslator.check( fragment );
+			}
+			catch (SyntaxException e) {
+				final var message = "Error in ordering: " + e.getMessage();
+				context.message( memberOfClass, annotation, annotationValue, message, Diagnostic.Kind.ERROR );
+			}
+			catch (Exception ignored) {
+				// do nothing with it
 			}
 		}
 	}
@@ -1727,8 +1729,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			Element memberOfClass, AnnotationMirror annotation, AnnotationValue annotationVal, TypeElement assocTypeElement) {
 		final var mappedBy = annotationVal.getValue().toString();
 		if ( mappedBy != null && !mappedBy.isEmpty()
-			// this happens for a typesafe ref, e.g. Page_BOOK
-			// TODO: we should queue it to validate it later somehow
+			// typesafe refs such as Page_BOOK are unresolved while the metamodel is generated
 			&& !mappedBy.equals( "<error>" ) ) {
 			if ( mappedBy.indexOf( '.' ) > 0 ) {
 				//we don't know how to handle paths yet

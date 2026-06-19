@@ -113,12 +113,31 @@ public class MappedSuperclassTests {
 					final JpaStaticMetamodelInjectionSource metamodelInjectionSource =
 							JpaStaticMetamodelInjectionSource.from( context.getBindingState().getBootBindingModel() );
 					assertThat( metamodelInjectionSource.managedTypes() )
-							.extracting( JpaStaticMetamodelInjectionSource.ManagedType::javaType )
+							.extracting( JpaStaticMetamodelInjectionSource.ManagedTypeReference::javaType )
 							.containsExactly( HierarchySuper.class, HierarchyRoot.class );
-					assertThat( metamodelInjectionSource.managedTypes().get( 0 ).kind() )
+
+					final JpaStaticMetamodelInjectionSource.ManagedTypeReference superTypeReference =
+							metamodelInjectionSource.managedTypes().get( 0 );
+					assertThat( superTypeReference.sourceView().classDetails().toJavaClass() )
+							.isEqualTo( HierarchySuper.class );
+					assertThat( superTypeReference.kind() )
 							.isEqualTo( ManagedTypeBinding.Kind.MAPPED_SUPERCLASS );
-					assertThat( metamodelInjectionSource.managedTypes().get( 0 ).fieldNames() )
+					assertThat( superTypeReference.fieldNames() )
 							.contains( "id", "name" );
+					assertThat( superTypeReference.fields() )
+							.extracting( JpaStaticMetamodelInjectionSource.FieldReference::role )
+							.contains(
+									JpaStaticMetamodelInjectionSource.FieldRole.IDENTIFIER_ATTRIBUTE,
+									JpaStaticMetamodelInjectionSource.FieldRole.DECLARED_ATTRIBUTE
+							);
+					assertThat( superTypeReference.fields() )
+							.filteredOn( (field) -> field.fieldName().equals( "id" ) )
+							.first()
+							.isInstanceOf( JpaStaticMetamodelInjectionSource.IdentifierFieldReference.class );
+					assertThat( superTypeReference.fields() )
+							.filteredOn( (field) -> field.fieldName().equals( "name" ) )
+							.first()
+							.isInstanceOf( JpaStaticMetamodelInjectionSource.DeclaredAttributeFieldReference.class );
 					assertThat( metamodelInjectionSource.managedTypes().get( 1 ).kind() )
 							.isEqualTo( ManagedTypeBinding.Kind.ENTITY );
 				},

@@ -39,8 +39,9 @@ The first view-backed static metamodel slice introduced a bridge:
 [source]
 ----
 BootBindingModel views
-        -> JpaStaticMetamodelInjectionSource selects identifiable field names
-        -> MetadataContext resolves runtime ManagedDomainType / Attribute values
+        -> JpaStaticMetamodelInjectionSource selects identifiable field references
+        -> JpaStaticMetamodelInjection resolves planned references
+        -> MetadataContext supplies runtime ManagedDomainType / Attribute values
         -> static metamodel fields are injected
 ----
 
@@ -49,39 +50,44 @@ the source in a separate view traversal near runtime JPA metamodel creation.
 
 == Current Implementation Split
 
-The current `org.hibernate.boot.mapping.internal.jpa` package is not yet the
-owner of JPA static metamodel injection end-to-end.
+The current `org.hibernate.boot.mapping.internal.jpa` package owns the
+view-backed source/selection side and the view-backed application loop for
+identifiable managed types.  This is still not the final model, because the
+source is derived near runtime JPA metamodel creation rather than during
+boot/mapping-model materialization.
 
-Today it owns only the view-backed source/selection side:
+Today it owns:
 
 [source]
 ----
 BootBindingModel views
         -> JpaStaticMetamodelInjectionSource
-        -> managed Java types and static field names
+        -> view-keyed managed-type and field references
+        -> JpaStaticMetamodelInjection resolves field references by role
 ----
 
-The actual injection orchestration still happens from `MetadataContext`:
+`MetadataContext` remains the bridge to runtime values and reflection helpers:
 
 [source]
 ----
 MetadataContext
         -> creates runtime ManagedDomainType / Attribute values
-        -> calls JpaStaticMetamodelInjection when a view-backed source exists
+        -> locates runtime ManagedDomainType values for view-backed references
+        -> injects class_ and resolved Attribute values
         -> falls back to runtime-domain traversal otherwise
 ----
 
-`JpaStaticMetamodelInjection` is therefore a helper used by `MetadataContext`,
-not yet an independent phase that owns the full static metamodel injection
-responsibility.  This is a useful bridge, but it leaves responsibility split in
-a slightly awkward way:
+`JpaStaticMetamodelInjection` is therefore the owner of the view-backed
+application algorithm, but it still uses `MetadataContext` as a runtime lookup
+and injection adapter.  This is a useful bridge, but it leaves responsibility
+split in a deliberately temporary way:
 
 * `org.hibernate.boot.mapping.internal.jpa` selects managed types and field
-  names from binding views;
-* the selected static metamodel references are not yet modeled as durable
-  references back to the pipeline views that produced them;
-* `MetadataContext` decides when injection happens and still contains the
-  fallback traversal/injection control flow;
+  references from binding views;
+* selected static metamodel references are currently direct internal view
+  references, not stable plan keys;
+* `MetadataContext` still decides when injection happens and still contains the
+  legacy fallback traversal for metadata without a binding model;
 * runtime JPA metamodel objects remain the injected values, so injection cannot
   happen during boot/mapping materialization itself.
 
@@ -303,6 +309,15 @@ Expected behavior:
 
 Track generated static metamodel references as references to pipeline views.
 
+Status: transitory implementation target.
+
+This slice intentionally did not change runtime injection behavior.  It
+upgrades `JpaStaticMetamodelInjectionSource` from "managed type plus field
+names" to "managed type plus field references keyed by source views", while
+retaining field-name access as a compatibility/debugging bridge.
+The point is to preserve source/view correspondence before the injection plan is
+produced during mapping materialization.
+
 Expected behavior:
 
 * each managed-type item points back to the `ManagedTypeView` or hierarchy view
@@ -314,19 +329,34 @@ Expected behavior:
 * field names remain available as diagnostics and reflective lookup inputs, but
   are not the only semantic connection between boot and runtime models.
 
+After this transitory step, the intended direction is:
+
+* move production of these view-keyed references into the mapping
+  materialization walk;
+* replace direct view-object references with whichever stable view-reference
+  representation is chosen for the final plan;
+* have runtime JPA model creation register the runtime objects created from
+  those same views;
+* let the JPA injection component resolve planned metamodel references through
+  that view-to-runtime registry, falling back to field-name probing only where
+  legacy metadata still requires it.
+
 === Slice 4: Move Injection Application Behind The JPA Package
 
 Move reflective static metamodel injection orchestration out of
 `MetadataContext` and behind `org.hibernate.boot.mapping.internal.jpa`.
 
+Status: transitory implementation target, partially complete for view-backed
+identifiable managed types.
+
 Expected behavior:
 
 * `MetadataContext` creates runtime JPA `ManagedDomainType` and `Attribute`
   objects as it does today;
-* `MetadataContext` hands those runtime values, plus the optional boot-time
-  plan/source, to the JPA injection component;
+* `MetadataContext` supplies runtime values and narrow injection helpers to the
+  JPA injection component;
 * the JPA injection component resolves view-keyed generated metamodel
-  references to runtime values and performs the reflective field writes;
+  references to runtime values and drives the reflective field writes;
 * the legacy runtime-domain fallback traversal also lives behind the JPA
   package boundary until it can be removed.
 
@@ -339,6 +369,9 @@ metamodel injection concern, not split between the JPA package and
 === Slice 5: Add Explicit Field Roles
 
 Make the view-keyed field reference model role-aware.
+
+Status: transitory implementation target, complete for declared attributes,
+identifier attributes, and version attributes.
 
 Expected behavior:
 

@@ -25,13 +25,13 @@ import org.hibernate.models.spi.ClassDetails;
 /// View-backed source for JPA static metamodel injection.
 ///
 /// This is the first non-materialization consumer of the boot binding model.  It
-/// records the managed classes and static metamodel field names selected from
-/// binding/view facts, leaving runtime `Attribute` resolution and reflective
-/// field injection to [JpaStaticMetamodelInjection].
+/// records the managed classes and static metamodel field references selected
+/// from binding/view facts, leaving runtime `Attribute` resolution and
+/// reflective field injection to [JpaStaticMetamodelInjection].
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) {
+public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> managedTypes) {
 	public JpaStaticMetamodelInjectionSource {
 		managedTypes = List.copyOf( managedTypes );
 	}
@@ -39,11 +39,11 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) 
 	public static JpaStaticMetamodelInjectionSource from(BootBindingModel bootBindingModel) {
 		final Map<ClassDetails, EntityIdentifierBindingView> entityIdentifierBindings = entityIdentifierBindingsByOwner( bootBindingModel );
 		final Map<ClassDetails, VersionBindingView> versionBindings = versionBindingsByOwner( bootBindingModel );
-		final List<ManagedType> managedTypes = new ArrayList<>();
+		final List<ManagedTypeReference> managedTypes = new ArrayList<>();
 		final Set<ClassDetails> includedTypes = new LinkedHashSet<>();
 		for ( EntityHierarchyView hierarchyView : bootBindingModel.entityHierarchyViews() ) {
 			for ( ManagedTypeView typeView : hierarchyView.managedTypeViews() ) {
-				managedTypes.add( managedType(
+				managedTypes.add( managedTypeReference(
 						typeView,
 						entityIdentifierBindings.get( hierarchyView.root().classDetails() ),
 						versionBindings.get( typeView.classDetails() )
@@ -57,7 +57,7 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) 
 			}
 			if ( binding.kind() == ManagedTypeBinding.Kind.ENTITY
 					|| binding.kind() == ManagedTypeBinding.Kind.MAPPED_SUPERCLASS ) {
-				managedTypes.add( managedType(
+				managedTypes.add( managedTypeReference(
 						new StandardManagedTypeView( binding ),
 						entityIdentifierBindings.get( binding.classDetails() ),
 						versionBindings.get( binding.classDetails() )
@@ -67,26 +67,27 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) 
 		return new JpaStaticMetamodelInjectionSource( managedTypes );
 	}
 
-	private static ManagedType managedType(
+	private static ManagedTypeReference managedTypeReference(
 			ManagedTypeView managedTypeView,
 			EntityIdentifierBindingView entityIdentifierBinding,
 			VersionBindingView versionBinding) {
-		final LinkedHashSet<String> fieldNames = new LinkedHashSet<>();
+		final List<FieldReference> fields = new ArrayList<>();
 		for ( AttributeDeclarationBindingView attribute : managedTypeView.declaredAttributeViews() ) {
-			fieldNames.add( attribute.attributeName() );
+			fields.add( new DeclaredAttributeFieldReference( attribute ) );
 		}
 		if ( entityIdentifierBinding != null ) {
 			for ( var attribute : entityIdentifierBinding.attributes() ) {
-				fieldNames.add( attribute.attributeName() );
+				fields.add( new IdentifierFieldReference( entityIdentifierBinding, attribute ) );
 			}
 		}
 		if ( versionBinding != null ) {
-			fieldNames.add( versionBinding.attributeName() );
+			fields.add( new VersionFieldReference( versionBinding ) );
 		}
-		return new ManagedType(
+		return new ManagedTypeReference(
+				managedTypeView,
 				managedTypeView.classDetails().toJavaClass(),
 				managedTypeView.kind(),
-				fieldNames
+				fields
 		);
 	}
 
@@ -106,12 +107,74 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedType> managedTypes) 
 		return result;
 	}
 
-	public record ManagedType(
+	public record ManagedTypeReference(
+			ManagedTypeView sourceView,
 			Class<?> javaType,
 			ManagedTypeBinding.Kind kind,
-			Set<String> fieldNames) {
-		public ManagedType {
-			fieldNames = Collections.unmodifiableSet( new LinkedHashSet<>( fieldNames ) );
+			List<FieldReference> fields) {
+		public ManagedTypeReference {
+			fields = List.copyOf( fields );
+		}
+
+		public Set<String> fieldNames() {
+			final LinkedHashSet<String> fieldNames = new LinkedHashSet<>();
+			for ( FieldReference field : fields ) {
+				fieldNames.add( field.fieldName() );
+			}
+			return Collections.unmodifiableSet( fieldNames );
+		}
+	}
+
+	public sealed interface FieldReference
+			permits DeclaredAttributeFieldReference, IdentifierFieldReference, VersionFieldReference {
+		String fieldName();
+
+		FieldRole role();
+	}
+
+	public enum FieldRole {
+		DECLARED_ATTRIBUTE,
+		IDENTIFIER_ATTRIBUTE,
+		VERSION_ATTRIBUTE
+	}
+
+	public record DeclaredAttributeFieldReference(
+			AttributeDeclarationBindingView sourceView) implements FieldReference {
+		@Override
+		public String fieldName() {
+			return sourceView.attributeName();
+		}
+
+		@Override
+		public FieldRole role() {
+			return FieldRole.DECLARED_ATTRIBUTE;
+		}
+	}
+
+	public record IdentifierFieldReference(
+			EntityIdentifierBindingView sourceView,
+			EntityIdentifierBindingView.Attribute attribute) implements FieldReference {
+		@Override
+		public String fieldName() {
+			return attribute.attributeName();
+		}
+
+		@Override
+		public FieldRole role() {
+			return FieldRole.IDENTIFIER_ATTRIBUTE;
+		}
+	}
+
+	public record VersionFieldReference(
+			VersionBindingView sourceView) implements FieldReference {
+		@Override
+		public String fieldName() {
+			return sourceView.attributeName();
+		}
+
+		@Override
+		public FieldRole role() {
+			return FieldRole.VERSION_ATTRIBUTE;
 		}
 	}
 }

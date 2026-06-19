@@ -193,46 +193,14 @@ public class MetadataContext {
 		};
 	}
 
-	public void injectStaticMetamodelFields(
+	public void injectStaticMetamodelManagedType(
 			ManagedDomainType<?> managedType,
-			Class<?> metamodelClass,
-			Set<String> fieldNames) {
+			Class<?> metamodelClass) {
 		injectManagedType( managedType, metamodelClass );
-		for ( String fieldName : fieldNames ) {
-			final Attribute<?, ?> attribute = findStaticMetamodelAttribute( managedType, fieldName );
-			if ( attribute != null ) {
-				registerStaticMetamodelAttribute( metamodelClass, attribute );
-			}
-		}
-	}
-
-	private Attribute<?, ?> findStaticMetamodelAttribute(ManagedDomainType<?> managedType, String fieldName) {
-		final Attribute<?, ?> declaredAttribute = managedType.findDeclaredAttribute( fieldName );
-		if ( declaredAttribute != null ) {
-			return declaredAttribute;
-		}
-		if ( managedType instanceof IdentifiableDomainType<?> identifiableType ) {
-			final var identifierAttribute = identifiableType.findIdAttribute();
-			if ( identifierAttribute != null && identifierAttribute.getName().equals( fieldName ) ) {
-				return identifierAttribute;
-			}
-			final var versionAttribute = identifiableType.findVersionAttribute();
-			if ( versionAttribute != null && versionAttribute.getName().equals( fieldName ) ) {
-				return versionAttribute;
-			}
-			final Attribute<?, ?>[] idClassAttribute = new Attribute[1];
-			identifiableType.visitIdClassAttributes( (attribute) -> {
-				if ( attribute.getName().equals( fieldName ) ) {
-					idClassAttribute[0] = attribute;
-				}
-			} );
-			return idClassAttribute[0];
-		}
-		return null;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void registerStaticMetamodelAttribute(Class<?> metamodelClass, Attribute attribute) {
+	public void injectStaticMetamodelAttribute(Class<?> metamodelClass, Attribute attribute) {
 		registerAttribute( metamodelClass, attribute, true );
 	}
 

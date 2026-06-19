@@ -1942,18 +1942,12 @@ public class HbmXmlTransformer {
 		}
 
 		if ( source instanceof JaxbHbmSetType set ) {
-			final String sort = set.getSort();
-			if ( isNotEmpty( sort ) && !"unsorted".equals( sort ) ) {
-				target.setSort( sort );
-			}
+			transferSort( set.getSort(), target );
 			target.setOrderBy( set.getOrderBy() );
 			target.setClassification( LimitedCollectionClassification.SET );
 		}
 		else if ( source instanceof JaxbHbmMapType map ) {
-			final String sort = map.getSort();
-			if ( isNotEmpty( sort ) && !"unsorted".equals( sort ) ) {
-				target.setSort( sort );
-			}
+			transferSort( map.getSort(), target );
 			target.setOrderBy( map.getOrderBy() );
 
 			transferMapKey( map, target );
@@ -1989,6 +1983,17 @@ public class HbmXmlTransformer {
 					target
 			);
 			target.setClassification( LimitedCollectionClassification.LIST );
+		}
+	}
+
+	private void transferSort(String sort, JaxbPluralAttribute target) {
+		if ( isNotEmpty( sort ) && !"unsorted".equals( sort ) ) {
+			if ( "natural".equals( sort ) ) {
+				target.setSortNatural( new JaxbPluralAnyMappingImpl.JaxbSortNaturalImpl() );
+			}
+			else {
+				target.setSort( sort );
+			}
 		}
 	}
 

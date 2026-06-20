@@ -8,8 +8,8 @@ import jakarta.annotation.Nonnull;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.annotations.NamedNativeQuery;
@@ -18,10 +18,8 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
-import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
 
@@ -56,7 +54,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 			@Nonnull String sqlString,
 			@Nullable Class<R> resultType,
 			@Nullable String resultSetMappingName,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nullable Boolean readOnly,
@@ -75,7 +73,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 		super(
 				name,
 				location,
-				flushMode,
+				queryFlushMode,
 				timeout,
 				comment,
 				readOnly,
@@ -142,7 +140,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				resultType,
 				resultSetMappingName,
 				querySpaces,
-				flushMode,
+				queryFlushMode,
 				timeout,
 				comment,
 				readOnly,
@@ -174,7 +172,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				nullIfEmpty( annotation.resultSetMapping() ),
-				interpret( annotation.flush() ),
+				annotation.flush(),
 				cleanTimeout( annotation.timeout() ),
 				nullIfEmpty( annotation.comment() ),
 				annotation.readOnly(),
@@ -191,18 +189,6 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				Set.of( annotation.querySpaces() ),
 				Map.of()
 		);
-	}
-
-	@Nullable
-	private static FlushMode interpret(@Nonnull QueryFlushMode queryFlushMode) {
-		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
-			return null;
-		}
-		else {
-			return queryFlushMode == QueryFlushMode.FLUSH
-					? FlushMode.ALWAYS
-					: FlushMode.MANUAL;
-		}
 	}
 
 	/// Build a definition from JPA's [jakarta.persistence.NamedNativeQuery] annotation.
@@ -227,7 +213,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				nullIfEmpty( resultSetMappingName ),
-				FlushModeTypeHelper.getFlushMode( annotation.flush() ),
+				annotation.flush(),
 				null,
 				null,
 				null,

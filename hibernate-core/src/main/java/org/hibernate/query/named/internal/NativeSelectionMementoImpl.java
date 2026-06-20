@@ -7,9 +7,9 @@ package org.hibernate.query.named.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,7 +38,7 @@ public class NativeSelectionMementoImpl<R>
 			@Nullable Class<R> queryType,
 			@Nullable String resultSetMappingName,
 			@Nullable Set<String> synchronizationSpaces,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nullable Boolean readOnly,
@@ -53,7 +53,7 @@ public class NativeSelectionMementoImpl<R>
 			@Nullable Timeout lockTimeout,
 			@Nullable Locking.FollowOn followOnLockingStrategy,
 			@Nonnull Map<String, Object> hints) {
-		super( name, queryType, flushMode, timeout, comment, readOnly, fetchSize, firstRow, maxRows, cacheable,
+		super( name, queryType, queryFlushMode, timeout, comment, readOnly, fetchSize, firstRow, maxRows, cacheable,
 				cacheMode, cacheRegion, lockMode, lockScope, lockTimeout, followOnLockingStrategy, hints );
 		this.sqlString = sqlString;
 		this.resultSetMappingName = resultSetMappingName;

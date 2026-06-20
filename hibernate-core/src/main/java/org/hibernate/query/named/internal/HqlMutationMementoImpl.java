@@ -6,8 +6,8 @@ package org.hibernate.query.named.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.internal.MutationQueryImpl;
@@ -35,9 +35,9 @@ public class HqlMutationMementoImpl<T>
 	public HqlMutationMementoImpl(
 			@Nonnull String name, @Nonnull String hqlString, @Nullable Class<T> targetType,
 			@Nullable Map<String, String> parameterTypes,
-			@Nullable FlushMode flushMode, @Nullable Timeout timeout, @Nullable String comment,
+			@Nullable QueryFlushMode queryFlushMode, @Nullable Timeout timeout, @Nullable String comment,
 			@Nonnull Map<String, Object> hints) {
-		super( name, targetType, flushMode, timeout, comment, hints );
+		super( name, targetType, queryFlushMode, timeout, comment, hints );
 		this.hqlString = hqlString;
 		this.parameterTypes = parameterTypes;
 	}

@@ -6,10 +6,10 @@ package org.hibernate.boot.query.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
@@ -19,9 +19,7 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.spi.NamedSelectionQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
-import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.named.internal.HqlSelectionMementoImpl;
 
@@ -45,7 +43,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 			@Nonnull String hqlString,
 			@Nullable Class<R> resultType,
 			@Nullable String entityGraphName,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nullable Boolean readOnly,
@@ -64,7 +62,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 		super(
 				name,
 				location,
-				flushMode,
+				queryFlushMode,
 				timeout,
 				comment,
 				readOnly,
@@ -116,7 +114,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 		return new HqlSelectionMementoImpl<>(
 				getRegistrationName(), hqlString,
 				getResultType(), entityGraphName,
-				flushMode, timeout, comment, readOnly,
+				queryFlushMode, timeout, comment, readOnly,
 				fetchSize, firstRow, maxRows,
 				cacheable, cacheMode, cacheRegion,
 				lockMode, lockScope, lockTimeout, followOnLockingStrategy,
@@ -139,7 +137,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				null,
-				resolveFlushMode( annotation.flush() ),
+				annotation.flush(),
 				cleanTimeout( annotation.timeout() ),
 				annotation.comment(),
 				annotation.readOnly(),
@@ -160,18 +158,6 @@ public class NamedHqlSelectionDefinitionImpl<R>
 		);
 	}
 
-	@Nullable
-	private static FlushMode resolveFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
-		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
-			return null;
-		}
-		else {
-			return queryFlushMode == QueryFlushMode.FLUSH
-					? FlushMode.ALWAYS
-					: FlushMode.MANUAL;
-		}
-	}
-
 	/// Build a definition from Hibernate's [HQLSelect] annotation.
 	///
 	/// @param name The name to use.
@@ -187,7 +173,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 				annotation.query(),
 				null,
 				null,
-				FlushMode.MANUAL,
+				QueryFlushMode.NO_FLUSH,
 				Timeouts.WAIT_FOREVER,
 				null,
 				null,
@@ -221,7 +207,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				annotation.entityGraph(),
-				FlushModeTypeHelper.getFlushMode( annotation.flush() ),
+				annotation.flush(),
 				null,
 				null,
 				null,

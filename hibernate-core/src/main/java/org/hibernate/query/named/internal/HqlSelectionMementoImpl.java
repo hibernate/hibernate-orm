@@ -7,9 +7,9 @@ package org.hibernate.query.named.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -45,7 +45,7 @@ public class HqlSelectionMementoImpl<R>
 			@Nonnull String hqlString,
 			@Nullable Class<R> resultType,
 			@Nullable String entityGraphName,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nullable Boolean readOnly,
@@ -62,7 +62,7 @@ public class HqlSelectionMementoImpl<R>
 			@Nullable Map<String, String> parameterTypes,
 			@Nonnull Map<String, Object> hints) {
 		super( name, resultType,
-				flushMode, timeout, comment,
+				queryFlushMode, timeout, comment,
 				readOnly, fetchSize, firstResult, maxResults,
 				cacheable, cacheMode, cacheRegion,
 				lockMode, lockScope, lockTimeout, followOnLockingStrategy,

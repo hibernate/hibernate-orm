@@ -148,8 +148,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			memento.getHints().forEach( this::setHint );
 		}
 
-		if ( memento.getFlushMode() != null ) {
-			queryOptions.setFlushMode( memento.getFlushMode() );
+		final var queryFlushMode = memento.getQueryFlushMode();
+		if ( queryFlushMode != null && queryFlushMode != QueryFlushMode.DEFAULT ) {
+			queryOptions.setFlushMode( FlushModeTypeHelper.getFlushMode( queryFlushMode ) );
 		}
 
 		if ( memento.getTimeout() != null ) {

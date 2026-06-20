@@ -6,8 +6,8 @@ package org.hibernate.query.named.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
-import org.hibernate.FlushMode;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 
@@ -23,7 +23,7 @@ public abstract class AbstractQueryMemento<R>
 
 	protected final @Nullable Class<R> queryType;
 
-	protected final @Nullable FlushMode flushMode;
+	protected final @Nullable QueryFlushMode queryFlushMode;
 	protected final @Nullable Timeout timeout;
 	protected final @Nullable String comment;
 
@@ -32,13 +32,13 @@ public abstract class AbstractQueryMemento<R>
 	protected AbstractQueryMemento(
 			@Nonnull String name,
 			@Nullable Class<R> queryType,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nonnull Map<String, Object> hints) {
 		this.name = name;
 		this.queryType = queryType == void.class ? null : queryType;
-		this.flushMode = flushMode;
+		this.queryFlushMode = queryFlushMode;
 		this.timeout = timeout;
 		this.comment = StringHelper.nullIfEmpty( comment );
 		this.hints = hints;
@@ -46,7 +46,7 @@ public abstract class AbstractQueryMemento<R>
 
 	public AbstractQueryMemento(@Nonnull String name, @Nonnull AbstractQueryMemento<R> original) {
 		this.name = name;
-		this.flushMode = original.flushMode;
+		this.queryFlushMode = original.queryFlushMode;
 		this.timeout = original.timeout;
 		this.comment = original.comment;
 		this.hints = original.hints;
@@ -67,8 +67,8 @@ public abstract class AbstractQueryMemento<R>
 
 	@Override
 	@Nullable
-	public FlushMode getFlushMode() {
-		return flushMode;
+	public QueryFlushMode getQueryFlushMode() {
+		return queryFlushMode;
 	}
 
 	@Nullable

@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.query;
 
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.Distributor;
@@ -141,7 +140,7 @@ public class AddNamedQueryTest {
 					NamedSelectionMemento<?> def = sfi.getQueryEngine()
 							.getNamedObjectRepository()
 							.getSelectionQueryMemento( name );
-					assertEquals( FlushMode.COMMIT, def.getFlushMode() );
+					assertEquals( QueryFlushMode.NO_FLUSH, def.getQueryFlushMode() );
 
 					// then lets create a query by name and check its setting
 					q = em.createNamedQuery( name );

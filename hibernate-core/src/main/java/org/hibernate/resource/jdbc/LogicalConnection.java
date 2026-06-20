@@ -4,6 +4,9 @@
  */
 package org.hibernate.resource.jdbc;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.Connection;
 
 /**
@@ -32,6 +35,7 @@ public interface LogicalConnection {
 	 *
 	 * @apiNote The return type accommodates legacy functionality for user-supplied connections.
 	 */
+	@Nullable
 	Connection close();
 
 	/**
@@ -51,6 +55,7 @@ public interface LogicalConnection {
 	 *
 	 * @throws org.hibernate.ResourceClosedException if the {@code LogicalConnection} is closed
 	 */
+	@Nonnull
 	ResourceRegistry getResourceRegistry();
 
 }

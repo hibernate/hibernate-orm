@@ -37,7 +37,7 @@ public class SecondaryTableSchemaTest extends EntityManagerFactoryBasedFunctiona
 		return new Class[] {Cluster.class};
 	}
 
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put(
 				AvailableSettings.URL,
 				options.get( AvailableSettings.URL )

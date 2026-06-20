@@ -55,8 +55,8 @@ public class EntityManagerTest extends EntityManagerFactoryBasedFunctionalTest {
 		};
 	}
 
-	@SuppressWarnings({"unchecked"})
-	protected void addConfigOptions(Map options) {
+	@Override
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 		options.put( Environment.JPA_CLOSED_COMPLIANCE, "true" );
 	}

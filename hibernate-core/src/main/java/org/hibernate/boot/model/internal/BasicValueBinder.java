@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -155,11 +156,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	@Override
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return buildingContext.getBootstrapContext().getTypeConfiguration();
 	}
 
 	@Override
+	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, buildingContext );
 	}

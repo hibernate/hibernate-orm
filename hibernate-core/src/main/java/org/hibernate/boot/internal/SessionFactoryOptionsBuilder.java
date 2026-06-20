@@ -18,6 +18,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.PessimisticLockScope;
@@ -165,25 +166,33 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
 
 	// persistence behavior
+	@Nonnull
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
+	@Nonnull
 	private final List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
+	@Nonnull
 	private EntityNotFoundDelegate entityNotFoundDelegate;
+
 	private boolean identifierRollbackEnabled;
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
-	private boolean bidirectionalAssociationManagementEnabled;
-	private TemporalTableStrategy temporalTableStrategy;
-	private AuditStrategy auditStrategy;
+	private final boolean bidirectionalAssociationManagementEnabled;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
-	private Nulls defaultNullPrecedence;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
 	private final boolean unownedAssociationTransientCheck;
 	private final boolean passProcedureParameterNames;
 	private final boolean preferJdbcDatetimeTypes;
+
+	@Nonnull
+	private Nulls defaultNullPrecedence;
+	@Nonnull
+	private TemporalTableStrategy temporalTableStrategy;
+	@Nonnull
+	private AuditStrategy auditStrategy;
 
 	// JPA callbacks
 	private final boolean callbacksEnabled;
@@ -212,6 +221,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final int preferredSqlTypeCodeForUuid;
 	private final int preferredSqlTypeCodeForInstant;
 	private final int preferredSqlTypeCodeForArray;
+
+	@Nonnull
 	private final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 
 	// Caching
@@ -231,20 +242,24 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Integer jdbcFetchSize;
 	private boolean scrollableResultSetsEnabled;
 	private boolean commentsEnabled;
-	private PhysicalConnectionHandlingMode connectionHandlingMode;
 	private boolean connectionProviderDisablesAutoCommit;
 	private final TimeZone jdbcTimeZone;
-	private final ValueHandlingMode criteriaValueHandlingMode;
 	private final boolean criteriaCopyTreeEnabled;
 	private final boolean criteriaPlanCacheEnabled;
 	private final boolean nativeJdbcParametersIgnored;
-	private final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	// These two settings cannot be modified from the builder,
 	// in order to maintain consistency.
 	// Indeed, other components (the schema tools) also make use of these settings,
 	// and THOSE do not have access to session factory options.
 	private final String defaultCatalog;
 	private final String defaultSchema;
+
+	@Nonnull
+	private PhysicalConnectionHandlingMode connectionHandlingMode;
+	@Nonnull
+	private final ValueHandlingMode criteriaValueHandlingMode;
+	@Nonnull
+	private final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
 	private Map<String, SqmFunctionDescriptor> sqlFunctions;
 
@@ -263,10 +278,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
 	private final CacheMode initialSessionCacheMode;
+
+	@Nonnull
 	private final FlushMode initialSessionFlushMode;
+	@Nonnull
 	private final LockOptions defaultLockOptions;
 
 	@Deprecated(forRemoval = true)
+	@Nonnull
 	private final GraphParserMode graphParserMode;
 
 
@@ -570,6 +589,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		graphParserMode = GraphParserMode.interpret( graphParserModeSetting );
 	}
 
+	@Nullable
 	private StatementObserver interpretStatementObserver(Map<String, Object> settings) {
 		var setting = settings.get( JdbcSettings.STATEMENT_OBSERVER );
 		if ( setting == null ) {
@@ -598,6 +618,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 	}
 
+	@Nullable
 	private TimeZone getJdbcTimeZone(Object jdbcTimeZoneValue) {
 		if ( jdbcTimeZoneValue instanceof TimeZone timeZone ) {
 			return timeZone;
@@ -617,22 +638,29 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 	}
 
+	@Nonnull
 	private Nulls getDefaultNullPrecedence(Object defaultNullPrecedence) {
 		if ( defaultNullPrecedence instanceof Nulls jpaValue ) {
 			return jpaValue;
 		}
 		else if ( defaultNullPrecedence instanceof String string ) {
-			return NullsHelper.parse( string );
+			final var parsed = NullsHelper.parse( string );
+			if ( parsed == null ) {
+				throw new IllegalArgumentException( "Configuration property " + DEFAULT_NULL_ORDERING
+													+ " value '" + defaultNullPrecedence + "' is not recognized" );
+			}
+			return parsed;
 		}
 		else if ( defaultNullPrecedence != null ) {
 			throw new IllegalArgumentException( "Configuration property " + DEFAULT_NULL_ORDERING
-												+ " value [" + defaultNullPrecedence + "] is not supported" );
+												+ " value [" + defaultNullPrecedence + "] is not recognized" );
 		}
 		else {
-			return null;
+			return Nulls.NONE;
 		}
 	}
 
+	@Nullable
 	private static Class<? extends SessionEventListener> getAutoSessionEventsListener(
 			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
@@ -653,6 +681,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
 	private SqmMultiTableMutationStrategy resolveSqmMutationStrategy(
 			String strategyName,
 			StandardServiceRegistry serviceRegistry,
@@ -715,6 +744,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
 	private Constructor<SqmMultiTableMutationStrategy> resolveSqmMutationStrategyConstructor(
 			String strategyName,
 			StrategySelector strategySelector) {
@@ -732,6 +762,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
 	private SqmMultiTableInsertStrategy resolveSqmInsertStrategy(
 			String strategyName,
 			StandardServiceRegistry serviceRegistry,
@@ -795,6 +826,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
 	private Constructor<SqmMultiTableInsertStrategy> resolveSqmInsertStrategyConstructor(
 			String strategyName,
 			StrategySelector strategySelector) {
@@ -811,6 +843,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return null;
 	}
 
+	@Nullable
 	private HqlTranslator resolveHqlTranslator(
 			String producerName,
 			StandardServiceRegistry serviceRegistry,
@@ -826,6 +859,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				);
 	}
 
+	@Nullable
 	private SqmTranslatorFactory resolveSqmTranslator(
 			String translatorImplFqn,
 			StrategySelector strategySelector) {
@@ -850,6 +884,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Nullable
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
 			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
@@ -873,6 +908,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 	}
 
+	@Nonnull
 	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> clazz) {
 		return () -> {
 			try {
@@ -888,6 +924,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		};
 	}
 
+	@Nonnull
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 			Map<String, Object> configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
@@ -1019,11 +1056,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public Object getBeanManagerReference() {
 		return beanManagerReference;
 	}
 
 	@Override
+	@Nullable
 	public Object getValidatorFactoryReference() {
 		return validatorFactoryReference;
 	}
@@ -1146,11 +1185,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
 		return sessionFactoryObserverList.toArray( new SessionFactoryObserver[0] );
 	}
 
 	@Override
+	@Nonnull
 	public SessionEventListener[] buildSessionEventListeners() {
 		if ( StatisticalLoggingSessionEventListener.isLoggingEnabled() ) {
 			return autoSessionEventListener == null
@@ -1201,11 +1242,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public TemporalTableStrategy getTemporalTableStrategy() {
 		return temporalTableStrategy;
 	}
 
 	@Override
+	@Nonnull
 	public AuditStrategy getAuditStrategy() {
 		return auditStrategy;
 	}
@@ -1226,6 +1269,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public Nulls getDefaultNullPrecedence() {
 		return defaultNullPrecedence;
 	}
@@ -1246,16 +1290,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nullable
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
 		return tenantSchemaMapper;
 	}
 
 	@Override
+	@Nullable
 	public TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
 		return tenantCredentialsMapper;
 	}
 
 	@Override
+	@Nullable
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
@@ -1336,6 +1383,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 		return connectionHandlingMode;
 	}
@@ -1368,6 +1416,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return entityNotFoundDelegate;
 	}
@@ -1388,6 +1437,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return criteriaValueHandlingMode;
 	}
@@ -1408,6 +1458,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return immutableEntityUpdateQueryHandlingMode;
 	}
@@ -1503,6 +1554,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return defaultTimeZoneStorageStrategy;
 	}
@@ -1523,6 +1575,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getJsonFormatMapper() {
 		if ( jsonFormatMapper == null ) {
 			throw new HibernateException(
@@ -1533,6 +1586,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getXmlFormatMapper() {
 		if ( xmlFormatMapper == null ) {
 			throw new HibernateException(
@@ -1775,7 +1829,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.jdbcFetchSize = size;
 	}
 
-	public void applyConnectionHandlingMode(PhysicalConnectionHandlingMode mode) {
+	public void applyConnectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode mode) {
 		this.connectionHandlingMode = mode;
 	}
 
@@ -1852,12 +1906,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public CacheStoreMode getCacheStoreMode(final Map<String, Object> properties) {
+	public CacheStoreMode getCacheStoreMode(@Nullable Map<String, Object> properties) {
 		return properties == null ? defaultCacheStoreMode : defaultCacheStoreMode( properties );
 	}
 
 	@Override
-	public CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties) {
+	public CacheRetrieveMode getCacheRetrieveMode(@Nullable Map<String, Object> properties) {
 		return properties == null ? defaultCacheRetrieveMode : defaultCacheRetrieveMode( properties );
 	}
 
@@ -1881,19 +1935,23 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public FlushMode getInitialSessionFlushMode() {
 		return initialSessionFlushMode;
 	}
 
 	@Override
+	@Nonnull
 	public LockOptions getDefaultLockOptions() {
 		return defaultLockOptions;
 	}
 
+	@Nonnull
 	private static FlushMode defaultFlushMode(Map<String, Object> properties) {
 		return getFlushMode( properties.get( HibernateHints.HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
+	@Nonnull
 	private static LockOptions defaultLockOptions(Map<String, Object> defaultSessionProperties) {
 		final var lockOptions = new LockOptions();
 		applyPropertiesToLockOptions( defaultSessionProperties, () -> lockOptions );
@@ -1901,11 +1959,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getDefaultSessionProperties() {
 		return defaultSessionProperties;
 	}
 
 	@Override
+	@Nonnull
 	public GraphParserMode getGraphParserMode() {
 		return graphParserMode;
 	}

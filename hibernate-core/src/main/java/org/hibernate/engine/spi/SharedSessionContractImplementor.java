@@ -381,6 +381,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Retrieves the {@link Interceptor} associated with this session.
 	 */
+	@Nonnull
 	Interceptor getInterceptor();
 
 	/**
@@ -402,6 +403,7 @@ public interface SharedSessionContractImplementor
 	 * <p>
 	 * When {@code eager = true}, the object is eagerly fetched from the database.
 	 */
+	@Nullable
 	Object internalLoad(@Nonnull String entityName, @Nonnull Object id, boolean eager, boolean nullable)
 			throws HibernateException;
 
@@ -453,6 +455,7 @@ public interface SharedSessionContractImplementor
 	 * Instantiate the entity class of the given {@link EntityPersister},
 	 * initializing the new instance with the given identifier.
 	 */
+	@Nonnull
 	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id);
 
 	/**

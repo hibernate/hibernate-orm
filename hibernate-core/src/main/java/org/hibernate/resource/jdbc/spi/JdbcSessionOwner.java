@@ -4,6 +4,8 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -28,8 +30,10 @@ import java.sql.SQLException;
  */
 public interface JdbcSessionOwner {
 
+	@Nonnull
 	JdbcSessionContext getJdbcSessionContext();
 
+	@Nonnull
 	JdbcConnectionAccess getJdbcConnectionAccess();
 
 	/**
@@ -37,6 +41,7 @@ public interface JdbcSessionOwner {
 	 *
 	 * @return The {@code TransactionCoordinator}
 	 */
+	@Nonnull
 	TransactionCoordinator getTransactionCoordinator();
 
 	/**
@@ -73,8 +78,10 @@ public interface JdbcSessionOwner {
 	 *
 	 * @since 5.2
 	 */
+	@Nullable
 	Integer getJdbcBatchSize();
 
+	@Nonnull
 	default SqlExceptionHelper getSqlExceptionHelper() {
 		return getJdbcSessionContext().getJdbcServices().getSqlExceptionHelper();
 	}
@@ -93,7 +100,7 @@ public interface JdbcSessionOwner {
 	 * @since 7.1
 	 */
 	@Incubating
-	void afterObtainConnection(Connection connection) throws SQLException;
+	void afterObtainConnection(@Nonnull Connection connection) throws SQLException;
 
 	/**
 	 * Called right before a managed JDBC connection is released.
@@ -106,13 +113,14 @@ public interface JdbcSessionOwner {
 	 * @since 7.1
 	 */
 	@Incubating
-	void beforeReleaseConnection(Connection connection) throws SQLException;
+	void beforeReleaseConnection(@Nonnull Connection connection) throws SQLException;
 
 	/**
 	 * Obtain a reference to the {@link EventMonitor}.
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	EventMonitor getEventMonitor();
 
 }

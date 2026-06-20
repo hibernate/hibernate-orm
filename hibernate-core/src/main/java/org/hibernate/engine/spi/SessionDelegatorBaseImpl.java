@@ -157,6 +157,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		return delegate.getJdbcConnectionAccess();
 	}
@@ -174,6 +175,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public Interceptor getInterceptor() {
 		return delegate.getInterceptor();
 	}
@@ -394,6 +396,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public TransactionCoordinator getTransactionCoordinator() {
 		return delegate.getTransactionCoordinator();
 	}
@@ -411,6 +414,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public JdbcSessionContext getJdbcSessionContext() {
 		return delegate.getJdbcSessionContext();
 	}
@@ -1509,17 +1513,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException {
 		return delegate.instantiate( persister, id );
 	}
 
 	@Override
-	public void forceFlush(EntityEntry e) throws HibernateException {
+	public void forceFlush(@Nonnull EntityEntry e) throws HibernateException {
 		delegate.forceFlush( e );
 	}
 
 	@Override
-	public void forceFlush(EntityKey e) throws HibernateException {
+	public void forceFlush(@Nonnull EntityKey e) throws HibernateException {
 		delegate.forceFlush( e );
 	}
 
@@ -1539,22 +1544,25 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public LobCreator getLobCreator() {
 		return delegate.getLobCreator();
 	}
 
 	@Override
+	@Nullable
 	public Integer getJdbcBatchSize() {
 		return delegate.getJdbcBatchSize();
 	}
 
 	@Override
+	@Nonnull
 	public EventMonitor getEventMonitor() {
 		return delegate.getEventMonitor();
 	}
 
 	@Override
-	public void setJdbcBatchSize(Integer jdbcBatchSize) {
+	public void setJdbcBatchSize(@Nullable Integer jdbcBatchSize) {
 		delegate.setJdbcBatchSize( jdbcBatchSize );
 	}
 
@@ -1584,11 +1592,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getJsonFormatMapper() {
 		return delegate.getJsonFormatMapper();
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
 	}

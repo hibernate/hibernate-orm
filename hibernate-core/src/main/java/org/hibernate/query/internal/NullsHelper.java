@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.query.SortDirection;
 
@@ -18,9 +20,9 @@ public class NullsHelper {
 	 * Is this null precedence the default for the given sort order and null ordering.
 	 */
 	public static boolean isDefaultOrdering(
-			Nulls precedence,
-			SortDirection sortOrder,
-			NullOrdering nullOrdering) {
+			@Nonnull Nulls precedence,
+			@Nonnull SortDirection sortOrder,
+			@Nonnull NullOrdering nullOrdering) {
 		return switch ( precedence ) {
 			case NONE -> true;
 			case FIRST -> switch ( nullOrdering ) {
@@ -39,14 +41,15 @@ public class NullsHelper {
 	}
 
 	/**
-	 * Interprets a string representation of {@link Nulls}, returning {@code null} by default.  For
-	 * alternative default handling, see {@link #parse(String, Nulls)}
+	 * Interprets a string representation of {@link Nulls}, returning {@code null} by default.
+	 * For alternative default handling, see {@link #parse(String, Nulls)}
 	 *
 	 * @param name The String representation to interpret
 	 *
 	 * @return The recognized {@link Nulls}, or {@code null}
 	 */
-	public static Nulls parse(String name) {
+	@Nullable
+	public static Nulls parse(@Nonnull String name) {
 		for ( var value : Nulls.values() ) {
 			if ( value.name().equalsIgnoreCase( name ) ) {
 				return value;
@@ -63,7 +66,8 @@ public class NullsHelper {
 	 *
 	 * @return The recognized {@link Nulls}, or {@code defaultValue}.
 	 */
-	public static Nulls parse(String name, Nulls defaultValue) {
+	@Nonnull
+	public static Nulls parse(@Nonnull String name, @Nonnull Nulls defaultValue) {
 		final var value = parse( name );
 		return value != null ? value : defaultValue;
 	}

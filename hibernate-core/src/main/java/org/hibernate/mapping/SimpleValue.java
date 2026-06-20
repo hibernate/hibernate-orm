@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -172,6 +173,7 @@ public abstract class SimpleValue implements KeyValue {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return getBootstrapContext().getTypeConfiguration();
 	}
@@ -718,11 +720,13 @@ public abstract class SimpleValue implements KeyValue {
 				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
 				new JdbcTypeIndicators() {
 					@Override
+					@Nonnull
 					public TypeConfiguration getTypeConfiguration() {
 						return metadata.getTypeConfiguration();
 					}
 
 					@Override
+					@Nonnull
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 						return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
 					}

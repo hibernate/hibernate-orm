@@ -33,8 +33,7 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFact
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put( AvailableSettings.JPA_PROXY_COMPLIANCE, Boolean.FALSE.toString() );
 	}
 

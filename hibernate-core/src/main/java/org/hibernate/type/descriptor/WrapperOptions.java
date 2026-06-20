@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -28,11 +29,13 @@ public interface WrapperOptions {
 	/**
 	 * Access to the current session.
 	 */
+	@Nonnull
 	SharedSessionContractImplementor getSession();
 
 	/**
 	 * Access to the current session factory.
 	 */
+	@Nonnull
 	default SessionFactoryImplementor getSessionFactory() {
 		return getSession().getSessionFactory();
 	}
@@ -40,6 +43,7 @@ public interface WrapperOptions {
 	/**
 	 * Access to the current dialect.
 	 */
+	@Nonnull
 	default Dialect getDialect() {
 		return getSessionFactory().getJdbcServices().getDialect();
 	}
@@ -82,6 +86,7 @@ public interface WrapperOptions {
 	 * @see org.hibernate.cfg.JdbcSettings#NON_CONTEXTUAL_LOB_CREATION
 	 * @see org.hibernate.dialect.Dialect#getDefaultNonContextualLobCreation()
 	 */
+	@Nonnull
 	default LobCreator getLobCreator() {
 		return getSession().getLobCreator();
 	}
@@ -118,6 +123,7 @@ public interface WrapperOptions {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	default TypeConfiguration getTypeConfiguration() {
 		return getSessionFactory().getTypeConfiguration();
 	}
@@ -127,6 +133,7 @@ public interface WrapperOptions {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	FormatMapper getXmlFormatMapper();
 
 	/**
@@ -134,5 +141,6 @@ public interface WrapperOptions {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	FormatMapper getJsonFormatMapper();
 }

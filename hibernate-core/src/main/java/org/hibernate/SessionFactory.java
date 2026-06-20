@@ -150,6 +150,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * The JNDI name, used to bind the {@code SessionFactory} to JNDI.
 	 */
+	@Nullable
 	String getJndiName();
 
 	/**

@@ -685,9 +685,8 @@ public final class FullJoinEmulation {
 					translator.getSessionFactory().getSessionFactoryOptions()
 							.getDefaultNullPrecedence();
 		}
-		if ( nullPrecedence == null
-				|| isDefaultOrdering( nullPrecedence, sortOrder,
-						translator.getDialect().getNullOrdering() ) ) {
+		if ( isDefaultOrdering( nullPrecedence, sortOrder,
+				translator.getDialect().getNullOrdering() ) ) {
 			return null;
 		}
 		return nullPrecedence;

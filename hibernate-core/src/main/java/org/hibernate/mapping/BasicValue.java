@@ -13,6 +13,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
@@ -1034,6 +1035,7 @@ public class BasicValue extends SimpleValue
 	}
 
 	@Override
+	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return timeZoneStorageStrategy( timeZoneStorageType, getBuildingContext() );
 	}

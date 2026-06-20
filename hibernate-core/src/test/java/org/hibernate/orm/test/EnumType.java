@@ -10,6 +10,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
+
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MapKeyEnumerated;
 
@@ -303,6 +305,7 @@ public class EnumType<T extends Enum<T>>
 		}
 
 		@Override
+		@Nonnull
 		public TypeConfiguration getTypeConfiguration() {
 			return typeConfiguration;
 		}

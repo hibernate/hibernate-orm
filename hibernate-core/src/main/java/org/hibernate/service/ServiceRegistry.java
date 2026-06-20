@@ -63,7 +63,7 @@ public interface ServiceRegistry extends AutoCloseable {
 	 * @throws UnknownServiceException Indicates the service was not known.
 	 * @throws NullServiceException Indicates the service was null.
 	 */
-	default <R extends Service> R requireService(Class<R> serviceRole) {
+	default <R extends Service> R requireService(@Nonnull Class<R> serviceRole) {
 		final R service = getService( serviceRole );
 		if ( service == null ) {
 			throw new NullServiceException( serviceRole );

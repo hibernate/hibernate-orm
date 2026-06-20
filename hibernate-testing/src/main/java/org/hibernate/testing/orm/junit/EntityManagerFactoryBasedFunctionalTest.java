@@ -93,7 +93,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 		return NO_MAPPINGS;
 	}
 
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 	}
 
 	protected static final Class<?>[] NO_CLASSES = new Class[0];

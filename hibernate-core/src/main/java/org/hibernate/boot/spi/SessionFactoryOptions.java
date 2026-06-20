@@ -85,11 +85,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.ManagedBeanSettings#JAKARTA_CDI_BEAN_MANAGER
 	 */
+	@Nullable
 	Object getBeanManagerReference();
 
 	/**
 	 * @see org.hibernate.cfg.ValidationSettings#JAKARTA_VALIDATION_FACTORY
 	 */
+	@Nullable
 	Object getValidatorFactoryReference();
 
 	/**
@@ -128,6 +130,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI
 	 */
+	@Nullable
 	Boolean isSessionFactoryNameAlsoJndiName();
 
 	/**
@@ -151,6 +154,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
 	 */
+	@Nullable
 	Interceptor getInterceptor();
 
 	/**
@@ -172,6 +176,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
 	 */
+	@Nullable
 	Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier();
 
 	/**
@@ -181,6 +186,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.SessionBuilder#statementInspector(StatementInspector)
 	 */
+	@Nullable
 	StatementInspector getStatementInspector();
 
 	/**
@@ -188,6 +194,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER
 	 */
+	@Nonnull
 	SessionFactoryObserver[] getSessionFactoryObservers();
 
 	/**
@@ -197,6 +204,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.SessionBuilder#eventListeners(SessionEventListener...)
 	 */
+	@Nonnull
 	SessionEventListener[] buildSessionEventListeners();
 
 	/**
@@ -255,6 +263,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.FetchSettings#MAX_FETCH_DEPTH
 	 */
+	@Nullable
 	Integer getMaximumFetchDepth();
 
 	/**
@@ -271,6 +280,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.QuerySettings#DEFAULT_NULL_ORDERING
 	 */
+	@Nonnull
 	Nulls getDefaultNullPrecedence();
 
 	/**
@@ -299,6 +309,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
+	@Nullable
 	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	/**
@@ -311,6 +322,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 7.1
 	 */
+	@Nullable
 	TenantSchemaMapper<Object> getTenantSchemaMapper();
 
 	/**
@@ -322,6 +334,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 7.3
 	 */
+	@Nullable
 	TenantCredentialsMapper<Object> getTenantCredentialsMapper();
 
 	/**
@@ -424,6 +437,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
+	@Nullable
 	Integer getJdbcFetchSize();
 
 	/**
@@ -431,6 +445,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.SessionBuilder#connectionHandlingMode(PhysicalConnectionHandlingMode)
 	 */
+	@Nonnull
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
 	/**
@@ -454,6 +469,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
 	 */
+	@Nonnull
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
 	/**
@@ -461,6 +477,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.Configuration#addEntityNameResolver(EntityNameResolver)
 	 */
+	@Nonnull
 	EntityNameResolver[] getEntityNameResolvers();
 
 	/**
@@ -473,6 +490,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.Configuration#setEntityNotFoundDelegate
 	 */
+	@Nonnull
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
 	/**
@@ -512,11 +530,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
 	 */
+	@Nonnull
 	TemporalTableStrategy getTemporalTableStrategy();
 
 	/**
 	 * @see StateManagementSettings#AUDIT_STRATEGY
 	 */
+	@Nonnull
 	AuditStrategy getAuditStrategy();
 
 	/**
@@ -661,6 +681,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.MappingSettings#TIMEZONE_DEFAULT_STORAGE
 	 */
 	@Incubating
+	@Nonnull
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
 	/**
@@ -686,6 +707,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @since 6.0
 	 */
 	@Incubating
+	@Nonnull
 	FormatMapper getJsonFormatMapper();
 
 	/**
@@ -696,6 +718,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @since 6.0.1
 	 */
 	@Incubating
+	@Nonnull
 	FormatMapper getXmlFormatMapper();
 
 	/**
@@ -713,6 +736,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @since 6.4
 	 */
 	@Incubating
+	@Nonnull
 	default JavaType<Object> getDefaultTenantIdentifierJavaType() {
 		return ObjectJavaType.INSTANCE;
 	}
@@ -740,7 +764,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @return either the {@link CacheStoreMode} as defined in the session-specific properties,
 	 *         or as defined in the properties shared across all sessions (the defaults).
 	 */
-	CacheStoreMode getCacheStoreMode(Map<String, Object> properties);
+	CacheStoreMode getCacheStoreMode(@Nullable Map<String, Object> properties);
 
 	/**
 	 * Determine the default {@link CacheRetrieveMode}, given the current
@@ -750,7 +774,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @return either the {@link CacheRetrieveMode} as defined in the session-specific properties,
 	 *         or as defined in the properties shared across all sessions (the defaults).
 	 */
-	CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties);
+	CacheRetrieveMode getCacheRetrieveMode(@Nullable Map<String, Object> properties);
 
 	/**
 	 * The default initial {@link CacheMode} for new sessions.
@@ -770,6 +794,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.SessionBuilder#flushMode(FlushMode)
 	 * @see org.hibernate.Session#setHibernateFlushMode(FlushMode)
 	 */
+	@Nonnull
 	FlushMode getInitialSessionFlushMode();
 
 	/**
@@ -778,6 +803,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_LOCK_TIMEOUT
 	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_LOCK_SCOPE
 	 */
+	@Nonnull
 	LockOptions getDefaultLockOptions();
 
 	/**
@@ -785,6 +811,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.Session#setProperty(String, Object)
 	 */
+	@Nonnull
 	Map<String, Object> getDefaultSessionProperties();
 
 	/**
@@ -794,5 +821,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	GraphParserMode getGraphParserMode();
 }

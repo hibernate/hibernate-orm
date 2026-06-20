@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import java.util.HashMap;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -79,6 +80,7 @@ public class AnnotationHelper {
 			final JdbcType jdbcType = jtd.getRecommendedJdbcType(
 					new JdbcTypeIndicators() {
 						@Override
+						@Nonnull
 						public TypeConfiguration getTypeConfiguration() {
 							return typeConfiguration;
 						}

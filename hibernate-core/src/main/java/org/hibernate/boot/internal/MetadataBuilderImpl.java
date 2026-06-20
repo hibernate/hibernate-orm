@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
@@ -292,19 +294,20 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	@Deprecated
+	@Deprecated @SuppressWarnings("deprecation")
 	public void contributeType(BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 	}
 
 	@Override
-	@Deprecated
+	@Deprecated @SuppressWarnings("deprecation")
+
 	public void contributeType(BasicType<?> type, String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 	}
 
 	@Override
-	@Deprecated
+	@Deprecated @SuppressWarnings("deprecation")
 	public void contributeType(UserType<?> type, String[] keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 	}
@@ -755,24 +758,24 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 		}
 
-		private AccessType getDefaultCacheAccessType(ConfigurationService configService) {
-			final var regionFactory = serviceRegistry.getService( RegionFactory.class );
-			return configService.getSetting(
-					DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					value -> {
-						if ( value instanceof CacheConcurrencyStrategy cacheConcurrencyStrategy ) {
-							return cacheConcurrencyStrategy.toAccessType();
-						}
-						else if ( value instanceof AccessType accessType ) {
-							return accessType;
-						}
-						else {
-							return AccessType.fromExternalName( value.toString() );
-						}
-					},
-					// by default, see if the defined RegionFactory (if one) defines a default
-					regionFactory == null ? null : regionFactory.getDefaultAccessType()
-			);
+		@Nullable
+		private AccessType getDefaultCacheAccessType(@Nonnull ConfigurationService configService) {
+			final Object value = configService.getSettings().get( DEFAULT_CACHE_CONCURRENCY_STRATEGY );
+			if ( value == null ) {
+				final var regionFactory = serviceRegistry.getService( RegionFactory.class );
+				return regionFactory == null ? null : regionFactory.getDefaultAccessType();
+			}
+			else {
+				if ( value instanceof CacheConcurrencyStrategy cacheConcurrencyStrategy ) {
+					return cacheConcurrencyStrategy.toAccessType();
+				}
+				else if ( value instanceof AccessType accessType ) {
+					return accessType;
+				}
+				else {
+					return AccessType.fromExternalName( value.toString() );
+				}
+			}
 		}
 
 		private static SharedCacheMode getSharedCacheMode(ConfigurationService configService) {
@@ -808,15 +811,18 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		@Nonnull
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
 			return toTimeZoneStorageStrategy( getTimeZoneSupport() );
 		}
 
+		@Nonnull
 		private Dialect getDialect() {
 			return serviceRegistry.requireService( JdbcServices.class ).getDialect();
 		}
 
 		@Override
+		@Nonnull
 		public TimeZoneSupport getTimeZoneSupport() {
 			try {
 				return getDialect().getTimeZoneSupport();
@@ -826,7 +832,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(TimeZoneSupport timeZoneSupport) {
+		@Nonnull
+		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(@Nonnull TimeZoneSupport timeZoneSupport) {
 			return switch (defaultTimezoneStorage) {
 				case NATIVE -> {
 					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {

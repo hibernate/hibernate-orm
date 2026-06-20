@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.jpa.spi.JpaCompliance;
 
 import static org.hibernate.resource.transaction.spi.TransactionStatus.ACTIVE;
@@ -18,6 +19,7 @@ public interface TransactionCoordinator {
 	/**
 	 * Access to the builder that generated this coordinator
 	 */
+	@Nonnull
 	TransactionCoordinatorBuilder getTransactionCoordinatorBuilder();
 
 	/**
@@ -25,6 +27,7 @@ public interface TransactionCoordinator {
 	 *
 	 * @return The control delegate.
 	 */
+	@Nonnull
 	TransactionDriver getTransactionDriverControl();
 
 	/**
@@ -32,9 +35,10 @@ public interface TransactionCoordinator {
 	 *
 	 * @return The local Synchronization registry
 	 */
+	@Nonnull
 	SynchronizationRegistry getLocalSynchronizations();
 
-
+	@Nonnull
 	JpaCompliance getJpaCompliance();
 
 	/**
@@ -75,6 +79,7 @@ public interface TransactionCoordinator {
 	 *
 	 * @return An isolation delegate.
 	 */
+	@Nonnull
 	IsolationDelegate createIsolationDelegate();
 
 	/**
@@ -84,14 +89,14 @@ public interface TransactionCoordinator {
 	 *
 	 * @param observer The observer to add.
 	 */
-	void addObserver(TransactionObserver observer);
+	void addObserver(@Nonnull TransactionObserver observer);
 
 	/**
 	 * Remove an observer from the coordinator.
 	 *
 	 * @param observer The observer to remove.
 	 */
-	void removeObserver(TransactionObserver observer);
+	void removeObserver(@Nonnull TransactionObserver observer);
 
 	void setTimeOut(int seconds);
 
@@ -126,6 +131,7 @@ public interface TransactionCoordinator {
 		 */
 		void rollback();
 
+		@Nonnull
 		TransactionStatus getStatus();
 
 		void markRollbackOnly();

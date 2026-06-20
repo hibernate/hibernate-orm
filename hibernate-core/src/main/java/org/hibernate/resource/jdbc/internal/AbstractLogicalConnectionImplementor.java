@@ -7,9 +7,9 @@ package org.hibernate.resource.jdbc.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.TransactionException;
 import org.hibernate.resource.jdbc.LogicalConnection;
-import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalJdbcTransaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
@@ -24,8 +24,8 @@ import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONN
  */
 public abstract class AbstractLogicalConnectionImplementor implements LogicalConnectionImplementor, PhysicalJdbcTransaction {
 
+	@Nonnull
 	private TransactionStatus status = TransactionStatus.NOT_ACTIVE;
-	protected ResourceRegistry resourceRegistry;
 
 	@Override
 	public PhysicalJdbcTransaction getPhysicalJdbcTransaction() {
@@ -40,11 +40,6 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	}
 
 	@Override
-	public ResourceRegistry getResourceRegistry() {
-		return resourceRegistry;
-	}
-
-	@Override
 	public void afterStatement() {
 	}
 
@@ -54,7 +49,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 
 	@Override
 	public void afterTransaction() {
-		resourceRegistry.releaseResources();
+		getResourceRegistry().releaseResources();
 	}
 
 	// PhysicalJdbcTransaction impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -165,6 +160,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	}
 
 	@Override
+	@Nonnull
 	public TransactionStatus getStatus() {
 		return status;
 	}

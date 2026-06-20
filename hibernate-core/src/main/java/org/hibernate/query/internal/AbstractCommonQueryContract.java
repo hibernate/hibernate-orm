@@ -155,7 +155,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 		final var queryFlushMode = memento.getQueryFlushMode();
 		if ( queryFlushMode != QueryFlushMode.DEFAULT ) {
-			queryOptions.setFlushMode( FlushModeTypeHelper.getFlushMode( queryFlushMode ) );
+			queryOptions.setQueryFlushMode( queryFlushMode );
 		}
 
 		if ( memento.getTimeout() != null ) {
@@ -275,14 +275,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	@Nonnull
 	public CommonQueryContractImplementor setFlushMode(@Nonnull FlushModeType flushMode) {
 		session.checkOpen();
-		queryOptions.setFlushMode( FlushMode.fromJpaFlushMode( flushMode ) );
+		queryOptions.setQueryFlushMode( FlushModeTypeHelper.queryFlushModeFromFlushModeType( flushMode ) );
 		return this;
 	}
 
 	@Override
 	public FlushMode getEffectiveFlushMode() {
-		final var flushMode = queryOptions.getFlushMode();
-		return flushMode == null ? getSession().getHibernateFlushMode() : flushMode;
+		return FlushModeTypeHelper.toHibernateFlushMode( queryOptions.getQueryFlushMode(), getSession() );
 	}
 
 	@Nonnull
@@ -373,7 +372,10 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, queryOptions.getComment() );
-		putIfNotNull( hints, HINT_FLUSH_MODE,  queryOptions.getFlushMode() );
+		final var queryFlushMode = queryOptions.getQueryFlushMode();
+		if ( queryFlushMode != QueryFlushMode.DEFAULT ) {
+			hints.put( HINT_FLUSH_MODE, queryFlushMode );
+		}
 
 		putIfNotNull( hints, HINT_READ_ONLY, queryOptions.isReadOnly() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, queryOptions.getFetchSize() );
@@ -461,7 +463,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	 * <p>
 	 * Hints which are always relevant are handled by directly applying
 	 * the corresponding option.  These include:<ul>
-	 *     <li>{@linkplain QueryOptions#getFlushMode() flush mode}
+	 *     <li>{@linkplain QueryOptions#getQueryFlushMode() flush mode}
 	 *     <li>{@linkplain QueryOptions#getTimeout() timeout}
 	 *     <li>{@linkplain QueryOptions#getComment() comment}
 	 *     <li>{@linkplain QueryOptions#getDatabaseHints() database hints}
@@ -502,7 +504,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 				// always relevant
 				case HINT_FLUSH_MODE:
-					queryOptions.setFlushMode( FlushMode.fromHint( value ) );
+					queryOptions.setQueryFlushMode( FlushModeTypeHelper.queryFlushModeFromHint( value ) );
 					return true;
 				case HINT_TIMEOUT:
 					queryOptions.setTimeout( Timeouts.fromHibernateHint( value ) );
@@ -792,13 +794,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	@Override
 	@Nonnull
 	public QueryFlushMode getQueryFlushMode() {
-		return FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() );
+		return queryOptions.getQueryFlushMode();
 	}
 
 	@Override
 	@Nonnull
 	public CommonQueryContractImplementor setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
-		queryOptions.setFlushMode( FlushModeTypeHelper.getFlushMode( queryFlushMode ) );
+		queryOptions.setQueryFlushMode( queryFlushMode );
 		return this;
 	}
 

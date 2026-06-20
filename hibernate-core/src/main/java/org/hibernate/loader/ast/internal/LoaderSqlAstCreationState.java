@@ -4,10 +4,11 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import org.hibernate.FlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.FetchOptions;
@@ -270,8 +271,9 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public FlushMode getFlushMode() {
-		return null;
+	@Nonnull
+	public QueryFlushMode getQueryFlushMode() {
+		return QueryFlushMode.DEFAULT;
 	}
 
 	@Override

@@ -11,11 +11,11 @@ import java.util.StringJoiner;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.query.JakartaQuery;
 import jakarta.persistence.query.StaticStatementReference;
 import jakarta.persistence.query.StaticTypedQueryReference;
-import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Order;
 import org.hibernate.query.named.spi.NamedObjectRepository;
@@ -255,7 +255,7 @@ class Jpa4StaticQueryRegistrationTest {
 					.unwrap( SelectionQueryImplementor.class )
 					.getQueryOptions();
 			assertThat( queryOptions.getTimeout() ).isEqualTo( Timeout.milliseconds( 123 ) );
-			assertThat( queryOptions.getFlushMode() ).isEqualTo( FlushMode.MANUAL );
+			assertThat( queryOptions.getQueryFlushMode() ).isEqualTo( QueryFlushMode.NO_FLUSH );
 			assertThat( queryOptions.getCacheStoreMode() ).isEqualTo( CacheStoreMode.BYPASS );
 			assertThat( queryOptions.getLockOptions().getLockMode().toJpaLockMode() )
 					.isEqualTo( LockModeType.PESSIMISTIC_READ );
@@ -274,13 +274,13 @@ class Jpa4StaticQueryRegistrationTest {
 					.unwrap( MutationQueryImplementor.class )
 					.getQueryOptions();
 			assertThat( statementOptions.getTimeout() ).isEqualTo( Timeout.milliseconds( 234 ) );
-			assertThat( statementOptions.getFlushMode() ).isEqualTo( FlushMode.MANUAL );
+			assertThat( statementOptions.getQueryFlushMode() ).isEqualTo( QueryFlushMode.NO_FLUSH );
 
 			final var nativeStatementOptions = session.createNamedMutationQuery( BOOK_NATIVE_DELETE_BY_TITLE_WITH_OPTIONS )
 					.unwrap( MutationQueryImplementor.class )
 					.getQueryOptions();
 			assertThat( nativeStatementOptions.getTimeout() ).isEqualTo( Timeout.milliseconds( 345 ) );
-			assertThat( nativeStatementOptions.getFlushMode() ).isEqualTo( FlushMode.ALWAYS );
+			assertThat( nativeStatementOptions.getQueryFlushMode() ).isEqualTo( QueryFlushMode.FLUSH );
 
 			final var referenceQueryOptions = session.createQuery( new StaticTypedQueryReference<>(
 							BOOK_FIND_BY_TITLE_WITH_OPTIONS,

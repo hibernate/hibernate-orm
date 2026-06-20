@@ -4,10 +4,11 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
-import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
@@ -31,8 +32,9 @@ public class MutationQueryOptions implements QueryOptions {
 	}
 
 	@Override
-	public FlushMode getFlushMode() {
-		return null;
+	@Nonnull
+	public QueryFlushMode getQueryFlushMode() {
+		return QueryFlushMode.DEFAULT;
 	}
 
 	@Override

@@ -33,7 +33,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
@@ -1136,7 +1135,7 @@ public class SelectionQueryImpl<R>
 					queryOptions.isResultCachingEnabled(),
 					queryOptions.getResultCacheRegionName(),
 					queryOptions.getCacheMode(),
-					FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() ),
+					queryOptions.getQueryFlushMode(),
 					queryOptions.isReadOnly(),
 					lockOptions.getLockMode(),
 					lockOptions.getScope(),
@@ -1155,7 +1154,7 @@ public class SelectionQueryImpl<R>
 					hql,
 					actualResultType,
 					getEntityGraph() == null ? null : getEntityGraph().getName(),
-					FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() ),
+					queryOptions.getQueryFlushMode(),
 					queryOptions.getTimeout(),
 					queryOptions.getComment(),
 					queryOptions.isReadOnly(),

@@ -11,7 +11,7 @@ import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
-import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
+import static org.hibernate.query.internal.SqlOmittingQueryOptions.omitSqlQueryOptions;
 
 /**
  * ExecutionContext adapter delegating to a DomainQueryExecutionContext

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -17,13 +19,16 @@ public class Limit {
 	 */
 	public static final Limit NONE = new Limit();
 
+	@Nullable
 	private Integer firstRow;
+
+	@Nullable
 	private Integer maxRows;
 
 	public Limit() {
 	}
 
-	public Limit(Integer firstRow, Integer maxRows) {
+	public Limit(@Nullable Integer firstRow, @Nullable Integer maxRows) {
 		this.firstRow = firstRow;
 		this.maxRows = maxRows;
 	}
@@ -36,6 +41,7 @@ public class Limit {
 		return new Limit( firstRow, maxRows );
 	}
 
+	@Nullable
 	public Integer getFirstRow() {
 		return firstRow;
 	}
@@ -46,10 +52,11 @@ public class Limit {
 		return firstRow == null ? 0 : firstRow;
 	}
 
-	public void setFirstRow(Integer firstRow) {
+	public void setFirstRow(@Nullable Integer firstRow) {
 		this.firstRow = firstRow;
 	}
 
+	@Nullable
 	public Integer getMaxRows() {
 		return maxRows;
 	}
@@ -65,7 +72,7 @@ public class Limit {
 		this.maxRows = maxRows < 0 ? null : maxRows;
 	}
 
-	public void setMaxRows(Integer maxRows) {
+	public void setMaxRows(@Nullable Integer maxRows) {
 		// treat negatives specially as meaning no limit
 		this.maxRows = maxRows != null && maxRows < 0 ? null : maxRows;
 	}

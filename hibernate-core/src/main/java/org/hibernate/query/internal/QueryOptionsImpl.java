@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
 
 /**
@@ -74,7 +75,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	 * Copy constructor.
 	 * @see #makeCopy()
 	 */
-	public QueryOptionsImpl(QueryOptionsImpl original) {
+	public QueryOptionsImpl(@Nonnull QueryOptionsImpl original) {
 		this.queryFlushMode = original.queryFlushMode;
 		this.timeout = original.timeout;
 		this.comment = original.comment;
@@ -105,11 +106,12 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return new HashSet<>( original );
 	}
 
-	private <E> List<E> copy(List<E> original) {
+	private <E> List<E> copy(@Nullable List<E> original) {
 		return original == null ? null : new ArrayList<>( original );
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return timeout;
 	}
@@ -119,12 +121,12 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		setTimeout( Timeout.seconds( timeout ) );
 	}
 
-	public void setTimeout(Integer timeout) {
-		setTimeout( Timeout.seconds( timeout ) );
+	public void setTimeout(@Nullable Integer timeout) {
+		setTimeout( timeout == null ? null : Timeout.seconds( timeout ) );
 	}
 
 	@Override
-	public void setTimeout(Timeout timeout) {
+	public void setTimeout(@Nullable Timeout timeout) {
 		this.timeout = timeout;
 	}
 
@@ -136,26 +138,29 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 
 	@Override
 	public void setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
-		this.queryFlushMode = queryFlushMode == null ? QueryFlushMode.DEFAULT : queryFlushMode;
+		requireNonNull( queryFlushMode );
+		this.queryFlushMode = queryFlushMode;
 	}
 
 	@Override
+	@Nullable
 	public String getComment() {
 		return comment;
 	}
 
 	@Override
-	public void setComment(String comment) {
+	public void setComment(@Nullable String comment) {
 		this.comment = comment;
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getDatabaseHints() {
 		return databaseHints == null ? emptyList() : databaseHints;
 	}
 
 	@Override
-	public void addDatabaseHint(String hint) {
+	public void addDatabaseHint(@Nonnull String hint) {
 		if ( databaseHints == null ) {
 			databaseHints = new ArrayList<>();
 		}
@@ -163,31 +168,34 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public void setTupleTransformer(TupleTransformer<?> transformer) {
+	public void setTupleTransformer(@Nonnull TupleTransformer<?> transformer) {
 		this.tupleTransformer = transformer;
 	}
 
 	@Override
-	public void setResultListTransformer(ResultListTransformer<?> transformer) {
+	public void setResultListTransformer(@Nonnull ResultListTransformer<?> transformer) {
 		this.resultListTransformer = transformer;
 	}
 
 	@Override
+	@Nonnull
 	public Limit getLimit() {
 		return limit;
 	}
 
 	@Override
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
 	@Override
+	@Nullable
 	public Integer getFetchSize() {
 		return fetchSize;
 	}
 
-	public void setFetchSize(Integer fetchSize) {
+	public void setFetchSize(@Nullable Integer fetchSize) {
 		this.fetchSize = fetchSize;
 	}
 
@@ -200,29 +208,31 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	@Nullable
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return cacheRetrieveMode;
 	}
 
 	@Override
+	@Nullable
 	public CacheStoreMode getCacheStoreMode() {
 		return cacheStoreMode;
 	}
 
 	@Override
-	public void setCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
+	public void setCacheRetrieveMode(@Nullable CacheRetrieveMode retrieveMode) {
 		this.cacheRetrieveMode = retrieveMode;
 		this.refreshSession = false;
 	}
 
 	@Override
-	public void setCacheStoreMode(CacheStoreMode storeMode) {
+	public void setCacheStoreMode(@Nullable CacheStoreMode storeMode) {
 		this.cacheStoreMode = storeMode;
 		this.refreshSession = false;
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cacheMode) {
+	public void setCacheMode(@Nullable CacheMode cacheMode) {
 		if ( cacheMode == null ) {
 			QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to 'NORMAL'" );
 			cacheMode = CacheMode.NORMAL;
@@ -234,6 +244,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	@Nullable
 	public Boolean isResultCachingEnabled() {
 		return resultCachingEnabled;
 	}
@@ -244,37 +255,42 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	@Nullable
 	public String getResultCacheRegionName() {
 		return resultCacheRegionName;
 	}
 
 	@Override
+	@Nullable
 	public Boolean getQueryPlanCachingEnabled() {
 		return queryPlanCachingEnabled;
 	}
 
 	@Override
+	@Nullable
 	public Boolean isLimitInMemoryEnabled() {
 		return limitInMemoryEnabled;
 	}
 
 	@Override
-	public void setQueryPlanCachingEnabled(Boolean queryPlanCachingEnabled) {
+	public void setQueryPlanCachingEnabled(@Nullable Boolean queryPlanCachingEnabled) {
 		this.queryPlanCachingEnabled = queryPlanCachingEnabled;
 	}
 
 	@Override
+	@Nullable
 	public TupleTransformer<?> getTupleTransformer() {
 		return tupleTransformer;
 	}
 
 	@Override
+	@Nullable
 	public ResultListTransformer<?> getResultListTransformer() {
 		return resultListTransformer;
 	}
 
 	@Override
-	public void setResultCacheRegionName(String resultCacheRegionName) {
+	public void setResultCacheRegionName(@Nullable String resultCacheRegionName) {
 		this.resultCacheRegionName = resultCacheRegionName;
 	}
 
@@ -294,18 +310,19 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	@Nullable
 	public Boolean isReadOnly() {
 		return readOnlyEnabled;
 	}
 
 	@Override
-	public void applyGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic) {
+	public void applyGraph(@Nonnull RootGraphImplementor<?> rootGraph, @Nonnull GraphSemantic graphSemantic) {
 		this.rootGraph = rootGraph;
 		this.graphSemantic = graphSemantic;
 	}
 
 	@Override
-	public void enableFetchProfile(String profileName) {
+	public void enableFetchProfile(@Nonnull String profileName) {
 		if ( enabledFetchProfiles == null ) {
 			enabledFetchProfiles = new HashSet<>();
 		}
@@ -316,7 +333,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public void disableFetchProfile(String profileName) {
+	public void disableFetchProfile(@Nonnull String profileName) {
 		if ( disabledFetchProfiles == null ) {
 			disabledFetchProfiles = new HashSet<>();
 		}
@@ -327,31 +344,37 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	@Nullable
 	public Set<String> getEnabledFetchProfiles() {
 		return enabledFetchProfiles;
 	}
 
 	@Override
+	@Nullable
 	public Set<String> getDisabledFetchProfiles() {
 		return disabledFetchProfiles;
 	}
 
 	@Override
+	@Nullable
 	public AppliedGraph getAppliedGraph() {
 		return this;
 	}
 
 	@Override
-	public @Nullable RootGraphImplementor<?> getGraph() {
+	@Nullable
+	public RootGraphImplementor<?> getGraph() {
 		return rootGraph;
 	}
 
 	@Override
-	public @Nullable GraphSemantic getSemantic() {
+	@Nullable
+	public GraphSemantic getSemantic() {
 		return graphSemantic;
 	}
 
 	@Override
+	@Nonnull
 	public MutableQueryOptions makeCopy() {
 		return new QueryOptionsImpl( this );
 	}

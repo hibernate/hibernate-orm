@@ -34,7 +34,6 @@ import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.util.OptionsHelper;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryArrayTransformer;
 import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
@@ -531,7 +530,7 @@ public class NativeQueryImpl<R>
 				name,
 				originalSqlString,
 				null,
-				FlushModeTypeHelper.getQueryFlushMode( options.getFlushMode() ),
+				options.getQueryFlushMode(),
 				options.getTimeout(),
 				getComment(),
 				getHints(),
@@ -552,7 +551,7 @@ public class NativeQueryImpl<R>
 				//		think about the case of an applied j.p.sql.ResultSetMapping
 				null,
 				querySpaces,
-				FlushModeTypeHelper.getQueryFlushMode( options.getFlushMode() ),
+				options.getQueryFlushMode(),
 				options.getTimeout(),
 				options.getComment(),
 				options.isReadOnly(),
@@ -1046,12 +1045,15 @@ public class NativeQueryImpl<R>
 	 */
 	protected boolean shouldFlush() {
 		if ( getSession().isTransactionInProgress() ) {
-			var queryFlushMode = getQueryOptions().getFlushMode();
-			return switch ( queryFlushMode == null ? session.getHibernateFlushMode() : queryFlushMode ) {
-				// The JPA spec requires that we auto-flush before native queries
-				case AUTO -> getSessionFactory().getSessionFactoryOptions().isJpaBootstrap();
-				case ALWAYS -> true;
-				default -> false;
+			return switch ( getQueryOptions().getQueryFlushMode() ) {
+				case FLUSH -> true;
+				case NO_FLUSH -> false;
+				case DEFAULT -> switch ( session.getHibernateFlushMode() ) {
+					// The JPA spec requires that we auto-flush before native queries
+					case AUTO -> getSessionFactory().getSessionFactoryOptions().isJpaBootstrap();
+					case ALWAYS -> true;
+					default -> false;
+				};
 			};
 		}
 		else {
@@ -1569,7 +1571,7 @@ public class NativeQueryImpl<R>
 	@Override
 	@Nonnull
 	public NativeQueryImplementor<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
-		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode(queryFlushMode) );
+		getQueryOptions().setQueryFlushMode( queryFlushMode );
 		return this;
 	}
 

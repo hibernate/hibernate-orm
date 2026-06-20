@@ -6,10 +6,11 @@ package org.hibernate.query.spi;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
@@ -41,7 +42,8 @@ public interface QueryOptions {
 	/**
 	 * The flush mode to use for the query execution
 	 */
-	FlushMode getFlushMode();
+	@Nonnull
+	QueryFlushMode getQueryFlushMode();
 
 	/**
 	 * Should entities returned from the query be marked read-only.

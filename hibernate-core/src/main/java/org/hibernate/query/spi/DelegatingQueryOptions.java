@@ -7,12 +7,13 @@ package org.hibernate.query.spi;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
@@ -36,8 +37,9 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
-	public FlushMode getFlushMode() {
-		return queryOptions.getFlushMode();
+	@Nonnull
+	public QueryFlushMode getQueryFlushMode() {
+		return queryOptions.getQueryFlushMode();
 	}
 
 	@Override

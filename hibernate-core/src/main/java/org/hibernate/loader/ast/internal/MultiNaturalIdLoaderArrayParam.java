@@ -6,6 +6,7 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
@@ -80,6 +81,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 						.buildSelectTranslator( factory, sqlAst )
 						.translate( JdbcParameterBindings.NO_BINDINGS, new QueryOptionsAdapter() {
 							@Override
+							@Nonnull
 							public LockOptions getLockOptions() {
 								return lockOptions;
 							}

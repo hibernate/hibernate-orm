@@ -5,6 +5,7 @@
 package org.hibernate.query.spi;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.QueryFlushMode;
@@ -24,31 +25,37 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 	private final LockOptions lockOptions = new LockOptions();
 
 	@Override
+	@Nonnull
 	public Limit getLimit() {
 		return Limit.NONE;
 	}
 
 	@Override
+	@Nullable
 	public Integer getFetchSize() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public String getComment() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getDatabaseHints() {
 		return emptyList();
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return null;
 	}
@@ -60,61 +67,73 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 	}
 
 	@Override
+	@Nullable
 	public Boolean isReadOnly() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return CacheRetrieveMode.BYPASS;
 	}
 
 	@Override
+	@Nullable
 	public CacheStoreMode getCacheStoreMode() {
 		return CacheStoreMode.BYPASS;
 	}
 
 	@Override
+	@Nullable
 	public CacheMode getCacheMode() {
 		return CacheMode.IGNORE;
 	}
 
 	@Override
+	@Nullable
 	public Boolean isResultCachingEnabled() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public Boolean getQueryPlanCachingEnabled() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public String getResultCacheRegionName() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public AppliedGraph getAppliedGraph() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public TupleTransformer<?> getTupleTransformer() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public ResultListTransformer<?> getResultListTransformer() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public Set<String> getEnabledFetchProfiles() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public Set<String> getDisabledFetchProfiles() {
 		return null;
 	}

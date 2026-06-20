@@ -4,6 +4,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -61,6 +62,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 								null,
 								new QueryOptionsAdapter() {
 									@Override
+									@Nonnull
 									public LockOptions getLockOptions() {
 										return lockOptions;
 									}

@@ -61,6 +61,8 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 			&& isSame( identifier, other.identifier );
 	}
 
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			final var primaryKey = new PrimaryKey( getCollectionTable() );

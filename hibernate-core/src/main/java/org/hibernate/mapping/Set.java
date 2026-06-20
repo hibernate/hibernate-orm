@@ -86,6 +86,8 @@ public non-sealed class Set extends Collection {
 		}
 	}
 
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			final var collectionTable = getCollectionTable();

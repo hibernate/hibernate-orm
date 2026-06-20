@@ -63,6 +63,8 @@ public sealed abstract class IndexedCollection extends Collection permits Map, L
 			&& isSame( index, other.index );
 	}
 
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			final var primaryKey = new PrimaryKey( getCollectionTable() );

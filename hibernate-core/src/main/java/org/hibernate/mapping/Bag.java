@@ -46,6 +46,8 @@ public non-sealed class Bag extends Collection {
 		return new BagType( getRole(), getReferencedPropertyName() );
 	}
 
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
 		//create an index on the key columns??
 	}

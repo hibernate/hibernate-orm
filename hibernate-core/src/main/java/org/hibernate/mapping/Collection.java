@@ -544,6 +544,11 @@ public abstract sealed class Collection
 			&& Objects.equals( typeParameters, other.typeParameters );
 	}
 
+	/**
+	 * @deprecated Hidden key creation is being replaced by explicit boot-time
+	 * key materialization products.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	private void createForeignKeys() throws MappingException {
 		// if ( !isInverse() ) { // for inverse collections, let the "other end" handle it
 		final String entityName = getOwner().getEntityName();
@@ -560,6 +565,10 @@ public abstract sealed class Collection
 		// }
 	}
 
+	/**
+	 * @deprecated Use explicit boot-time collection key materialization instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	abstract void createPrimaryKey();
 
 	/**

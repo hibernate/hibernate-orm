@@ -78,10 +78,10 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		return registeredName;
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
 	public QueryFlushMode getQueryFlushMode() {
-		return null;
+		return QueryFlushMode.DEFAULT;
 	}
 
 	@Override
@@ -152,7 +152,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 				false,
 				null,
 				CacheMode.IGNORE,
-				null,
+				QueryFlushMode.DEFAULT,
 				false,
 				null,
 				null,

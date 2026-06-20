@@ -739,7 +739,7 @@ public abstract class QueryBinder {
 
 	private static QueryFlushMode queryFlushMode(QueryOptions options) {
 		if ( options == null || options.flush() == QueryFlushMode.DEFAULT ) {
-			return null;
+			return QueryFlushMode.DEFAULT;
 		}
 		else {
 			return options.flush();

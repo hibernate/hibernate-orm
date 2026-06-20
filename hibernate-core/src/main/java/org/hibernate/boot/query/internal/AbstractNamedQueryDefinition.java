@@ -19,7 +19,7 @@ public abstract class AbstractNamedQueryDefinition<T> implements NamedQueryDefin
 	protected final String name;
 	protected final String location;
 
-	protected final QueryFlushMode queryFlushMode;
+	protected final @Nonnull QueryFlushMode queryFlushMode;
 	protected final Timeout timeout;
 	protected final String comment;
 	protected final Map<String,Object> hints;
@@ -33,7 +33,7 @@ public abstract class AbstractNamedQueryDefinition<T> implements NamedQueryDefin
 			@Nonnull Map<String, Object> hints) {
 		this.name = name;
 		this.location = location;
-		this.queryFlushMode = queryFlushMode;
+		this.queryFlushMode = queryFlushMode == null ? QueryFlushMode.DEFAULT : queryFlushMode;
 		this.timeout = timeout;
 		this.comment = comment;
 		this.hints = hints;
@@ -45,7 +45,7 @@ public abstract class AbstractNamedQueryDefinition<T> implements NamedQueryDefin
 		return name;
 	}
 
-	@Nullable
+	@Nonnull
 	@Override
 	public QueryFlushMode getQueryFlushMode() {
 		return queryFlushMode;

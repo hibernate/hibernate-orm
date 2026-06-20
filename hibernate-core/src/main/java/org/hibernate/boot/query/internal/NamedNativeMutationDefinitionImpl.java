@@ -97,7 +97,7 @@ public class NamedNativeMutationDefinitionImpl<T>
 				target == null ? null : target.getName(),
 				annotation.statement(),
 				new HashSet<>(),
-				null,
+				QueryFlushMode.DEFAULT,
 				null,
 				null,
 				Helper.extractHints( annotation.hints() )

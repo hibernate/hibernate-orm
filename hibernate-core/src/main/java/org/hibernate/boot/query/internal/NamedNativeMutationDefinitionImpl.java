@@ -7,8 +7,8 @@ package org.hibernate.boot.query.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.NamedNativeStatement;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
-import org.hibernate.FlushMode;
 import org.hibernate.boot.query.NamedMutationDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,11 +36,11 @@ public class NamedNativeMutationDefinitionImpl<T>
 			@Nullable String location,
 			@Nonnull String sqlString,
 			@Nonnull Set<String> querySpaces,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nonnull Map<String, Object> hints) {
-		super( name, location, flushMode, timeout, comment, hints );
+		super( name, location, queryFlushMode, timeout, comment, hints );
 		this.sqlString = sqlString;
 		this.querySpaces = querySpaces;
 	}
@@ -76,7 +76,7 @@ public class NamedNativeMutationDefinitionImpl<T>
 				name,
 				sqlString,
 				null,
-				flushMode,
+				queryFlushMode,
 				timeout,
 				comment,
 				hints,

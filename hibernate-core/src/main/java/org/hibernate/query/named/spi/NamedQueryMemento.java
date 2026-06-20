@@ -6,8 +6,8 @@ package org.hibernate.query.named.spi;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.JpaReference;
 import org.hibernate.query.spi.MutationQueryImplementor;
@@ -31,7 +31,7 @@ public interface NamedQueryMemento<T> extends JpaReference {
 	String getRegistrationName();
 
 	@Nullable
-	FlushMode getFlushMode();
+	QueryFlushMode getQueryFlushMode();
 
 	@Nullable
 	Timeout getTimeout();

@@ -7,9 +7,9 @@ package org.hibernate.query.named.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -40,13 +40,13 @@ public abstract class AbstractSelectionMemento<R>
 
 	public AbstractSelectionMemento(
 			@Nonnull String name, @Nullable Class<R> queryType,
-			@Nullable FlushMode flushMode, @Nullable Timeout timeout, @Nullable String comment,
+			@Nullable QueryFlushMode queryFlushMode, @Nullable Timeout timeout, @Nullable String comment,
 			@Nullable Boolean readOnly, @Nullable Integer fetchSize, @Nullable Integer firstRow, @Nullable Integer maxRows,
 			@Nullable Boolean cacheable, @Nullable CacheMode cacheMode, @Nullable String cacheRegion,
 			@Nullable LockMode lockMode, @Nullable PessimisticLockScope lockScope, @Nullable Timeout lockTimeout,
 			@Nullable Locking.FollowOn followOnLockingStrategy,
 			@Nonnull Map<String, Object> hints) {
-		super( name, queryType, flushMode, timeout, comment, hints );
+		super( name, queryType, queryFlushMode, timeout, comment, hints );
 		this.readOnly = readOnly;
 		this.fetchSize = fetchSize;
 		this.firstRow = firstRow;

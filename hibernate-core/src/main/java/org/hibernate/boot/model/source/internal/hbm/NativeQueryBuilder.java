@@ -14,8 +14,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.interpretFlushMode;
-
 /**
  * @author Steve Ebersole
  */
@@ -61,7 +59,7 @@ class NativeQueryBuilder<E> extends AbstractNamedQueryBuilder<E, NativeQueryBuil
 				sqlString,
 				getResultClass(),
 				resultSetMappingName,
-				interpretFlushMode( flushMode ),
+				flushMode,
 				getTimeout(),
 				getComment(),
 				getReadOnly(),

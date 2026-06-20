@@ -5,9 +5,9 @@
 package org.hibernate.boot.query;
 
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.JpaReference;
@@ -42,9 +42,8 @@ public interface NamedQueryDefinition<T> extends JpaReference {
 		return getRegistrationName();
 	}
 
-	// TODO: change this to use QueryFlushMode
 	@Nullable
-	FlushMode getQueryFlushMode();
+	QueryFlushMode getQueryFlushMode();
 
 	@Nullable
 	Timeout getTimeout();

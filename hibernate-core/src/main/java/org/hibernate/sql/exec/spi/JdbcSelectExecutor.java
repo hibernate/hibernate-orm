@@ -264,11 +264,13 @@ public interface JdbcSelectExecutor {
 			}
 
 			@Override
+			@Nonnull
 			public QueryOptions getQueryOptions() {
 				return this;
 			}
 
 			@Override
+			@Nullable
 			public Timeout getTimeout() {
 				return timeout;
 			}
@@ -280,81 +282,97 @@ public interface JdbcSelectExecutor {
 			}
 
 			@Override
+			@Nullable
 			public Boolean isReadOnly() {
 				return readOnly;
 			}
 
 			@Override
+			@Nullable
 			public AppliedGraph getAppliedGraph() {
 				return appliedGraph;
 			}
 
 			@Override
+			@Nullable
 			public TupleTransformer<?> getTupleTransformer() {
 				return tupleTransformer;
 			}
 
 			@Override
+			@Nullable
 			public ResultListTransformer<?> getResultListTransformer() {
 				return resultListTransformer;
 			}
 
 			@Override
+			@Nullable
 			public Boolean isResultCachingEnabled() {
 				return resultCachingEnabled;
 			}
 
 			@Override
+			@Nullable
 			public Boolean getQueryPlanCachingEnabled() {
 				return null;
 			}
 
 			@Override
+			@Nullable
 			public CacheRetrieveMode getCacheRetrieveMode() {
 				return cacheRetrieveMode;
 			}
 
 			@Override
+			@Nullable
 			public CacheStoreMode getCacheStoreMode() {
 				return cacheStoreMode;
 			}
 
 			@Override
+			@Nullable
 			public String getResultCacheRegionName() {
 				return resultCacheRegionName;
 			}
 
 			@Override
+			@Nonnull
 			public LockOptions getLockOptions() {
 				return lockOptions;
 			}
 
 			@Override
+			@Nullable
 			public String getComment() {
 				return comment;
 			}
 
 			@Override
+			@Nonnull
 			public List<String> getDatabaseHints() {
 				return databaseHints;
 			}
 
 			@Override
+			@Nullable
 			public Integer getFetchSize() {
 				return fetchSize;
 			}
 
 			@Override
+			@Nonnull
 			public Limit getLimit() {
 				return limit;
 			}
 
 			@Override
+			@Nullable
 			public Boolean isLimitInMemoryEnabled() {
 				return limitInMemoryEnabled;
 			}
 
 			@Override
+			@Nonnull
 			public Limit peekOriginalLimit() {
 				return originalLimit;
 			}
@@ -375,23 +393,26 @@ public interface JdbcSelectExecutor {
 			}
 
 			@Override
+			@Nullable
 			public Set<String> getEnabledFetchProfiles() {
 				return null;
 			}
 
 			@Override
+			@Nullable
 			public Set<String> getDisabledFetchProfiles() {
 				return null;
 			}
 		}
 
-		final QueryOptions options = context.getQueryOptions();
+		final var options = context.getQueryOptions();
+		final Boolean optionsReadOnly = options.isReadOnly();
 		return new ScrollableExecutionContext(
 				options.getTimeout(),
 				options.getQueryFlushMode(),
-				options.isReadOnly() == null
-					? context.getSession().getPersistenceContext().isDefaultReadOnly()
-					: options.isReadOnly(),
+				optionsReadOnly == null
+						? context.getSession().getPersistenceContext().isDefaultReadOnly()
+						: optionsReadOnly,
 				options.getAppliedGraph(),
 				options.getTupleTransformer(),
 				options.getResultListTransformer(),

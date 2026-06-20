@@ -6,6 +6,7 @@ package org.hibernate.loader.ast.internal;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -137,6 +138,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
 						.translate( jdbcParameterBindings, new QueryOptionsAdapter() {
 							@Override
+							@Nonnull
 							public LockOptions getLockOptions() {
 								return lockOptions;
 							}

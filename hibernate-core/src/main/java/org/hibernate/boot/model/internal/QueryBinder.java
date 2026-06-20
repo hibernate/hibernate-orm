@@ -25,7 +25,6 @@ import jakarta.persistence.query.NativeQuery;
 import jakarta.persistence.query.QueryOptions;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.SQLSelect;
@@ -738,12 +737,12 @@ public abstract class QueryBinder {
 		return classDetails.getName() + "#" + methodDetails.getName();
 	}
 
-	private static FlushMode queryFlushMode(QueryOptions options) {
+	private static QueryFlushMode queryFlushMode(QueryOptions options) {
 		if ( options == null || options.flush() == QueryFlushMode.DEFAULT ) {
 			return null;
 		}
 		else {
-			return options.flush() == QueryFlushMode.FLUSH ? FlushMode.ALWAYS : FlushMode.MANUAL;
+			return options.flush();
 		}
 	}
 

@@ -4,13 +4,14 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
@@ -34,7 +35,7 @@ import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
 public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Valid for all query types
-	private FlushMode flushMode;
+	private QueryFlushMode queryFlushMode = QueryFlushMode.DEFAULT;
 	private Timeout timeout;
 	private String comment;
 	private List<String> databaseHints;
@@ -74,7 +75,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	 * @see #makeCopy()
 	 */
 	public QueryOptionsImpl(QueryOptionsImpl original) {
-		this.flushMode = original.flushMode;
+		this.queryFlushMode = original.queryFlushMode;
 		this.timeout = original.timeout;
 		this.comment = original.comment;
 		this.databaseHints = copy( original.databaseHints );
@@ -128,13 +129,14 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public FlushMode getFlushMode() {
-		return flushMode;
+	@Nonnull
+	public QueryFlushMode getQueryFlushMode() {
+		return queryFlushMode;
 	}
 
 	@Override
-	public void setFlushMode(FlushMode flushMode) {
-		this.flushMode = flushMode;
+	public void setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
+		this.queryFlushMode = queryFlushMode == null ? QueryFlushMode.DEFAULT : queryFlushMode;
 	}
 
 	@Override

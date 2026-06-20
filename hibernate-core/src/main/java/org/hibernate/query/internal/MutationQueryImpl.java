@@ -22,7 +22,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.util.OptionsHelper;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -929,7 +928,7 @@ public class MutationQueryImpl<T>
 					name,
 					targetType,
 					sqm,
-					FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() ),
+					queryOptions.getQueryFlushMode(),
 					queryOptions.getTimeout(),
 					getComment(),
 					Map.of()
@@ -941,7 +940,7 @@ public class MutationQueryImpl<T>
 					hql,
 					targetType,
 					Map.of(),
-					FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() ),
+					queryOptions.getQueryFlushMode(),
 					queryOptions.getTimeout(),
 					getComment(),
 					Map.of()

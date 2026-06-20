@@ -18,7 +18,6 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
@@ -27,7 +26,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import jakarta.persistence.QueryFlushMode;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.Query;
@@ -53,7 +51,6 @@ import java.util.stream.StreamSupport;
 import static java.util.Optional.ofNullable;
 import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterators.spliteratorUnknownSize;
-import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushMode;
 
 /// Base support for [QueryImplementor] implementors.
 ///
@@ -294,18 +291,14 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override
 	@Nonnull
 	public QueryFlushMode getQueryFlushMode() {
-		return queryFlushModeFromFlushMode( getQueryOptions().getFlushMode() );
+		return getQueryOptions().getQueryFlushMode();
 	}
 
 	@Override
 	@Nonnull
 	public QueryImplementor<T> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
-		getQueryOptions().setFlushMode( interpretQueryFlushMode(queryFlushMode) );
+		getQueryOptions().setQueryFlushMode( queryFlushMode );
 		return this;
-	}
-
-	protected FlushMode interpretQueryFlushMode(QueryFlushMode queryFlushMode) {
-		return FlushModeTypeHelper.getFlushMode(queryFlushMode);
 	}
 
 	@Override

@@ -7,6 +7,7 @@ package org.hibernate.sql.results.jdbc.internal;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EnumType;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
@@ -144,6 +145,7 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 		return javaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
+					@Nonnull
 					public TypeConfiguration getTypeConfiguration() {
 						return typeConfiguration;
 					}

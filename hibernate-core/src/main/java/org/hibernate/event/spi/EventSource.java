@@ -28,6 +28,7 @@ public interface EventSource extends SessionImplementor {
 	 * Instantiate an entity instance, using either an interceptor,
 	 * or the given persister
 	 */
+	@Nonnull
 	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException;
 
 	/**
@@ -41,11 +42,11 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Force an immediate flush
 	 */
-	void forceFlush(EntityEntry e) throws HibernateException;
+	void forceFlush(@Nonnull EntityEntry e) throws HibernateException;
 	/**
 	 * Force an immediate flush
 	 */
-	void forceFlush(EntityKey e) throws HibernateException;
+	void forceFlush(@Nonnull EntityKey e) throws HibernateException;
 
 	/**
 	 * Cascade merge an entity instance

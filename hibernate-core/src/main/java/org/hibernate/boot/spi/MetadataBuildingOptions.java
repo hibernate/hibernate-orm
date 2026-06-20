@@ -6,6 +6,7 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -50,6 +51,7 @@ public interface MetadataBuildingOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE
 	 * @see org.hibernate.dialect.Dialect#getTimeZoneSupport()
 	 */
+	@Nonnull
 	TimeZoneStorageStrategy getDefaultTimeZoneStorage();
 
 	/**

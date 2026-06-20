@@ -63,7 +63,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 	private static final String CREATE_TABLE = "CREATE TABLE application_configurations (id BIGSERIAL NOT NULL PRIMARY KEY)";
 
 	@Override
-	protected void addConfigOptions(Map settings) {
+	protected void addConfigOptions(Map<String, Object> settings) {
 		triggerable.reset();
 		assertThat( triggerable.wasTriggered() ).isFalse();
 

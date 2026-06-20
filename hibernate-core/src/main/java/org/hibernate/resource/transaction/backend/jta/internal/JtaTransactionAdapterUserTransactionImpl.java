@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.UserTransaction;
 
@@ -24,7 +25,7 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 
 	private boolean initiator;
 
-	public JtaTransactionAdapterUserTransactionImpl(UserTransaction userTransaction) {
+	public JtaTransactionAdapterUserTransactionImpl(@Nonnull UserTransaction userTransaction) {
 		this.userTransaction = userTransaction;
 	}
 
@@ -83,9 +84,10 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	}
 
 	@Override
+	@Nonnull
 	public TransactionStatus getStatus() {
 		try {
-			final TransactionStatus status = StatusTranslator.translate( userTransaction.getStatus() );
+			final var status = StatusTranslator.translate( userTransaction.getStatus() );
 			if ( status == null ) {
 				throw new TransactionException( "UserTransaction reported transaction status as unknown" );
 			}

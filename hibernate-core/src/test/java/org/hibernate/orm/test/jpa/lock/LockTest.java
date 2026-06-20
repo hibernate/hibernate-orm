@@ -76,7 +76,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	private static final Logger log = Logger.getLogger( LockTest.class );
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		super.addConfigOptions( options );
 		if ( getDialect() instanceof InformixDialect ) {
 			options.put( AvailableSettings.ISOLATION,

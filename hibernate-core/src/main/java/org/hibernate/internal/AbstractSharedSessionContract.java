@@ -218,6 +218,7 @@ abstract class AbstractSharedSessionContract
 	private final boolean isTransactionCoordinatorShared;
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 
+	@Nonnull
 	private final Interceptor interceptor;
 
 	private final Object tenantIdentifier;
@@ -432,7 +433,7 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * Create a FindByKeyOperation to be used for {@code find()} and {@code get()} handling.
 	 *
-	 * @param entityClass
+	 * @param entityClass Thg entity class being loaded.
 	 * @param entityDescriptor The entity type being loaded.
 	 * @param options Any options to apply.
 	 */
@@ -444,7 +445,7 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * Create a FindByKeyOperation to be used for {@code find()} and {@code get()} handling.
 	 *
-	 * @param entityClass
+	 * @param entityClass The entity class being loaded.
 	 * @param entityDescriptor The entity type being loaded.
 	 * @param graphSemantic Semantic of the supplied {@code rootGraph}.
 	 * @param rootGraph The EntityGraph to apply to the load.
@@ -915,6 +916,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final Interceptor getInterceptor() {
 		return interceptor;
 	}
@@ -926,11 +928,13 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final TransactionCoordinator getTransactionCoordinator() {
 		return transactionCoordinator;
 	}
 
 	@Override
+	@Nonnull
 	public final JdbcSessionContext getJdbcSessionContext() {
 		return jdbcSessionContext;
 	}
@@ -1390,6 +1394,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level Javadoc for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
@@ -1442,7 +1447,8 @@ abstract class AbstractSharedSessionContract
 	private transient String initialSchema;
 
 	@Override
-	public void afterObtainConnection(Connection connection) throws SQLException {
+	public void afterObtainConnection(@Nonnull Connection connection)
+			throws SQLException {
 		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
 			initialSchema = connection.getSchema();
 			connection.setSchema( tenantSchema() );
@@ -1454,7 +1460,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public void beforeReleaseConnection(Connection connection) throws SQLException {
+	public void beforeReleaseConnection(@Nonnull Connection connection)
+			throws SQLException {
 		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
 			connection.setSchema( initialSchema );
 		}
@@ -1477,7 +1484,8 @@ abstract class AbstractSharedSessionContract
 	@Nonnull
 	public EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister persister) {
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
-		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
+		return temporalId != null
+			&& temporalId != AuditLog.ALL_CHANGESETS
 				? new TemporalEntityKey( id, persister, temporalId )
 				: new EntityKey( id, persister );
 	}
@@ -1486,7 +1494,8 @@ abstract class AbstractSharedSessionContract
 	@Nonnull
 	public CollectionKey generateCollectionKey(@Nonnull CollectionPersister persister, @Nonnull Object key) {
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
-		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
+		return temporalId != null
+			&& temporalId != AuditLog.ALL_CHANGESETS
 				? new TemporalCollectionKey( persister, key, temporalId )
 				: new CollectionKey( persister, key );
 	}
@@ -1513,6 +1522,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public LobCreator getLobCreator() {
 		return jdbcServices.getLobCreator( this );
 	}
@@ -2445,6 +2455,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public EventMonitor getEventMonitor() {
 		return factory.eventMonitor;
 	}
@@ -2488,11 +2499,13 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getXmlFormatMapper() {
 		return factoryOptions.getXmlFormatMapper();
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getJsonFormatMapper() {
 		return factoryOptions.getJsonFormatMapper();
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
@@ -97,6 +98,7 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	}
 
 	@Override
+	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return delegate.getDefaultTimeZoneStorageStrategy();
 	}
@@ -128,6 +130,7 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	}
 
 	@Override
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
 	}

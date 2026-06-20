@@ -6,6 +6,9 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.transaction.Status;
 
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -39,18 +42,19 @@ import static org.hibernate.resource.transaction.spi.TransactionStatus.NOT_ACTIV
  */
 public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, SynchronizationCallbackTarget {
 
-	private final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	private final TransactionCoordinatorOwner transactionCoordinatorOwner;
-	private final JtaPlatform jtaPlatform;
+	private final @Nonnull TransactionCoordinatorBuilder transactionCoordinatorBuilder;
+	private final @Nonnull TransactionCoordinatorOwner transactionCoordinatorOwner;
+	private final @Nonnull JtaPlatform jtaPlatform;
 	private final boolean autoJoinTransactions;
 	private final boolean preferUserTransactions;
 	private final boolean performJtaThreadTracking;
 
 	private boolean synchronizationRegistered;
-	private SynchronizationCallbackCoordinator callbackCoordinator;
-	private TransactionDriverControlImpl physicalTransactionDelegate;
+	private @Nullable SynchronizationCallbackCoordinator callbackCoordinator;
+	private @Nullable TransactionDriverControlImpl physicalTransactionDelegate;
 
-	private final SynchronizationRegistryStandardImpl synchronizationRegistry = new SynchronizationRegistryStandardImpl();
+	private final SynchronizationRegistryStandardImpl synchronizationRegistry =
+			new SynchronizationRegistryStandardImpl();
 
 	private int timeOut = -1;
 
@@ -64,10 +68,10 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 * @param autoJoinTransactions Should JTA transactions be auto-joined?  Or should we wait for explicit join calls?
 	 */
 	JtaTransactionCoordinatorImpl(
-			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
-			TransactionCoordinatorOwner owner,
+			@Nonnull TransactionCoordinatorBuilder transactionCoordinatorBuilder,
+			@Nonnull TransactionCoordinatorOwner owner,
 			boolean autoJoinTransactions,
-			JtaPlatform jtaPlatform) {
+			@Nonnull JtaPlatform jtaPlatform) {
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
@@ -83,13 +87,13 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	public JtaTransactionCoordinatorImpl(
-			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
-			TransactionCoordinatorOwner owner,
+			@Nonnull TransactionCoordinatorBuilder transactionCoordinatorBuilder,
+			@Nonnull TransactionCoordinatorOwner owner,
 			boolean autoJoinTransactions,
-			JtaPlatform jtaPlatform,
+			@Nonnull JtaPlatform jtaPlatform,
 			boolean preferUserTransactions,
 			boolean performJtaThreadTracking,
-			TransactionObserver... observers) {
+			@Nullable TransactionObserver... observers) {
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.transactionCoordinatorOwner = owner;
 		this.autoJoinTransactions = autoJoinTransactions;
@@ -114,10 +118,12 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 *
 	 * @return TransactionObserver
 	 */
+	@Nonnull
 	private Iterable<TransactionObserver> observers() {
 		return observers == null ? emptyList() : new ArrayList<>( observers );
 	}
 
+	@Nonnull
 	public SynchronizationCallbackCoordinator getSynchronizationCallbackCoordinator() {
 		if ( callbackCoordinator == null ) {
 			callbackCoordinator = performJtaThreadTracking
@@ -187,16 +193,19 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		return synchronizationRegistered;
 	}
 
+	@Nonnull
 	public TransactionCoordinatorOwner getTransactionCoordinatorOwner(){
 		return transactionCoordinatorOwner;
 	}
 
 	@Override
+	@Nonnull
 	public JpaCompliance getJpaCompliance() {
 		return transactionCoordinatorOwner.getJdbcSessionOwner().getJdbcSessionContext().getJpaCompliance();
 	}
 
 	@Override
+	@Nonnull
 	public TransactionDriver getTransactionDriverControl() {
 		if ( physicalTransactionDelegate == null ) {
 			physicalTransactionDelegate = makePhysicalTransactionDelegate();
@@ -204,6 +213,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		return physicalTransactionDelegate;
 	}
 
+	@Nonnull
 	private TransactionDriverControlImpl makePhysicalTransactionDelegate() {
 		final var adapter =
 				preferUserTransactions
@@ -219,24 +229,31 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 	}
 
+	@Nullable
 	private JtaTransactionAdapter getTransactionAdapterPreferringTransactionManager() {
 		final var adapter = makeTransactionManagerAdapter();
 		if ( adapter == null ) {
 			JTA_LOGGER.unableToAccessTransactionManagerTryingUserTransaction();
 			return makeUserTransactionAdapter();
 		}
-		return adapter;
+		else {
+			return adapter;
+		}
 	}
 
+	@Nullable
 	private JtaTransactionAdapter getTransactionAdapterPreferringUserTransaction() {
 		final var adapter = makeUserTransactionAdapter();
 		if ( adapter == null ) {
 			JTA_LOGGER.unableToAccessUserTransactionTryingTransactionManager();
 			return makeTransactionManagerAdapter();
 		}
-		return adapter;
+		else {
+			return adapter;
+		}
 	}
 
+	@Nullable
 	private JtaTransactionAdapter makeUserTransactionAdapter() {
 		try {
 			final var userTransaction = jtaPlatform.retrieveUserTransaction();
@@ -254,6 +271,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 	}
 
+	@Nullable
 	private JtaTransactionAdapter makeTransactionManagerAdapter() {
 		try {
 			final var transactionManager = jtaPlatform.retrieveTransactionManager();
@@ -272,6 +290,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	@Override
+	@Nonnull
 	public SynchronizationRegistry getLocalSynchronizations() {
 		return synchronizationRegistry;
 	}
@@ -286,11 +305,14 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	@Override
+	@Nonnull
 	public IsolationDelegate createIsolationDelegate() {
-		return new JtaIsolationDelegate( transactionCoordinatorOwner, jtaPlatform.retrieveTransactionManager() );
+		return new JtaIsolationDelegate( transactionCoordinatorOwner,
+				jtaPlatform.retrieveTransactionManager() );
 	}
 
 	@Override
+	@Nonnull
 	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
 		return transactionCoordinatorBuilder;
 	}
@@ -354,7 +376,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 	}
 
-	public void addObserver(TransactionObserver observer) {
+	public void addObserver(@Nonnull TransactionObserver observer) {
 		if ( observers == null ) {
 			observers = new ArrayList<>( 3 ); //These lists are typically very small.
 		}
@@ -362,7 +384,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	}
 
 	@Override
-	public void removeObserver(TransactionObserver observer) {
+	public void removeObserver(@Nonnull TransactionObserver observer) {
 		if ( observers != null ) {
 			observers.remove( observer );
 		}
@@ -374,10 +396,10 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	 * TransactionCoordinator for the purpose of driving the underlying JTA transaction.
 	 */
 	public class TransactionDriverControlImpl implements TransactionDriver {
-		private final JtaTransactionAdapter jtaTransactionAdapter;
+		private final @Nonnull JtaTransactionAdapter jtaTransactionAdapter;
 		private boolean invalid;
 
-		public TransactionDriverControlImpl(JtaTransactionAdapter jtaTransactionAdapter) {
+		public TransactionDriverControlImpl(@Nonnull JtaTransactionAdapter jtaTransactionAdapter) {
 			this.jtaTransactionAdapter = jtaTransactionAdapter;
 		}
 
@@ -416,6 +438,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		}
 
 		@Override
+		@Nonnull
 		public TransactionStatus getStatus() {
 			return jtaTransactionAdapter.getStatus();
 		}

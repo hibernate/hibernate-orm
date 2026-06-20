@@ -37,7 +37,7 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends EntityMana
 	private SQLStatementInspector sqlStatementInspector;
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		sqlStatementInspector = new SQLStatementInspector();
 		options.put( AvailableSettings.STATEMENT_INSPECTOR, sqlStatementInspector );
 		options.put( AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, Boolean.FALSE );

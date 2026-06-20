@@ -265,11 +265,13 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public TemporalTableStrategy getTemporalTableStrategy() {
 		return TemporalTableStrategy.SINGLE_TABLE;
 	}
 
 	@Override
+	@Nonnull
 	public AuditStrategy getAuditStrategy() {
 		return AuditStrategy.DEFAULT;
 	}
@@ -445,6 +447,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
 		return new DefaultCustomEntityDirtinessStrategy();
 	}
@@ -609,11 +612,13 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
 		return NO_OBSERVERS;
 	}
 
 	@Override
+	@Nonnull
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return NO_RESOLVERS;
 	}
@@ -630,6 +635,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return ImmutableEntityUpdateQueryHandlingMode.ALLOW;
 	}
@@ -855,6 +861,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return TimeZoneStorageStrategy.NATIVE;
 	}

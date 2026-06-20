@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
@@ -29,6 +30,7 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	public static final TransactionCoordinatorBuilder INSTANCE = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
 
 	@Override
+	@Nonnull
 	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
 		if ( owner instanceof JdbcResourceTransactionAccess transactionAccess ) {
 			return new JdbcResourceLocalTransactionCoordinatorImpl(
@@ -49,11 +51,13 @@ public class JdbcResourceLocalTransactionCoordinatorBuilderImpl implements Trans
 	}
 
 	@Override
+	@Nonnull
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
 		return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 	}
 
 	@Override
+	@Nonnull
 	public DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
 		return new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.transaction.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.transaction.Synchronization;
 import jakarta.annotation.Nullable;
 
@@ -22,15 +23,17 @@ import static org.hibernate.resource.transaction.spi.TransactionCoordinator.Tran
  */
 public class TransactionImpl implements Transaction {
 
+	@Nonnull
 	private final TransactionCoordinator transactionCoordinator;
 	private final boolean jpaCompliance;
 	private final SharedSessionContractImplementor session;
 
-	private @Nullable TransactionDriver transactionDriverControl;
+	@Nullable
+	private TransactionDriver transactionDriverControl;
 
 	public TransactionImpl(
-			TransactionCoordinator transactionCoordinator,
-			SharedSessionContractImplementor session) {
+			@Nonnull TransactionCoordinator transactionCoordinator,
+			@Nonnull SharedSessionContractImplementor session) {
 		this.transactionCoordinator = transactionCoordinator;
 		this.session = session;
 
@@ -94,6 +97,7 @@ public class TransactionImpl implements Transaction {
 		}
 	}
 
+	@Nonnull
 	public TransactionDriver internalGetTransactionDriverControl() {
 		// NOTE here to help be a more descriptive NullPointerException
 		if ( transactionDriverControl == null ) {
@@ -139,6 +143,7 @@ public class TransactionImpl implements Transaction {
 	}
 
 	@Override
+	@Nonnull
 	public TransactionStatus getStatus() {
 		if ( transactionDriverControl == null ) {
 			if ( session.isOpen() ) {
@@ -153,7 +158,7 @@ public class TransactionImpl implements Transaction {
 	}
 
 	@Override
-	public void registerSynchronization(Synchronization synchronization) {
+	public void registerSynchronization(@Nonnull Synchronization synchronization) {
 		transactionCoordinator.getLocalSynchronizations()
 				.registerSynchronization( synchronization );
 	}
@@ -169,7 +174,8 @@ public class TransactionImpl implements Transaction {
 	}
 
 	@Override
-	public @Nullable Integer getTimeout() {
+	@Nullable
+	public Integer getTimeout() {
 		final int timeout = transactionCoordinator.getTimeOut();
 		return timeout == -1 ? null : timeout;
 	}

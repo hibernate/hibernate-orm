@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jdbc.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
@@ -27,6 +28,7 @@ public interface JdbcResourceTransaction {
 	 */
 	void rollback();
 
+	@Nonnull
 	TransactionStatus getStatus();
 
 	/**

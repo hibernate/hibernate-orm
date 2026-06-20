@@ -4,6 +4,7 @@
  */
 package org.hibernate.testing.jta;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -14,8 +15,9 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
  */
 public class TestingJtaTransactionCoordinatorBuilder implements TransactionCoordinatorBuilder {
 	@Override
+	@Nonnull
 	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -24,7 +26,8 @@ public class TestingJtaTransactionCoordinatorBuilder implements TransactionCoord
 	}
 
 	@Override
+	@Nonnull
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 }

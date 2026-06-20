@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -414,6 +415,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryUuid;
 
 		@Override
+		@Nonnull
 		public TypeConfiguration getTypeConfiguration() {
 			return typeConfiguration;
 		}
@@ -433,6 +435,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		@Override
+		@Nonnull
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 			return sessionFactory == null
 					? metadataBuildingContext.getBuildingOptions().getDefaultTimeZoneStorage()

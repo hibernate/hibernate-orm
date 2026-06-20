@@ -146,11 +146,14 @@ This replaces the current ad hoc categorization work in `MetadataBuildingProcess
 
 == Binding
 
-Binding should consume categorized metadata and resolved bootstrap context:
+Binding should consume categorized metadata and resolved bootstrap context,
+record binding products, and drive explicit materialization:
 
 [source]
 ----
-CategorizedDomainModel + settings/defaults/global registrations -> ORM mapping model
+CategorizedDomainModel + settings/defaults/global registrations
+        -> binding products / pending work / views
+        -> materialized ORM mapping model
 ----
 
 Binding should not need raw `MetadataSources` or raw `ManagedResources`.

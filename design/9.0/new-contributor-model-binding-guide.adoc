@@ -2,7 +2,7 @@
 :toc:
 
 This guide explains the prototype boot flow from source collection through
-`org.hibernate.mapping` binding.
+binding-model population and `org.hibernate.mapping` materialization.
 
 The goal is to give new contributors a mental model before they start changing
 annotation, XML, categorization, or binding code.
@@ -16,8 +16,9 @@ This guide assumes you are familiar with:
 * The idea that Hibernate needs to process your domain classes and turn them into
 an internal model before it can generate SQL.  This is the "boot" process.
 * `org.hibernate.mapping` is Hibernate's internal boot-time representation of your
-domain model: tables, columns, joins, and foreign keys.  It is not the runtime
-metamodel; it exists during startup to build the SessionFactory.
+domain model: tables, columns, joins, and foreign keys.  In the ORM 9 pipeline it
+is the materialization target, not the semantic binding model itself.  It is not
+the runtime metamodel; it exists during startup to build the SessionFactory.
 
 If any of these are unfamiliar, start with the Hibernate ORM documentation on
 bootstrapping and the JPA specification chapter on metadata.
@@ -44,6 +45,12 @@ CategorizedDomainModel
 BindingCoordinator.coordinateBinding(...)
         |
         v
+BindingState / binding products / pending work
+        |
+        v
+materializers
+        |
+        v
 org.hibernate.mapping
 ----
 
@@ -60,8 +67,11 @@ answers: "After interpreting that source material, what persistent types,
 attributes, hierarchies, and global registrations does binding need?"
 
 link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
-answers: "How do we turn that categorized model into Hibernate's boot-time
-mapping model in a dependency-safe order?"
+answers: "How do we turn that categorized model into ordered binding facts,
+pending work, and materialization requests in a dependency-safe order?"
+
+Materializers answer: "Given finalized binding facts or resolved products, how
+do we create or mutate Hibernate's boot-time `org.hibernate.mapping` objects?"
 
 The categorizer should be the last place that works with raw source material
 (classes, package metadata, XML documents, global annotations).  Later binding
@@ -88,12 +98,15 @@ link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi
 now contains one entity hierarchy, zero mapped superclasses, and zero
 embeddables.
 5. link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
-walks that hierarchy, creates a `PersistentClass` mapping object for `Customer`,
-and runs through the binding phases to fill in tables, identifiers, attributes,
-and foreign keys.
+walks that hierarchy and records the ordered binding facts needed for tables,
+identifiers, attributes, and constraints.
+6. Materializers consume those binding facts and resolved products, creating or
+mutating the `PersistentClass`, `Table`, `Property`, `Value`, `PrimaryKey`,
+`ForeignKey`, `UniqueKey`, and `Index` objects needed by the rest of boot.
 
-At the end, `org.hibernate.mapping` contains everything Hibernate needs to
-generate the `customer` table DDL and build the runtime SessionFactory.
+At the end, `org.hibernate.mapping` contains the materialized boot mapping model
+Hibernate needs to generate the `customer` table DDL and build the runtime
+SessionFactory.
 ====
 
 
@@ -117,7 +130,13 @@ generate the `customer` table DDL and build the runtime SessionFactory.
 | Internal mapping context contracts and state shared by pipeline phases
 
 | link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/package-info.java[`o.h.boot.mapping.internal.binders`]
-| Type and attribute binders, including binding phases
+| Type and attribute binders, including binding phases.  Binders should record
+semantic facts, value shapes, and pending work; they should avoid owning physical
+constraint/index creation directly.
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/materialize/package-info.java[`o.h.boot.mapping.internal.materialize`]
+| Materializers that consume finalized binding facts or resolved products and
+create or mutate `org.hibernate.mapping` objects.
 
 | link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/package-info.java[`o.h.boot.mapping.internal.sources`]
 | Source descriptors that normalize annotation/XML facts for binders
@@ -342,8 +361,10 @@ as a service locator.
 
 == BindingCoordinator
 
-`BindingCoordinator` takes the categorized model and produces Hibernate's
-boot-time `org.hibernate.mapping` model.
+`BindingCoordinator` takes the categorized model and coordinates binding phases.
+The phases populate binding state, create transitional mapping shells where the
+current compatibility model still requires them, and schedule or invoke explicit
+materializers for mapping-object population.
 
 Touchpoint:
 
@@ -357,8 +378,9 @@ Touchpoint:
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingContext.java[`BindingContext`]
 
 The categorized model describes what should be bound.  The binding state is the
-mutable place where produced mapping objects and pending bindings are recorded.
-Options and context provide boot-time services and configuration.
+mutable place where semantic binding products, compatibility mapping shells, and
+pending bindings are recorded.  Options and context provide boot-time services
+and configuration.
 
 
 == Binding Steps
@@ -369,9 +391,12 @@ Options and context provide boot-time services and configuration.
 2. `coordinateModelBindings()`
 
 Global bindings apply persistence-unit scoped registrations to the metadata
-collector.  Model bindings create and fill the `org.hibernate.mapping` structures
-for entity hierarchies, mapped superclasses, attributes, collections, joins,
-association targets, and foreign keys.
+collector.  Model bindings record type/member/table/value facts, create
+transitional compatibility shells where needed, and call named materializers for
+the parts of `org.hibernate.mapping` that are now phase-owned products.  Primary
+keys, dependent table keys, collection-table keys, foreign keys, unique keys,
+and indexes are examples of work that should flow through explicit
+materialization products instead of hidden side effects on mapping values.
 
 The current global binding step processes:
 
@@ -411,10 +436,12 @@ Touchpoints:
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ModelBinders.java[`ModelBinders`]
 
 While each binder is created, the coordinator immediately calls
-`bindTypeSkeleton()`.  The skeleton is a partially filled mapping object with
-just enough structure for other binders to reference it.  It lets later types
-resolve already-created binders and mapping shells without relying on global
-metadata lookups.
+`bindTypeSkeleton()`.  The skeleton is a compatibility anchor with just enough
+identity and table/type structure for other binders to reference it.  In the
+current transition this may still include partially populated
+`org.hibernate.mapping` objects, but new binding contracts should treat those as
+materialization targets or lookup anchors, not as the place where semantic facts
+are rediscovered.
 
 
 == Binding Phases
@@ -422,11 +449,12 @@ metadata lookups.
 After binder creation, the coordinator runs a fixed sequence of narrow phase
 contracts.
 
-The phases exist because mapping objects have circular dependencies.  For
-example, a foreign key cannot be created until both sides of an association have
-tables and columns.  Rather than using callbacks or lazy resolution, the
-coordinator runs a fixed sequence of narrow phases.  Each phase can assume that
-all prior phases have completed for all types in all hierarchies.
+The phases exist because binding facts and materialized mapping objects have
+circular dependencies.  For example, a foreign key cannot be materialized until
+both sides of an association have tables and columns.  Rather than using
+callbacks or lazy resolution, the coordinator runs a fixed sequence of narrow
+phases.  Each phase can assume that all prior phases have completed for all
+types in all hierarchies.
 
 The phase contracts live here:
 
@@ -467,13 +495,13 @@ The order is:
 | Resolve `@MapsId` associations after owner identifiers and association values exist.
 
 | `TableKeys`
-| Create dependent table keys for joined subclasses, secondary tables, and collection/association tables.
+| Resolve and materialize dependent table keys for joined subclasses, secondary tables, and collection/association tables.
 
 | `InverseAssociations`
 | Copy or reconcile owning-side state for `mappedBy` associations.
 
 | `ForeignKeys`
-| Create and customize physical foreign-key constraints after values, table keys, and inverse structures are available.
+| Resolve and materialize physical foreign-key constraints after values, table keys, and inverse structures are available.
 |===
 
 Binders implement only the phases they participate in.  The coordinator checks
@@ -507,17 +535,17 @@ register typed pending binding
 later phase consumes pending binding
         |
         v
-mapping object becomes complete
+resolved product is materialized into org.hibernate.mapping
 ----
 
 If a new feature cannot be completed in the member phase because another type,
 table, identifier, or association is not ready yet, add typed pending state and
 consume it in the phase where the dependency is guaranteed to exist.
 
-After binding completes, `org.hibernate.mapping` contains a full description of
-every table, column, identifier, association, and constraint in the persistence
-unit.  The SessionFactory builder consumes these mapping objects to produce the
-runtime metamodel and SQL generators, then discards them.
+After binding and materialization complete, `org.hibernate.mapping` contains a
+full description of every table, column, identifier, association, and constraint
+in the persistence unit.  The SessionFactory builder consumes these mapping
+objects to produce the runtime metamodel and SQL generators, then discards them.
 
 
 == Source Descriptors
@@ -564,18 +592,22 @@ A useful workflow:
 1. Identify where the source fact should be categorized.
 2. Add or extend a source descriptor if the binder needs normalized annotation or
    XML facts.
-3. Bind the earliest mapping structure in the earliest safe phase.
+3. Record the earliest binding fact or compatibility shell in the earliest safe
+   phase.
 4. If anything depends on later state, register typed pending state in
    link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingState.java[`BindingState`].
 5. Resolve the pending state in the narrowest phase that has the dependency
    available.
-6. Add focused tests for both the produced mapping object and the phase-ordering
+6. Materialize mapping objects through an existing materializer, or add a narrow
+   resolved product plus materializer when the work creates physical mapping
+   artifacts such as keys, constraints, indexes, or compatibility values.
+7. Add focused tests for both the produced mapping object and the phase-ordering
    edge case.
 
 Useful questions:
 
 * Does binding need this information before any `org.hibernate.mapping` object
-  exists?
+  exists, or can it be carried as a binding product until materialization?
 * Is this a global declaration, or is it tied to one managed type/member?
 * Does XML need to override annotations, replace annotations, or simply add more
   source facts?
@@ -583,6 +615,9 @@ Useful questions:
   re-read raw annotations?
 * Is an ordering problem better modeled as a narrow phase or typed pending
   binding?
+* Is this code creating a physical table artifact?  If so, should it use a
+  resolved product and a materializer instead of mutating a `Value`, `Table`, or
+  `Collection` opportunistically?
 
 Prefer adding a categorized contract over making the binder search the source
 model opportunistically.
@@ -625,7 +660,18 @@ belongs after table keys, association targets, derived identifiers, and inverse
 associations have done their work.
 
 *Do instead:* record the FK requirement as pending state and create the physical
-foreign key in the `ForeignKeys` phase.
+foreign key in the `ForeignKeys` phase through `ResolvedForeignKey` and
+`ForeignKeyMappingMaterializer`.
+
+Do not create primary keys, unique keys, indexes, or collection-table keys by
+calling hidden mapping helper methods from whichever binder happens to have the
+columns in hand.
+
+*Do instead:* use the appropriate resolved product and materializer, such as
+`ResolvedPrimaryTableKey`, `ResolvedDependentTableKey`,
+`ResolvedCollectionTableKey`, `ResolvedUniqueKey`, or `ResolvedIndex`.  If the
+artifact needs a new source of semantic information, add that information to the
+binding product first and let the materializer perform the mapping mutation.
 
 Do not assume collection indexes are simple columns.  Property map keys and
 entity-valued map keys depend on element or target bindings.

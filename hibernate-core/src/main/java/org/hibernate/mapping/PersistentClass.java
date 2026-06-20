@@ -478,8 +478,11 @@ public abstract sealed class PersistentClass
 	}
 
 	/**
-	 * @deprecated Use explicit boot-time primary-table key materialization
-	 * instead.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer}
+	 * with an explicit resolved primary-table key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKey() {

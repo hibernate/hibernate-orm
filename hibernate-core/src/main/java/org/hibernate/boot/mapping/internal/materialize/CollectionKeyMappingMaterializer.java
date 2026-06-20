@@ -91,6 +91,13 @@ public class CollectionKeyMappingMaterializer {
 		adjustTemporalPrimaryKey( collection );
 	}
 
+	public PrimaryKey materializeValuePrimaryKey(Table table, Value value, String sourceRole) {
+		final PrimaryKey primaryKey = new PrimaryKey( table );
+		primaryKey.addColumns( value );
+		table.setPrimaryKey( primaryKey );
+		return primaryKey;
+	}
+
 	private void createPrimaryKey(Collection collection) {
 		if ( collection.isOneToMany() ) {
 			return;

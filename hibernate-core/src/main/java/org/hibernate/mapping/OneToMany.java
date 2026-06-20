@@ -70,11 +70,25 @@ public class OneToMany implements Value {
 		this.associatedClass = associatedClass;
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 		// no foreign key element for a one-to-many
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {

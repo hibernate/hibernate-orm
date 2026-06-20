@@ -66,6 +66,15 @@ public non-sealed class Map extends IndexedCollection {
 	}
 
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * and
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with explicit resolved key products instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createAllKeys() throws MappingException {

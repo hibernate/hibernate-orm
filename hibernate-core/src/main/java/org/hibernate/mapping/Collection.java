@@ -502,11 +502,25 @@ public abstract sealed class Collection
 		return owner.getTable();
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
@@ -545,8 +559,11 @@ public abstract sealed class Collection
 	}
 
 	/**
-	 * @deprecated Hidden key creation is being replaced by explicit boot-time
-	 * key materialization products.
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * and
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with explicit resolved key products instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	private void createForeignKeys() throws MappingException {
@@ -566,13 +583,19 @@ public abstract sealed class Collection
 	}
 
 	/**
-	 * @deprecated Use explicit boot-time collection key materialization instead.
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	abstract void createPrimaryKey();
 
 	/**
-	 * @deprecated Use explicit boot-time collection key materialization instead.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKeyIfNeeded() {
@@ -583,8 +606,11 @@ public abstract sealed class Collection
 	}
 
 	/**
-	 * @deprecated Hidden key creation is being replaced by explicit boot-time
-	 * key materialization products.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createAllKeys() throws MappingException {

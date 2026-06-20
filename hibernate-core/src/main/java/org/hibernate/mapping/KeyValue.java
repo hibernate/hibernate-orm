@@ -21,15 +21,21 @@ import java.util.List;
 public interface KeyValue extends Value {
 
 	/**
-	 * @deprecated Hidden key creation is being replaced by explicit boot-time
-	 * key materialization products.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns);
 
 	/**
-	 * @deprecated Hidden key creation is being replaced by explicit boot-time
-	 * key materialization products.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	ForeignKey createForeignKeyOfEntity(String entityName);

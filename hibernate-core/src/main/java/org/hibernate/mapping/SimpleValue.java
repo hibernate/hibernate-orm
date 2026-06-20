@@ -348,13 +348,34 @@ public abstract class SimpleValue implements KeyValue {
 		this.table = table;
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() throws MappingException {}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
@@ -374,6 +395,13 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
@@ -407,6 +435,13 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {

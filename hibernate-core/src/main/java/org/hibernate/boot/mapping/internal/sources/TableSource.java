@@ -8,8 +8,10 @@ import org.hibernate.internal.util.StringHelper;
 
 import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.UniqueConstraint;
 
 /// Unified source for physical table-like mapping annotations.
 ///
@@ -51,7 +53,13 @@ public interface TableSource {
 
 	String options();
 
+	String type();
+
 	CheckConstraint[] checkConstraints();
+
+	UniqueConstraint[] uniqueConstraints();
+
+	Index[] indexes();
 
 	record JpaTableSource(jakarta.persistence.Table table) implements TableSource {
 		@Override
@@ -80,8 +88,23 @@ public interface TableSource {
 		}
 
 		@Override
+		public String type() {
+			return table.type();
+		}
+
+		@Override
 		public CheckConstraint[] checkConstraints() {
 			return table.check();
+		}
+
+		@Override
+		public UniqueConstraint[] uniqueConstraints() {
+			return table.uniqueConstraints();
+		}
+
+		@Override
+		public Index[] indexes() {
+			return table.indexes();
 		}
 	}
 
@@ -112,8 +135,23 @@ public interface TableSource {
 		}
 
 		@Override
+		public String type() {
+			return joinTable.type();
+		}
+
+		@Override
 		public CheckConstraint[] checkConstraints() {
 			return joinTable.check();
+		}
+
+		@Override
+		public UniqueConstraint[] uniqueConstraints() {
+			return joinTable.uniqueConstraints();
+		}
+
+		@Override
+		public Index[] indexes() {
+			return joinTable.indexes();
 		}
 	}
 
@@ -144,8 +182,23 @@ public interface TableSource {
 		}
 
 		@Override
+		public String type() {
+			return secondaryTable.type();
+		}
+
+		@Override
 		public CheckConstraint[] checkConstraints() {
 			return secondaryTable.check();
+		}
+
+		@Override
+		public UniqueConstraint[] uniqueConstraints() {
+			return secondaryTable.uniqueConstraints();
+		}
+
+		@Override
+		public Index[] indexes() {
+			return secondaryTable.indexes();
 		}
 	}
 
@@ -176,8 +229,23 @@ public interface TableSource {
 		}
 
 		@Override
+		public String type() {
+			return collectionTable.type();
+		}
+
+		@Override
 		public CheckConstraint[] checkConstraints() {
 			return collectionTable.check();
+		}
+
+		@Override
+		public UniqueConstraint[] uniqueConstraints() {
+			return collectionTable.uniqueConstraints();
+		}
+
+		@Override
+		public Index[] indexes() {
+			return collectionTable.indexes();
 		}
 	}
 }

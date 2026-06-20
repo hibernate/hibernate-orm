@@ -134,8 +134,11 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 	}
 
 	/**
-	 * @deprecated Hidden key creation is being replaced by explicit boot-time
-	 * key materialization products.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
@@ -146,7 +149,11 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 	}
 
 	/**
-	 * @deprecated Use explicit boot-time table-key materialization instead.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.DependentTableKeyMappingMaterializer}
+	 * with an explicit resolved dependent-table key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKey() {

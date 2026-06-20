@@ -140,8 +140,11 @@ public interface Value extends Serializable {
 	boolean isNullable();
 
 	/**
-	 * @deprecated Hidden key creation is being replaced by explicit boot-time
-	 * key materialization products.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	void createForeignKey();
@@ -150,8 +153,11 @@ public interface Value extends Serializable {
 	// @OneToOne with a FK, or a @OneToMany with
 	// a join table
 	/**
-	 * @deprecated Hidden key creation is being replaced by explicit boot-time
-	 * key materialization products.
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	void createUniqueKey(MetadataBuildingContext context);

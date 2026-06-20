@@ -82,6 +82,7 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -104,7 +105,6 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
@@ -2819,10 +2819,11 @@ public abstract class CollectionBinder {
 				buildingContext
 		);
 		if ( createPrimaryKey ) {
-			final var table = value.getTable();
-			final var primaryKey = new PrimaryKey( table );
-			primaryKey.addColumns( value );
-			table.setPrimaryKey( primaryKey );
+			new CollectionKeyMappingMaterializer().materializeValuePrimaryKey(
+					value.getTable(),
+					value,
+					collection.getRole() + ".inverse"
+			);
 		}
 	}
 

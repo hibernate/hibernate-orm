@@ -7,6 +7,8 @@ package org.hibernate.boot.mapping.internal.binders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.StringTokenizer;
 
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.SecondaryRow;
@@ -24,7 +26,11 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.mapping.internal.context.BindingHelper;
+import org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedIndex;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.relational.InLineView;
 import org.hibernate.boot.mapping.internal.relational.PhysicalTable;
 import org.hibernate.boot.mapping.internal.relational.PhysicalView;
@@ -41,8 +47,11 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DenormalizedTable;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 
@@ -72,7 +81,9 @@ public class TableBinder {
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
 	private final BindingContext bindingContext;
+	private final IndexMappingMaterializer indexMappingMaterializer = new IndexMappingMaterializer();
 	private final PrimaryTableKeyMappingMaterializer primaryTableKeyMappingMaterializer;
+	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	private final ImplicitNamingStrategy implicitNamingStrategy;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
@@ -215,7 +226,10 @@ public class TableBinder {
 		);
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
+		applyType( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
+		applyUniqueConstraints( binding, tableSource );
+		applyIndexes( binding, tableSource );
 
 		return new UnionTable( logicalName, superTypeTable, binding, !type.hasSubTypes() );
 	}
@@ -375,7 +389,10 @@ public class TableBinder {
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
+		applyType( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
+		applyUniqueConstraints( binding, tableSource );
+		applyIndexes( binding, tableSource );
 		applyHibernateChecks( binding, type );
 		applyView( binding, viewAnn );
 
@@ -502,11 +519,12 @@ public class TableBinder {
 				tableSource != null && tableSource.nonEmptyName() != null
 		);
 
-			applyComment( binding, tableSource );
-			applyOptions( binding, tableSource );
-			applyCheckConstraints( binding, tableSource );
+		applyComment( binding, tableSource );
+		applyOptions( binding, tableSource );
+		applyType( binding, tableSource );
+		applyCheckConstraints( binding, tableSource );
 
-			return new PhysicalTable(
+		return new PhysicalTable(
 				logicalName,
 				logicalCatalogName,
 				logicalSchemaName,
@@ -644,7 +662,10 @@ public class TableBinder {
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
+		applyType( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
+		applyUniqueConstraints( binding, tableSource );
+		applyIndexes( binding, tableSource );
 
 		final Join join = new Join();
 		join.setTable( binding );
@@ -710,6 +731,15 @@ public class TableBinder {
 		}
 	}
 
+	private void applyType(Table table, TableSource tableSource) {
+		if ( tableSource != null ) {
+			final String type = tableSource.type();
+			if ( StringHelper.isNotEmpty( type ) ) {
+				table.setType( type );
+			}
+		}
+	}
+
 	private void applyCheckConstraints(Table table, TableSource tableSource) {
 		if ( tableSource == null ) {
 			return;
@@ -730,6 +760,155 @@ public class TableBinder {
 					StringHelper.nullIfEmpty( checkConstraint.options() )
 			) );
 		}
+	}
+
+	private void applyUniqueConstraints(Table table, TableSource tableSource) {
+		if ( tableSource == null || tableSource.uniqueConstraints() == null ) {
+			return;
+		}
+
+		for ( jakarta.persistence.UniqueConstraint uniqueConstraint : tableSource.uniqueConstraints() ) {
+			if ( uniqueConstraint.columnNames().length == 0 ) {
+				continue;
+			}
+			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( uniqueConstraint.columnNames().length );
+			for ( String columnName : uniqueConstraint.columnNames() ) {
+				uniqueKeyColumns.add( createColumn( columnName ) );
+			}
+			uniqueKeyMappingMaterializer.materializeUniqueKey(
+					ResolvedUniqueKey.explicit(
+							table,
+							uniqueKeyColumns,
+							bindingState.getMetadataBuildingContext(),
+							StringHelper.nullIfEmpty( uniqueConstraint.name() ),
+							StringHelper.isNotEmpty( uniqueConstraint.name() ),
+							uniqueConstraint.options(),
+							null,
+							"table-unique-constraint"
+					)
+			);
+		}
+	}
+
+	private void applyIndexes(Table table, TableSource tableSource) {
+		if ( tableSource == null || tableSource.indexes() == null ) {
+			return;
+		}
+
+		for ( jakarta.persistence.Index indexAnn : tableSource.indexes() ) {
+			final List<String> parsed = parseColumnList( indexAnn.columnList() );
+			if ( parsed.isEmpty() ) {
+				continue;
+			}
+			final String[] columnExpressions = new String[parsed.size()];
+			final String[] orderings = new String[parsed.size()];
+			initializeColumns( columnExpressions, orderings, parsed );
+
+			final Selectable[] selectables = selectables( columnExpressions );
+			boolean hasFormula = false;
+			for ( Selectable selectable : selectables ) {
+				if ( selectable.isFormula() ) {
+					hasFormula = true;
+					break;
+				}
+			}
+
+			if ( indexAnn.unique()
+					&& !hasFormula
+					&& jdbcEnvironment.getDialect().supportsUniqueConstraints()
+					&& StringHelper.isEmpty( indexAnn.type() )
+					&& StringHelper.isEmpty( indexAnn.using() ) ) {
+				final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( selectables.length );
+				for ( Selectable selectable : selectables ) {
+					uniqueKeyColumns.add( (Column) selectable );
+				}
+				uniqueKeyMappingMaterializer.materializeUniqueKey(
+						ResolvedUniqueKey.explicit(
+								table,
+								uniqueKeyColumns,
+								bindingState.getMetadataBuildingContext(),
+								StringHelper.nullIfEmpty( indexAnn.name() ),
+								StringHelper.isNotEmpty( indexAnn.name() ),
+								indexAnn.options(),
+								Arrays.asList( orderings ),
+								"table-index"
+						)
+				);
+			}
+			else {
+				indexMappingMaterializer.materializeIndex(
+						ResolvedIndex.explicit(
+								table,
+								Arrays.asList( selectables ),
+								Arrays.asList( columnExpressions ),
+								bindingState.getMetadataBuildingContext(),
+								StringHelper.nullIfEmpty( indexAnn.name() ),
+								indexAnn.unique(),
+								indexAnn.type(),
+								indexAnn.using(),
+								indexAnn.options(),
+								Arrays.asList( orderings ),
+								"table-index"
+						)
+				);
+			}
+		}
+	}
+
+	private List<String> parseColumnList(String columnList) {
+		final var tokenizer = new StringTokenizer( columnList, "," );
+		final List<String> parsed = new ArrayList<>();
+		while ( tokenizer.hasMoreElements() ) {
+			final String trimmed = tokenizer.nextToken().trim();
+			if ( !trimmed.isEmpty() ) {
+				parsed.add( trimmed );
+			}
+		}
+		return parsed;
+	}
+
+	private void initializeColumns(String[] columns, String[] orderings, List<String> columnList) {
+		for ( int i = 0, size = columnList.size(); i < size; i++ ) {
+			final String description = columnList.get( i );
+			final String tmp = description.toLowerCase( Locale.ROOT );
+			if ( tmp.endsWith( " desc" ) ) {
+				columns[i] = description.substring( 0, description.length() - 5 );
+				orderings[i] = "desc";
+			}
+			else if ( tmp.endsWith( " asc" ) ) {
+				columns[i] = description.substring( 0, description.length() - 4 );
+				orderings[i] = "asc";
+			}
+			else {
+				columns[i] = description;
+				orderings[i] = null;
+			}
+		}
+	}
+
+	private Selectable[] selectables(String[] columnNames) {
+		final Selectable[] selectables = new Selectable[columnNames.length];
+		for ( int i = 0; i < columnNames.length; i++ ) {
+			selectables[i] = selectable( columnNames[i] );
+		}
+		return selectables;
+	}
+
+	private Selectable selectable(String columnNameOrFormula) {
+		if ( columnNameOrFormula.startsWith( "(" ) ) {
+			return new Formula( columnNameOrFormula );
+		}
+		return createColumn( columnNameOrFormula );
+	}
+
+	private Column createColumn(String logicalName) {
+		final String physicalName = physicalNamingStrategy
+				.toPhysicalColumnName(
+						bindingState.getMetadataBuildingContext().getMetadataCollector().getDatabase().toIdentifier( logicalName ),
+						jdbcEnvironment
+				)
+				.render( jdbcEnvironment.getDialect() );
+		return new Column( physicalName );
 	}
 
 	@SuppressWarnings("removal")

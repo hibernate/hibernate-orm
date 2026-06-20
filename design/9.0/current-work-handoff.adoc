@@ -106,18 +106,19 @@ Current status:
 * natural-id, table-level `@UniqueConstraint`, collection-table unique
   constraints, and set-table nullable-element unique keys also route through the
   resolved unique-key product;
+* annotation-driven fallback indexes, new-pipeline entity/secondary table
+  indexes, and new-pipeline collection-table indexes now route through
+  `ResolvedIndex` and `IndexMappingMaterializer`;
+* new-pipeline table-source `@UniqueConstraint` declarations also feed the
+  resolved unique-key materializer; collection/join table declarations remain
+  deferred to `TableKeyBinder` until their columns are known;
 * low-level `Table#createForeignKey(...)` remains the table registry operation
   used by explicit foreign-key materialization;
 * low-level `Table` unique-key registry helpers remain as compatibility
   primitives used by explicit unique-key materialization;
-* Slice 5 prep has started by inventorying the remaining hidden creation APIs:
-  `PersistentClass#createPrimaryKey()` and production
-  `Value#createUniqueKey()` callers are drained, while collection all-key and
-  foreign-key second-pass paths still run through materializer-owned legacy
-  bridges;
-* Slice 5 bridge-drain work has started by making
-  `ForeignKeyMappingMaterializer` perform its legacy fallback FK creation
-  directly instead of delegating to deprecated hidden FK helpers;
+* Slice 5 bridge-drain work has removed the obvious materializer-owned
+  compatibility fallback methods; the materializers now create equivalent
+  mapping keys directly from resolved products;
 * `CollectionKeyMappingMaterializer` no longer calls
   `Collection#createAllKeys()`; it now materializes collection element, owner,
   and map-index FKs plus collection-table PK/UK finalization directly;
@@ -132,9 +133,19 @@ Current status:
 * entity-join, joined-subclass, and property-ref FK wrapper methods on
   `ForeignKeyMappingMaterializer` have been removed; their callers now use
   resolved FK materialization entry points directly;
+* a materializer ownership audit found no production boot
+  `getOrCreateIndex(...)` callers outside `IndexMappingMaterializer` and
+  `Table` itself, and moved the remaining legacy collection inverse set
+  primary-key creation into `CollectionKeyMappingMaterializer`;
+* remaining direct `PrimaryKey` creation outside materializers is limited to
+  compatibility methods on `org.hibernate.mapping` and auxiliary table helpers
+  such as audit tables and temporal history tables;
 * legacy hidden helpers on `Value`, `KeyValue`, `Collection`,
   `PersistentClass`, `Join`, `Map`, `Subclass`, `SimpleValue`, and `ToOne` are
-  deprecated as transitional compatibility methods.
+  deprecated since 9.0, marked for removal, and retained as transitional
+  compatibility methods.
+  Their Javadocs now identify them as compatibility-only hooks and point ORM
+  boot code to the appropriate materializer replacement;
 
 This slice is not a full mapping-key redesign yet.
 It is the bridge that makes remaining hidden key creation visible and easier to
@@ -200,9 +211,11 @@ The best next step depends on the desired risk profile.
 If finishing the active key-creation work:
 
 * continue link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`];
-* continue Slice 5 by replacing the materializer-owned legacy collection and
-  foreign-key bridges with resolved products for the remaining second-pass
-  paths;
+* continue the Slice 4 index tail by centralizing index annotation
+  interpretation;
+* decide whether audit/temporal auxiliary-table primary-key construction should
+  get its own resolved materializer product or remain outside the boot mapping
+  key-creation slices;
 * keep `Table#createForeignKey(...)` and unique-key registry helpers as
   low-level table primitives until all higher-level hidden helpers are drained;
 * then narrow or retire deprecated hidden helpers such as

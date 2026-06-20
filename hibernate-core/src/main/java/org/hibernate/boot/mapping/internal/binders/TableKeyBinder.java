@@ -15,7 +15,9 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.DependentTableKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedIndex;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
 import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
@@ -25,7 +27,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
-import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.SortableValue;
@@ -58,6 +60,7 @@ public class TableKeyBinder {
 	private final BindingState bindingState;
 	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer();
 	private final DependentTableKeyMappingMaterializer dependentTableKeyMappingMaterializer = new DependentTableKeyMappingMaterializer();
+	private final IndexMappingMaterializer indexMappingMaterializer = new IndexMappingMaterializer();
 	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	public TableKeyBinder(EntityTypeBinder entityBinder) {
@@ -237,16 +240,28 @@ public class TableKeyBinder {
 			final String indexName = StringHelper.isEmpty( indexAnn.name() )
 					? "idx_" + table.getName() + "_" + Integer.toHexString( indexAnn.columnList().hashCode() )
 					: indexAnn.name();
-			final Index index = table.getOrCreateIndex( indexName );
-			index.setTable( table );
-			index.setName( indexName );
-			index.setUnique( indexAnn.unique() );
-			if ( StringHelper.isNotEmpty( indexAnn.options() ) ) {
-				index.setOptions( indexAnn.options() );
-			}
+			final List<Selectable> indexColumns = new ArrayList<>();
+			final List<String> columnNames = new ArrayList<>();
 			for ( String columnName : indexAnn.columnList().split( "," ) ) {
-				index.addColumn( resolveColumn( table, columnName.trim() ) );
+				final String trimmedColumnName = columnName.trim();
+				columnNames.add( trimmedColumnName );
+				indexColumns.add( resolveColumn( table, trimmedColumnName ) );
 			}
+			indexMappingMaterializer.materializeIndex(
+					ResolvedIndex.explicit(
+							table,
+							indexColumns,
+							columnNames,
+							bindingState.getMetadataBuildingContext(),
+							indexName,
+							indexAnn.unique(),
+							indexAnn.type(),
+							indexAnn.using(),
+							indexAnn.options(),
+							null,
+							collectionTableBinding.collection().getRole()
+					)
+			);
 		}
 	}
 

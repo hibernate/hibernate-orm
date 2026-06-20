@@ -63,6 +63,13 @@ public sealed abstract class IndexedCollection extends Collection permits Map, L
 			&& isSame( index, other.index );
 	}
 
+	/**
+	 * Compatibility-only implementation of the hidden collection key hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {

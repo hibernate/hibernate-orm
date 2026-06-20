@@ -12,6 +12,8 @@ import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedIndex;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
 import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
@@ -24,7 +26,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 
@@ -33,7 +34,6 @@ import jakarta.persistence.UniqueConstraint;
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -45,6 +45,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 class IndexBinder {
 
 	private final MetadataBuildingContext context;
+	private final IndexMappingMaterializer indexMappingMaterializer = new IndexMappingMaterializer();
 	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	IndexBinder(MetadataBuildingContext context) {
@@ -204,18 +205,21 @@ class IndexBinder {
 		}
 		else {
 			final String keyName = getImplicitNamingStrategy().determineIndexName( source ).render( dialect );
-			final Index index = table.getOrCreateIndex( keyName );
-			index.setUnique( unique );
-			if ( isNotEmpty( type ) ) {
-				index.setType( type );
-			}
-			if ( isNotEmpty( using ) ) {
-				index.setUsing( using );
-			}
-			index.setOptions( options );
-			for ( int i = 0; i < columns.length; i++ ) {
-				index.addColumn( columns[i], orderings != null ? orderings[i] : null );
-			}
+			indexMappingMaterializer.materializeIndex(
+					ResolvedIndex.explicit(
+							table,
+							Arrays.asList( columns ),
+							Arrays.asList( columnNames ),
+							context,
+							keyName,
+							unique,
+							type,
+							using,
+							options,
+							orderings == null ? null : Arrays.asList( orderings ),
+							declaredAsIndex ? "index" : "unique-constraint"
+					)
+			);
 		}
 	}
 

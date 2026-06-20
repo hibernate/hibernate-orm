@@ -233,7 +233,7 @@ Remaining:
 
 === Slice 4: Unique Keys And Natural-Id/One-To-One Constraints
 
-Status: resolved unique-key products complete; index cleanup deferred.
+Status: resolved unique-key products complete; index materialization started.
 
 Replace `Value#createUniqueKey()` side effects with explicit unique-key
 materialization.
@@ -265,12 +265,27 @@ Progress:
 * Natural-id and explicit table-level unique constraints still materialize as
   table `UniqueKey` objects, including explicit names, options, column
   orderings, and set-table `NULLS NOT DISTINCT` behavior where applicable.
+* Non-unique index creation has started moving to explicit products:
+  `ResolvedIndex` and `IndexMappingMaterializer` now own mapping `Index`
+  object creation for annotation-driven `IndexBinder` fallback indexes and
+  new-pipeline entity, secondary-table, and collection-table indexes.
+* New-pipeline table-source `@UniqueConstraint` declarations now flow through
+  `ResolvedUniqueKey`; collection/join table declarations remain deferred to
+  `TableKeyBinder` so materialization can use the finalized collection table
+  columns.
+* Unique indexes still preserve the existing dialect decision: when a unique
+  index can be represented as a unique constraint, `IndexBinder` routes it
+  through `ResolvedUniqueKey`; otherwise it materializes an index through
+  `ResolvedIndex`.
 
 Remaining:
 
-* Non-unique index materialization remains outside this slice.
-* `IndexBinder` still owns non-unique index creation and the dialect fallback
-  for unique indexes that cannot be represented as unique constraints.
+* Centralize index annotation interpretation, including parsing column orderings
+  and the unique-index-versus-unique-constraint dialect decision, so both
+  legacy annotation binding and new-pipeline table binding share the same
+  resolved-product construction path.
+* Audit any remaining low-level table/index registry paths that still create
+  mapping indexes directly.
 * Low-level `Table` unique-key registry helpers remain as compatibility
   primitives used by explicit unique-key materialization.
 
@@ -338,6 +353,18 @@ Prep inventory:
   still copies included-table foreign keys during metadata finalization.
 * Audit-table foreign-key creation still calls `Table#createForeignKey(...)`
   directly and is outside the boot mapping hidden-helper cleanup.
+* A materializer ownership audit found no remaining production boot
+  `getOrCreateIndex(...)` callers outside `IndexMappingMaterializer` and
+  `Table` itself.  Direct legacy collection primary-key creation for the
+  logical one-to-many/set inverse case now routes through
+  `CollectionKeyMappingMaterializer`.
+* Remaining direct `PrimaryKey` creation outside materializers is limited to
+  compatibility methods on `org.hibernate.mapping` and auxiliary table helpers
+  such as audit tables and temporal history tables.
+* Retained hidden key-creation helpers are consistently deprecated since 9.0
+  and marked for removal.
+  Their Javadocs identify them as compatibility-only and point ORM boot code to
+  the corresponding explicit materializer replacement.
 
 Remaining:
 

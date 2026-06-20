@@ -39,7 +39,7 @@ public record ResolvedUniqueKey(
 	public ResolvedUniqueKey {
 		columns = List.copyOf( columns );
 		if ( columnOrderings != null ) {
-			columnOrderings = List.copyOf( columnOrderings );
+			columnOrderings = java.util.Collections.unmodifiableList( new java.util.ArrayList<>( columnOrderings ) );
 		}
 	}
 

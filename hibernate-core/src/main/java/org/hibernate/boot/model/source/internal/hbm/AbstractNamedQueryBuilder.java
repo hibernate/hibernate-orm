@@ -27,7 +27,7 @@ public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryB
 	protected String cacheRegion;
 	protected CacheMode cacheMode;
 
-	protected QueryFlushMode flushMode;
+	protected QueryFlushMode flushMode = QueryFlushMode.DEFAULT;
 	protected Boolean readOnly;
 
 	protected Timeout timeout;
@@ -80,7 +80,7 @@ public abstract class AbstractNamedQueryBuilder<R, T extends AbstractNamedQueryB
 	}
 
 	public T setFlushMode(QueryFlushMode flushMode) {
-		this.flushMode = flushMode;
+		this.flushMode = flushMode == null ? QueryFlushMode.DEFAULT : flushMode;
 		return getThis();
 	}
 

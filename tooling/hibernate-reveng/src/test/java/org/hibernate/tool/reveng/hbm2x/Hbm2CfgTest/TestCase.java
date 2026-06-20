@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.hbm2x.Hbm2CfgTest;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -37,14 +38,16 @@ public class TestCase {
 
 	public static class FakeTransactionManagerLookup implements TransactionCoordinatorBuilder {
 		@Override
+		@Nonnull
 		public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 		@Override
 		public boolean isJta() {
 			return false;
 		}
 		@Override
+		@Nonnull
 		public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
 			return PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 		}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.envers.integration.customtype;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.MapKeyEnumerated;
 import org.hibernate.AssertionFailure;
@@ -302,6 +303,7 @@ public class EnumType<T extends Enum<T>>
 		}
 
 		@Override
+		@Nonnull
 		public TypeConfiguration getTypeConfiguration() {
 			return typeConfiguration;
 		}

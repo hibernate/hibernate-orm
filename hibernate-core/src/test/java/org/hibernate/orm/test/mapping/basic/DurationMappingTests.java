@@ -6,6 +6,7 @@ package org.hibernate.orm.test.mapping.basic;
 
 import java.time.Duration;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -68,6 +69,7 @@ public class DurationMappingTests {
 			realType = ( (AdjustableJdbcType) intervalType ).resolveIndicatedType(
 					new JdbcTypeIndicators() {
 						@Override
+						@Nonnull
 						public TypeConfiguration getTypeConfiguration() {
 							return mappingMetamodel.getTypeConfiguration();
 						}

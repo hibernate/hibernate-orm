@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jdbc.internal.DdlTransactionIsolatorNonJtaImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.DdlTransactionIsolatorJtaImpl;
@@ -33,12 +34,15 @@ public interface TransactionCoordinatorBuilder extends Service {
 		boolean shouldAutoJoinTransaction();
 	}
 
+	@Nonnull
 	TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options);
 
 	boolean isJta();
 
+	@Nonnull
 	PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode();
 
+	@Nonnull
 	default DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
 		return isJta()
 				? new DdlTransactionIsolatorJtaImpl( jdbcContext )

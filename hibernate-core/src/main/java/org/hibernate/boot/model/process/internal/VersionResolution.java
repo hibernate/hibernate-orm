@@ -5,6 +5,8 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.util.function.Function;
+
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.type.TimeZoneStorageStrategy;
@@ -46,6 +48,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		final var recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
+					@Nonnull
 					public TypeConfiguration getTypeConfiguration() {
 						return typeConfiguration;
 					}
@@ -67,6 +70,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					}
 
 					@Override
+					@Nonnull
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 						return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, context );
 					}

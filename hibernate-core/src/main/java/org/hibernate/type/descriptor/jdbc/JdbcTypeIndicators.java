@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
@@ -200,6 +201,7 @@ public interface JdbcTypeIndicators {
 	 * @see org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE
 	 * @see org.hibernate.dialect.Dialect#getTimeZoneSupport()
 	 */
+	@Nonnull
 	default TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return getCurrentBaseSqlTypeIndicators().getDefaultTimeZoneStorageStrategy();
 	}
@@ -253,6 +255,7 @@ public interface JdbcTypeIndicators {
 	/**
 	 * Provides access to the {@link TypeConfiguration} for access to various type system related registries.
 	 */
+	@Nonnull
 	TypeConfiguration getTypeConfiguration();
 
 	private JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {

@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityTransaction;
 import jakarta.transaction.Synchronization;
 import jakarta.annotation.Nullable;
@@ -63,6 +64,7 @@ public interface Transaction extends EntityTransaction {
 	 *          {@link #isInCompletionProcess} according to need.
 	 *
 	 */
+	@Nonnull
 	TransactionStatus getStatus();
 
 	/**
@@ -175,7 +177,7 @@ public interface Transaction extends EntityTransaction {
 	 * @since 7.0
 	 */
 	@Incubating
-	default void runBeforeCompletion(Runnable action) {
+	default void runBeforeCompletion(@Nonnull Runnable action) {
 		registerSynchronization( new Synchronization() {
 			@Override
 			public void beforeCompletion() {
@@ -193,7 +195,7 @@ public interface Transaction extends EntityTransaction {
 	 * @since 7.0
 	 */
 	@Incubating
-	default void runAfterCompletion(Consumer<TransactionStatus> action) {
+	default void runAfterCompletion(@Nonnull Consumer<TransactionStatus> action) {
 		registerSynchronization( new Synchronization() {
 			@Override
 			public void beforeCompletion() {
@@ -215,7 +217,7 @@ public interface Transaction extends EntityTransaction {
 	 *          the methods {@link #runBeforeCompletion} and {@link #runAfterCompletion}
 	 *          for convenience.
 	 */
-	void registerSynchronization(Synchronization synchronization);
+	void registerSynchronization(@Nonnull Synchronization synchronization);
 
 	/**
 	 * Set the transaction timeout for any transaction started by a subsequent call to
@@ -233,7 +235,8 @@ public interface Transaction extends EntityTransaction {
 	 * @return the timeout, in seconds, or {@code null}
 	 */
 	@Override
-	@Nullable Integer getTimeout();
+	@Nullable
+	Integer getTimeout();
 
 	/**
 	 * Attempt to mark the underlying transaction for rollback only.

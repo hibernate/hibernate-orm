@@ -12,6 +12,7 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.util.TimeZone;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
@@ -38,8 +39,9 @@ public class OffsetTimeJavaTypeDescriptorTest {
 		final OffsetTimeJavaType javaType = OffsetTimeJavaType.INSTANCE;
 		final WrapperOptions wrapperOptions = new WrapperOptions() {
 			@Override
+			@Nonnull
 			public SharedSessionContractImplementor getSession() {
-				return null;
+				throw new UnsupportedOperationException();
 			}
 
 			public boolean useStreamForLobBinding() {
@@ -56,6 +58,7 @@ public class OffsetTimeJavaTypeDescriptorTest {
 				return true;
 			}
 
+			@Nonnull
 			public LobCreator getLobCreator() {
 				return NonContextualLobCreator.INSTANCE;
 			}
@@ -70,23 +73,27 @@ public class OffsetTimeJavaTypeDescriptorTest {
 			}
 
 			@Override
+			@Nonnull
 			public Dialect getDialect() {
-				return null;
+				throw new UnsupportedOperationException();
 			}
 
 			@Override
+			@Nonnull
 			public TypeConfiguration getTypeConfiguration() {
-				return null;
+				throw new UnsupportedOperationException();
 			}
 
 			@Override
+			@Nonnull
 			public FormatMapper getXmlFormatMapper() {
-				return null;
+				throw new UnsupportedOperationException();
 			}
 
 			@Override
+			@Nonnull
 			public FormatMapper getJsonFormatMapper() {
-				return null;
+				throw new UnsupportedOperationException();
 			}
 		};
 

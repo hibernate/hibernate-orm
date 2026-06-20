@@ -94,14 +94,15 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	boolean isAutoCloseSessionEnabled();
 
 	@Override
+	@Nonnull
 	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException;
 
 	/**
 	 * Initiate a flush to force deletion of a re-persisted entity.
 	 */
-	void forceFlush(EntityEntry e) throws HibernateException;
+	void forceFlush(@Nonnull EntityEntry e) throws HibernateException;
 	/**
 	 * Initiate a flush to force deletion of a re-persisted entity.
 	 */
-	void forceFlush(EntityKey e) throws HibernateException;
+	void forceFlush(@Nonnull EntityKey e) throws HibernateException;
 }

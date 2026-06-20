@@ -9,6 +9,7 @@ import java.util.TimeZone;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
@@ -162,11 +163,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryObserver[] getSessionFactoryObservers() {
 		return delegate.getSessionFactoryObservers();
 	}
 
 	@Override
+	@Nonnull
 	public SessionEventListener[] buildSessionEventListeners() {
 		return delegate.buildSessionEventListeners();
 	}
@@ -207,6 +210,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public Nulls getDefaultNullPrecedence() {
 		return delegate.getDefaultNullPrecedence();
 	}
@@ -227,21 +231,25 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nullable
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return delegate.getCurrentTenantIdentifierResolver();
 	}
 
 	@Override
+	@Nullable
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
 		return delegate.getTenantSchemaMapper();
 	}
 
 	@Override
+	@Nullable
 	public TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
 		return delegate.getTenantCredentialsMapper();
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<Object> getDefaultTenantIdentifierJavaType() {
 		return delegate.getDefaultTenantIdentifierJavaType();
 	}
@@ -327,6 +335,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 		return delegate.getPhysicalConnectionHandlingMode();
 	}
@@ -342,16 +351,19 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
 		return delegate.getCustomEntityDirtinessStrategy();
 	}
 
 	@Override
+	@Nonnull
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return delegate.getEntityNameResolvers();
 	}
 
 	@Override
+	@Nonnull
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return delegate.getEntityNotFoundDelegate();
 	}
@@ -392,11 +404,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public TemporalTableStrategy getTemporalTableStrategy() {
 		return delegate.getTemporalTableStrategy();
 	}
 
 	@Override
+	@Nonnull
 	public AuditStrategy getAuditStrategy() {
 		return delegate.getAuditStrategy();
 	}
@@ -431,6 +445,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return delegate.getImmutableEntityUpdateQueryHandlingMode();
 	}
@@ -526,6 +541,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return delegate.getDefaultTimeZoneStorageStrategy();
 	}
@@ -546,11 +562,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getJsonFormatMapper() {
 		return delegate.getJsonFormatMapper();
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
 	}
@@ -571,21 +589,23 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public CacheStoreMode getCacheStoreMode(Map<String, Object> properties) {
+	public CacheStoreMode getCacheStoreMode(@Nullable Map<String, Object> properties) {
 		return delegate.getCacheStoreMode( properties );
 	}
 
 	@Override
-	public CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties) {
+	public CacheRetrieveMode getCacheRetrieveMode(@Nullable Map<String, Object> properties) {
 		return delegate.getCacheRetrieveMode( properties );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getDefaultSessionProperties() {
 		return delegate.getDefaultSessionProperties();
 	}
 
 	@Override
+	@Nonnull
 	public GraphParserMode getGraphParserMode() {
 		return delegate.getGraphParserMode();
 	}
@@ -596,11 +616,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public FlushMode getInitialSessionFlushMode() {
 		return delegate.getInitialSessionFlushMode();
 	}
 
 	@Override
+	@Nonnull
 	public LockOptions getDefaultLockOptions() {
 		return delegate.getDefaultLockOptions();
 	}

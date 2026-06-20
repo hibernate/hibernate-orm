@@ -71,7 +71,7 @@ public class SequenceInformationTest extends
 	}
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 	}
 

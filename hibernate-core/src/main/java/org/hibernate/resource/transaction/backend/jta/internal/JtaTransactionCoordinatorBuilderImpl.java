@@ -29,6 +29,7 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 	private JtaPlatform jtaPlatform;
 
 	@Override
+	@Nonnull
 	public TransactionCoordinator buildTransactionCoordinator(TransactionCoordinatorOwner owner, Options options) {
 		return new JtaTransactionCoordinatorImpl(
 				this,
@@ -44,12 +45,14 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 	}
 
 	@Override
+	@Nonnull
 	public PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode() {
 		// todo : I want to change this to IMMEDIATE_ACQUISITION_AND_HOLD
 		return DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
 	}
 
 	@Override
+	@Nonnull
 	public DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
 		return new DdlTransactionIsolatorJtaImpl( jdbcContext );
 	}

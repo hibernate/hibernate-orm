@@ -21,7 +21,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 public class SequenceMismatchStrategyExceptionEnumTest extends SequenceMismatchStrategyDefaultExceptionTest {
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		super.addConfigOptions( options );
 		options.put( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.EXCEPTION );
 	}

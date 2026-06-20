@@ -23,7 +23,7 @@ public abstract class AbstractQueryMemento<R>
 
 	protected final @Nullable Class<R> queryType;
 
-	protected final @Nullable QueryFlushMode queryFlushMode;
+	protected final @Nonnull QueryFlushMode queryFlushMode;
 	protected final @Nullable Timeout timeout;
 	protected final @Nullable String comment;
 
@@ -38,7 +38,7 @@ public abstract class AbstractQueryMemento<R>
 			@Nonnull Map<String, Object> hints) {
 		this.name = name;
 		this.queryType = queryType == void.class ? null : queryType;
-		this.queryFlushMode = queryFlushMode;
+		this.queryFlushMode = queryFlushMode == null ? QueryFlushMode.DEFAULT : queryFlushMode;
 		this.timeout = timeout;
 		this.comment = StringHelper.nullIfEmpty( comment );
 		this.hints = hints;
@@ -66,7 +66,7 @@ public abstract class AbstractQueryMemento<R>
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public QueryFlushMode getQueryFlushMode() {
 		return queryFlushMode;
 	}

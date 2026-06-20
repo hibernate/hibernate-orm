@@ -264,7 +264,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				sqlSelect.sql(),
 				resultType,
 				resultSetMappingName,
-				null,
+				QueryFlushMode.DEFAULT,
 				null,
 				null,
 				null,

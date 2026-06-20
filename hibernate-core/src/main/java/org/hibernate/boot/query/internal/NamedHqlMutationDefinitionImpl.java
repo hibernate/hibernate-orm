@@ -78,7 +78,7 @@ public class NamedHqlMutationDefinitionImpl<T>
 				target == null ? null : target.getName(),
 				annotation.statement(),
 				null,
-				null,
+				QueryFlushMode.DEFAULT,
 				null,
 				null,
 				Helper.extractHints( annotation.hints() )

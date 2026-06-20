@@ -2,23 +2,21 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.spi;
+package org.hibernate.query.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.Internal;
 import org.hibernate.LockOptions;
+import org.hibernate.query.spi.DelegatingQueryOptions;
+import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
- * @apiNote This class is considered internal implementation
- * and will move to an internal package in a future version.
- * Application programs should never depend directly on this class.
- *
  * @author Christian Beikov
  */
-@Internal // used by Hibernate Reactive
+// used by Hibernate Reactive
 public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	private final boolean omitLimit;
@@ -65,13 +63,13 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 		// No need for a context when there are no options we use during SQL rendering
 		if ( originalOptions.getLockOptions().isEmpty() ) {
-			if ( !omitLimit || limit == null || limit.isEmpty() ) {
+			if ( !omitLimit || limit.isEmpty() ) {
 				return originalOptions;
 			}
 		}
 
 		if ( !omitLocks ) {
-			if ( !omitLimit || limit == null || limit.isEmpty() ) {
+			if ( !omitLimit || limit.isEmpty() ) {
 				return originalOptions;
 			}
 		}

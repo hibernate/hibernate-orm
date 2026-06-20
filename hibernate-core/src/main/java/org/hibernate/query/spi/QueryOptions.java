@@ -15,6 +15,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.internal.SqlOmittingQueryOptions;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import java.sql.Statement;
@@ -183,12 +184,13 @@ public interface QueryOptions {
 	Limit getLimit();
 
 	/**
-	 * The original {@link Limit} as set by the application, before any wrapper
-	 * (e.g. {@link org.hibernate.query.spi.SqlOmittingQueryOptions} or the
-	 * scroll execution context) hid it from {@link #getLimit()}. Used by
-	 * runtime parameter binders that the SQM-to-SQL converter pushed into the
-	 * SQL AST so they can bind the original value even when {@link #getLimit()}
-	 * has been intentionally suppressed for SQL rendering.
+	 * The original {@link Limit} as set by the application,
+	 * before any wrapper ({@link SqlOmittingQueryOptions} or the
+	 * scroll execution context) hid it from {@link #getLimit()}.
+	 * Used by runtime parameter binders that the SQM-to-SQL
+	 * converter pushed into the SQL AST so they can bind the
+	 * original value even when {@link #getLimit()} has been
+	 * intentionally suppressed for SQL rendering.
 	 */
 	@Nonnull
 	default Limit peekOriginalLimit() {

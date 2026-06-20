@@ -10,8 +10,6 @@ import org.hibernate.models.spi.AnnotationTarget;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.interpretFlushMode;
-
 /// Used to build NamedHqlSelectionDefinitionImpl references
 /// from named queries defined in hbm.xml mappings.
 ///
@@ -74,7 +72,7 @@ public class HqlQueryBuilder<E> extends AbstractNamedQueryBuilder<E, HqlQueryBui
 				hqlString,
 				getResultClass(),
 				entityGraphName,
-				interpretFlushMode( flushMode ),
+				flushMode,
 				timeout,
 				comment,
 				readOnly,

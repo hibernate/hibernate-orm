@@ -531,7 +531,7 @@ public class NativeQueryImpl<R>
 				name,
 				originalSqlString,
 				null,
-				options.getFlushMode(),
+				FlushModeTypeHelper.getQueryFlushMode( options.getFlushMode() ),
 				options.getTimeout(),
 				getComment(),
 				getHints(),
@@ -552,7 +552,7 @@ public class NativeQueryImpl<R>
 				//		think about the case of an applied j.p.sql.ResultSetMapping
 				null,
 				querySpaces,
-				options.getFlushMode(),
+				FlushModeTypeHelper.getQueryFlushMode( options.getFlushMode() ),
 				options.getTimeout(),
 				options.getComment(),
 				options.isReadOnly(),

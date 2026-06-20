@@ -25,6 +25,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.util.OptionsHelper;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
@@ -992,7 +993,7 @@ public class ProcedureCallImpl<R>
 				queryOptions.isResultCachingEnabled(),
 				queryOptions.getResultCacheRegionName(),
 				queryOptions.getCacheMode(),
-				queryOptions.getFlushMode(),
+				FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() ),
 				queryOptions.isReadOnly(),
 				queryOptions.getTimeout(),
 				queryOptions.getFetchSize(),

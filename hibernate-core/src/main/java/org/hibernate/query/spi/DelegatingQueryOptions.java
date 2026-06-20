@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -27,11 +28,12 @@ public class DelegatingQueryOptions implements QueryOptions {
 
 	private final QueryOptions queryOptions;
 
-	public DelegatingQueryOptions(QueryOptions queryOptions) {
+	public DelegatingQueryOptions(@Nonnull QueryOptions queryOptions) {
 		this.queryOptions = queryOptions;
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return queryOptions.getTimeout();
 	}
@@ -43,111 +45,133 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
+	@Nullable
 	public Boolean isReadOnly() {
 		return queryOptions.isReadOnly();
 	}
 
 	@Override
+	@Nullable
 	public AppliedGraph getAppliedGraph() {
 		return queryOptions.getAppliedGraph();
 	}
 
 	@Override
+	@Nullable
 	public TupleTransformer<?> getTupleTransformer() {
 		return queryOptions.getTupleTransformer();
 	}
 
 	@Override
+	@Nullable
 	public ResultListTransformer<?> getResultListTransformer() {
 		return queryOptions.getResultListTransformer();
 	}
 
 	@Override
+	@Nullable
 	public Boolean isResultCachingEnabled() {
 		return queryOptions.isResultCachingEnabled();
 	}
 
 	@Override
+	@Nullable
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return queryOptions.getCacheRetrieveMode();
 	}
 
 	@Override
+	@Nullable
 	public CacheStoreMode getCacheStoreMode() {
 		return queryOptions.getCacheStoreMode();
 	}
 
 	@Override
+	@Nullable
 	public Boolean getQueryPlanCachingEnabled() {
 		return queryOptions.getQueryPlanCachingEnabled();
 	}
 
 	@Override
+	@Nullable
 	public Boolean isLimitInMemoryEnabled() {
 		return queryOptions.isLimitInMemoryEnabled();
 	}
 
 	@Override
+	@Nullable
 	public CacheMode getCacheMode() {
 		return queryOptions.getCacheMode();
 	}
 
 	@Override
+	@Nullable
 	public String getResultCacheRegionName() {
 		return queryOptions.getResultCacheRegionName();
 	}
 
 	@Override
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return queryOptions.getLockOptions();
 	}
 
 	@Override
+	@Nullable
 	public String getComment() {
 		return queryOptions.getComment();
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getDatabaseHints() {
 		return queryOptions.getDatabaseHints();
 	}
 
 	@Override
+	@Nullable
 	public Integer getFetchSize() {
 		return queryOptions.getFetchSize();
 	}
 
 	@Override
+	@Nullable
 	public Set<String> getEnabledFetchProfiles() {
 		return queryOptions.getEnabledFetchProfiles();
 	}
 
 	@Override
+	@Nullable
 	public Set<String> getDisabledFetchProfiles() {
 		return queryOptions.getDisabledFetchProfiles();
 	}
 
 	@Override
+	@Nonnull
 	public Limit getLimit() {
 		return queryOptions.getLimit();
 	}
 
 	@Override
+	@Nonnull
 	public Limit peekOriginalLimit() {
 		return queryOptions.peekOriginalLimit();
 	}
 
 	@Override
+	@Nullable
 	public Integer getFirstRow() {
 		return queryOptions.getFirstRow();
 	}
 
 	@Override
+	@Nullable
 	public Integer getMaxRows() {
 		return queryOptions.getMaxRows();
 	}
 
 	@Override
+	@Nonnull
 	public Limit getEffectiveLimit() {
 		return queryOptions.getEffectiveLimit();
 	}
@@ -158,6 +182,7 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
+	@Nullable
 	public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
 		return queryOptions.getUniqueSemantic();
 	}

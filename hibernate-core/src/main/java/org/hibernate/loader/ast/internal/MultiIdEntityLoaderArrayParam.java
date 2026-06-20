@@ -8,6 +8,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -122,6 +123,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						NO_BINDINGS,
 						new QueryOptionsAdapter() {
 							@Override
+							@Nonnull
 							public LockOptions getLockOptions() {
 								return lockOptions;
 							}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -65,6 +66,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 			}
 
 			@Override
+			@Nonnull
 			public LockOptions getLockOptions() {
 				return lockOptions;
 			}

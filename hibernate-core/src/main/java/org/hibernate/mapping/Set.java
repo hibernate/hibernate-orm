@@ -102,6 +102,10 @@ public non-sealed class Set extends Collection {
 						}
 					}
 				}
+				final var softDeleteColumn = getSoftDeleteColumn();
+				if ( softDeleteColumn != null && softDeleteColumn.isNullable() ) {
+					useUniqueKey = true;
+				}
 				final Constraint key;
 				if ( useUniqueKey ) {
 					final var uniqueKey = new UniqueKey( collectionTable );
@@ -116,6 +120,9 @@ public non-sealed class Set extends Collection {
 					if ( selectable instanceof Column column ) {
 						key.addColumn( column );
 					}
+				}
+				if ( softDeleteColumn != null ) {
+					key.addColumn( softDeleteColumn );
 				}
 				key.setName( getBuildingContext().getBuildingOptions().getImplicitNamingStrategy()
 						.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {

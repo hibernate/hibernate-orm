@@ -7,9 +7,9 @@ package org.hibernate.boot.query.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
@@ -40,7 +40,7 @@ public abstract class AbstractNamedSelectionDefinition<R>
 	public AbstractNamedSelectionDefinition(
 			@Nonnull String name,
 			@Nullable String location,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nullable Boolean readOnly,
@@ -55,7 +55,7 @@ public abstract class AbstractNamedSelectionDefinition<R>
 			@Nullable Timeout lockTimeout,
 			@Nullable Locking.FollowOn followOnLockingStrategy,
 			@Nonnull Map<String, Object> hints) {
-		super( name, location, flushMode, timeout, comment, hints );
+		super( name, location, queryFlushMode, timeout, comment, hints );
 		this.readOnly = readOnly;
 		this.fetchSize = cleanInteger( fetchSize, -1 );
 		this.firstRow = cleanInteger( firstRow, -1 );

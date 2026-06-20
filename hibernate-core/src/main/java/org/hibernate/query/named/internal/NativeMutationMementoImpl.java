@@ -6,8 +6,8 @@ package org.hibernate.query.named.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.named.spi.NamedMutationMemento;
@@ -34,12 +34,12 @@ public class NativeMutationMementoImpl<T>
 			@Nonnull String name,
 			@Nonnull String sqlString,
 			@Nullable Class<T> queryType,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Timeout timeout,
 			@Nullable String comment,
 			@Nonnull Map<String, Object> hints,
 			@Nullable Set<String> synchronizationSpaces) {
-		super( name, queryType, flushMode, timeout, comment, hints );
+		super( name, queryType, queryFlushMode, timeout, comment, hints );
 		this.sqlString = sqlString;
 		this.synchronizationSpaces = synchronizationSpaces;
 	}

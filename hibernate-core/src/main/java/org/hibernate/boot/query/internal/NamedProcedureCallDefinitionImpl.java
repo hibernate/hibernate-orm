@@ -7,11 +7,11 @@ package org.hibernate.boot.query.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.internal.QueryHintDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -80,7 +80,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 	@Nullable
 	@Override
-	public FlushMode getQueryFlushMode() {
+	public QueryFlushMode getQueryFlushMode() {
 		return null;
 	}
 

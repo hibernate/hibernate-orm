@@ -6,8 +6,8 @@ package org.hibernate.query.named.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.internal.AbstractSqmQuery;
@@ -34,9 +34,9 @@ public class CriteriaMutationMementoImpl<T>
 	public CriteriaMutationMementoImpl(
 			@Nonnull String name, @Nullable Class<T> queryType,
 			@Nonnull SqmDmlStatement<T> mutationAst,
-			@Nullable FlushMode flushMode, @Nullable Timeout timeout, @Nullable String comment,
+			@Nullable QueryFlushMode queryFlushMode, @Nullable Timeout timeout, @Nullable String comment,
 			@Nonnull Map<String, Object> hints) {
-		super( name, queryType, flushMode, timeout, comment, hints );
+		super( name, queryType, queryFlushMode, timeout, comment, hints );
 		this.mutationAst = mutationAst;
 	}
 

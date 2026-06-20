@@ -7,9 +7,9 @@ package org.hibernate.query.named.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -47,7 +47,7 @@ public class CriteriaSelectionMementoImpl<R>
 			@Nullable Boolean cacheable,
 			@Nullable String cacheRegion,
 			@Nullable CacheMode cacheMode,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Boolean readOnly,
 			@Nullable LockMode lockMode,
 			@Nullable PessimisticLockScope lockScope,
@@ -59,7 +59,7 @@ public class CriteriaSelectionMementoImpl<R>
 			@Nullable Map<String, String> parameterTypes,
 			@Nonnull Map<String, Object> hints) {
 		super( name, resultType,
-				flushMode, timeout, comment,
+				queryFlushMode, timeout, comment,
 				readOnly, fetchSize, firstResult, maxResults,
 				cacheable, cacheMode, cacheRegion,
 				lockMode, lockScope, lockTimeout, followOnLockingStrategy,

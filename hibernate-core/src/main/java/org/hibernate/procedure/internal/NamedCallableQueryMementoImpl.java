@@ -7,9 +7,9 @@ package org.hibernate.procedure.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.ParameterMode;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -57,7 +57,7 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 			@Nullable Boolean cacheable,
 			@Nullable String cacheRegion,
 			@Nullable CacheMode cacheMode,
-			@Nullable FlushMode flushMode,
+			@Nullable QueryFlushMode queryFlushMode,
 			@Nullable Boolean readOnly,
 			@Nullable Timeout timeout,
 			@Nullable Integer fetchSize,
@@ -66,7 +66,7 @@ public class NamedCallableQueryMementoImpl extends AbstractQueryMemento<Object> 
 		super(
 				name,
 				Object.class,
-				flushMode,
+				queryFlushMode,
 				timeout,
 				comment,
 				hints

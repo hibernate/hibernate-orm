@@ -17,8 +17,10 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 
 /// Explicit materializer for collection-table primary-key and uniqueness
 /// constraints.
@@ -31,7 +33,56 @@ import org.hibernate.mapping.UniqueKey;
 /// @since 9.0
 /// @author Steve Ebersole
 public class CollectionKeyMappingMaterializer {
-	public void materializePrimaryKeyIfNeeded(Collection collection) {
+	private final ForeignKeyMappingMaterializer foreignKeyMappingMaterializer = new ForeignKeyMappingMaterializer();
+	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
+
+	public ResolvedCollectionTableKey resolveTableKey(Collection collection) {
+		return new ResolvedCollectionTableKey( collection );
+	}
+
+	public void materializeAllKeys(ResolvedCollectionTableKey collectionTableKey) {
+		materializeForeignKeys( collectionTableKey.collection() );
+		materializePrimaryKeyIfNeeded( collectionTableKey );
+	}
+
+	private void materializeForeignKeys(Collection collection) {
+		if ( collection.getReferencedPropertyName() == null ) {
+			materializeValueForeignKey( collection, collection.getElement(), collection.getRole() + ".element" );
+			foreignKeyMappingMaterializer.materializeForeignKey(
+					collection.getKey(),
+					collection.getOwner(),
+					collection.getRole() + ".key"
+			);
+		}
+		else {
+			final var property = collection.getOwner().getProperty( collection.getReferencedPropertyName() );
+			assert property != null;
+			foreignKeyMappingMaterializer.materializeForeignKey(
+					collection.getKey(),
+					collection.getOwner(),
+					collection.getRole() + ".key",
+					property.getValue().getConstraintColumns()
+			);
+		}
+
+		if ( collection instanceof org.hibernate.mapping.Map map && !collection.isInverse() ) {
+			materializeValueForeignKey( collection, map.getIndex(), collection.getRole() + ".index" );
+		}
+	}
+
+	private void materializeValueForeignKey(Collection collection, Value value, String sourceRole) {
+		if ( value instanceof ToOne toOne ) {
+			final PersistentClass referencedEntity = collection.getBuildingContext()
+					.getMetadataCollector()
+					.getEntityBinding( toOne.getReferencedEntityName() );
+			if ( referencedEntity != null ) {
+				foreignKeyMappingMaterializer.materializeForeignKey( toOne, referencedEntity, sourceRole );
+			}
+		}
+	}
+
+	public void materializePrimaryKeyIfNeeded(ResolvedCollectionTableKey collectionTableKey) {
+		final Collection collection = collectionTableKey.collection();
 		if ( collection.isInverse() || collection.isPrimaryKeyDisabled() ) {
 			return;
 		}
@@ -105,31 +156,38 @@ public class CollectionKeyMappingMaterializer {
 			}
 		}
 
-		final Constraint key;
 		if ( useUniqueKey ) {
-			final UniqueKey uniqueKey = new UniqueKey( collectionTable );
-			uniqueKey.setNullsNotDistinct( true );
-			key = uniqueKey;
-		}
-		else {
-			key = new PrimaryKey( collectionTable );
+			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( collection.getKey().getColumnSpan() );
+			uniqueKeyColumns.addAll( collection.getKey().getColumns() );
+			for ( var selectable : collection.getElement().getSelectables() ) {
+				if ( selectable instanceof Column column ) {
+					uniqueKeyColumns.add( column );
+				}
+			}
+			if ( uniqueKeyColumns.size() > collection.getKey().getColumnSpan() ) {
+				uniqueKeyMappingMaterializer.materializeUniqueKey(
+						ResolvedUniqueKey.internal(
+								collectionTable,
+								uniqueKeyColumns,
+								collection.getBuildingContext(),
+								true,
+								collection.getRole()
+						)
+				);
+			}
+			return;
 		}
 
+		final Constraint key = new PrimaryKey( collectionTable );
 		key.addColumns( collection.getKey() );
 		for ( var selectable : collection.getElement().getSelectables() ) {
 			if ( selectable instanceof Column column ) {
 				key.addColumn( column );
 			}
 		}
-
 		key.setName( implicitKeyName( collection, key ) );
 		if ( key.getColumnSpan() > collection.getKey().getColumnSpan() ) {
-			if ( useUniqueKey ) {
-				collectionTable.addUniqueKey( (UniqueKey) key );
-			}
-			else {
-				collectionTable.setPrimaryKey( (PrimaryKey) key );
-			}
+			collectionTable.setPrimaryKey( (PrimaryKey) key );
 		}
 	}
 

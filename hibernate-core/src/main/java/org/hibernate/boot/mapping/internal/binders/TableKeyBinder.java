@@ -14,6 +14,10 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.DependentTableKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
@@ -24,11 +28,8 @@ import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
-import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.models.ModelsException;
 
 import jakarta.persistence.JoinColumn;
@@ -56,6 +57,8 @@ public class TableKeyBinder {
 	private final EntityTypeBinder entityBinder;
 	private final BindingState bindingState;
 	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer();
+	private final DependentTableKeyMappingMaterializer dependentTableKeyMappingMaterializer = new DependentTableKeyMappingMaterializer();
+	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	public TableKeyBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
@@ -83,7 +86,14 @@ public class TableKeyBinder {
 				primaryKeyJoinColumns()
 		);
 		joinedSubclass.setKey( key );
-		createPrimaryKey( joinedSubclass.getTable(), key );
+		dependentTableKeyMappingMaterializer.materializePrimaryKey(
+				dependentTableKeyMappingMaterializer.resolvePrimaryKey(
+						entityBinder.getTypeBinding(),
+						joinedSubclass.getEntityName(),
+						joinedSubclass.getTable(),
+						key
+				)
+		);
 		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
 				entityBinder.getTypeBinding(),
 				key,
@@ -105,7 +115,14 @@ public class TableKeyBinder {
 				? createDependentKeyValue( join.getTable(), rootIdentifierBinding )
 				: createDependentKeyValue( join.getTable(), rootIdentifierBinding, associationTableBinding );
 		join.setKey( key );
-		join.createPrimaryKey();
+		dependentTableKeyMappingMaterializer.materializePrimaryKey(
+				dependentTableKeyMappingMaterializer.resolvePrimaryKey(
+						entityBinder.getTypeBinding(),
+						entityBinder.getTypeBinding().getEntityName() + "." + join.getTable().getName(),
+						join.getTable(),
+						key
+				)
+		);
 		if ( !join.isInverse() ) {
 			bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
 					entityBinder.getTypeBinding(),
@@ -133,7 +150,9 @@ public class TableKeyBinder {
 		);
 		key.setOnDeleteAction( collectionTableBinding.onDeleteAction() );
 		collectionTableBinding.collection().setKey( key );
-		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded( collectionTableBinding.collection() );
+		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
+				collectionKeyMappingMaterializer.resolveTableKey( collectionTableBinding.collection() )
+		);
 		createOneToManyBackref( collectionTableBinding, key );
 		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
 				entityBinder.getTypeBinding(),
@@ -189,23 +208,22 @@ public class TableKeyBinder {
 			}
 
 			final Table table = collectionTableBinding.collection().getCollectionTable();
-			final UniqueKey uniqueKey = StringHelper.isEmpty( uniqueConstraint.name() )
-					? table.addUniqueKey( new UniqueKey( table ) )
-					: table.getOrCreateUniqueKey( uniqueConstraint.name() );
-			if ( StringHelper.isNotEmpty( uniqueConstraint.name() ) ) {
-				uniqueKey.setName( uniqueConstraint.name() );
-				uniqueKey.setNameExplicit( true );
-			}
-			uniqueKey.setExplicit( true );
-			if ( StringHelper.isNotEmpty( uniqueConstraint.options() ) ) {
-				uniqueKey.setOptions( uniqueConstraint.options() );
-			}
+			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( uniqueConstraint.columnNames().length );
 			for ( String columnName : uniqueConstraint.columnNames() ) {
-				uniqueKey.addColumn( resolveColumn( table, columnName ) );
+				uniqueKeyColumns.add( resolveColumn( table, columnName ) );
 			}
-			if ( StringHelper.isEmpty( uniqueConstraint.name() ) ) {
-				table.addUniqueKey( uniqueKey );
-			}
+			uniqueKeyMappingMaterializer.materializeUniqueKey(
+					ResolvedUniqueKey.explicit(
+							table,
+							uniqueKeyColumns,
+							bindingState.getMetadataBuildingContext(),
+							StringHelper.nullIfEmpty( uniqueConstraint.name() ),
+							StringHelper.isNotEmpty( uniqueConstraint.name() ),
+							uniqueConstraint.options(),
+							null,
+							collectionTableBinding.collection().getRole()
+					)
+			);
 		}
 	}
 
@@ -480,9 +498,4 @@ public class TableKeyBinder {
 		return result;
 	}
 
-	private void createPrimaryKey(Table table, KeyValue key) {
-		final PrimaryKey primaryKey = new PrimaryKey( table );
-		table.setPrimaryKey( primaryKey );
-		key.getColumns().forEach( primaryKey::addColumn );
-	}
 }

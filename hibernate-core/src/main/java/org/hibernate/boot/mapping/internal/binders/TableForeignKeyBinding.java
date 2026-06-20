@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;

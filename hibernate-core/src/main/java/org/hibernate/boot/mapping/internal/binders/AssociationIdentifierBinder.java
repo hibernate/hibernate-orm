@@ -11,6 +11,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding;
 import org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.internal.util.StringHelper;
@@ -137,7 +138,10 @@ class AssociationIdentifierBinder {
 				}
 				addIdentifierColumn( associationIdentifierBinding.identifierValue(), i, column, true );
 				primaryTableKeyMappingMaterializer.addIdentifierColumn(
-						associationIdentifierBinding.ownerBinding().getTable(),
+						primaryTableKeyMappingMaterializer.resolvePrimaryKey(
+								associationIdentifierBinding.ownerBinding(),
+								associationIdentifierBinding.ownerBinding().getTable()
+						),
 						column
 				);
 			associationIdentifierBinding.identifierColumns().add( column );

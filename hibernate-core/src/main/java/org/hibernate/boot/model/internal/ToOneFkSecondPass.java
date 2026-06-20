@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
@@ -26,6 +27,7 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  * @author Emmanuel Bernard
  */
 class ToOneFkSecondPass implements FkSecondPass {
+	private final ForeignKeyMappingMaterializer foreignKeyMappingMaterializer = new ForeignKeyMappingMaterializer();
 	private final PersistentClass persistentClass;
 	private final MetadataBuildingContext buildingContext;
 	private final boolean unique;
@@ -137,11 +139,18 @@ class ToOneFkSecondPass implements FkSecondPass {
 			}
 			TableBinder.bindForeignKey( targetEntity, persistentClass, columns, manyToOne, unique, buildingContext );
 			if ( !manyToOne.isIgnoreNotFound() ) {
-				manyToOne.createPropertyRefConstraints( persistentClasses );
+				foreignKeyMappingMaterializer.materializeForeignKey(
+						manyToOne,
+						targetEntity,
+						qualify( entityClassName, path )
+				);
 			}
 		}
 		else if ( value instanceof OneToOne ) {
-			value.createForeignKey();
+			final var targetEntity = persistentClasses.get( value.getReferencedEntityName() );
+			if ( targetEntity != null ) {
+				foreignKeyMappingMaterializer.materializeForeignKey( value, targetEntity, qualify( entityClassName, path ) );
+			}
 		}
 		else {
 			throw new AssertionFailure( "FkSecondPass for a wrong value type: " + value.getClass().getName() );

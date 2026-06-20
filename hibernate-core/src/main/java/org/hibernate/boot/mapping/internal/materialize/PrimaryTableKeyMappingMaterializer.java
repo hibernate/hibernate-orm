@@ -29,7 +29,12 @@ public class PrimaryTableKeyMappingMaterializer {
 		this.buildingContext = buildingContext;
 	}
 
-	public PrimaryKey initializePrimaryKey(PersistentClass entityBinding, Table table) {
+	public ResolvedPrimaryTableKey resolvePrimaryKey(PersistentClass entityBinding, Table table) {
+		return new ResolvedPrimaryTableKey( entityBinding, table, buildingContext );
+	}
+
+	public PrimaryKey initializePrimaryKey(ResolvedPrimaryTableKey primaryTableKey) {
+		final Table table = primaryTableKey.table();
 		final PrimaryKey existingPrimaryKey = table.getPrimaryKey();
 		if ( existingPrimaryKey != null ) {
 			return existingPrimaryKey;
@@ -41,14 +46,18 @@ public class PrimaryTableKeyMappingMaterializer {
 		return primaryKey;
 	}
 
-	public void addIdentifierColumn(Table table, Column column) {
-		table.getPrimaryKey().addColumn( column );
+	public void addIdentifierColumn(ResolvedPrimaryTableKey primaryTableKey, Column column) {
+		primaryTableKey.addIdentifierColumn( column );
+		initializePrimaryKey( primaryTableKey ).addColumn( column );
 	}
 
-	public void finalizePrimaryKey(PersistentClass entityBinding, Table table) {
-		final PrimaryKey primaryKey = initializePrimaryKey( entityBinding, table );
-		if ( addPartitionKeyToPrimaryKey( entityBinding ) ) {
-			for ( var property : entityBinding.getProperties() ) {
+	public void finalizePrimaryKey(ResolvedPrimaryTableKey primaryTableKey) {
+		final PrimaryKey primaryKey = initializePrimaryKey( primaryTableKey );
+		for ( Column identifierColumn : primaryTableKey.identifierColumns() ) {
+			primaryKey.addColumn( identifierColumn );
+		}
+		if ( addPartitionKeyToPrimaryKey() ) {
+			for ( var property : primaryTableKey.entityBinding().getProperties() ) {
 				if ( property.getValue().isPartitionKey() ) {
 					primaryKey.addColumns( property.getValue() );
 				}
@@ -56,7 +65,7 @@ public class PrimaryTableKeyMappingMaterializer {
 		}
 	}
 
-	private boolean addPartitionKeyToPrimaryKey(PersistentClass entityBinding) {
+	private boolean addPartitionKeyToPrimaryKey() {
 		return buildingContext.getMetadataCollector().getDatabase().getDialect().addPartitionKeyToPrimaryKey();
 	}
 }

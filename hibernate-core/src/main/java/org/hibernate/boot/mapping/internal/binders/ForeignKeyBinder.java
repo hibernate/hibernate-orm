@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
@@ -23,6 +25,7 @@ import org.hibernate.mapping.ToOne;
 /// @author Steve Ebersole
 class ForeignKeyBinder {
 	private final EntityTypeBinder entityBinder;
+	private final ForeignKeyMappingMaterializer foreignKeyMappingMaterializer = new ForeignKeyMappingMaterializer();
 
 	ForeignKeyBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
@@ -51,17 +54,37 @@ class ForeignKeyBinder {
 			applyForeignKeySource( resolvedForeignKey, foreignKeyBinding.foreignKeySource() );
 			return;
 		}
+		final ForeignKey foreignKey;
 		if ( value.isReferenceToPrimaryKey() ) {
-			value.createForeignKey();
+			final PersistentClass referencedEntity = entityBinder.getBindingState()
+					.getMetadataBuildingContext()
+					.getMetadataCollector()
+					.getEntityBinding( value.getReferencedEntityName() );
+			foreignKey = referencedEntity == null
+					? null
+					: foreignKeyMappingMaterializer.materializeForeignKey(
+							value,
+							referencedEntity,
+							foreignKeyBinding.ownerBinding().getEntityName() + "." + value.getTable().getName()
+					);
 		}
 		else if ( value instanceof ManyToOne manyToOne ) {
-			manyToOne.createPropertyRefConstraints(
-					entityBinder.getBindingState().getMetadataBuildingContext()
-							.getMetadataCollector()
-							.getEntityBindingMap()
-			);
+			final PersistentClass referencedEntity = entityBinder.getBindingState()
+					.getMetadataBuildingContext()
+					.getMetadataCollector()
+					.getEntityBinding( manyToOne.getReferencedEntityName() );
+			foreignKey = referencedEntity == null
+					? null
+					: foreignKeyMappingMaterializer.materializeForeignKey(
+							manyToOne,
+							referencedEntity,
+							foreignKeyBinding.ownerBinding().getEntityName() + "." + manyToOne.getTable().getName()
+					);
 		}
-		applyForeignKeySource( value, foreignKeyBinding.foreignKeySource() );
+		else {
+			foreignKey = null;
+		}
+		applyForeignKeySource( foreignKey, foreignKeyBinding.foreignKeySource() );
 	}
 
 	private void bindTableForeignKey(TableForeignKeyBinding tableForeignKeyBinding) {
@@ -73,8 +96,18 @@ class ForeignKeyBinder {
 			applyForeignKeySource( resolvedForeignKey, tableForeignKeyBinding.foreignKeySource() );
 			return;
 		}
-		final ForeignKey foreignKey = tableForeignKeyBinding.key()
-				.createForeignKeyOfEntity( tableForeignKeyBinding.referencedEntityName() );
+		final PersistentClass referencedEntity = entityBinder.getBindingState()
+				.getMetadataBuildingContext()
+				.getMetadataCollector()
+				.getEntityBinding( tableForeignKeyBinding.referencedEntityName() );
+		final ForeignKey foreignKey = referencedEntity == null
+				? null
+				: foreignKeyMappingMaterializer.materializeForeignKey(
+						tableForeignKeyBinding.key(),
+						referencedEntity,
+						tableForeignKeyBinding.ownerBinding().getEntityName()
+								+ "." + tableForeignKeyBinding.key().getTable().getName()
+				);
 		applyForeignKeySource( foreignKey, tableForeignKeyBinding.foreignKeySource() );
 	}
 
@@ -89,16 +122,7 @@ class ForeignKeyBinder {
 		if ( referencedEntity == null ) {
 			return null;
 		}
-		return resolvedForeignKey.createForeignKey( referencedEntity );
-	}
-
-	private void applyForeignKeySource(ToOne value, ForeignKeySource foreignKeySource) {
-		if ( foreignKeySource == null ) {
-			return;
-		}
-
-		final ForeignKey foreignKey = findForeignKey( value );
-		applyForeignKeySource( foreignKey, foreignKeySource );
+		return foreignKeyMappingMaterializer.materializeForeignKey( resolvedForeignKey, referencedEntity );
 	}
 
 	private void applyForeignKeySource(ForeignKey foreignKey, ForeignKeySource foreignKeySource) {
@@ -117,14 +141,5 @@ class ForeignKeyBinder {
 		if ( StringHelper.isNotEmpty( foreignKeySource.options() ) ) {
 			foreignKey.setOptions( foreignKeySource.options() );
 		}
-	}
-
-	private ForeignKey findForeignKey(ToOne value) {
-		for ( ForeignKey foreignKey : value.getTable().getForeignKeyCollection() ) {
-			if ( value.getReferencedEntityName().equals( foreignKey.getReferencedEntityName() ) ) {
-				return foreignKey;
-			}
-		}
-		return null;
 	}
 }

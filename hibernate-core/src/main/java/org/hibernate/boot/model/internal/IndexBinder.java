@@ -5,12 +5,15 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -24,7 +27,6 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 
 import jakarta.persistence.UniqueConstraint;
 
@@ -43,6 +45,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 class IndexBinder {
 
 	private final MetadataBuildingContext context;
+	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	IndexBinder(MetadataBuildingContext context) {
 		this.context = context;
@@ -177,18 +180,27 @@ class IndexBinder {
 		if ( unique && !hasFormula && dialect.supportsUniqueConstraints()
 				&& isEmpty( type ) && isEmpty( using ) ) {
 			final String keyName = getImplicitNamingStrategy().determineUniqueKeyName( source ).render( dialect );
-			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
-			uniqueKey.setExplicit( true );
-			uniqueKey.setNameExplicit( nameExplicit );
-			uniqueKey.setOptions( options );
+			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( columns.length );
 			for ( int i = 0; i < columns.length; i++ ) {
 				if ( columns[i] instanceof Column column) {
-					uniqueKey.addColumn( column, orderings != null ? orderings[i] : null );
+					uniqueKeyColumns.add( column );
 				}
 				else {
 					throw new AssertionFailure( "Not a column" );
 				}
 			}
+			uniqueKeyMappingMaterializer.materializeUniqueKey(
+					ResolvedUniqueKey.explicit(
+							table,
+							uniqueKeyColumns,
+							context,
+							keyName,
+							nameExplicit,
+							options,
+							orderings == null ? null : Arrays.asList( orderings ),
+							declaredAsIndex ? "index" : "unique-constraint"
+					)
+			);
 		}
 		else {
 			final String keyName = getImplicitNamingStrategy().determineIndexName( source ).render( dialect );

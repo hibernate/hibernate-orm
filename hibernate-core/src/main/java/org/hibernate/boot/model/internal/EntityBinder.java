@@ -77,6 +77,8 @@ import org.hibernate.boot.model.naming.NamingStrategyHelper;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.mapping.internal.materialize.DependentTableKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
@@ -2211,8 +2213,23 @@ public class EntityBinder {
 		key.setOnDeleteAction( null );
 		bindForeignKey( persistentClass, null, joinColumns, key, false, context );
 		key.sortProperties();
-		join.createPrimaryKey();
-		join.createForeignKey();
+		final var dependentTableKeyMappingMaterializer = new DependentTableKeyMappingMaterializer();
+		dependentTableKeyMappingMaterializer.materializePrimaryKey(
+				dependentTableKeyMappingMaterializer.resolvePrimaryKey(
+						persistentClass,
+						persistentClass.getEntityName() + "." + join.getTable().getName(),
+						join.getTable(),
+						key
+				)
+		);
+		final var foreignKey = new ForeignKeyMappingMaterializer().materializeForeignKey(
+				join.getKey(),
+				persistentClass,
+				persistentClass.getEntityName() + "." + join.getTable().getName()
+		);
+		if ( foreignKey != null && join.isForeignKeyCreationDisabled() ) {
+			foreignKey.disableCreation();
+		}
 		persistentClass.addJoin( join );
 	}
 

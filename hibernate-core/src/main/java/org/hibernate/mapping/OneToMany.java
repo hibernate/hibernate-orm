@@ -70,11 +70,13 @@ public class OneToMany implements Value {
 		this.associatedClass = associatedClass;
 	}
 
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 		// no foreign key element for a one-to-many
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 

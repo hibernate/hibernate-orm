@@ -120,7 +120,7 @@ public class IdentifierMappingMaterializer {
 		typeBinding.setIdentifierProperty( idProperty );
 		typeBinding.setDeclaredIdentifierProperty( idProperty );
 
-		final Column column = bindIdColumn( idAttributeMember, idAttribute::getName, table, idValue );
+		final Column column = bindIdColumn( typeBinding, idAttributeMember, idAttribute::getName, table, idValue );
 		CustomMappingBinder.callAttributeBinders( idAttributeMember, typeBinding, idProperty, state, context );
 		addSelectableName( binding, idAttribute.getName(), column.getName() );
 
@@ -238,7 +238,7 @@ public class IdentifierMappingMaterializer {
 			final Property idClassProperty = createProperty( idAttribute.getName(), idClassValue, idClassMember );
 			idValue.addProperty( idClassProperty );
 
-			final Column column = bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue );
+			final Column column = bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue );
 			columns.add( column );
 			addSelectableName( binding, idAttribute.getName(), column.getName() );
 		}
@@ -284,7 +284,7 @@ public class IdentifierMappingMaterializer {
 				final Property idClassProperty = createProperty( idAttribute.getName(), idClassValue, idClassMember );
 				mappingParts.idValue().addProperty( idClassProperty );
 
-				final Column column = bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue );
+				final Column column = bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue );
 				columns.add( column );
 				addSelectableName( binding, idAttribute.getName(), column.getName() );
 			}
@@ -464,8 +464,8 @@ public class IdentifierMappingMaterializer {
 				idValue.addProperty( idClassProperty );
 
 				final Column column = hasIdClass
-						? bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue )
-						: bindIdColumn( member, idAttribute::getName, table, basicValue );
+						? bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue )
+						: bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue );
 				columns.add( column );
 				addSelectableName( binding, idAttribute.getName(), column.getName() );
 			}
@@ -561,7 +561,15 @@ public class IdentifierMappingMaterializer {
 			EntityIdentifierBinding binding) {
 		final EntityIdentifierBindingView view = new EntityIdentifierBindingView( binding );
 		view.identifierSelectableNames();
-		primaryTableKeyMappingMaterializer.finalizePrimaryKey( rootClass, table );
+		primaryTableKeyMappingMaterializer.finalizePrimaryKey(
+				new ResolvedPrimaryTableKey(
+						rootClass,
+						table,
+						state.getMetadataBuildingContext(),
+						view,
+						columns
+				)
+		);
 		return new IdentifierBinding(
 				entityType,
 				rootClass,
@@ -579,13 +587,17 @@ public class IdentifierMappingMaterializer {
 			ComponentSource componentSource,
 			Component idValue,
 			Table table) {
+		final ResolvedPrimaryTableKey primaryTableKey = primaryTableKeyMappingMaterializer.resolvePrimaryKey(
+				typeBinding,
+				table
+		);
 		return new ComponentBinder( modelBinders, state, options, context ).bindBasicProperties(
 				type,
 				typeBinding,
 				componentSource,
 				idValue,
 				table,
-				(member, column) -> primaryTableKeyMappingMaterializer.addIdentifierColumn( table, column ),
+				(member, column) -> primaryTableKeyMappingMaterializer.addIdentifierColumn( primaryTableKey, column ),
 				false,
 				false,
 				false
@@ -640,7 +652,7 @@ public class IdentifierMappingMaterializer {
 		final Property idClassProperty = createProperty( idAttribute.getName(), idClassValue, idClassMember );
 		mappingParts.idValue().addProperty( idClassProperty );
 
-		final Column column = bindIdColumn( member, idAttribute::getName, table, basicValue, idClassValue );
+		final Column column = bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue );
 		columns.add( column );
 		addSelectableName( binding, idAttribute.getName(), column.getName() );
 	}
@@ -1133,6 +1145,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private Column bindIdColumn(
+			RootClass typeBinding,
 			MemberDetails member,
 			java.util.function.Supplier<String> implicitName,
 			Table table,
@@ -1150,7 +1163,10 @@ public class IdentifierMappingMaterializer {
 			additionalValue.addColumn( column, true, true );
 		}
 		table.addColumn( column );
-		primaryTableKeyMappingMaterializer.addIdentifierColumn( table, column );
+		primaryTableKeyMappingMaterializer.addIdentifierColumn(
+				primaryTableKeyMappingMaterializer.resolvePrimaryKey( typeBinding, table ),
+				column
+		);
 		return column;
 	}
 }

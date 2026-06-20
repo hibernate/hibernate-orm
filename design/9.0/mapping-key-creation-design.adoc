@@ -104,7 +104,7 @@ JDBC order connected to the same resolution result.
 
 === Slice 1: Primary Table Primary Keys
 
-Status: initial bridge complete; full slice in progress.
+Status: resolved product complete; compatibility bridge retained.
 
 Start by making entity primary table primary-key creation explicit.
 
@@ -134,8 +134,14 @@ Progress:
 
 * New-pipeline root entity identifier binding now initializes, populates, and
   finalizes primary-table primary keys through an explicit internal materializer.
+* Primary-table primary-key materialization now consumes a
+  `ResolvedPrimaryTableKey` product carrying the entity binding, table,
+  metadata context, ordered identifier columns, and optional identifier view.
+* Legacy `CreateKeySecondPass` root primary-key creation now delegates through
+  the resolved product and materializer.
 * `PersistentClass#createPrimaryKey()` remains as a compatibility bridge for
-  legacy paths and unmigrated second-pass callers.
+  external or unmigrated compatibility paths, but main boot callers have been
+  drained.
 * Legacy hidden key-creation helpers are deprecated during the transitory
   period so remaining callers are visible while explicit materializers are
   introduced.
@@ -145,16 +151,12 @@ Progress:
 
 Remaining:
 
-* Introduce the resolved primary-key product described above, instead of passing
-  table/entity/column facts directly to the materializer.
-* Move any remaining new-pipeline primary-table PK mutations behind that product
-  if new cases appear.
-* Retire or narrow `PersistentClass#createPrimaryKey()` after legacy paths and
-  second-pass callers have migrated.
+* Retire or narrow `PersistentClass#createPrimaryKey()` with the other hidden
+  creation APIs in Slice 5.
 
 === Slice 2: Collection and Dependent Table Keys
 
-Status: in progress.
+Status: resolved products complete; compatibility bridges retained.
 
 Start with collection owner keys, join-table inverse keys, joined-subclass keys,
 and secondary-table keys.
@@ -181,12 +183,23 @@ Progress:
 * New-pipeline collection primary-key and set unique-key creation is now routed
   through an explicit internal materializer rather than calling
   `Collection#createPrimaryKeyIfNeeded()` directly.
+* New-pipeline joined-subclass and secondary-table primary-key creation is now
+  routed through an explicit internal materializer rather than calling
+  `PersistentClass#createPrimaryKey()` or `Join#createPrimaryKey()` directly.
+* Dependent-table primary-key materialization now consumes a
+  `ResolvedDependentTableKey` product carrying the owner binding, source role,
+  table, key value, and ordered key columns.
+* Collection-table key materialization now consumes a
+  `ResolvedCollectionTableKey` product carrying the collection role,
+  compatibility collection mapping, table, and ordered owner-key columns.
 * The old `Collection#createPrimaryKeyIfNeeded()` method remains for legacy
   compatibility paths.
 * Collection owner-key column creation is still local to `TableKeyBinder`; a
   fuller resolved table-key product remains a follow-up inside this slice.
 
 === Slice 3: Association Foreign Keys
+
+Status: resolved product complete; compatibility bridges retained.
 
 Move singular to-one, association-valued id, derived-id, and collection
 association FK creation behind the same resolved-FK product.
@@ -195,7 +208,32 @@ The binder should resolve local/referenced selectable correspondence once and
 the FK materializer should create the `ForeignKey` from that ordered
 correspondence.
 
+Progress:
+
+* New-pipeline association and table-key foreign-key creation is routed through
+  an explicit internal materializer rather than calling hidden `Value` or
+  `KeyValue` foreign-key helpers directly from the binder.
+* Foreign-key materialization now consumes a `ResolvedForeignKey` product
+  carrying the table, referenced entity name, source foreign-key metadata,
+  ON DELETE action, optional referenced table, and ordered selectable
+  correspondence.
+* Legacy annotation-binding `TableBinder` now projects its linked
+  `AnnotatedJoinColumns` into the same resolved foreign-key product, including
+  the secondary-table referenced-key case.
+* Legacy second-pass collection, entity-join, joined-subclass, inverse
+  many-to-many, and to-one foreign-key call sites now delegate through the same
+  materializer bridges where this preserves existing behavior.
+* `Table#createForeignKey(...)` remains the low-level table registry operation
+  used by the explicit FK materializer.
+
+Remaining:
+
+* Unique-key helper calls in `AnnotatedColumn`, `BinderHelper`, and `TableBinder`
+  are left for Slice 4.
+
 === Slice 4: Unique Keys And Natural-Id/One-To-One Constraints
+
+Status: resolved unique-key products complete; index cleanup deferred.
 
 Replace `Value#createUniqueKey()` side effects with explicit unique-key
 materialization.
@@ -212,7 +250,33 @@ This is important because uniqueness may come from different semantic sources:
 Those sources should not all collapse into "some value marked some column
 unique" before ordering and table ownership are clear.
 
+Progress:
+
+* `@Column(unique = true)`, `@JoinColumn(unique = true)`, one-to-one unique
+  keys, and synthetic property-reference unique keys now route through
+  `ResolvedUniqueKey` and `UniqueKeyMappingMaterializer`.
+* Natural-id unique keys, table-level `@UniqueConstraint`, collection-table
+  unique constraints, and set-table nullable-element unique keys now route
+  through the same resolved product and materializer.
+* Deprecated `SimpleValue`, `ManyToOne`, and `OneToOne` unique-key helpers now
+  delegate through the explicit materializer as compatibility bridges.
+* Single-column unique keys still preserve the existing mapping representation:
+  the column is marked unique and receives an implicit unique-key name.
+* Natural-id and explicit table-level unique constraints still materialize as
+  table `UniqueKey` objects, including explicit names, options, column
+  orderings, and set-table `NULLS NOT DISTINCT` behavior where applicable.
+
+Remaining:
+
+* Non-unique index materialization remains outside this slice.
+* `IndexBinder` still owns non-unique index creation and the dialect fallback
+  for unique indexes that cannot be represented as unique constraints.
+* Low-level `Table` unique-key registry helpers remain as compatibility
+  primitives used by explicit unique-key materialization.
+
 === Slice 5: Retire Hidden Creation APIs
+
+Status: materializer bridge drain complete; deprecated compatibility helpers retained.
 
 Once migrated paths are green, delete or sharply narrow hidden creation methods.
 For ORM 9, deleting obsolete helpers is acceptable when their behavior is now
@@ -231,6 +295,54 @@ Candidate methods include:
 Compatibility call sites may temporarily delegate to the new materializers, but
 the long-term direction is that values describe value state and key products
 describe relational constraints.
+
+Prep inventory:
+
+* `PersistentClass#createPrimaryKey()` is no longer called by ORM boot code.
+  It remains only as a deprecated compatibility bridge and can be retired or
+  narrowed with the other hidden creation APIs.
+* Production callers of `Value#createUniqueKey()` have been drained.  The
+  remaining direct unique-key registry usage is inside
+  `UniqueKeyMappingMaterializer` and low-level `Table` compatibility helpers.
+* `CollectionKeyMappingMaterializer` no longer delegates to
+  `Collection#createAllKeys()`.  It now explicitly materializes collection
+  element FKs, owner-key FKs, map-index FKs, and collection-table primary-key or
+  nullable set unique-key finalization in the same sequence as the legacy
+  helper.
+* Collection element and map-index `ToOne` foreign keys now materialize through
+  `ResolvedForeignKey` products instead of using the legacy association-FK
+  fallback.
+* The legacy association-FK fallback method on `ForeignKeyMappingMaterializer`
+  has been removed; remaining primary-key association fallback callers now use
+  the `ToOne`-to-`ResolvedForeignKey` materialization path directly.
+* The legacy table-key FK fallback method on `ForeignKeyMappingMaterializer`
+  has been removed; collection owner keys and defensive table-key fallback
+  callers now use `KeyValue`-to-`ResolvedForeignKey` materialization directly.
+* Entity-join and joined-subclass FK wrappers on `ForeignKeyMappingMaterializer`
+  have been removed; their callers now use `KeyValue`-to-`ResolvedForeignKey`
+  materialization directly.
+* Property-ref FK creation now uses a `ManyToOne`-to-`ResolvedForeignKey`
+  materialization path directly rather than a property-ref bridge method.
+* `ForeignKeyMappingMaterializer` no longer delegates to
+  `Value#createForeignKey()`, `KeyValue#createForeignKeyOfEntity()`,
+  `Join#createForeignKey()`, `Subclass#createForeignKey()`, or
+  `ManyToOne#createPropertyRefConstraints(...)` for its legacy fallback paths.
+  It now performs the equivalent low-level table FK materialization directly
+  while preserving sorting, property-ref, disabled-constraint, auxiliary-PK,
+  referenced-table, and ON DELETE behavior.
+* The deprecated hidden FK helpers remain on the mapping model for external
+  compatibility and for legacy mapping-internal methods that are no longer
+  called by the explicit FK materializer.
+* Low-level `Table#createForeignKey(...)` remains the table registry primitive
+  used by `ForeignKeyMappingMaterializer`; `DenormalizedTable#createForeignKeys`
+  still copies included-table foreign keys during metadata finalization.
+* Audit-table foreign-key creation still calls `Table#createForeignKey(...)`
+  directly and is outside the boot mapping hidden-helper cleanup.
+
+Remaining:
+
+* Decide how aggressively ORM 9 should delete or narrow the deprecated hidden
+  mapping helper methods now that ORM boot callers have been drained.
 
 == Non-Goals
 
@@ -263,9 +375,10 @@ Required guardrails:
 
 == Status
 
-Planned.
+Slices 1 through 4 have explicit resolved products and materializers for
+primary-table primary keys, dependent and collection table keys, association
+foreign keys, and unique keys.
 
-The immediate candidate implementation slice is collection/table key
-materialization, because the current binder already owns table-key timing and
-recent tests exposed accidental uniqueness copying and implicit key-column
-naming gaps.
+Slice 5 prep has started by inventorying the remaining hidden creation APIs and
+classifying them as drained compatibility bridges, materializer-only legacy
+fallbacks, or low-level table registry primitives.

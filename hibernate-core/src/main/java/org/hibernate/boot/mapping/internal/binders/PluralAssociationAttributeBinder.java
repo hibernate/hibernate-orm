@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDelete;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;

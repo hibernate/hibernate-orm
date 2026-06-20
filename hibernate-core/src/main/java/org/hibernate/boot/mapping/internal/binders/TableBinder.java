@@ -149,8 +149,10 @@ public class TableBinder {
 			applyRowId( tableReference.binding(), type );
 
 			primaryTableKeyMappingMaterializer.initializePrimaryKey(
-					entityBinder.getTypeBinding(),
-					tableReference.binding()
+					primaryTableKeyMappingMaterializer.resolvePrimaryKey(
+							entityBinder.getTypeBinding(),
+							tableReference.binding()
+					)
 			);
 		}
 

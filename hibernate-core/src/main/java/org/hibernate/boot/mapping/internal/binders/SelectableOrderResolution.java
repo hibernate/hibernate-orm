@@ -19,28 +19,28 @@ import org.hibernate.mapping.ForeignKeyColumnMappings;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-record SelectableOrderResolution(List<SelectableCorrespondence> correspondences) {
-	SelectableOrderResolution {
+public record SelectableOrderResolution(List<SelectableCorrespondence> correspondences) {
+	public SelectableOrderResolution {
 		correspondences = List.copyOf( correspondences );
 	}
 
-	boolean isEmpty() {
+	public boolean isEmpty() {
 		return correspondences.isEmpty();
 	}
 
-	List<Column> localColumns() {
+	public List<Column> localColumns() {
 		return correspondences.stream()
 				.map( SelectableCorrespondence::localColumn )
 				.toList();
 	}
 
-	List<Column> referencedColumns() {
+	public List<Column> referencedColumns() {
 		return correspondences.stream()
 				.map( SelectableCorrespondence::referencedColumn )
 				.toList();
 	}
 
-	ForeignKeyColumnMappings foreignKeyColumnMappings() {
+	public ForeignKeyColumnMappings foreignKeyColumnMappings() {
 		return new ForeignKeyColumnMappings( correspondences.stream()
 				.map( (correspondence) -> new ForeignKeyColumnMapping(
 						correspondence.localColumn(),
@@ -49,7 +49,7 @@ record SelectableOrderResolution(List<SelectableCorrespondence> correspondences)
 				.toList() );
 	}
 
-	int[] localSourcePositions() {
+	public int[] localSourcePositions() {
 		final int[] result = new int[correspondences.size()];
 		for ( int i = 0; i < correspondences.size(); i++ ) {
 			result[i] = correspondences.get( i ).localSourcePosition();

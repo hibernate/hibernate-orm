@@ -11,6 +11,7 @@ import java.util.Comparator;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.IdentifierGenerator;

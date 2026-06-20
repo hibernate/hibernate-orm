@@ -66,7 +66,10 @@ materialization.
 Added materializers:
 
 * `CollectionKeyMappingMaterializer`
+* `DependentTableKeyMappingMaterializer`
+* `ForeignKeyMappingMaterializer`
 * `PrimaryTableKeyMappingMaterializer`
+* `UniqueKeyMappingMaterializer`
 
 Routed callers include:
 
@@ -82,13 +85,53 @@ link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
 
 Current status:
 
-* collection/table primary-key creation is routed through an explicit
-  materializer bridge;
+* collection/dependent-table primary-key creation is routed through an explicit
+  materializer bridge and resolved table-key products;
 * primary-table primary-key creation is routed through an explicit materializer
-  bridge;
-* `PersistentClass#createPrimaryKey()` remains as a legacy bridge;
+  bridge and `ResolvedPrimaryTableKey` product;
+* new-pipeline association and table-key foreign-key creation is routed through
+  `ResolvedForeignKey` products and an explicit materializer;
+* cheap legacy second-pass collection, entity-join, joined-subclass, inverse
+  many-to-many, and to-one foreign-key callers now delegate through the same
+  materializer bridges;
+* legacy `CreateKeySecondPass` root primary-key creation now delegates through
+  the resolved primary-table key product;
+* `PersistentClass#createPrimaryKey()` remains as an unused compatibility
+  bridge until hidden creation APIs are removed or narrowed;
+* legacy annotation-binding `TableBinder` now projects `AnnotatedJoinColumns`
+  into the same resolved foreign-key product;
+* value-driven unique-key creation for `@Column(unique = true)`,
+  `@JoinColumn(unique = true)`, one-to-one, and synthetic property-reference
+  paths now routes through `ResolvedUniqueKey` and `UniqueKeyMappingMaterializer`;
+* natural-id, table-level `@UniqueConstraint`, collection-table unique
+  constraints, and set-table nullable-element unique keys also route through the
+  resolved unique-key product;
 * low-level `Table#createForeignKey(...)` remains the table registry operation
   used by explicit foreign-key materialization;
+* low-level `Table` unique-key registry helpers remain as compatibility
+  primitives used by explicit unique-key materialization;
+* Slice 5 prep has started by inventorying the remaining hidden creation APIs:
+  `PersistentClass#createPrimaryKey()` and production
+  `Value#createUniqueKey()` callers are drained, while collection all-key and
+  foreign-key second-pass paths still run through materializer-owned legacy
+  bridges;
+* Slice 5 bridge-drain work has started by making
+  `ForeignKeyMappingMaterializer` perform its legacy fallback FK creation
+  directly instead of delegating to deprecated hidden FK helpers;
+* `CollectionKeyMappingMaterializer` no longer calls
+  `Collection#createAllKeys()`; it now materializes collection element, owner,
+  and map-index FKs plus collection-table PK/UK finalization directly;
+* collection element and map-index `ToOne` FKs now use `ResolvedForeignKey`
+  products instead of the legacy association-FK fallback;
+* the legacy association-FK fallback method on `ForeignKeyMappingMaterializer`
+  has been removed; remaining primary-key association fallback callers use the
+  `ToOne`-to-`ResolvedForeignKey` materialization path directly;
+* the legacy table-key FK fallback method on `ForeignKeyMappingMaterializer`
+  has been removed; collection owner keys and defensive table-key fallback
+  callers use `KeyValue`-to-`ResolvedForeignKey` materialization directly;
+* entity-join, joined-subclass, and property-ref FK wrapper methods on
+  `ForeignKeyMappingMaterializer` have been removed; their callers now use
+  resolved FK materialization entry points directly;
 * legacy hidden helpers on `Value`, `KeyValue`, `Collection`,
   `PersistentClass`, `Join`, `Map`, `Subclass`, `SimpleValue`, and `ToOne` are
   deprecated as transitional compatibility methods.
@@ -157,12 +200,14 @@ The best next step depends on the desired risk profile.
 If finishing the active key-creation work:
 
 * continue link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`];
-* introduce resolved primary-key products instead of only materializer helper
-  calls;
-* route any remaining new-pipeline primary-key mutation through explicit
-  materializers;
-* then narrow or retire `PersistentClass#createPrimaryKey()` when legacy callers
-  are gone.
+* continue Slice 5 by replacing the materializer-owned legacy collection and
+  foreign-key bridges with resolved products for the remaining second-pass
+  paths;
+* keep `Table#createForeignKey(...)` and unique-key registry helpers as
+  low-level table primitives until all higher-level hidden helpers are drained;
+* then narrow or retire deprecated hidden helpers such as
+  `PersistentClass#createPrimaryKey()`, `Value#createForeignKey()`,
+  `KeyValue#createForeignKeyOfEntity()`, and `Join#createForeignKey()`.
 
 If returning to model-shape work:
 
@@ -198,4 +243,3 @@ If looking for correctness failures:
 * Keep new binding-model contracts free of `org.hibernate.mapping` types unless
   the contract is explicitly a materializer or compatibility bridge.
 * When adding new Java files, include `@author Steve Ebersole`.
-

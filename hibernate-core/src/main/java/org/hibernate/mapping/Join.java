@@ -129,6 +129,10 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 		disableForeignKeyCreation = true;
 	}
 
+	public boolean isForeignKeyCreationDisabled() {
+		return disableForeignKeyCreation;
+	}
+
 	/**
 	 * @deprecated Hidden key creation is being replaced by explicit boot-time
 	 * key materialization products.

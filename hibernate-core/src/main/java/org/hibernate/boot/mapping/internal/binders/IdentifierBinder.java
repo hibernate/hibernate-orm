@@ -91,7 +91,9 @@ public class IdentifierBinder {
 		final KeyMapping idMapping = hierarchy.getIdMapping();
 		final Table table = typeBinding.getTable();
 
-		primaryTableKeyMappingMaterializer.initializePrimaryKey( typeBinding, table );
+		primaryTableKeyMappingMaterializer.initializePrimaryKey(
+				primaryTableKeyMappingMaterializer.resolvePrimaryKey( typeBinding, table )
+		);
 
 		if ( idMapping instanceof BasicKeyMapping basicKeyMapping ) {
 			return bindBasicIdentifier( basicKeyMapping, table, type, typeBinding );

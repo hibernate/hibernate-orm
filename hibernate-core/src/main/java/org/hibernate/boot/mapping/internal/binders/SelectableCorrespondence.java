@@ -27,7 +27,7 @@ import org.hibernate.mapping.Column;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-record SelectableCorrespondence(
+public record SelectableCorrespondence(
 		@Nonnull Column localColumn,
 		@Nonnull Column referencedColumn,
 		int localSourcePosition,

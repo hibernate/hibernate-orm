@@ -15,6 +15,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.PropertyRef;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;

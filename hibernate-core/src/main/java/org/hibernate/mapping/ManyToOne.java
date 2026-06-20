@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ManyToOneType;
@@ -18,6 +20,9 @@ import org.hibernate.type.ManyToOneType;
  * @author Gavin King
  */
 public final class ManyToOne extends ToOne {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
+
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
 
@@ -56,9 +61,12 @@ public final class ManyToOne extends ToOne {
 	}
 
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() ) {
-			getTable().createUniqueKey( getConstraintColumns(), context );
+			UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+					ResolvedUniqueKey.from( this, context, getPropertyName() )
+			);
 		}
 	}
 
@@ -71,7 +79,11 @@ public final class ManyToOne extends ToOne {
 	 * We depend here on having a property of the referenced entity
 	 * that does hold the referenced unique key. We might have created
 	 * a "synthetic" composite property for this purpose.
+	 *
+	 * @deprecated Hidden key creation is being replaced by explicit boot-time
+	 * key materialization products.
 	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
 		if ( referencedPropertyName != null ) {
 			// Ensure properties are sorted before we create a foreign key

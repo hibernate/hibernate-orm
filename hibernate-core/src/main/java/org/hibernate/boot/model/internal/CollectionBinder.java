@@ -82,6 +82,7 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
@@ -2838,7 +2839,7 @@ public abstract class CollectionBinder {
 		setReferencedProperty( targetEntity.getEntityName(), mappedBy, manyToOne );
 		// Ensure that we copy over the delete action from the owner side before creating the foreign key
 		setOnDeleteAction( mappedByProperty, manyToOne );
-		value.createForeignKey();
+		new ForeignKeyMappingMaterializer().materializeForeignKey( manyToOne, targetEntity, collection.getRole() + ".inverse" );
 	}
 
 	private void setReferencedProperty(String targetEntityName, String mappedBy, ManyToOne manyToOne) {

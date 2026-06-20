@@ -6,6 +6,7 @@ package org.hibernate.boot.spi;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -51,6 +52,7 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
+	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
 		return delegate.getDefaultTimeZoneStorage();
 	}

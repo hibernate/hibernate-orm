@@ -4,6 +4,8 @@
  */
 package org.hibernate.resource.transaction.spi;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Enumeration of statuses in which a transaction facade ({@link org.hibernate.Transaction}) might be.
  *
@@ -55,7 +57,7 @@ public enum TransactionStatus {
 			|| this == MARKED_ROLLBACK;
 	}
 
-	public boolean isOneOf(TransactionStatus... statuses) {
+	public boolean isOneOf(@Nonnull TransactionStatus... statuses) {
 		for ( var status : statuses ) {
 			if ( this == status ) {
 				return true;
@@ -64,7 +66,7 @@ public enum TransactionStatus {
 		return false;
 	}
 
-	public boolean isNotOneOf(TransactionStatus... statuses) {
+	public boolean isNotOneOf(@Nonnull TransactionStatus... statuses) {
 		return !isOneOf( statuses );
 	}
 

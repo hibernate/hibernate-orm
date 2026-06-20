@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.RollbackException;
 import jakarta.transaction.Status;
 
@@ -37,17 +39,19 @@ import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
  */
 public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionCoordinator {
 
-	private final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	private final JdbcResourceTransactionAccess jdbcResourceTransactionAccess;
-	private final TransactionCoordinatorOwner transactionCoordinatorOwner;
-	private final SynchronizationRegistryStandardImpl synchronizationRegistry = new SynchronizationRegistryStandardImpl();
+	private final @Nonnull TransactionCoordinatorBuilder transactionCoordinatorBuilder;
+	private final @Nonnull JdbcResourceTransactionAccess jdbcResourceTransactionAccess;
+	private final @Nonnull TransactionCoordinatorOwner transactionCoordinatorOwner;
+	private final @Nonnull SynchronizationRegistryStandardImpl synchronizationRegistry =
+			new SynchronizationRegistryStandardImpl();
 
-	private final JpaCompliance jpaCompliance;
+	private final @Nonnull JpaCompliance jpaCompliance;
 
-	private TransactionDriverControlImpl physicalTransactionDelegate;
+	private @Nullable TransactionDriverControlImpl physicalTransactionDelegate;
 
 	private int timeOut = -1;
 
+	@Nullable
 	private transient List<TransactionObserver> observers = null;
 
 	/**
@@ -57,9 +61,9 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	 * @param owner The transactionCoordinatorOwner
 	 */
 	JdbcResourceLocalTransactionCoordinatorImpl(
-			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
-			TransactionCoordinatorOwner owner,
-			JdbcResourceTransactionAccess jdbcResourceTransactionAccess) {
+			@Nonnull TransactionCoordinatorBuilder transactionCoordinatorBuilder,
+			@Nonnull TransactionCoordinatorOwner owner,
+			@Nonnull JdbcResourceTransactionAccess jdbcResourceTransactionAccess) {
 		this.transactionCoordinatorBuilder = transactionCoordinatorBuilder;
 		this.jdbcResourceTransactionAccess = jdbcResourceTransactionAccess;
 		this.transactionCoordinatorOwner = owner;
@@ -72,15 +76,20 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	 *
 	 * @return TransactionObserver
 	 */
+	@Nonnull
 	private Iterable<TransactionObserver> observers() {
-		return observers == null || observers.isEmpty() ? emptyList() : new ArrayList<>( observers );
+		return observers == null || observers.isEmpty()
+				? emptyList()
+				: new ArrayList<>( observers );
 	}
 
 	@Override
+	@Nonnull
 	public TransactionDriver getTransactionDriverControl() {
-		// Again, this PhysicalTransactionDelegate will act as the bridge from the local transaction back into the
-		// coordinator.  We lazily build it as we invalidate each delegate after each transaction (a delegate is
-		// valid for just one transaction)
+		// Again, this PhysicalTransactionDelegate will act as the bridge from the
+		// local transaction back into the coordinator. We lazily build it as we
+		// invalidate each delegate after each transaction (a delegate is valid for
+		// just one transaction)
 		if ( physicalTransactionDelegate == null ) {
 			physicalTransactionDelegate =
 					new TransactionDriverControlImpl( jdbcResourceTransactionAccess.getResourceLocalTransaction() );
@@ -106,11 +115,13 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	@Override
+	@Nonnull
 	public SynchronizationRegistry getLocalSynchronizations() {
 		return synchronizationRegistry;
 	}
 
 	@Override
+	@Nonnull
 	public JpaCompliance getJpaCompliance() {
 		return jpaCompliance;
 	}
@@ -121,11 +132,13 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	@Override
+	@Nonnull
 	public IsolationDelegate createIsolationDelegate() {
 		return new JdbcIsolationDelegate( transactionCoordinatorOwner );
 	}
 
 	@Override
+	@Nonnull
 	public TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
 		return transactionCoordinatorBuilder;
 	}
@@ -156,7 +169,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		transactionCoordinatorOwner.afterTransactionBegin();
 
 		// notify all registered observers
-		for ( TransactionObserver observer : observers() ) {
+		for ( var observer : observers() ) {
 			observer.afterBegin();
 		}
 	}
@@ -190,7 +203,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	@Override
-	public void addObserver(TransactionObserver observer) {
+	public void addObserver(@Nonnull TransactionObserver observer) {
 		if ( observers == null ) {
 			observers = new ArrayList<>( 6 );
 		}
@@ -198,7 +211,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	@Override
-	public void removeObserver(TransactionObserver observer) {
+	public void removeObserver(@Nonnull TransactionObserver observer) {
 		if ( observers != null ) {
 			observers.remove( observer );
 		}
@@ -212,7 +225,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		private final JdbcResourceTransaction jdbcResourceTransaction;
 //		private boolean invalid;
 
-		public TransactionDriverControlImpl(JdbcResourceTransaction jdbcResourceTransaction) {
+		public TransactionDriverControlImpl(@Nonnull JdbcResourceTransaction jdbcResourceTransaction) {
 			this.jdbcResourceTransaction = jdbcResourceTransaction;
 		}
 
@@ -303,6 +316,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		}
 
 		@Override
+		@Nonnull
 		public TransactionStatus getStatus() {
 			return jdbcResourceTransaction.getStatus();
 		}

@@ -33,7 +33,7 @@ public abstract class AbstractSqlFunctionMetadataBuilderContributorTest
 
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put(
 				EntityManagerFactoryBuilderImpl.METADATA_BUILDER_CONTRIBUTOR,
 				matadataBuilderContributor()

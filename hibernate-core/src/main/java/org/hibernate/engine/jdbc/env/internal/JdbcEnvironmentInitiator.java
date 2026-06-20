@@ -5,6 +5,7 @@
 package org.hibernate.engine.jdbc.env.internal;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.registry.StandardServiceInitiator;
@@ -346,8 +347,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		final var jdbcCoordinator = new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices );
 
 		try {
-			temporaryJdbcSessionOwner.transactionCoordinator = registry.requireService( TransactionCoordinatorBuilder.class )
-					.buildTransactionCoordinator( jdbcCoordinator, () -> false );
+			temporaryJdbcSessionOwner.transactionCoordinator =
+					registry.requireService( TransactionCoordinatorBuilder.class )
+							.buildTransactionCoordinator( jdbcCoordinator, () -> false );
 			return temporaryJdbcSessionOwner.transactionCoordinator.createIsolationDelegate().delegateWork(
 					new AbstractReturningWork<>() {
 						@Override
@@ -643,14 +645,14 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final PhysicalConnectionHandlingMode connectionHandlingMode;
 		private final JpaCompliance jpaCompliance;
 		private final SqlExceptionHelper sqlExceptionHelper;
-		TransactionCoordinator transactionCoordinator;
+		private TransactionCoordinator transactionCoordinator;
 		private final EmptyEventMonitor eventManager;
 
 		public TemporaryJdbcSessionOwner(
-				JdbcConnectionAccess jdbcConnectionAccess,
-				JdbcServices jdbcServices,
-				SqlExceptionHelper sqlExceptionHelper,
-				ServiceRegistryImplementor serviceRegistry) {
+				@Nonnull JdbcConnectionAccess jdbcConnectionAccess,
+				@Nonnull JdbcServices jdbcServices,
+				@Nonnull SqlExceptionHelper sqlExceptionHelper,
+				@Nonnull ServiceRegistryImplementor serviceRegistry) {
 			this.jdbcConnectionAccess = jdbcConnectionAccess;
 			this.jdbcServices = jdbcServices;
 			this.sqlExceptionHelper = sqlExceptionHelper;
@@ -660,7 +662,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.connectionProviderDisablesAutoCommit =
 					getBoolean( CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, configuration.getSettings() );
 
-			final PhysicalConnectionHandlingMode specifiedHandlingMode =
+			final var specifiedHandlingMode =
 					PhysicalConnectionHandlingMode.interpret( configuration.getSettings().get( CONNECTION_HANDLING ) );
 			this.connectionHandlingMode = specifiedHandlingMode != null
 					? specifiedHandlingMode
@@ -672,16 +674,19 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		@Override
+		@Nonnull
 		public JdbcSessionContext getJdbcSessionContext() {
 			return this;
 		}
 
 		@Override
+		@Nonnull
 		public JdbcConnectionAccess getJdbcConnectionAccess() {
 			return jdbcConnectionAccess;
 		}
 
 		@Override
+		@Nonnull
 		public TransactionCoordinator getTransactionCoordinator() {
 			return transactionCoordinator;
 		}
@@ -712,11 +717,13 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		@Override
+		@Nullable
 		public Integer getJdbcBatchSize() {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public EventMonitor getEventMonitor() {
 			return eventManager;
 		}
@@ -797,16 +804,17 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		@Override
+		@Nonnull
 		public SqlExceptionHelper getSqlExceptionHelper() {
 			return sqlExceptionHelper;
 		}
 
 		@Override
-		public void afterObtainConnection(Connection connection) {
+		public void afterObtainConnection(@Nonnull Connection connection) {
 		}
 
 		@Override
-		public void beforeReleaseConnection(Connection connection) {
+		public void beforeReleaseConnection(@Nonnull Connection connection) {
 		}
 	}
 }

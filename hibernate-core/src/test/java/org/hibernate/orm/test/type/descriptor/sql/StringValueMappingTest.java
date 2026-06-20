@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.TimeZone;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -46,8 +47,9 @@ public class StringValueMappingTest {
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
 		@Override
+		@Nonnull
 		public SharedSessionContractImplementor getSession() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		public boolean useStreamForLobBinding() {
@@ -64,6 +66,7 @@ public class StringValueMappingTest {
 			return true;
 		}
 
+		@Nonnull
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
 		}
@@ -85,23 +88,27 @@ public class StringValueMappingTest {
 		};
 
 		@Override
+		@Nonnull
 		public Dialect getDialect() {
 			return dialect;
 		}
 
 		@Override
+		@Nonnull
 		public TypeConfiguration getTypeConfiguration() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public FormatMapper getXmlFormatMapper() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public FormatMapper getJsonFormatMapper() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 	};
 

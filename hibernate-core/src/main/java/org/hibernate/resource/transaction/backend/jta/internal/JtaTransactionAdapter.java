@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 /**
@@ -31,6 +32,7 @@ public interface JtaTransactionAdapter {
 	 */
 	void rollback();
 
+	@Nonnull
 	TransactionStatus getStatus();
 
 	void markRollbackOnly();

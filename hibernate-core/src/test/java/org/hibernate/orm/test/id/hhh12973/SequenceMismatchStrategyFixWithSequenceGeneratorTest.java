@@ -83,7 +83,7 @@ public class SequenceMismatchStrategyFixWithSequenceGeneratorTest extends Entity
 	}
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 		options.put( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, "fix" );
 		triggerable.reset();

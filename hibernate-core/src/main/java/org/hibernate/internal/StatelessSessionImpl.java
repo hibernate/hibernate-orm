@@ -1375,6 +1375,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) {
 		checkOpen();
 		return persister.instantiate( id, this );

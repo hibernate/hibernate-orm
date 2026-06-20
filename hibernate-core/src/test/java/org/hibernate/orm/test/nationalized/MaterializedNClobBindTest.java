@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.TimeZone;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -84,7 +85,7 @@ public class MaterializedNClobBindTest {
 		);
 	}
 
-	private class MockWrapperOptions implements WrapperOptions {
+	private static class MockWrapperOptions implements WrapperOptions {
 		private final boolean useStreamForLobBinding;
 		private final Dialect dialect = new H2Dialect();
 
@@ -93,8 +94,9 @@ public class MaterializedNClobBindTest {
 		}
 
 		@Override
+		@Nonnull
 		public SharedSessionContractImplementor getSession() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -113,6 +115,7 @@ public class MaterializedNClobBindTest {
 		}
 
 		@Override
+		@Nonnull
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
 		}
@@ -123,23 +126,27 @@ public class MaterializedNClobBindTest {
 		}
 
 		@Override
+		@Nonnull
 		public Dialect getDialect() {
 			return dialect;
 		}
 
 		@Override
+		@Nonnull
 		public TypeConfiguration getTypeConfiguration() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public FormatMapper getXmlFormatMapper() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public FormatMapper getJsonFormatMapper() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -161,37 +168,36 @@ public class MaterializedNClobBindTest {
 
 
 	private static class PreparedStatementHandler implements InvocationHandler {
-		private WrapperOptions wrapperOptions;
+		private final WrapperOptions wrapperOptions;
 
 		PreparedStatementHandler(WrapperOptions wrapperOptions) {
 			this.wrapperOptions = wrapperOptions;
 		}
 
 		@Override
-		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		public Object invoke(Object proxy, Method method, Object[] args) {
 			final String methodName = method.getName();
-			if ( "setNCharacterStream".equals( methodName ) ) {
-				if ( wrapperOptions.useStreamForLobBinding() ) {
+			switch ( methodName ) {
+				case "setNCharacterStream" -> {
+					if ( wrapperOptions.useStreamForLobBinding() ) {
+						return null;
+					}
+					else {
+						throw new IllegalStateException( "PreparedStatement#setNCharacterStream unexpectedly called" );
+					}
+				}
+				case "setNClob" -> {
+					if ( !wrapperOptions.useStreamForLobBinding() ) {
+						return null;
+					}
+					else {
+						throw new IllegalStateException( "PreparedStatement#setNClob unexpectedly called" );
+					}
+				}
+				case "setNString" -> {
 					return null;
 				}
-				else {
-					throw new IllegalStateException( "PreparedStatement#setNCharacterStream unexpectedly called" );
-				}
-			}
-			else if ( "setNClob".equals( methodName ) ) {
-				if ( !wrapperOptions.useStreamForLobBinding() ) {
-					return null;
-				}
-				else {
-					throw new IllegalStateException( "PreparedStatement#setNClob unexpectedly called" );
-				}
-			}
-			else if ( "setNString".equals( methodName ) ) {
-				return null;
-			}
-			else {
-				throw new UnsupportedOperationException( methodName + " is not supported." );
-
+				default -> throw new UnsupportedOperationException( methodName + " is not supported." );
 			}
 		}
 	}

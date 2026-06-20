@@ -1501,12 +1501,12 @@ public class SessionImpl
 	}
 
 	@Override
-	public void forceFlush(EntityEntry entityEntry) {
+	public void forceFlush(@Nonnull EntityEntry entityEntry) {
 		forceFlush( entityEntry.getEntityKey() );
 	}
 
 	@Override
-	public void forceFlush(EntityKey key) {
+	public void forceFlush(@Nonnull EntityKey key) {
 		if ( SESSION_LOGGER.isTraceEnabled() ) {
 			SESSION_LOGGER.flushingToForceDeletion(
 					infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
@@ -1527,6 +1527,7 @@ public class SessionImpl
 	 * give the interceptor an opportunity to override the default instantiation
 	 */
 	@Override
+	@Nonnull
 	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();

@@ -11,6 +11,7 @@ import java.sql.Connection;
 
 import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -21,11 +22,13 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.IMM
  */
 public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImplementor {
 
+	@Nonnull
+	protected ResourceRegistry resourceRegistry;
 	private transient Connection providedConnection;
 	private final boolean initiallyAutoCommit;
 	private boolean closed;
 
-	public LogicalConnectionProvidedImpl(Connection providedConnection, ResourceRegistry resourceRegistry) {
+	public LogicalConnectionProvidedImpl(@Nonnull Connection providedConnection, @Nonnull ResourceRegistry resourceRegistry) {
 		this.resourceRegistry = resourceRegistry;
 		if ( providedConnection == null ) {
 			throw new IllegalArgumentException( "Provided Connection cannot be null" );
@@ -51,6 +54,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	@Override
+	@Nonnull
 	public Connection close() {
 		CONNECTION_LOGGER.closingLogicalConnection();
 		getResourceRegistry().releaseResources();
@@ -128,5 +132,11 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	protected void afterCompletion() {
 		afterTransaction();
 		resetConnection( initiallyAutoCommit );
+	}
+
+	@Override
+	@Nonnull
+	public ResourceRegistry getResourceRegistry() {
+		return resourceRegistry;
 	}
 }

@@ -6,6 +6,7 @@ package org.hibernate.query.spi;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -110,6 +111,7 @@ public interface QueryEngineOptions {
 	 *             Use {@link #allowImmutableEntityUpdate} instead.
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
+	@Nonnull
 	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
 
 	/**

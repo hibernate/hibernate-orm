@@ -22,7 +22,7 @@ public abstract class AbstractNonOptionalSecondaryTableTest extends EntityManage
 	private JpaComplianceCachingSetting jpaComplianceCachingSetting;
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		switch ( jpaComplianceCachingSetting ) {
 			case DEFAULT:
 				// Keep the default (false)

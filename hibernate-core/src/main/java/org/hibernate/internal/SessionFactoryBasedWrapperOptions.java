@@ -5,6 +5,7 @@
 package org.hibernate.internal;
 
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,26 +28,31 @@ class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionContractImplementor getSession() {
 		throw new UnsupportedOperationException( "No session" );
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return factory;
 	}
 
 	@Override
+	@Nonnull
 	public LobCreator getLobCreator() {
 		return factory.getJdbcServices().getLobCreator( getSession() );
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getXmlFormatMapper() {
 		return factory.getSessionFactoryOptions().getXmlFormatMapper();
 	}
 
 	@Override
+	@Nonnull
 	public FormatMapper getJsonFormatMapper() {
 		return factory.getSessionFactoryOptions().getJsonFormatMapper();
 	}

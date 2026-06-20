@@ -10,6 +10,8 @@ import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -36,13 +38,15 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  */
 public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImplementor {
 
-	private final transient JdbcSessionOwner jdbcSessionOwner;
-	private final transient PhysicalConnectionHandlingMode connectionHandlingMode;
+	private final transient @Nonnull JdbcSessionOwner jdbcSessionOwner;
+	private final transient @Nonnull PhysicalConnectionHandlingMode connectionHandlingMode;
+	@Nonnull
+	protected ResourceRegistry resourceRegistry;
 
 	private transient Connection physicalConnection;
 	private boolean closed;
 
-	public LogicalConnectionManagedImpl(JdbcSessionOwner sessionOwner, ResourceRegistry registry) {
+	public LogicalConnectionManagedImpl(@Nonnull JdbcSessionOwner sessionOwner, @Nonnull ResourceRegistry registry) {
 		jdbcSessionOwner = sessionOwner;
 		resourceRegistry = registry;
 
@@ -57,7 +61,8 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		}
 	}
 
-	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(JdbcSessionOwner sessionOwner) {
+	@Nonnull
+	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(@Nonnull JdbcSessionOwner sessionOwner) {
 		final var connectionHandlingMode = sessionOwner.getJdbcSessionContext().getPhysicalConnectionHandlingMode();
 		return connectionHandlingMode.getReleaseMode() == AFTER_STATEMENT
 			&& !sessionOwner.getJdbcConnectionAccess().supportsAggressiveRelease()
@@ -65,19 +70,22 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 				: connectionHandlingMode;
 	}
 
-	private LogicalConnectionManagedImpl(JdbcSessionOwner owner, boolean closed) {
+	private LogicalConnectionManagedImpl(@Nonnull JdbcSessionOwner owner, boolean closed) {
 		this( owner, new ResourceRegistryStandardImpl() );
 		this.closed = closed;
 	}
 
+	@Nonnull
 	private JdbcSessionContext getJdbcSessionContext() {
 		return jdbcSessionOwner.getJdbcSessionContext();
 	}
 
+	@Nonnull
 	private JdbcConnectionAccess getJdbcConnectionAccess() {
 		return jdbcSessionOwner.getJdbcConnectionAccess();
 	}
 
+	@Nonnull
 	private SqlExceptionHelper getExceptionHelper() {
 		return jdbcSessionOwner.getSqlExceptionHelper();
 	}
@@ -111,6 +119,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
+	@Nonnull
 	public PhysicalConnectionHandlingMode getConnectionHandlingMode() {
 		return connectionHandlingMode;
 	}
@@ -253,6 +262,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
+	@Nullable
 	public Connection close() {
 		if ( !closed ) {
 			try {
@@ -301,5 +311,11 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	@Override
 	protected boolean doConnectionsFromProviderHaveAutoCommitDisabled() {
 		return getJdbcSessionContext().doesConnectionProviderDisableAutoCommit();
+	}
+
+	@Override
+	@Nonnull
+	public ResourceRegistry getResourceRegistry() {
+		return resourceRegistry;
 	}
 }

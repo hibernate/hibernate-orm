@@ -47,7 +47,7 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends Entity
 	public LoggerInspectionExtension logInspection =
 			LoggerInspectionExtension.builder().setLogger( SEQUENCE_GENERATOR_LOGGER ).build();
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
 
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
@@ -81,7 +81,7 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends Entity
 	}
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 		triggerable.reset();
 	}

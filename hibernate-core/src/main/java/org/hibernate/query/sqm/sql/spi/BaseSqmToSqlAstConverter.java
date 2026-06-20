@@ -708,6 +708,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	// SqlTypeDescriptorIndicators
 
 	@Override
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return creationContext.getTypeConfiguration();
 	}

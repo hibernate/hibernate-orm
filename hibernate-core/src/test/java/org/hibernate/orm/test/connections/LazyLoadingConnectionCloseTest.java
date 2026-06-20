@@ -46,7 +46,7 @@ public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFun
 	}
 
 	@Override
-	protected void addConfigOptions(Map options) {
+	protected void addConfigOptions(Map<String, Object> options) {
 		options.put( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 
 		options.put(

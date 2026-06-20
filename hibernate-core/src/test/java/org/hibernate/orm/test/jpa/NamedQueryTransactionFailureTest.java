@@ -40,8 +40,8 @@ public class NamedQueryTransactionFailureTest extends EntityManagerFactoryBasedF
 
 	private TransactionCoordinator transactionCoordinator;
 
-	@SuppressWarnings( {"unchecked"})
-	protected void addConfigOptions(Map options) {
+	@Override
+	protected void addConfigOptions(Map<String, Object> options) {
 		TransactionCoordinatorBuilder transactionCoordinatorBuilder = Mockito.mock( TransactionCoordinatorBuilder.class);
 		when(transactionCoordinatorBuilder.getDefaultConnectionHandlingMode())
 		.thenReturn( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_HOLD );

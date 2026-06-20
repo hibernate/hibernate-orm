@@ -37,8 +37,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushMode;
-
 /// Support for the type-safe option contracts introduced by Jakarta Persistence 4.
 ///
 /// @since 8.0
@@ -244,8 +242,8 @@ public final class OptionsHelper {
 	public static Set<TypedQuery.Option> getTypedQueryOptions(QueryOptions queryOptions) {
 		final Set<TypedQuery.Option> options = new HashSet<>();
 		addIfNotNull( options, queryOptions.getTimeout() );
-		final var queryFlushMode = queryFlushModeFromFlushMode( queryOptions.getFlushMode() );
-		if ( queryFlushMode != null && queryFlushMode != QueryFlushMode.DEFAULT ) {
+		final var queryFlushMode = queryOptions.getQueryFlushMode();
+		if ( queryFlushMode != QueryFlushMode.DEFAULT ) {
 			options.add( queryFlushMode );
 		}
 		addIfNotNull( options, queryOptions.getCacheRetrieveMode() );
@@ -300,8 +298,8 @@ public final class OptionsHelper {
 	public static Set<Statement.Option> getStatementOptions(QueryOptions queryOptions) {
 		final Set<Statement.Option> options = new HashSet<>();
 		addIfNotNull( options, queryOptions.getTimeout() );
-		final var queryFlushMode = queryFlushModeFromFlushMode( queryOptions.getFlushMode() );
-		if ( queryFlushMode != null && queryFlushMode != QueryFlushMode.DEFAULT ) {
+		final var queryFlushMode = queryOptions.getQueryFlushMode();
+		if ( queryFlushMode != QueryFlushMode.DEFAULT ) {
 			options.add( queryFlushMode );
 		}
 		final String comment = queryOptions.getComment();
@@ -324,8 +322,8 @@ public final class OptionsHelper {
 	public static Set<StoredProcedureQuery.Option> getStoredProcedureOptions(QueryOptions queryOptions) {
 		final Set<StoredProcedureQuery.Option> options = new HashSet<>();
 		addIfNotNull( options, queryOptions.getTimeout() );
-		final var queryFlushMode = queryFlushModeFromFlushMode( queryOptions.getFlushMode() );
-		if ( queryFlushMode != null && queryFlushMode != QueryFlushMode.DEFAULT ) {
+		final var queryFlushMode = queryOptions.getQueryFlushMode();
+		if ( queryFlushMode != QueryFlushMode.DEFAULT ) {
 			options.add( queryFlushMode );
 		}
 		return options;

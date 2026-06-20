@@ -7,9 +7,10 @@ package org.hibernate.query.spi;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.ResultListTransformer;
@@ -26,9 +27,9 @@ import static org.hibernate.query.internal.QueryLogging.QUERY_LOGGER;
  */
 public interface MutableQueryOptions extends QueryOptions {
 	/**
-	 * Corollary to {@link #getFlushMode()}
+	 * Corollary to {@link #getQueryFlushMode()}
 	 */
-	void setFlushMode(FlushMode flushMode);
+	void setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	/**
 	 * Corollary to {@link #getCacheRetrieveMode}

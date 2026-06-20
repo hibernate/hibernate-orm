@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 
@@ -21,6 +22,7 @@ public class SimpleQueryOptions extends QueryOptionsAdapter {
 	}
 
 	@Override
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}

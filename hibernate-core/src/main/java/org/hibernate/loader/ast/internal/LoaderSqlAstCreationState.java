@@ -50,6 +50,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import static java.util.Collections.emptyList;
+
 /**
  * Helper used when generating the database-snapshot select query
  */
@@ -324,6 +326,7 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
@@ -334,8 +337,9 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getDatabaseHints() {
-		return null;
+		return emptyList();
 	}
 
 	@Override
@@ -344,8 +348,9 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	@Nonnull
 	public Limit getLimit() {
-		return null;
+		return Limit.NONE;
 	}
 
 	@Override

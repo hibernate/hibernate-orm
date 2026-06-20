@@ -4,6 +4,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -88,6 +89,7 @@ public class MultiNaturalIdLoadingBatcher {
 						.buildSelectTranslator( sessionFactory, sqlSelect )
 						.translate( null, new QueryOptionsAdapter() {
 							@Override
+							@Nonnull
 							public LockOptions getLockOptions() {
 								return lockOptions;
 							}

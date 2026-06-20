@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -59,7 +61,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 	}
 
 	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, boolean omitLimit, boolean omitLocks) {
-		final Limit limit = originalOptions.getLimit();
+		final var limit = originalOptions.getLimit();
 
 		// No need for a context when there are no options we use during SQL rendering
 		if ( originalOptions.getLockOptions().isEmpty() ) {
@@ -76,37 +78,40 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 		return new SqlOmittingQueryOptions( originalOptions, omitLimit, omitLocks );
 	}
-
-	public static QueryOptions omitSqlQueryOptionsWithUniqueSemanticFilter(QueryOptions originalOptions, boolean omitLimit, boolean omitLocks) {
-		final Limit limit = originalOptions.getLimit();
-
-		// No need for a context when there are no options we use during SQL rendering
-		if ( originalOptions.getLockOptions().isEmpty() ) {
-			if ( !omitLimit || limit == null || limit.isEmpty() ) {
-				return originalOptions;
-			}
-		}
-
-		if ( !omitLocks ) {
-			if ( !omitLimit || limit == null || limit.isEmpty() ) {
-				return originalOptions;
-			}
-		}
-
-		return new SqlOmittingQueryOptions( originalOptions, omitLimit, omitLocks, ListResultsConsumer.UniqueSemantic.FILTER );
-	}
+//
+//	public static QueryOptions omitSqlQueryOptionsWithUniqueSemanticFilter(QueryOptions originalOptions, boolean omitLimit, boolean omitLocks) {
+//		final Limit limit = originalOptions.getLimit();
+//
+//		// No need for a context when there are no options we use during SQL rendering
+//		if ( originalOptions.getLockOptions().isEmpty() ) {
+//			if ( !omitLimit || limit == null || limit.isEmpty() ) {
+//				return originalOptions;
+//			}
+//		}
+//
+//		if ( !omitLocks ) {
+//			if ( !omitLimit || limit == null || limit.isEmpty() ) {
+//				return originalOptions;
+//			}
+//		}
+//
+//		return new SqlOmittingQueryOptions( originalOptions, omitLimit, omitLocks, ListResultsConsumer.UniqueSemantic.FILTER );
+//	}
 
 	@Override
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return omitLocks ? new LockOptions() : super.getLockOptions();
 	}
 
 	@Override
+	@Nullable
 	public Integer getFetchSize() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Limit getLimit() {
 		return omitLimit ? Limit.NONE : super.getLimit();
 	}
@@ -117,21 +122,26 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 	 * table when this wrapper has hidden the limit from the SQL translator. Walks
 	 * through chained wraps (the scroll path can wrap an already-wrapped context).
 	 */
+	@Override
+	@Nonnull
 	public Limit peekOriginalLimit() {
 		return originalLimit;
 	}
 
 	@Override
+	@Nullable
 	public Integer getFirstRow() {
 		return omitLimit ? null : super.getFirstRow();
 	}
 
 	@Override
+	@Nullable
 	public Integer getMaxRows() {
 		return omitLimit ? null : super.getMaxRows();
 	}
 
 	@Override
+	@Nonnull
 	public Limit getEffectiveLimit() {
 		return omitLimit ? Limit.NONE : super.getEffectiveLimit();
 	}
@@ -142,6 +152,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 	}
 
 	@Override
+	@Nullable
 	public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
 		return uniqueSemantic;
 	}

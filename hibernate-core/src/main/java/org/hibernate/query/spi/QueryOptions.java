@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Encapsulates options for the execution of query.
+ * Encapsulates options for the execution of a query.
  *
  * @apiNote Note that not all options are relevant for every type of query.
  *
@@ -34,39 +34,46 @@ public interface QueryOptions {
 	// Query options
 
 	/**
-	 * The timeout to apply to the query.  May also be defined at the transaction
-	 * level using {@link org.hibernate.Transaction#getTimeout}
+	 * The query execution timeout. May alternatively
+	 * be specified at the transaction level using
+	 * {@link org.hibernate.Transaction#getTimeout}.
 	 */
+	@Nullable
 	Timeout getTimeout();
 
 	/**
-	 * The flush mode to use for the query execution
+	 * The flush mode to use for the query execution.
 	 */
 	@Nonnull
 	QueryFlushMode getQueryFlushMode();
 
 	/**
-	 * Should entities returned from the query be marked read-only.
+	 * Are entities returned by the query marked as
+	 * read-only?
 	 */
+	@Nullable
 	Boolean isReadOnly();
 
 	/**
-	 * JPA {@link jakarta.persistence.EntityGraph} explicitly applied to the
-	 * query.
+	 * An {@link jakarta.persistence.EntityGraph}
+	 * explicitly applied to the query.
 	 */
+	@Nullable
 	AppliedGraph getAppliedGraph();
 
 	/**
-	 * Transformer applied to the query to transform the structure of each "row"
-	 * in the results
+	 * Transformer applied to the query to transform
+	 * the structure of each "row" of the results.
 	 */
-	@Nullable TupleTransformer<?> getTupleTransformer();
+	@Nullable
+	TupleTransformer<?> getTupleTransformer();
 
 	/**
-	 * Transformer applied to the query to transform the structure of the
-	 * overall results
+	 * Transformer applied to the query to transform
+	 * the structure of the overall result list.
 	 */
-	@Nullable ResultListTransformer<?> getResultListTransformer();
+	@Nullable
+	ResultListTransformer<?> getResultListTransformer();
 
 	/**
 	 * Should results from the query be cached?
@@ -74,57 +81,67 @@ public interface QueryOptions {
 	 * @see #getCacheMode
 	 * @see #getResultCacheRegionName
 	 */
+	@Nullable
 	Boolean isResultCachingEnabled();
 
 	/**
 	 * Controls whether query results are read from the cache.
-	 * No effect unless {@link #isResultCachingEnabled} returns
-	 * {@code true}
+	 * Has no effect unless {@link #isResultCachingEnabled}
+	 * returns {@code true}
 	 *
 	 * @see CacheMode
 	 */
+	@Nullable
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	/**
 	 * Controls whether query results are put into the cache.
-	 * No effect unless {@link #isResultCachingEnabled} returns
-	 * {@code true}
+	 * Has no effect unless {@link #isResultCachingEnabled}
+	 * returns {@code true}.
 	 *
 	 * @see CacheMode
 	 */
+	@Nullable
 	CacheStoreMode getCacheStoreMode();
 
+	@Nullable
 	default CacheMode getCacheMode() {
 		return CacheMode.fromJpaModes( getCacheRetrieveMode(), getCacheStoreMode() );
 	}
 
 	/**
-	 * The query cache region in which the results should be cached.  No
-	 * effect unless {@link #isResultCachingEnabled} returns {@code true}
+	 * The query cache region in which the results should be cached.
+	 * Has no effect unless {@link #isResultCachingEnabled} returns
+	 * {@code true}.
 	 */
+	@Nullable
 	String getResultCacheRegionName();
 
 	/**
 	 * Should the query plan of the query be cached?
 	 */
+	@Nullable
 	Boolean getQueryPlanCachingEnabled();
 
 	/**
-	 * Whether top-level HQL/criteria pagination should be applied in memory
-	 * instead of by SQL.
+	 * Whether top-level HQL/criteria pagination should be
+	 * handled in memory instead of by the SQL query.
 	 */
+	@Nullable
 	default Boolean isLimitInMemoryEnabled() {
 		return null;
 	}
 
 	/**
-	 * The explicitly enabled profiles for this query
+	 * The explicitly enabled profiles for this query.
 	 */
+	@Nullable
 	Set<String> getEnabledFetchProfiles();
 
 	/**
-	 * The explicitly disabled profiles for this query
+	 * The explicitly disabled profiles for this query.
 	 */
+	@Nullable
 	Set<String> getDisabledFetchProfiles();
 
 
@@ -132,19 +149,22 @@ public interface QueryOptions {
 	// JDBC / SQL options
 
 	/**
-	 * Describes the locking to apply to the query results
+	 * Describes the locking to apply to the query results.
 	 */
+	@Nonnull
 	LockOptions getLockOptions();
 
 	/**
-	 * The SQL comment to apply to the interpreted SQL query, for dialects which
-	 * support SQL comments
+	 * The SQL comment to apply to the interpreted SQL query,
+	 * for dialects which support SQL comments.
 	 */
+	@Nullable
 	String getComment();
 
 	/**
-	 * Hints to apply to the interpreted SQL query
+	 * Hints to apply to the interpreted SQL query.
 	 */
+	@Nonnull
 	List<String> getDatabaseHints();
 
 	/**
@@ -152,12 +172,14 @@ public interface QueryOptions {
 	 *
 	 * @see Statement#getFetchSize
 	 */
+	@Nullable
 	Integer getFetchSize();
 
 	/**
-	 * The limit to the query results.  May also be accessed via
-	 * {@link #getFirstRow} and {@link #getMaxRows}.
+	 * The limit to the query results.  May also be accessed
+	 * via {@link #getFirstRow} and {@link #getMaxRows}.
 	 */
+	@Nonnull
 	Limit getLimit();
 
 	/**
@@ -168,38 +190,41 @@ public interface QueryOptions {
 	 * SQL AST so they can bind the original value even when {@link #getLimit()}
 	 * has been intentionally suppressed for SQL rendering.
 	 */
+	@Nonnull
 	default Limit peekOriginalLimit() {
 		return getLimit();
 	}
 
 	/**
-	 * The first row from the results to return
+	 * The first row from the results to return.
 	 *
 	 * @see #getLimit
 	 */
+	@Nullable
 	default Integer getFirstRow() {
 		return getLimit().getFirstRow();
 	}
 
 	/**
-	 * The maximum number of rows to return from the results
+	 * The maximum number of rows to return from the results.
 	 *
 	 * @see #getLimit
 	 */
+	@Nullable
 	default Integer getMaxRows() {
 		return getLimit().getMaxRows();
 	}
 
 	/**
 	 * Determine the effective paging limit to apply to the
-	 * query.  If the application did not explicitly specify paging
-	 * limits, {@link Limit#NONE} is returned
+	 * query. If the application did not explicitly specify
+	 * paging limits, {@link Limit#NONE} is returned.
 	 *
 	 * @see #getLimit
 	 */
+	@Nonnull
 	default Limit getEffectiveLimit() {
-		final Limit explicit = getLimit();
-		return explicit != null ? explicit : Limit.NONE;
+		return getLimit();
 	}
 
 	/**
@@ -208,26 +233,27 @@ public interface QueryOptions {
 	 * @see #getLimit
 	 */
 	default boolean hasLimit() {
-		final Limit limit = getLimit();
-		return limit != null
-			&& (limit.getFirstRow() != null || limit.getMaxRows() != null);
+		final var limit = getLimit();
+		return limit.getFirstRow() != null
+			|| limit.getMaxRows() != null;
 	}
 
-	default ListResultsConsumer.UniqueSemantic getUniqueSemantic(){
+	@Nullable
+	default ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
 		return null;
 	}
 
 	/**
 	 * Whether this execution goes through {@code scroll()} /
-	 * {@code getResultStream()} and therefore needs SQL row ordering stable
-	 * enough for scroll-style result grouping.
+	 * {@code getResultStream()} and therefore needs SQL row
+	 * ordering stable enough for scroll-style result grouping.
 	 */
 	default boolean isScrollExecution() {
 		return false;
 	}
 
 	/**
-	 * Provide singleton access for frequently needed options:
+	 * Provide singleton access for a frequently needed option.
 	 */
 	QueryOptions NONE = new QueryOptionsAdapter() {
 	};

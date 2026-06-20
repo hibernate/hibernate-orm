@@ -30,7 +30,7 @@ public interface NamedQueryMemento<T> extends JpaReference {
 	@Nonnull
 	String getRegistrationName();
 
-	@Nullable
+	@Nonnull
 	QueryFlushMode getQueryFlushMode();
 
 	@Nullable

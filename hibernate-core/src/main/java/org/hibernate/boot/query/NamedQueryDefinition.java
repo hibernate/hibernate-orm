@@ -42,7 +42,7 @@ public interface NamedQueryDefinition<T> extends JpaReference {
 		return getRegistrationName();
 	}
 
-	@Nullable
+	@Nonnull
 	QueryFlushMode getQueryFlushMode();
 
 	@Nullable

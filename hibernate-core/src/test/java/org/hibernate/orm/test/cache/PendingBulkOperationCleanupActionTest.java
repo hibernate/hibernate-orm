@@ -6,6 +6,7 @@ package org.hibernate.orm.test.cache;
 
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -199,8 +200,10 @@ public class PendingBulkOperationCleanupActionTest {
 		}
 
 		@Override
+		@Nonnull
 		public DomainDataRegion buildDomainDataRegion(
-				DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+				@Nonnull DomainDataRegionConfig regionConfig,
+				@Nonnull DomainDataRegionBuildingContext buildingContext) {
 			if ( testDomainDataRegion == null ) {
 				testDomainDataRegion = new TestDomainDataRegion(
 						regionConfig,

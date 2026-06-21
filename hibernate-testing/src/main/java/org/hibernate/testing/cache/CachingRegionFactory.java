@@ -7,6 +7,7 @@ package org.hibernate.testing.cache;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -52,8 +53,10 @@ public class CachingRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
+	@Nonnull
 	public DomainDataRegion buildDomainDataRegion(
-			DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		return new DomainDataRegionImpl(
 				regionConfig,
 				this,
@@ -64,16 +67,18 @@ public class CachingRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
+	@Nonnull
 	protected StorageAccess createQueryResultsRegionStorageAccess(
-			String regionName,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		return new MapStorageAccessImpl();
 	}
 
 	@Override
+	@Nonnull
 	protected StorageAccess createTimestampsRegionStorageAccess(
-			String regionName,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		return new MapStorageAccessImpl();
 	}
 

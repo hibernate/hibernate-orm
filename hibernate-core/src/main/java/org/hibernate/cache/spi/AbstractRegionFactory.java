@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.AccessType;
@@ -78,7 +79,8 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public final void start(SessionFactoryOptions settings, Map<String,Object> configValues) throws CacheException {
+	public final void start(@Nonnull SessionFactoryOptions settings, @Nonnull Map<String,Object> configValues)
+			throws CacheException {
 		if ( started.compareAndSet( false, true ) ) {
 			synchronized (this) {
 				this.options = settings;
@@ -126,12 +128,14 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getDefaultAccessType() {
 		return AccessType.READ_WRITE;
 	}
 
 	@Override
-	public String qualify(String regionName) {
+	@Nonnull
+	public String qualify(@Nonnull String regionName) {
 		return RegionNameQualifier.INSTANCE.qualify( regionName, options );
 	}
 

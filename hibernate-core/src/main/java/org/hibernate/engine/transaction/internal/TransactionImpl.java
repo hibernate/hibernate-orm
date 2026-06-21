@@ -26,6 +26,7 @@ public class TransactionImpl implements Transaction {
 	@Nonnull
 	private final TransactionCoordinator transactionCoordinator;
 	private final boolean jpaCompliance;
+	@Nonnull
 	private final SharedSessionContractImplementor session;
 
 	@Nullable

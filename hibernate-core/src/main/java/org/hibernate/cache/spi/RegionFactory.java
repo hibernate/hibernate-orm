@@ -6,6 +6,7 @@ package org.hibernate.cache.spi;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
@@ -78,6 +79,7 @@ public interface RegionFactory extends Service, Stoppable {
 
 	String qualify(String regionName);
 
+	@Nonnull
 	default CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
 		return new StandardCacheTransactionSynchronization( this );
 	}

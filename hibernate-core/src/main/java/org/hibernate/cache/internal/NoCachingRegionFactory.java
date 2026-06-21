@@ -7,6 +7,7 @@ package org.hibernate.cache.internal;
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.NoCacheRegionFactoryAvailableException;
@@ -39,7 +40,8 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public void start(SessionFactoryOptions settings, Map<String,Object> configValues) throws CacheException {
+	public void start(@Nonnull SessionFactoryOptions settings, @Nonnull Map<String,Object> configValues)
+			throws CacheException {
 	}
 
 	@Override
@@ -47,7 +49,8 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
-	public String qualify(String regionName) {
+	@Nonnull
+	public String qualify(@Nonnull String regionName) {
 		return regionName;
 	}
 
@@ -57,6 +60,7 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
+	@Nullable
 	public AccessType getDefaultAccessType() {
 		return null;
 	}
@@ -68,25 +72,31 @@ public class NoCachingRegionFactory implements RegionFactory {
 
 	@Override
 	@Nonnull
-	public CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
+	public CacheTransactionSynchronization createTransactionContext(@Nonnull SharedSessionContractImplementor session) {
 		return NoCachingTransactionSynchronizationImpl.INSTANCE;
 	}
 
 	@Override
+	@Nonnull
 	public DomainDataRegion buildDomainDataRegion(
-			DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	@Override
+	@Nonnull
 	public QueryResultsRegion buildQueryResultsRegion(
-			String regionName, SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
 	@Override
+	@Nonnull
 	public TimestampsRegion buildTimestampsRegion(
-			String regionName, SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 }

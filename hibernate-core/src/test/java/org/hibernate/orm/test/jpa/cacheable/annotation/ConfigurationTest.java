@@ -6,11 +6,11 @@ package org.hibernate.orm.test.jpa.cacheable.annotation;
 
 import java.util.Arrays;
 import java.util.Map;
+
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -137,12 +137,5 @@ public class ConfigurationTest {
 	}
 
 	public static class CustomRegionFactory extends CachingRegionFactory {
-		public CustomRegionFactory() {
-		}
-
-		@Override
-		public AccessType getDefaultAccessType() {
-			return AccessType.READ_WRITE;
-		}
 	}
 }

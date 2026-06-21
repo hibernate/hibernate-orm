@@ -16,6 +16,7 @@ import javax.cache.Caching;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.spi.CachingProvider;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
@@ -63,8 +64,10 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
+	@Nonnull
 	public DomainDataRegion buildDomainDataRegion(
-			DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		return new JCacheDomainDataRegionImpl(
 				regionConfig,
 				this,
@@ -75,9 +78,10 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
+	@Nonnull
 	protected DomainDataStorageAccess createDomainDataStorageAccess(
-			DomainDataRegionConfig regionConfig,
-			DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		return new JCacheAccessImpl(
 				getOrCreateCache( regionConfig.getRegionName(), buildingContext.getSessionFactory() )
 		);
@@ -125,9 +129,10 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
+	@Nonnull
 	protected StorageAccess createQueryResultsRegionStorageAccess(
-			String regionName,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		String defaultedRegionName = defaultRegionName(
 				regionName,
 				sessionFactory,
@@ -140,9 +145,10 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
+	@Nonnull
 	protected StorageAccess createTimestampsRegionStorageAccess(
-			String regionName,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		String defaultedRegionName = defaultRegionName(
 				regionName,
 				sessionFactory,

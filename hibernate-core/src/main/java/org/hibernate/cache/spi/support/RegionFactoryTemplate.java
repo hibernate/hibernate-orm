@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
@@ -19,9 +20,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  */
 public abstract class RegionFactoryTemplate extends AbstractRegionFactory {
 	@Override
+	@Nonnull
 	public DomainDataRegion buildDomainDataRegion(
-			DomainDataRegionConfig regionConfig,
-			DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		verifyStarted();
 		return new DomainDataRegionTemplate(
 				regionConfig,
@@ -36,16 +38,18 @@ public abstract class RegionFactoryTemplate extends AbstractRegionFactory {
 		return DefaultCacheKeysFactory.INSTANCE;
 	}
 
+	@Nonnull
 	protected DomainDataStorageAccess createDomainDataStorageAccess(
-			DomainDataRegionConfig regionConfig,
-			DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		throw new UnsupportedOperationException( "Not implemented by caching provider" );
 	}
 
 	@Override
+	@Nonnull
 	public QueryResultsRegion buildQueryResultsRegion(
-			String regionName,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		verifyStarted();
 		return new QueryResultsRegionTemplate(
 				regionName,
@@ -54,13 +58,16 @@ public abstract class RegionFactoryTemplate extends AbstractRegionFactory {
 		);
 	}
 
+	@Nonnull
 	protected abstract StorageAccess createQueryResultsRegionStorageAccess(
-			String regionName,
-			SessionFactoryImplementor sessionFactory);
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory);
 
 	@Override
+	@Nonnull
 	public TimestampsRegion buildTimestampsRegion(
-			String regionName, SessionFactoryImplementor sessionFactory) {
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		verifyStarted();
 		return new TimestampsRegionTemplate(
 				regionName,
@@ -69,7 +76,8 @@ public abstract class RegionFactoryTemplate extends AbstractRegionFactory {
 		);
 	}
 
+	@Nonnull
 	protected abstract StorageAccess createTimestampsRegionStorageAccess(
-			String regionName,
-			SessionFactoryImplementor sessionFactory);
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory);
 }

@@ -92,6 +92,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		return jdbcSessionOwner.getSqlExceptionHelper();
 	}
 
+	@Nonnull
 	private Connection acquireConnectionIfNeeded() {
 		if ( physicalConnection == null ) {
 			physicalConnection = acquire();
@@ -132,6 +133,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
+	@Nonnull
 	public Connection getPhysicalConnection() {
 		errorIfClosed();
 		return acquireConnectionIfNeeded();
@@ -184,7 +186,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	@Override
-	public void manualReconnect(Connection suppliedConnection) {
+	public void manualReconnect(@Nonnull Connection suppliedConnection) {
 		if ( closed ) {
 			throw new ResourceClosedException( "Logical connection is closed" );
 		}

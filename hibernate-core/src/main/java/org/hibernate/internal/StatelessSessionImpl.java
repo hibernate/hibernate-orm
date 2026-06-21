@@ -149,12 +149,20 @@ public class StatelessSessionImpl
 		extends AbstractSharedSessionContract
 		implements StatelessSessionImplementor, StatelessLoadAccessContext {
 
+	@Nonnull
 	private final LoadQueryInfluencers influencers;
+
+	@Nonnull
 	private final PersistenceContext temporaryPersistenceContext;
 	private final boolean connectionProvided;
+
+	@Nonnull
 	private final TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;
 
+	@Nonnull
 	private final FlushMode flushMode;
+
+	@Nonnull
 	private final EventListenerGroups eventListenerGroups;
 
 	public StatelessSessionImpl(SessionFactoryImpl factory, StatelessOptions options) {

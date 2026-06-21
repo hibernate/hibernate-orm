@@ -6,6 +6,7 @@ package org.hibernate.cache.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.NoCacheRegionFactoryAvailableException;
@@ -66,6 +67,7 @@ public class NoCachingRegionFactory implements RegionFactory {
 	}
 
 	@Override
+	@Nonnull
 	public CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
 		return NoCachingTransactionSynchronizationImpl.INSTANCE;
 	}

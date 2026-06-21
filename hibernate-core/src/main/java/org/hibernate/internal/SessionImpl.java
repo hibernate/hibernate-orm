@@ -162,15 +162,21 @@ public class SessionImpl
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, StatefulLoadAccessContext {
 
+	@Nonnull
 	private transient ActionQueue actionQueue;
+	@Nonnull
 	private transient EventListenerGroups eventListenerGroups;
+	@Nonnull
 	private transient PersistenceContext persistenceContext;
 
+	@Nonnull
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
 	@SuppressWarnings("removal")
+	@Nullable
 	private LockOptions lockOptions;
 
+	@Nonnull
 	private FlushMode flushMode;
 
 	private final boolean autoClear;
@@ -178,7 +184,9 @@ public class SessionImpl
 
 	private final boolean identifierRollbackEnabled;
 
+	@Nullable
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
+	@Nullable
 	private transient PostLoadEvent postLoadEvent; //cached PostLoadEvent instance
 
 	private transient TransactionObserver transactionObserver;
@@ -244,6 +252,7 @@ public class SessionImpl
 		}
 	}
 
+	@Nonnull
 	private FlushMode getInitialFlushMode(SessionCreationOptions options) {
 		final var initialSessionFlushMode = options.getInitialSessionFlushMode();
 		if ( initialSessionFlushMode != null ) {
@@ -2021,14 +2030,14 @@ public class SessionImpl
 	}
 
 	@Override
-	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+	protected void addSharedSessionTransactionObserver(@Nonnull TransactionCoordinator transactionCoordinator) {
 		transactionObserver = new TransactionObserver() {
 			@Override
-	public void afterBegin() {
+			public void afterBegin() {
 			}
 
 			@Override
-	public void beforeCompletion() {
+			public void beforeCompletion() {
 				if ( isOpen() && getHibernateFlushMode() !=  FlushMode.MANUAL ) {
 					managedFlush();
 				}
@@ -2037,7 +2046,7 @@ public class SessionImpl
 			}
 
 			@Override
-	public void afterCompletion(boolean successful, boolean delayed) {
+			public void afterCompletion(boolean successful, boolean delayed) {
 				afterTransactionCompletion( successful, delayed );
 				if ( !isClosed() && autoClose ) {
 					managedClose();
@@ -2048,7 +2057,7 @@ public class SessionImpl
 	}
 
 	@Override
-	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
+	protected void removeSharedSessionTransactionObserver(@Nonnull TransactionCoordinator transactionCoordinator) {
 		super.removeSharedSessionTransactionObserver( transactionCoordinator );
 		transactionCoordinator.removeObserver( transactionObserver );
 	}
@@ -2836,7 +2845,7 @@ public class SessionImpl
 
 	// Used by Hibernate reactive
 	protected Boolean getReadOnlyFromLoadQueryInfluencers() {
-		return loadQueryInfluencers == null ? null : loadQueryInfluencers.getReadOnly();
+		return loadQueryInfluencers.getReadOnly();
 	}
 
 	@Override @Deprecated

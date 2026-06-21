@@ -12,6 +12,7 @@ import java.sql.Connection;
 import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -24,6 +25,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Nonnull
 	protected ResourceRegistry resourceRegistry;
+	@Nullable
 	private transient Connection providedConnection;
 	private final boolean initiallyAutoCommit;
 	private boolean closed;
@@ -44,7 +46,8 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	@Override
-	public @Nonnull PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+	@Nonnull
+	public PhysicalConnectionHandlingMode getConnectionHandlingMode() {
 		return IMMEDIATE_ACQUISITION_AND_HOLD;
 	}
 
@@ -54,7 +57,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	@Override
-	@Nonnull
+	@Nullable
 	public Connection close() {
 		CONNECTION_LOGGER.closingLogicalConnection();
 		getResourceRegistry().releaseResources();
@@ -74,8 +77,12 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	@Override
+	@Nonnull
 	public Connection getPhysicalConnection() {
 		errorIfClosed();
+		if ( providedConnection == null ) {
+			throw new IllegalStateException( "No provided connection" );
+		}
 		return providedConnection;
 	}
 
@@ -105,7 +112,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	@Override
-	public void manualReconnect(Connection connection) {
+	public void manualReconnect(@Nonnull Connection connection) {
 		errorIfClosed();
 		if ( connection == null ) {
 			throw new IllegalArgumentException( "cannot reconnect using a null connection" );

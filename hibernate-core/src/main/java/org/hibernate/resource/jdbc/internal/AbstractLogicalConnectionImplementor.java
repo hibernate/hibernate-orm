@@ -28,6 +28,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	private TransactionStatus status = TransactionStatus.NOT_ACTIVE;
 
 	@Override
+	@Nonnull
 	public PhysicalJdbcTransaction getPhysicalJdbcTransaction() {
 		errorIfClosed();
 		return this;

@@ -13,7 +13,6 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.support.RegionNameQualifier;
 import org.hibernate.cache.spi.support.SimpleTimestamper;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
@@ -134,11 +133,6 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	@Override
 	public String qualify(String regionName) {
 		return RegionNameQualifier.INSTANCE.qualify( regionName, options );
-	}
-
-	@Override
-	public CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
-		return new StandardCacheTransactionSynchronization( this );
 	}
 
 	@Override

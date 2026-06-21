@@ -417,6 +417,80 @@ metadata through
 link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/EntityTypeMetadata.java[`EntityTypeMetadata#getCompleteJpaEventListeners()`].
 
 
+[[_bootstrap_phase_contract]]
+== Bootstrap Phase Contract
+
+The pipeline has one guiding rule:
+
+Binding records source-aware facts and resolved intents.
+Materialization creates or mutates `org.hibernate.mapping` objects based on
+those facts and intents.
+
+Do not add a new phase just because a feature feels complicated.  Add a phase
+only when some work must wait until a clearly defined dependency is available
+for every managed type, collection, or table.  Otherwise, prefer a typed pending
+binding or a resolved product consumed by an existing phase.
+
+[cols="1,2,2", options="header"]
+|===
+| Step
+| Owns
+| Must not own
+
+| Source collection
+| Persistence-unit resources, mapping files, package details, scanner results
+| Annotation interpretation, binding decisions, mapping-object mutation
+
+| Categorization
+| Source interpretation into typed persistent-type, member, hierarchy, XML, and
+global-registration facts
+| `org.hibernate.mapping` object construction or physical constraint creation
+
+| Binding intent capture
+| Binding products, source descriptors, value shapes, selectable
+correspondence, pending work, and compatibility lookup shells
+| Opportunistic physical `PrimaryKey`, `ForeignKey`, `UniqueKey`, or `Index`
+creation
+
+| Value/table materialization
+| `Table`, `Column`, `Value`, `Property`, `PersistentClass`, `Join`, and
+collection-table mapping objects needed as compatibility anchors or later
+materialization targets
+| Final physical keys and constraints unless the current phase explicitly owns
+that artifact
+
+| Key/constraint materialization
+| Physical `PrimaryKey`, `ForeignKey`, `UniqueKey`, `Index`, and table-level
+constraint objects from resolved products
+| Re-reading raw annotations or inventing source semantics from mutable mapping
+objects
+
+| Cross-reference finalization
+| Property-ref associations, inverse associations, derived identifiers,
+synthetic properties, and other work that requires both sides to be bound
+| Creating new side channels when typed pending state or resolved products can
+carry the dependency
+
+| Validation and compatibility finalization
+| Mapping consistency checks and transitional compatibility behavior still
+needed by old mapping consumers
+| New semantic binding decisions
+|===
+
+Materialization therefore has a phase concept, but it is an ownership and
+ordering concept first, not necessarily a separate coordinator framework.
+Today, materializers are invoked from the binding phase that owns their
+dependencies: table-key materializers run after values and tables are available,
+foreign-key materializers run after association targets and inverse structures
+are stable, and collection/index materializers run after collection key, element,
+and index columns are known.
+
+If materialization ordering becomes too large for the binding phase interfaces
+to express clearly, introduce a small materialization coordinator with the same
+contract: each materialization phase consumes resolved products, creates or
+mutates mapping artifacts, and does not rediscover source metadata.
+
+
 == Type Binders
 
 Model binding starts by walking every categorized entity hierarchy.  For each
@@ -455,6 +529,13 @@ both sides of an association have tables and columns.  Rather than using
 callbacks or lazy resolution, the coordinator runs a fixed sequence of narrow
 phases.  Each phase can assume that all prior phases have completed for all
 types in all hierarchies.
+
+Treat these as dependency boundaries, not as buckets for arbitrary work.  A
+phase may collect binding facts, resolve pending work, or invoke a materializer,
+but it should do so only for artifacts whose dependencies are guaranteed by that
+point in the sequence.  If a materializer needs more information than the phase
+has, carry that information forward as typed pending state instead of looking
+back at raw source metadata or mutable mapping objects.
 
 The phase contracts live here:
 
@@ -506,6 +587,12 @@ The order is:
 
 Binders implement only the phases they participate in.  The coordinator checks
 whether each binder implements the phase interface before invoking it.
+
+Materialization does not currently require a separate public phase interface for
+each artifact family.  The important contract is that the binding phase that
+invokes a materializer owns that artifact's dependency boundary and passes a
+resolved product such as `ResolvedForeignKey`, `ResolvedUniqueKey`, or
+`ResolvedIndex`.
 
 
 == Pending State
@@ -592,16 +679,19 @@ A useful workflow:
 1. Identify where the source fact should be categorized.
 2. Add or extend a source descriptor if the binder needs normalized annotation or
    XML facts.
-3. Record the earliest binding fact or compatibility shell in the earliest safe
+3. Decide which phase contract owns the work: binding intent capture,
+   value/table materialization, key/constraint materialization, cross-reference
+   finalization, or validation.
+4. Record the earliest binding fact or compatibility shell in the earliest safe
    phase.
-4. If anything depends on later state, register typed pending state in
+5. If anything depends on later state, register typed pending state in
    link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingState.java[`BindingState`].
-5. Resolve the pending state in the narrowest phase that has the dependency
+6. Resolve the pending state in the narrowest phase that has the dependency
    available.
-6. Materialize mapping objects through an existing materializer, or add a narrow
+7. Materialize mapping objects through an existing materializer, or add a narrow
    resolved product plus materializer when the work creates physical mapping
    artifacts such as keys, constraints, indexes, or compatibility values.
-7. Add focused tests for both the produced mapping object and the phase-ordering
+8. Add focused tests for both the produced mapping object and the phase-ordering
    edge case.
 
 Useful questions:
@@ -615,6 +705,8 @@ Useful questions:
   re-read raw annotations?
 * Is an ordering problem better modeled as a narrow phase or typed pending
   binding?
+* Is this materialization ordering already owned by an existing phase, or does
+  the feature expose a genuinely new cross-type dependency boundary?
 * Is this code creating a physical table artifact?  If so, should it use a
   resolved product and a materializer instead of mutating a `Value`, `Table`, or
   `Collection` opportunistically?

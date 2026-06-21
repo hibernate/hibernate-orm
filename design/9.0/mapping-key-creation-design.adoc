@@ -43,6 +43,14 @@ not to redesign `org.hibernate.mapping` for aesthetics.  The goal is to remove
 side effects that obscure ordering, ownership, source metadata, and
 correspondence between local and referenced selectables.
 
+This design follows the bootstrap phase contract described in
+link:new-contributor-model-binding-guide.adoc#_bootstrap_phase_contract[`new-contributor-model-binding-guide.adoc`]:
+binding captures key facts and resolved intents, while materializers own the
+physical `PrimaryKey`, `ForeignKey`, `UniqueKey`, and `Index` mutations.  The
+materialization boundary is explicit even when the current implementation
+invokes a materializer from a binding phase such as `TableKeys` or
+`ForeignKeys`.
+
 == Proposed Shape
 
 Keep `Table`, `PrimaryKey`, `ForeignKey`, `UniqueKey`, and `Index` as mapping

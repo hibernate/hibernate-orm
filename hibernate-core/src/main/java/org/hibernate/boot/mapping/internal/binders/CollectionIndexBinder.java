@@ -100,9 +100,8 @@ class CollectionIndexBinder {
 			return;
 		}
 		if ( isEntityMapKey( source, bindingState ) ) {
-			throw new UnsupportedOperationException(
-					"Entity-valued map keys require @MapKeyJoinColumn support - " + collection.getRole()
-			);
+			bindEntityMapKey( source, collection, table, bindingState );
+			return;
 		}
 		final ComponentMapKey componentMapKey = resolveComponentMapKey( source, bindingState, bindingContext );
 		if ( componentMapKey != null ) {
@@ -333,9 +332,46 @@ class CollectionIndexBinder {
 			}
 			return index;
 		}
+		if ( targetPropertyValue instanceof ManyToOne manyToOne ) {
+			final ManyToOne index = new ManyToOne(
+					bindingState.getMetadataBuildingContext(),
+					collection.getCollectionTable()
+			);
+			index.setReferencedEntityName( manyToOne.getReferencedEntityName() );
+			index.setReferenceToPrimaryKey( manyToOne.isReferenceToPrimaryKey() );
+			index.setReferencedPropertyName( manyToOne.getReferencedPropertyName() );
+			index.setTypeName( manyToOne.getTypeName() );
+			index.setTypeUsingReflection(
+					collection.getOwner().getClassName(),
+					collection.getRole().substring( collection.getRole().lastIndexOf( '.' ) + 1 )
+			);
+			if ( manyToOne.isLogicalOneToOne() ) {
+				index.markAsLogicalOneToOne();
+			}
+			for ( Column column : manyToOne.getColumns() ) {
+				index.addColumn( copyColumn( collection.getCollectionTable(), column, column.isUnique() ) );
+			}
+			return index;
+		}
 		throw new UnsupportedOperationException(
-				"@MapKey(name) is only implemented for basic target properties - " + collection.getRole()
+				"@MapKey(name) is only implemented for basic and to-one target properties - " + collection.getRole()
 		);
+	}
+
+	private static Column copyColumn(Table table, Column source, boolean unique) {
+		final Column result = new Column( source.getName() );
+		result.setLength( source.getLength() );
+		result.setPrecision( source.getPrecision() );
+		result.setScale( source.getScale() );
+		result.setSqlType( source.getSqlType() );
+		result.setNullable( source.isNullable() );
+		result.setUnique( unique );
+		table.addColumn( result );
+		final Column canonicalColumn = table.getColumn( result );
+		final Column column = canonicalColumn == null ? result : canonicalColumn;
+		column.setNullable( source.isNullable() );
+		column.setUnique( unique );
+		return column;
 	}
 
 	private static void bindBasicMapKey(

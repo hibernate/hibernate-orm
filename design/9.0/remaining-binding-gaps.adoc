@@ -106,15 +106,19 @@ implemented element-collection / many-to-many paths.  Unsupported plural member
 shapes still throw.
 
 | Entity-valued map keys
-| source-confirmed gap
-| `CollectionIndexBinder` still has unsupported paths for entity-valued map keys
-requiring `@MapKeyJoinColumn` support.
+| test-only gap
+| `CollectionIndexBinder` now supports entity-valued map keys when explicit
+`@MapKeyJoinColumn` / `@MapKeyJoinColumns` metadata is present, including
+non-primary-key references through late association-target binding.  It also
+supports implicit primary-key references when no explicit map-key join columns
+are declared.  Keep focused coverage on composite implicit key shapes and
+runtime SQL behavior.
 
 | `@MapKey(name)` for non-basic target properties
 | source-confirmed gap
-| `CollectionIndexBinder` currently implements property map keys for basic target
-properties.  Component-valued, association-valued, or otherwise complex target
-properties need parity decisions.
+| `CollectionIndexBinder` implements property map keys for basic target
+properties and to-one target properties.  Component-valued or otherwise complex
+target properties need parity decisions.
 
 | Implicit `@MapKey`
 | source-confirmed gap
@@ -123,8 +127,10 @@ Other map element shapes need coverage or explicit rejection.
 
 | Inverse map-valued `@ManyToMany`
 | source-confirmed gap
-| `InversePluralAssociationBinder` handles basic and to-one owning map keys, but
-still rejects other inverse map-key shapes.
+| `InversePluralAssociationBinder` handles basic and to-one owning map keys,
+including implicit entity-valued map keys and to-one `@MapKey(name)` target
+properties.  It still rejects component-valued or otherwise complex owning
+map-key indexes.
 
 | `@Any` key inference
 | source-confirmed gap
@@ -134,8 +140,9 @@ identifiers with matching Java types.
 
 | Column/table `options`
 | source-confirmed gap
-| `ColumnBinder` still throws for column options instead of applying them.  Table
-options should be checked at the same time because `TableSource` carries them.
+| `TableBinder` applies `TableSource` options and the resolved unique-key/index
+materializers apply key/index options.  `ColumnBinder` still throws for column
+options instead of applying them.
 
 | Constructor-level `@Instantiator`
 | source-confirmed gap
@@ -148,6 +155,91 @@ in the way this pipeline needs.
 | XML processing still leaves `<mapped-superclass/>` in dynamic models as an open
 question.
 |===
+
+== Focused Gap Refresh: 2026-06-20
+
+This refresh was taken after the explicit key/materialization slice described
+in `current-work-handoff.adoc`.
+
+Source-confirmed refresh:
+
+* Table-key, foreign-key, unique-key, and index creation are no longer good
+  top-level gap buckets by themselves.  Current source routes the important
+  new-pipeline and cheap legacy callers through resolved products such as
+  `ResolvedForeignKey`, `ResolvedUniqueKey`, `ResolvedIndex`, and
+  `ResolvedPrimaryTableKey`, then through materializers.
+* Collection-table unique constraints and indexes now have resolved
+  materialization coverage.  Collection-table owner keys still deserve focused
+  parity testing because they combine implicit naming, explicit join columns,
+  FK ordering, PK/UK finalization, and inverse collection handling.
+* Entity-valued map keys with explicit `@MapKeyJoinColumn` metadata and
+  implicit primary-key references are covered in boot-model tests.  The
+  remaining map-key source-confirmed gaps are complex component-valued
+  `@MapKey(name)` target properties and inverse map-valued many-to-many keys
+  beyond basic/to-one owning indexes.
+* Table options are applied at table binding time.  Column options remain a
+  source-confirmed gap.
+* Identifier binding should stay narrowed to newly observed failing shapes.
+  The recent identifier/materializer work covers the main simple, embedded,
+  IdClass bridge, association-id, and derived-id guardrails.
+
+Recommended next parity bucket:
+
+* Highest-signal bucket: collections/plural association keys, with map-key and
+  collection-table owner-key parity first.  This bucket is still
+  source-confirmed, appeared repeatedly in broad-run failure streams, and is
+  directly adjacent to the new materialization contract.
+* Start with boot-model mapping-state tests before broad runtime tests.  The
+  most useful first guardrail is:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests'
+----
+
+Focused verification result:
+
+* Initial run exposed one owner-key naming parity failure:
+  `ElementCollectionBindingTests.testImplicitCollectionTableName` expected the
+  implicit collection-table owner key column to reuse the referenced identifier
+  column name `id`, but the new table-key binder produced
+  `ImplicitCollectionTableOwner_id`.
+* Small fix: when a collection table declares no explicit owner join columns,
+  `TableKeyBinder` now binds the dependent key column from the referenced
+  identifier column name directly.  Explicit join columns, joined-subclass
+  keys, secondary-table keys, and association-table keys keep their existing
+  paths.
+* Rerun status: the focused collection boot-model guardrail above passed.
+
+Follow-up map-key slice:
+
+* Implicit entity-valued map keys without `@MapKeyJoinColumn` now bind through
+  the same entity map-key path as explicit primary-key references.
+* `@MapKey(name)` now supports to-one target properties by copying the target
+  `ManyToOne` as the collection index value; component-valued target properties
+  remain open.
+* Inverse map-valued many-to-many binding was verified for implicit
+  entity-valued owning map keys and to-one property map keys.  The existing
+  inverse binder copies the owning `ManyToOne` index cleanly for both shapes.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitEntityMapKeyElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyEntityMapKeyWithoutMapKeyJoinColumn' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyToOnePropertyMapKey'
+----
+
+Additional inverse verification passed for:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByImplicitEntityMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByToOnePropertyMapKey'
+----
 
 == Core Guardrail Attempt: 2026-06-17
 

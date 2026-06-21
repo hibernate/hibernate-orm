@@ -18,6 +18,9 @@ pipeline:
   materialization are separate phases;
 * semantic binding facts are recorded before compatibility
   `org.hibernate.mapping` objects are populated;
+* the contributor guide now defines a bootstrap phase contract: binding captures
+  source-aware facts and resolved intents, while materialization owns
+  `org.hibernate.mapping` creation/mutation;
 * views over the binding model are intended to support more than one consumer,
   including mapping-object materialization and JPA static metamodel planning;
 * hidden key creation and ordering side effects are being replaced by explicit
@@ -151,6 +154,12 @@ This slice is not a full mapping-key redesign yet.
 It is the bridge that makes remaining hidden key creation visible and easier to
 drain.
 
+The key/materialization work is close enough to the finish line that a fresh
+conversation can safely switch back to
+link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`] and use the
+phase/materializer contract as background rather than continuing horizontally
+through more key-creation cleanup.
+
 == Deliberate Transitional Bridges
 
 Do not treat these as accidental leftovers:
@@ -208,6 +217,20 @@ legacy helpers for removal.
 
 The best next step depends on the desired risk profile.
 
+If switching back to binding parity:
+
+* start from link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`];
+* refresh the source-confirmed gap list against the current code, because recent
+  materialization work may have closed or reframed some table-key, FK, unique
+  key, index, and collection-table shapes;
+* choose one focused bucket and verify it with a small `hibernate-core` test
+  run before broadening;
+* keep fixes aligned with the bootstrap phase contract in
+  link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]:
+  categorize source facts, bind intents and pending work, and materialize
+  `org.hibernate.mapping` artifacts only through the appropriate materializer or
+  compatibility bridge.
+
 If finishing the active key-creation work:
 
 * continue link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`];
@@ -241,6 +264,20 @@ If looking for correctness failures:
 * refresh link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`] with a
   focused `hibernate-core` failure run;
 * prefer bucketed fixes over broad source/categorization churn.
+
+== Suggested Fresh-Conversation Request
+
+Use this prompt to resume in a new conversation:
+
+[source,text]
+----
+Please read design/9.0/current-work-handoff.adoc first, then switch focus back
+to design/9.0/remaining-binding-gaps.adoc.  Start by refreshing the gap list
+against the current worktree, taking the new bootstrap phase contract and
+materialization/key-creation work into account.  Recommend the highest-signal
+binding parity bucket to attack next, then begin with a focused verification
+run and small, bucketed fixes.
+----
 
 == Fresh-Context Cautions
 

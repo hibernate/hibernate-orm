@@ -753,6 +753,30 @@ public class ElementCollectionBindingTests {
 
 	@Test
 	@ServiceRegistry
+	void testImplicitEntityMapKeyElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ImplicitEntityMapKeyOwner.class.getName() );
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) entityBinding.getProperty( "labels" )
+							.getValue();
+					final ManyToOne key = (ManyToOne) collection.getIndex();
+
+					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "implicit_entity_map_key_owner_labels" );
+					assertThat( key.getReferencedEntityName() ).isEqualTo( LabelKey.class.getName() );
+					assertThat( key.isReferenceToPrimaryKey() ).isTrue();
+					assertThat( key.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "id_id" );
+				},
+				scope.getRegistry(),
+				ImplicitEntityMapKeyOwner.class,
+				LabelKey.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testEntityMapKeyElementCollectionNonPrimaryKeyReference(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -1731,6 +1755,20 @@ public class ElementCollectionBindingTests {
 	public static class LabelKey {
 		@Id
 		private Integer id;
+	}
+
+	@Entity(name="ImplicitEntityMapKeyOwner")
+	@Table(name="implicit_entity_map_key_owners")
+	public static class ImplicitEntityMapKeyOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "implicit_entity_map_key_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@Column(name = "label")
+		private Map<LabelKey, String> labels;
 	}
 
 	@Entity(name="EntityMapKeyNonPkOwner")

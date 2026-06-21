@@ -158,6 +158,14 @@ CategorizedDomainModel + settings/defaults/global registrations
 
 Binding should not need raw `MetadataSources` or raw `ManagedResources`.
 
+The detailed phase contract lives in
+link:new-contributor-model-binding-guide.adoc#_bootstrap_phase_contract[`new-contributor-model-binding-guide.adoc`].
+In short, binding captures source-aware facts and resolved intents, while
+materialization owns creation or mutation of `org.hibernate.mapping` artifacts.
+Materialization has ordering requirements, but it should remain an ownership
+boundary unless those requirements grow large enough to justify a separate
+materialization coordinator.
+
 == Plan
 
 Concrete Refined Plan

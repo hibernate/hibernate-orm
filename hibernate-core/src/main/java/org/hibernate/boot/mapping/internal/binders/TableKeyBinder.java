@@ -8,10 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
-import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.DependentTableKeyMappingMaterializer;
@@ -429,12 +425,7 @@ public class TableKeyBinder {
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
 			final Column identifierColumn = targetColumns.get( i );
 			final Column keyColumn = orderedJoinColumns.isEmpty()
-					? bindKeyColumn(
-							table,
-							identifierColumn,
-							null,
-							() -> implicitCollectionKeyColumnName( identifierColumn )
-					)
+					? bindKeyColumn( table, identifierColumn, null )
 					: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) );
 			table.addColumn( keyColumn );
 			key.addColumn( keyColumn, true, updateable );
@@ -457,44 +448,6 @@ public class TableKeyBinder {
 
 	private Column bindKeyColumn(Table table, Column identifierColumn, jakarta.persistence.JoinColumn joinColumn) {
 		return bindKeyColumn( table, identifierColumn, joinColumn, identifierColumn::getName );
-	}
-
-	private String implicitCollectionKeyColumnName(Column referencedColumn) {
-		final MetadataBuildingContext buildingContext = bindingState.getMetadataBuildingContext();
-		final Identifier name = buildingContext.getBuildingOptions()
-				.getImplicitNamingStrategy()
-				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
-					@Override
-					public Nature getNature() {
-						return Nature.ENTITY_COLLECTION;
-					}
-
-					@Override
-					public EntityTypeMetadata getEntityNaming() {
-						return entityBinder.getManagedType();
-					}
-
-					@Override
-					public AttributePath getAttributePath() {
-						return null;
-					}
-
-					@Override
-					public Identifier getReferencedTableName() {
-						return entityBinder.getTypeBinding().getTable().getNameIdentifier();
-					}
-
-					@Override
-					public Identifier getReferencedColumnName() {
-						return referencedColumn.getNameIdentifier( buildingContext );
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return buildingContext;
-					}
-				} );
-		return name.render( buildingContext.getMetadataCollector().getDatabase().getDialect() );
 	}
 
 	private Column bindKeyColumn(

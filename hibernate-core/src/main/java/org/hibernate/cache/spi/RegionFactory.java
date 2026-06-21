@@ -7,6 +7,7 @@ package org.hibernate.cache.spi;
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
@@ -61,7 +62,8 @@ public interface RegionFactory extends Service, Stoppable {
 	 * considered as a sign to stop {@link org.hibernate.SessionFactory}
 	 * building.
 	 */
-	void start(SessionFactoryOptions settings, Map<String,Object> configValues) throws CacheException;
+	void start(@Nonnull SessionFactoryOptions settings, @Nonnull Map<String,Object> configValues)
+			throws CacheException;
 
 	/**
 	 * By default, should we perform "minimal puts" when using this second
@@ -75,12 +77,14 @@ public interface RegionFactory extends Service, Stoppable {
 	/**
 	 * Get the default access type for any "user model" data.
 	 */
+	@Nullable
 	AccessType getDefaultAccessType();
 
-	String qualify(String regionName);
+	@Nonnull String qualify(@Nonnull String regionName);
 
 	@Nonnull
-	default CacheTransactionSynchronization createTransactionContext(SharedSessionContractImplementor session) {
+	default CacheTransactionSynchronization createTransactionContext(
+			@Nonnull SharedSessionContractImplementor session) {
 		return new StandardCacheTransactionSynchronization( this );
 	}
 
@@ -108,19 +112,23 @@ public interface RegionFactory extends Service, Stoppable {
 	 * @param regionConfig The user requested caching configuration for this Region
 	 * @param buildingContext Access to delegates useful in building the Region
 	 */
-	DomainDataRegion buildDomainDataRegion(
-			DomainDataRegionConfig regionConfig,
-			DomainDataRegionBuildingContext buildingContext);
+	@Nonnull DomainDataRegion buildDomainDataRegion(
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext);
 
 
 	/**
 	 * Create a named {@link Region} for holding query result sets.
 	 */
-	QueryResultsRegion buildQueryResultsRegion(String regionName, SessionFactoryImplementor sessionFactory);
+	@Nonnull QueryResultsRegion buildQueryResultsRegion(
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory);
 
 	/**
 	 * Create a named {@link Region} for holding timestamps used to
 	 * determine when a cached query result set is stale.
 	 */
-	TimestampsRegion buildTimestampsRegion(String regionName, SessionFactoryImplementor sessionFactory);
+	@Nonnull TimestampsRegion buildTimestampsRegion(
+			@Nonnull String regionName,
+			@Nonnull SessionFactoryImplementor sessionFactory);
 }

@@ -49,7 +49,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		// (flushBeginning/flushEnding), which disables aggressive connection release.
 		// Individual statements are released from the resource registry as they complete,
 		// but the connection itself is retained.
-		var physicalConnection = session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
+		final var physicalConnection = session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 		doExecution(
 				physicalConnection,
 				flushOperations,

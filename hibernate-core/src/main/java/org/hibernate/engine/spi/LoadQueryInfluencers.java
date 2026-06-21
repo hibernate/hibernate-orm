@@ -51,35 +51,45 @@ import static org.hibernate.graph.spi.GraphHelper.appliesTo;
  */
 public class LoadQueryInfluencers implements Serializable {
 
+	@Nonnull
 	private final SessionFactoryImplementor sessionFactory;
 
+	@Nullable
 	private CascadingFetchProfile enabledCascadingFetchProfile;
 
 	//Lazily initialized!
-	private @Nullable HashSet<String> enabledFetchProfileNames;
+	@Nullable
+	private HashSet<String> enabledFetchProfileNames;
 
 	//Lazily initialized!
 	//Note that ordering is important for cache keys
-	private @Nullable TreeMap<String,Filter> enabledFilters;
+	@Nullable
+	private TreeMap<String,Filter> enabledFilters;
 
 	private boolean subselectFetchEnabled;
 
 	private int batchSize;
+	@Nonnull
 	private FetchOptions fetchOptions = FetchOptions.NONE;
 
+	@Nonnull
 	private final EffectiveEntityGraph effectiveEntityGraph;
 
+	@Nullable
 	private Boolean readOnly;
+	@Nullable
 	private Object temporalIdentifier;
 
-	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
+	public LoadQueryInfluencers(@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 		batchSize = sessionFactory.getSessionFactoryOptions().getDefaultBatchFetchSize();
 		subselectFetchEnabled = sessionFactory.getSessionFactoryOptions().isSubselectFetchEnabled();
 		effectiveEntityGraph = new EffectiveEntityGraph();
 	}
 
-	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory, SessionCreationOptions options) {
+	public LoadQueryInfluencers(
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionCreationOptions options) {
 		this.sessionFactory = sessionFactory;
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
@@ -97,6 +107,7 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
+	@Nonnull
 	public EffectiveEntityGraph applyEntityGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic) {
 		final var effectiveEntityGraph = getEffectiveEntityGraph();
 		if ( graphSemantic != null ) {
@@ -108,15 +119,17 @@ public class LoadQueryInfluencers implements Serializable {
 		return effectiveEntityGraph;
 	}
 
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
+	@Nullable
 	public Object getTemporalIdentifier() {
 		return temporalIdentifier;
 	}
 
-	public void setTemporalIdentifier(Object temporalIdentifier) {
+	public void setTemporalIdentifier(@Nullable Object temporalIdentifier) {
 		this.temporalIdentifier = temporalIdentifier;
 	}
 
@@ -127,7 +140,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public <T> T fromInternalFetchProfile(CascadingFetchProfile profile, Supplier<T> supplier) {
+	public <T> T fromInternalFetchProfile(@Nonnull CascadingFetchProfile profile, @Nonnull Supplier<T> supplier) {
 		final var previous = enabledCascadingFetchProfile;
 		enabledCascadingFetchProfile = profile;
 		try {
@@ -144,6 +157,7 @@ public class LoadQueryInfluencers implements Serializable {
 	 * handling a {@linkplain org.hibernate.Session#merge merge} to
 	 * immediately load additional based on {@linkplain jakarta.persistence.CascadeType#MERGE}
 	 */
+	@Nullable
 	public CascadingFetchProfile getEnabledCascadingFetchProfile() {
 		return enabledCascadingFetchProfile;
 	}
@@ -155,7 +169,7 @@ public class LoadQueryInfluencers implements Serializable {
 	/**
 	 * Set the effective {@linkplain #getEnabledCascadingFetchProfile() cascading fetch-profile}
 	 */
-	public void setEnabledCascadingFetchProfile(CascadingFetchProfile enabledCascadingFetchProfile) {
+	public void setEnabledCascadingFetchProfile(@Nullable CascadingFetchProfile enabledCascadingFetchProfile) {
 		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
 	}
 
@@ -166,6 +180,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return enabledFilters != null && !enabledFilters.isEmpty();
 	}
 
+	@Nonnull
 	public Map<String,Filter> getEnabledFilters() {
 		final var enabledFilters = this.enabledFilters;
 		if ( enabledFilters == null ) {
@@ -185,15 +200,18 @@ public class LoadQueryInfluencers implements Serializable {
 	 * Returns an unmodifiable Set of enabled filter names.
 	 * @return an unmodifiable Set of enabled filter names.
 	 */
+	@Nonnull
 	public Set<String> getEnabledFilterNames() {
 		return enabledFilters == null ? emptySet() : unmodifiableSet( enabledFilters.keySet() );
 	}
 
-	public @Nullable Filter getEnabledFilter(@Nonnull String filterName) {
+	@Nullable
+	public Filter getEnabledFilter(@Nonnull String filterName) {
 		return enabledFilters == null ? null : enabledFilters.get( filterName );
 	}
 
-	public Filter enableFilter(SessionCreationOption.EnabledFilter enabledFilterOption) {
+	@Nonnull
+	public Filter enableFilter(@Nonnull SessionCreationOption.EnabledFilter enabledFilterOption) {
 		final var filter = enableFilter( enabledFilterOption.name() );
 		for ( var entry : enabledFilterOption.arguments().entrySet() ) {
 			setFilterParameter( filter, entry.getKey(), entry.getValue() );
@@ -201,7 +219,10 @@ public class LoadQueryInfluencers implements Serializable {
 		return filter;
 	}
 
-	private static void setFilterParameter(Filter filter, String parameterName, Object argument) {
+	private static void setFilterParameter(
+			@Nonnull Filter filter,
+			@Nonnull String parameterName,
+			Object argument) {
 		if ( argument instanceof Collection<?> argumentList ) {
 			filter.setParameterList( parameterName, argumentList );
 		}
@@ -213,6 +234,7 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
+	@Nonnull
 	public Filter enableFilter(@Nonnull String filterName) {
 		final var filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
@@ -259,22 +281,23 @@ public class LoadQueryInfluencers implements Serializable {
 		return enabledFetchProfileNames != null && !enabledFetchProfileNames.isEmpty();
 	}
 
+	@Nonnull
 	public Set<String> getEnabledFetchProfileNames() {
 		return enabledFetchProfileNames == null ? emptySet() : enabledFetchProfileNames;
 	}
 
-	private void checkFetchProfileName(String name) {
+	private void checkFetchProfileName(@Nonnull String name) {
 		if ( !sessionFactory.containsFetchProfileDefinition( name ) ) {
 			throw new UnknownProfileException( name );
 		}
 	}
 
-	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException {
+	public boolean isFetchProfileEnabled(@Nonnull String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
 		return enabledFetchProfileNames != null && enabledFetchProfileNames.contains( name );
 	}
 
-	public void enableFetchProfile(String name) throws UnknownProfileException {
+	public void enableFetchProfile(@Nonnull String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames == null ) {
 			enabledFetchProfileNames = new HashSet<>();
@@ -282,7 +305,7 @@ public class LoadQueryInfluencers implements Serializable {
 		enabledFetchProfileNames.add( name );
 	}
 
-	public void disableFetchProfile(String name) throws UnknownProfileException {
+	public void disableFetchProfile(@Nonnull String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.remove( name );
@@ -290,8 +313,10 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	@Internal
-	public @Nullable HashSet<String> adjustFetchProfiles(
-			@Nullable Set<String> disabledFetchProfiles, @Nullable Set<String> enabledFetchProfiles) {
+	@Nullable
+	public HashSet<String> adjustFetchProfiles(
+			@Nullable Set<String> disabledFetchProfiles,
+			@Nullable Set<String> enabledFetchProfiles) {
 		final var oldFetchProfiles =
 				enabledFetchProfileNames != null && !enabledFetchProfileNames.isEmpty()
 						? new HashSet<>( enabledFetchProfileNames )
@@ -309,14 +334,16 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	@Internal
-	public void setEnabledFetchProfileNames(HashSet<String> enabledFetchProfileNames) {
+	public void setEnabledFetchProfileNames(@Nullable HashSet<String> enabledFetchProfileNames) {
 		this.enabledFetchProfileNames = enabledFetchProfileNames;
 	}
 
+	@Nonnull
 	public EffectiveEntityGraph getEffectiveEntityGraph() {
 		return effectiveEntityGraph;
 	}
 
+	@Nullable
 	public Boolean getReadOnly() {
 		return readOnly;
 	}
@@ -337,7 +364,10 @@ public class LoadQueryInfluencers implements Serializable {
 		return fetchOptions.hasBatchSize();
 	}
 
-	public <T> T withFetchOptions(SharedSessionContractImplementor session, FetchOptions options, Supplier<T> supplier) {
+	public <T> T withFetchOptions(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull FetchOptions options,
+			@Nonnull Supplier<T> supplier) {
 		if ( !options.hasOptions() && !fetchOptions.hasOptions() ) {
 			return supplier.get();
 		}
@@ -404,7 +434,7 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
-	public boolean effectivelyBatchLoadable(EntityPersister persister) {
+	public boolean effectivelyBatchLoadable(@Nonnull EntityPersister persister) {
 		final var batchSizeOverride = fetchOptions.batchSize();
 		return batchSizeOverride == null
 				? persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1
@@ -419,14 +449,14 @@ public class LoadQueryInfluencers implements Serializable {
 		this.subselectFetchEnabled = subselectFetchEnabled;
 	}
 
-	public boolean effectiveSubselectFetchEnabled(CollectionPersister persister) {
+	public boolean effectiveSubselectFetchEnabled(@Nonnull CollectionPersister persister) {
 		return subselectFetchEnabled
 			|| fetchOptions.fetchMethod() == FetchMethod.BY_SUBQUERY
 			|| persister.isSubselectLoadable()
 			|| isSubselectFetchEnabledInProfile( persister );
 	}
 
-	private boolean isSubselectFetchEnabledInProfile(CollectionPersister persister) {
+	private boolean isSubselectFetchEnabledInProfile(@Nonnull CollectionPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			final var sqlTranslationEngine = persister.getFactory().getSqlTranslationEngine();
 			for ( String profile : getEnabledFetchProfileNames() ) {
@@ -442,7 +472,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
-	public boolean hasSubselectLoadableCollections(EntityPersister persister) {
+	public boolean hasSubselectLoadableCollections(@Nonnull EntityPersister persister) {
 		return persister.hasSubselectLoadableCollections()
 			|| hasSubselectLoadableAttributes( persister )
 			|| subselectFetchEnabled && persister.hasCollections()
@@ -451,13 +481,13 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean hasSubselectLoadableCollections(
-			EntityPersister persister,
+			@Nonnull EntityPersister persister,
 			@Nullable AppliedGraph appliedGraph) {
 		return hasSubselectLoadableCollections( persister )
 			|| hasSubselectLoadableCollectionsEnabledInGraph( appliedGraph, persister );
 	}
 
-	private static boolean hasSubselectLoadableAttributes(EntityPersister persister) {
+	private static boolean hasSubselectLoadableAttributes(@Nonnull EntityPersister persister) {
 		final var attributeMappings = persister.getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			if ( attributeMappings.get( i ).getMappedFetchOptions().getStyle() == SUBSELECT ) {
@@ -467,7 +497,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
-	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
+	private boolean hasSubselectLoadableCollectionsEnabledInProfile(@Nonnull EntityPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			final var sqlTranslationEngine = persister.getFactory().getSqlTranslationEngine();
 			for ( String profile : getEnabledFetchProfileNames() ) {
@@ -482,22 +512,24 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private boolean hasSubselectLoadableCollectionsEnabledInGraph(
 			@Nullable AppliedGraph appliedGraph,
-			EntityPersister persister) {
+			@Nonnull EntityPersister persister) {
 		final var graph = appliedGraph == null ? null : appliedGraph.getGraph();
 		if ( graph == null || appliedGraph.getSemantic() == null ) {
 			return false;
 		}
 
-		var entityType = sessionFactory.getJpaMetamodel().findEntityType( persister.getEntityName() );
+		final var jpaMetamodel = sessionFactory.getJpaMetamodel();
+		var entityType = jpaMetamodel.findEntityType( persister.getEntityName() );
 		if ( entityType == null ) {
-			entityType = sessionFactory.getJpaMetamodel().findEntityType( persister.getMappedClass() );
+			entityType = jpaMetamodel.findEntityType( persister.getMappedClass() );
 		}
-		return entityType != null && hasSubselectLoadableCollectionsEnabledInGraph( graph, entityType );
+		return entityType != null
+			&& hasSubselectLoadableCollectionsEnabledInGraph( graph, entityType );
 	}
 
 	private static boolean hasSubselectLoadableCollectionsEnabledInGraph(
-			GraphImplementor<?> graph,
-			EntityDomainType<?> entityType) {
+			@Nonnull GraphImplementor<?> graph,
+			@Nonnull EntityDomainType<?> entityType) {
 		if ( appliesTo( graph, entityType )
 				&& hasDirectBulkSelectNode( graph ) ) {
 			return true;
@@ -523,7 +555,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
-	private static boolean hasDirectBulkSelectNode(GraphImplementor<?> graph) {
+	private static boolean hasDirectBulkSelectNode(@Nonnull GraphImplementor<?> graph) {
 		for ( var node : graph.getNodes().values() ) {
 			if ( node.getFetchType() != FetchType.LAZY
 					&& node.getOptions().contains( FetchMethod.BY_SUBQUERY ) ) {

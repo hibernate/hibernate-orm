@@ -1,6 +1,15 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.31.Final (June 21, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39479
+
+
+** Bug
+    * HHH-20561 NullPointerException in Query.setCacheRetrieveMode() and Query.setCacheStoreMode()
+
 Changes in 7.1.30.Final (June 07, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

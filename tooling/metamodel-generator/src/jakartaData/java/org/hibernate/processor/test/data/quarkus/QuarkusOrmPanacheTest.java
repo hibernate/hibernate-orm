@@ -57,4 +57,19 @@ class QuarkusOrmPanacheTest {
 		Assertions.assertNotNull( constructor );
 		Assertions.assertTrue( constructor.isAnnotationPresent( Inject.class ) );
 	}
+
+	@Test
+	@WithClasses({ Panache2Parent.class, Panache2Child.class })
+	void testPanache2InheritedEntityMetamodel() throws Exception {
+		Class<?> parentMetamodel = getMetamodelClassFor( Panache2Parent.class );
+		Class<?> childMetamodel = getMetamodelClassFor( Panache2Child.class );
+
+		Assertions.assertEquals( parentMetamodel.getName(), childMetamodel.getSuperclass().getName() );
+		Assertions.assertNotNull( parentMetamodel.getDeclaredMethod( "managedBlocking" ) );
+		Assertions.assertNotNull( parentMetamodel.getDeclaredMethod( "statelessBlocking" ) );
+		Assertions.assertThrows( NoSuchMethodException.class,
+				() -> childMetamodel.getDeclaredMethod( "managedBlocking" ) );
+		Assertions.assertThrows( NoSuchMethodException.class,
+				() -> childMetamodel.getDeclaredMethod( "statelessBlocking" ) );
+	}
 }

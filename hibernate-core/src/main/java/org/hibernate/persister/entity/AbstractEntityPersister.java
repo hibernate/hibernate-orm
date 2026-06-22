@@ -2632,6 +2632,16 @@ public abstract class AbstractEntityPersister
 			&& ( currentAttributeName.length() == nameLength || currentAttributeName.charAt(nameLength) == '.' );
 	}
 
+	private static int nextAttributeNameIndex(
+			final AttributeMapping attributeMapping,
+			final String[] attributeNames,
+			int index) {
+		while ( index < attributeNames.length && isPrefix( attributeMapping, attributeNames[index] ) ) {
+			index++;
+		}
+		return index;
+	}
+
 	@Override
 	public int[] resolveAttributeIndexes(String[] attributeNames) {
 		if ( attributeNames == null || attributeNames.length == 0 ) {
@@ -2647,19 +2657,8 @@ public abstract class AbstractEntityPersister
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 				fields.add( attributeMapping.getStateArrayPosition() );
-				index++;
-				if ( index < attributeNames.length ) {
-					// Skip duplicates
-					do {
-						if ( attributeNames[index].equals( attributeMapping.getAttributeName() ) ) {
-							index++;
-						}
-						else {
-							break;
-						}
-					} while ( index < attributeNames.length );
-				}
-				else {
+				index = nextAttributeNameIndex( attributeMapping, attributeNames, index + 1 );
+				if ( index >= attributeNames.length ) {
 					break;
 				}
 			}
@@ -2724,19 +2723,8 @@ public abstract class AbstractEntityPersister
 						if ( propertyUpdateability[position] && !fields.contains( position ) ) {
 							fields.add( position );
 						}
-						index++;
-						if ( index < attributeNames.length ) {
-							// Skip duplicates
-							do {
-								if ( attributeNames[index].equals( attributeName ) ) {
-									index++;
-								}
-								else {
-									break;
-								}
-							} while ( index < attributeNames.length );
-						}
-						else {
+						index = nextAttributeNameIndex( attributeMapping, attributeNames, index + 1 );
+						if ( index >= attributeNames.length ) {
 							break;
 						}
 					}

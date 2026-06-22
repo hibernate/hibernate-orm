@@ -406,14 +406,6 @@ public abstract class AbstractIdentifiableType<J>
 	private SqmPathSource<?> interpretIdDescriptor() {
 		log.tracef( "Interpreting domain-model identifier descriptor" );
 
-		final var superType = getSuperType();
-		if ( superType != null ) {
-			final var idDescriptor = superType.getIdentifierDescriptor();
-			if ( idDescriptor != null ) {
-				return idDescriptor;
-			}
-		}
-
 		if ( id != null ) {
 			// simple id or aggregate composite id
 			return pathSource( id );
@@ -421,14 +413,19 @@ public abstract class AbstractIdentifiableType<J>
 		else if ( nonAggregatedIdAttributes != null && !nonAggregatedIdAttributes.isEmpty() ) {
 			return compositePathSource();
 		}
-		else {
-			if ( isIdMappingRequired() ) {
-				throw new UnsupportedMappingException(
-						"Could not build SqmPathSource for entity identifier : " + getTypeName() );
-			}
-			return null;
-		}
 
+		final var superType = getSuperType();
+		if ( superType != null ) {
+			final var idDescriptor = superType.getIdentifierDescriptor();
+			if ( idDescriptor != null ) {
+				return idDescriptor;
+			}
+		}
+		if ( isIdMappingRequired() ) {
+			throw new UnsupportedMappingException(
+					"Could not build SqmPathSource for entity identifier : " + getTypeName() );
+		}
+		return null;
 	}
 
 	private AbstractSqmPathSource<?> compositePathSource() {

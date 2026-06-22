@@ -331,29 +331,27 @@ public class MetadataContext {
 				}
 			}
 			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
-				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
+				final MappedSuperclass mappedSuperclass = (MappedSuperclass) mapping;
 				if ( log.isTraceEnabled() ) {
-					log.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+					log.trace( "Starting mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 				}
 				try {
-					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
+					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( mappedSuperclass );
 
-					applyIdMetadata( safeMapping, jpaType );
-					applyVersionAttribute( safeMapping, jpaType );
+					applyIdMetadata( mappedSuperclass, jpaType );
+					applyVersionAttribute( mappedSuperclass, jpaType );
 //					applyNaturalIdAttribute( safeMapping, jpaType );
 
-					for ( Property property : safeMapping.getDeclaredProperties() ) {
-						if ( isIdentifierProperty( property, safeMapping ) ) {
-							// property represents special handling for id-class mappings but we have already
-							// accounted for the embedded property mappings in #applyIdMetadata &&
-							// #buildIdClassAttributes
-							continue;
-						}
-						else if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+					for ( var property : mappedSuperclass.getDeclaredProperties() ) {
+						// property represents special handling for @IdClass mappings,
+						// but we have already accounted for the embedded property mappings
+						// in #applyIdMetadata && #buildIdClassAttributes
+						if ( !isIdentifierProperty( property, mappedSuperclass )
+							&& !isIdentifierPropertyDeclaredOnMappedSuperclass( property, mappedSuperclass )
 							// skip the version property, it was already handled previously.
-							continue;
+						    && !isVersion( mappedSuperclass, property ) ) {
+							buildAttribute( property, jpaType );
 						}
-						buildAttribute( property, jpaType );
 					}
 
 					( (AttributeContainer<?>) jpaType ).getInFlightAccess().finishUp();
@@ -364,7 +362,7 @@ public class MetadataContext {
 				}
 				finally {
 					if ( log.isTraceEnabled() ) {
-						log.trace( "Completed mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
+						log.trace( "Completed mapped superclass [" + mappedSuperclass.getMappedClass().getName() + ']' );
 					}
 				}
 			}
@@ -405,10 +403,43 @@ public class MetadataContext {
 		}
 	}
 
+	private static boolean isVersion(MappedSuperclass persistentClass, Property property) {
+		return persistentClass.isVersioned() && property == persistentClass.getVersion();
+	}
+
 	private static boolean isIdentifierProperty(Property property, MappedSuperclass mappedSuperclass) {
 		final Component identifierMapper = mappedSuperclass.getIdentifierMapper();
 		return identifierMapper != null
 			&& ArrayHelper.contains( identifierMapper.getPropertyNames(), property.getName() );
+	}
+
+	private boolean isIdentifierPropertyDeclaredOnMappedSuperclass(Property property, MappedSuperclass mappedSuperclass) {
+		return getMappedSuperclassIdentifierProperty( mappedSuperclass ) == property;
+	}
+
+	private Property getMappedSuperclassIdentifierProperty(MappedSuperclass mappedSuperclass) {
+		for ( var property : mappedSuperclass.getDeclaredProperties() ) {
+			for ( var persistentClass : entityTypesByPersistentClass.keySet() ) {
+				if ( isMappedSuperclassInHierarchy( persistentClass, mappedSuperclass ) ) {
+					final var identifierProperty = persistentClass.getIdentifierProperty();
+					if ( identifierProperty != null && identifierProperty.getName().equals( property.getName() ) ) {
+						return property;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private boolean isMappedSuperclassInHierarchy(PersistentClass persistentClass, MappedSuperclass mappedSuperclass) {
+		MappedSuperclass current = getMappedSuperclass( persistentClass );
+		while ( current != null ) {
+			if ( current == mappedSuperclass ) {
+				return true;
+			}
+			current = getMappedSuperclass( current );
+		}
+		return false;
 	}
 
 	private <T> void addAttribute(EmbeddableDomainType<T> embeddable, Property property, Component component) {
@@ -590,7 +621,10 @@ public class MetadataContext {
 		@SuppressWarnings("unchecked")
 		final var attributeContainer = (AttributeContainer<X>) jpaMappingType;
 		if ( mappingType.hasIdentifierProperty() ) {
-			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
+			var declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
+			if ( declaredIdentifierProperty == null ) {
+				declaredIdentifierProperty = getMappedSuperclassIdentifierProperty( mappingType );
+			}
 			if ( declaredIdentifierProperty != null ) {
 				final var attribute =
 						(SingularPersistentAttribute<X, ?>)

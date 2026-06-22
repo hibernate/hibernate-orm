@@ -705,10 +705,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean hasPanache2EntitySuperType() {
-		final var superTypeElement = getSuperTypeElement();
-		return superTypeElement instanceof TypeElement superType
-			&& hasAnnotation( superType, ENTITY )
-			&& isPanache2Type( superType );
+		var superClass = element.getSuperclass();
+		while ( superClass.getKind() == TypeKind.DECLARED ) {
+			final var declaredType = (DeclaredType) superClass;
+			final var superType = (TypeElement) declaredType.asElement();
+			if ( hasAnnotation( superType, ENTITY ) && isPanache2Type( superType ) ) {
+				return true;
+			}
+			superClass = superType.getSuperclass();
+		}
+		return false;
 	}
 
 	private boolean addRepositoryAccessor(

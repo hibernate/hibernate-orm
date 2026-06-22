@@ -92,7 +92,6 @@ public non-sealed class Set extends Collection {
 				final var softDeleteColumn = getSoftDeleteColumn();
 				final boolean useLiveRowUniqueIndex =
 						softDeleteColumn != null && getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP;
-				boolean useUniqueKey = useLiveRowUniqueIndex;
 				for ( var selectable : getElement().getSelectables() ) {
 					if ( selectable instanceof Column column ) {
 						try {
@@ -103,18 +102,14 @@ public non-sealed class Set extends Collection {
 						catch (MappingException me) {
 							// ignore
 						}
-						if ( column.isNullable() ) {
-							useUniqueKey = true;
-						}
 					}
-				}
-				if ( softDeleteColumn != null && softDeleteColumn.isNullable() ) {
-					useUniqueKey = true;
 				}
 				if ( useLiveRowUniqueIndex ) {
 					createLiveRowUniqueIndex( collectionTable, softDeleteColumn );
 				}
 				else {
+					final boolean useUniqueKey = getElement().isNullable()
+							|| softDeleteColumn != null && softDeleteColumn.isNullable();
 					final Constraint key;
 					if ( useUniqueKey ) {
 						final var uniqueKey = new UniqueKey( collectionTable );
@@ -178,11 +173,9 @@ public non-sealed class Set extends Collection {
 	}
 
 	private String liveRowSoftDeleteFormula(Column softDeleteColumn) {
-		final String nonDeletedLiteral = softDeleteColumn.getValue() instanceof BasicValue basicValue
-				? softDeleteNonDeletedLiteral( basicValue )
-				: getSoftDeleteStrategy() == SoftDeleteType.ACTIVE ? "true" : "false";
+		final String nonDeletedLiteral = softDeleteNonDeletedLiteral( (BasicValue) softDeleteColumn.getValue() );
 		return "(case when " + softDeleteColumn.getQuotedName( getMetadata().getDatabase().getDialect() )
-				+ " = " + nonDeletedLiteral + " then " + nonDeletedLiteral + " end)";
+				+ " = " + nonDeletedLiteral + " then 1 end)";
 	}
 
 	private String softDeleteNonDeletedLiteral(BasicValue softDeleteValue) {

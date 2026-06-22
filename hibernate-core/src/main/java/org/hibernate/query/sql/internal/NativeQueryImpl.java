@@ -1284,7 +1284,8 @@ public class NativeQueryImpl<R>
 		return getInterpretationCache( getSession() );
 	}
 
-	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
+	// Called by Hibernate Reactive
+	protected NonSelectQueryPlan resolveNonSelectQueryPlan() {
 		final var cacheKey = generateNonSelectInterpretationsKey();
 		if ( cacheKey != null ) {
 			final var queryPlan = getInterpretationCache().getNonSelectQueryPlan( cacheKey );

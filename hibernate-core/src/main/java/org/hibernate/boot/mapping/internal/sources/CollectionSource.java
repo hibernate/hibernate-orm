@@ -29,6 +29,7 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.boot.mapping.internal.binders.CascadeBinder;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -49,6 +50,7 @@ import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
@@ -90,9 +92,11 @@ import jakarta.persistence.OrderBy;
 /// collection classification the source member requested: set, bag, list, map, and
 /// eventually ordered/sorted/id-bag/array variants.  That is related to, but not identical
 /// with, the concrete `org.hibernate.mapping.Collection` subclass.  For example, a Java
-/// `List` without `@Bag` is modeled as an indexed list, while a Java `List` with
-/// Hibernate `@Bag` is modeled as a bag.  Keeping that decision on the source object makes
-/// the classification explicit and testable.
+/// `List` is modeled as an indexed list, using explicit list-index metadata when
+/// present and default `@OrderColumn` values otherwise.  Ordering annotations are
+/// different: a list with `@OrderBy` or `@SQLOrder` and no list-index indicators is
+/// order-driven rather than implicitly index-driven.  Keeping that decision on the
+/// source object makes the classification explicit and testable.
 ///
 /// In an upstream mapping-model version, a collection mapping might directly retain some
 /// equivalent of:
@@ -190,6 +194,7 @@ public record CollectionSource(
 			ClassDetails ownerType,
 			ClassDetails hierarchyRootType,
 			ModelsContext modelsContext) {
+		final CollectionTable collectionTable = member.getDirectAnnotationUsage( CollectionTable.class );
 		final CollectionClassification classification = determineClassification( member );
 		final AssociationOverride associationOverride = locateAssociationOverride(
 				member,
@@ -202,15 +207,43 @@ public record CollectionSource(
 				Nature.ELEMENT_COLLECTION,
 				classification,
 				member,
-				member.getElementType(),
-					classification.toJpaClassification() == jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP
-							? member.getMapKeyType()
-							: null,
-				member.getDirectAnnotationUsage( CollectionTable.class ),
+				elementCollectionElementType( member, modelsContext ),
+				mapKeyType( member, classification, modelsContext ),
+				collectionTable,
 				associationOverride == null ? member.getDirectAnnotationUsage( JoinTable.class ) : associationOverride.joinTable(),
 				locateAttributeOverride( member, ownerType, hierarchyRootType, modelsContext ),
 				modelsContext
 		);
+	}
+
+	private static TypeDetails mapKeyType(
+			MemberDetails member,
+			CollectionClassification classification,
+			ModelsContext modelsContext) {
+		if ( classification.toJpaClassification() != jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP ) {
+			return null;
+		}
+		final MapKeyClass mapKeyClass = member.getDirectAnnotationUsage( MapKeyClass.class );
+		if ( mapKeyClass != null && mapKeyClass.value() != void.class && modelsContext != null ) {
+			return new ClassTypeDetailsImpl(
+					modelsContext.getClassDetailsRegistry()
+							.resolveClassDetails( mapKeyClass.value().getName() ),
+					TypeDetails.Kind.CLASS
+			);
+		}
+		return member.getMapKeyType();
+	}
+
+	private static TypeDetails elementCollectionElementType(MemberDetails member, ModelsContext modelsContext) {
+		final ElementCollection elementCollection = member.getDirectAnnotationUsage( ElementCollection.class );
+		if ( elementCollection != null && elementCollection.targetClass() != void.class && modelsContext != null ) {
+			return new ClassTypeDetailsImpl(
+					modelsContext.getClassDetailsRegistry()
+							.resolveClassDetails( elementCollection.targetClass().getName() ),
+					TypeDetails.Kind.CLASS
+			);
+		}
+		return member.getElementType();
 	}
 
 	/// Creates a collection source for an owning many-to-many association member.
@@ -262,13 +295,13 @@ public record CollectionSource(
 				nature,
 				source.classification,
 				source.member,
-					source.elementType,
-					source.mapKeyType,
-					null,
-					associationOverride == null ? member.getDirectAnnotationUsage( JoinTable.class ) : associationOverride.joinTable(),
-					source.attributeOverride,
-					modelsContext
-			);
+				source.elementType,
+				source.mapKeyType,
+				source.collectionTable,
+				associationOverride == null ? member.getDirectAnnotationUsage( JoinTable.class ) : associationOverride.joinTable(),
+				source.attributeOverride,
+				modelsContext
+		);
 	}
 
 	private static CollectionClassification determineClassification(MemberDetails member) {
@@ -290,8 +323,8 @@ public record CollectionSource(
 		}
 		if ( java.util.List.class.isAssignableFrom( collectionType )
 				&& !member.hasDirectAnnotationUsage( Bag.class ) ) {
-			if ( hasListIndexSource( member ) ) {
-				return CollectionClassification.LIST;
+			if ( isOrdered( member ) && !hasListIndexIndicator( member ) ) {
+				return CollectionClassification.BAG;
 			}
 			return CollectionClassification.LIST;
 		}
@@ -388,7 +421,7 @@ public record CollectionSource(
 				|| member.hasDirectAnnotationUsage( SQLOrder.class );
 	}
 
-	private static boolean hasListIndexSource(MemberDetails member) {
+	private static boolean hasListIndexIndicator(MemberDetails member) {
 		return member.hasDirectAnnotationUsage( OrderColumn.class )
 				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexBase.class )
 				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJavaType.class )
@@ -552,6 +585,16 @@ public record CollectionSource(
 		return member.getDirectAnnotationUsage( MapKey.class );
 	}
 
+	/// The effective property name declared by `@MapKey`, honoring both the legacy
+	/// `name` member and the shorthand `value` alias.
+	public String mapKeyName() {
+		final MapKey mapKey = mapKey();
+		if ( mapKey == null ) {
+			return null;
+		}
+		return !mapKey.value().isEmpty() ? mapKey.value() : mapKey.name();
+	}
+
 	/// The map-key join columns as a list, if an entity-valued map key was declared.
 	public List<MapKeyJoinColumn> mapKeyJoinColumns() {
 		final MapKeyJoinColumns plural = member.getDirectAnnotationUsage( MapKeyJoinColumns.class );
@@ -605,11 +648,19 @@ public record CollectionSource(
 
 	/// The owning-side join columns for a join-table association.
 	public List<JoinColumn> associationJoinColumns() {
-		if ( joinTable == null || joinTable.joinColumns().length == 0 ) {
+		if ( joinTable != null ) {
+			if ( joinTable.joinColumns().length == 0 ) {
+				return List.of();
+			}
+			final ArrayList<JoinColumn> result = new ArrayList<>( joinTable.joinColumns().length );
+			result.addAll( Arrays.asList( joinTable.joinColumns() ) );
+			return result;
+		}
+		if ( collectionTable == null || collectionTable.joinColumns().length == 0 ) {
 			return List.of();
 		}
-		final ArrayList<JoinColumn> result = new ArrayList<>( joinTable.joinColumns().length );
-		result.addAll( Arrays.asList( joinTable.joinColumns() ) );
+		final ArrayList<JoinColumn> result = new ArrayList<>( collectionTable.joinColumns().length );
+		result.addAll( Arrays.asList( collectionTable.joinColumns() ) );
 		return result;
 	}
 

@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
+import org.hibernate.annotations.AnyKeyJavaType;
+import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -197,12 +199,18 @@ class AnyValueBinder {
 							+ source.member().getName()
 			);
 		}
-		if ( source.keyJavaClass() == null && source.discriminatorValues().isEmpty() ) {
+		if ( !hasExplicitKeyType( source ) && source.discriminatorValues().isEmpty() ) {
 			throw new UnsupportedOperationException(
-					"@Any requires @AnyKeyJavaClass when no explicit discriminator target mappings are available for key type inference - "
+					"@Any requires explicit key type metadata when no explicit discriminator target mappings are available for key type inference - "
 							+ source.member().getName()
 			);
 		}
+	}
+
+	private boolean hasExplicitKeyType(AnySource source) {
+		return source.keyJavaClass() != null
+				|| source.member().hasDirectAnnotationUsage( AnyKeyJavaType.class )
+				|| source.member().hasDirectAnnotationUsage( AnyKeyType.class );
 	}
 
 	private ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(AnySource source) {

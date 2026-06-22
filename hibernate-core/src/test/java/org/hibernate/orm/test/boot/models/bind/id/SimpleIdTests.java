@@ -4,10 +4,12 @@
  */
 package org.hibernate.orm.test.boot.models.bind.id;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
 import org.hibernate.boot.mapping.internal.view.EntityView;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
@@ -18,9 +20,11 @@ import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelCheckContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
@@ -28,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -253,6 +258,39 @@ public class SimpleIdTests {
 
 	@Test
 	@ServiceRegistry
+	void testImplicitEmbeddedIdClassBinding(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ImplicitEmbeddedIdClassEntity.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final Component identifierMapper = entityBinding.getIdentifierMapper();
+
+					assertThat( entityBinding.hasEmbeddedIdentifier() ).isFalse();
+					assertThat( identifier.getProperty( "code" ).getValue() ).isInstanceOf( Component.class );
+					assertThat( identifierMapper.getProperty( "code" ).getValue() ).isInstanceOf( Component.class );
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code_part", "local_id" );
+					final EntityIdentifierBindingView entityIdentifierBinding = entityIdentifierBinding(
+							context,
+							ImplicitEmbeddedIdClassEntity.class
+					);
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "code", "localId" );
+					assertThat( entityIdentifierBinding.attribute( "code" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
+					assertThat( entityIdentifierBinding.attribute( "code" ).selectableNames() )
+							.containsExactly( "code_part" );
+					assertThat( entityIdentifierBinding.attribute( "localId" ).selectableNames() )
+							.containsExactly( "local_id" );
+				},
+				scope.getRegistry(),
+				ImplicitEmbeddedIdClassEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testMapsIdWithEmbeddedId(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -348,6 +386,43 @@ public class SimpleIdTests {
 				scope.getRegistry(),
 				MapsIdParent.class,
 				IdClassMapsIdChild.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testMapsIdWithIdClassComponentIdentifierAttribute(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( IdClassComponentMapsIdChild.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final Component identifierMapper = entityBinding.getIdentifierMapper();
+					final ManyToOne parent = (ManyToOne) entityBinding.getProperty( "parent" ).getValue();
+
+					assertThat( identifier.getProperty( "parentId" ).getValue() ).isInstanceOf( Component.class );
+					assertThat( identifierMapper.getProperty( "parentId" ).getValue() ).isInstanceOf( Component.class );
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_id1", "parent_id2", "child_id" );
+					assertThat( parent.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_id1", "parent_id2" );
+					assertThat( parent.getColumnInsertability() ).containsExactly( false, false );
+					assertThat( parent.getColumnUpdateability() ).containsExactly( false, false );
+					final EntityIdentifierBindingView entityIdentifierBinding = entityIdentifierBinding(
+							context,
+							IdClassComponentMapsIdChild.class
+					);
+					assertThat( entityIdentifierBinding.idAttributeNames() ).containsExactly( "parentId", "childId" );
+					assertThat( entityIdentifierBinding.attribute( "parentId" ).extractionKind() )
+							.isEqualTo( IdentifierExtractionKind.DIRECT );
+					assertThat( entityIdentifierBinding.attribute( "parentId" ).selectableNames() )
+							.containsExactly( "parent_id1", "parent_id2" );
+				},
+				scope.getRegistry(),
+				CompositeMapsIdParent.class,
+				IdClassComponentMapsIdChild.class
 		);
 	}
 
@@ -532,14 +607,31 @@ public class SimpleIdTests {
 	@Test
 	@ServiceRegistry
 	void testAssociationIdWithJoinTable(ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> checkDomainModel(
+		checkDomainModel(
 				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( JoinTableAssociationIdChild.class.getName() );
+
+					assertJoinTableAssociationIdBinding( entityBinding );
 				},
 				scope.getRegistry(),
 				MapsIdParent.class,
 				JoinTableAssociationIdChild.class
-		) )
-				.hasMessageContaining( "Unable to match join column referencedColumnName to target identifier column" );
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	@SuppressWarnings("removal")
+	void testLegacyAssociationIdWithJoinTable(ServiceRegistryScope scope) {
+		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
+				.addAnnotatedClass( MapsIdParent.class )
+				.addAnnotatedClass( JoinTableAssociationIdChild.class )
+				.buildMetadata();
+
+		assertJoinTableAssociationIdBinding(
+				(RootClass) metadata.getEntityBinding( JoinTableAssociationIdChild.class.getName() )
+		);
 	}
 
 	@Test
@@ -725,6 +817,26 @@ public class SimpleIdTests {
 		throw new AssertionError( "Could not locate entity view for " + entityClass.getName() );
 	}
 
+	private static void assertJoinTableAssociationIdBinding(RootClass entityBinding) {
+		final Component identifier = (Component) entityBinding.getIdentifier();
+		final Component identifierMapper = entityBinding.getIdentifierMapper();
+		final Join join = entityBinding.getJoins().get( 0 );
+		final ManyToOne parent = (ManyToOne) identifierMapper.getProperty( "parent" ).getValue();
+
+		assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+				.extracting( org.hibernate.mapping.Column::getName )
+				.containsExactly( "parent_id", "child_id" );
+		assertThat( identifier.getProperty( "parent" ).getValue() ).isInstanceOf( org.hibernate.mapping.BasicValue.class );
+		assertThat( parent.getTable() ).isSameAs( join.getTable() );
+		assertThat( join.getTable().getName() ).isEqualTo( "association_id_join_table" );
+		assertThat( join.getKey().getColumns() )
+				.extracting( org.hibernate.mapping.Column::getName )
+				.containsExactly( "child_id" );
+		assertThat( parent.getColumns() )
+				.extracting( org.hibernate.mapping.Column::getName )
+				.containsExactly( "parent_id" );
+	}
+
 	private static void assertNoMappingModelLeakage(Class<?>... bindingTypes) {
 		for ( Class<?> bindingType : bindingTypes ) {
 			for ( java.lang.reflect.Field field : bindingType.getDeclaredFields() ) {
@@ -791,6 +903,29 @@ public class SimpleIdTests {
 		private CompositeMapsIdPk id;
 	}
 
+	@Entity(name = "ImplicitEmbeddedIdClassEntity")
+	@Table(name = "implicit_embedded_id_class_entities")
+	@IdClass(ImplicitEmbeddedIdClassEntity.Pk.class)
+	public static class ImplicitEmbeddedIdClassEntity {
+		@Id
+		private ImplicitCode code;
+
+		@Id
+		@Column(name = "local_id")
+		private Integer localId;
+
+		public static class Pk implements Serializable {
+			private ImplicitCode code;
+			private Integer localId;
+		}
+	}
+
+	@Embeddable
+	public static class ImplicitCode implements Serializable {
+		@Column(name = "code_part")
+		private String part;
+	}
+
 	@Entity(name = "MapsIdChild")
 	@Table(name = "maps_id_children")
 	public static class MapsIdChild {
@@ -851,6 +986,27 @@ public class SimpleIdTests {
 		@MapsId("parentId")
 		@JoinColumn(name = "parent_id", referencedColumnName = "parent_id")
 		private MapsIdParent parent;
+	}
+
+	@Entity(name = "IdClassComponentMapsIdChild")
+	@Table(name = "id_class_component_maps_id_children")
+	@IdClass(IdClassComponentMapsIdChildPk.class)
+	public static class IdClassComponentMapsIdChild {
+		@Id
+		@Embedded
+		private CompositeMapsIdPk parentId;
+
+		@Id
+		@Column(name = "child_id")
+		private Integer childId;
+
+		@jakarta.persistence.ManyToOne
+		@MapsId("parentId")
+		@JoinColumns({
+				@JoinColumn(name = "parent_id1", referencedColumnName = "parent_id1"),
+				@JoinColumn(name = "parent_id2", referencedColumnName = "parent_id2")
+		})
+		private CompositeMapsIdParent parent;
 	}
 
 	@Entity(name = "OneToOneMapsIdChild")
@@ -1098,6 +1254,11 @@ public class SimpleIdTests {
 
 	public static class IdClassMapsIdChildPk {
 		private Integer parentId;
+		private Integer childId;
+	}
+
+	public static class IdClassComponentMapsIdChildPk {
+		private CompositeMapsIdPk parentId;
 		private Integer childId;
 	}
 

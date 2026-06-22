@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.sources;
 
 import org.hibernate.annotations.CollectionIdJavaClass;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 
@@ -187,6 +188,12 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.ATTRIBUTE, member, member.getType(), null, directConversion( member ) );
 	}
 
+	/// Creates a source for a normal singular basic attribute whose type has
+	/// already been resolved for a concrete entity usage.
+	public static BasicValueSource attribute(MemberDetails member, TypeDetails type) {
+		return new BasicValueSource( Kind.ATTRIBUTE, member, type, null, directConversion( member ) );
+	}
+
 	/// Creates a source for a basic embeddable/component member.
 	///
 	/// This is distinct from [#attribute(MemberDetails)] so embeddable-member-specific
@@ -211,13 +218,29 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.COLLECTION_ELEMENT, member, member.getElementType(), null, directConversion( member ) );
 	}
 
+	/// Creates a source for the basic value side of an element collection whose effective
+	/// element type has already been resolved from source-level metadata.
+	public static BasicValueSource collectionElement(MemberDetails member, TypeDetails elementType) {
+		return new BasicValueSource( Kind.COLLECTION_ELEMENT, member, elementType, null, directConversion( member ) );
+	}
+
 	/// Creates a source for the basic value side of an element collection with access to
 	/// repeated `@Convert` declarations such as `@Convert(attributeName = "value", ...)`.
 	public static BasicValueSource collectionElement(MemberDetails member, BindingContext bindingContext) {
+		return collectionElement( member, member.getElementType(), bindingContext );
+	}
+
+	/// Creates a source for the basic value side of an element collection with an
+	/// already-resolved effective element type and access to repeated `@Convert`
+	/// declarations such as `@Convert(attributeName = "value", ...)`.
+	public static BasicValueSource collectionElement(
+			MemberDetails member,
+			TypeDetails elementType,
+			BindingContext bindingContext) {
 		return new BasicValueSource(
 				Kind.COLLECTION_ELEMENT,
 				member,
-				member.getElementType(),
+				elementType,
 				null,
 				collectionRoleConversion( member, "value", bindingContext )
 		);
@@ -270,6 +293,12 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.IDENTIFIER, member, member.getType(), null, directConversion( member ) );
 	}
 
+	/// Creates a source for a basic identifier value whose type has already been
+	/// resolved for a concrete entity usage.
+	public static BasicValueSource identifier(MemberDetails member, TypeDetails type) {
+		return new BasicValueSource( Kind.IDENTIFIER, member, type, null, directConversion( member ) );
+	}
+
 	/// Creates a source for an `@Any` discriminator value.
 	public static BasicValueSource anyDiscriminator(MemberDetails member, Class<?> discriminatorJavaType) {
 		return new BasicValueSource( Kind.ANY_DISCRIMINATOR, member, null, discriminatorJavaType, null );
@@ -280,21 +309,13 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.ANY_KEY, member, null, keyJavaType, null );
 	}
 
-	/// Resolves the Java type to expose to [org.hibernate.mapping.BasicValue].
-	///
-	/// This is deliberately still a [Class] because `BasicValue` currently
-	/// consumes implicit Java type information through a lambda returning a Java reflection
-	/// type.  In an upstream model that directly carries Hibernate Models references, callers
-	/// should prefer [#type()] when available and only fall back to an explicit Java
-	/// type for synthetic or override-driven cases.
-	public Class<?> javaType() {
-		if ( explicitJavaType != null ) {
-			return explicitJavaType;
-		}
-		if ( type == null ) {
-			return null;
-		}
-		return type.determineRawClass().toJavaClass();
+	/// Resolves the source type to expose to [BasicValue].
+	public BasicValue.SourceJavaType sourceJavaType() {
+		return BasicValue.SourceJavaType.from( type, explicitJavaType );
+	}
+
+	public Class<?> rawJavaType() {
+		return sourceJavaType().rawJavaClass();
 	}
 
 	private static Convert directConversion(MemberDetails member) {

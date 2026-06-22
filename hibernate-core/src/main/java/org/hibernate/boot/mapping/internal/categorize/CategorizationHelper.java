@@ -161,6 +161,8 @@ public class CategorizationHelper {
 		//		only do these if it is not a collection
 
 		if ( !plural && any == null ) {
+			final boolean explicitlyEmbedded = embedded != null || embeddedId != null;
+
 			// first implicit basic nature
 			if ( backingMember.hasDirectAnnotationUsage( Temporal.class )
 					|| backingMember.hasDirectAnnotationUsage( Lob.class )
@@ -173,9 +175,10 @@ public class CategorizationHelper {
 					|| backingMember.hasDirectAnnotationUsage( TimeZoneStorage.class )
 					|| backingMember.hasDirectAnnotationUsage( Type.class )
 					|| backingMember.hasDirectAnnotationUsage( TenantId.class )
-					|| backingMember.hasDirectAnnotationUsage( JavaType.class )
-					|| backingMember.hasDirectAnnotationUsage( JdbcTypeCode.class )
-					|| backingMember.hasDirectAnnotationUsage( JdbcType.class ) ) {
+					|| ( !explicitlyEmbedded
+							&& ( backingMember.hasDirectAnnotationUsage( JavaType.class )
+									|| backingMember.hasDirectAnnotationUsage( JdbcTypeCode.class )
+									|| backingMember.hasDirectAnnotationUsage( JdbcType.class ) ) ) ) {
 				natures.add( AttributeNature.BASIC );
 			}
 

@@ -24,6 +24,7 @@ import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.mapping.internal.context.BindingHelper;
 import org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer;
@@ -57,7 +58,9 @@ import org.hibernate.models.spi.ClassDetails;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotationUsages;
@@ -152,7 +155,7 @@ public class TableBinder {
 			}
 		}
 		else {
-			tableReference = normalTableDetermination( type, subselectAnn, TableSource.from( joinTableAnn ), viewAnn );
+			tableReference = normalTableDetermination( type, subselectAnn, TableSource.from( tableAnn ), viewAnn );
 		}
 
 		if ( tableReference != null ) {
@@ -312,12 +315,12 @@ public class TableBinder {
 		final Identifier logicalCatalogName = bindingOptions.getDefaultCatalogName();
 
 		final Table binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
-				toCanonicalName( logicalSchemaName ),
-				toCanonicalName( logicalCatalogName ),
-				logicalName.getCanonicalName(),
-				null,
-				type.isAbstract(),
-				bindingState.getMetadataBuildingContext(),
+					toCanonicalName( logicalSchemaName ),
+					toCanonicalName( logicalCatalogName ),
+					logicalName.getText(),
+					null,
+					type.isAbstract(),
+					bindingState.getMetadataBuildingContext(),
 				false
 		);
 
@@ -494,6 +497,25 @@ public class TableBinder {
 		return bindPhysicalTable( logicalName, tableSource, false );
 	}
 
+	public PhysicalTable bindAssociationTable(
+			EntityTypeMetadata ownerType,
+			Table owningTable,
+			String attributeName,
+			EntityNaming targetType,
+			Table targetTable,
+			CollectionTable collectionTable) {
+		final TableSource tableSource = TableSource.from( collectionTable );
+		final Identifier logicalName = determineAssociationTableLogicalName(
+				ownerType,
+				owningTable,
+				attributeName,
+				targetType,
+				targetTable,
+				tableSource
+		);
+		return bindPhysicalTable( logicalName, tableSource, false );
+	}
+
 	private PhysicalTable bindPhysicalTable(
 			Identifier logicalName,
 			TableSource tableSource,
@@ -510,12 +532,12 @@ public class TableBinder {
 		);
 
 		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
-				explicitSchemaName( tableSource, logicalSchemaName ),
-				explicitCatalogName( tableSource, logicalCatalogName ),
-				tableSource != null && tableSource.nonEmptyName() != null ? logicalName.getText() : logicalName.getCanonicalName(),
-				null,
-				isAbstract,
-				bindingState.getMetadataBuildingContext(),
+					explicitSchemaName( tableSource, logicalSchemaName ),
+					explicitCatalogName( tableSource, logicalCatalogName ),
+					logicalName.getText(),
+					null,
+					isAbstract,
+					bindingState.getMetadataBuildingContext(),
 				tableSource != null && tableSource.nonEmptyName() != null
 		);
 
@@ -685,9 +707,24 @@ public class TableBinder {
 				physicalNamingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment ),
 				optional,
 				owned,
+				primaryKeyJoinColumns( secondaryTableAnn.pkJoinColumns() ),
 				ForeignKeySource.from( secondaryTableAnn ),
 				binding
 		);
+	}
+
+	private List<JoinColumn> primaryKeyJoinColumns(PrimaryKeyJoinColumn[] primaryKeyJoinColumns) {
+		if ( primaryKeyJoinColumns.length == 0 ) {
+			return List.of();
+		}
+		final ArrayList<JoinColumn> result = new ArrayList<>( primaryKeyJoinColumns.length );
+		for ( PrimaryKeyJoinColumn primaryKeyJoinColumn : primaryKeyJoinColumns ) {
+			result.add( JoinColumnJpaAnnotation.toJoinColumn(
+					primaryKeyJoinColumn,
+					bindingContext.getBootstrapContext().getModelsContext()
+			) );
+		}
+		return result;
 	}
 
 	private String toCanonicalName(Identifier name) {

@@ -24,6 +24,7 @@ import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
 import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
 import org.hibernate.boot.mapping.internal.extension.StandardAttributeBindingTarget;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
+import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -37,16 +38,21 @@ import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -159,7 +165,7 @@ public class ComponentBinder {
 		final List<Column> associationIdentifierColumns =
 				source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
 						? columns
-						: identifierColumns;
+						: identifierColumns != null ? identifierColumns : columns;
 		final EmbeddableContributionView contributionView =
 				embeddableMappingMaterializer.createContributionView( source, context );
 		final List<ComponentMemberBinding> members = new ArrayList<>( contributionView.members() );
@@ -198,24 +204,23 @@ public class ComponentBinder {
 			if ( isToOneMember( member ) ) {
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
 				final ToOneValueIntent toOneValueIntent = componentMember.toOneValueIntent();
-				final var manyToOne = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
+				final Value value = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
 						? bindAssociationIdentifierMember(
 								ownerType,
 								ownerBinding,
 								source.componentType(),
-								attributeName,
-								member,
-								toOneValueIntent.memberType(),
+								componentMember,
 								property,
 								table,
 								toOneValueIntent.associationOverride(),
 								associationIdentifierColumns
 						)
-						: ToOneAttributeBinder.bindToOne(
+						: ToOneAttributeBinder.bindToOneValue(
 								ownerType,
 								ownerBinding,
 								source.componentType().getClassName(),
 								attributeName,
+								componentMember.namingPath(),
 								member,
 								toOneValueIntent.memberType(),
 								property,
@@ -226,19 +231,23 @@ public class ComponentBinder {
 								state,
 								context
 						);
-				property.setValue( manyToOne );
+				property.setValue( value );
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-				manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
-				columns.addAll( manyToOne.getColumns() );
+				if ( value instanceof ManyToOne manyToOne ) {
+					manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
+					columns.addAll( manyToOne.getColumns() );
+				}
 				continue;
 			}
 
 			if ( isEmbeddedMember( member, componentMember.type() )
 					|| isImplicitEmbeddedIdentifierMember( source, componentMember.type() ) ) {
 				validateNestedEmbeddedTablePlacement( member );
-				final EmbeddedValueIntent embeddedValueIntent = componentMember.embeddedValueIntent();
+				final EmbeddedValueIntent embeddedValueIntent = componentMember.embeddedValueIntent() != null
+						? componentMember.embeddedValueIntent()
+						: EmbeddedValueIntent.fromAttribute( componentMember.type(), memberPath, componentMember.fullPath() );
 				final ComponentSource nestedSource = source.nested(
 						member,
 						embeddedValueIntent.memberType(),
@@ -276,20 +285,23 @@ public class ComponentBinder {
 			}
 
 			final Property property = propertyMappingMaterializer.createProperty( attributeName, null, member );
-			final MaterializedBasicValue basicValue = basicValueMappingMaterializer.createComponentMemberBasicValue(
-					source,
-					componentMember,
-					property,
+				final MaterializedBasicValue basicValue = basicValueMappingMaterializer.createComponentMemberBasicValue(
+						source,
+						componentMember,
+						property,
 					table,
 					columnNamingPatterns,
 					uniqueByDefault,
 					nullableByDefault,
 					updatable,
 					options,
-					state,
-					context
-			);
-			component.addProperty( property, componentMember.declaringType() );
+						state,
+						context
+				);
+				if ( component.isPolymorphic() && componentMember.declaringType() != source.componentType() ) {
+					property.setOptional( true );
+				}
+				component.addProperty( property, componentMember.declaringType() );
 			applyCollation( ownerType, componentMember, property );
 			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 			if ( basicValue.column() != null ) {
@@ -327,40 +339,25 @@ public class ComponentBinder {
 		);
 	}
 
-	private ManyToOne bindAssociationIdentifierMember(
+	private ToOne bindAssociationIdentifierMember(
 			IdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ClassDetails componentType,
-			String attributeName,
-			MemberDetails member,
-			TypeDetails memberType,
+			ComponentMemberBinding componentMember,
 			Property property,
 			Table table,
 			AssociationOverride associationOverride,
 			List<Column> identifierColumns) {
+		final String attributeName = componentMember.attributeName();
 		final ToOneSource source = ToOneSource.create(
-				member,
+				componentMember.member(),
 				componentType.getClassName(),
 				attributeName,
+				componentMember.namingPath(),
 				associationOverride,
 				context.getBootstrapContext().getModelsContext(),
-				memberType
+				componentMember.type()
 		);
-		if ( source.isInverseOneToOne() ) {
-			throw new UnsupportedOperationException(
-					"Association identifiers are only implemented for owning to-one attributes - "
-							+ ownerBinding.getEntityName() + "." + attributeName
-			);
-		}
-
-		final JoinTable joinTable = source.joinTable();
-		if ( joinTable != null ) {
-			throw new UnsupportedOperationException(
-					"Embedded-id association identifiers with @JoinTable are not yet implemented - "
-							+ ownerBinding.getEntityName() + "." + attributeName
-			);
-		}
-
 		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) state.getTypeBinder(
 				source.targetClassDetails( context )
 		);
@@ -370,8 +367,33 @@ public class ComponentBinder {
 							+ source.targetClassDetails( context ).getClassName()
 			);
 		}
+		if ( source.isInverseOneToOne() ) {
+			return bindInverseOneToOneAssociationIdentifierMember(
+					ownerType,
+					ownerBinding,
+					componentType,
+					attributeName,
+					source,
+					property,
+					table,
+					targetTypeBinder,
+					identifierColumns
+			);
+		}
 
-		final ManyToOne value = new ManyToOne( state.getMetadataBuildingContext(), table );
+		final JoinTable joinTable = source.joinTable();
+		final Table valueTable = joinTable == null
+				? table
+				: bindAssociationIdentifierTable(
+						resolveOwnerEntityType( ownerType ),
+						ownerBinding,
+						table,
+						attributeName,
+						targetTypeBinder,
+						joinTable
+				);
+
+		final ManyToOne value = new ManyToOne( state.getMetadataBuildingContext(), valueTable );
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setReferenceToPrimaryKey( true );
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
@@ -391,11 +413,101 @@ public class ComponentBinder {
 				value,
 				null,
 				targetTypeBinder,
-				source.valueJoinColumns( null ),
+				source.valueJoinColumns( joinTable ),
+				source.valueForeignKeySource( joinTable ),
+				identifierColumns
+		) );
+		return value;
+	}
+
+	private OneToOne bindInverseOneToOneAssociationIdentifierMember(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			ClassDetails componentType,
+			String attributeName,
+			ToOneSource source,
+			Property property,
+			Table table,
+			EntityTypeBinder targetTypeBinder,
+			List<Column> identifierColumns) {
+		final OneToOne value = new OneToOne(
+				state.getMetadataBuildingContext(),
+				table,
+				ownerBinding
+		);
+		value.setPropertyName( attributeName );
+		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
+		value.setReferenceToPrimaryKey( true );
+		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
+		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
+		value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
+		ToOneMaterializationHelper.applyFetchMode( source, value );
+		value.setConstrained( true );
+		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
+		value.setMappedByProperty( source.oneToOne().mappedBy() );
+		property.setOptional( false );
+		property.setCascade( source.cascades( state ), source.orphanRemoval() );
+
+		state.addAssociationIdentifierBinding( new AssociationIdentifierBinding(
+				resolveOwnerEntityType( ownerType ),
+				ownerBinding,
+				property,
+				value,
+				null,
+				targetTypeBinder,
+				List.of(),
 				source.valueForeignKeySource( null ),
 				identifierColumns
 		) );
 		return value;
+	}
+
+	private Table bindAssociationIdentifierTable(
+			EntityTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			Table primaryTable,
+			String attributeName,
+			EntityTypeBinder targetTypeBinder,
+			JoinTable joinTable) {
+		final Table associationTable = modelBinders.getTableBinder()
+				.bindAssociationTable(
+						ownerType,
+						primaryTable,
+						attributeName,
+						targetTypeBinder.getManagedType(),
+						targetTypeBinder.getTypeBinding().getTable(),
+						joinTable
+				)
+				.binding();
+
+		final Join join = new Join();
+		join.setTable( associationTable );
+		join.setPersistentClass( ownerBinding );
+		join.setOptional( false );
+		join.setInverse( false );
+		ownerBinding.addJoin( join );
+
+		final List<JoinColumn> joinColumns = listJoinColumns( joinTable.joinColumns() );
+		state.addAssociationTableBinding( new AssociationTableBinding(
+				join,
+				joinColumns,
+				ForeignKeySource.firstSpecified(
+						ForeignKeySource.fromFirstSpecifiedJoinColumn( joinColumns ),
+						ForeignKeySource.from( joinTable )
+				)
+		) );
+		return associationTable;
+	}
+
+	private static List<JoinColumn> listJoinColumns(JoinColumn[] joinColumns) {
+		if ( joinColumns.length == 0 ) {
+			return List.of();
+		}
+		final ArrayList<JoinColumn> result = new ArrayList<>( joinColumns.length );
+		for ( JoinColumn joinColumn : joinColumns ) {
+			result.add( joinColumn );
+		}
+		return result;
 	}
 
 	private Collection bindPluralMember(

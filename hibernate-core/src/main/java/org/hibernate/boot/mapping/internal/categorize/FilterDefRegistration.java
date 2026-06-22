@@ -13,12 +13,21 @@ import org.hibernate.models.spi.ClassDetails;
 ///
 /// @param name The filter name
 /// @param defaultCondition The default SQL condition for the filter
-/// @param parameters Filter parameter names mapped to their Java types
+/// @param autoEnabled Whether the filter should be enabled by default
+/// @param applyToLoadByKey Whether the filter should apply to direct key lookups
+/// @param parameterTypes Filter parameter names mapped to their Java types
+/// @param parameterResolvers Filter parameter names mapped to their resolver types
 ///
 /// @see FilterDef
 /// @see org.hibernate.boot.jaxb.mapping.JaxbFilterDef
 ///
 /// @since 9.0
 /// @author Marco Belladelli
-public record FilterDefRegistration(String name, String defaultCondition, Map<String, ClassDetails> parameters) {
+public record FilterDefRegistration(
+		String name,
+		String defaultCondition,
+		boolean autoEnabled,
+		boolean applyToLoadByKey,
+		Map<String, ClassDetails> parameterTypes,
+		Map<String, ClassDetails> parameterResolvers) {
 }

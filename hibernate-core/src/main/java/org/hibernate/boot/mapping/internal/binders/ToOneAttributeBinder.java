@@ -14,7 +14,10 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.PropertyRef;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
@@ -27,8 +30,10 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
@@ -51,6 +56,8 @@ import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapsId;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
 
 /// Binds to-one attributes and association values.
 ///
@@ -175,16 +182,94 @@ class ToOneAttributeBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		return (ManyToOne) bindToOneValue(
+				ownerType,
+				ownerBinding,
+				ownerClassName,
+				propertyName,
+				member,
+				resolvedType,
+				property,
+				primaryTable,
+				associationOverride,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
+	}
+
+	static Value bindToOneValue(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			String ownerClassName,
+			String propertyName,
+			MemberDetails member,
+			TypeDetails resolvedType,
+			Property property,
+			Table primaryTable,
+			AssociationOverride associationOverride,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		return bindToOneValue(
+				ownerType,
+				ownerBinding,
+				ownerClassName,
+				propertyName,
+				AttributePath.parse( propertyName ),
+				member,
+				resolvedType,
+				property,
+				primaryTable,
+				associationOverride,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
+	}
+
+	static Value bindToOneValue(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			String ownerClassName,
+			String propertyName,
+			AttributePath implicitNamingPath,
+			MemberDetails member,
+			TypeDetails resolvedType,
+			Property property,
+			Table primaryTable,
+			AssociationOverride associationOverride,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		final ToOneSource source = ToOneSource.create(
 				member,
 				ownerClassName,
 				propertyName,
+				implicitNamingPath,
 				associationOverride,
 				bindingContext.getBootstrapContext().getModelsContext(),
 				resolvedType
 		);
 		if ( source.isInverseOneToOne() ) {
-			throw new UnsupportedOperationException( "Inverse @OneToOne is not yet implemented" );
+			return bindInverseOneToOne(
+					source,
+					ownerType,
+					ownerBinding,
+					new AttributeMetadataImpl( propertyName, AttributeNature.TO_ONE, member ),
+					property,
+					primaryTable,
+					ownerClassName,
+					propertyName,
+					member,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
 		}
 		return bindToOne(
 				source,
@@ -226,6 +311,7 @@ class ToOneAttributeBinder {
 						propertyName,
 						target,
 						joinTable,
+						source.notFound() != null,
 						modelBinders,
 						bindingOptions,
 						bindingState,
@@ -240,9 +326,9 @@ class ToOneAttributeBinder {
 				joinTable,
 				bindingState.getDatabase().getDialect()
 		);
-		final PropertyRef propertyRef = source.propertyRef();
-		final boolean referenceToPrimaryKey = propertyRef == null
-				&& referencesPrimaryKeySources( valueJoinColumns, target.identifierColumns(), bindingState.getDatabase() );
+			final PropertyRef propertyRef = source.propertyRef();
+			final boolean referenceToPrimaryKey = propertyRef == null
+					&& referencesPrimaryKeySources( valueJoinColumns, target, bindingState.getDatabase() );
 		final MapsId mapsId = member.getDirectAnnotationUsage( MapsId.class );
 		value.setReferencedEntityName( target.entityName() );
 		value.setReferenceToPrimaryKey( referenceToPrimaryKey );
@@ -274,8 +360,10 @@ class ToOneAttributeBinder {
 					bindingState.getDatabase(),
 					logicalOneToOne,
 					optional,
-					ownerClassName,
-					propertyName
+					ownerBinding,
+					source,
+					ownerClassName + "." + propertyName,
+					bindingState
 			);
 			if ( referenceToPrimaryKey ) {
 				value.setSorted( true );
@@ -347,21 +435,51 @@ class ToOneAttributeBinder {
 	}
 
 	private OneToOne bindInverseOneToOne(ToOneSource source, Property property) {
+		return bindInverseOneToOne(
+				source,
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				property,
+				primaryTable,
+				ownerType.getClassDetails().getClassName(),
+				attributeBinding.attributeName(),
+				attributeBinding.member(),
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
+	}
+
+	private static OneToOne bindInverseOneToOne(
+			ToOneSource source,
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			Property property,
+			Table primaryTable,
+			String ownerClassName,
+			String propertyName,
+			MemberDetails member,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		final TargetEntityBinding target = resolveTargetEntityBinding( source, bindingState, bindingContext );
 		final OneToOne value = new OneToOne(
 				bindingState.getMetadataBuildingContext(),
 				primaryTable,
 				ownerBinding
 		);
-		value.setPropertyName( attributeBinding.attributeName() );
+		value.setPropertyName( propertyName );
 		value.setReferencedEntityName( target.entityName() );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeBinding.attributeName() );
+		value.setTypeUsingReflection( ownerClassName, propertyName );
 		value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
+		ToOneMaterializationHelper.applyFetchMode( source, value );
 		value.setConstrained( !source.optional() );
 		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
 		value.setMappedByProperty( source.oneToOne().mappedBy() );
-		applyOnDelete( attributeBinding.member(), value );
+		applyOnDelete( member, value );
 		property.setOptional( source.optional() );
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
 
@@ -423,19 +541,29 @@ class ToOneAttributeBinder {
 			Database database,
 			boolean uniqueByDefault,
 			boolean optional,
-			String ownerClassName,
-			String propertyName) {
-		final List<Column> targetColumns = target.identifierColumns();
+			PersistentClass ownerBinding,
+			ToOneSource source,
+			String sourceRole,
+			BindingState bindingState) {
+		final List<Column> targetColumns = referenceToPrimaryKey
+				? referencedPrimaryKeyColumns( joinColumnAnns, target, database )
+				: target.identifierColumns();
 
 		if ( referenceToPrimaryKey && !joinColumnAnns.isEmpty() && joinColumnAnns.size() != targetColumns.size() ) {
 			throw new MappingException(
 					"Composite to-one join column count did not match target identifier column count - "
-							+ ownerClassName + "." + propertyName
+							+ sourceRole
 			);
 		}
 
 		final List<JoinColumnOrFormulaSource> orderedJoinColumns = referenceToPrimaryKey
-				? orderJoinColumnSources( joinColumnAnns, targetColumns, database, ownerClassName, propertyName )
+				? orderJoinColumnSources(
+						joinColumnAnns,
+						targetColumns,
+						database,
+						source.ownerClassName(),
+						source.propertyName()
+				)
 				: joinColumnAnns;
 		final int columnCount = referenceToPrimaryKey ? targetColumns.size() : joinColumnAnns.size();
 		for ( int i = 0; i < columnCount; i++ ) {
@@ -449,7 +577,7 @@ class ToOneAttributeBinder {
 			}
 			final Column column = ColumnBinder.bindColumn(
 					ColumnSource.from( joinColumnAnn == null ? null : joinColumnAnn.column() ),
-					() -> propertyName + "_" + targetColumnName,
+					() -> implicitJoinColumnName( ownerBinding, source, target, targetColumnName, database, bindingState ),
 					uniqueByDefault,
 					optional
 			);
@@ -469,6 +597,65 @@ class ToOneAttributeBinder {
 							&& ( joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().updatable() )
 			);
 		}
+	}
+
+	private static String implicitJoinColumnName(
+			PersistentClass ownerBinding,
+			ToOneSource source,
+			TargetEntityBinding target,
+			String targetColumnName,
+			Database database,
+			BindingState bindingState) {
+		return bindingState.getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getImplicitNamingStrategy()
+				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
+					@Override
+					public Nature getNature() {
+						return Nature.ENTITY;
+					}
+
+					@Override
+					public EntityNaming getEntityNaming() {
+						return new EntityNaming() {
+							@Override
+							public String getClassName() {
+								return ownerBinding.getClassName();
+							}
+
+							@Override
+							public String getEntityName() {
+								return ownerBinding.getEntityName();
+							}
+
+							@Override
+							public String getJpaEntityName() {
+								return ownerBinding.getJpaEntityName();
+							}
+						};
+					}
+
+					@Override
+					public AttributePath getAttributePath() {
+						return source.implicitNamingPath();
+					}
+
+					@Override
+					public Identifier getReferencedTableName() {
+						return target.primaryTable().getNameIdentifier();
+					}
+
+					@Override
+					public Identifier getReferencedColumnName() {
+						return database.toIdentifier( targetColumnName );
+					}
+
+					@Override
+					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
+						return bindingState.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
 	}
 
 	private static List<Column> resolveSharedIdentifierColumns(
@@ -512,6 +699,14 @@ class ToOneAttributeBinder {
 
 	private static boolean referencesPrimaryKeySources(
 			List<JoinColumnOrFormulaSource> joinColumns,
+			TargetEntityBinding target,
+			Database database) {
+		return referencesPrimaryKeySources( joinColumns, target.identifierColumns(), database )
+			|| referencesSecondaryTablePrimaryKeySources( joinColumns, target, database );
+	}
+
+	private static boolean referencesPrimaryKeySources(
+			List<JoinColumnOrFormulaSource> joinColumns,
 			List<Column> targetColumns,
 			Database database) {
 		if ( joinColumns.isEmpty()
@@ -530,6 +725,96 @@ class ToOneAttributeBinder {
 			unmatchedTargetColumns.remove( targetColumn );
 		}
 		return unmatchedTargetColumns.isEmpty();
+	}
+
+	private static List<Column> referencedPrimaryKeyColumns(
+			List<JoinColumnOrFormulaSource> joinColumns,
+			TargetEntityBinding target,
+			Database database) {
+		if ( referencesPrimaryKeySources( joinColumns, target.identifierColumns(), database ) ) {
+			return target.identifierColumns();
+		}
+		final SecondaryTable[] secondaryTables = target.typeBinder()
+				.getManagedType()
+				.getClassDetails()
+				.getRepeatedAnnotationUsages(
+						SecondaryTable.class,
+						target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+				);
+		for ( SecondaryTable secondaryTable : secondaryTables ) {
+			if ( referencesPrimaryKeyJoinColumns( joinColumns, secondaryTable.pkJoinColumns(), database ) ) {
+				return primaryKeyJoinColumns( secondaryTable.pkJoinColumns() );
+			}
+		}
+		return target.identifierColumns();
+	}
+
+	private static List<Column> primaryKeyJoinColumns(PrimaryKeyJoinColumn[] primaryKeyJoinColumns) {
+		final ArrayList<Column> result = new ArrayList<>( primaryKeyJoinColumns.length );
+		for ( PrimaryKeyJoinColumn primaryKeyJoinColumn : primaryKeyJoinColumns ) {
+			result.add( new Column( primaryKeyJoinColumn.name() ) );
+		}
+		return result;
+	}
+
+	private static boolean referencesSecondaryTablePrimaryKeySources(
+			List<JoinColumnOrFormulaSource> joinColumns,
+			TargetEntityBinding target,
+			Database database) {
+		if ( joinColumns.isEmpty()
+				|| joinColumns.stream().noneMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) ) {
+			return false;
+		}
+		final SecondaryTable[] secondaryTables = target.typeBinder()
+				.getManagedType()
+				.getClassDetails()
+				.getRepeatedAnnotationUsages(
+						SecondaryTable.class,
+						target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+				);
+		for ( SecondaryTable secondaryTable : secondaryTables ) {
+			if ( referencesPrimaryKeyJoinColumns( joinColumns, secondaryTable.pkJoinColumns(), database ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean referencesPrimaryKeyJoinColumns(
+			List<JoinColumnOrFormulaSource> joinColumns,
+			PrimaryKeyJoinColumn[] primaryKeyJoinColumns,
+			Database database) {
+		if ( joinColumns.size() != primaryKeyJoinColumns.length ) {
+			return false;
+		}
+		final ArrayList<PrimaryKeyJoinColumn> unmatchedPrimaryKeyJoinColumns = new ArrayList<>(
+				List.of( primaryKeyJoinColumns )
+		);
+		for ( JoinColumnOrFormulaSource joinColumn : joinColumns ) {
+			final PrimaryKeyJoinColumn primaryKeyJoinColumn = findPrimaryKeyJoinColumn(
+					unmatchedPrimaryKeyJoinColumns,
+					joinColumn.referencedColumnName(),
+					database
+			);
+			if ( primaryKeyJoinColumn == null ) {
+				return false;
+			}
+			unmatchedPrimaryKeyJoinColumns.remove( primaryKeyJoinColumn );
+		}
+		return unmatchedPrimaryKeyJoinColumns.isEmpty();
+	}
+
+	private static PrimaryKeyJoinColumn findPrimaryKeyJoinColumn(
+			List<PrimaryKeyJoinColumn> primaryKeyJoinColumns,
+			String columnName,
+			Database database) {
+		final Identifier columnIdentifier = database.toIdentifier( columnName );
+		for ( PrimaryKeyJoinColumn primaryKeyJoinColumn : primaryKeyJoinColumns ) {
+			if ( database.toIdentifier( primaryKeyJoinColumn.name() ).matches( columnIdentifier ) ) {
+				return primaryKeyJoinColumn;
+			}
+		}
+		return null;
 	}
 
 	static List<String> referencedColumnNames(List<JoinColumn> joinColumns) {
@@ -653,6 +938,7 @@ class ToOneAttributeBinder {
 			String propertyName,
 			TargetEntityBinding target,
 			JoinTable joinTable,
+			boolean disableForeignKeyCreation,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -676,6 +962,9 @@ class ToOneAttributeBinder {
 		join.setPersistentClass( ownerBinding );
 		join.setOptional( true );
 		join.setInverse( false );
+		if ( disableForeignKeyCreation ) {
+			join.disableForeignKeyCreation();
+		}
 		ownerBinding.addJoin( join );
 
 		final IdentifierBinding ownerIdentifierBinding = bindingState.getIdentifierBinding( ownerType.getHierarchy().getRoot() );
@@ -686,7 +975,9 @@ class ToOneAttributeBinder {
 			);
 		}
 		final List<JoinColumn> joinColumns = listJoinColumns( joinTable.joinColumns() );
-		if ( !joinColumns.isEmpty() && joinColumns.size() != ownerIdentifierBinding.columns().size() ) {
+		if ( !joinColumns.isEmpty()
+				&& joinColumns.size() != ownerIdentifierBinding.columns().size()
+				&& !hasReferencedColumnName( joinColumns ) ) {
 			throw new MappingException(
 					"Association table join column count did not match owner identifier column count - "
 							+ ownerType.getClassDetails().getClassName()
@@ -695,7 +986,12 @@ class ToOneAttributeBinder {
 		bindingState.addAssociationTableBinding( new AssociationTableBinding(
 				join,
 				joinColumns,
-				ForeignKeySource.from( joinTable )
+				disableForeignKeyCreation
+						? ForeignKeySource.noConstraint()
+						: ForeignKeySource.firstSpecified(
+								ForeignKeySource.fromFirstSpecifiedJoinColumn( joinColumns ),
+								ForeignKeySource.from( joinTable )
+						)
 		) );
 		return associationTable;
 	}
@@ -733,6 +1029,10 @@ class ToOneAttributeBinder {
 			MemberDetails member,
 			AssociationOverride associationOverride) {
 		return ToOneSource.create( member, "", "", associationOverride, null ).joinColumns();
+	}
+
+	static boolean hasReferencedColumnName(List<JoinColumn> joinColumns) {
+		return joinColumns.stream().anyMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) );
 	}
 
 	private static List<JoinColumn> listJoinColumns(JoinColumn[] joinColumns) {

@@ -13,6 +13,7 @@ import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaClass;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
@@ -27,13 +28,19 @@ import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Fetch;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
@@ -137,6 +144,34 @@ public class ToOneAssociationTests {
 				},
 				scope.getRegistry(),
 				SelfReferentialManyToOneNonPkOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testManyToOneReferencesSecondaryTableKeyColumn(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( SecondaryTableKeyManyToOneOwner.class.getName() );
+					final ManyToOne value = (ManyToOne) entityBinding.getProperty( "target" ).getValue();
+
+					assertThat( value.isReferenceToPrimaryKey() ).isTrue();
+					assertThat( value.getReferencedPropertyName() ).isNull();
+					assertThat( value.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "target_id" );
+					final PersistentClass targetBinding = context.getMetadataCollector()
+							.getEntityBinding( SecondaryTableKeyTarget.class.getName() );
+					assertThat( targetBinding.getJoins().get( 0 ).getKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "target_type_id" );
+					assertThat( entityBinding.getTable().getForeignKeyCollection() ).hasSize( 1 );
+				},
+				scope.getRegistry(),
+				SecondaryTableKeyRoot.class,
+				SecondaryTableKeyTarget.class,
+				SecondaryTableKeyManyToOneOwner.class
 		);
 	}
 
@@ -261,6 +296,37 @@ public class ToOneAssociationTests {
 				scope.getRegistry(),
 				MappedByJoinTableOneToOneParent.class,
 				MappedByJoinTableOneToOneChild.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testInverseOneToOneMappedBySecondaryTable(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass inverseEntityBinding = context.getMetadataCollector()
+							.getEntityBinding( MappedBySecondaryTableOneToOneParent.class.getName() );
+					final Join inverseJoin = inverseEntityBinding.getJoins().get( 0 );
+					final org.hibernate.mapping.Property property = inverseJoin.getProperties().get( 0 );
+					assertThat( property.getValue() ).isInstanceOf( ManyToOne.class );
+					final ManyToOne value = (ManyToOne) property.getValue();
+
+					assertThat( inverseJoin.isInverse() ).isTrue();
+					assertThat( inverseJoin.getTable().getName() ).isEqualTo( "mapped_by_secondary_table_one_to_one_child_details" );
+					assertThat( inverseJoin.getKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_fk" );
+					assertThat( value.isLogicalOneToOne() ).isTrue();
+					assertThat( value.getReferencedEntityName() ).isEqualTo( MappedBySecondaryTableOneToOneChild.class.getName() );
+					assertThat( value.getReferencedPropertyName() ).isEqualTo( "parent" );
+					assertThat( value.isReferenceToPrimaryKey() ).isFalse();
+					assertThat( value.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "id" );
+				},
+				scope.getRegistry(),
+				MappedBySecondaryTableOneToOneParent.class,
+				MappedBySecondaryTableOneToOneChild.class
 		);
 	}
 
@@ -510,7 +576,7 @@ public class ToOneAssociationTests {
 							.getEntityBinding( ManyToManyEmptyOrderByOwner.class.getName() );
 					final Collection collection = (Collection) entityBinding.getProperty( "parents" ).getValue();
 
-					assertThat( collection.getOrderBy() ).isNull();
+					assertThat( collection.getJpaOrderBy() ).isEmpty();
 				},
 				scope.getRegistry(),
 				Parent.class,
@@ -555,7 +621,7 @@ public class ToOneAssociationTests {
 							.isEqualTo( "many_to_many_implicit_join_table_owners_parents" );
 					assertThat( collection.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "id" );
+							.containsExactly( "ManyToManyImplicitJoinTableOwner_id" );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "parents_id" );
@@ -644,7 +710,7 @@ public class ToOneAssociationTests {
 					assertThat( index.isReferenceToPrimaryKey() ).isTrue();
 					assertThat( index.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "id_id" );
+							.containsExactly( "parents_KEY" );
 					assertThat( element.getReferencedEntityName() ).isEqualTo( Parent.class.getName() );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
@@ -711,6 +777,29 @@ public class ToOneAssociationTests {
 				Child.class,
 				ManyToManyToOnePropertyMapKeyParent.class,
 				ManyToManyToOnePropertyMapKeyOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testOwningManyToManyComponentPropertyMapKey(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ManyToManyComponentPropertyMapKeyOwner.class.getName() );
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) entityBinding.getProperty( "parents" ).getValue();
+					final Component index = (Component) collection.getIndex();
+
+					assertThat( collection.hasMapKeyProperty() ).isTrue();
+					assertThat( collection.getMapKeyPropertyName() ).isEqualTo( "locationKey" );
+					assertThat( index.getComponentClassName() ).isEqualTo( LocationKey.class.getName() );
+					assertThat( index.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "city", "country" );
+				},
+				scope.getRegistry(),
+				ManyToManyComponentPropertyMapKeyParent.class,
+				ManyToManyComponentPropertyMapKeyOwner.class
 		);
 	}
 
@@ -898,7 +987,7 @@ public class ToOneAssociationTests {
 					assertThat( inverseIndex.isReferenceToPrimaryKey() ).isTrue();
 					assertThat( inverseIndex.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "id_id" );
+							.containsExactly( "parents_KEY" );
 				},
 				scope.getRegistry(),
 				Child.class,
@@ -934,6 +1023,33 @@ public class ToOneAssociationTests {
 				Child.class,
 				MappedByManyToManyToOnePropertyMapKeyParent.class,
 				MappedByManyToManyToOnePropertyMapKeyOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testInverseManyToManyMapMappedByComponentPropertyMapKey(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass inverseEntityBinding = context.getMetadataCollector()
+							.getEntityBinding( MappedByManyToManyComponentPropertyMapKeyParent.class.getName() );
+					final org.hibernate.mapping.Map inverseCollection = (org.hibernate.mapping.Map) inverseEntityBinding
+							.getProperty( "owners" )
+							.getValue();
+					final Component inverseIndex = (Component) inverseCollection.getIndex();
+
+					assertThat( inverseCollection.isInverse() ).isTrue();
+					assertThat( inverseCollection.getMappedByProperty() ).isEqualTo( "parents" );
+					assertThat( inverseCollection.hasMapKeyProperty() ).isTrue();
+					assertThat( inverseCollection.getMapKeyPropertyName() ).isEqualTo( "locationKey" );
+					assertThat( inverseIndex.getComponentClassName() ).isEqualTo( LocationKey.class.getName() );
+					assertThat( inverseIndex.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "city", "country" );
+				},
+				scope.getRegistry(),
+				MappedByManyToManyComponentPropertyMapKeyParent.class,
+				MappedByManyToManyComponentPropertyMapKeyOwner.class
 		);
 	}
 
@@ -1142,7 +1258,7 @@ public class ToOneAssociationTests {
 							.isEqualTo( "one_to_many_implicit_join_table_owners_children" );
 					assertThat( collection.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "id" );
+							.containsExactly( "OneToManyImplicitJoinTableOwner_id" );
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "children_id" );
@@ -1450,6 +1566,37 @@ public class ToOneAssociationTests {
 		private String code;
 	}
 
+	@Entity(name="SecondaryTableKeyRoot")
+	@Table(name="secondary_table_key_roots")
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@DiscriminatorColumn(name = "kind")
+	public static abstract class SecondaryTableKeyRoot {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+	}
+
+	@Entity(name="SecondaryTableKeyTarget")
+	@DiscriminatorValue("target")
+	@SecondaryTable(
+			name = "secondary_table_key_target_details",
+			pkJoinColumns = @PrimaryKeyJoinColumn(name = "target_type_id", referencedColumnName = "id")
+	)
+	public static class SecondaryTableKeyTarget extends SecondaryTableKeyRoot {
+		@Column(name = "details", table = "secondary_table_key_target_details")
+		private String details;
+	}
+
+	@Entity(name="SecondaryTableKeyManyToOneOwner")
+	@Table(name="secondary_table_key_many_to_one_owners")
+	public static class SecondaryTableKeyManyToOneOwner {
+		@Id
+		private Integer id;
+		@jakarta.persistence.ManyToOne
+		@JoinColumn(name = "target_id", referencedColumnName = "target_type_id")
+		private SecondaryTableKeyTarget target;
+	}
+
 	@Entity(name="OneToOneOwner")
 	@Table(name="one_to_one_owners")
 	public static class OneToOneOwner {
@@ -1519,6 +1666,26 @@ public class ToOneAssociationTests {
 				inverseJoinColumns = @JoinColumn(name = "parent_id", referencedColumnName = "id")
 		)
 		private MappedByJoinTableOneToOneParent parent;
+	}
+
+	@Entity(name="MappedBySecondaryTableOneToOneParent")
+	@Table(name="mapped_by_secondary_table_one_to_one_parents")
+	public static class MappedBySecondaryTableOneToOneParent {
+		@Id
+		private Integer id;
+		@OneToOne(mappedBy = "parent")
+		private MappedBySecondaryTableOneToOneChild child;
+	}
+
+	@Entity(name="MappedBySecondaryTableOneToOneChild")
+	@Table(name="mapped_by_secondary_table_one_to_one_children")
+	@SecondaryTable(name = "mapped_by_secondary_table_one_to_one_child_details")
+	public static class MappedBySecondaryTableOneToOneChild {
+		@Id
+		private Integer id;
+		@OneToOne
+		@JoinColumn(name = "parent_fk", referencedColumnName = "id", table = "mapped_by_secondary_table_one_to_one_child_details")
+		private MappedBySecondaryTableOneToOneParent parent;
 	}
 
 	@Entity(name="InvalidMappedByOneToOneParent")
@@ -1827,6 +1994,30 @@ public class ToOneAssociationTests {
 		private Map<Child, ManyToManyToOnePropertyMapKeyParent> parents;
 	}
 
+	@Entity(name="ManyToManyComponentPropertyMapKeyParent")
+	@Table(name="many_to_many_component_property_map_key_parents")
+	public static class ManyToManyComponentPropertyMapKeyParent {
+		@Id
+		private Integer id;
+		@Embedded
+		private LocationKey locationKey;
+	}
+
+	@Entity(name="ManyToManyComponentPropertyMapKeyOwner")
+	@Table(name="many_to_many_component_property_map_key_owners")
+	public static class ManyToManyComponentPropertyMapKeyOwner {
+		@Id
+		private Integer id;
+		@ManyToMany
+		@JoinTable(
+				name = "owner_component_property_key_parent_maps",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id"),
+				inverseJoinColumns = @JoinColumn(name = "parent_id", referencedColumnName = "id")
+		)
+		@MapKey(name = "locationKey")
+		private Map<LocationKey, ManyToManyComponentPropertyMapKeyParent> parents;
+	}
+
 	@Entity(name="SelfReferentialPropertyMapKeyOwner")
 	@Table(name="self_referential_property_map_key_owners")
 	public static class SelfReferentialPropertyMapKeyOwner {
@@ -2002,6 +2193,32 @@ public class ToOneAssociationTests {
 		)
 		@MapKey(name = "mapKeyChild")
 		private Map<Child, MappedByManyToManyToOnePropertyMapKeyParent> parents;
+	}
+
+	@Entity(name="MappedByManyToManyComponentPropertyMapKeyParent")
+	@Table(name="mapped_by_many_to_many_component_property_map_key_parents")
+	public static class MappedByManyToManyComponentPropertyMapKeyParent {
+		@Id
+		private Integer id;
+		@Embedded
+		private LocationKey locationKey;
+		@ManyToMany(mappedBy = "parents")
+		private Map<LocationKey, MappedByManyToManyComponentPropertyMapKeyOwner> owners;
+	}
+
+	@Entity(name="MappedByManyToManyComponentPropertyMapKeyOwner")
+	@Table(name="mapped_by_many_to_many_component_property_map_key_owners")
+	public static class MappedByManyToManyComponentPropertyMapKeyOwner {
+		@Id
+		private Integer id;
+		@ManyToMany
+		@JoinTable(
+				name = "mapped_by_owner_parent_component_property_maps",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id"),
+				inverseJoinColumns = @JoinColumn(name = "parent_id", referencedColumnName = "id")
+		)
+		@MapKey(name = "locationKey")
+		private Map<LocationKey, MappedByManyToManyComponentPropertyMapKeyParent> parents;
 	}
 
 	@Entity(name="MappedByOneToManyParent")
@@ -2329,5 +2546,11 @@ public class ToOneAssociationTests {
 	public static class Pk {
 		private Integer id1;
 		private Integer id2;
+	}
+
+	@Embeddable
+	public static class LocationKey {
+		private String city;
+		private String country;
 	}
 }

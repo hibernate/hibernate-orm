@@ -16,6 +16,7 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.categorize.StandardPersistentAttributeMemberResolver;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -216,16 +217,29 @@ public record ComponentSource(
 			MemberDetails member,
 			AccessType defaultAccessType,
 			BindingContext bindingContext) {
+		final TypeDetails elementType = elementCollectionElementType( member, bindingContext );
 		return new ComponentSource(
 				Kind.COLLECTION_ELEMENT,
 				member,
-				resolveEmbeddableType( member, bindingContext, true ),
-				member.getElementType(),
+				elementType.determineRawClass(),
+				elementType,
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
 				"",
 				member.resolveAttributeName() + "."
 		);
+	}
+
+	private static TypeDetails elementCollectionElementType(MemberDetails member, BindingContext bindingContext) {
+		final ElementCollection elementCollection = member.getDirectAnnotationUsage( ElementCollection.class );
+		if ( elementCollection != null && elementCollection.targetClass() != void.class ) {
+			return new ClassTypeDetailsImpl(
+					bindingContext.getClassDetailsRegistry()
+							.resolveClassDetails( elementCollection.targetClass().getName() ),
+					TypeDetails.Kind.CLASS
+			);
+		}
+		return member.getElementType();
 	}
 
 	/// Creates a source for an embeddable map key.
@@ -272,7 +286,7 @@ public record ComponentSource(
 				member.member(),
 				nestedComponentType,
 				member.member().resolveRelativeType( typeVariableScope ),
-				pathAdjustments,
+				new PathAdjustmentCollector( pathAdjustments, member.member(), bindingContext ),
 				defaultAccessType,
 				member.path() + ".",
 				member.fullPath() + "."
@@ -291,7 +305,7 @@ public record ComponentSource(
 				member,
 				nestedComponentType,
 				member.resolveRelativeType( typeVariableScope ),
-				pathAdjustments,
+				new PathAdjustmentCollector( pathAdjustments, member, bindingContext ),
 				defaultAccessType,
 				path + ".",
 				fullPath + "."
@@ -508,6 +522,11 @@ public record ComponentSource(
 		return ColumnSource.from( column );
 	}
 
+	public ColumnSource discriminatorColumnSource() {
+		final var override = locateAttributeOverride( "{discriminator}" );
+		return override == null ? null : ColumnSource.from( override.column() );
+	}
+
 	/// Resolves the converter source for a component member path.
 	///
 	/// Path-based `@Convert(attributeName = ...)` wins over a direct converter declared on
@@ -534,31 +553,56 @@ public record ComponentSource(
 		if ( pathAdjustments == null ) {
 			return null;
 		}
-		final var direct = pathAdjustments.locateAttributeOverride( path );
-		return direct == null ? pathAdjustments.locateAttributeOverride( rolePath( path ) ) : direct;
+		for ( String candidate : adjustmentPathCandidates( path ) ) {
+			final var override = pathAdjustments.locateAttributeOverride( candidate );
+			if ( override != null ) {
+				return override;
+			}
+		}
+		return null;
 	}
 
 	private AssociationOverride locateAssociationOverride(String path) {
 		if ( pathAdjustments == null ) {
 			return null;
 		}
-		final var direct = pathAdjustments.locateAssociationOverride( path );
-		return direct == null ? pathAdjustments.locateAssociationOverride( rolePath( path ) ) : direct;
+		for ( String candidate : adjustmentPathCandidates( path ) ) {
+			final var override = pathAdjustments.locateAssociationOverride( candidate );
+			if ( override != null ) {
+				return override;
+			}
+		}
+		return null;
 	}
 
 	private Convert locateConversion(String path) {
 		if ( pathAdjustments == null ) {
 			return null;
 		}
-		final var direct = pathAdjustments.locateConversion( path );
-		return direct == null ? pathAdjustments.locateConversion( rolePath( path ) ) : direct;
+		for ( String candidate : adjustmentPathCandidates( path ) ) {
+			final var conversion = pathAdjustments.locateConversion( candidate );
+			if ( conversion != null ) {
+				return conversion;
+			}
+		}
+		return null;
 	}
 
-	private String rolePath(String path) {
-		return switch ( kind ) {
-			case MAP_KEY -> "key." + path;
-			case COLLECTION_ELEMENT -> "value." + path;
-			default -> path;
-		};
+	private List<String> adjustmentPathCandidates(String path) {
+		final java.util.ArrayList<String> candidates = new java.util.ArrayList<>();
+		candidates.add( path );
+		if ( !pathPrefix.isEmpty() && path.startsWith( pathPrefix ) ) {
+			candidates.add( path.substring( pathPrefix.length() ) );
+		}
+		switch ( kind ) {
+			case MAP_KEY -> candidates.add( "key." + path );
+			case COLLECTION_ELEMENT -> {
+				candidates.add( "element." + path );
+				candidates.add( "value." + path );
+			}
+			default -> {
+			}
+		}
+		return candidates;
 	}
 }

@@ -57,6 +57,10 @@ public interface ColumnSource {
 
 	boolean nullable(boolean defaultValue);
 
+	boolean insertable(boolean defaultValue);
+
+	boolean updatable(boolean defaultValue);
+
 	String columnDefinition();
 
 	int length(int defaultValue);
@@ -87,6 +91,16 @@ public interface ColumnSource {
 		@Override
 		public boolean nullable(boolean defaultValue) {
 			return column.nullable();
+		}
+
+		@Override
+		public boolean insertable(boolean defaultValue) {
+			return column.insertable();
+		}
+
+		@Override
+		public boolean updatable(boolean defaultValue) {
+			return column.updatable();
 		}
 
 		@Override
@@ -142,6 +156,16 @@ public interface ColumnSource {
 		}
 
 		@Override
+		public boolean insertable(boolean defaultValue) {
+			return joinColumn.insertable();
+		}
+
+		@Override
+		public boolean updatable(boolean defaultValue) {
+			return joinColumn.updatable();
+		}
+
+		@Override
 		public String columnDefinition() {
 			return joinColumn.columnDefinition();
 		}
@@ -191,6 +215,16 @@ public interface ColumnSource {
 		@Override
 		public boolean nullable(boolean defaultValue) {
 			return mapKeyColumn.nullable();
+		}
+
+		@Override
+		public boolean insertable(boolean defaultValue) {
+			return mapKeyColumn.insertable();
+		}
+
+		@Override
+		public boolean updatable(boolean defaultValue) {
+			return mapKeyColumn.updatable();
 		}
 
 		@Override
@@ -246,6 +280,16 @@ public interface ColumnSource {
 		}
 
 		@Override
+		public boolean insertable(boolean defaultValue) {
+			return mapKeyJoinColumn.insertable();
+		}
+
+		@Override
+		public boolean updatable(boolean defaultValue) {
+			return mapKeyJoinColumn.updatable();
+		}
+
+		@Override
 		public String columnDefinition() {
 			return mapKeyJoinColumn.columnDefinition();
 		}
@@ -267,7 +311,7 @@ public interface ColumnSource {
 
 		@Override
 		public String options() {
-			return "";
+			return mapKeyJoinColumn.options();
 		}
 
 		@Override
@@ -295,6 +339,16 @@ public interface ColumnSource {
 		@Override
 		public boolean nullable(boolean defaultValue) {
 			return orderColumn.nullable();
+		}
+
+		@Override
+		public boolean insertable(boolean defaultValue) {
+			return orderColumn.insertable();
+		}
+
+		@Override
+		public boolean updatable(boolean defaultValue) {
+			return orderColumn.updatable();
 		}
 
 		@Override
@@ -341,6 +395,16 @@ public interface ColumnSource {
 
 		@Override
 		public boolean nullable(boolean defaultValue) {
+			return defaultValue;
+		}
+
+		@Override
+		public boolean insertable(boolean defaultValue) {
+			return defaultValue;
+		}
+
+		@Override
+		public boolean updatable(boolean defaultValue) {
 			return defaultValue;
 		}
 

@@ -52,17 +52,26 @@ public record BasicValueIntent(
 			MemberDetails member,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		return fromAttribute( member, null, bindingState, bindingContext );
+	}
+
+	public static BasicValueIntent fromAttribute(
+			MemberDetails member,
+			jakarta.persistence.AttributeOverride attributeOverride,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		final var formulaAnn = formula( member, bindingState, bindingContext );
 		if ( formulaAnn != null ) {
 			return formulaIntent( formulaAnn.value(), directConversion( member ) );
 		}
 
 		final Column columnAnn = member.getDirectAnnotationUsage( Column.class );
+		final Column effectiveColumn = attributeOverride == null ? columnAnn : attributeOverride.column();
 		return columnIntent(
-				ColumnSource.from( columnAnn ),
-				columnAnn == null ? null : columnAnn.table(),
-				columnAnn == null || columnAnn.insertable(),
-				columnAnn == null || columnAnn.updatable(),
+				ColumnSource.from( effectiveColumn ),
+				effectiveColumn == null ? null : effectiveColumn.table(),
+				effectiveColumn == null || effectiveColumn.insertable(),
+				effectiveColumn == null || effectiveColumn.updatable(),
 				member,
 				directConversion( member )
 		);
@@ -78,11 +87,12 @@ public record BasicValueIntent(
 			return formulaIntent( formulaAnn.value(), source.conversion( member.path(), member.member() ) );
 		}
 
+		final ColumnSource columnSource = source.columnSource( member.path(), member.member() );
 		return columnIntent(
-				source.columnSource( member.path(), member.member() ),
+				columnSource,
 				null,
-				true,
-				true,
+				columnSource == null || columnSource.insertable( true ),
+				columnSource == null || columnSource.updatable( true ),
 				member.member(),
 				source.conversion( member.path(), member.member() )
 		);

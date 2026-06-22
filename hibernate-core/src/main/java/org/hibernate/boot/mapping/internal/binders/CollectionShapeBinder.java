@@ -47,6 +47,7 @@ import static org.hibernate.internal.util.StringHelper.isNotBlank;
 /// @author Steve Ebersole
 class CollectionShapeBinder {
 	static void apply(CollectionSource source, Collection collection, BindingState bindingState) {
+		validateOrderingAndSorting( source, collection );
 		applyFetching( source, collection );
 		applyFetchProfileOverrides( source, collection, bindingState );
 		applyFilters( source, collection, bindingState );
@@ -68,6 +69,22 @@ class CollectionShapeBinder {
 			applyListIndexBase( source, list );
 		}
 	}
+
+	private static void validateOrderingAndSorting(CollectionSource source, Collection collection) {
+		if ( hasOrdering( source ) && hasSorting( source ) ) {
+			throw new AnnotationException( "Collection '" + collection.getRole() + "' is both sorted and ordered" );
+		}
+	}
+
+	private static boolean hasOrdering(CollectionSource source) {
+		return source.orderBy() != null || source.sqlOrder() != null;
+	}
+
+	private static boolean hasSorting(CollectionSource source) {
+		return source.member().hasDirectAnnotationUsage( org.hibernate.annotations.SortNatural.class )
+				|| source.sortComparator() != null;
+	}
+
 
 	private static void applyFetching(CollectionSource source, Collection collection) {
 		final FetchType fetchType = source.fetchType();
@@ -361,15 +378,28 @@ class CollectionShapeBinder {
 		);
 		if ( sqlOrder != null ) {
 			if ( isNotBlank( sqlOrder.value() ) ) {
-				collection.setOrderBy( sqlOrder.value() );
+				collection.setSqlOrderBy( sqlOrder.value() );
 			}
 			return;
 		}
 
 		final var orderBy = source.orderBy();
-		if ( orderBy != null && isNotBlank( orderBy.value() ) ) {
-			collection.setOrderBy( orderBy.value() );
+		if ( orderBy != null ) {
+			collection.setJpaOrderBy( orderByFragment( source, orderBy.value() ) );
 		}
+	}
+
+	private static String orderByFragment(CollectionSource source, String orderByFragment) {
+		if ( source.nature() == CollectionSource.Nature.ELEMENT_COLLECTION ) {
+			final String trimmed = orderByFragment.trim();
+			if ( trimmed.isBlank() || trimmed.equalsIgnoreCase( "asc" ) ) {
+				return "$element$ asc";
+			}
+			if ( trimmed.equalsIgnoreCase( "desc" ) ) {
+				return "$element$ desc";
+			}
+		}
+		return orderByFragment;
 	}
 
 	private static void applySorting(CollectionSource source, Collection collection) {

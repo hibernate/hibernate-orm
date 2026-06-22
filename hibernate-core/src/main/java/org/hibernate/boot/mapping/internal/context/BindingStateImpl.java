@@ -8,8 +8,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.internal.FilterDefBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -53,6 +55,8 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -482,20 +486,36 @@ public class BindingStateImpl implements BindingState {
 		addFilterDefinition( new FilterDefinition(
 				registration.name(),
 				registration.defaultCondition(),
-				extractParameterMap( registration )
+				registration.autoEnabled(),
+				registration.applyToLoadByKey(),
+				extractParameterMap( registration ),
+				extractParameterResolvers( registration )
 		) );
 	}
 
 	private Map<String, JdbcMapping> extractParameterMap(FilterDefRegistration registration) {
-		final Map<String, ClassDetails> parameters = registration.parameters();
+		final Map<String, ClassDetails> parameters = registration.parameterTypes();
 		if ( CollectionHelper.isEmpty( parameters ) ) {
 			return Collections.emptyMap();
 		}
 
-		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		final Map<String, JdbcMapping> result = new HashMap<>();
 		parameters.forEach( (name, typeDetails) -> {
-			result.put( name, typeConfiguration.getBasicTypeForJavaType( typeDetails.toJavaClass() ) );
+			result.put( name, FilterDefBinder.resolveFilterParamType( typeDetails.toJavaClass(), metadataBuildingContext ) );
+		} );
+		return result;
+	}
+
+	private Map<String, ManagedBean<? extends Supplier<?>>> extractParameterResolvers(FilterDefRegistration registration) {
+		final Map<String, ClassDetails> parameterResolvers = registration.parameterResolvers();
+		if ( CollectionHelper.isEmpty( parameterResolvers ) ) {
+			return Collections.emptyMap();
+		}
+
+		final ManagedBeanRegistry managedBeanRegistry = metadataBuildingContext.getBootstrapContext().getManagedBeanRegistry();
+		final Map<String, ManagedBean<? extends Supplier<?>>> result = new HashMap<>();
+		parameterResolvers.forEach( (name, resolver) -> {
+			result.put( name, managedBeanRegistry.getBean( resolver.toJavaClass() ) );
 		} );
 		return result;
 	}

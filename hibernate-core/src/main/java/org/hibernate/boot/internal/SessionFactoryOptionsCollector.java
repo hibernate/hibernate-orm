@@ -162,6 +162,7 @@ public class SessionFactoryOptionsCollector {
 				settings.xmlFunctionsEnabled(),
 				settings.portableIntegerDivisionEnabled(),
 				settings.nativeJdbcParametersIgnored(),
+				settings.safeModeEnabled(),
 				namedQueryCheckingOnStartup != null
 						? namedQueryCheckingOnStartup
 						: settings.namedQueryStartupCheckingEnabled(),

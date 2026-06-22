@@ -18,6 +18,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Table;
 
 /// Binder for a mapped-superclass type.
@@ -163,7 +164,10 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			}
 			final var identifierMapper = entityBinding.getDeclaredIdentifierMapper();
 			if ( identifierMapper != null ) {
-				binding.setDeclaredIdentifierMapper( identifierMapper );
+				final Component declaredIdentifierMapper = createDeclaredIdentifierMapper( identifierMapper, idMapping );
+				if ( !declaredIdentifierMapper.getProperties().isEmpty() ) {
+					binding.setDeclaredIdentifierMapper( declaredIdentifierMapper );
+				}
 			}
 		}
 
@@ -174,6 +178,17 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				binding.setDeclaredVersion( versionProperty );
 			}
 		}
+	}
+
+	private Component createDeclaredIdentifierMapper(Component identifierMapper, KeyMapping idMapping) {
+		final Component declaredIdentifierMapper = identifierMapper.copy();
+		declaredIdentifierMapper.clearProperties();
+		for ( Property property : identifierMapper.getProperties() ) {
+			if ( declaresAttribute( property.getName(), idMapping ) ) {
+				declaredIdentifierMapper.addProperty( property );
+			}
+		}
+		return declaredIdentifierMapper;
 	}
 
 	private boolean declaresKeyAttribute(KeyMapping keyMapping) {

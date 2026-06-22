@@ -191,6 +191,29 @@ public class AnyAssociationTests {
 
 	@Test
 	@ServiceRegistry
+	void testAnyImplicitDiscriminatorValuesWithKeyJavaType(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ImplicitDiscriminatorJavaTypeHolder.class.getName() );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) entityBinding.getProperty( "target" )
+							.getValue();
+
+					assertThat( value.getMetaValues() ).isEmpty();
+					assertThat( value.getKeyDescriptor().resolve().getDomainJavaType() )
+							.isInstanceOf( AnyIntegerJavaType.class );
+					assertThat( ( (MetaType) ( (AnyType) value.getType() ).getDiscriminatorType() )
+							.getImplicitValueStrategy() )
+							.isSameAs( ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY );
+				},
+				scope.getRegistry(),
+				ImplicitDiscriminatorJavaTypeHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testAnyDefaultsImplicitDiscriminatorValues(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
@@ -413,7 +436,7 @@ public class AnyAssociationTests {
 					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) property.getValue();
 
 					assertThat( join.getTable() ).isNotSameAs( entityBinding.getTable() );
-					assertThat( join.getTable().getName() ).isEqualTo( "implicitjointableanyholder_target" );
+					assertThat( join.getTable().getName() ).isEqualTo( "ImplicitJoinTableAnyHolder_target" );
 					assertThat( join.getKey().getColumns() ).extracting( Column::getName )
 							.containsExactly( "holder_id" );
 					assertThat( value.getTable() ).isSameAs( join.getTable() );
@@ -438,6 +461,21 @@ public class AnyAssociationTests {
 				CompositeKeyTarget.class
 		) )
 				.hasMessageContaining( "maps to 3 columns but 2 columns are required" );
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAnyCompositeKeyInferenceRequiresBasicTargetIdentifier(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> BindingTestingHelper.checkDomainModel(
+				(context) -> {},
+				scope.getRegistry(),
+				MissingCompositeKeyTypeHolder.class,
+				CompositeKeyTarget.class
+		) )
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "@Any key Java type inference requires basic target identifiers" )
+				.hasMessageContaining( CompositeKeyTarget.class.getName() )
+				.hasMessageContaining( "target" );
 	}
 
 	@Test
@@ -547,6 +585,21 @@ public class AnyAssociationTests {
 
 	@Test
 	@ServiceRegistry
+	void testManyToAnyCompositeKeyInferenceRequiresBasicTargetIdentifier(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> BindingTestingHelper.checkDomainModel(
+				(context) -> {},
+				scope.getRegistry(),
+				MissingCompositeKeyManyHolder.class,
+				CompositeKeyTarget.class
+		) )
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "@Any key Java type inference requires basic target identifiers" )
+				.hasMessageContaining( CompositeKeyTarget.class.getName() )
+				.hasMessageContaining( "targets" );
+	}
+
+	@Test
+	@ServiceRegistry
 	void testManyToAnyCascade(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
@@ -578,7 +631,7 @@ public class AnyAssociationTests {
 
 					assertThat( collection.getCollectionTable() ).isNotSameAs( entityBinding.getTable() );
 					assertThat( collection.getKey().getColumns() ).extracting( Column::getName )
-							.containsExactly( "id" );
+							.containsExactly( "ImplicitJoinTableManyAnyHolder_id" );
 					assertThat( ( (Column) element.getDiscriminatorDescriptor().getColumn() ).getName() )
 							.isEqualTo( "targets_type" );
 					assertThat( ( (Column) element.getKeyDescriptor().getColumn() ).getName() )
@@ -667,6 +720,18 @@ public class AnyAssociationTests {
 		@Any
 		@AnyDiscriminatorImplicitValues(AnyDiscriminatorImplicitValues.Strategy.SHORT_NAME)
 		@AnyKeyJavaClass(Integer.class)
+		@JoinColumn(name = "target_id")
+		private Object target;
+	}
+
+	@Entity(name = "ImplicitAnyDiscriminatorJavaTypeHolder")
+	public static class ImplicitDiscriminatorJavaTypeHolder {
+		@Id
+		private Integer id;
+
+		@Any
+		@AnyDiscriminatorImplicitValues(AnyDiscriminatorImplicitValues.Strategy.SHORT_NAME)
+		@AnyKeyJavaType(AnyIntegerJavaType.class)
 		@JoinColumn(name = "target_id")
 		private Object target;
 	}
@@ -835,6 +900,20 @@ public class AnyAssociationTests {
 		private Object target;
 	}
 
+	@Entity(name = "MissingCompositeKeyTypeAnyHolder")
+	public static class MissingCompositeKeyTypeHolder {
+		@Id
+		private Integer id;
+
+		@Any
+		@JoinColumns({
+				@JoinColumn(name = "target_id1"),
+				@JoinColumn(name = "target_id2")
+		})
+		@AnyDiscriminatorValue(discriminator = "composite", entity = CompositeKeyTarget.class)
+		private Object target;
+	}
+
 	@Entity(name = "JoinTableCompositeKeyAnyHolder")
 	public static class JoinTableCompositeKeyHolder {
 		@Id
@@ -940,6 +1019,24 @@ public class AnyAssociationTests {
 		)
 		@AnyDiscriminatorValue(discriminator = "composite", entity = CompositeKeyTarget.class)
 		@AnyKeyJavaClass(CompositeAnyKey.class)
+		private List<Object> targets;
+	}
+
+	@Entity(name = "MissingCompositeKeyTypeManyAnyHolder")
+	public static class MissingCompositeKeyManyHolder {
+		@Id
+		private Integer id;
+
+		@ManyToAny
+		@JoinTable(
+				name = "missing_composite_key_many_holder_targets",
+				joinColumns = @JoinColumn(name = "holder_id"),
+				inverseJoinColumns = {
+						@JoinColumn(name = "target_id1"),
+						@JoinColumn(name = "target_id2")
+				}
+		)
+		@AnyDiscriminatorValue(discriminator = "composite", entity = CompositeKeyTarget.class)
 		private List<Object> targets;
 	}
 

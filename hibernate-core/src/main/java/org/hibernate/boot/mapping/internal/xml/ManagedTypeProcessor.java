@@ -4,12 +4,14 @@
  */
 package org.hibernate.boot.mapping.internal.xml;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
@@ -543,6 +545,47 @@ public class ManagedTypeProcessor {
 		return null;
 	}
 
+	private static AccessType determineAccessTypeFromXmlAttributes(
+			JaxbAttributesContainer attributes,
+			MutableClassDetails classDetails) {
+		if ( attributes == null ) {
+			return null;
+		}
+
+		boolean hasAttribute = false;
+		boolean fieldsMatch = true;
+		boolean propertiesMatch = true;
+		for ( JaxbPersistentAttribute attribute : xmlPersistentAttributes( attributes ) ) {
+			hasAttribute = true;
+			final String attributeName = attribute.getName();
+			if ( XmlProcessingHelper.findAttributeMember( attributeName, AccessType.FIELD, classDetails ) == null ) {
+				fieldsMatch = false;
+			}
+			if ( XmlProcessingHelper.findAttributeMember( attributeName, AccessType.PROPERTY, classDetails ) == null ) {
+				propertiesMatch = false;
+			}
+		}
+
+		if ( !hasAttribute || fieldsMatch == propertiesMatch ) {
+			return null;
+		}
+		return fieldsMatch ? AccessType.FIELD : AccessType.PROPERTY;
+	}
+
+	private static List<JaxbPersistentAttribute> xmlPersistentAttributes(JaxbAttributesContainer attributes) {
+		final ArrayList<JaxbPersistentAttribute> result = new ArrayList<>();
+		result.addAll( attributes.getBasicAttributes() );
+		result.addAll( attributes.getEmbeddedAttributes() );
+		result.addAll( attributes.getManyToOneAttributes() );
+		result.addAll( attributes.getAnyMappingAttributes() );
+		result.addAll( attributes.getOneToOneAttributes() );
+		result.addAll( attributes.getElementCollectionAttributes() );
+		result.addAll( attributes.getOneToManyAttributes() );
+		result.addAll( attributes.getManyToManyAttributes() );
+		result.addAll( attributes.getPluralAnyMappingAttributes() );
+		return result;
+	}
+
 	private static boolean isId(MemberDetails field) {
 		return field.hasDirectAnnotationUsage( Id.class )
 			|| field.hasDirectAnnotationUsage( EmbeddedId.class );
@@ -695,9 +738,15 @@ public class ManagedTypeProcessor {
 		else {
 			final String className = XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEmbeddable );
 			classDetails = (MutableClassDetails) classDetailsRegistry.resolveClassDetails( className );
-			classAccessType = coalesce(
-					jaxbEmbeddable.getAccess(),
-					xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType()
+			classAccessType = coalesceSuppliedValues(
+					jaxbEmbeddable::getAccess,
+					jaxbRoot::getAccess,
+					() -> determineAccessTypeFromClassAnnotations( classDetails ),
+					() -> determineAccessTypeFromClassMembers( classDetails ),
+					() -> determineAccessTypeFromXmlAttributes( jaxbEmbeddable.getAttributes(), classDetails ),
+					() -> xmlDocumentContext.getXmlDocument().getDefaults().getAccessType(),
+					() -> defaultAccessTypeFromDefaultAccessor( xmlDocumentContext ),
+					() -> AccessType.PROPERTY
 			);
 			memberAdjuster = ManagedTypeProcessor::adjustNonDynamicTypeMember;
 		}

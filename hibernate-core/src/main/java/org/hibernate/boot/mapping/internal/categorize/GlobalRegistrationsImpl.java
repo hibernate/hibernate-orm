@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.FetchProfile;
@@ -1018,7 +1019,10 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				collectFilterDefinition(
 						filterDef.name(),
 						filterDef.defaultCondition(),
-						extractFilterParameters( filterDef )
+						filterDef.autoEnabled(),
+						filterDef.applyToLoadByKey(),
+						extractFilterParameters( filterDef ),
+						extractFilterParameterResolvers( filterDef )
 				);
 			}
 		}
@@ -1026,7 +1030,10 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			annotationTarget.forEachAnnotationUsage( FilterDef.class, modelsContext, (usage) -> collectFilterDefinition(
 					usage.name(),
 					usage.defaultCondition(),
-					extractFilterParameters( usage )
+					usage.autoEnabled(),
+					usage.applyToLoadByKey(),
+					extractFilterParameters( usage ),
+					extractFilterParameterResolvers( usage )
 			) );
 		}
 	}
@@ -1044,6 +1051,25 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		return result;
 	}
 
+	private Map<String, ClassDetails> extractFilterParameterResolvers(FilterDef source) {
+		final ParamDef[] parameters = source.parameters();
+		if ( parameters.length == 0 ) {
+			return null;
+		}
+
+		Map<String, ClassDetails> result = null;
+		for ( ParamDef parameter : parameters ) {
+			final Class<? extends Supplier> resolver = parameter.resolver();
+			if ( !resolver.getName().equals( Supplier.class.getName() ) ) {
+				if ( result == null ) {
+					result = new HashMap<>();
+				}
+				result.put( parameter.name(), classDetailsRegistry.resolveClassDetails( resolver.getName() ) );
+			}
+		}
+		return result;
+	}
+
 	public void collectFilterDefinitions(List<JaxbFilterDefImpl> filterDefinitions) {
 		if ( CollectionHelper.isEmpty( filterDefinitions ) ) {
 			return;
@@ -1052,7 +1078,10 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		filterDefinitions.forEach( (filterDefinition) -> collectFilterDefinition(
 				filterDefinition.getName(),
 				filterDefinition.getDefaultCondition(),
-				extractFilterParameters( filterDefinition )
+				filterDefinition.isAutoEnabled(),
+				filterDefinition.isApplyToLoadByKey(),
+				extractFilterParameters( filterDefinition ),
+				extractFilterParameterResolvers( filterDefinition )
 		) );
 	}
 
@@ -1075,12 +1104,45 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		return result;
 	}
 
-	public void collectFilterDefinition(String name, String defaultCondition, Map<String, ClassDetails> parameters) {
+	private Map<String, ClassDetails> extractFilterParameterResolvers(JaxbFilterDefImpl source) {
+		final List<JaxbFilterDefImpl.JaxbFilterParamImpl> parameters = source.getFilterParams();
+		if ( isEmpty( parameters ) ) {
+			return null;
+		}
+
+		Map<String, ClassDetails> result = null;
+		for ( JaxbFilterDefImpl.JaxbFilterParamImpl parameter : parameters ) {
+			if ( StringHelper.isNotEmpty( parameter.getResolver() ) ) {
+				if ( result == null ) {
+					result = new HashMap<>();
+				}
+				result.put( parameter.getName(), classDetailsRegistry.resolveClassDetails( parameter.getResolver() ) );
+			}
+		}
+		return result;
+	}
+
+	public void collectFilterDefinition(
+			String name,
+			String defaultCondition,
+			boolean autoEnabled,
+			boolean applyToLoadByKey,
+			Map<String, ClassDetails> parameterTypes,
+			Map<String, ClassDetails> parameterResolvers) {
 		if ( filterDefRegistrations == null ) {
 			filterDefRegistrations = new HashMap<>();
 		}
 
-		if ( filterDefRegistrations.put( name, new FilterDefRegistration( name, defaultCondition, parameters ) ) != null ) {
+		if ( filterDefRegistrations.put(
+				name,
+				new FilterDefRegistration(
+						name,
+						defaultCondition,
+						autoEnabled,
+						applyToLoadByKey,
+						parameterTypes,
+						parameterResolvers
+				) ) != null ) {
 			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
 	}

@@ -13,10 +13,13 @@ import org.hibernate.boot.pipeline.internal.SessionFactoryOptionsAdapter;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.internal.settings.SessionFactorySettingsResolver;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
+import org.hibernate.cfg.QuerySettings;
 import org.hibernate.cfg.SessionEventSettings;
+import org.hibernate.cfg.TransactionSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -48,6 +51,7 @@ public class SessionFactorySettingsResolverTests {
 		configurationValues.put( CacheSettings.USE_STRUCTURED_CACHE, true );
 		configurationValues.put( CacheSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, true );
 		configurationValues.put( CacheSettings.AUTO_EVICT_COLLECTION_CACHE, true );
+		configurationValues.put( QuerySettings.SAFE_MODE_ENABLED, true );
 		final var interceptor = new TestInterceptor();
 		configurationValues.put( SessionEventSettings.INTERCEPTOR, interceptor );
 		final var validatorFactory = new Object();
@@ -87,6 +91,7 @@ public class SessionFactorySettingsResolverTests {
 		assertThat( sessionFactorySettings.structuredCacheEntriesEnabled() ).isTrue();
 		assertThat( sessionFactorySettings.directReferenceCacheEntriesEnabled() ).isTrue();
 		assertThat( sessionFactorySettings.autoEvictCollectionCache() ).isTrue();
+		assertThat( sessionFactorySettings.safeModeEnabled() ).isTrue();
 		assertThat( sessionFactorySettings.multiTenancyEnabled() ).isFalse();
 		assertThat( sessionFactorySettings.currentTenantIdentifierResolver() ).isNull();
 		assertThat( sessionFactorySettings.defaultTenantIdentifierJavaType() ).isNotNull();
@@ -100,6 +105,111 @@ public class SessionFactorySettingsResolverTests {
 	void rejectsNullBootstrapSettings() {
 		assertThatThrownBy( () -> SessionFactorySettingsResolver.resolve( null, null ) )
 				.isInstanceOf( NullPointerException.class );
+	}
+
+	@Test
+	void aggregateJpaComplianceSettingOverridesJpaBootstrapDefault(ServiceRegistryScope registryScope) {
+		final var configurationValues = new LinkedHashMap<String, Object>();
+		configurationValues.put( AvailableSettings.JPA_COMPLIANCE, "false" );
+
+		final var settings = SessionFactorySettingsResolver.resolve(
+				new ResolvedBootstrapSettings(
+						configurationValues,
+						true
+				),
+				registryScope.getRegistry()
+		);
+
+		assertThat( settings.jpaCompliance().isJpaQueryComplianceEnabled() ).isFalse();
+		assertThat( settings.jpaCompliance().isJpaTransactionComplianceEnabled() ).isFalse();
+	}
+
+	@Test
+	void jpaBootstrapSuppliesJpaComplianceDefaultWhenAggregateIsUnset(ServiceRegistryScope registryScope) {
+		final var settings = SessionFactorySettingsResolver.resolve(
+				new ResolvedBootstrapSettings(
+						new LinkedHashMap<>(),
+						true
+				),
+				registryScope.getRegistry()
+		);
+
+		assertThat( settings.jpaCompliance().isJpaQueryComplianceEnabled() ).isTrue();
+		assertThat( settings.jpaCompliance().isJpaTransactionComplianceEnabled() ).isTrue();
+	}
+
+	@Test
+	void nativeBootstrapSuppliesNativeComplianceDefaultWhenAggregateIsUnset(ServiceRegistryScope registryScope) {
+		final var settings = SessionFactorySettingsResolver.resolve(
+				new ResolvedBootstrapSettings(
+						new LinkedHashMap<>(),
+						false
+				),
+				registryScope.getRegistry()
+		);
+
+		assertThat( settings.jpaCompliance().isJpaQueryComplianceEnabled() ).isFalse();
+		assertThat( settings.jpaCompliance().isJpaTransactionComplianceEnabled() ).isFalse();
+	}
+
+	@Test
+	void specificJpaQueryComplianceOverridesAggregateCompliance(ServiceRegistryScope registryScope) {
+		final var configurationValues = new LinkedHashMap<String, Object>();
+		configurationValues.put( AvailableSettings.JPA_COMPLIANCE, "false" );
+		configurationValues.put( AvailableSettings.JPA_QUERY_COMPLIANCE, "true" );
+
+		final var settings = SessionFactorySettingsResolver.resolve(
+				new ResolvedBootstrapSettings(
+						configurationValues,
+						true
+				),
+				registryScope.getRegistry()
+		);
+
+		assertThat( settings.jpaCompliance().isJpaQueryComplianceEnabled() ).isTrue();
+		assertThat( settings.jpaCompliance().isJpaTransactionComplianceEnabled() ).isFalse();
+	}
+
+	@Test
+	void legacyJpaqlStrictComplianceContributesQueryComplianceDefault(ServiceRegistryScope registryScope) {
+		final var configurationValues = new LinkedHashMap<String, Object>();
+		configurationValues.put( AvailableSettings.JPA_COMPLIANCE, "false" );
+		configurationValues.put( AvailableSettings.JPAQL_STRICT_COMPLIANCE, "true" );
+
+		final var settings = SessionFactorySettingsResolver.resolve(
+				new ResolvedBootstrapSettings(
+						configurationValues,
+						true
+				),
+				registryScope.getRegistry()
+		);
+
+		assertThat( settings.jpaCompliance().isJpaQueryComplianceEnabled() ).isTrue();
+		assertThat( settings.jpaCompliance().isJpaTransactionComplianceEnabled() ).isFalse();
+	}
+
+	@Test
+	void projectsHighImpactRuntimeSettings(ServiceRegistryScope registryScope) {
+		final var configurationValues = new LinkedHashMap<String, Object>();
+		configurationValues.put( TransactionSettings.FLUSH_BEFORE_COMPLETION, "false" );
+		configurationValues.put( TransactionSettings.AUTO_CLOSE_SESSION, "true" );
+		configurationValues.put( PersistenceSettings.JPA_CALLBACKS_ENABLED, "false" );
+		configurationValues.put( QuerySettings.QUERY_STARTUP_CHECKING, "false" );
+		configurationValues.put( QuerySettings.SAFE_MODE_ENABLED, "true" );
+
+		final var settings = SessionFactorySettingsResolver.resolve(
+				new ResolvedBootstrapSettings(
+						configurationValues,
+						true
+				),
+				registryScope.getRegistry()
+		);
+
+		assertThat( settings.flushBeforeCompletionEnabled() ).isFalse();
+		assertThat( settings.autoCloseSessionEnabled() ).isTrue();
+		assertThat( settings.jpaCallbacksEnabled() ).isFalse();
+		assertThat( settings.namedQueryStartupCheckingEnabled() ).isFalse();
+		assertThat( settings.safeModeEnabled() ).isTrue();
 	}
 
 	@Test
@@ -130,6 +240,7 @@ public class SessionFactorySettingsResolverTests {
 		assertThat( options.getQueryCacheLayout() ).isEqualTo( CacheLayout.FULL );
 		assertThat( options.getTimestampsCacheFactory() ).isSameAs( StandardTimestampsCacheFactory.INSTANCE );
 		assertThat( options.getCacheRegionPrefix() ).isNull();
+		assertThat( options.isSafeModeEnabled() ).isFalse();
 		assertThat( options.isMultiTenancyEnabled() ).isFalse();
 		assertThat( options.getDefaultTenantIdentifierJavaType() )
 				.isSameAs( settings.defaultTenantIdentifierJavaType() );

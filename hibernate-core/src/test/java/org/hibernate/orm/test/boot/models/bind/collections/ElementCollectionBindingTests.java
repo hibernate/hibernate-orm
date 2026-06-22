@@ -36,6 +36,7 @@ import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.FetchStyle;
@@ -102,6 +103,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.checkDomainModel;
 
 /**
@@ -192,10 +194,10 @@ public class ElementCollectionBindingTests {
 					final Collection collection = (Collection) entityBinding.getProperty( "labels" ).getValue();
 
 					assertThat( collection.getCollectionTable().getName() )
-							.isEqualTo( "implicitcollectiontableowner_labels" );
+							.isEqualTo( "ImplicitCollectionTableOwner_labels" );
 					assertThat( collection.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "id" );
+							.containsExactly( "ImplicitCollectionTableOwner_id" );
 				},
 				scope.getRegistry(),
 				ImplicitCollectionTableOwner.class
@@ -329,7 +331,7 @@ public class ElementCollectionBindingTests {
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "implicit_list_owner_labels" );
 					assertThat( index.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "idx" );
+							.containsExactly( "labels_ORDER" );
 				},
 				scope.getRegistry(),
 				ImplicitListOwner.class
@@ -604,6 +606,8 @@ public class ElementCollectionBindingTests {
 					assertThat( property.getValue() ).isInstanceOf( org.hibernate.mapping.Set.class );
 					final Collection collection = (Collection) property.getValue();
 					assertThat( collection.getOrderBy() ).isEqualTo( "label desc" );
+					assertThat( collection.getSqlOrderBy() ).isEqualTo( "label desc" );
+					assertThat( collection.getJpaOrderBy() ).isNull();
 					assertThat( collection.isSorted() ).isFalse();
 				},
 				scope.getRegistry(),
@@ -623,6 +627,8 @@ public class ElementCollectionBindingTests {
 					assertThat( property.getValue() ).isInstanceOf( org.hibernate.mapping.Set.class );
 					final Collection collection = (Collection) property.getValue();
 					assertThat( collection.getOrderBy() ).isEqualTo( "label desc" );
+					assertThat( collection.getJpaOrderBy() ).isEqualTo( "label desc" );
+					assertThat( collection.getSqlOrderBy() ).isNull();
 					assertThat( collection.isSorted() ).isFalse();
 				},
 				scope.getRegistry(),
@@ -721,7 +727,7 @@ public class ElementCollectionBindingTests {
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "implicit_map_owner_labels" );
 					assertThat( key.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "id" );
+							.containsExactly( "labels_KEY" );
 				},
 				scope.getRegistry(),
 				ImplicitMapOwner.class
@@ -767,12 +773,40 @@ public class ElementCollectionBindingTests {
 					assertThat( key.isReferenceToPrimaryKey() ).isTrue();
 					assertThat( key.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
-							.containsExactly( "id_id" );
+							.containsExactly( "labels_KEY" );
 				},
 				scope.getRegistry(),
 				ImplicitEntityMapKeyOwner.class,
 				LabelKey.class
 		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testImplicitMapKeyRejectsBasicElementCollection(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> checkDomainModel(
+				(context) -> {
+				},
+				scope.getRegistry(),
+				ImplicitMapKeyBasicElementOwner.class
+		) )
+				.isInstanceOf( MappingException.class )
+				.hasMessageContaining( "Implicit @MapKey requires an entity-valued map element" )
+				.hasMessageContaining( ImplicitMapKeyBasicElementOwner.class.getName() + ".labels" );
+	}
+
+	@Test
+	@ServiceRegistry
+	void testImplicitMapKeyRejectsEmbeddableElementCollection(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> checkDomainModel(
+				(context) -> {
+				},
+				scope.getRegistry(),
+				ImplicitMapKeyEmbeddableElementOwner.class
+		) )
+				.isInstanceOf( MappingException.class )
+				.hasMessageContaining( "Implicit @MapKey requires an entity-valued map element" )
+				.hasMessageContaining( ImplicitMapKeyEmbeddableElementOwner.class.getName() + ".addresses" );
 	}
 
 	@Test
@@ -840,6 +874,30 @@ public class ElementCollectionBindingTests {
 				},
 				scope.getRegistry(),
 				PropertyMapKeyEmbeddableOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testComponentPropertyMapKeyEmbeddableElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ComponentPropertyMapKeyEmbeddableOwner.class.getName() );
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) entityBinding.getProperty( "addresses" )
+							.getValue();
+					final Component key = (Component) collection.getIndex();
+
+					assertThat( collection.hasMapKeyProperty() ).isTrue();
+					assertThat( collection.getMapKeyPropertyName() ).isEqualTo( "location" );
+					assertThat( key.getComponentClassName() ).isEqualTo( Location.class.getName() );
+					assertThat( key.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "city", "country" );
+					assertThat( collection.getElement() ).isInstanceOf( Component.class );
+				},
+				scope.getRegistry(),
+				ComponentPropertyMapKeyEmbeddableOwner.class
 		);
 	}
 
@@ -1771,6 +1829,26 @@ public class ElementCollectionBindingTests {
 		private Map<LabelKey, String> labels;
 	}
 
+	@Entity(name="ImplicitMapKeyBasicElementOwner")
+	@Table(name="implicit_map_key_basic_element_owners")
+	public static class ImplicitMapKeyBasicElementOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@MapKey
+		private Map<String, String> labels;
+	}
+
+	@Entity(name="ImplicitMapKeyEmbeddableElementOwner")
+	@Table(name="implicit_map_key_embeddable_element_owners")
+	public static class ImplicitMapKeyEmbeddableElementOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@MapKey
+		private Map<String, Address> addresses;
+	}
+
 	@Entity(name="EntityMapKeyNonPkOwner")
 	@Table(name="entity_map_key_non_pk_owners")
 	public static class EntityMapKeyNonPkOwner {
@@ -1831,6 +1909,20 @@ public class ElementCollectionBindingTests {
 		)
 		@MapKey(name = "zipCode")
 		private Map<String, Address> addresses;
+	}
+
+	@Entity(name="ComponentPropertyMapKeyEmbeddableOwner")
+	@Table(name="component_property_map_key_embeddable_owners")
+	public static class ComponentPropertyMapKeyEmbeddableOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "component_property_map_key_embeddable_owner_addresses",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@MapKey(name = "location")
+		private Map<Location, AddressWithLocation> addresses;
 	}
 
 	@Entity(name="EnumMapKeyOwner")

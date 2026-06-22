@@ -4,9 +4,13 @@
  */
 package org.hibernate.boot.mapping.internal.relational;
 
+import java.util.List;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.mapping.Table;
+
+import jakarta.persistence.JoinColumn;
 
 /// Table reference for a JPA secondary table bound to an entity.
 ///
@@ -27,10 +31,11 @@ public record SecondaryTable(
 		Identifier physicalName,
 		Identifier physicalCatalogName,
 		Identifier physicalSchemaName,
-		boolean optional,
-		boolean owned,
-		ForeignKeySource foreignKeySource,
-		Table binding) implements PhysicalTableReference {
+			boolean optional,
+			boolean owned,
+			List<JoinColumn> primaryKeyJoinColumns,
+			ForeignKeySource foreignKeySource,
+			Table binding) implements PhysicalTableReference {
 	@Override
 	public Identifier logicalName() {
 		return logicalName;

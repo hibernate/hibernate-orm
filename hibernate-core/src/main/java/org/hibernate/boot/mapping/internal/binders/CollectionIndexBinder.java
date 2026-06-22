@@ -20,7 +20,7 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantBasicValue;
@@ -69,8 +69,13 @@ class CollectionIndexBinder {
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.orderColumn() ),
-				() -> IndexedCollection.DEFAULT_INDEX_COLUMN_NAME
+				() -> source.member().resolveAttributeName() + "_ORDER"
 		);
+		indexColumn.addCheckConstraint( new CheckConstraint(
+				null,
+				indexColumn.getQuotedName( bindingState.getDatabase().getDialect() )
+						+ ">=" + effectiveListIndexBase( source )
+		) );
 		table.addColumn( indexColumn );
 		index.addColumn(
 				indexColumn,
@@ -78,6 +83,11 @@ class CollectionIndexBinder {
 				source.orderColumn() == null || source.orderColumn().updatable()
 		);
 		collection.setIndex( index );
+	}
+
+	private static int effectiveListIndexBase(CollectionSource source) {
+		final var listIndexBase = source.listIndexBase();
+		return listIndexBase == null ? 0 : listIndexBase.value();
 	}
 
 	static void bindMapKey(
@@ -92,7 +102,7 @@ class CollectionIndexBinder {
 			BindingContext bindingContext) {
 		final MapKey mapKey = source.mapKey();
 		if ( mapKey != null ) {
-			bindPropertyMapKey( source, collection, mapKey, bindingState );
+			bindPropertyMapKey( source, collection, source.mapKeyName(), bindingState );
 			return;
 		}
 		if ( !source.mapKeyJoinColumns().isEmpty() ) {
@@ -234,9 +244,9 @@ class CollectionIndexBinder {
 	private static void bindPropertyMapKey(
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			MapKey mapKey,
+			String mapKeyName,
 			BindingState bindingState) {
-		if ( mapKey.name().isEmpty() ) {
+		if ( mapKeyName.isEmpty() ) {
 			bindImplicitPropertyMapKey( source, collection, bindingState );
 			return;
 		}
@@ -247,15 +257,13 @@ class CollectionIndexBinder {
 			bindingState.addPropertyMapKeyBinding( new PropertyMapKeyBinding(
 					collection,
 					entityTypeBinder,
-					mapKey.name()
+					mapKeyName
 			) );
 			return;
 		}
 
-		final Property targetProperty = resolveComponentMapKeyProperty( source, collection, mapKey );
-		collection.setIndex( createPropertyMapKeyValue( collection, targetProperty.getValue(), bindingState ) );
-		collection.setMapKeyPropertyName( mapKey.name() );
-		collection.setHasMapKeyProperty( true );
+		final Property targetProperty = resolveComponentMapKeyProperty( source, collection, mapKeyName );
+		bindPropertyMapKeyValue( collection, targetProperty.getValue(), mapKeyName, bindingState );
 	}
 
 	static void bindPropertyMapKey(
@@ -263,8 +271,16 @@ class CollectionIndexBinder {
 			BindingState bindingState) {
 		final Property targetProperty = resolveEntityMapKeyProperty( propertyMapKeyBinding );
 		final org.hibernate.mapping.Map collection = propertyMapKeyBinding.collection();
-		collection.setIndex( createPropertyMapKeyValue( collection, targetProperty.getValue(), bindingState ) );
-		collection.setMapKeyPropertyName( propertyMapKeyBinding.propertyName() );
+		bindPropertyMapKeyValue( collection, targetProperty.getValue(), propertyMapKeyBinding.propertyName(), bindingState );
+	}
+
+	static void bindPropertyMapKeyValue(
+			org.hibernate.mapping.Map collection,
+		Value targetPropertyValue,
+		String propertyName,
+		BindingState bindingState) {
+		collection.setIndex( createPropertyMapKeyValue( collection, targetPropertyValue, bindingState ) );
+		collection.setMapKeyPropertyName( propertyName );
 		collection.setHasMapKeyProperty( true );
 	}
 
@@ -276,8 +292,9 @@ class CollectionIndexBinder {
 				source.elementType().determineRawClass()
 		);
 		if ( !( elementTypeBinder instanceof EntityTypeBinder entityTypeBinder ) ) {
-			throw new UnsupportedOperationException(
-					"Implicit @MapKey is only implemented for entity-valued map elements - " + collection.getRole()
+			throw new MappingException(
+					"Implicit @MapKey requires an entity-valued map element whose identifier can be used as the map key - "
+							+ collection.getRole()
 			);
 		}
 		collection.setIndex( createPropertyMapKeyValue(
@@ -290,6 +307,12 @@ class CollectionIndexBinder {
 	}
 
 	private static Property resolveEntityMapKeyProperty(PropertyMapKeyBinding propertyMapKeyBinding) {
+		if ( propertyMapKeyBinding.propertyName().contains( "." ) ) {
+			return resolvePropertyPath(
+					propertyMapKeyBinding.elementTypeBinder().getTypeBinding(),
+					propertyMapKeyBinding.propertyName()
+			);
+		}
 		final Property identifierProperty = propertyMapKeyBinding.elementTypeBinder().getTypeBinding()
 				.getIdentifierProperty();
 		if ( identifierProperty != null && identifierProperty.getName().equals( propertyMapKeyBinding.propertyName() ) ) {
@@ -302,14 +325,50 @@ class CollectionIndexBinder {
 	private static Property resolveComponentMapKeyProperty(
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
-			MapKey mapKey) {
+			String mapKeyName) {
 		if ( collection.getElement() instanceof Component component ) {
-			return component.getProperty( mapKey.name() );
+			return mapKeyName.contains( "." )
+					? resolvePropertyPath( component, mapKeyName )
+					: component.getProperty( mapKeyName );
 		}
 		throw new MappingException(
 				"Could not resolve property-based map key element - "
 						+ source.elementType().determineRawClass().getClassName()
 		);
+	}
+
+	static Property resolvePropertyPath(PersistentClass typeBinding, String propertyPath) {
+		final int separator = propertyPath.indexOf( '.' );
+		if ( separator < 0 ) {
+			final Property identifierProperty = typeBinding.getIdentifierProperty();
+			if ( identifierProperty != null && identifierProperty.getName().equals( propertyPath ) ) {
+				return identifierProperty;
+			}
+			return typeBinding.getProperty( propertyPath );
+		}
+
+		final String firstSegment = propertyPath.substring( 0, separator );
+		final Property firstProperty = resolvePropertyPath( typeBinding, firstSegment );
+		return resolvePropertyPath( firstProperty.getValue(), propertyPath.substring( separator + 1 ) );
+	}
+
+	private static Property resolvePropertyPath(Component component, String propertyPath) {
+		return resolvePropertyPath( (Value) component, propertyPath );
+	}
+
+	private static Property resolvePropertyPath(Value value, String propertyPath) {
+		if ( !( value instanceof Component component ) ) {
+			throw new MappingException(
+					"Could not resolve nested @MapKey property path `" + propertyPath + "` from non-component value"
+			);
+		}
+
+		final int separator = propertyPath.indexOf( '.' );
+		final String firstSegment = separator < 0 ? propertyPath : propertyPath.substring( 0, separator );
+		final Property property = component.getProperty( firstSegment );
+		return separator < 0
+				? property
+				: resolvePropertyPath( property.getValue(), propertyPath.substring( separator + 1 ) );
 	}
 
 	static Value createPropertyMapKeyValue(
@@ -335,7 +394,7 @@ class CollectionIndexBinder {
 		if ( targetPropertyValue instanceof ManyToOne manyToOne ) {
 			final ManyToOne index = new ManyToOne(
 					bindingState.getMetadataBuildingContext(),
-					collection.getCollectionTable()
+					manyToOne.getTable()
 			);
 			index.setReferencedEntityName( manyToOne.getReferencedEntityName() );
 			index.setReferenceToPrimaryKey( manyToOne.isReferenceToPrimaryKey() );
@@ -349,12 +408,30 @@ class CollectionIndexBinder {
 				index.markAsLogicalOneToOne();
 			}
 			for ( Column column : manyToOne.getColumns() ) {
-				index.addColumn( copyColumn( collection.getCollectionTable(), column, column.isUnique() ) );
+				index.addColumn( column.clone(), false, false );
 			}
 			return index;
 		}
+		if ( targetPropertyValue instanceof Component component ) {
+			final Component index = new Component( bindingState.getMetadataBuildingContext(), collection );
+			index.setComponentClassName( component.getComponentClassName() );
+			index.setEmbedded( component.isEmbedded() );
+			index.setDynamic( component.isDynamic() );
+			index.setRoleName( component.getRoleName() );
+			for ( Property property : component.getProperties() ) {
+				final Property copy = property.copy();
+				copy.setValue( createPropertyMapKeyValue( collection, property.getValue(), bindingState ) );
+				copy.setInsertable( false );
+				copy.setUpdatable( false );
+				copy.setPersistentClass( collection.getOwner() );
+				index.addProperty( copy );
+			}
+			index.sortProperties();
+			return index;
+		}
 		throw new UnsupportedOperationException(
-				"@MapKey(name) is only implemented for basic and to-one target properties - " + collection.getRole()
+				"@MapKey(name) is only implemented for basic, to-one, and component target properties - "
+						+ collection.getRole()
 		);
 	}
 
@@ -394,7 +471,7 @@ class CollectionIndexBinder {
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.mapKeyColumn() ),
-				() -> Collection.DEFAULT_KEY_COLUMN_NAME,
+				() -> source.member().resolveAttributeName() + "_KEY",
 				false,
 				false
 		);
@@ -457,7 +534,7 @@ class CollectionIndexBinder {
 					: mapKeyJoinColumn.referencedColumnName();
 			final Column column = ColumnBinder.bindColumn(
 					ColumnSource.from( mapKeyJoinColumn ),
-					() -> Collection.DEFAULT_KEY_COLUMN_NAME + "_" + targetColumnName,
+					() -> implicitMapKeyJoinColumnName( source, referenceToPrimaryKey, columnCount, targetColumnName ),
 					false,
 					false
 			);
@@ -465,7 +542,7 @@ class CollectionIndexBinder {
 			index.addColumn(
 					column,
 					mapKeyJoinColumn == null || mapKeyJoinColumn.insertable(),
-				mapKeyJoinColumn == null || mapKeyJoinColumn.updatable()
+					mapKeyJoinColumn == null || mapKeyJoinColumn.updatable()
 			);
 		}
 		collection.setIndex( index );
@@ -483,6 +560,17 @@ class CollectionIndexBinder {
 				index,
 				orderedJoinColumns.isEmpty() ? null : ForeignKeySource.from( orderedJoinColumns.get( 0 ).foreignKey() )
 		) );
+	}
+
+	private static String implicitMapKeyJoinColumnName(
+			CollectionSource source,
+			boolean referenceToPrimaryKey,
+			int columnCount,
+			String targetColumnName) {
+		if ( referenceToPrimaryKey && columnCount == 1 ) {
+			return source.member().resolveAttributeName() + "_KEY";
+		}
+		return source.member().resolveAttributeName() + "_KEY_" + targetColumnName;
 	}
 
 	private static boolean referencesPrimaryKey(List<MapKeyJoinColumn> joinColumns, List<Column> targetColumns) {

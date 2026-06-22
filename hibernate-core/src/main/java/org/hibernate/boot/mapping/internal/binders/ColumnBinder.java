@@ -80,8 +80,10 @@ public class ColumnBinder {
 		result.setLength( columnSource == null ? lengthByDefault : columnSource.length( lengthByDefault ) );
 		final int precision = columnSource == null ? precisionByDefault : columnSource.precision( precisionByDefault );
 		result.setPrecision( precision > 0 ? precision : null );
-		result.setScale( columnSource == null ? scaleByDefault : columnSource.scale( scaleByDefault ) );
+		final int scale = columnSource == null ? scaleByDefault : columnSource.scale( scaleByDefault );
+		result.setScale( scale > 0 ? scale : null );
 		applyCheckConstraints( result, columnSource );
+		applyOptions( result, columnSource );
 		return result;
 	}
 
@@ -162,9 +164,7 @@ public class ColumnBinder {
 		if ( columnSource != null ) {
 			final String options = columnSource.options();
 			if ( StringHelper.isNotEmpty( options ) ) {
-				// todo : see https://hibernate.atlassian.net/browse/HHH-17449
-//				table.setOptions( options );
-				throw new UnsupportedOperationException( "Not yet implemented" );
+				column.setOptions( options );
 			}
 		}
 	}

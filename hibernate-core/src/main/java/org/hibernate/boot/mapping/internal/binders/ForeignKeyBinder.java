@@ -46,6 +46,9 @@ class ForeignKeyBinder {
 
 	private void bindForeignKey(ForeignKeyBinding foreignKeyBinding) {
 		final ToOne value = foreignKeyBinding.value();
+		if ( value instanceof ManyToOne manyToOne && manyToOne.isIgnoreNotFound() ) {
+			return;
+		}
 		final ForeignKey resolvedForeignKey = createResolvedForeignKey(
 				foreignKeyBinding.resolvedForeignKey(),
 				value.getReferencedEntityName()

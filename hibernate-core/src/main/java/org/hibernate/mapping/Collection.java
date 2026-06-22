@@ -70,9 +70,13 @@ public abstract sealed class Collection
 	private String cacheRegionName;
 	private CacheLayout queryCacheLayout;
 	private String orderBy;
+	private String jpaOrderBy;
+	private String sqlOrderBy;
 	private String where;
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
+	private String manyToManyJpaOrderBy;
+	private String manyToManySqlOrderBy;
 	private String referencedPropertyName;
 	private String mappedByProperty;
 	private boolean sorted;
@@ -144,9 +148,13 @@ public abstract sealed class Collection
 		this.cacheConcurrencyStrategy = original.cacheConcurrencyStrategy;
 		this.cacheRegionName = original.cacheRegionName;
 		this.orderBy = original.orderBy;
+		this.jpaOrderBy = original.jpaOrderBy;
+		this.sqlOrderBy = original.sqlOrderBy;
 		this.where = original.where;
 		this.manyToManyWhere = original.manyToManyWhere;
 		this.manyToManyOrderBy = original.manyToManyOrderBy;
+		this.manyToManyJpaOrderBy = original.manyToManyJpaOrderBy;
+		this.manyToManySqlOrderBy = original.manyToManySqlOrderBy;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mappedByProperty = original.mappedByProperty;
 		this.sorted = original.sorted;
@@ -284,6 +292,14 @@ public abstract sealed class Collection
 		return orderBy;
 	}
 
+	public String getJpaOrderBy() {
+		return jpaOrderBy;
+	}
+
+	public String getSqlOrderBy() {
+		return sqlOrderBy;
+	}
+
 	public void setComparator(@SuppressWarnings("rawtypes") Comparator comparator) {
 		this.comparator = comparator;
 	}
@@ -298,6 +314,16 @@ public abstract sealed class Collection
 
 	public void setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
+	}
+
+	public void setJpaOrderBy(String jpaOrderBy) {
+		this.jpaOrderBy = jpaOrderBy;
+		this.orderBy = jpaOrderBy;
+	}
+
+	public void setSqlOrderBy(String sqlOrderBy) {
+		this.sqlOrderBy = sqlOrderBy;
+		this.orderBy = sqlOrderBy;
 	}
 
 	public void setRole(String role) {
@@ -336,7 +362,25 @@ public abstract sealed class Collection
 		return manyToManyOrderBy;
 	}
 
+	public String getManyToManyJpaOrdering() {
+		return manyToManyJpaOrderBy;
+	}
+
+	public String getManyToManySqlOrdering() {
+		return manyToManySqlOrderBy;
+	}
+
 	public void setManyToManyOrdering(String orderFragment) {
+		this.manyToManyOrderBy = orderFragment;
+	}
+
+	public void setManyToManyJpaOrdering(String orderFragment) {
+		this.manyToManyJpaOrderBy = orderFragment;
+		this.manyToManyOrderBy = orderFragment;
+	}
+
+	public void setManyToManySqlOrdering(String orderFragment) {
+		this.manyToManySqlOrderBy = orderFragment;
 		this.manyToManyOrderBy = orderFragment;
 	}
 

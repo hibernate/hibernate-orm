@@ -23,6 +23,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -76,6 +77,7 @@ import org.hibernate.usertype.UserType;
 import jakarta.persistence.AttributeConverter;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /// Coordinates binding of a categorized domain model into Hibernate's boot-time
 /// mapping model.
@@ -185,6 +187,10 @@ public class BindingCoordinator {
 				bindingState.getBootBindingModel().addManagedTypeBinding(
 						new EmbeddableTypeBinding( type, defaultAccessType( type ) )
 				);
+			}
+			if ( !type.hasDirectAnnotationUsage( Imported.class ) ) {
+				final String className = type.getName();
+				bindingState.addImport( unqualify( className ), className );
 			}
 		} );
 	}

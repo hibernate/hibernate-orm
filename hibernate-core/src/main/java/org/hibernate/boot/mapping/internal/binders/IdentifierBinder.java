@@ -189,7 +189,7 @@ public class IdentifierBinder {
 		final boolean hasIdClass = idMapping.getIdClassType() != null;
 		final boolean wholeDerivedIdClass = hasWholeDerivedIdClass( idMapping );
 		if ( hasIdClass && !wholeDerivedIdClass ) {
-			validateIdClassMembers( idMapping );
+			validateIdClassMembers( idMapping, type );
 		}
 		if ( isScalarIdClass( idMapping, wholeDerivedIdClass ) ) {
 			return bindScalarIdClassIdentifier( idMapping, table, type, typeBinding );
@@ -396,7 +396,7 @@ public class IdentifierBinder {
 				&& findIdClassMember( idMapping, idAttribute ) == null;
 	}
 
-	private void validateIdClassMembers(NonAggregatedKeyMapping idMapping) {
+	private void validateIdClassMembers(NonAggregatedKeyMapping idMapping, EntityTypeMetadata type) {
 		final Set<String> idAttributeNames = new HashSet<>();
 		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
 			idAttributeNames.add( idAttribute.getName() );
@@ -407,7 +407,7 @@ public class IdentifierBinder {
 								+ "' which do not match properties of the specified '@IdClass'"
 				);
 			}
-			validateIdClassMemberType( idAttribute, idClassMember );
+			validateIdClassMemberType( idAttribute, idClassMember, type );
 		}
 
 		final Set<String> idClassMemberNames = new HashSet<>( idClassMemberNames( idMapping.getIdClassType() ) );
@@ -421,14 +421,17 @@ public class IdentifierBinder {
 		}
 	}
 
-	private void validateIdClassMemberType(AttributeMetadata idAttribute, MemberDetails idClassMember) {
+	private void validateIdClassMemberType(
+			AttributeMetadata idAttribute,
+			MemberDetails idClassMember,
+			EntityTypeMetadata type) {
 		if ( isToOneMember( idClassMember )
 				|| idAttribute.getNature() == AttributeNature.TO_ONE ) {
 			return;
 		}
 
 		final String entityMemberType = idAttribute.getMember()
-				.getType()
+				.resolveRelativeType( type.getClassDetails() )
 				.determineRawClass()
 				.getClassName();
 		final String idClassMemberType = idClassMember

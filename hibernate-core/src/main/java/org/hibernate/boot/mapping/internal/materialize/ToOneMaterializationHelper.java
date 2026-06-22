@@ -6,11 +6,11 @@ package org.hibernate.boot.mapping.internal.materialize;
 
 import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.ToOne;
 
 /// Shared materialization helpers for to-one mapping values.
 ///
-/// This keeps common `ManyToOne` value shaping out of attribute binders while
+/// This keeps common `ToOne` value shaping out of attribute binders while
 /// identifier materialization still creates transitional mapping objects
 /// directly.
 ///
@@ -20,7 +20,7 @@ public final class ToOneMaterializationHelper {
 	private ToOneMaterializationHelper() {
 	}
 
-	public static void applyFetchMode(ToOneSource source, ManyToOne value) {
+	public static void applyFetchMode(ToOneSource source, ToOne value) {
 		final org.hibernate.annotations.Fetch fetch = source.hibernateFetch();
 		if ( fetch == null ) {
 			value.setFetchStyle( value.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN );

@@ -47,6 +47,20 @@ class PathAdjustmentCollector {
 		collectMemberAdjustments( member, modelsContext );
 	}
 
+	PathAdjustmentCollector(
+			PathAdjustmentCollector parent,
+			MemberDetails member,
+			BindingContext bindingContext) {
+		if ( parent != null ) {
+			attributeOverrides.putAll( parent.attributeOverrides );
+			associationOverrides.putAll( parent.associationOverrides );
+			conversions.putAll( parent.conversions );
+		}
+
+		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		collectMemberAdjustments( member, modelsContext );
+	}
+
 	private static List<ClassDetails> ownerTypeChain(ClassDetails ownerType, ClassDetails hierarchyRootType) {
 		if ( ownerType == null ) {
 			return List.of();

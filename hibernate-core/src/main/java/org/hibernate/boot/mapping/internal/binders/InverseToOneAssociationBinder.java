@@ -46,7 +46,7 @@ class InverseToOneAssociationBinder {
 			);
 		}
 
-		final Property owningProperty = targetTypeBinder.getTypeBinding().getProperty( inverseBinding.mappedBy() );
+		final Property owningProperty = targetTypeBinder.getTypeBinding().getRecursiveProperty( inverseBinding.mappedBy() );
 		final Value owningValue = owningProperty.getValue();
 		if ( !( owningValue instanceof ManyToOne owningToOne ) ) {
 			throw new MappingException(
@@ -62,7 +62,7 @@ class InverseToOneAssociationBinder {
 							+ "." + inverseBinding.attributeMetadata().getName()
 			);
 		}
-		if ( !inverseBinding.ownerBinding().getEntityName().equals( owningToOne.getReferencedEntityName() ) ) {
+		if ( !referencesOwnerTypeOrSupertype( inverseBinding.ownerBinding(), owningToOne.getReferencedEntityName() ) ) {
 			throw new MappingException(
 					"Inverse @OneToOne mappedBy named a to-one attribute that targets `"
 							+ owningToOne.getReferencedEntityName() + "` rather than `"
@@ -77,9 +77,16 @@ class InverseToOneAssociationBinder {
 			return;
 		}
 		if ( owningToOne.getTable() != targetTypeBinder.getTable() ) {
-			throw new UnsupportedOperationException(
-					"Inverse @OneToOne mappedBy through a joined table is not yet implemented"
-			);
+			final Join joinedTable = findJoinContainingProperty( targetTypeBinder, owningProperty );
+			if ( joinedTable == null ) {
+				throw new MappingException(
+						"Could not resolve joined table for inverse @OneToOne mappedBy - "
+								+ inverseBinding.ownerType().getClassDetails().getClassName()
+								+ "." + inverseBinding.attributeMetadata().getName()
+				);
+			}
+			bindInverseJoinTableOneToOne( inverseBinding, targetTypeBinder, owningToOne, joinedTable );
+			return;
 		}
 
 		UniquePropertyReferenceBinder.bindUniquePropertyReference(
@@ -88,6 +95,19 @@ class InverseToOneAssociationBinder {
 				inverseBinding.mappedBy()
 		);
 		inverseBinding.value().sortProperties();
+	}
+
+	private boolean referencesOwnerTypeOrSupertype(
+			org.hibernate.mapping.PersistentClass ownerBinding,
+			String referencedEntityName) {
+		org.hibernate.mapping.PersistentClass type = ownerBinding;
+		while ( type != null ) {
+			if ( type.getEntityName().equals( referencedEntityName ) ) {
+				return true;
+			}
+			type = type.getSuperclass();
+		}
+		return false;
 	}
 
 	private void bindInverseJoinTableOneToOne(
@@ -100,6 +120,11 @@ class InverseToOneAssociationBinder {
 				inverseBinding,
 				targetTypeBinder,
 				owningJoin
+		);
+		UniquePropertyReferenceBinder.bindUniquePropertyReference(
+				bindingState,
+				inverseValue,
+				inverseBinding.mappedBy()
 		);
 		inverseBinding.property().setValue( inverseValue );
 		inverseBinding.ownerBinding().addJoin( inverseJoin );
@@ -136,19 +161,13 @@ class InverseToOneAssociationBinder {
 			Join owningJoin) {
 		final ManyToOne value = new ManyToOne( bindingState.getMetadataBuildingContext(), owningJoin.getTable() );
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
-		value.setReferencedPropertyName( inverseBinding.mappedBy() );
-		value.setReferenceToPrimaryKey( false );
+		value.setReferenceToPrimaryKey( true );
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
 				inverseBinding.attributeMetadata().getName()
 		);
 		value.markAsLogicalOneToOne();
-		UniquePropertyReferenceBinder.bindUniquePropertyReference(
-				bindingState,
-				value,
-				inverseBinding.mappedBy()
-		);
 		for ( Column column : owningJoin.getKey().getColumns() ) {
 			value.addColumn( copyColumn( owningJoin.getTable(), column ) );
 		}
@@ -158,6 +177,15 @@ class InverseToOneAssociationBinder {
 	private Join findAssociationJoinContainingProperty(EntityTypeBinder targetTypeBinder, Property property) {
 		for ( Join join : targetTypeBinder.getTypeBinding().getJoins() ) {
 			if ( join.containsProperty( property ) && bindingState.getAssociationTableBinding( join ) != null ) {
+				return join;
+			}
+		}
+		return null;
+	}
+
+	private Join findJoinContainingProperty(EntityTypeBinder targetTypeBinder, Property property) {
+		for ( Join join : targetTypeBinder.getTypeBinding().getJoins() ) {
+			if ( join.containsProperty( property ) ) {
 				return join;
 			}
 		}

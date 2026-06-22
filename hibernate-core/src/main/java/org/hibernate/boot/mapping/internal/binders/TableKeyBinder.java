@@ -6,9 +6,15 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.DependentTableKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer;
@@ -19,20 +25,34 @@ import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMateriali
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
+import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
+import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.models.ModelsException;
 
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
+
+import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 
 /// Binds table keys that depend on an already-bound entity hierarchy identifier.
 ///
@@ -97,7 +117,7 @@ public class TableKeyBinder {
 				entityBinder.getTypeBinding(),
 				key,
 				entityBinder.getSuperEntityBinder().getTypeBinding().getEntityName(),
-				null,
+				primaryKeyJoinColumnForeignKeySource(),
 				resolveTableForeignKey(
 						key,
 						entityBinder.getSuperEntityBinder().getTypeBinding().getEntityName(),
@@ -110,8 +130,14 @@ public class TableKeyBinder {
 	private void bindSecondaryTableKey(Join join) {
 		final IdentifierBinding rootIdentifierBinding = resolveIdentifierBinding();
 		final AssociationTableBinding associationTableBinding = bindingState.getAssociationTableBinding( join );
+		final org.hibernate.boot.mapping.internal.relational.SecondaryTable secondaryTable =
+				bindingState.getSecondaryTable( join.getTable() );
 		final DependantValue key = associationTableBinding == null
-				? createDependentKeyValue( join.getTable(), rootIdentifierBinding )
+				? createDependentKeyValue(
+						join.getTable(),
+						rootIdentifierBinding,
+						secondaryTable == null ? List.of() : secondaryTable.primaryKeyJoinColumns()
+				)
 				: createDependentKeyValue( join.getTable(), rootIdentifierBinding, associationTableBinding );
 		join.setKey( key );
 		dependentTableKeyMappingMaterializer.materializePrimaryKey(
@@ -133,7 +159,6 @@ public class TableKeyBinder {
 					resolveTableForeignKey(
 							key,
 							entityBinder.getTypeBinding().getEntityName(),
-							rootIdentifierBinding,
 							entityBinder.getTypeBinding().getEntityName() + "." + join.getTable().getName()
 					)
 			) );
@@ -161,7 +186,6 @@ public class TableKeyBinder {
 				resolveTableForeignKey(
 						key,
 						entityBinder.getTypeBinding().getEntityName(),
-						rootIdentifierBinding,
 						collectionTableBinding.collection().getRole()
 				)
 		) );
@@ -261,7 +285,7 @@ public class TableKeyBinder {
 		}
 	}
 
-	private org.hibernate.boot.mapping.internal.sources.ForeignKeySource findSecondaryTableForeignKeySource(Join join) {
+	private ForeignKeySource findSecondaryTableForeignKeySource(Join join) {
 		final org.hibernate.boot.mapping.internal.relational.SecondaryTable secondaryTable = bindingState.getSecondaryTable( join.getTable() );
 		return secondaryTable == null ? null : secondaryTable.foreignKeySource();
 	}
@@ -294,6 +318,24 @@ public class TableKeyBinder {
 				SelectableOrderResolver.resolveByTargetOrder(
 						key.getColumns(),
 						targetIdentifierColumns( entityIdentifierBinding ),
+						sourceRole
+				)
+		);
+	}
+
+	private ResolvedForeignKey resolveTableForeignKey(
+			DependantValue key,
+			String referencedEntityName,
+			String sourceRole) {
+		if ( key.getWrappedValue() instanceof SortableValue sortableValue ) {
+			sortableValue.sortProperties();
+		}
+		return ResolvedForeignKey.from(
+				key,
+				referencedEntityName,
+				SelectableOrderResolver.resolveByTargetOrder(
+						key.getColumns(),
+						key.getWrappedValue().getColumns(),
 						sourceRole
 				)
 		);
@@ -337,7 +379,7 @@ public class TableKeyBinder {
 			table.addColumn( keyColumn );
 			key.addColumn( keyColumn, true, false );
 		}
-		key.sortProperties();
+		key.setSorted( true );
 		return key;
 	}
 
@@ -353,6 +395,23 @@ public class TableKeyBinder {
 				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
 		);
 		return primaryKeyJoinColumns( repeatableColumns );
+	}
+
+	private ForeignKeySource primaryKeyJoinColumnForeignKeySource() {
+		final var classDetails = entityBinder.getManagedType().getClassDetails();
+		final var primaryKeyJoinColumns = classDetails.getDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
+		if ( primaryKeyJoinColumns != null ) {
+			return ForeignKeySource.firstSpecified(
+					ForeignKeySource.fromFirstSpecifiedPrimaryKeyJoinColumn( primaryKeyJoinColumns.value() ),
+					ForeignKeySource.from( primaryKeyJoinColumns )
+			);
+		}
+
+		final PrimaryKeyJoinColumn[] repeatableColumns = classDetails.getRepeatedAnnotationUsages(
+				PrimaryKeyJoinColumn.class,
+				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+		);
+		return ForeignKeySource.fromFirstSpecifiedPrimaryKeyJoinColumn( repeatableColumns );
 	}
 
 	private List<JoinColumn> primaryKeyJoinColumns(PrimaryKeyJoinColumn[] primaryKeyJoinColumns) {
@@ -373,6 +432,21 @@ public class TableKeyBinder {
 			Table table,
 			IdentifierBinding entityIdentifierBinding,
 			AssociationTableBinding associationTableBinding) {
+		final ReferencedOwnerKey referencedOwnerKey = resolveReferencedOwnerKey(
+				entityBinder.getTypeBinding(),
+				associationTableBinding.joinColumns(),
+				associationTableBinding.join().getTable().getName()
+		);
+		if ( referencedOwnerKey != null ) {
+			return createDependentKeyValue(
+					table,
+					referencedOwnerKey,
+					associationTableBinding.joinColumns(),
+					associationTableBinding.join().getTable().getName(),
+					false
+			);
+		}
+
 		final DependantValue key = new DependantValue(
 				bindingState.getMetadataBuildingContext(),
 				table,
@@ -397,7 +471,7 @@ public class TableKeyBinder {
 					false
 			);
 		}
-		key.sortProperties();
+		key.setSorted( true );
 		return key;
 	}
 
@@ -405,13 +479,37 @@ public class TableKeyBinder {
 			Table table,
 			IdentifierBinding entityIdentifierBinding,
 			CollectionTableBinding collectionTableBinding) {
+		final ReferencedOwnerKey referencedOwnerKey = resolveReferencedOwnerKey(
+				collectionTableBinding.collection().getOwner(),
+				collectionTableBinding.joinColumns(),
+				collectionTableBinding.collection().getRole()
+		);
+		if ( referencedOwnerKey != null ) {
+			collectionTableBinding.collection().setReferencedPropertyName( referencedOwnerKey.property().getName() );
+			bindingState.getMetadataBuildingContext()
+					.getMetadataCollector()
+					.addPropertyReference(
+							collectionTableBinding.collection().getOwner().getEntityName(),
+							referencedOwnerKey.property().getName()
+					);
+			final DependantValue key = createDependentKeyValue(
+					table,
+					referencedOwnerKey,
+					collectionTableBinding.joinColumns(),
+					collectionTableBinding.collection().getRole(),
+					true
+			);
+			applyCollectionKeyNullabilityAndMutability( collectionTableBinding, key );
+			return key;
+		}
+
 		final DependantValue key = new DependantValue(
 				bindingState.getMetadataBuildingContext(),
 				table,
 				entityIdentifierBinding.value()
 		);
-		key.setNullable( false );
-		key.setUpdateable( true );
+		key.setNullable( collectionKeyNullable( collectionTableBinding.joinColumns() ) );
+		key.setUpdateable( collectionKeyUpdatable( collectionTableBinding.joinColumns() ) );
 
 		final List<Column> targetColumns = targetIdentifierColumns( entityIdentifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
@@ -421,17 +519,388 @@ public class TableKeyBinder {
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				collectionTableBinding.collection().getRole()
 		);
-		final boolean updateable = collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany;
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
+			final JoinColumn joinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
 			final Column identifierColumn = targetColumns.get( i );
 			final Column keyColumn = orderedJoinColumns.isEmpty()
-					? bindKeyColumn( table, identifierColumn, null )
-					: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) );
+					? bindKeyColumn(
+							table,
+							identifierColumn,
+							null,
+							() -> implicitCollectionKeyColumnName( collectionTableBinding, identifierColumn )
+					)
+					: bindKeyColumn(
+							table,
+							identifierColumn,
+							joinColumn,
+							() -> implicitCollectionKeyColumnName( collectionTableBinding, identifierColumn )
+					);
 			table.addColumn( keyColumn );
-			key.addColumn( keyColumn, true, updateable );
+			key.addColumn(
+					keyColumn,
+					joinColumn == null || joinColumn.insertable(),
+					joinColumn == null || joinColumn.updatable()
+			);
 		}
-		key.sortProperties();
+		key.setSorted( true );
+		applyCollectionKeyNullabilityAndMutability( collectionTableBinding, key );
 		return key;
+	}
+
+	private void applyCollectionKeyNullabilityAndMutability(CollectionTableBinding collectionTableBinding, DependantValue key) {
+		key.setNullable( collectionKeyNullable( collectionTableBinding.joinColumns() ) );
+		key.setUpdateable( collectionKeyUpdatable( collectionTableBinding.joinColumns() ) );
+		for ( Column column : key.getColumns() ) {
+			column.setNullable( key.isNullable() );
+		}
+	}
+
+	private String implicitCollectionKeyColumnName(CollectionTableBinding collectionTableBinding, Column referencedColumn) {
+		final AttributePath attributePath = inverseManyToManyAttributePath( collectionTableBinding );
+		return bindingState.getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getImplicitNamingStrategy()
+				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
+					@Override
+					public Nature getNature() {
+						return collectionTableBinding.collection().getElement() instanceof ManyToOne
+								|| collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany
+								? Nature.ENTITY_COLLECTION
+								: Nature.ELEMENT_COLLECTION;
+					}
+
+					@Override
+					public EntityNaming getEntityNaming() {
+						return new EntityNaming() {
+							@Override
+							public String getClassName() {
+								return collectionTableBinding.collection().getOwner().getClassName();
+							}
+
+							@Override
+							public String getEntityName() {
+								return collectionTableBinding.collection().getOwner().getEntityName();
+							}
+
+							@Override
+							public String getJpaEntityName() {
+								return collectionTableBinding.collection().getOwner().getJpaEntityName();
+							}
+						};
+					}
+
+					@Override
+					public AttributePath getAttributePath() {
+						return attributePath;
+					}
+
+					@Override
+					public Identifier getReferencedTableName() {
+						return collectionTableBinding.collection().getOwner().getTable().getNameIdentifier();
+					}
+
+					@Override
+					public Identifier getReferencedColumnName() {
+						return referencedColumn.getNameIdentifier( bindingState.getDatabase() );
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return bindingState.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
+	}
+
+	private AttributePath inverseManyToManyAttributePath(CollectionTableBinding collectionTableBinding) {
+		if ( !( collectionTableBinding.collection().getElement() instanceof ManyToOne ) ) {
+			return null;
+		}
+
+		final String ownerClassName = collectionTableBinding.collection().getOwner().getClassName();
+		final String collectionRolePath = collectionRolePath( collectionTableBinding );
+		final AtomicReference<AttributePath> result = new AtomicReference<>();
+		bindingState.forEachInversePluralAssociationBinding( (inverseBinding) -> {
+			if ( result.get() == null
+					&& inverseBinding.nature() == InversePluralAssociationBinding.Nature.MANY_TO_MANY
+					&& ownerClassName.equals( inverseBinding.targetClassDetails().getClassName() )
+					&& collectionRolePath.equals( inverseBinding.mappedBy() ) ) {
+				result.set( AttributePath.parse( inverseBinding.attributeMetadata().getName() ) );
+			}
+		} );
+		return result.get();
+	}
+
+	private String collectionRolePath(CollectionTableBinding collectionTableBinding) {
+		final String role = collectionTableBinding.collection().getRole();
+		final String ownerEntityPrefix = collectionTableBinding.collection().getOwner().getEntityName() + ".";
+		if ( role.startsWith( ownerEntityPrefix ) ) {
+			return role.substring( ownerEntityPrefix.length() );
+		}
+		return collectionAttributeName( collectionTableBinding );
+	}
+
+	private String collectionAttributeName(CollectionTableBinding collectionTableBinding) {
+		final String role = collectionTableBinding.collection().getRole();
+		final int separatorIndex = role.lastIndexOf( '.' );
+		return separatorIndex < 0 ? role : role.substring( separatorIndex + 1 );
+	}
+
+	private boolean collectionKeyNullable(List<JoinColumn> joinColumns) {
+		if ( joinColumns.isEmpty() ) {
+			return false;
+		}
+		for ( JoinColumn joinColumn : joinColumns ) {
+			if ( !joinColumn.nullable() ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean collectionKeyUpdatable(List<JoinColumn> joinColumns) {
+		for ( JoinColumn joinColumn : joinColumns ) {
+			return joinColumn.updatable();
+		}
+		return true;
+	}
+
+	private DependantValue createDependentKeyValue(
+			Table table,
+			ReferencedOwnerKey referencedOwnerKey,
+			List<JoinColumn> joinColumns,
+			String sourceRole,
+			boolean collectionKey) {
+		final DependantValue key = new DependantValue(
+				bindingState.getMetadataBuildingContext(),
+				table,
+				referencedOwnerKey.value()
+		);
+		key.setNullable( collectionKey ? collectionKeyNullable( joinColumns ) : false );
+		key.setUpdateable( collectionKey && collectionKeyUpdatable( joinColumns ) );
+
+		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
+				joinColumns,
+				referencedOwnerKey.targetColumns(),
+				bindingState.getDatabase(),
+				entityBinder.getManagedType().getClassDetails().getClassName(),
+				sourceRole
+		);
+		for ( int i = 0; i < referencedOwnerKey.targetColumns().size(); i++ ) {
+			final JoinColumn joinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
+			final Column targetColumn = referencedOwnerKey.targetColumns().get( i );
+			final Column keyColumn = orderedJoinColumns.isEmpty()
+					? bindKeyColumn( table, targetColumn, null )
+					: bindKeyColumn( table, targetColumn, joinColumn );
+			table.addColumn( keyColumn );
+			key.addColumn(
+					keyColumn,
+					joinColumn == null || joinColumn.insertable(),
+					joinColumn == null || joinColumn.updatable()
+			);
+		}
+		key.setSorted( true );
+		return key;
+	}
+
+	private ReferencedOwnerKey resolveReferencedOwnerKey(
+			PersistentClass ownerBinding,
+			List<JoinColumn> joinColumns,
+			String sourceRole) {
+		final List<Identifier> referencedColumnNames = referencedColumnNames( joinColumns );
+		if ( referencedColumnNames.isEmpty()
+				|| columnNamesMatch( ownerBinding.getIdentifier().getColumns(), referencedColumnNames ) ) {
+			return null;
+		}
+		for ( Property property : referenceableProperties( ownerBinding ) ) {
+			if ( property.getValue() instanceof SimpleValue simpleValue
+					&& columnNamesMatch( simpleValue.getColumns(), referencedColumnNames ) ) {
+				materializeUniqueKey( simpleValue, sourceRole );
+				return new ReferencedOwnerKey( property, simpleValue, simpleValue.getColumns() );
+			}
+		}
+
+		final List<Property> properties = resolveReferencedProperties( ownerBinding, referencedColumnNames, sourceRole );
+		if ( !properties.isEmpty() ) {
+			final Property property = createSyntheticProperty(
+					ownerBinding,
+					properties,
+					syntheticPropertyName( ownerBinding, sourceRole ),
+					sourceRole
+			);
+			return new ReferencedOwnerKey( property, (KeyValue) property.getValue(), property.getValue().getColumns() );
+		}
+		throw new MappingException(
+				"Could not resolve non-primary-key table key columns " + referencedColumnNames + " - " + sourceRole
+		);
+	}
+
+	private List<Property> referenceableProperties(PersistentClass ownerBinding) {
+		final ArrayList<Property> properties = new ArrayList<>();
+		if ( ownerBinding.getIdentifierProperty() != null ) {
+			properties.add( ownerBinding.getIdentifierProperty() );
+		}
+		properties.addAll( ownerBinding.getReferenceableProperties() );
+		return properties;
+	}
+
+	private List<Property> resolveReferencedProperties(
+			PersistentClass ownerBinding,
+			List<Identifier> referencedColumnNames,
+			String sourceRole) {
+		final LinkedHashSet<Property> result = new LinkedHashSet<>();
+		for ( Identifier referencedColumnName : referencedColumnNames ) {
+			final Property property = findPropertyContainingColumn( ownerBinding, referencedColumnName );
+			if ( property == null ) {
+				return List.of();
+			}
+			result.add( property );
+		}
+		final List<Property> properties = new ArrayList<>( result );
+		if ( !columnNamesMatch( collectColumns( properties ), referencedColumnNames ) ) {
+			throw new MappingException(
+					"Referenced table key columns span properties that do not match the requested order "
+							+ referencedColumnNames + " - " + sourceRole
+			);
+		}
+		return properties;
+	}
+
+	private Property findPropertyContainingColumn(PersistentClass ownerBinding, Identifier referencedColumnName) {
+		for ( Property property : referenceableProperties( ownerBinding ) ) {
+			final Property match = findPropertyContainingColumn( property, referencedColumnName );
+			if ( match != null ) {
+				return match;
+			}
+		}
+		return null;
+	}
+
+	private Property findPropertyContainingColumn(Property property, Identifier referencedColumnName) {
+		if ( property.getValue() instanceof Component component ) {
+			for ( Property subProperty : component.getProperties() ) {
+				final Property match = findPropertyContainingColumn( subProperty, referencedColumnName );
+				if ( match != null ) {
+					return match;
+				}
+			}
+		}
+		else if ( containsColumn( property.getValue(), referencedColumnName ) ) {
+			return property;
+		}
+		return null;
+	}
+
+	private boolean containsColumn(Value value, Identifier referencedColumnName) {
+		final Database database = bindingState.getDatabase();
+		for ( Column column : value.getColumns() ) {
+			if ( column.getNameIdentifier( database ).matches( referencedColumnName ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Property createSyntheticProperty(
+			PersistentClass ownerBinding,
+			List<Property> properties,
+			String syntheticPropertyName,
+			String sourceRole) {
+		final Component component = new Component( metadataBuildingContext(), ownerBinding );
+		component.setComponentClassName( ownerBinding.getClassName() );
+		component.setEmbedded( true );
+		for ( Property property : properties ) {
+			component.addProperty( cloneProperty( ownerBinding, property ) );
+		}
+		component.sortProperties();
+
+		final SyntheticProperty syntheticProperty = new SyntheticProperty();
+		syntheticProperty.setName( syntheticPropertyName );
+		syntheticProperty.setPersistentClass( ownerBinding );
+		syntheticProperty.setUpdatable( false );
+		syntheticProperty.setInsertable( false );
+		syntheticProperty.setValue( component );
+		syntheticProperty.setPropertyAccessorName( EMBEDDED.getExternalName() );
+		ownerBinding.addProperty( syntheticProperty );
+		materializeUniqueKey( component, sourceRole );
+		return syntheticProperty;
+	}
+
+	private Property cloneProperty(PersistentClass ownerBinding, Property property) {
+		if ( property.isComposite() ) {
+			final Component component = (Component) property.getValue();
+			final Component copy = new Component( metadataBuildingContext(), component );
+			copy.setComponentClassName( component.getComponentClassName() );
+			copy.setEmbedded( component.isEmbedded() );
+			for ( Property subProperty : component.getProperties() ) {
+				copy.addProperty( cloneProperty( ownerBinding, subProperty ) );
+			}
+			copy.sortProperties();
+			final SyntheticProperty result = new SyntheticProperty();
+			result.setName( property.getName() );
+			result.setPersistentClass( ownerBinding );
+			result.setUpdatable( false );
+			result.setInsertable( false );
+			result.setValue( copy );
+			result.setPropertyAccessorName( property.getPropertyAccessorName() );
+			return result;
+		}
+		final Property clone = property.copy();
+		clone.setInsertable( false );
+		clone.setUpdatable( false );
+		clone.setNaturalIdentifier( false );
+		clone.setPersistentClass( ownerBinding );
+		return clone;
+	}
+
+	private String syntheticPropertyName(PersistentClass ownerBinding, String sourceRole) {
+		return ( "_" + ownerBinding.getEntityName() + "_" + sourceRole )
+				.replace( '.', '_' );
+	}
+
+	private List<Column> collectColumns(List<Property> properties) {
+		final ArrayList<Column> columns = new ArrayList<>();
+		for ( Property property : properties ) {
+			columns.addAll( property.getValue().getColumns() );
+		}
+		return columns;
+	}
+
+	private void materializeUniqueKey(SimpleValue value, String sourceRole) {
+		uniqueKeyMappingMaterializer.materializeUniqueKey(
+				ResolvedUniqueKey.from( value, metadataBuildingContext(), sourceRole )
+		);
+	}
+
+	private MetadataBuildingContext metadataBuildingContext() {
+		return bindingState.getMetadataBuildingContext();
+	}
+
+	private List<Identifier> referencedColumnNames(List<JoinColumn> joinColumns) {
+		final ArrayList<Identifier> result = new ArrayList<>();
+		final Database database = bindingState.getDatabase();
+		for ( JoinColumn joinColumn : joinColumns ) {
+			if ( StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) {
+				result.add( database.toIdentifier( joinColumn.referencedColumnName() ) );
+			}
+		}
+		return result;
+	}
+
+	private boolean columnNamesMatch(List<Column> columns, List<Identifier> referencedColumnNames) {
+		if ( columns.size() != referencedColumnNames.size() ) {
+			return false;
+		}
+		final Database database = bindingState.getDatabase();
+		for ( int i = 0; i < columns.size(); i++ ) {
+			if ( !columns.get( i ).getNameIdentifier( database ).matches( referencedColumnNames.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private record ReferencedOwnerKey(Property property, KeyValue value, List<Column> targetColumns) {
 	}
 
 	private Column copyKeyColumn(Column source, boolean copyUnique) {

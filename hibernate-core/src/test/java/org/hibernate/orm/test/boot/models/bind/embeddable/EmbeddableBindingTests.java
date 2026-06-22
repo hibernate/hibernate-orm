@@ -5,10 +5,13 @@
 package org.hibernate.orm.test.boot.models.bind.embeddable;
 
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Set;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
@@ -141,9 +144,9 @@ public class EmbeddableBindingTests {
 					final ComponentMemberBinding labels = componentMember( contribution.members(), "labels" );
 					assertThat( labels.nature() ).isEqualTo( AttributeNature.ELEMENT_COLLECTION );
 					assertThat( labels.valueIntent() ).isSameAs( labels.collectionValueIntent() );
-					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.LIST );
+					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.BAG );
 					assertThat( labels.collectionValueIntent().elementIntent() ).isInstanceOf( BasicValueIntent.class );
-					assertThat( labels.collectionValueIntent().indexIntent() ).isInstanceOf( BasicValueIntent.class );
+					assertThat( labels.collectionValueIntent().indexIntent() ).isNull();
 					assertThat( labels.collectionValueIntent().sourceRole() ).isEqualTo( "facts.labels" );
 					assertThat( labels.collectionValueIntent().attributePath() ).isEqualTo( "labels" );
 
@@ -160,11 +163,69 @@ public class EmbeddableBindingTests {
 					assertThat( tags.nature() ).isEqualTo( AttributeNature.MANY_TO_MANY );
 					assertThat( tagsIntent.elementIntent() ).isInstanceOf( ToOneValueIntent.class );
 					assertThat( tagsIntent.classification() ).isEqualTo( CollectionClassification.SET );
+
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ComponentPluralOwner.class.getName() );
+					final Component facts = (Component) entityBinding.getProperty( "facts" ).getValue();
+					final org.hibernate.mapping.Collection labelsCollection =
+							(org.hibernate.mapping.Collection) facts.getProperty( "labels" ).getValue();
+					final org.hibernate.mapping.Collection partsCollection =
+							(org.hibernate.mapping.Collection) facts.getProperty( "parts" ).getValue();
+					final org.hibernate.mapping.Collection childrenCollection =
+							(org.hibernate.mapping.Collection) facts.getProperty( "children" ).getValue();
+					final org.hibernate.mapping.Collection tagsCollection =
+							(org.hibernate.mapping.Collection) facts.getProperty( "tags" ).getValue();
+
+					assertThat( labelsCollection ).isInstanceOf( Bag.class );
+					assertThat( labelsCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.labels" );
+					assertThat( context.getMetadataCollector().getCollectionBinding( labelsCollection.getRole() ) )
+							.isSameAs( labelsCollection );
+					assertThat( partsCollection ).isInstanceOf( Bag.class );
+					assertThat( partsCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.parts" );
+					assertThat( childrenCollection ).isInstanceOf( Bag.class );
+					assertThat( childrenCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.children" );
+					assertThat( tagsCollection ).isInstanceOf( Set.class );
+					assertThat( tagsCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.tags" );
 				},
 				scope.getRegistry(),
 				ComponentPluralOwner.class,
 				ComponentPluralChild.class,
 				ComponentPluralTag.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testNestedValueEmbeddablePluralMember(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var contribution = context.getBindingState().getBootBindingModel()
+							.embeddableContributions()
+							.stream()
+							.filter( (candidate) -> candidate.componentType().getName().equals( NestedComponentPluralDetails.class.getName() ) )
+							.findFirst()
+							.orElseThrow();
+					final ComponentMemberBinding labels = componentMember( contribution.members(), "labels" );
+
+					assertThat( labels.nature() ).isEqualTo( AttributeNature.ELEMENT_COLLECTION );
+					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.BAG );
+					assertThat( labels.collectionValueIntent().sourceRole() ).isEqualTo( "facts.details.labels" );
+
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( NestedComponentPluralOwner.class.getName() );
+					final Component facts = (Component) entityBinding.getProperty( "facts" ).getValue();
+					final Component details = (Component) facts.getProperty( "details" ).getValue();
+					final org.hibernate.mapping.Collection labelsCollection =
+							(org.hibernate.mapping.Collection) details.getProperty( "labels" ).getValue();
+
+					assertThat( labelsCollection ).isInstanceOf( Bag.class );
+					assertThat( labelsCollection.getRole() )
+							.isEqualTo( NestedComponentPluralOwner.class.getName() + ".facts.details.labels" );
+					assertThat( context.getMetadataCollector().getCollectionBinding( labelsCollection.getRole() ) )
+							.isSameAs( labelsCollection );
+				},
+				scope.getRegistry(),
+				NestedComponentPluralOwner.class
 		);
 	}
 
@@ -179,6 +240,84 @@ public class EmbeddableBindingTests {
 		) )
 				.isInstanceOf( org.hibernate.AnnotationException.class )
 				.hasMessageContaining( "embeddables used as entity identifiers may not contain plural attributes" );
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEmbeddedIdentifierRejectsUnannotatedPluralMember(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> BindingTestingHelper.checkDomainModel(
+				(context) -> {
+				},
+				scope.getRegistry(),
+				EmbeddedIdentifierWithUnannotatedPluralEntity.class
+		) )
+				.isInstanceOf( org.hibernate.AnnotationException.class )
+				.hasMessageContaining( "Embeddable identifier member 'labels' is collection-valued" )
+				.hasMessageContaining( "embeddables used as entity identifiers may not contain plural attributes" );
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEmbeddedIdentifierRejectsNestedPluralMember(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> BindingTestingHelper.checkDomainModel(
+				(context) -> {
+				},
+				scope.getRegistry(),
+				EmbeddedIdentifierWithNestedPluralEntity.class
+		) )
+				.isInstanceOf( org.hibernate.AnnotationException.class )
+				.hasMessageContaining( "Embeddable identifier member 'nested.labels' is collection-valued" )
+				.hasMessageContaining( "embeddables used as entity identifiers may not contain plural attributes" );
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEmbeddedIdentifierAssociationWithJoinTable(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( EmbeddedIdentifierWithJoinTableAssociationEntity.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final ManyToOne country = (ManyToOne) identifier.getProperty( "country" ).getValue();
+					final Join join = entityBinding.getJoins().get( 0 );
+
+					assertThat( join.getTable().getName() ).isEqualTo( "embedded_id_country_links" );
+					assertThat( join.getKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "owner_country_id" );
+					assertThat( country.getTable() ).isSameAs( join.getTable() );
+					assertThat( country.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "country_id" );
+				},
+				scope.getRegistry(),
+				Country.class,
+				EmbeddedIdentifierWithJoinTableAssociationEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEmbeddedIdentifierInverseOneToOneAssociation(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( EmbeddedIdentifierWithInverseOneToOneEntity.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final OneToOne owner = (OneToOne) identifier.getProperty( "owner" ).getValue();
+
+					assertThat( owner.getReferencedEntityName() )
+							.isEqualTo( EmbeddedIdentifierInverseOneToOneOwner.class.getName() );
+					assertThat( owner.getMappedByProperty() ).isEqualTo( "dependent" );
+					assertThat( owner.isConstrained() ).isTrue();
+					assertThat( owner.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "owner_id" );
+				},
+				scope.getRegistry(),
+				EmbeddedIdentifierInverseOneToOneOwner.class,
+				EmbeddedIdentifierWithInverseOneToOneEntity.class
+		);
 	}
 
 	@Test
@@ -769,6 +908,15 @@ public class EmbeddableBindingTests {
 		private Integer id;
 	}
 
+	@Entity(name = "NestedComponentPluralOwner")
+	@Table(name = "nested_component_plural_owners")
+	public static class NestedComponentPluralOwner {
+		@Id
+		private Integer id;
+		@Embedded
+		private NestedComponentPluralFacts facts;
+	}
+
 	@Entity(name = "Country")
 	@Table(name = "countries")
 	public static class Country {
@@ -887,6 +1035,17 @@ public class EmbeddableBindingTests {
 		private String name;
 	}
 
+	@Embeddable
+	public static class NestedComponentPluralFacts {
+		private NestedComponentPluralDetails details;
+	}
+
+	@Embeddable
+	public static class NestedComponentPluralDetails {
+		@ElementCollection
+		private java.util.List<String> labels;
+	}
+
 	@Entity(name = "EmbeddedIdentifierWithPluralEntity")
 	@Table(name = "embedded_identifier_with_plural")
 	public static class EmbeddedIdentifierWithPluralEntity {
@@ -899,6 +1058,80 @@ public class EmbeddableBindingTests {
 		private Integer id;
 		@ElementCollection
 		private java.util.List<String> labels;
+	}
+
+	@Entity(name = "EmbeddedIdentifierWithUnannotatedPluralEntity")
+	@Table(name = "embedded_identifier_with_unannotated_plural")
+	public static class EmbeddedIdentifierWithUnannotatedPluralEntity {
+		@EmbeddedId
+		private EmbeddedIdentifierWithUnannotatedPlural id;
+	}
+
+	@Embeddable
+	public static class EmbeddedIdentifierWithUnannotatedPlural {
+		private Integer id;
+		private java.util.List<String> labels;
+	}
+
+	@Entity(name = "EmbeddedIdentifierWithNestedPluralEntity")
+	@Table(name = "embedded_identifier_with_nested_plural")
+	public static class EmbeddedIdentifierWithNestedPluralEntity {
+		@EmbeddedId
+		private EmbeddedIdentifierWithNestedPlural id;
+	}
+
+	@Embeddable
+	public static class EmbeddedIdentifierWithNestedPlural {
+		private Integer id;
+		private NestedPluralIdentifierPart nested;
+	}
+
+	@Embeddable
+	public static class NestedPluralIdentifierPart {
+		private String code;
+		@ElementCollection
+		private java.util.List<String> labels;
+	}
+
+	@Entity(name = "EmbeddedIdentifierWithJoinTableAssociationEntity")
+	@Table(name = "embedded_identifier_join_table_association")
+	public static class EmbeddedIdentifierWithJoinTableAssociationEntity {
+		@EmbeddedId
+		private EmbeddedIdentifierWithJoinTableAssociation id;
+	}
+
+	@Embeddable
+	public static class EmbeddedIdentifierWithJoinTableAssociation {
+		@jakarta.persistence.ManyToOne
+		@JoinTable(
+				name = "embedded_id_country_links",
+				joinColumns = @JoinColumn(name = "owner_country_id", referencedColumnName = "country_id"),
+				inverseJoinColumns = @JoinColumn(name = "country_id", referencedColumnName = "id")
+		)
+		private Country country;
+	}
+
+	@Entity(name = "EmbeddedIdentifierInverseOneToOneOwner")
+	@Table(name = "embedded_identifier_inverse_one_to_one_owner")
+	public static class EmbeddedIdentifierInverseOneToOneOwner {
+		@Id
+		private Integer id;
+		@jakarta.persistence.OneToOne
+		@JoinColumn(name = "dependent_id")
+		private EmbeddedIdentifierWithInverseOneToOneEntity dependent;
+	}
+
+	@Entity(name = "EmbeddedIdentifierWithInverseOneToOneEntity")
+	@Table(name = "embedded_identifier_inverse_one_to_one")
+	public static class EmbeddedIdentifierWithInverseOneToOneEntity {
+		@EmbeddedId
+		private EmbeddedIdentifierWithInverseOneToOne id;
+	}
+
+	@Embeddable
+	public static class EmbeddedIdentifierWithInverseOneToOne {
+		@jakarta.persistence.OneToOne(mappedBy = "dependent")
+		private EmbeddedIdentifierInverseOneToOneOwner owner;
 	}
 
 	@MappedSuperclass

@@ -72,6 +72,7 @@ class AnyAttributeBinder {
 		).bind( source, attributeBinding.attributeName(), valueTable );
 		property.setOptional( source.effectiveOptional() );
 		property.setCascade( source.cascades() );
+		property.setLazy( source.lazy() );
 		return value;
 	}
 
@@ -117,7 +118,9 @@ class AnyAttributeBinder {
 		}
 
 		final List<JoinColumn> ownerJoinColumns = source.ownerJoinColumns();
-		if ( !ownerJoinColumns.isEmpty() && ownerJoinColumns.size() != ownerIdentifierBinding.columns().size() ) {
+		if ( !ownerJoinColumns.isEmpty()
+				&& ownerJoinColumns.size() != ownerIdentifierBinding.columns().size()
+				&& !ToOneAttributeBinder.hasReferencedColumnName( ownerJoinColumns ) ) {
 			throw new MappingException(
 					"@Any association table join column count did not match owner identifier column count - "
 							+ ownerType.getClassDetails().getClassName()

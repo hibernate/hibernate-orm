@@ -174,6 +174,9 @@ public record ResolvedSessionFactorySettings(
 		/// Whether native-query JDBC ordinal parameters should be ignored.
 		boolean nativeJdbcParametersIgnored,
 
+		/// Whether HQL and Criteria safe-mode validation is enabled.
+		boolean safeModeEnabled,
+
 		/// Whether named queries should be validated during SessionFactory startup.
 		boolean namedQueryStartupCheckingEnabled,
 
@@ -285,6 +288,7 @@ public record ResolvedSessionFactorySettings(
 				xmlFunctionsEnabled,
 				portableIntegerDivisionEnabled,
 				nativeJdbcParametersIgnored,
+				safeModeEnabled,
 				namedQueryStartupCheckingEnabled,
 				collectionsInDefaultFetchGroupEnabled,
 				jpaCallbacksEnabled,

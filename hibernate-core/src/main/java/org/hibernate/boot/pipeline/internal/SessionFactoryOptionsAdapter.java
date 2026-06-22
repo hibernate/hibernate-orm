@@ -144,6 +144,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "isXmlFunctionsEnabled" -> settings.xmlFunctionsEnabled();
 				case "isPortableIntegerDivisionEnabled" -> settings.portableIntegerDivisionEnabled();
 				case "getNativeJdbcParametersIgnored" -> settings.nativeJdbcParametersIgnored();
+				case "isSafeModeEnabled" -> settings.safeModeEnabled();
 				case "isNamedQueryStartupCheckingEnabled" -> settings.namedQueryStartupCheckingEnabled();
 				case "getQueryStatisticsMaxSize" -> 100;
 				case "isCollectionsInDefaultFetchGroupEnabled" -> settings.collectionsInDefaultFetchGroupEnabled();

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.CascadeBinder;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -97,6 +98,9 @@ public record ToOneSource(
 		/// The persistent property name on the owner.
 		String propertyName,
 
+		/// Attribute path passed to implicit naming strategy for implicit join columns.
+		AttributePath implicitNamingPath,
+
 		/// The direct `@ManyToOne` source annotation, if this association is many-to-one.
 		jakarta.persistence.ManyToOne manyToOne,
 
@@ -128,10 +132,30 @@ public record ToOneSource(
 			AssociationOverride associationOverride,
 			ModelsContext modelsContext,
 			TypeDetails resolvedType) {
+		return create(
+				member,
+				ownerClassName,
+				propertyName,
+				AttributePath.parse( propertyName ),
+				associationOverride,
+				modelsContext,
+				resolvedType
+		);
+	}
+
+	public static ToOneSource create(
+			MemberDetails member,
+			String ownerClassName,
+			String propertyName,
+			AttributePath implicitNamingPath,
+			AssociationOverride associationOverride,
+			ModelsContext modelsContext,
+			TypeDetails resolvedType) {
 		return new ToOneSource(
 				member,
 				ownerClassName,
 				propertyName,
+				implicitNamingPath,
 				member.getDirectAnnotationUsage( jakarta.persistence.ManyToOne.class ),
 				member.getDirectAnnotationUsage( OneToOne.class ),
 				associationOverride,
@@ -280,10 +304,13 @@ public record ToOneSource(
 	/// Resolves foreign-key metadata for the value-side columns.
 	public ForeignKeySource valueForeignKeySource(JoinTable joinTable) {
 		if ( joinTable != null ) {
-			return ForeignKeySource.inverseFrom( joinTable );
+			return ForeignKeySource.firstSpecified(
+					ForeignKeySource.fromFirstSpecifiedJoinColumn( listJoinColumns( joinTable.inverseJoinColumns() ) ),
+					ForeignKeySource.inverseFrom( joinTable )
+			);
 		}
 		final List<JoinColumn> joinColumns = joinColumns();
-		return joinColumns.isEmpty() ? null : ForeignKeySource.from( joinColumns.get( 0 ) );
+		return ForeignKeySource.fromFirstSpecifiedJoinColumn( joinColumns );
 	}
 
 	/// Resolves the normal source join columns, considering association overrides first.

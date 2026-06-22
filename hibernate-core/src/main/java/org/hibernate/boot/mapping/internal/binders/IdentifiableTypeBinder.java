@@ -39,6 +39,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 
@@ -298,6 +299,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		return switch ( attributeMetadata.getNature() ) {
 			case BASIC -> BasicValueIntent.fromAttribute(
 					attributeMetadata.getMember(),
+					locateAttributeOverride( ownerType, attributeName ),
 					getBindingState(),
 					getBindingContext()
 			);
@@ -375,6 +377,37 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			}
 		}
 		return result;
+	}
+
+	private AttributeOverride locateAttributeOverride(
+			IdentifiableTypeMetadata ownerType,
+			String attributeName) {
+		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final ClassDetails ownerClassDetails = ownerType.getClassDetails();
+		final ClassDetails rootClassDetails = ownerType.getHierarchy().getRoot().getClassDetails();
+		AttributeOverride result = locateAttributeOverride( rootClassDetails, attributeName, modelsContext );
+		if ( ownerClassDetails != rootClassDetails ) {
+			final AttributeOverride ownerOverride = locateAttributeOverride( ownerClassDetails, attributeName, modelsContext );
+			if ( ownerOverride != null ) {
+				result = ownerOverride;
+			}
+		}
+		return result;
+	}
+
+	private static AttributeOverride locateAttributeOverride(
+			ClassDetails type,
+			String attributeName,
+			org.hibernate.models.spi.ModelsContext modelsContext) {
+		if ( type == null ) {
+			return null;
+		}
+		for ( AttributeOverride override : type.getRepeatedAnnotationUsages( AttributeOverride.class, modelsContext ) ) {
+			if ( attributeName.equals( override.name() ) ) {
+				return override;
+			}
+		}
+		return null;
 	}
 
 	private static AssociationOverride locateAssociationOverride(

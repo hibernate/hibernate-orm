@@ -169,10 +169,12 @@ public class GlobalRegistrationBindingTests {
 					assertThat( parsedEntityGraph.source() ).isEqualTo( NamedEntityGraphDefinition.Source.PARSED );
 					assertThat( parsedEntityGraph.graphCreator().getClass().getSimpleName() )
 							.isEqualTo( "NamedGraphCreatorParsed" );
-					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getDefaultFilterCondition() )
+					final var filterDefinition = metadataCollector.getFilterDefinition( "globalFilter" );
+					assertThat( filterDefinition.getDefaultFilterCondition() )
 							.isEqualTo( "name = :name" );
-					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getParameterNames() )
-							.containsExactly( "name" );
+					assertThat( filterDefinition.isAutoEnabled() ).isTrue();
+					assertThat( filterDefinition.isAppliedToLoadByKey() ).isTrue();
+					assertThat( filterDefinition.getParameterNames() ).containsExactly( "name" );
 					assertThat( metadataCollector.getFetchProfile( "globalFetchProfile" ).getFetches() )
 							.anySatisfy( (fetch) -> {
 								assertThat( fetch.getEntity() ).isEqualTo( GlobalRegistrationEntity.class.getName() );
@@ -334,7 +336,13 @@ public class GlobalRegistrationBindingTests {
 	@org.hibernate.annotations.NamedQuery(name = "globalHibernateQuery", query = "from GlobalRegistrationEntity")
 	@NamedEntityGraph(name = "globalGraph", attributeNodes = @NamedAttributeNode("id"))
 	@org.hibernate.annotations.NamedEntityGraph(name = "globalParsedGraph", graph = "parent")
-	@FilterDef(name = "globalFilter", defaultCondition = "name = :name", parameters = @ParamDef(name = "name", type = String.class))
+	@FilterDef(
+			name = "globalFilter",
+			defaultCondition = "name = :name",
+			autoEnabled = true,
+			applyToLoadByKey = true,
+			parameters = @ParamDef(name = "name", type = String.class)
+	)
 	@FetchProfile(
 			name = "globalFetchProfile",
 			fetchOverrides = @FetchProfile.FetchOverride(

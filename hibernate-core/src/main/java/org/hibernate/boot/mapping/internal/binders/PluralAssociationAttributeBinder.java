@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.List;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
@@ -21,7 +22,6 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
@@ -30,11 +30,14 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.UniqueConstraint;
 
 /// Binds association-valued plural attributes.
 ///
@@ -295,16 +298,7 @@ class PluralAssociationAttributeBinder {
 	private Collection bindAssociation(CollectionSource source, boolean uniqueTargetColumns, Property property) {
 		final TargetEntityBinding target = resolveTargetEntityBinding( source );
 		final Table table = registerCollectionBindings
-				? modelBinders.getTableBinder()
-						.bindAssociationTable(
-								resolveOwnerEntityType(),
-								ownerBinding.getTable(),
-								attributeMetadata.getName(),
-								target.entityType(),
-								target.primaryTable(),
-								source.joinTable()
-						)
-						.binding()
+				? bindAssociationTable( source, target )
 				: createDeclarationOnlyTable();
 
 		final Collection collection = createCollection( source );
@@ -359,10 +353,13 @@ class PluralAssociationAttributeBinder {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
 					collection,
 					source.associationJoinColumns(),
-					ForeignKeySource.from( source.joinTable() ),
+					ForeignKeySource.firstSpecified(
+							ForeignKeySource.fromFirstSpecifiedJoinColumn( source.associationJoinColumns() ),
+							associationTableForeignKey( source )
+					),
 					resolveOnDeleteAction(),
-					source.joinTable() == null ? new jakarta.persistence.UniqueConstraint[0] : source.joinTable().uniqueConstraints(),
-					source.joinTable() == null ? new jakarta.persistence.Index[0] : source.joinTable().indexes()
+					associationTableUniqueConstraints( source ),
+					associationTableIndexes( source )
 			) );
 			bindingState.addCollectionBinding( collection );
 		}
@@ -437,7 +434,10 @@ class PluralAssociationAttributeBinder {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
 					collection,
 					source.oneToManyJoinColumns(),
-					ForeignKeySource.from( source.joinTable() ),
+					ForeignKeySource.firstSpecified(
+							ForeignKeySource.fromFirstSpecifiedJoinColumn( source.oneToManyJoinColumns() ),
+							ForeignKeySource.from( source.joinTable() )
+					),
 					resolveOnDeleteAction(),
 					new jakarta.persistence.UniqueConstraint[0],
 					new jakarta.persistence.Index[0]
@@ -451,25 +451,7 @@ class PluralAssociationAttributeBinder {
 	private Collection bindManyToAny(CollectionSource source, Property property) {
 		final JoinTable joinTable = source.joinTable();
 		final Table table = registerCollectionBindings
-				? joinTable == null
-						? modelBinders.getTableBinder()
-								.bindCollectionTable(
-										resolveOwnerEntityType(),
-										ownerBinding.getTable(),
-										attributeMetadata.getName(),
-										null
-								)
-								.binding()
-						: modelBinders.getTableBinder()
-								.bindAssociationTable(
-										resolveOwnerEntityType(),
-										ownerBinding.getTable(),
-										attributeMetadata.getName(),
-										resolveOwnerEntityType(),
-										ownerBinding.getTable(),
-										joinTable
-								)
-								.binding()
+				? bindManyToAnyTable( source, joinTable )
 				: createDeclarationOnlyTable();
 
 		final Collection collection = createCollection( source );
@@ -529,14 +511,106 @@ class PluralAssociationAttributeBinder {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
 					collection,
 					source.associationJoinColumns(),
-					ForeignKeySource.from( joinTable ),
+					ForeignKeySource.firstSpecified(
+							ForeignKeySource.fromFirstSpecifiedJoinColumn( source.associationJoinColumns() ),
+							associationTableForeignKey( source )
+					),
 					resolveOnDeleteAction(),
-					joinTable == null ? new jakarta.persistence.UniqueConstraint[0] : joinTable.uniqueConstraints(),
-					joinTable == null ? new jakarta.persistence.Index[0] : joinTable.indexes()
+					associationTableUniqueConstraints( source ),
+					associationTableIndexes( source )
 			) );
 			bindingState.addCollectionBinding( collection );
 		}
 		return collection;
+	}
+
+	private Table bindAssociationTable(CollectionSource source, TargetEntityBinding target) {
+		final JoinTable joinTable = source.joinTable();
+		if ( joinTable != null ) {
+			return modelBinders.getTableBinder()
+					.bindAssociationTable(
+							resolveOwnerEntityType(),
+							ownerBinding.getTable(),
+							attributeMetadata.getName(),
+							target.entityType(),
+							target.primaryTable(),
+							joinTable
+					)
+					.binding();
+		}
+		final CollectionTable collectionTable = source.collectionTable();
+		return modelBinders.getTableBinder()
+				.bindAssociationTable(
+						resolveOwnerEntityType(),
+						ownerBinding.getTable(),
+						attributeMetadata.getName(),
+						target.entityType(),
+						target.primaryTable(),
+						collectionTable
+				)
+				.binding();
+	}
+
+	private Table bindManyToAnyTable(CollectionSource source, JoinTable joinTable) {
+		if ( joinTable != null ) {
+			return modelBinders.getTableBinder()
+					.bindAssociationTable(
+							resolveOwnerEntityType(),
+							ownerBinding.getTable(),
+							attributeMetadata.getName(),
+							resolveOwnerEntityType(),
+							ownerBinding.getTable(),
+							joinTable
+					)
+					.binding();
+		}
+		final CollectionTable collectionTable = source.collectionTable();
+		if ( collectionTable != null ) {
+			return modelBinders.getTableBinder()
+					.bindAssociationTable(
+							resolveOwnerEntityType(),
+							ownerBinding.getTable(),
+							attributeMetadata.getName(),
+							resolveOwnerEntityType(),
+							ownerBinding.getTable(),
+							collectionTable
+					)
+					.binding();
+		}
+		return modelBinders.getTableBinder()
+				.bindCollectionTable(
+						resolveOwnerEntityType(),
+						ownerBinding.getTable(),
+						attributeMetadata.getName(),
+						null
+				)
+				.binding();
+	}
+
+	private ForeignKeySource associationTableForeignKey(CollectionSource source) {
+		final JoinTable joinTable = source.joinTable();
+		if ( joinTable != null ) {
+			return ForeignKeySource.from( joinTable );
+		}
+		return ForeignKeySource.from( source.collectionTable() );
+	}
+
+	private UniqueConstraint[] associationTableUniqueConstraints(CollectionSource source) {
+		final JoinTable joinTable = source.joinTable();
+		if ( joinTable != null ) {
+			return joinTable.uniqueConstraints();
+		}
+		final CollectionTable collectionTable = source.collectionTable();
+		return collectionTable == null ? new UniqueConstraint[0] : collectionTable.uniqueConstraints();
+	}
+
+	private Index[] associationTableIndexes(CollectionSource source) {
+		final JoinTable joinTable = source.joinTable();
+		if ( joinTable != null ) {
+			return joinTable.indexes();
+		}
+		final CollectionTable collectionTable = source.collectionTable();
+		return collectionTable == null ? new Index[0] : collectionTable.indexes();
 	}
 
 	private void applyCascade(CollectionSource source, Property property, Collection collection) {
@@ -549,18 +623,7 @@ class PluralAssociationAttributeBinder {
 	}
 
 	private Collection createCollection(CollectionSource source) {
-		return switch ( source.classification() ) {
-			case SET, ORDERED_SET, SORTED_SET -> new org.hibernate.mapping.Set( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case LIST -> new org.hibernate.mapping.List( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case BAG -> new org.hibernate.mapping.Bag( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case ID_BAG -> new IdentifierBag( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case MAP, ORDERED_MAP, SORTED_MAP -> new org.hibernate.mapping.Map( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case ARRAY -> {
-				final org.hibernate.mapping.Array array = new org.hibernate.mapping.Array( bindingState.getMetadataBuildingContext(), ownerBinding );
-				array.setElementClassName( source.elementType().determineRawClass().getClassName() );
-				yield array;
-			}
-		};
+		return CollectionMappingHelper.createCollection( source, ownerBinding, bindingState );
 	}
 
 	private ManyToOne bindElementValue(
@@ -606,7 +669,10 @@ class PluralAssociationAttributeBinder {
 			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 					ownerBinding,
 					element,
-					ForeignKeySource.inverseFrom( source.joinTable() ),
+					ForeignKeySource.firstSpecified(
+							ForeignKeySource.fromFirstSpecifiedJoinColumn( inverseJoinColumns ),
+							ForeignKeySource.inverseFrom( source.joinTable() )
+					),
 					referenceToPrimaryKey && element.isConstrained()
 							? ResolvedForeignKey.from(
 									element,
@@ -745,6 +811,12 @@ class PluralAssociationAttributeBinder {
 		final OneToMany oneToMany = source.oneToMany();
 		if ( oneToMany != null && oneToMany.targetEntity() != void.class ) {
 			return bindingContext.getClassDetailsRegistry().resolveClassDetails( oneToMany.targetEntity().getName() );
+		}
+		if ( source.elementType() == null ) {
+			throw new AnnotationException(
+					source.member().getDeclaringType().getName() + "." + source.member().resolveAttributeName()
+							+ " is not a collection and may not be a '@OneToMany', '@ManyToMany', or '@ElementCollection'"
+			);
 		}
 		return source.elementType().determineRawClass();
 	}

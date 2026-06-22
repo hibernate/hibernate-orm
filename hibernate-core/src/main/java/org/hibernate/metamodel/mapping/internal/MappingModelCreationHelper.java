@@ -1307,6 +1307,10 @@ public class MappingModelCreationHelper {
 					allowColumnTypeIndexMatch
 			);
 			if ( selectableIndex < 0 ) {
+				if ( selectableSource instanceof ToOne toOne
+						&& ( toOne.getReferencedPropertyName() != null || toOne.hasFormula() ) ) {
+					return identitySelectableOrder( columnSpan );
+				}
 				if ( matchedSelectableCount == 0 && noRemainingSelectableMatches(
 						sourceSelectables,
 						i + 1,
@@ -1327,6 +1331,14 @@ public class MappingModelCreationHelper {
 			selectableOrder[i] = selectableIndex;
 			used[selectableIndex] = true;
 			matchedSelectableCount++;
+		}
+		return selectableOrder;
+	}
+
+	private static int[] identitySelectableOrder(int columnSpan) {
+		final int[] selectableOrder = new int[columnSpan];
+		for ( int i = 0; i < columnSpan; i++ ) {
+			selectableOrder[i] = i;
 		}
 		return selectableOrder;
 	}

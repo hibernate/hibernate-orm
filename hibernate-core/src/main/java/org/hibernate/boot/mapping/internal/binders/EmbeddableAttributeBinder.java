@@ -4,7 +4,10 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -31,7 +34,10 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Convert;
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.MappedSuperclass;
 
 /// Binds component-valued singular attributes.
 ///
@@ -141,14 +147,41 @@ class EmbeddableAttributeBinder {
 	}
 
 	private void bindDiscriminator(Component component, Table componentTable) {
+		bindDiscriminator(
+				component,
+				componentTable,
+				componentSource,
+				attributeBinding.attributeName() + "_DTYPE",
+				bindingState,
+				bindingOptions,
+				bindingContext
+		);
+	}
+
+	static void bindDiscriminator(
+			Component component,
+			Table componentTable,
+			ComponentSource componentSource,
+			String implicitColumnName,
+			BindingState bindingState,
+			BindingOptions bindingOptions,
+			BindingContext bindingContext) {
 		final Map<Object, String> discriminatorValues = new LinkedHashMap<>();
 		final Map<String, String> subclassToSuperclass = new LinkedHashMap<>();
 		collectDiscriminatorValue( componentSource.componentType(), discriminatorValues );
+		collectPersistentSuperclassLinks( componentSource.componentType(), subclassToSuperclass );
+		final List<ClassDetails> subtypes = new ArrayList<>();
 		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
 			if ( isSubtypeOf( embeddableType, componentSource.componentType() ) ) {
-				collectDiscriminatorValue( embeddableType, discriminatorValues );
-				subclassToSuperclass.put( embeddableType.getName(), embeddableType.getSuperClass().getName() );
+				subtypes.add( embeddableType );
 			}
+		} );
+		subtypes.sort( Comparator
+				.comparingInt( (ClassDetails subtype) -> hierarchyDistance( subtype, componentSource.componentType() ) )
+				.thenComparing( ClassDetails::getName ) );
+		subtypes.forEach( embeddableType -> {
+			collectDiscriminatorValue( embeddableType, discriminatorValues );
+			collectPersistentSuperclassLinks( embeddableType, subclassToSuperclass );
 		} );
 		if ( discriminatorValues.size() <= 1 ) {
 			return;
@@ -158,14 +191,39 @@ class EmbeddableAttributeBinder {
 		discriminator.setTable( componentTable );
 		discriminator.setImplicitJavaTypeAccess( typeConfiguration -> String.class );
 		discriminator.setTypeName( String.class.getName() );
-		final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
-				null,
-				() -> attributeBinding.attributeName() + "_DTYPE",
-				false,
-				true
-		);
-		componentTable.addColumn( column );
-		discriminator.addColumn( column, true, true );
+		final ColumnSource overrideColumnSource = componentSource.discriminatorColumnSource();
+		final DiscriminatorColumn discriminatorColumn =
+				componentSource.componentType().getDirectAnnotationUsage( DiscriminatorColumn.class );
+		if ( overrideColumnSource != null ) {
+			final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+					overrideColumnSource,
+					() -> implicitColumnName,
+					false,
+					true
+			);
+			componentTable.addColumn( column );
+			discriminator.addColumn( column, true, true );
+		}
+		else if ( discriminatorColumn == null ) {
+			final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+					null,
+					() -> implicitColumnName,
+					false,
+					true
+			);
+			componentTable.addColumn( column );
+			discriminator.addColumn( column, true, true );
+		}
+		else {
+			ColumnBinder.bindDiscriminatorColumn(
+					bindingContext,
+					null,
+					discriminator,
+					discriminatorColumn,
+					bindingOptions,
+					bindingState
+			);
+		}
 		component.setDiscriminator( discriminator );
 		component.setDiscriminatorValues( discriminatorValues );
 		component.setSubclassToSuperclass( subclassToSuperclass );
@@ -179,6 +237,25 @@ class EmbeddableAttributeBinder {
 		discriminatorValues.put( value, embeddableType.getName().intern() );
 	}
 
+	private static void collectPersistentSuperclassLinks(
+			ClassDetails componentType,
+			Map<String, String> subclassToSuperclass) {
+		for ( ClassDetails current = componentType; current != null; current = current.getSuperClass() ) {
+			final ClassDetails superClass = current.getSuperClass();
+			if ( !isPersistentComponentSuperType( superClass ) ) {
+				return;
+			}
+			subclassToSuperclass.put( current.getName(), superClass.getName() );
+		}
+	}
+
+	private static boolean isPersistentComponentSuperType(ClassDetails superClass) {
+		return superClass != null
+			&& superClass != ClassDetails.OBJECT_CLASS_DETAILS
+			&& (superClass.hasDirectAnnotationUsage( MappedSuperclass.class )
+				|| superClass.hasDirectAnnotationUsage( Embeddable.class ));
+	}
+
 	private static boolean isSubtypeOf(ClassDetails subtype, ClassDetails supertype) {
 		for ( ClassDetails candidate = subtype.getSuperClass(); candidate != null; candidate = candidate.getSuperClass() ) {
 			if ( candidate.getName().equals( supertype.getName() ) ) {
@@ -186,6 +263,17 @@ class EmbeddableAttributeBinder {
 			}
 		}
 		return false;
+	}
+
+	private static int hierarchyDistance(ClassDetails subtype, ClassDetails supertype) {
+		int distance = 0;
+		for ( ClassDetails candidate = subtype; candidate != null; candidate = candidate.getSuperClass() ) {
+			if ( candidate.getName().equals( supertype.getName() ) ) {
+				return distance;
+			}
+			distance++;
+		}
+		return Integer.MAX_VALUE;
 	}
 
 	private Table resolveComponentTable(MemberDetails attributeMember) {

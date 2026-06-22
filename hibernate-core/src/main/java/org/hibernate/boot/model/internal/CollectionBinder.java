@@ -1345,7 +1345,7 @@ public abstract class CollectionBinder {
 		if ( ordered ) {
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
 			if ( sqlOrder != null ) {
-				collection.setOrderBy( sqlOrder.value() );
+				collection.setSqlOrderBy( sqlOrder.value() );
 			}
 		}
 
@@ -1701,7 +1701,7 @@ public abstract class CollectionBinder {
 		if ( hqlOrderBy != null ) {
 			final String orderByFragment = buildOrderByClauseFromHql( hqlOrderBy, associatedClass );
 			if ( isNotBlank( orderByFragment ) ) {
-				collection.setOrderBy( orderByFragment );
+				collection.setJpaOrderBy( orderByFragment );
 			}
 		}
 	}
@@ -2219,7 +2219,7 @@ public abstract class CollectionBinder {
 		collection.setElement( elementBinder.make() );
 		final String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 		if ( orderBy != null ) {
-			collection.setOrderBy( orderBy );
+			collection.setJpaOrderBy( orderBy );
 		}
 	}
 
@@ -2256,7 +2256,7 @@ public abstract class CollectionBinder {
 		if ( isNotBlank( hqlOrderBy ) ) {
 			final String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 			if ( orderBy != null ) {
-				collection.setOrderBy( orderBy );
+				collection.setJpaOrderBy( orderBy );
 			}
 		}
 	}
@@ -2358,7 +2358,7 @@ public abstract class CollectionBinder {
 		element.setNotFoundAction( notFoundAction );
 		// as per 11.1.38 of JPA 2.0 spec, default to primary key if no column is specified by @OrderBy.
 		if ( hqlOrderBy != null ) {
-			collection.setManyToManyOrdering( buildOrderByClauseFromHql( hqlOrderBy, collectionEntity ) );
+			collection.setManyToManyJpaOrdering( buildOrderByClauseFromHql( hqlOrderBy, collectionEntity ) );
 		}
 
 		final var joinTableAnn = property.getDirectAnnotationUsage( JoinTable.class );

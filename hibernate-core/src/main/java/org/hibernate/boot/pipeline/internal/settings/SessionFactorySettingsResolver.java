@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BytecodeSettings;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
@@ -135,6 +136,7 @@ public class SessionFactorySettingsResolver {
 					asBoolean( configurationValues.get( QuerySettings.XML_FUNCTIONS_ENABLED ), false ),
 					asBoolean( configurationValues.get( QuerySettings.PORTABLE_INTEGER_DIVISION ), false ),
 					asBoolean( configurationValues.get( QuerySettings.NATIVE_IGNORE_JDBC_PARAMETERS ), false ),
+					asBoolean( configurationValues.get( QuerySettings.SAFE_MODE_ENABLED ), false ),
 					asBoolean( configurationValues.get( QuerySettings.QUERY_STARTUP_CHECKING ), true ),
 					true,
 					asBoolean( configurationValues.get( PersistenceSettings.JPA_CALLBACKS_ENABLED ), true ),
@@ -274,9 +276,13 @@ public class SessionFactorySettingsResolver {
 		}
 
 	private static JpaCompliance resolveJpaCompliance(ResolvedBootstrapSettings bootstrapSettings) {
+		final var configurationValues = bootstrapSettings.configurationValues();
 		return new MutableJpaComplianceImpl(
-				bootstrapSettings.configurationValues(),
-				bootstrapSettings.jpaBootstrap()
+				configurationValues,
+				asBoolean(
+						configurationValues.get( AvailableSettings.JPA_COMPLIANCE ),
+						bootstrapSettings.jpaBootstrap()
+				)
 		);
 	}
 

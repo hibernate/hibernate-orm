@@ -43,6 +43,7 @@ import org.hibernate.annotations.AnyKeyJdbcTypeCode;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -104,10 +105,10 @@ public class BasicValueBinder {
 			Property property,
 			BasicValue basicValue,
 			BindingOptions bindingOptions,
-			BindingState bindingState,
-			BindingContext bindingContext) {
+		BindingState bindingState,
+		BindingContext bindingContext) {
 		basicValue.setMemberDetails( source.member() );
-		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> source.javaType() );
+		basicValue.setImplicitSourceJavaType( source.sourceJavaType() );
 		bindConversion( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJavaType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJdbcType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
@@ -144,7 +145,7 @@ public class BasicValueBinder {
 			//noinspection unchecked
 			final Class<AttributeConverter<?, ?>> javaClass = (Class<AttributeConverter<?, ?>>) conversion.converter();
 			basicValue.setJpaAttributeConverterDescriptor(
-					new RegisteredConversion( source.javaType(), javaClass, false ).getConverterDescriptor()
+					new RegisteredConversion( source.rawJavaType(), javaClass, false ).getConverterDescriptor()
 			);
 			return;
 		}
@@ -533,6 +534,12 @@ public class BasicValueBinder {
 				if ( javaTypeAnn != null ) {
 					applyJavaType( member, basicValue, javaTypeAnn.value() );
 				}
+				else {
+					final var typeAnn = member.getDirectAnnotationUsage( AnyKeyType.class );
+					if ( typeAnn != null ) {
+						applyAnyKeyType( member, basicValue, typeAnn.value() );
+					}
+				}
 			}
 			case COLLECTION_ID -> {
 				final var javaTypeAnn = member.getDirectAnnotationUsage( CollectionIdJavaType.class );
@@ -648,6 +655,19 @@ public class BasicValueBinder {
 				modelsException.addSuppressed( e );
 				throw modelsException;
 			}
+		} );
+	}
+
+	private static void applyAnyKeyType(
+			MemberDetails member,
+			BasicValue basicValue,
+			String typeName) {
+		basicValue.setExplicitJavaTypeAccess( (typeConfiguration) -> {
+			final var registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( typeName );
+			if ( registeredType == null ) {
+				throw new MappingException( "Unrecognized @AnyKeyType value - " + typeName + " - " + member.getName() );
+			}
+			return (BasicJavaType<?>) registeredType.getJavaTypeDescriptor();
 		} );
 	}
 

@@ -61,12 +61,12 @@ public class BasicValueMappingMaterializer {
 
 		final var selectable = processSelectable( attributeBinding, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
 		final var column = selectable.column();
-		applyBasicOptionality( member, property, column );
+		applyBasicOptionality( member, attributeBinding.resolvedType(), property, column );
 		applyBasicFetch( member, property );
 		property.setLob( member.hasDirectAnnotationUsage( Lob.class ) );
 
 		BasicValueBinder.bindBasicValue(
-				BasicValueSource.attribute( member ),
+				BasicValueSource.attribute( member, attributeBinding.resolvedType() ),
 				property,
 				basicValue,
 				bindingOptions,
@@ -162,7 +162,8 @@ public class BasicValueMappingMaterializer {
 				columnNamingPatterns,
 				uniqueByDefault,
 				nullableByDefault,
-				updatable
+				basicValueIntent.insertable(),
+				updatable && basicValueIntent.updatable()
 		);
 		applyBasicOptionality( member, componentMember.type(), property, column );
 		BasicValueBinder.bindBasicValue(
@@ -183,6 +184,7 @@ public class BasicValueMappingMaterializer {
 			List<String> columnNamingPatterns,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
+			boolean insertable,
 			boolean updatable) {
 		final Column column = ColumnBinder.bindColumn(
 				basicValueIntent.columnSource(),
@@ -191,7 +193,7 @@ public class BasicValueMappingMaterializer {
 				nullableByDefault
 		);
 		column.setName( applyColumnNamingPatterns( column.getName(), columnNamingPatterns ) );
-		basicValue.addColumn( column, true, updatable );
+		basicValue.addColumn( column, insertable, updatable );
 		basicValue.getTable().addColumn( column );
 		return column;
 	}
@@ -210,7 +212,7 @@ public class BasicValueMappingMaterializer {
 
 					@Override
 					public boolean isCollectionElement() {
-						return source.kind() == ComponentSource.Kind.COLLECTION_ELEMENT;
+						return false;
 					}
 
 					@Override

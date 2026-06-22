@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDelete;
+import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -24,13 +26,13 @@ import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Index;
@@ -223,7 +225,9 @@ class ElementCollectionAttributeBinder {
 							+ ownerType.getClassDetails().getClassName()
 			);
 		}
-		if ( !joinColumns.isEmpty() && joinColumns.size() != ownerIdentifierBinding.columns().size() ) {
+		if ( !joinColumns.isEmpty()
+				&& joinColumns.size() != ownerIdentifierBinding.columns().size()
+				&& !ToOneAttributeBinder.hasReferencedColumnName( joinColumns ) ) {
 			throw new MappingException(
 					"Collection table join column count did not match owner identifier column count - "
 							+ ownerType.getClassDetails().getClassName()
@@ -233,7 +237,12 @@ class ElementCollectionAttributeBinder {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
 					collection,
 					joinColumns,
-					source.joinTable() == null ? ForeignKeySource.from( collectionTable ) : ForeignKeySource.from( source.joinTable() ),
+					ForeignKeySource.firstSpecified(
+							ForeignKeySource.fromFirstSpecifiedJoinColumn( joinColumns ),
+							source.joinTable() == null
+									? ForeignKeySource.from( collectionTable )
+									: ForeignKeySource.from( source.joinTable() )
+					),
 					resolveOnDeleteAction(),
 					uniqueConstraints( source ),
 					indexes( source )
@@ -248,18 +257,7 @@ class ElementCollectionAttributeBinder {
 	}
 
 	private Collection createCollection(CollectionSource source) {
-		return switch ( source.classification() ) {
-			case SET, ORDERED_SET, SORTED_SET -> new org.hibernate.mapping.Set( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case LIST -> new org.hibernate.mapping.List( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case MAP, ORDERED_MAP, SORTED_MAP -> new org.hibernate.mapping.Map( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case BAG -> new org.hibernate.mapping.Bag( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case ID_BAG -> new IdentifierBag( bindingState.getMetadataBuildingContext(), ownerBinding );
-			case ARRAY -> {
-				final org.hibernate.mapping.Array array = new org.hibernate.mapping.Array( bindingState.getMetadataBuildingContext(), ownerBinding );
-				array.setElementClassName( source.elementType().determineRawClass().getClassName() );
-				yield array;
-			}
-		};
+		return CollectionMappingHelper.createCollection( source, ownerBinding, bindingState );
 	}
 
 		private UniqueConstraint[] uniqueConstraints(CollectionSource source) {
@@ -316,6 +314,15 @@ class ElementCollectionAttributeBinder {
 						collection,
 						table
 				);
+		EmbeddableAttributeBinder.bindDiscriminator(
+				component,
+				table,
+				source,
+				"element_DTYPE",
+				bindingState,
+				bindingOptions,
+				bindingContext
+		);
 
 		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
 				ownerType,
@@ -335,7 +342,7 @@ class ElementCollectionAttributeBinder {
 			final BasicValue element = new BasicValue( bindingState.getMetadataBuildingContext(), table );
 			element.setTable( table );
 			BasicValueBinder.bindBasicValue(
-					BasicValueSource.collectionElement( source.member(), bindingContext ),
+					BasicValueSource.collectionElement( source.member(), source.elementType(), bindingContext ),
 					null,
 					element,
 					bindingOptions,
@@ -344,14 +351,35 @@ class ElementCollectionAttributeBinder {
 			);
 
 			final jakarta.persistence.Column column = source.elementColumn();
-		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(
-				ColumnSource.from( column ),
-				() -> Collection.DEFAULT_ELEMENT_COLUMN_NAME
-		);
-		table.addColumn( elementColumn );
-		element.addColumn( elementColumn );
-		return element;
-	}
+			final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(
+					ColumnSource.from( column ),
+					() -> implicitElementColumnName( source )
+			);
+			table.addColumn( elementColumn );
+			element.addColumn( elementColumn );
+			return element;
+		}
+
+		private String implicitElementColumnName(CollectionSource source) {
+			return bindingContext.getImplicitNamingStrategy()
+					.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
+						@Override
+						public AttributePath getAttributePath() {
+							return AttributePath.parse( source.member().resolveAttributeName() );
+						}
+
+						@Override
+						public boolean isCollectionElement() {
+							return false;
+						}
+
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return bindingState.getMetadataBuildingContext();
+						}
+					} )
+					.getText();
+		}
 
 	private EntityTypeMetadata resolveOwnerEntityType() {
 		if ( ownerType instanceof EntityTypeMetadata entityType ) {

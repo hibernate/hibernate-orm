@@ -31,16 +31,16 @@ dependencyResolutionManagement {
         if ( !org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it) ) {
             // temporary for 4.0 snapshot testing
             maven {
-                url "https://central.sonatype.com/repository/maven-snapshots/"
+                url = "https://central.sonatype.com/repository/maven-snapshots/"
             }
 
             if (System.getProperty('JPA_PREVIEW') != null) {
                 maven {
-                    url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+                    url = "https://jakarta.oss.sonatype.org/content/repositories/releases/"
                 }
                 // Needed for the SNAPSHOT versions of Jakarta Persistence
                 maven {
-                    url "https://central.sonatype.com/repository/maven-snapshots/"
+                    url = "https://central.sonatype.com/repository/maven-snapshots/"
                 }
             }
         }

@@ -9,7 +9,9 @@ import java.util.Set;
 
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.mapping.Index;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -56,6 +58,12 @@ public class SoftDeleteElementCollectionReaddTest {
 			final TimestampSoftDeleteCollectionOwner owner = session.get( TimestampSoftDeleteCollectionOwner.class, 1L );
 			assertThat( owner.getMobiles() ).containsExactlyInAnyOrder( "1", "3" );
 		} );
+	}
+
+	@Test
+	void booleanSoftDeleteCollectionTablesUseUniqueIndexWithLiveRowExpression(DomainModelScope scope) {
+		assertLiveRowIndex( scope, ActiveSoftDeleteCollectionOwner.class, "active", "true" );
+		assertLiveRowIndex( scope, DeletedSoftDeleteCollectionOwner.class, "deleted", "false" );
 	}
 
 	@Test
@@ -120,6 +128,28 @@ public class SoftDeleteElementCollectionReaddTest {
 			final DeletedSoftDeleteCollectionOwner owner = session.get( DeletedSoftDeleteCollectionOwner.class, 1L );
 			assertThat( owner.getMobiles() ).containsExactly( "3" );
 		} );
+	}
+
+	private static void assertLiveRowIndex(
+			DomainModelScope scope,
+			Class<?> collectionOwner,
+			String softDeleteColumnName,
+			String liveRowLiteral) {
+		final org.hibernate.mapping.Table table = scope.getDomainModel()
+				.getCollectionBinding( collectionOwner.getName() + ".mobiles" )
+				.getCollectionTable();
+
+		assertThat( table.getUniqueKeys() ).isEmpty();
+		assertThat( table.getIndexes().values() )
+				.singleElement()
+				.satisfies( index -> assertLiveRowIndex( index, softDeleteColumnName, liveRowLiteral ) );
+	}
+
+	private static void assertLiveRowIndex(Index index, String softDeleteColumnName, String liveRowLiteral) {
+		assertThat( index.isUnique() ).isTrue();
+		assertThat( index.getSelectables() ).hasSize( 3 );
+		assertThat( index.getSelectables().get( 2 ).getText() )
+				.contains( "case when", softDeleteColumnName, liveRowLiteral );
 	}
 
 	@Entity( name = "SoftDeleteCollectionOwner" )

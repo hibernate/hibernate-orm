@@ -11,9 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -21,13 +18,11 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 @DomainModel(
 		annotatedClasses = NestedEmbeddableDynamicUpdateTest.Account.class
@@ -36,12 +31,6 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 @BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckEnhancementContext.class, DirtyCheckEnhancementContext.class })
 public class NestedEmbeddableDynamicUpdateTest {
-	@BeforeAll
-	static void beforeAll() {
-		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		assumeFalse( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals(
-				byteCodeProvider ) );
-	}
 
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {

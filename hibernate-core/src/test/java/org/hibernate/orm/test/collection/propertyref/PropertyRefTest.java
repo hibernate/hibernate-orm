@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @JiraKey(value = "HHH-565")
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/collection/propertyref/User.hbm.xml",
-				"org/hibernate/orm/test/collection/propertyref/Mail.hbm.xml"
+				"org/hibernate/orm/test/collection/propertyref/User.orm.xml",
+				"org/hibernate/orm/test/collection/propertyref/Mail.orm.xml"
 		}
 )
 @SessionFactory

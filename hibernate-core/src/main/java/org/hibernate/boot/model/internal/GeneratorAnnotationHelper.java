@@ -27,6 +27,7 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidGenerator;
+import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.AnnotationDescriptor;
@@ -36,7 +37,7 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -333,21 +334,15 @@ public class GeneratorAnnotationHelper {
 			Annotation typeAnnotation,
 			AnnotationBasedGenerator<A> annotationBased) {
 		final var annotationType = annotationBased.getClass();
-		for ( var iface: annotationType.getGenericInterfaces() ) {
-			if ( iface instanceof ParameterizedType parameterizedType
-					&& parameterizedType.getRawType() == AnnotationBasedGenerator.class ) {
-				final var typeArguments = parameterizedType.getActualTypeArguments();
-				if ( typeArguments.length > 0
-						&& typeArguments[0] instanceof Class<?> annotationClass ) {
-					if ( !annotationClass.isInstance( typeAnnotation ) ) {
-						throw new AnnotationException( String.format( "Annotation '%s' is not assignable to '%s'",
-								annotationType.getName(), iface.getTypeName() ) );
-					}
-					@SuppressWarnings("unchecked") // safe, we just checked it
-					final var castAnnotation = (A) typeAnnotation;
-					return castAnnotation;
-				}
+		Type[] typeArguments = GenericsHelper.typeArguments( AnnotationBasedGenerator.class, annotationType );
+		if ( typeArguments.length > 0 && typeArguments[0] instanceof Class<?> annotationClass ) {
+			if ( !annotationClass.isInstance( typeAnnotation ) ) {
+				throw new AnnotationException( String.format( "Annotation '%s' is not assignable to '%s'",
+						annotationType.getName(), annotationClass.getName() ) );
 			}
+			@SuppressWarnings("unchecked") // safe, we just checked it
+			final var castAnnotation = (A) typeAnnotation;
+			return castAnnotation;
 		}
 		throw new AssertionFailure( "Could not find implementing interface" );
 	}

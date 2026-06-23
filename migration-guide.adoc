@@ -586,6 +586,30 @@ Pessimistic locking now produces a `FOR UPDATE` clause. The dialect previously r
 string, so `PESSIMISTIC_READ` and `PESSIMISTIC_WRITE` had no effect.
 
 
+[[multiid-session-check-default]]
+=== Multi-ID loading session check default
+
+The default value of `FindMultipleOption.SessionCheckMode` has been changed from `DISABLED` to `ENABLED`.
+
+This means that `Session#findMultiple()` and `Session#getMultiple()` now check the persistence context by default
+before querying the database. Identifiers for entities already managed in the current session will not be sent to the
+database, and entities marked for removal will be replaced with `null` in the result (see `RemovalsMode`).
+
+To restore the previous behavior, pass `FindMultipleOption.SessionCheckMode.DISABLED` as a find option:
+
+[source,java]
+----
+session.findMultiple(MyEntity.class, ids, SessionCheckMode.DISABLED);
+----
+
+Or, for the legacy `byMultipleIds()` API:
+
+[source,java]
+----
+session.byMultipleIds(MyEntity.class).enableSessionCheck(false).multiLoad(ids);
+----
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

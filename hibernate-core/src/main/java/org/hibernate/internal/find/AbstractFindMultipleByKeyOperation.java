@@ -53,7 +53,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	private KeyType keyType = KeyType.IDENTIFIER;
 
 	private FindMultipleOption.BatchSize batchSize;
-	private FindMultipleOption.SessionCheckMode sessionCheckMode = FindMultipleOption.SessionCheckMode.DISABLED;
+	private FindMultipleOption.SessionCheckMode sessionCheckMode = FindMultipleOption.SessionCheckMode.ENABLED;
 	private FindMultipleOption.RemovalsMode removalsMode = FindMultipleOption.RemovalsMode.REPLACE;
 	private FindMultipleOption.OrderingMode orderingMode = FindMultipleOption.OrderingMode.ORDERED;
 
@@ -208,6 +208,11 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 		return refreshSession && cacheMode == CacheMode.REFRESH
 				? CacheMode.REFRESH_SESSION
 				: cacheMode;
+	}
+
+	@Override
+	public boolean isRefreshSession() {
+		return getCacheMode() == CacheMode.REFRESH_SESSION;
 	}
 
 	public EntityPersister getEntityDescriptor() {

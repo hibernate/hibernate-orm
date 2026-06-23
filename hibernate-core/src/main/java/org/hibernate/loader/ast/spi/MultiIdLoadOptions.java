@@ -45,6 +45,14 @@ public interface MultiIdLoadOptions extends MultiLoadOptions {
 	boolean isSecondLevelCacheCheckingEnabled();
 
 	/**
+	 * Whether the operation is configured to refresh the state of the loaded entities in the session's first level cache.
+	 *
+	 * @return {@code true}, if {@link org.hibernate.CacheMode#REFRESH_SESSION} is configured, {@code false} otherwise
+	 * @see org.hibernate.CacheMode#REFRESH_SESSION
+	 */
+	boolean isRefreshSession();
+
+	/**
 	 * Should the entities be loaded in read-only mode?
 	 */
 	Boolean getReadOnly(SessionImplementor session);

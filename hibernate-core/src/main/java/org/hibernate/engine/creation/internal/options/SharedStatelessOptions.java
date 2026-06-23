@@ -4,6 +4,9 @@
  */
 package org.hibernate.engine.creation.internal.options;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
@@ -31,6 +34,7 @@ public class SharedStatelessOptions extends StatelessOptions implements CommonSh
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionContractImplementor getOriginalSession() {
 		return original;
 	}
@@ -41,6 +45,7 @@ public class SharedStatelessOptions extends StatelessOptions implements CommonSh
 	}
 
 	@Override
+	@Nullable
 	public Transaction getTransaction() {
 		return shareTransactionContext
 				? original.getTransaction()
@@ -48,6 +53,7 @@ public class SharedStatelessOptions extends StatelessOptions implements CommonSh
 	}
 
 	@Override
+	@Nullable
 	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
 		return shareTransactionContext
 				? original.getTransactionCompletionCallbacksImplementor()

@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.creation.internal.options;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /// Mutable collector for creating a stateful child session from an existing
@@ -31,6 +33,7 @@ public class SharedStatefulOptions extends StatefulOptions implements CommonShar
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionContractImplementor getOriginalSession() {
 		return original;
 	}

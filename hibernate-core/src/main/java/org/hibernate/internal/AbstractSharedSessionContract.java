@@ -311,21 +311,26 @@ abstract class AbstractSharedSessionContract
 			if ( options.getConnection() != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
 			}
-			transactionCoordinator = sharedOptions.getTransactionCoordinator();
-			jdbcCoordinator = sharedOptions.getJdbcCoordinator();
+
+			final var transactionCoordinator = sharedOptions.getTransactionCoordinator();
+			final var jdbcCoordinator = sharedOptions.getJdbcCoordinator();
+			assert transactionCoordinator != null;
+			assert jdbcCoordinator != null;
+			this.transactionCoordinator = transactionCoordinator;
+			this.jdbcCoordinator = jdbcCoordinator;
+
 			// todo : "wrap" the transaction to no-op commit/rollback attempts?
 			currentHibernateTransaction = sharedOptions.getTransaction();
-			connectionHandlingMode = jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode();
+			connectionHandlingMode = this.jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode();
 			autoJoinTransactions = false;
 			jdbcSessionContext = createJdbcSessionContext( options.getStatementObserver(), statementInspector );
 			logInconsistentOptions( sharedOptions );
-			addSharedSessionTransactionObserver( transactionCoordinator );
+			addSharedSessionTransactionObserver( this.transactionCoordinator );
 			sharedOptions.registerParentSessionObserver( new ParentSessionObserver() {
 				@Override
 				public void onParentFlush() {
 					propagateFlush();
 				}
-
 				@Override
 				public void onParentClose() {
 					propagateClose();

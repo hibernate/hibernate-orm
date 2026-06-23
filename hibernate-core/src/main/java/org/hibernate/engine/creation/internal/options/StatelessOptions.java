@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.creation.internal.options;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityAgent;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionEventListener;
@@ -55,6 +57,7 @@ public class StatelessOptions extends CommonOptions implements SessionCreationOp
 	}
 
 	@Override
+	@Nonnull
 	public FlushMode getInitialSessionFlushMode() {
 		return FlushMode.ALWAYS;
 	}
@@ -76,6 +79,7 @@ public class StatelessOptions extends CommonOptions implements SessionCreationOp
 	}
 
 	@Override
+	@Nullable
 	public List<SessionEventListener> getCustomSessionEventListeners() {
 		return null;
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.Connection;
 import java.util.List;
 import java.util.TimeZone;
@@ -31,6 +34,7 @@ public interface SessionCreationOptions {
 
 	boolean shouldAutoJoinTransactions();
 
+	@Nullable
 	FlushMode getInitialSessionFlushMode();
 
 	boolean isSubselectFetchEnabled();
@@ -41,35 +45,47 @@ public interface SessionCreationOptions {
 
 	boolean shouldAutoClear();
 
+	@Nullable
 	Connection getConnection();
 
-	Interceptor resolveInterceptor(SessionFactoryImplementor sessionFactory);
+	@Nullable
+	Interceptor resolveInterceptor(@Nonnull SessionFactoryImplementor sessionFactory);
 
+	@Nullable
 	StatementObserver getStatementObserver();
 
+	@Nullable
 	StatementInspector getStatementInspector();
 
+	@Nonnull
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
+	@Nullable
 	Object getTenantIdentifierValue();
 
 	boolean isReadOnly();
 
+	@Nullable
 	Integer getJdbcBatchSize();
 
+	@Nonnull
 	CacheMode getInitialCacheMode();
 
 	boolean isIdentifierRollbackEnabled();
 
+	@Nullable
 	TimeZone getJdbcTimeZone();
 
+	@Nullable
 	Object getTemporalIdentifier();
 
+	@Nonnull
 	List<SessionCreationOption.EnabledFilter> getEnabledFilterOptions();
 
 	/**
 	 * @return the full list of SessionEventListener if this was customized,
 	 * or null if this Session is being created with the default list.
 	 */
+	@Nullable
 	List<SessionEventListener> getCustomSessionEventListeners();
 }

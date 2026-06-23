@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.creation.internal.options;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
@@ -70,22 +72,27 @@ public class CommonOptions {
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 	}
 
+	@Nullable
 	public StatementInspector getStatementInspector() {
 		return statementInspector;
 	}
 
+	@Nullable
 	public StatementObserver getStatementObserver() {
 		return statementObserver;
 	}
 
+	@Nullable
 	public Connection getConnection() {
 		return connection;
 	}
 
+	@Nonnull
 	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 		return connectionHandlingMode;
 	}
 
+	@Nullable
 	public Object getTenantIdentifierValue() {
 		return tenantIdentifier;
 	}
@@ -94,22 +101,27 @@ public class CommonOptions {
 		return readOnly;
 	}
 
+	@Nullable
 	public Integer getJdbcBatchSize() {
 		return jdbcBatchSize;
 	}
 
+	@Nonnull
 	public CacheMode getInitialCacheMode() {
 		return cacheMode;
 	}
 
+	@Nullable
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
 	}
 
+	@Nullable
 	public Object getTemporalIdentifier() {
 		return temporalIdentifier;
 	}
 
+	@Nonnull
 	public List<SessionCreationOption.EnabledFilter> getEnabledFilterOptions() {
 		return enabledFilterOptions == null ? emptyList() : enabledFilterOptions;
 	}
@@ -236,7 +248,8 @@ public class CommonOptions {
 	/// an explicitly disabled interceptor, an explicitly supplied interceptor,
 	/// the factory-scoped interceptor, and the factory's session-scoped
 	/// interceptor supplier.
-	public Interceptor resolveInterceptor(SessionFactoryImplementor sessionFactory) {
+	@Nullable
+	public Interceptor resolveInterceptor(@Nonnull SessionFactoryImplementor sessionFactory) {
 		if ( !allowInterceptor ) {
 			return null;
 		}

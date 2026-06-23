@@ -4,6 +4,9 @@
  */
 package org.hibernate.engine.creation.internal.options;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Transaction;
 import org.hibernate.engine.creation.internal.ParentSessionObserver;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
@@ -24,14 +27,16 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 /// @author Steve Ebersole
 public interface CommonSharedOptions extends SharedSessionCreationOptions {
 	/// The session from which shared transaction/JDBC context may be inherited.
+	@Nonnull
 	SharedSessionContractImplementor getOriginalSession();
 
 	@Override
-	default void registerParentSessionObserver(ParentSessionObserver observer) {
+	default void registerParentSessionObserver(@Nonnull ParentSessionObserver observer) {
 		registerParentSessionObserver( observer, getOriginalSession() );
 	}
 
 	@Override
+	@Nullable
 	default TransactionCoordinator getTransactionCoordinator() {
 		return isTransactionCoordinatorShared()
 				? getOriginalSession().getTransactionCoordinator()
@@ -39,6 +44,7 @@ public interface CommonSharedOptions extends SharedSessionCreationOptions {
 	}
 
 	@Override
+	@Nullable
 	default JdbcCoordinator getJdbcCoordinator() {
 		return isTransactionCoordinatorShared()
 				? getOriginalSession().getJdbcCoordinator()
@@ -46,6 +52,7 @@ public interface CommonSharedOptions extends SharedSessionCreationOptions {
 	}
 
 	@Override
+	@Nullable
 	default Transaction getTransaction() {
 		return isTransactionCoordinatorShared()
 				? getOriginalSession().getCurrentTransaction()
@@ -53,6 +60,7 @@ public interface CommonSharedOptions extends SharedSessionCreationOptions {
 	}
 
 	@Override
+	@Nullable
 	default TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
 		return isTransactionCoordinatorShared()
 				? getOriginalSession().getTransactionCompletionCallbacksImplementor()

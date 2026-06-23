@@ -145,7 +145,7 @@ class CollectionShapeBinder {
 	}
 
 	private static void applyFilters(CollectionSource source, Collection collection, BindingState bindingState) {
-		final boolean hasAssociationTable = source.joinTable() != null;
+		final boolean hasAssociationTable = hasAssociationTable( source );
 		for ( Filter filter : effectiveFilters( source, bindingState ) ) {
 			final String condition = resolveFilterCondition( collection, filter.name(), filter.condition(), bindingState );
 			if ( hasAssociationTable ) {
@@ -181,6 +181,12 @@ class CollectionShapeBinder {
 					extractFilterAliasEntityMap( filter.aliases() )
 			);
 		}
+	}
+
+	private static boolean hasAssociationTable(CollectionSource source) {
+		return source.nature() == CollectionSource.Nature.MANY_TO_MANY
+				|| source.nature() == CollectionSource.Nature.MANY_TO_ANY
+				|| source.joinTable() != null;
 	}
 
 	private static String resolveFilterCondition(
@@ -244,7 +250,7 @@ class CollectionShapeBinder {
 	}
 
 	private static void applyRestrictions(CollectionSource source, Collection collection, BindingState bindingState) {
-		final boolean hasAssociationTable = source.joinTable() != null;
+		final boolean hasAssociationTable = hasAssociationTable( source );
 		final String whereClause = combinedRestriction(
 				getOverridableAnnotation(
 						source.member(),

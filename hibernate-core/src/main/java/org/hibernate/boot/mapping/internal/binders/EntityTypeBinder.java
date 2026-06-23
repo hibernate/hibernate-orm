@@ -278,7 +278,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		processQueryCacheLayout( classDetails );
 		processCustomSql( classDetails );
 		processSqlRestriction( classDetails );
-		processFilters( classDetails, getBindingState(), getBindingContext() );
+		processFilters( getManagedType(), getBindingState(), getBindingContext() );
 		processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
 	}
 
@@ -1274,6 +1274,16 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 
 		rootClass.setWhere( restriction.value() );
+	}
+
+	private void processFilters(IdentifiableTypeMetadata type, BindingState state, BindingContext context) {
+		processFilters( type.getClassDetails(), state, context );
+		IdentifiableTypeMetadata superType = type.getSuperType();
+		while ( superType != null
+				&& superType.getClassDetails().hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
+			processFilters( superType.getClassDetails(), state, context );
+			superType = superType.getSuperType();
+		}
 	}
 
 	private void processFilters(ClassDetails classDetails, BindingState state, BindingContext context) {

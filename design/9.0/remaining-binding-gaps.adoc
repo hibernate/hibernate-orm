@@ -1974,8 +1974,18 @@ Open parity questions:
   --tests 'org.hibernate.orm.test.fetchmode.toone.ToOneWithSubselectFetchModeTests'
 ----
 * Filter definitions, auto-enabled filters, parameter type inference, entity
-  filters, collection filters, and join-table filters need runtime-adjacent
-  coverage.
+  filters, collection filters, and join-table filters now have runtime-adjacent
+  coverage.  The filter parity slice restored legacy collection association-table
+  semantics for implicit many-to-many join tables, so `@Filter` conditions apply
+  to the associated entity table and `@FilterJoinTable` / join-table restrictions
+  apply to the join table even when no explicit `@JoinTable` is declared.  It
+  also restored legacy mapped-superclass filter inheritance for entity bindings.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.filter.*'
+----
 * Global type registrations, converter registrations, Java/JDBC type
   registrations, custom user types, composite user types, collection types, and
   embeddable instantiators should be verified through both annotation and XML

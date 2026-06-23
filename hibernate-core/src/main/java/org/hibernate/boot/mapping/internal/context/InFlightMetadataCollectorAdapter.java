@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
@@ -100,6 +101,11 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	@Override
 	public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		metadataCollector.addAttributeConverter( converterClass );
+	}
+
+	@Override
+	public void addAttributeConverter(ConverterDescriptor<?, ?> converterDescriptor) {
+		metadataCollector.addAttributeConverter( converterDescriptor );
 	}
 
 	@Override

@@ -91,6 +91,8 @@ public final class SessionFactoryOptionsAdapter {
 				case "getStatementObserver" -> settings.statementObserver();
 				case "getStatementInspector" -> settings.statementInspector();
 				case "getInitialSessionCacheMode" -> settings.initialSessionCacheMode();
+				case "getCacheRetrieveMode" -> settings.defaultCacheRetrieveMode();
+				case "getCacheStoreMode" -> settings.defaultCacheStoreMode();
 				case "getInitialSessionFlushMode" -> org.hibernate.FlushMode.AUTO;
 				case "getDefaultLockOptions" -> org.hibernate.LockOptions.NONE;
 				case "getDefaultNullPrecedence" -> jakarta.persistence.criteria.Nulls.NONE;
@@ -136,6 +138,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "resolveCustomSqmMultiTableMutationStrategy" -> null;
 				case "resolveCustomSqmMultiTableInsertStrategy" -> null;
 				case "getJpaCompliance" -> settings.jpaCompliance();
+				case "getGraphParserMode" -> settings.graphParserMode();
 				case "getCriteriaValueHandlingMode" -> settings.criteriaValueHandlingMode();
 				case "getImmutableEntityUpdateQueryHandlingMode" -> settings.immutableEntityUpdateQueryHandlingMode();
 				case "allowImmutableEntityUpdate" -> settings.immutableEntityUpdateQueryHandlingMode()

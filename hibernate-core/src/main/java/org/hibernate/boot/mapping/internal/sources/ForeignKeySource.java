@@ -7,10 +7,14 @@ package org.hibernate.boot.mapping.internal.sources;
 import java.util.List;
 
 import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.SecondaryTable;
@@ -35,6 +39,22 @@ public interface ForeignKeySource {
 
 	static ForeignKeySource from(JoinColumn joinColumn) {
 		return joinColumn == null ? null : from( joinColumn.foreignKey() );
+	}
+
+	static ForeignKeySource from(JoinColumns joinColumns) {
+		return joinColumns == null ? null : from( joinColumns.foreignKey() );
+	}
+
+	static ForeignKeySource from(MapKeyJoinColumn joinColumn) {
+		return joinColumn == null ? null : from( joinColumn.foreignKey() );
+	}
+
+	static ForeignKeySource from(MapKeyJoinColumns joinColumns) {
+		return joinColumns == null ? null : from( joinColumns.foreignKey() );
+	}
+
+	static ForeignKeySource from(AssociationOverride associationOverride) {
+		return associationOverride == null ? null : from( associationOverride.foreignKey() );
 	}
 
 	static ForeignKeySource from(PrimaryKeyJoinColumn joinColumn) {
@@ -68,6 +88,16 @@ public interface ForeignKeySource {
 
 	static ForeignKeySource fromFirstSpecifiedJoinColumn(List<JoinColumn> joinColumns) {
 		for ( JoinColumn joinColumn : joinColumns ) {
+			final ForeignKeySource foreignKeySource = from( joinColumn );
+			if ( foreignKeySource != null && foreignKeySource.isSpecified() ) {
+				return foreignKeySource;
+			}
+		}
+		return null;
+	}
+
+	static ForeignKeySource fromFirstSpecifiedMapKeyJoinColumn(List<MapKeyJoinColumn> joinColumns) {
+		for ( MapKeyJoinColumn joinColumn : joinColumns ) {
 			final ForeignKeySource foreignKeySource = from( joinColumn );
 			if ( foreignKeySource != null && foreignKeySource.isSpecified() ) {
 				return foreignKeySource;

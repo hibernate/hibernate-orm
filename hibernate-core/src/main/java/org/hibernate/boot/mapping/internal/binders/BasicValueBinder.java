@@ -166,7 +166,7 @@ public class BasicValueBinder {
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler();
 		return switch ( source.kind() ) {
-			case ATTRIBUTE, EMBEDDABLE_MEMBER, IDENTIFIER ->
+			case ATTRIBUTE, EMBEDDABLE_MEMBER ->
 					autoApplyHandler.findAutoApplyConverterForAttribute( source.member(), metadataBuildingContext );
 			case COLLECTION_ELEMENT ->
 					autoApplyHandler.findAutoApplyConverterForCollectionElement( source.member(), metadataBuildingContext );
@@ -485,6 +485,11 @@ public class BasicValueBinder {
 		}
 
 		switch ( source.kind() ) {
+			case ATTRIBUTE, IDENTIFIER -> {
+				if ( attributeName.equals( source.member().resolveAttributeName() ) ) {
+					return;
+				}
+			}
 			case MAP_KEY -> {
 				if ( "key".equals( attributeName ) ) {
 					return;

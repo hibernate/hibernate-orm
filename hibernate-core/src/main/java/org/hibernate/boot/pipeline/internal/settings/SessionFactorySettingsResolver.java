@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 import org.hibernate.CacheMode;
+import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
@@ -30,6 +31,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.cfg.FetchSettings;
+import org.hibernate.cfg.GraphParserSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
@@ -40,6 +42,7 @@ import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
+import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.spi.HqlTranslator;
@@ -54,7 +57,14 @@ import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+
 import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
 
 /// Projects resolved bootstrap settings into settings needed for SessionFactory
@@ -98,6 +108,9 @@ public class SessionFactorySettingsResolver {
 				resolveStatementObserver( configurationValues ),
 				resolveStatementInspector( configurationValues, standardServiceRegistry ),
 				CacheMode.NORMAL,
+				resolveDefaultCacheRetrieveMode( configurationValues ),
+				resolveDefaultCacheStoreMode( configurationValues ),
+				GraphParserMode.interpret( configurationValues.get( GraphParserSettings.GRAPH_PARSER_MODE ) ),
 				resolvePhysicalConnectionHandlingMode( configurationValues, standardServiceRegistry ),
 				resolveJdbcTimeZone( configurationValues ),
 				asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
@@ -152,6 +165,24 @@ public class SessionFactorySettingsResolver {
 				asString( configurationValues.get( MappingSettings.DEFAULT_CATALOG ) ),
 				asString( configurationValues.get( MappingSettings.DEFAULT_SCHEMA ) )
 		);
+	}
+
+	private static CacheRetrieveMode resolveDefaultCacheRetrieveMode(Map<String, Object> configurationValues) {
+		final var legacyRetrieveMode = (CacheRetrieveMode) configurationValues.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		if ( legacyRetrieveMode != null ) {
+			return legacyRetrieveMode;
+		}
+		final var retrieveMode = (CacheRetrieveMode) configurationValues.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE );
+		return retrieveMode == null ? CacheModeHelper.DEFAULT_RETRIEVE_MODE : retrieveMode;
+	}
+
+	private static CacheStoreMode resolveDefaultCacheStoreMode(Map<String, Object> configurationValues) {
+		final var legacyStoreMode = (CacheStoreMode) configurationValues.get( JPA_SHARED_CACHE_STORE_MODE );
+		if ( legacyStoreMode != null ) {
+			return legacyStoreMode;
+		}
+		final var storeMode = (CacheStoreMode) configurationValues.get( JAKARTA_SHARED_CACHE_STORE_MODE );
+		return storeMode == null ? CacheModeHelper.DEFAULT_STORE_MODE : storeMode;
 	}
 
 	private static boolean resolveBidirectionalAssociationManagementEnabled(Map<String, Object> configurationValues) {

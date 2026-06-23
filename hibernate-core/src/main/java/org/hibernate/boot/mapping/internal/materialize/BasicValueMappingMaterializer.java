@@ -33,6 +33,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
 
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.bindImplicitJavaType;
+import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.applyColumnTransformer;
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.processSelectable;
 import static org.hibernate.boot.mapping.internal.binders.BasicValueBinder.bindJavaType;
 import static org.hibernate.boot.mapping.internal.binders.BasicValueBinder.bindJdbcType;
@@ -66,7 +67,7 @@ public class BasicValueMappingMaterializer {
 		property.setLob( member.hasDirectAnnotationUsage( Lob.class ) );
 
 		BasicValueBinder.bindBasicValue(
-				BasicValueSource.attribute( member, attributeBinding.resolvedType() ),
+				BasicValueSource.attribute( member, attributeBinding.resolvedType(), bindingContext ),
 				property,
 				basicValue,
 				bindingOptions,
@@ -112,7 +113,7 @@ public class BasicValueMappingMaterializer {
 
 		processSelectable( basicValueIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
 		BasicValueBinder.bindBasicValue(
-				BasicValueSource.attribute( member ),
+				BasicValueSource.attribute( member, bindingContext ),
 				property,
 				basicValue,
 				bindingOptions,
@@ -155,10 +156,11 @@ public class BasicValueMappingMaterializer {
 			return new MaterializedBasicValue( basicValue, null );
 		}
 
-		final Column column = bindComponentMemberColumn(
-				() -> implicitBasicColumnName( source, componentMember, bindingState, bindingContext ),
-				basicValue,
-				basicValueIntent,
+			final Column column = bindComponentMemberColumn(
+					() -> implicitBasicColumnName( source, componentMember, bindingState, bindingContext ),
+					property,
+					basicValue,
+					basicValueIntent,
 				columnNamingPatterns,
 				uniqueByDefault,
 				nullableByDefault,
@@ -179,6 +181,7 @@ public class BasicValueMappingMaterializer {
 
 	private Column bindComponentMemberColumn(
 			Supplier<String> implicitName,
+			Property property,
 			BasicValue basicValue,
 			BasicValueIntent basicValueIntent,
 			List<String> columnNamingPatterns,
@@ -191,9 +194,10 @@ public class BasicValueMappingMaterializer {
 				implicitName,
 				uniqueByDefault,
 				nullableByDefault
-		);
-		column.setName( applyColumnNamingPatterns( column.getName(), columnNamingPatterns ) );
-		basicValue.addColumn( column, insertable, updatable );
+			);
+			column.setName( applyColumnNamingPatterns( column.getName(), columnNamingPatterns ) );
+			applyColumnTransformer( basicValueIntent, property, column );
+			basicValue.addColumn( column, insertable, updatable );
 		basicValue.getTable().addColumn( column );
 		return column;
 	}

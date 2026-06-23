@@ -104,6 +104,10 @@ class InversePluralAssociationBinder {
 		final EntityTypeBinder targetTypeBinder = resolveTargetTypeBinder( inverseBinding );
 		final Property owningProperty = resolveMappedByProperty( targetTypeBinder, inverseBinding.mappedBy() );
 		final Value owningValue = owningProperty.getValue();
+		if ( owningValue instanceof BasicValue owningBasicValue ) {
+			bindInverseOneToMany( inverseBinding, targetTypeBinder, owningBasicValue );
+			return;
+		}
 		if ( !( owningValue instanceof ManyToOne owningToOne ) ) {
 			throw new MappingException(
 					"Inverse @OneToMany mappedBy did not name an owning to-one attribute - "
@@ -128,6 +132,21 @@ class InversePluralAssociationBinder {
 			inverseCollection.setReferencedPropertyName( owningToOne.getReferencedPropertyName() );
 		}
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningToOne ) );
+		inverseCollection.setElement( createOneToManyElement( inverseBinding, targetTypeBinder ) );
+		bindInverseOneToManyIndex( inverseBinding, targetTypeBinder, inverseCollection );
+		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
+				collectionKeyMappingMaterializer.resolveTableKey( inverseCollection )
+		);
+	}
+
+	private void bindInverseOneToMany(
+			InversePluralAssociationBinding inverseBinding,
+			EntityTypeBinder targetTypeBinder,
+			BasicValue owningBasicValue) {
+		final Collection inverseCollection = inverseBinding.collection();
+		final Table collectionTable = owningBasicValue.getTable();
+		inverseCollection.setCollectionTable( collectionTable );
+		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningBasicValue ) );
 		inverseCollection.setElement( createOneToManyElement( inverseBinding, targetTypeBinder ) );
 		bindInverseOneToManyIndex( inverseBinding, targetTypeBinder, inverseCollection );
 		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
@@ -162,6 +181,33 @@ class InversePluralAssociationBinder {
 		key.setUpdateable( false );
 		for ( Column owningElementColumn : owningElement.getColumns() ) {
 			key.addColumn( copyColumn( collectionTable, owningElementColumn, false ), true, false );
+		}
+		return key;
+	}
+
+	private KeyValue createInverseKey(
+			InversePluralAssociationBinding inverseBinding,
+			Table collectionTable,
+			BasicValue owningBasicValue) {
+		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding(
+				inverseBinding.ownerType().getHierarchy().getRoot()
+		);
+		if ( entityIdentifierBinding == null ) {
+			throw new MappingException(
+					"Could not resolve identifier binding for inverse plural association owner - "
+							+ inverseBinding.ownerBinding().getEntityName()
+			);
+		}
+
+		final DependantValue key = new DependantValue(
+				bindingState.getMetadataBuildingContext(),
+				collectionTable,
+				entityIdentifierBinding.value()
+		);
+		key.setNullable( false );
+		key.setUpdateable( false );
+		for ( Column column : owningBasicValue.getColumns() ) {
+			key.addColumn( copyColumn( collectionTable, column, false ), true, false );
 		}
 		return key;
 	}

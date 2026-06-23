@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -46,6 +48,7 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.JpaEventListener;
 import org.hibernate.boot.mapping.internal.categorize.JpaEventListenerStyle;
+import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.NaturalIdCacheRegion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -81,6 +84,7 @@ import java.util.Map;
 import static org.hibernate.boot.mapping.ModelBindingLogging.MODEL_BINDING_LOGGER;
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotationUsages;
+import static org.hibernate.internal.util.ReflectHelper.ensureAccessibility;
 import static org.hibernate.internal.util.StringHelper.coalesce;
 
 /// Binder for binding an entity type to a {@link PersistentClass}.
@@ -239,6 +243,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		else {
 			final Subclass subclass = (Subclass) binding;
 			final PersistentClass superEntity = superEntityBinder.getTypeBinding();
+			checkOverrides();
 
 			if ( (superTypeBinder == superEntityBinder && superTypeBinder != null) ) {
 				// the super is an entity
@@ -359,6 +364,45 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// split foreign keys and attributes into more focused phases.
 	public void bindMembers() {
 		prepareBinding( modelBinders );
+	}
+
+	private void checkOverrides() {
+		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final ClassDetails classDetails = getManagedType().getClassDetails();
+		classDetails.forEachAnnotationUsage(
+				AttributeOverride.class,
+				modelsContext,
+				(usage) -> checkOverride( usage.name(), classDetails, AttributeOverride.class )
+		);
+		classDetails.forEachAnnotationUsage(
+				AssociationOverride.class,
+				modelsContext,
+				(usage) -> checkOverride( usage.name(), classDetails, AssociationOverride.class )
+		);
+	}
+
+	private void checkOverride(
+			String name,
+			ClassDetails classDetails,
+			Class<?> overrideClass) {
+		final IdentifiableTypeMetadata declaringSuperEntity = findDeclaringSuperEntity( StringHelper.root( name ) );
+		if ( declaringSuperEntity != null ) {
+			throw new AnnotationException( "Property '" + name
+					+ "' is inherited from entity '" + declaringSuperEntity.getClassDetails().getName()
+					+ "' and may not be overridden using '@" + overrideClass.getSimpleName()
+					+ "' in entity subclass '" + classDetails.getName() + "'" );
+		}
+	}
+
+	private IdentifiableTypeMetadata findDeclaringSuperEntity(String attributeName) {
+		IdentifiableTypeMetadata superType = getManagedType().getSuperType();
+		while ( superType != null ) {
+			if ( superType.findAttribute( attributeName ) != null ) {
+				return superType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ? superType : null;
+			}
+			superType = superType.getSuperType();
+		}
+		return null;
 	}
 
 	private void processJpaEventListeners(EntityTypeMetadata type, BindingState state, BindingContext context) {
@@ -556,6 +600,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			Method callbackMethod,
 			JpaEventListenerStyle style,
 			CallbackType callbackType) {
+		ensureAccessibility( callbackMethod );
 		final CallbackDefinition callback;
 		if ( style == JpaEventListenerStyle.CALLBACK ) {
 			callback = new EntityCallbackDefinition( callbackMethod, callbackType );
@@ -581,8 +626,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			}
 			else {
 				final ClassDetails argClassDetails = callbackMethod.getArgumentTypes().get( 0 );
-				// we don't
-				return callbackTarget.getMethod( callbackMethod.getName(), argClassDetails.toJavaClass() );
+				return callbackTarget.getDeclaredMethod( callbackMethod.getName(), argClassDetails.toJavaClass() );
 			}
 		}
 		catch (NoSuchMethodException e) {
@@ -813,7 +857,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		if ( ann == null ) {
 			final Type resolvedJavaType = discriminatorMapping.resolve().getRelationalJavaType().getJavaType();
 			if ( resolvedJavaType == String.class ) {
-				typeBinding.setDiscriminatorValue( typeBinding.getJpaEntityName() );
+				// Match legacy EntityBinder#name for implicit discriminator values:
+				// @Entity(name) when present, otherwise the unqualified class name.
+				typeBinding.setDiscriminatorValue( managedType.getJpaEntityName() );
 			}
 			else {
 				typeBinding.setDiscriminatorValue( Integer.toString( typeBinding.getSubclassId() ) );

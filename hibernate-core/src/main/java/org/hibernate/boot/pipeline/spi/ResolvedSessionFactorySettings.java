@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 import org.hibernate.CacheMode;
+import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
@@ -33,6 +34,9 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 /// Resolved settings used while building the runtime SessionFactory.
 /// This is intentionally focused on values needed by the next SessionFactory
@@ -73,6 +77,15 @@ public record ResolvedSessionFactorySettings(
 
 		/// Initial cache mode for newly opened sessions.
 		CacheMode initialSessionCacheMode,
+
+		/// Default JPA cache retrieve mode for newly opened sessions and find operations.
+		CacheRetrieveMode defaultCacheRetrieveMode,
+
+		/// Default JPA cache store mode for newly opened sessions and find operations.
+		CacheStoreMode defaultCacheStoreMode,
+
+		/// Parser mode used for Hibernate entity graph text parsing.
+		GraphParserMode graphParserMode,
 
 		/// Physical JDBC connection handling mode for sessions.
 		PhysicalConnectionHandlingMode physicalConnectionHandlingMode,
@@ -236,6 +249,9 @@ public record ResolvedSessionFactorySettings(
 			Objects.requireNonNull( jpaCompliance );
 			Objects.requireNonNull( criteriaValueHandlingMode );
 			Objects.requireNonNull( immutableEntityUpdateQueryHandlingMode );
+			Objects.requireNonNull( defaultCacheRetrieveMode );
+			Objects.requireNonNull( defaultCacheStoreMode );
+			Objects.requireNonNull( graphParserMode );
 			Objects.requireNonNull( defaultTenantIdentifierJavaType );
 		}
 
@@ -255,6 +271,9 @@ public record ResolvedSessionFactorySettings(
 				statementObserver,
 				statementInspector,
 				initialSessionCacheMode,
+				defaultCacheRetrieveMode,
+				defaultCacheStoreMode,
+				graphParserMode,
 				physicalConnectionHandlingMode,
 				jdbcTimeZone,
 				flushBeforeCompletionEnabled,

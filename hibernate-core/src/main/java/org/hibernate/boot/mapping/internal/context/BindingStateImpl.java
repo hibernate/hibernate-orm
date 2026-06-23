@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.internal.FilterDefBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.naming.Identifier;
@@ -201,6 +202,11 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		metadataCollector.addAttributeConverter( converterClass );
+	}
+
+	@Override
+	public void addAttributeConverter(ConverterDescriptor<?, ?> converterDescriptor) {
+		metadataCollector.addAttributeConverter( converterDescriptor );
 	}
 
 	@Override

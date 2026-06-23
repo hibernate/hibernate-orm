@@ -40,7 +40,6 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
-import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -57,6 +56,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.SecondaryTable;
 
 /// Binds to-one attributes and association values.
@@ -332,13 +332,13 @@ class ToOneAttributeBinder {
 		final MapsId mapsId = member.getDirectAnnotationUsage( MapsId.class );
 		value.setReferencedEntityName( target.entityName() );
 		value.setReferenceToPrimaryKey( referenceToPrimaryKey );
-		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName );
-		value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
-		ToOneMaterializationHelper.applyFetchMode( source, value );
-		applyOnDelete( member, value );
-		applyNotFound( source, value );
-		applyFetchProfileOverrides( source, ownerBinding, propertyName, bindingState );
+			value.setTypeName( target.entityName() );
+			value.setTypeUsingReflection( ownerClassName, propertyName );
+			value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
+			ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding );
+			applyOnDelete( member, value );
+			applyNotFound( source, value );
+			applyFetchProfileOverrides( source, ownerBinding, propertyName, bindingState );
 
 		final boolean logicalOneToOne = source.isLogicalOneToOne();
 		if ( logicalOneToOne ) {
@@ -472,11 +472,11 @@ class ToOneAttributeBinder {
 		);
 		value.setPropertyName( propertyName );
 		value.setReferencedEntityName( target.entityName() );
-		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName );
-		value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
-		ToOneMaterializationHelper.applyFetchMode( source, value );
-		value.setConstrained( !source.optional() );
+			value.setTypeName( target.entityName() );
+			value.setTypeUsingReflection( ownerClassName, propertyName );
+			value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
+			ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding );
+			value.setConstrained( !source.optional() );
 		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
 		value.setMappedByProperty( source.oneToOne().mappedBy() );
 		applyOnDelete( member, value );
@@ -520,14 +520,12 @@ class ToOneAttributeBinder {
 				throw new AnnotationException( "Property '" + ownerBinding.getEntityName() + "." + propertyName
 						+ "' refers to an unknown fetch profile named '" + override.profile() + "'" );
 			}
-			if ( profile.getSource() == MetadataSource.OTHER || profile.getSource() == MetadataSource.ANNOTATIONS ) {
-				profile.addFetch( new FetchProfile.Fetch(
-						ownerBinding.getEntityName(),
-						propertyName,
-						override.mode(),
-						override.fetch()
-				) );
-			}
+			profile.addFetch( new FetchProfile.Fetch(
+					ownerBinding.getEntityName(),
+					propertyName,
+					override.mode(),
+					override.fetch()
+			) );
 		}
 	}
 
@@ -734,6 +732,10 @@ class ToOneAttributeBinder {
 		if ( referencesPrimaryKeySources( joinColumns, target.identifierColumns(), database ) ) {
 			return target.identifierColumns();
 		}
+		final PrimaryKeyJoinColumn[] primaryKeyJoinColumns = targetPrimaryKeyJoinColumns( target );
+		if ( referencesPrimaryKeyJoinColumns( joinColumns, primaryKeyJoinColumns, database ) ) {
+			return primaryKeyJoinColumns( primaryKeyJoinColumns );
+		}
 		final SecondaryTable[] secondaryTables = target.typeBinder()
 				.getManagedType()
 				.getClassDetails()
@@ -765,6 +767,9 @@ class ToOneAttributeBinder {
 				|| joinColumns.stream().noneMatch( (joinColumn) -> StringHelper.isNotEmpty( joinColumn.referencedColumnName() ) ) ) {
 			return false;
 		}
+		if ( referencesPrimaryKeyJoinColumns( joinColumns, targetPrimaryKeyJoinColumns( target ), database ) ) {
+			return true;
+		}
 		final SecondaryTable[] secondaryTables = target.typeBinder()
 				.getManagedType()
 				.getClassDetails()
@@ -778,6 +783,20 @@ class ToOneAttributeBinder {
 			}
 		}
 		return false;
+	}
+
+	private static PrimaryKeyJoinColumn[] targetPrimaryKeyJoinColumns(TargetEntityBinding target) {
+		final ClassDetails classDetails = target.typeBinder().getManagedType().getClassDetails();
+		final PrimaryKeyJoinColumns primaryKeyJoinColumns = classDetails.getDirectAnnotationUsage(
+				PrimaryKeyJoinColumns.class
+		);
+		if ( primaryKeyJoinColumns != null ) {
+			return primaryKeyJoinColumns.value();
+		}
+		return classDetails.getRepeatedAnnotationUsages(
+				PrimaryKeyJoinColumn.class,
+				target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+		);
 	}
 
 	private static boolean referencesPrimaryKeyJoinColumns(

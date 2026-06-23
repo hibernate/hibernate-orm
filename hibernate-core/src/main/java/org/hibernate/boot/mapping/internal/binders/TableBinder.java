@@ -383,7 +383,7 @@ public class TableBinder {
 		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
 				explicitSchemaName( tableSource, logicalSchemaName ),
 				explicitCatalogName( tableSource, logicalCatalogName ),
-				tableSource.nonEmptyName() != null ? logicalName.getText() : logicalName.getCanonicalName(),
+				nameForAddTable( logicalName, tableSource.nonEmptyName() != null ),
 				null,
 				type.isAbstract(),
 				bindingState.getMetadataBuildingContext(),
@@ -675,7 +675,7 @@ public class TableBinder {
 		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
 				explicitSchemaName( tableSource, schemaName ),
 				explicitCatalogName( tableSource, catalogName ),
-				tableSource.nonEmptyName() != null ? logicalName.getText() : logicalName.getCanonicalName(),
+				nameForAddTable( logicalName, tableSource.nonEmptyName() != null ),
 				null,
 				false,
 				bindingState.getMetadataBuildingContext(),
@@ -732,6 +732,10 @@ public class TableBinder {
 			return null;
 		}
 		return name.getCanonicalName();
+	}
+
+	private String nameForAddTable(Identifier logicalName, boolean explicit) {
+		return explicit ? logicalName.render() : logicalName.getCanonicalName();
 	}
 
 	private Identifier resolveDatabaseIdentifier(

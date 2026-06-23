@@ -21,6 +21,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
@@ -120,6 +121,11 @@ class AssociationTargetBinder {
 			return null;
 		}
 		if ( sourceSecondaryTableKeyMatches( associationTargetBinding, referencedColumnNames ) ) {
+			return identifierProperty;
+		}
+		if ( targetBinding instanceof JoinedSubclass joinedSubclass
+				&& joinedSubclass.getKey() != null
+				&& columnNamesMatch( joinedSubclass.getKey().getColumns(), referencedColumnNames ) ) {
 			return identifierProperty;
 		}
 		for ( Join join : targetBinding.getJoins() ) {

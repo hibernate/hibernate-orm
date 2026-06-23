@@ -17,6 +17,9 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.SharedSessionContract;
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -546,8 +549,12 @@ public class AnnotationCoverageBindingTests {
 					final BasicValue computed = (BasicValue) entityBinding.getProperty( "computed" ).getValue();
 					final ManyToOne directFormulaTarget = (ManyToOne) entityBinding.getProperty( "directFormulaTarget" )
 							.getValue();
+					final org.hibernate.mapping.Any anyFormulaTarget =
+							(org.hibernate.mapping.Any) entityBinding.getProperty( "anyFormulaTarget" ).getValue();
 					final org.hibernate.mapping.Collection tags = context.getMetadataCollector()
 							.getCollectionBinding( DialectOverrideRoot.class.getName() + ".tags" );
+					final org.hibernate.mapping.Collection restrictedTargets = context.getMetadataCollector()
+							.getCollectionBinding( DialectOverrideRoot.class.getName() + ".restrictedTargets" );
 
 					assertThat( ( (org.hibernate.mapping.Formula) discriminator.getColumn() ).getFormula() )
 							.isEqualTo( "override_kind" );
@@ -563,6 +570,9 @@ public class AnnotationCoverageBindingTests {
 								assertThat( ( (org.hibernate.mapping.Formula) selectable ).getFormula() )
 										.isEqualTo( "override_target_id" );
 							} );
+					assertThat( ( (org.hibernate.mapping.Formula) anyFormulaTarget.getDiscriminatorDescriptor()
+							.getColumn() ).getFormula() )
+							.isEqualTo( "override_any_target_type" );
 					assertThat( entityBinding.getWhere() ).isEqualTo( "override_visible = true" );
 					assertThat( entityBinding.getTable().getChecks() )
 							.singleElement()
@@ -594,6 +604,8 @@ public class AnnotationCoverageBindingTests {
 							.getNamedNativeQueryMapping( tags.getLoaderName() )
 							.getSqlQueryString() )
 							.isEqualTo( "select tag from dialect_override_tags where root_id = ? and override_loader = true" );
+					assertThat( restrictedTargets.getManyToManyWhere() )
+							.isEqualTo( "override_target_visible = true" );
 				},
 				scope.getRegistry(),
 				DialectOverrideRoot.class,
@@ -1798,6 +1810,24 @@ public class AnnotationCoverageBindingTests {
 				dialect = DialectOverrideDialect.class,
 				override = @SQLSelect(sql = "select tag from dialect_override_tags where root_id = ? and override_loader = true"))
 		private Set<String> tags;
+
+		@Any
+		@Formula("base_any_target_type")
+		@DialectOverride.Formula(
+				dialect = DialectOverrideDialect.class,
+				override = @Formula("override_any_target_type"))
+		@JoinColumn(name = "any_target_id")
+		@AnyKeyJavaClass(Integer.class)
+		@AnyDiscriminatorValue(discriminator = "target", entity = DialectOverrideTarget.class)
+		private DialectOverrideTarget anyFormulaTarget;
+
+		@ManyToMany
+		@JoinTable(
+				name = "dialect_override_root_targets",
+				joinColumns = @JoinColumn(name = "root_id"),
+				inverseJoinColumns = @JoinColumn(name = "target_id")
+		)
+		private Set<DialectOverrideTarget> restrictedTargets;
 	}
 
 	@Entity(name = "DialectOverrideSubtype")
@@ -1807,6 +1837,9 @@ public class AnnotationCoverageBindingTests {
 
 	@Entity(name = "DialectOverrideTarget")
 	@Table(name = "dialect_override_targets")
+	@DialectOverride.SQLRestriction(
+			dialect = DialectOverrideDialect.class,
+			override = @SQLRestriction("override_target_visible = true"))
 	public static class DialectOverrideTarget {
 		@Id
 		@Column(name = "id")

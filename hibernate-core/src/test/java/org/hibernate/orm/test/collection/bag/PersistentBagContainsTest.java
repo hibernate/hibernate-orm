@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import jakarta.persistence.Table;
 import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -82,7 +83,8 @@ public class PersistentBagContainsTest {
 		} );
 	}
 
-	@Entity(name = "`Order`")
+	@Entity(name = "Order")
+	@Table(name = "`Order`")
 	public static class Order {
 
 		@Id

@@ -61,10 +61,10 @@ public class SimpleSingleTableTests {
 					assertThat( ( (Column) discriminatorMapping.getColumn() ).getName() ).isEqualToIgnoringCase( "dtype" );
 					assertThat( discriminatorMapping.resolve().getDomainJavaType().getJavaType() ).isEqualTo( String.class );
 
-					assertThat( rootBinding.getDiscriminatorValue() ).isEqualTo( Root.class.getName() );
+					assertThat( rootBinding.getDiscriminatorValue() ).isEqualTo( "Root" );
 
 					assertThat( subBinding.getTable() ).isSameAs( rootBinding.getTable() );
-					assertThat( subBinding.getDiscriminatorValue() ).isEqualTo( Sub.class.getName() );
+					assertThat( subBinding.getDiscriminatorValue() ).isEqualTo( "Sub" );
 				},
 				scope.getRegistry(),
 				Root.class,

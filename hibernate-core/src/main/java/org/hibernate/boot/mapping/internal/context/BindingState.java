@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.context;
 
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
@@ -115,6 +116,9 @@ public interface BindingState {
 
 	/// Register an auto-apply converter for eventual publication to the metadata collector.
 	void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass);
+
+	/// Register an auto-apply converter for eventual publication to the metadata collector.
+	void addAttributeConverter(ConverterDescriptor<?, ?> converterDescriptor);
 
 	/// Register an explicit converter for eventual publication to the metadata collector.
 	void addRegisteredConversion(RegisteredConversion registeredConversion);

@@ -11,6 +11,9 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyKeyJavaType;
 import org.hibernate.boot.internal.AnyKeyType;
+import org.hibernate.boot.model.naming.ImplicitAnyDiscriminatorColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitAnyKeyColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -31,6 +34,7 @@ import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 import jakarta.persistence.DiscriminatorType;
 
@@ -105,7 +109,7 @@ class AnyValueBinder {
 		else {
 			final Column column = ColumnBinder.bindColumn(
 					ColumnSource.from( source.discriminatorColumn() ),
-					() -> propertyName + "_type",
+					() -> implicitAnyDiscriminatorColumnName( source ),
 					false,
 					source.effectiveOptional(),
 					defaultDiscriminatorLength( source.discriminatorType() ),
@@ -134,7 +138,7 @@ class AnyValueBinder {
 		if ( source.keyColumns().isEmpty() ) {
 			final Column column = ColumnBinder.bindColumn(
 					null,
-					() -> propertyName + "_id",
+					() -> implicitAnyKeyColumnName( source ),
 					false,
 					source.effectiveOptional()
 			);
@@ -146,7 +150,9 @@ class AnyValueBinder {
 				final int index = i;
 				final Column column = ColumnBinder.bindColumn(
 						ColumnSource.from( source.keyColumns().get( index ) ),
-						() -> index == 0 ? propertyName + "_id" : propertyName + "_id" + ( index + 1 ),
+						() -> index == 0
+								? implicitAnyKeyColumnName( source )
+								: implicitAnyKeyColumnName( source ) + ( index + 1 ),
 						false,
 						source.effectiveOptional()
 				);
@@ -164,6 +170,38 @@ class AnyValueBinder {
 				bindingContext
 		);
 		return key;
+	}
+
+	private String implicitAnyDiscriminatorColumnName(AnySource source) {
+		return bindingContext.getImplicitNamingStrategy()
+				.determineAnyDiscriminatorColumnName( new ImplicitAnyDiscriminatorColumnNameSource() {
+					@Override
+					public AttributePath getAttributePath() {
+						return AttributePath.parse( source.member().resolveAttributeName() );
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return bindingState.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
+	}
+
+	private String implicitAnyKeyColumnName(AnySource source) {
+		return bindingContext.getImplicitNamingStrategy()
+				.determineAnyKeyColumnName( new ImplicitAnyKeyColumnNameSource() {
+					@Override
+					public AttributePath getAttributePath() {
+						return AttributePath.parse( source.member().resolveAttributeName() );
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return bindingState.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
 	}
 
 	private void addAdditionalKeySelectables(Any any, BasicValue key) {

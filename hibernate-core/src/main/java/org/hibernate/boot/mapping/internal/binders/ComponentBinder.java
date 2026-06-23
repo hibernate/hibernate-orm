@@ -262,6 +262,7 @@ public class ComponentBinder {
 						source.componentType().getClassName(),
 						attributeName
 				);
+				embeddableMappingMaterializer.prepareComponentForBinding( nestedComponent, nestedSource );
 
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
 				component.addProperty( property, componentMember.declaringType() );
@@ -396,13 +397,13 @@ public class ComponentBinder {
 		final ManyToOne value = new ManyToOne( state.getMetadataBuildingContext(), valueTable );
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setReferenceToPrimaryKey( true );
-		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
-		value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
-		ToOneMaterializationHelper.applyFetchMode( source, value );
-		if ( source.isLogicalOneToOne() ) {
-			value.markAsLogicalOneToOne();
-		}
+			value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
+			value.setTypeUsingReflection( componentType.getClassName(), attributeName );
+			value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
+			ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding );
+			if ( source.isLogicalOneToOne() ) {
+				value.markAsLogicalOneToOne();
+			}
 		property.setOptional( false );
 		property.setCascade( source.cascades( state ), source.orphanRemoval() );
 
@@ -438,11 +439,11 @@ public class ComponentBinder {
 		value.setPropertyName( attributeName );
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setReferenceToPrimaryKey( true );
-		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
-		value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
-		ToOneMaterializationHelper.applyFetchMode( source, value );
-		value.setConstrained( true );
+			value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
+			value.setTypeUsingReflection( componentType.getClassName(), attributeName );
+			value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
+			ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding );
+			value.setConstrained( true );
 		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
 		value.setMappedByProperty( source.oneToOne().mappedBy() );
 		property.setOptional( false );

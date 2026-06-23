@@ -14,6 +14,7 @@ import org.hibernate.boot.mapping.internal.binders.CascadeBinder;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
@@ -189,8 +190,7 @@ public record ToOneSource(
 	/// The effective fetch style requested by graphless JPA `@Fetch`, if present,
 	/// or by the active association annotation.
 	public FetchType effectiveFetchType(FetchType defaultToOneFetchType) {
-		final org.hibernate.annotations.Fetch hibernateFetch = hibernateFetch();
-		if ( hibernateFetch != null && hibernateFetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+		if ( hibernateFetchMode() == FetchMode.JOIN ) {
 			return FetchType.EAGER;
 		}
 		final Fetch fetch = graphlessFetch();
@@ -214,8 +214,9 @@ public record ToOneSource(
 		return null;
 	}
 
-	public org.hibernate.annotations.Fetch hibernateFetch() {
-		return member.getDirectAnnotationUsage( org.hibernate.annotations.Fetch.class );
+	public FetchMode hibernateFetchMode() {
+		final org.hibernate.annotations.Fetch fetch = member.getDirectAnnotationUsage( org.hibernate.annotations.Fetch.class );
+		return fetch == null ? null : fetch.value();
 	}
 
 	/// The optionality declared by the active association annotation.
@@ -307,6 +308,19 @@ public record ToOneSource(
 			return ForeignKeySource.firstSpecified(
 					ForeignKeySource.fromFirstSpecifiedJoinColumn( listJoinColumns( joinTable.inverseJoinColumns() ) ),
 					ForeignKeySource.inverseFrom( joinTable )
+			);
+		}
+		if ( associationOverride != null ) {
+			return ForeignKeySource.firstSpecified(
+					ForeignKeySource.fromFirstSpecifiedJoinColumn( listJoinColumns( associationOverride.joinColumns() ) ),
+					ForeignKeySource.from( associationOverride )
+			);
+		}
+		final JoinColumns joinColumnsAnn = member.getDirectAnnotationUsage( JoinColumns.class );
+		if ( joinColumnsAnn != null ) {
+			return ForeignKeySource.firstSpecified(
+					ForeignKeySource.fromFirstSpecifiedJoinColumn( listJoinColumns( joinColumnsAnn.value() ) ),
+					ForeignKeySource.from( joinColumnsAnn )
 			);
 		}
 		final List<JoinColumn> joinColumns = joinColumns();

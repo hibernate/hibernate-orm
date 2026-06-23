@@ -11,6 +11,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -520,6 +522,46 @@ public record ComponentSource(
 
 		final Column column = member.getDirectAnnotationUsage( Column.class );
 		return ColumnSource.from( column );
+	}
+
+	public ColumnTransformer columnTransformer(String path, MemberDetails member, BindingContext bindingContext) {
+		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final ColumnTransformer directTransformer = member.getAnnotationUsage( ColumnTransformer.class, modelsContext );
+		if ( directTransformer != null ) {
+			return directTransformer;
+		}
+		final var override = locateAttributeOverride( path );
+		if ( override == null || sourceMember == null ) {
+			return null;
+		}
+		final String columnName = override.column() == null ? null : override.column().name();
+		final ColumnTransformer sourceTransformer = sourceMember.getAnnotationUsage( ColumnTransformer.class, modelsContext );
+		if ( sourceTransformer != null && columnTransformerMatches( sourceTransformer, columnName ) ) {
+			return sourceTransformer;
+		}
+		final ColumnTransformers sourceTransformers = sourceMember.getAnnotationUsage( ColumnTransformers.class, modelsContext );
+		if ( sourceTransformers != null ) {
+			for ( ColumnTransformer transformer : sourceTransformers.value() ) {
+				if ( columnTransformerMatches( transformer, columnName ) ) {
+					return transformer;
+				}
+			}
+		}
+		for ( ColumnTransformer transformer : sourceMember.getRepeatedAnnotationUsages(
+				ColumnTransformer.class,
+				modelsContext
+		) ) {
+			if ( columnTransformerMatches( transformer, columnName ) ) {
+				return transformer;
+			}
+		}
+		return null;
+	}
+
+	private boolean columnTransformerMatches(ColumnTransformer transformer, String columnName) {
+		return StringHelper.isEmpty( transformer.forColumn() )
+				? StringHelper.isEmpty( columnName )
+				: transformer.forColumn().equals( columnName );
 	}
 
 	public ColumnSource discriminatorColumnSource() {

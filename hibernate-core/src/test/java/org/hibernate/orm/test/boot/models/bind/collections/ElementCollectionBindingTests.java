@@ -38,7 +38,12 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IncrementGenerator;
@@ -69,6 +74,7 @@ import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
@@ -332,6 +338,30 @@ public class ElementCollectionBindingTests {
 					assertThat( index.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "labels_ORDER" );
+				},
+				scope.getRegistry(),
+				ImplicitListOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+			value = "org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests$CollectionIndexImplicitNamingStrategy"
+	))
+	void testImplicitOrderColumnUsesImplicitNamingStrategy(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ImplicitListOwner.class.getName() );
+					final org.hibernate.mapping.List collection = (org.hibernate.mapping.List) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue index = (BasicValue) collection.getIndex();
+
+					assertThat( index.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "implicit_list_index_labels" );
 				},
 				scope.getRegistry(),
 				ImplicitListOwner.class
@@ -606,7 +636,7 @@ public class ElementCollectionBindingTests {
 					assertThat( property.getValue() ).isInstanceOf( org.hibernate.mapping.Set.class );
 					final Collection collection = (Collection) property.getValue();
 					assertThat( collection.getOrderBy() ).isEqualTo( "label desc" );
-					assertThat( collection.getSqlOrderBy() ).isEqualTo( "label desc" );
+					assertThat( collection.getSqlOrderBy() ).isNull();
 					assertThat( collection.getJpaOrderBy() ).isNull();
 					assertThat( collection.isSorted() ).isFalse();
 				},
@@ -728,6 +758,30 @@ public class ElementCollectionBindingTests {
 					assertThat( key.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "labels_KEY" );
+				},
+				scope.getRegistry(),
+				ImplicitMapOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+			value = "org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests$CollectionIndexImplicitNamingStrategy"
+	))
+	void testImplicitMapKeyColumnUsesImplicitNamingStrategy(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ImplicitMapOwner.class.getName() );
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue key = (BasicValue) collection.getIndex();
+
+					assertThat( key.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "implicit_map_key_labels" );
 				},
 				scope.getRegistry(),
 				ImplicitMapOwner.class
@@ -1225,6 +1279,24 @@ public class ElementCollectionBindingTests {
 				scope.getRegistry(),
 				NestedConvertedEmbeddableElementOwner.class
 		);
+	}
+
+	public static class CollectionIndexImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
+		@Override
+		public Identifier determineListIndexColumnName(ImplicitIndexColumnNameSource source) {
+			return toIdentifier(
+					"implicit_list_index_" + source.getPluralAttributePath().getProperty(),
+					source.getBuildingContext()
+			);
+		}
+
+		@Override
+		public Identifier determineMapKeyColumnName(ImplicitMapKeyColumnNameSource source) {
+			return toIdentifier(
+					"implicit_map_key_" + source.getPluralAttributePath().getProperty(),
+					source.getBuildingContext()
+			);
+		}
 	}
 
 	@Entity(name="SetOwner")

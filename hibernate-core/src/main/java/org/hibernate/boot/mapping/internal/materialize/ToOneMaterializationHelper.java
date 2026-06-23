@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.materialize;
 
 import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.ToOne;
 
 /// Shared materialization helpers for to-one mapping values.
@@ -21,16 +22,23 @@ public final class ToOneMaterializationHelper {
 	}
 
 	public static void applyFetchMode(ToOneSource source, ToOne value) {
-		final org.hibernate.annotations.Fetch fetch = source.hibernateFetch();
-		if ( fetch == null ) {
+		final org.hibernate.annotations.FetchMode fetchMode = source.hibernateFetchMode();
+		if ( fetchMode == null ) {
 			value.setFetchStyle( value.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN );
 			return;
 		}
 
-		value.setFetchStyle( fetchStyle( fetch.value() ) );
-		if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+		value.setFetchStyle( fetchStyle( fetchMode ) );
+		if ( fetchMode == org.hibernate.annotations.FetchMode.JOIN ) {
 			value.setLazy( false );
 			value.setUnwrapProxy( false );
+		}
+	}
+
+	public static void applyFetchMode(ToOneSource source, ToOne value, PersistentClass ownerBinding) {
+		applyFetchMode( source, value );
+		if ( source.hibernateFetchMode() == org.hibernate.annotations.FetchMode.SUBSELECT ) {
+			ownerBinding.setSubselectLoadableAttributes( true );
 		}
 	}
 

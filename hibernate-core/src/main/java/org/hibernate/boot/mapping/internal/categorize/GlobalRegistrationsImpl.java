@@ -7,12 +7,13 @@ package org.hibernate.boot.mapping.internal.categorize;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
@@ -59,6 +60,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
+import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -68,6 +70,7 @@ import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedNativeStatement;
@@ -78,14 +81,13 @@ import jakarta.persistence.QueryHint;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.AttributeConverter;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.hibernate.boot.models.JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY;
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.mapping.internal.xml.QueryProcessing.collectResultClasses;
-import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -102,6 +104,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 	private List<JpaEventListener> jpaEventListeners;
 	private List<ConversionRegistration> converterRegistrations;
+	private Set<JpaConverterRegistration> jpaConverters;
 	private List<JavaTypeRegistration> javaTypeRegistrations;
 	private List<JdbcTypeRegistration> jdbcTypeRegistrations;
 	private List<UserTypeRegistration> userTypeRegistrations;
@@ -156,6 +159,11 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	@Override
 	public List<ConversionRegistration> getConverterRegistrations() {
 		return converterRegistrations == null ? emptyList() : converterRegistrations;
+	}
+
+	@Override
+	public Set<JpaConverterRegistration> getJpaConverters() {
+		return jpaConverters == null ? emptySet() : jpaConverters;
 	}
 
 	@Override
@@ -328,21 +336,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		if ( converter == null || !( annotationTarget instanceof ClassDetails converterType ) ) {
 			return;
 		}
-		final ClassDetails domainType = converterDomainType( converterType );
-		collectConverterRegistration( new ConversionRegistration(
-				domainType,
-				converterType,
-				converter.autoApply(),
-				descriptorRegistry.getDescriptor( Converter.class )
-		) );
-	}
-
-	private ClassDetails converterDomainType(ClassDetails converterType) {
-		final Type[] typeArguments = typeArguments( AttributeConverter.class, converterType.toJavaClass() );
-		if ( typeArguments.length == 0 || !( typeArguments[0] instanceof Class<?> domainType ) ) {
-			return null;
-		}
-		return classDetailsRegistry.resolveClassDetails( domainType.getName() );
+		collectJpaConverter( new JpaConverterRegistration( converterType, null ) );
 	}
 
 	public void collectConverterRegistrations(List<JaxbConverterRegistrationImpl> registrations) {
@@ -379,13 +373,15 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 		converters.forEach( (jaxbConverter) -> {
 			final ClassDetails converterType = classDetailsRegistry.resolveClassDetails( jaxbConverter.getClazz() );
-			collectConverterRegistration( new ConversionRegistration(
-					null,
-					converterType,
-					jaxbConverter.isAutoApply(),
-					descriptorRegistry.getDescriptor( Converter.class )
-			) );
+			collectJpaConverter( new JpaConverterRegistration( converterType, jaxbConverter.isAutoApply() ) );
 		} );
+	}
+
+	public void collectJpaConverter(JpaConverterRegistration conversion) {
+		if ( jpaConverters == null ) {
+			jpaConverters = new HashSet<>();
+		}
+		jpaConverters.add( conversion );
 	}
 
 
@@ -706,6 +702,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 	public void collectNamedEntityGraphRegistrations(ClassDetails classDetails) {
 		for ( NamedEntityGraph usage : classDetails.getRepeatedAnnotationUsages( NamedEntityGraph.class, modelsContext ) ) {
+			if ( !classDetails.hasDirectAnnotationUsage( Entity.class ) && StringHelper.isEmpty( usage.name() ) ) {
+				throw new AnnotationException(
+						"Unnamed @NamedEntityGraph is only valid when declared on an entity type - "
+								+ classDetails.getName()
+				);
+			}
 			final String jpaEntityName = jpaEntityName( classDetails );
 			collectNamedEntityGraphRegistration(
 					graphName( classDetails, usage ),
@@ -735,6 +737,10 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			NamedGraphCreator graphCreator) {
 		if ( namedEntityGraphRegistrations == null ) {
 			namedEntityGraphRegistrations = new HashMap<>();
+		}
+		final var existing = namedEntityGraphRegistrations.get( name );
+		if ( existing != null && !existing.entityName().equals( entityName ) ) {
+			return;
 		}
 		namedEntityGraphRegistrations.put( name, new NamedEntityGraphDefinition(
 				name,
@@ -775,10 +781,15 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				fetchOverrides.add( new FetchProfileRegistration.FetchOverride(
 						jaxbFetch.getEntity(),
 						jaxbFetch.getAssociation(),
-						jaxbFetch.getStyle()
+						fetchMode( jaxbFetch.getStyle() ),
+						FetchType.EAGER
 				) );
 			}
-			fetchProfileRegistrations.add( new FetchProfileRegistration( jaxbFetchProfile.getName(), fetchOverrides ) );
+			fetchProfileRegistrations.add( new FetchProfileRegistration(
+					jaxbFetchProfile.getName(),
+					MetadataSource.OTHER,
+					fetchOverrides
+			) );
 		}
 	}
 
@@ -793,11 +804,27 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				fetchOverrides.add( new FetchProfileRegistration.FetchOverride(
 						fetchOverride.entity().getName(),
 						fetchOverride.association(),
-						fetchOverride.mode().name()
+						fetchOverride.mode(),
+						fetchOverride.fetch()
 				) );
 			}
-			fetchProfileRegistrations.add( new FetchProfileRegistration( usage.name(), fetchOverrides ) );
+			fetchProfileRegistrations.add( new FetchProfileRegistration(
+					usage.name(),
+					MetadataSource.ANNOTATIONS,
+					fetchOverrides
+			) );
 		}
+	}
+
+	private static org.hibernate.annotations.FetchMode fetchMode(String style) {
+		if ( style != null ) {
+			for ( org.hibernate.annotations.FetchMode mode : org.hibernate.annotations.FetchMode.values() ) {
+				if ( mode.name().equalsIgnoreCase( style ) ) {
+					return mode;
+				}
+			}
+		}
+		return org.hibernate.annotations.FetchMode.JOIN;
 	}
 
 	public void collectImportRenames(List<JaxbHqlImportImpl> imports) {

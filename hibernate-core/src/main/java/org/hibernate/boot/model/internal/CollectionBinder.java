@@ -1345,7 +1345,7 @@ public abstract class CollectionBinder {
 		if ( ordered ) {
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
 			if ( sqlOrder != null ) {
-				collection.setSqlOrderBy( sqlOrder.value() );
+				collection.setOrderBy( sqlOrder.value() );
 			}
 		}
 

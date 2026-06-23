@@ -13,6 +13,7 @@ import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SchemaManagementAction;
 
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
@@ -172,6 +173,9 @@ public class SessionFactoryBootstrap {
 		}
 		catch (Exception e) {
 			bootstrapServiceRegistry.close();
+			if ( e instanceof MappingException mappingException ) {
+				throw mappingException;
+			}
 			throw new PersistenceException(
 					"Unable to build Hibernate SessionFactory  [persistence unit: "
 							+ persistenceUnitDescriptor.getName() + "] ",

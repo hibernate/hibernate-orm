@@ -94,6 +94,7 @@ public record BasicValueIntent(
 				columnSource == null || columnSource.insertable( true ),
 				columnSource == null || columnSource.updatable( true ),
 				member.member(),
+				source.columnTransformer( member.path(), member.member(), bindingContext ),
 				source.conversion( member.path(), member.member() )
 		);
 	}
@@ -169,8 +170,26 @@ public record BasicValueIntent(
 			boolean updatable,
 			MemberDetails member,
 			Convert conversion) {
+		return columnIntent(
+				columnSource,
+				tableName,
+				insertable,
+				updatable,
+				member,
+				member.getDirectAnnotationUsage( ColumnTransformer.class ),
+				conversion
+		);
+	}
+
+	private static BasicValueIntent columnIntent(
+			ColumnSource columnSource,
+			String tableName,
+			boolean insertable,
+			boolean updatable,
+			MemberDetails member,
+			ColumnTransformer transformerAnn,
+			Convert conversion) {
 		final Array arrayAnn = member.getDirectAnnotationUsage( Array.class );
-		final ColumnTransformer transformerAnn = member.getDirectAnnotationUsage( ColumnTransformer.class );
 		return new BasicValueIntent(
 				null,
 				columnSource,

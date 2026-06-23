@@ -19,6 +19,10 @@ import org.hibernate.annotations.AnyKeyJdbcTypeCode;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitAnyDiscriminatorColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitAnyKeyColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
@@ -32,8 +36,10 @@ import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.SqlTypes;
@@ -103,6 +109,30 @@ public class AnyAssociationTests {
 				Holder.class,
 				TargetOne.class,
 				TargetTwo.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+			value = "org.hibernate.orm.test.boot.models.bind.associations.AnyAssociationTests$AnyImplicitNamingStrategy"
+	))
+	void testAnyImplicitColumnsUseImplicitNamingStrategy(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ImplicitColumnAnyHolder.class.getName() );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) entityBinding.getProperty( "target" )
+							.getValue();
+
+					assertThat( ( (Column) value.getDiscriminatorDescriptor().getColumn() ).getName() )
+							.isEqualTo( "implicit_any_discriminator_target" );
+					assertThat( ( (Column) value.getKeyDescriptor().getColumn() ).getName() )
+							.isEqualTo( "implicit_any_key_target" );
+				},
+				scope.getRegistry(),
+				ImplicitColumnAnyHolder.class,
+				TargetOne.class
 		);
 	}
 
@@ -697,6 +727,35 @@ public class AnyAssociationTests {
 		@Any
 		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
 		private Object target;
+	}
+
+	@Entity(name = "ImplicitColumnAnyHolder")
+	public static class ImplicitColumnAnyHolder {
+		@Id
+		private Integer id;
+
+		@Any
+		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
+		@AnyKeyJavaClass(Integer.class)
+		private Object target;
+	}
+
+	public static class AnyImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
+		@Override
+		public Identifier determineAnyDiscriminatorColumnName(ImplicitAnyDiscriminatorColumnNameSource source) {
+			return toIdentifier(
+					"implicit_any_discriminator_" + source.getAttributePath().getProperty(),
+					source.getBuildingContext()
+			);
+		}
+
+		@Override
+		public Identifier determineAnyKeyColumnName(ImplicitAnyKeyColumnNameSource source) {
+			return toIdentifier(
+					"implicit_any_key_" + source.getAttributePath().getProperty(),
+					source.getBuildingContext()
+			);
+		}
 	}
 
 	@Entity(name = "CharAnyDiscriminatorHolder")

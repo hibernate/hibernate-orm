@@ -45,6 +45,9 @@ class ForeignKeyBinder {
 	}
 
 	private void bindForeignKey(ForeignKeyBinding foreignKeyBinding) {
+		if ( foreignKeyBinding.foreignKeySource() != null && foreignKeyBinding.foreignKeySource().isNoConstraint() ) {
+			return;
+		}
 		final ToOne value = foreignKeyBinding.value();
 		if ( value instanceof ManyToOne manyToOne && manyToOne.isIgnoreNotFound() ) {
 			return;
@@ -91,6 +94,10 @@ class ForeignKeyBinder {
 	}
 
 	private void bindTableForeignKey(TableForeignKeyBinding tableForeignKeyBinding) {
+		if ( tableForeignKeyBinding.foreignKeySource() != null
+				&& tableForeignKeyBinding.foreignKeySource().isNoConstraint() ) {
+			return;
+		}
 		final ForeignKey resolvedForeignKey = createResolvedForeignKey(
 				tableForeignKeyBinding.resolvedForeignKey(),
 				tableForeignKeyBinding.referencedEntityName()

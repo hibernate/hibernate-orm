@@ -9,12 +9,14 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
+import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
-import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -69,7 +71,7 @@ class CollectionIndexBinder {
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.orderColumn() ),
-				() -> source.member().resolveAttributeName() + "_ORDER"
+				() -> implicitListIndexColumnName( source, bindingState )
 		);
 		indexColumn.addCheckConstraint( new CheckConstraint(
 				null,
@@ -88,6 +90,24 @@ class CollectionIndexBinder {
 	private static int effectiveListIndexBase(CollectionSource source) {
 		final var listIndexBase = source.listIndexBase();
 		return listIndexBase == null ? 0 : listIndexBase.value();
+	}
+
+	private static String implicitListIndexColumnName(CollectionSource source, BindingState bindingState) {
+		return bindingState.getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getImplicitNamingStrategy()
+				.determineListIndexColumnName( new ImplicitIndexColumnNameSource() {
+					@Override
+					public AttributePath getPluralAttributePath() {
+						return AttributePath.parse( source.member().resolveAttributeName() );
+					}
+
+					@Override
+					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
+						return bindingState.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
 	}
 
 	static void bindMapKey(
@@ -231,7 +251,7 @@ class CollectionIndexBinder {
 				(ignored, column) -> table.addColumn( column ),
 				false,
 				false,
-				false
+				true
 		);
 		collection.setIndex( component );
 	}
@@ -471,7 +491,7 @@ class CollectionIndexBinder {
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.mapKeyColumn() ),
-				() -> source.member().resolveAttributeName() + "_KEY",
+				() -> implicitMapKeyColumnName( source, bindingState ),
 				false,
 				false
 		);
@@ -482,6 +502,24 @@ class CollectionIndexBinder {
 				source.mapKeyColumn() == null || source.mapKeyColumn().updatable()
 		);
 		collection.setIndex( index );
+	}
+
+	private static String implicitMapKeyColumnName(CollectionSource source, BindingState bindingState) {
+		return bindingState.getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getImplicitNamingStrategy()
+				.determineMapKeyColumnName( new ImplicitMapKeyColumnNameSource() {
+					@Override
+					public AttributePath getPluralAttributePath() {
+						return AttributePath.parse( source.member().resolveAttributeName() );
+					}
+
+					@Override
+					public org.hibernate.boot.spi.MetadataBuildingContext getBuildingContext() {
+						return bindingState.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
 	}
 
 	private static void bindEntityMapKey(
@@ -555,18 +593,22 @@ class CollectionIndexBinder {
 					collection.getRole()
 			) );
 		}
-		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
-				collection.getOwner(),
-				index,
-				orderedJoinColumns.isEmpty() ? null : ForeignKeySource.from( orderedJoinColumns.get( 0 ).foreignKey() )
-		) );
-	}
+			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
+					collection.getOwner(),
+					index,
+					source.mapKeyForeignKeySource()
+			) );
+		}
 
 	private static String implicitMapKeyJoinColumnName(
 			CollectionSource source,
 			boolean referenceToPrimaryKey,
 			int columnCount,
 			String targetColumnName) {
+		// Legacy treats @MapKeyJoinColumn defaults as an explicit logical
+		// property name plus "_KEY" suffix.  Routing through
+		// determineJoinColumnName changes defaults such as "labels_KEY" to
+		// "LabelKey_id" or "parents_KEY_id".
 		if ( referenceToPrimaryKey && columnCount == 1 ) {
 			return source.member().resolveAttributeName() + "_KEY";
 		}

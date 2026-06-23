@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
@@ -75,6 +76,9 @@ public interface MetadataCollector {
 
 	/// Register an auto-apply converter.
 	void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass);
+
+	/// Register an auto-apply converter.
+	void addAttributeConverter(ConverterDescriptor<?, ?> converterDescriptor);
 
 	/// Register an explicit converter.
 	void addRegisteredConversion(RegisteredConversion registeredConversion);

@@ -201,7 +201,16 @@ public class XmlProcessingSmokeTests {
 		final org.hibernate.boot.mapping.internal.categorize.GlobalRegistrationsImpl globalRegistrations =
 				(org.hibernate.boot.mapping.internal.categorize.GlobalRegistrationsImpl) categorizedDomainModel.getGlobalRegistrations();
 
-		assertThat( globalRegistrations.getConverterRegistrations() ).hasSize( 2 );
+		assertThat( globalRegistrations.getConverterRegistrations() ).singleElement().satisfies( (registration) -> {
+			assertThat( registration.converterType().getClassName() ).isEqualTo( "org.hibernate.type.YesNoConverter" );
+			assertThat( registration.explicitDomainType().toJavaClass() ).isEqualTo( boolean.class );
+			assertThat( registration.autoApply() ).isTrue();
+		} );
+		assertThat( globalRegistrations.getJpaConverters() ).singleElement().satisfies( (registration) -> {
+			assertThat( registration.converterType().getClassName() )
+					.isEqualTo( "org.hibernate.type.NumericBooleanConverter" );
+			assertThat( registration.autoApply() ).isFalse();
+		} );
 		assertThat( globalRegistrations.getImportedRenames() )
 				.containsEntry( "XmlSimpleEntity", "org.hibernate.orm.test.boot.models.xml.SimpleEntity" );
 

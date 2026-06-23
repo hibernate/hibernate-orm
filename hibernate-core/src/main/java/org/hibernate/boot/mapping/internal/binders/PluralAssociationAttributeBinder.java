@@ -27,6 +27,7 @@ import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 
@@ -432,12 +433,12 @@ class PluralAssociationAttributeBinder {
 		}
 		if ( registerCollectionBindings ) {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
-					collection,
-					source.oneToManyJoinColumns(),
-					ForeignKeySource.firstSpecified(
-							ForeignKeySource.fromFirstSpecifiedJoinColumn( source.oneToManyJoinColumns() ),
-							ForeignKeySource.from( source.joinTable() )
-					),
+						collection,
+						source.oneToManyJoinColumns(),
+						ForeignKeySource.firstSpecified(
+								source.oneToManyForeignKeySource(),
+								ForeignKeySource.from( source.joinTable() )
+						),
 					resolveOnDeleteAction(),
 					new jakarta.persistence.UniqueConstraint[0],
 					new jakarta.persistence.Index[0]
@@ -799,6 +800,7 @@ class PluralAssociationAttributeBinder {
 				targetTypeBinder,
 				targetTypeBinder.getManagedType(),
 				targetTypeBinder.getTable(),
+				entityIdentifierBinding,
 				entityIdentifierBinding.columns()
 		);
 	}
@@ -844,6 +846,20 @@ class PluralAssociationAttributeBinder {
 			EntityTypeBinder typeBinder,
 			EntityTypeMetadata entityType,
 			Table primaryTable,
+			IdentifierBinding entityIdentifierBinding,
 			List<org.hibernate.mapping.Column> identifierColumns) {
+		@Override
+		public List<org.hibernate.mapping.Column> identifierColumns() {
+			if ( entityIdentifierBinding.value() instanceof SortableValue sortableValue ) {
+				sortableValue.sortProperties();
+				return entityIdentifierBinding.value().getColumns();
+			}
+			if ( primaryTable.getPrimaryKey() != null
+					&& !primaryTable.getPrimaryKey().getColumns().isEmpty()
+					&& primaryTable.getPrimaryKey().getColumns().size() >= identifierColumns.size() ) {
+				return primaryTable.getPrimaryKey().getColumns();
+			}
+			return identifierColumns;
+		}
 	}
 }

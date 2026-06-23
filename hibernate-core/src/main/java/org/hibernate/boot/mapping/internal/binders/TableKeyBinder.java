@@ -215,7 +215,6 @@ public class TableKeyBinder {
 						+ "Backref"
 		);
 		backref.setOptional( true );
-		backref.setInsertable( false );
 		backref.setUpdatable( false );
 		backref.setSelectable( false );
 		backref.setCollectionRole( collectionTableBinding.collection().getRole() );
@@ -352,6 +351,13 @@ public class TableKeyBinder {
 		return createDependentKeyValue( table, entityIdentifierBinding, List.of() );
 	}
 
+	private List<Column> dependentTableTargetColumns(IdentifierBinding entityIdentifierBinding) {
+		if ( entityBinder.getTypeBinding() instanceof JoinedSubclass joinedSubclass && joinedSubclass.getKey() != null ) {
+			return joinedSubclass.getKey().getColumns();
+		}
+		return targetIdentifierColumns( entityIdentifierBinding );
+	}
+
 	private DependantValue createDependentKeyValue(
 			Table table,
 			IdentifierBinding entityIdentifierBinding,
@@ -363,7 +369,7 @@ public class TableKeyBinder {
 		);
 		key.setNullable( false );
 		key.setUpdateable( false );
-		final List<Column> targetColumns = targetIdentifierColumns( entityIdentifierBinding );
+		final List<Column> targetColumns = dependentTableTargetColumns( entityIdentifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				joinColumns,
 				targetColumns,
@@ -556,7 +562,7 @@ public class TableKeyBinder {
 	}
 
 	private String implicitCollectionKeyColumnName(CollectionTableBinding collectionTableBinding, Column referencedColumn) {
-		final AttributePath attributePath = inverseManyToManyAttributePath( collectionTableBinding );
+		final AttributePath attributePath = collectionKeyAttributePath( collectionTableBinding );
 		return bindingState.getMetadataBuildingContext()
 				.getBuildingOptions()
 				.getImplicitNamingStrategy()
@@ -610,6 +616,13 @@ public class TableKeyBinder {
 					}
 				} )
 				.getText();
+	}
+
+	private AttributePath collectionKeyAttributePath(CollectionTableBinding collectionTableBinding) {
+		if ( collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany ) {
+			return AttributePath.parse( collectionRolePath( collectionTableBinding ) );
+		}
+		return inverseManyToManyAttributePath( collectionTableBinding );
 	}
 
 	private AttributePath inverseManyToManyAttributePath(CollectionTableBinding collectionTableBinding) {

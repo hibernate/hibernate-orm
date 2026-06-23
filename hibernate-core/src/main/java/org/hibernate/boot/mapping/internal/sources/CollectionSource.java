@@ -17,19 +17,23 @@ import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionIdMutability;
 import org.hibernate.annotations.CollectionIdType;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SQLJoinTableRestriction;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
+import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.mapping.internal.binders.CascadeBinder;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.models.internal.ModelsHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -37,12 +41,14 @@ import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Fetch;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
@@ -57,6 +63,7 @@ import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.OrderBy;
+import org.jetbrains.annotations.NotNull;
 
 /// Source-model facts for an [org.hibernate.mapping.Collection].
 ///
@@ -152,14 +159,18 @@ public record CollectionSource(
 		/// collection-table naming request with enough context for the naming strategy.
 		CollectionTable collectionTable,
 
-		/// The `@JoinTable` annotation declared on an association-valued plural member.
-		JoinTable joinTable,
+	/// The `@JoinTable` annotation declared on an association-valued plural member.
+	JoinTable joinTable,
 
-		/// The path adjustment targeting this collection member directly.
-		AttributeOverride attributeOverride,
+	/// The path-based association override currently active for this source, if any.
+	AssociationOverride associationOverride,
+
+	/// The path adjustment targeting this collection member directly.
+	AttributeOverride attributeOverride,
 
 		/// The models context used to resolve repeatable annotations.
 		ModelsContext modelsContext) {
+
 	/// Source-level plural mapping nature.
 	public enum Nature {
 		/// A value collection declared with `@ElementCollection`.
@@ -203,17 +214,21 @@ public record CollectionSource(
 				modelsContext
 		);
 
+		final TypeDetails elementType = elementCollectionElementType( member, modelsContext );
 		return new CollectionSource(
-				Nature.ELEMENT_COLLECTION,
+				elementType.determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Entity.class )
+						? Nature.MANY_TO_MANY
+						: Nature.ELEMENT_COLLECTION,
 				classification,
 				member,
-				elementCollectionElementType( member, modelsContext ),
-				mapKeyType( member, classification, modelsContext ),
-				collectionTable,
-				associationOverride == null ? member.getDirectAnnotationUsage( JoinTable.class ) : associationOverride.joinTable(),
-				locateAttributeOverride( member, ownerType, hierarchyRootType, modelsContext ),
-				modelsContext
-		);
+					elementType,
+					mapKeyType( member, classification, modelsContext ),
+					collectionTable,
+					effectiveJoinTable( member, associationOverride ),
+					associationOverride,
+					locateAttributeOverride( member, ownerType, hierarchyRootType, modelsContext ),
+					modelsContext
+			);
 	}
 
 	private static TypeDetails mapKeyType(
@@ -235,6 +250,10 @@ public record CollectionSource(
 	}
 
 	private static TypeDetails elementCollectionElementType(MemberDetails member, ModelsContext modelsContext) {
+		final Target xmlTarget = member.getDirectAnnotationUsage( Target.class );
+		if ( xmlTarget != null && modelsContext != null ) {
+			return resolveXmlTargetType( xmlTarget, modelsContext );
+		}
 		final ElementCollection elementCollection = member.getDirectAnnotationUsage( ElementCollection.class );
 		if ( elementCollection != null && elementCollection.targetClass() != void.class && modelsContext != null ) {
 			return new ClassTypeDetailsImpl(
@@ -291,17 +310,71 @@ public record CollectionSource(
 			ModelsContext modelsContext,
 			AssociationOverride associationOverride) {
 		final CollectionSource source = elementCollection( member, modelsContext );
+		final TypeDetails elementType = associationElementType( member, source.elementType, modelsContext );
 		return new CollectionSource(
 				nature,
 				source.classification,
 				source.member,
-				source.elementType,
-				source.mapKeyType,
-				source.collectionTable,
-				associationOverride == null ? member.getDirectAnnotationUsage( JoinTable.class ) : associationOverride.joinTable(),
-				source.attributeOverride,
-				modelsContext
+				elementType,
+					source.mapKeyType,
+					source.collectionTable,
+					effectiveJoinTable( member, associationOverride ),
+					associationOverride,
+					source.attributeOverride,
+					modelsContext
+			);
+	}
+
+	private static JoinTable effectiveJoinTable(MemberDetails member, AssociationOverride associationOverride) {
+		if ( associationOverride != null ) {
+			return isSpecified( associationOverride.joinTable() ) ? associationOverride.joinTable() : null;
+		}
+		final JoinTable joinTable = member.getDirectAnnotationUsage( JoinTable.class );
+		return isSpecified( joinTable ) ? joinTable : null;
+	}
+
+	private static boolean isSpecified(JoinTable joinTable) {
+		return joinTable != null
+				&& ( StringHelper.isNotEmpty( joinTable.name() )
+						|| joinTable.joinColumns().length > 0
+						|| joinTable.inverseJoinColumns().length > 0 );
+	}
+
+	private static TypeDetails associationElementType(
+			MemberDetails member,
+			TypeDetails fallback,
+			ModelsContext modelsContext) {
+		final Target xmlTarget = member.getDirectAnnotationUsage( Target.class );
+		if ( xmlTarget != null && modelsContext != null ) {
+			return resolveXmlTargetType( xmlTarget, modelsContext );
+		}
+		final ManyToMany manyToMany = member.getDirectAnnotationUsage( ManyToMany.class );
+		if ( manyToMany != null && manyToMany.targetEntity() != void.class && modelsContext != null ) {
+			return new ClassTypeDetailsImpl(
+					modelsContext.getClassDetailsRegistry()
+							.resolveClassDetails( manyToMany.targetEntity().getName() ),
+					TypeDetails.Kind.CLASS
+			);
+		}
+		final OneToMany oneToMany = member.getDirectAnnotationUsage( OneToMany.class );
+		if ( oneToMany != null && oneToMany.targetEntity() != void.class && modelsContext != null ) {
+			return new ClassTypeDetailsImpl(
+					modelsContext.getClassDetailsRegistry()
+							.resolveClassDetails( oneToMany.targetEntity().getName() ),
+					TypeDetails.Kind.CLASS
+			);
+		}
+		return fallback;
+	}
+
+	private static TypeDetails resolveXmlTargetType(Target xmlTarget, ModelsContext modelsContext) {
+		final String targetName = xmlTarget.value();
+		final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
+				targetName,
+				modelsContext.getClassDetailsRegistry(),
+				() -> new DynamicClassDetails( targetName, modelsContext )
 		);
+		return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 	}
 
 	private static CollectionClassification determineClassification(MemberDetails member) {
@@ -324,6 +397,9 @@ public record CollectionSource(
 		if ( java.util.List.class.isAssignableFrom( collectionType )
 				&& !member.hasDirectAnnotationUsage( Bag.class ) ) {
 			if ( isOrdered( member ) && !hasListIndexIndicator( member ) ) {
+				return CollectionClassification.BAG;
+			}
+			if ( isUnownedToMany( member ) && !hasListIndexIndicator( member ) ) {
 				return CollectionClassification.BAG;
 			}
 			return CollectionClassification.LIST;
@@ -429,6 +505,15 @@ public record CollectionSource(
 				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJdbcTypeCode.class );
 	}
 
+	private static boolean isUnownedToMany(MemberDetails member) {
+		final ManyToMany manyToMany = member.getDirectAnnotationUsage( ManyToMany.class );
+		if ( manyToMany != null && StringHelper.isNotEmpty( manyToMany.mappedBy() ) ) {
+			return true;
+		}
+		final OneToMany oneToMany = member.getDirectAnnotationUsage( OneToMany.class );
+		return oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() );
+	}
+
 	/// The direct `@ManyToMany` annotation.
 	public ManyToMany manyToMany() {
 		return member.getDirectAnnotationUsage( ManyToMany.class );
@@ -451,7 +536,9 @@ public record CollectionSource(
 	/// Aggregates the JPA cascade and mapping defaults for association-valued plural mappings.
 	public EnumSet<CascadeType> cascades(BindingState bindingState) {
 		return switch ( nature ) {
-			case MANY_TO_MANY -> CascadeBinder.aggregateCascadeTypes( manyToMany().cascade(), false, bindingState );
+			case MANY_TO_MANY -> manyToMany() == null
+					? EnumSet.noneOf( CascadeType.class )
+					: CascadeBinder.aggregateCascadeTypes( manyToMany().cascade(), false, bindingState );
 			case ONE_TO_MANY -> CascadeBinder.aggregateCascadeTypes( oneToMany().cascade(), oneToMany().orphanRemoval(), bindingState );
 			case MANY_TO_ANY -> CascadeBinder.aggregateCascadeTypes( manyToAny().cascade(), false, bindingState );
 			case ELEMENT_COLLECTION -> EnumSet.noneOf( CascadeType.class );
@@ -463,8 +550,7 @@ public record CollectionSource(
 	}
 
 	public FetchType fetchType() {
-		final org.hibernate.annotations.Fetch hibernateFetch = hibernateFetch();
-		if ( hibernateFetch != null && hibernateFetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+		if ( hibernateFetchMode() == FetchMode.JOIN ) {
 			return FetchType.EAGER;
 		}
 		final Fetch fetch = graphlessFetch();
@@ -472,10 +558,14 @@ public record CollectionSource(
 			return fetch.type();
 		}
 		return switch ( nature ) {
-			case MANY_TO_MANY -> manyToMany().fetch();
+			case MANY_TO_MANY -> manyToMany() == null
+					? FetchType.LAZY
+					: manyToMany().fetch();
 			case ONE_TO_MANY -> oneToMany().fetch();
 			case MANY_TO_ANY -> manyToAny().fetch();
-			case ELEMENT_COLLECTION -> elementCollection().fetch();
+			case ELEMENT_COLLECTION -> elementCollection() == null
+					? FetchType.LAZY
+					: elementCollection().fetch();
 		};
 	}
 
@@ -498,8 +588,9 @@ public record CollectionSource(
 		return null;
 	}
 
-	public org.hibernate.annotations.Fetch hibernateFetch() {
-		return member.getDirectAnnotationUsage( org.hibernate.annotations.Fetch.class );
+	public FetchMode hibernateFetchMode() {
+		final org.hibernate.annotations.Fetch fetch = member.getDirectAnnotationUsage( org.hibernate.annotations.Fetch.class );
+		return fetch == null ? null : fetch.value();
 	}
 
 	/// Whether the collection element value should be modeled as a component.
@@ -508,8 +599,34 @@ public record CollectionSource(
 	/// element type itself being annotated `@Embeddable`, or through `@Embedded` on the
 	/// collection member.
 	public boolean hasEmbeddableElement() {
-		return elementType.determineRawClass().hasDirectAnnotationUsage( Embeddable.class )
+		return !hasElementConversion()
+				&& elementType.determineRawClass().hasDirectAnnotationUsage( Embeddable.class )
 				|| member.hasDirectAnnotationUsage( Embedded.class );
+	}
+
+	private boolean hasElementConversion() {
+		final Convert directConversion = member.getDirectAnnotationUsage( Convert.class );
+		if ( isElementConversion( directConversion ) ) {
+			return true;
+		}
+		for ( Convert conversion : member.getRepeatedAnnotationUsages( Convert.class, modelsContext ) ) {
+			if ( isElementConversion( conversion ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean isElementConversion(Convert conversion) {
+		if ( conversion == null
+				|| conversion.disableConversion()
+				|| conversion.converter() == AttributeConverter.class ) {
+			return false;
+		}
+		final String attributeName = conversion.attributeName();
+		return attributeName == null
+				|| attributeName.isEmpty()
+				|| "value".equals( attributeName );
 	}
 
 	/// The explicit list-index column source, if one was declared.
@@ -523,22 +640,6 @@ public record CollectionSource(
 	/// JPA order-by fragment declared for ordered sets/maps.
 	public OrderBy orderBy() {
 		return member.getDirectAnnotationUsage( OrderBy.class );
-	}
-
-	/// Hibernate SQL order fragment declared for ordered sets/maps.
-	public SQLOrder sqlOrder() {
-		return member.getDirectAnnotationUsage( SQLOrder.class );
-	}
-
-	public SQLRestriction sqlRestriction() {
-		return member.getDirectAnnotationUsage( SQLRestriction.class );
-	}
-
-	public SQLRestriction associatedTypeRestriction() {
-		if ( nature == Nature.ELEMENT_COLLECTION ) {
-			return null;
-		}
-		return elementType.determineRawClass().getDirectAnnotationUsage( SQLRestriction.class );
 	}
 
 	public SQLJoinTableRestriction sqlJoinTableRestriction() {
@@ -608,6 +709,18 @@ public record CollectionSource(
 		return singular == null ? List.of() : List.of( singular );
 	}
 
+	public ForeignKeySource mapKeyForeignKeySource() {
+		final MapKeyJoinColumns plural = member.getDirectAnnotationUsage( MapKeyJoinColumns.class );
+		if ( plural != null ) {
+			return ForeignKeySource.firstSpecified(
+					ForeignKeySource.fromFirstSpecifiedMapKeyJoinColumn( mapKeyJoinColumns() ),
+					ForeignKeySource.from( plural )
+			);
+		}
+		final MapKeyJoinColumn singular = member.getDirectAnnotationUsage( MapKeyJoinColumn.class );
+		return ForeignKeySource.from( singular );
+	}
+
 	/// The collection-table join columns as a list.
 	///
 	/// The conversion from annotation array to list is intentionally kept near the source
@@ -615,26 +728,29 @@ public record CollectionSource(
 	/// table joins back to its owner.
 	public List<JoinColumn> joinColumns() {
 		if ( joinTable != null ) {
-			if ( joinTable.joinColumns().length == 0 ) {
-				return List.of();
-			}
-			final ArrayList<JoinColumn> result = new ArrayList<>( joinTable.joinColumns().length );
-			result.addAll( Arrays.asList( joinTable.joinColumns() ) );
-			return result;
+			return extractJoinColumns( joinTable.joinColumns() );
 		}
 		if ( collectionTable == null ) {
 			return List.of();
 		}
-		if ( collectionTable.joinColumns().length == 0 ) {
+		return extractJoinColumns( collectionTable.joinColumns() );
+	}
+
+	@NotNull
+	private List<JoinColumn> extractJoinColumns(JoinColumn[] joinColumns) {
+		if ( joinColumns.length == 0 ) {
 			return List.of();
 		}
-		final ArrayList<JoinColumn> result = new ArrayList<>( collectionTable.joinColumns().length );
-		result.addAll( Arrays.asList( collectionTable.joinColumns() ) );
+		final ArrayList<JoinColumn> result = new ArrayList<>( joinColumns.length );
+		result.addAll( Arrays.asList( joinColumns ) );
 		return result;
 	}
 
 	/// The foreign-key columns declared directly on a unidirectional one-to-many association.
 	public List<JoinColumn> oneToManyJoinColumns() {
+		if ( associationOverride != null && associationOverride.joinColumns().length > 0 ) {
+			return extractJoinColumns( associationOverride.joinColumns() );
+		}
 		final JoinColumns plural = member.getDirectAnnotationUsage( JoinColumns.class );
 		if ( plural != null && plural.value().length > 0 ) {
 			final ArrayList<JoinColumn> result = new ArrayList<>( plural.value().length );
@@ -646,15 +762,27 @@ public record CollectionSource(
 		return singular == null ? List.of() : List.of( singular );
 	}
 
+	public ForeignKeySource oneToManyForeignKeySource() {
+		if ( associationOverride != null ) {
+			return ForeignKeySource.firstSpecified(
+					ForeignKeySource.fromFirstSpecifiedJoinColumn( oneToManyJoinColumns() ),
+					ForeignKeySource.from( associationOverride )
+			);
+		}
+		final JoinColumns plural = member.getDirectAnnotationUsage( JoinColumns.class );
+		if ( plural != null ) {
+			return ForeignKeySource.firstSpecified(
+					ForeignKeySource.fromFirstSpecifiedJoinColumn( oneToManyJoinColumns() ),
+					ForeignKeySource.from( plural )
+			);
+		}
+		return ForeignKeySource.fromFirstSpecifiedJoinColumn( oneToManyJoinColumns() );
+	}
+
 	/// The owning-side join columns for a join-table association.
 	public List<JoinColumn> associationJoinColumns() {
 		if ( joinTable != null ) {
-			if ( joinTable.joinColumns().length == 0 ) {
-				return List.of();
-			}
-			final ArrayList<JoinColumn> result = new ArrayList<>( joinTable.joinColumns().length );
-			result.addAll( Arrays.asList( joinTable.joinColumns() ) );
-			return result;
+			return extractJoinColumns( joinTable.joinColumns() );
 		}
 		if ( collectionTable == null || collectionTable.joinColumns().length == 0 ) {
 			return List.of();

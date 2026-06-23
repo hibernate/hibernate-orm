@@ -188,10 +188,24 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.ATTRIBUTE, member, member.getType(), null, directConversion( member ) );
 	}
 
+	/// Creates a source for a normal singular basic attribute with access to
+	/// type-level repeated `@Convert` declarations such as
+	/// `@Convert(attributeName = "website", ...)`.
+	public static BasicValueSource attribute(MemberDetails member, BindingContext bindingContext) {
+		return new BasicValueSource( Kind.ATTRIBUTE, member, member.getType(), null, attributeConversion( member, bindingContext ) );
+	}
+
 	/// Creates a source for a normal singular basic attribute whose type has
 	/// already been resolved for a concrete entity usage.
 	public static BasicValueSource attribute(MemberDetails member, TypeDetails type) {
 		return new BasicValueSource( Kind.ATTRIBUTE, member, type, null, directConversion( member ) );
+	}
+
+	/// Creates a source for a normal singular basic attribute whose type has
+	/// already been resolved for a concrete entity usage, with access to type-level
+	/// repeated `@Convert` declarations.
+	public static BasicValueSource attribute(MemberDetails member, TypeDetails type, BindingContext bindingContext) {
+		return new BasicValueSource( Kind.ATTRIBUTE, member, type, null, attributeConversion( member, bindingContext ) );
 	}
 
 	/// Creates a source for a basic embeddable/component member.
@@ -320,6 +334,23 @@ public record BasicValueSource(
 
 	private static Convert directConversion(MemberDetails member) {
 		return member.getDirectAnnotationUsage( Convert.class );
+	}
+
+	private static Convert attributeConversion(MemberDetails member, BindingContext bindingContext) {
+		final String attributeName = member.resolveAttributeName();
+		if ( bindingContext != null && attributeName != null ) {
+			final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+			for ( Convert conversion : member.getDeclaringType().getRepeatedAnnotationUsages( Convert.class, modelsContext ) ) {
+				if ( attributeName.equals( conversion.attributeName() ) ) {
+					return conversion;
+				}
+			}
+		}
+		final Convert directConversion = directConversion( member );
+		return directConversion != null
+				&& ( directConversion.attributeName() == null || directConversion.attributeName().isEmpty() )
+				? directConversion
+				: null;
 	}
 
 	private static Convert collectionRoleConversion(

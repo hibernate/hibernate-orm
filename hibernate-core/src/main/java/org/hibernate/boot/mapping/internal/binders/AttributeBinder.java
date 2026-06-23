@@ -361,7 +361,7 @@ public class AttributeBinder {
 		return ProcessedSelectable.column( column );
 	}
 
-	private static void applyColumnTransformer(
+	public static void applyColumnTransformer(
 			BasicValueIntent selectableIntent,
 			Property property,
 			org.hibernate.mapping.Column column) {

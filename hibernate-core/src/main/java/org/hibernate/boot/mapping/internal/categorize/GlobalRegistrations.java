@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 
@@ -27,6 +28,9 @@ public interface GlobalRegistrations {
 
 	/// Attribute converter registrations.
 	List<ConversionRegistration> getConverterRegistrations();
+
+	/// JPA attribute converter classes.
+	Set<JpaConverterRegistration> getJpaConverters();
 
 	/// Java type descriptor registrations.
 	List<JavaTypeRegistration> getJavaTypeRegistrations();

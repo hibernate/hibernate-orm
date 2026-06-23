@@ -31,6 +31,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
+
 /// Source-model facts for a Hibernate `@Any` association value.
 ///
 /// An any-valued association is represented by two basic values:
@@ -114,7 +116,7 @@ public record AnySource(
 				any.optional(),
 				CascadeBinder.aggregateCascadeTypes( any.cascade(), false, bindingState ),
 				member.getDirectAnnotationUsage( Column.class ),
-				member.getDirectAnnotationUsage( Formula.class ),
+				effectiveFormula( member, bindingState ),
 				member.getDirectAnnotationUsage( AnyDiscriminator.class ),
 				discriminatorValues( member, bindingContext ),
 				member.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class ),
@@ -143,13 +145,22 @@ public record AnySource(
 				true,
 				CascadeBinder.aggregateCascadeTypes( manyToAny.cascade(), false, bindingState ),
 				member.getDirectAnnotationUsage( Column.class ),
-				member.getDirectAnnotationUsage( Formula.class ),
+				effectiveFormula( member, bindingState ),
 				member.getDirectAnnotationUsage( AnyDiscriminator.class ),
 				discriminatorValues( member, bindingContext ),
 				member.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class ),
 				collectionSource.joinTable(),
 				inverseJoinColumns,
 				anyKeyJavaClass == null ? null : anyKeyJavaClass.value()
+		);
+	}
+
+	private static Formula effectiveFormula(MemberDetails member, BindingState bindingState) {
+		return getOverridableAnnotation(
+				member,
+				Formula.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
 		);
 	}
 

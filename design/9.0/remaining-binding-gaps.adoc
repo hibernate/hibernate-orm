@@ -243,6 +243,18 @@ Follow-up collection naming strategy slice:
 * Component-source path adjustment lookup now tries collection-element
   `element.` paths alongside legacy `value.` paths and carries direct nested
   member overrides into nested embeddable sources.
+* List-index columns and basic map-key columns now route unnamed
+  `@OrderColumn` and `@MapKeyColumn` defaults through the configured
+  `ImplicitNamingStrategy` (`determineListIndexColumnName` and
+  `determineMapKeyColumnName`) instead of hard-coding the JPA suffix in the new
+  collection-index binder.  Custom strategy coverage was added for both hooks.
+* Entity-valued map-key join columns were audited against the legacy binder.
+  Legacy builds unnamed `@MapKeyJoinColumn` defaults as an explicit logical
+  collection attribute name plus `_KEY` suffix, so the new binder intentionally
+  preserves `labels_KEY` / `parents_KEY` and composite
+  `<attribute>_KEY_<target-column>` defaults instead of routing this path
+  through `determineJoinColumnName`, which would change stock names such as
+  `labels_KEY` to `LabelKey_id`.
 * Focused verification passed for:
 +
 [source,bash]
@@ -261,6 +273,37 @@ Follow-up collection naming strategy slice:
   --tests org.hibernate.orm.test.annotations.collectionelement.ElementCollectionAndCompositeKeyTest \
   --tests org.hibernate.orm.test.annotations.collectionelement.ElementCollectionReferencingIdColumnsTest \
   --tests org.hibernate.orm.test.annotations.collectionelement.PrimitiveArrayElementCollectionTempTest
+----
+* Focused collection-index implicit naming verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnListElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnUsesImplicitNamingStrategy' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyColumnElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyColumnUsesImplicitNamingStrategy'
+----
+
+Follow-up non-collection naming strategy slice:
+
+* Identifier columns and singular/plural `@Any` discriminator/key columns now
+  route unnamed defaults through the configured `ImplicitNamingStrategy` hooks
+  instead of relying on hard-coded default text in the new boot pipeline.
+* The covered hooks are `determineIdentifierColumnName`,
+  `determineAnyDiscriminatorColumnName`, and `determineAnyKeyColumnName`.
+  Custom strategy coverage was added for those hooks.
+* Root entity discriminator naming was audited but left unchanged for now:
+  routing that path through `determineDiscriminatorColumnName` changes the
+  stock annotation-style default expected by the existing boot-model tests, so
+  it needs a dedicated legacy comparison before changing the new binder.
+* Focused non-collection implicit naming verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.AnyAssociationTests.testAnyImplicitColumnsUseImplicitNamingStrategy' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests.testImplicitIdentifierColumnUsesImplicitNamingStrategy'
 ----
 
 Follow-up association collection naming slice:
@@ -286,6 +329,45 @@ Follow-up association collection naming slice:
   --tests 'org.hibernate.orm.test.boot.models.bind.associations.AnyAssociationTests.testManyToAnyImplicitJoinTable' \
   --tests 'org.hibernate.orm.test.annotations.manytomany.defaults.ManyToManyImplicitNamingTest' \
   --tests 'org.hibernate.orm.test.annotations.manytomany.defaults.JpaCompliantManyToManyImplicitNamingTest'
+----
+
+Follow-up inverse to-many list classification slice:
+
+* Plain Java `List` attributes still default to indexed `LIST` mappings with
+  default `@OrderColumn` values for owned collection shapes.
+* Inverse `@OneToMany(mappedBy = ...)` and inverse `@ManyToMany(mappedBy = ...)`
+  plain lists now preserve the legacy exception: without explicit list-index
+  metadata they classify as `BAG`.  Explicit `@OrderColumn` /
+  `@ListIndex*` metadata still classifies as `LIST`.
+* This avoids producing synthetic order columns for unowned to-many lists, which
+  caused duplicate `children_ORDER` update dependencies in table-per-class
+  discriminator association tests.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritancePersistTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.tableperclass.*' \
+  --tests 'org.hibernate.orm.test.inheritance.TablePerClassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.OneToManyAbstractTablePerClassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.ManyToManyAbstractTablePerClassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.TransientOverrideAsPersistentTablePerClassTests' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritancePersistTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.embeddable.TablePerClassWithEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.inheritance.join.EntityJoinWithTablePerClassInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.join.AttributeJoinWithTablePerClassInheritanceTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnListElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnUsesImplicitNamingStrategy' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyColumnElementCollection' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.tableperclass.*' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest'
 ----
 
 Follow-up map-key slice:
@@ -715,7 +797,10 @@ registration path.
 | Inheritance / mapped-superclass / discriminator
 | Console output still included inheritance, discriminator, mapped-superclass,
 and non-root table failures.  Some are likely downstream of association/table
-binding rather than pure categorization failures.
+binding rather than pure categorization failures.  The implicit string
+discriminator value path was corrected to match legacy `EntityBinder#name`
+semantics: `@Entity(name)` when present, otherwise the unqualified class name,
+instead of the fully qualified `ClassDetails#getName()`.
 
 | Audit/changelog state management
 | A large audit tail failed with `IllegalArgumentException`,
@@ -1795,7 +1880,7 @@ sample from 18 failures to 2 failures out of 110 tests.  Covered fixes include:
 * list index check constraints, blank element-collection `@OrderBy`, and
   order/sort conflict validation;
 * read-only collection key insert/update propagation and read-only
-  collection-table implicit-list fallback to bag semantics;
+  collection-table implicit-list default indexed-list semantics;
 * `@MapKeyClass` source typing;
 * parameterized `BasicValueSource` type retention for unannotated
   collection-valued basic attributes such as `List<String>`; and
@@ -1814,13 +1899,34 @@ source types directly instead of converting through reflection.
 
 Focused verification passed for representative naming, map-key,
 materialization, ordering, read-only, implicit-list, `@MapKeyClass`, and custom
-collection cases, plus `CollectionTest`.  The refreshed broad sample still has
-two failures:
+collection cases, plus `CollectionTest`.  A refreshed broader
+collection-valued sample currently has 5 failures out of 396 tests.  Restoring
+logical implicit collection-table names in the new table binder burned down the
+collection-table naming cluster from the broader sample.  The follow-up
+indexed-list slice also made legacy external/entity-backed element collections
+that intentionally lack order columns opt into `@Bag`, and fixed association
+collection-table element column ordering for composite identifiers so the
+join-table FK column types match the target identifier value order.
 
-* `ElementCollectionPerfTest.testSelect0`: strict JPA query compliance rejects
-  the runtime query path.
-* `OrderedBySQLTest.testLifecycle`: SQL order expression translation is rejected
-  by runtime order-by compliance handling.
+The mappedBy / borrowed map-key bucket is now mostly burned down.  Scalar
+`mappedBy` inverse one-to-many mappings are accepted when the mapped attribute is
+the owner key column, XML `target-entity` declarations are honored when raw
+collection Java members would otherwise infer `Object`, and standalone component
+map-key columns on unidirectional one-to-many FK mappings are writable so the
+map key is persisted and orphan/delete behavior matches legacy runtime behavior.
+
+Remaining collection-valued clusters in the refreshed sample are:
+
+* `PersistentBagContainsTest` still generates invalid SQL for `contains`;
+* `MultipleSessionCollectionTest` still hits a runtime collection-role
+  transfer edge; and
+* `CollectionTest.testCollectionInheritance` still fails during delete with an
+  FK constraint violation.
+
+The earlier `OrderByColumnNameTest` / `OrderByTest` cluster is green after
+restoring legacy boot metadata behavior for `@SQLOrder` and expanding blank JPA
+entity `@OrderBy` fragments to target identifier selectables before runtime
+model construction.
 
 === Global Metadata and Named Objects
 
@@ -1830,15 +1936,54 @@ Open parity questions:
   SQL result-set mappings, query cache layout, imports, and named entity graphs
   should be verified through metadata finalization and runtime use where
   possible.
-* Fetch profiles and member-level fetch-profile overrides should be tested with
-  inherited attributes and XML-sourced mappings.
+  JPA 4 unnamed `@NamedEntityGraph` declarations are now covered in the new
+  global-registration path: unnamed graphs are accepted only when declared
+  directly on an entity type, and the generated graph name uses the effective
+  JPA entity name (`@Entity(name)` when present, otherwise the unqualified
+  class name).
+  Entity-graph runtime parity also now covers static metamodel injection by JPA
+  entity name, legacy duplicate graph-name handling across different entity
+  roots, graph parser mode resolution, and default JPA cache retrieve/store
+  option exposure through the temporary SessionFactory options adapter.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.graph.EntityGraphsTest' \
+  --tests 'org.hibernate.orm.test.entitygraph.mappedbyid.LoadGraphFindByIdTest' \
+  --tests 'org.hibernate.orm.test.entitygraph.JpaFetchAnnotationJpaApiTest'
+----
+* Fetch-profile registration parity is covered for annotation and XML sources:
+  XML-sourced profiles override annotation profiles, invalid global overrides
+  fail after entity binding like the legacy second pass, member-level
+  `@FetchProfileOverride` sees early profile declarations, and direct
+  to-one `@Fetch(SUBSELECT)` marks the owning entity as subselect-loadable.
+  The `@Fetch` audit removed HBM-shaped source APIs from the new pipeline:
+  direct `@Fetch` source access now exposes the resolved `FetchMode` rather
+  than the annotation instance, XML fetch-profile declarations use the generic
+  external-registration source instead of the old HBM tag, and collection
+  `@Fetch(SUBSELECT)` now matches legacy owner subselect-loadable flags.
+  Keep inherited-attribute combinations in the global metadata guardrail set.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.fetchprofile.FetchProfileTest' \
+  --tests 'org.hibernate.orm.test.annotations.fetchprofile.NewFetchTest' \
+  --tests 'org.hibernate.orm.test.fetchprofiles.join.JoinFetchProfileTest' \
+  --tests 'org.hibernate.orm.test.fetchmode.toone.ToOneWithSubselectFetchModeTests'
+----
 * Filter definitions, auto-enabled filters, parameter type inference, entity
   filters, collection filters, and join-table filters need runtime-adjacent
   coverage.
 * Global type registrations, converter registrations, Java/JDBC type
   registrations, custom user types, composite user types, collection types, and
   embeddable instantiators should be verified through both annotation and XML
-  source paths.
+  source paths.  XML converter categorization now distinguishes Hibernate
+  `<conversion/>` declarations, which become explicit `ConversionRegistration`
+  entries, from JPA `<converter/>` declarations, which become
+  `JpaConverterRegistration` entries and are materialized as attribute
+  converter descriptors.
 
 === Table, Column, and Schema Details
 

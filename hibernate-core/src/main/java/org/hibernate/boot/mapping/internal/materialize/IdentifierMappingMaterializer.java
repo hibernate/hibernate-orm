@@ -8,9 +8,12 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.internal.GeneratorStrategies;
+import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
 import org.hibernate.boot.mapping.internal.binders.BasicValueBinder;
@@ -53,6 +56,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -121,7 +125,13 @@ public class IdentifierMappingMaterializer {
 		typeBinding.setIdentifierProperty( idProperty );
 		typeBinding.setDeclaredIdentifierProperty( idProperty );
 
-		final Column column = bindIdColumn( typeBinding, idAttributeMember, idAttribute::getName, table, idValue );
+		final Column column = bindIdColumn(
+				typeBinding,
+				idAttributeMember,
+				implicitIdentifierColumnName( typeMetadata, idAttribute ),
+				table,
+				idValue
+		);
 		CustomMappingBinder.callAttributeBinders( idAttributeMember, typeBinding, idProperty, state, context );
 		addSelectableName( binding, idAttribute.getName(), column.getName() );
 
@@ -239,7 +249,15 @@ public class IdentifierMappingMaterializer {
 			final Property idClassProperty = createProperty( idAttribute.getName(), idClassValue, idClassMember );
 			idValue.addProperty( idClassProperty );
 
-			final Column column = bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue );
+			final Column column = bindIdColumn(
+					typeBinding,
+					member,
+					idClassMember,
+					implicitIdentifierColumnName( type, idAttribute ),
+					table,
+					basicValue,
+					idClassValue
+			);
 			columns.add( column );
 			addSelectableName( binding, idAttribute.getName(), column.getName() );
 		}
@@ -285,7 +303,15 @@ public class IdentifierMappingMaterializer {
 				final Property idClassProperty = createProperty( idAttribute.getName(), idClassValue, idClassMember );
 				mappingParts.idValue().addProperty( idClassProperty );
 
-				final Column column = bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue );
+				final Column column = bindIdColumn(
+						typeBinding,
+						member,
+						idClassMember,
+						implicitIdentifierColumnName( type, idAttribute ),
+						table,
+						basicValue,
+						idClassValue
+				);
 				columns.add( column );
 				addSelectableName( binding, idAttribute.getName(), column.getName() );
 			}
@@ -466,8 +492,22 @@ public class IdentifierMappingMaterializer {
 				idValue.addProperty( idClassProperty );
 
 				final Column column = hasIdClass
-						? bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue )
-						: bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue );
+						? bindIdColumn(
+								typeBinding,
+								member,
+								idClassMember,
+								implicitIdentifierColumnName( type, idAttribute ),
+								table,
+								basicValue,
+								idClassValue
+						)
+						: bindIdColumn(
+								typeBinding,
+								member,
+								implicitIdentifierColumnName( type, idAttribute ),
+								table,
+								basicValue
+						);
 				columns.add( column );
 				addSelectableName( binding, idAttribute.getName(), column.getName() );
 			}
@@ -655,7 +695,15 @@ public class IdentifierMappingMaterializer {
 		final Property idClassProperty = createProperty( idAttribute.getName(), idClassValue, idClassMember );
 		mappingParts.idValue().addProperty( idClassProperty );
 
-		final Column column = bindIdColumn( typeBinding, member, idAttribute::getName, table, basicValue, idClassValue );
+		final Column column = bindIdColumn(
+				typeBinding,
+				member,
+				idClassMember,
+				implicitIdentifierColumnName( type, idAttribute ),
+				table,
+				basicValue,
+				idClassValue
+		);
 		columns.add( column );
 		addSelectableName( binding, idAttribute.getName(), column.getName() );
 	}
@@ -949,7 +997,7 @@ public class IdentifierMappingMaterializer {
 		manyToOne.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		manyToOne.setTypeUsingReflection( type.getClassDetails().getClassName(), idAttribute.getName() );
 		manyToOne.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
-		ToOneMaterializationHelper.applyFetchMode( source, manyToOne );
+		ToOneMaterializationHelper.applyFetchMode( source, manyToOne, typeBinding );
 		if ( source.isLogicalOneToOne() ) {
 			manyToOne.markAsLogicalOneToOne();
 		}
@@ -1128,6 +1176,27 @@ public class IdentifierMappingMaterializer {
 		return basicValue;
 	}
 
+	private Supplier<String> implicitIdentifierColumnName(EntityTypeMetadata type, AttributeMetadata idAttribute) {
+		return () -> context.getImplicitNamingStrategy()
+				.determineIdentifierColumnName( new ImplicitIdentifierColumnNameSource() {
+					@Override
+					public EntityTypeMetadata getEntityNaming() {
+						return type;
+					}
+
+					@Override
+					public AttributePath getIdentifierAttributePath() {
+						return AttributePath.parse( idAttribute.getName() );
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return state.getMetadataBuildingContext();
+					}
+				} )
+				.getText();
+	}
+
 	private void applyGeneratedValue(BasicValue idValue, MemberDetails member) {
 		if ( GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
 				idValue,
@@ -1165,7 +1234,18 @@ public class IdentifierMappingMaterializer {
 			Table table,
 			BasicValue basicValue,
 			BasicValue... additionalValues) {
-		final jakarta.persistence.Column columnAnn = member.getDirectAnnotationUsage( jakarta.persistence.Column.class );
+		return bindIdColumn( typeBinding, member, null, implicitName, table, basicValue, additionalValues );
+	}
+
+	private Column bindIdColumn(
+			RootClass typeBinding,
+			MemberDetails member,
+			@Nullable MemberDetails idClassMember,
+			java.util.function.Supplier<String> implicitName,
+			Table table,
+			BasicValue basicValue,
+			BasicValue... additionalValues) {
+		final jakarta.persistence.Column columnAnn = columnAnnotation( member, idClassMember );
 		final Column column = ColumnBinder.bindColumn(
 				ColumnSource.from( columnAnn ),
 				implicitName,
@@ -1182,5 +1262,45 @@ public class IdentifierMappingMaterializer {
 				column
 		);
 		return column;
+	}
+
+	private jakarta.persistence.Column columnAnnotation(MemberDetails member, @Nullable MemberDetails idClassMember) {
+		final jakarta.persistence.Column column = member.getDirectAnnotationUsage( jakarta.persistence.Column.class );
+		if ( column != null || idClassMember == null ) {
+			return column;
+		}
+
+		final jakarta.persistence.Column idClassColumn = idClassMember.getDirectAnnotationUsage(
+				jakarta.persistence.Column.class
+		);
+		if ( idClassColumn != null ) {
+			return idClassColumn;
+		}
+
+		return matchingIdClassColumnAnnotation( idClassMember );
+	}
+
+	private jakarta.persistence.Column matchingIdClassColumnAnnotation(MemberDetails idClassMember) {
+		final String attributeName = idClassMember.resolveAttributeName();
+		if ( attributeName == null ) {
+			return null;
+		}
+		for ( MemberDetails method : idClassMember.getDeclaringType().getMethods() ) {
+			if ( attributeName.equals( method.resolveAttributeName() ) ) {
+				final jakarta.persistence.Column column = method.getDirectAnnotationUsage( jakarta.persistence.Column.class );
+				if ( column != null ) {
+					return column;
+				}
+			}
+		}
+		for ( MemberDetails field : idClassMember.getDeclaringType().getFields() ) {
+			if ( attributeName.equals( field.resolveAttributeName() ) ) {
+				final jakarta.persistence.Column column = field.getDirectAnnotationUsage( jakarta.persistence.Column.class );
+				if ( column != null ) {
+					return column;
+				}
+			}
+		}
+		return null;
 	}
 }

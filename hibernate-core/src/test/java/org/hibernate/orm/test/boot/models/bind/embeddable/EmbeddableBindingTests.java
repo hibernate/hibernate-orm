@@ -5,9 +5,9 @@
 package org.hibernate.orm.test.boot.models.bind.embeddable;
 
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.List;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
@@ -144,9 +144,9 @@ public class EmbeddableBindingTests {
 					final ComponentMemberBinding labels = componentMember( contribution.members(), "labels" );
 					assertThat( labels.nature() ).isEqualTo( AttributeNature.ELEMENT_COLLECTION );
 					assertThat( labels.valueIntent() ).isSameAs( labels.collectionValueIntent() );
-					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.BAG );
+					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.LIST );
 					assertThat( labels.collectionValueIntent().elementIntent() ).isInstanceOf( BasicValueIntent.class );
-					assertThat( labels.collectionValueIntent().indexIntent() ).isNull();
+					assertThat( labels.collectionValueIntent().indexIntent() ).isInstanceOf( BasicValueIntent.class );
 					assertThat( labels.collectionValueIntent().sourceRole() ).isEqualTo( "facts.labels" );
 					assertThat( labels.collectionValueIntent().attributePath() ).isEqualTo( "labels" );
 
@@ -176,13 +176,13 @@ public class EmbeddableBindingTests {
 					final org.hibernate.mapping.Collection tagsCollection =
 							(org.hibernate.mapping.Collection) facts.getProperty( "tags" ).getValue();
 
-					assertThat( labelsCollection ).isInstanceOf( Bag.class );
+					assertThat( labelsCollection ).isInstanceOf( List.class );
 					assertThat( labelsCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.labels" );
 					assertThat( context.getMetadataCollector().getCollectionBinding( labelsCollection.getRole() ) )
 							.isSameAs( labelsCollection );
-					assertThat( partsCollection ).isInstanceOf( Bag.class );
+					assertThat( partsCollection ).isInstanceOf( List.class );
 					assertThat( partsCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.parts" );
-					assertThat( childrenCollection ).isInstanceOf( Bag.class );
+					assertThat( childrenCollection ).isInstanceOf( List.class );
 					assertThat( childrenCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.children" );
 					assertThat( tagsCollection ).isInstanceOf( Set.class );
 					assertThat( tagsCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.tags" );
@@ -208,7 +208,7 @@ public class EmbeddableBindingTests {
 					final ComponentMemberBinding labels = componentMember( contribution.members(), "labels" );
 
 					assertThat( labels.nature() ).isEqualTo( AttributeNature.ELEMENT_COLLECTION );
-					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.BAG );
+					assertThat( labels.collectionValueIntent().classification() ).isEqualTo( CollectionClassification.LIST );
 					assertThat( labels.collectionValueIntent().sourceRole() ).isEqualTo( "facts.details.labels" );
 
 					final PersistentClass entityBinding = context.getMetadataCollector()
@@ -218,7 +218,7 @@ public class EmbeddableBindingTests {
 					final org.hibernate.mapping.Collection labelsCollection =
 							(org.hibernate.mapping.Collection) details.getProperty( "labels" ).getValue();
 
-					assertThat( labelsCollection ).isInstanceOf( Bag.class );
+					assertThat( labelsCollection ).isInstanceOf( List.class );
 					assertThat( labelsCollection.getRole() )
 							.isEqualTo( NestedComponentPluralOwner.class.getName() + ".facts.details.labels" );
 					assertThat( context.getMetadataCollector().getCollectionBinding( labelsCollection.getRole() ) )

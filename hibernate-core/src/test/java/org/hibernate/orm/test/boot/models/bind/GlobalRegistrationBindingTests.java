@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.annotations.CollectionTypeRegistration;
@@ -69,6 +70,7 @@ import jakarta.persistence.FieldResult;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedNativeQuery;
@@ -92,6 +94,7 @@ import static org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM;
 import static org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM;
 import static org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Tests that persistence-unit scoped registrations collected during
 /// categorization are applied to Hibernate's boot metadata collector.
@@ -130,7 +133,11 @@ public class GlobalRegistrationBindingTests {
 					assertThat( metadataCollector.getAttributeConverterManager()
 							.findRegisteredConversion( GlobalConverted.class ) ).isNotNull();
 					assertThat( metadataCollector.getAttributeConverterManager()
-							.findRegisteredConversion( PlainConverted.class ) ).isNotNull();
+							.findRegisteredConversion( PlainConverted.class ) ).isNull();
+					final var plainConverted = (BasicValue) metadataCollector.getEntityBinding(
+							GlobalRegistrationEntity.class.getName()
+					).getProperty( "plainConverted" ).getValue();
+					assertThat( plainConverted.getJpaAttributeConverterDescriptor() ).isNotNull();
 					assertThat( metadataCollector.getImports() )
 							.containsEntry( "GlobalRegistrationAlias", GlobalRegistrationEntity.class.getName() );
 
@@ -164,6 +171,9 @@ public class GlobalRegistrationBindingTests {
 					assertThat( entityGraph.graphCreator() ).isNotNull();
 					assertThat( entityGraph.graphCreator().getClass().getSimpleName() ).isEqualTo( "NamedGraphCreatorJpa" );
 					verifyJpaFetchGraphContribution( entityGraph );
+					final var unnamedEntityGraph = metadataCollector.getNamedEntityGraph( "GlobalRegistrationEntity" );
+					assertThat( unnamedEntityGraph.entityName() ).isEqualTo( "GlobalRegistrationEntity" );
+					assertThat( unnamedEntityGraph.source() ).isEqualTo( NamedEntityGraphDefinition.Source.JPA );
 					final var parsedEntityGraph = metadataCollector.getNamedEntityGraph( "globalParsedGraph" );
 					assertThat( parsedEntityGraph.entityName() ).isEqualTo( "GlobalRegistrationEntity" );
 					assertThat( parsedEntityGraph.source() ).isEqualTo( NamedEntityGraphDefinition.Source.PARSED );
@@ -252,6 +262,20 @@ public class GlobalRegistrationBindingTests {
 		} );
 	}
 
+	@Test
+	@ServiceRegistry
+	void testUnnamedNamedEntityGraphRequiresEntity(ServiceRegistryScope scope) {
+		assertThatThrownBy( () -> BindingTestingHelper.checkDomainModel(
+				(context) -> {},
+				scope.getRegistry(),
+				UnnamedGraphMappedSuperclass.class,
+				UnnamedGraphEntity.class
+		) )
+				.isInstanceOf( AnnotationException.class )
+				.hasMessageContaining( "Unnamed @NamedEntityGraph is only valid when declared on an entity type" )
+				.hasMessageContaining( UnnamedGraphMappedSuperclass.class.getName() );
+	}
+
 	@SuppressWarnings("unchecked")
 	private static void verifyJpaFetchGraphContribution(NamedEntityGraphDefinition entityGraph) {
 		final List<?> fetchContributions = readField( entityGraph.graphCreator(), "fetchContributions" );
@@ -335,6 +359,7 @@ public class GlobalRegistrationBindingTests {
 	)
 	@org.hibernate.annotations.NamedQuery(name = "globalHibernateQuery", query = "from GlobalRegistrationEntity")
 	@NamedEntityGraph(name = "globalGraph", attributeNodes = @NamedAttributeNode("id"))
+	@NamedEntityGraph(attributeNodes = @NamedAttributeNode("id"))
 	@org.hibernate.annotations.NamedEntityGraph(name = "globalParsedGraph", graph = "parent")
 	@FilterDef(
 			name = "globalFilter",
@@ -367,6 +392,7 @@ public class GlobalRegistrationBindingTests {
 	public static class GlobalRegistrationEntity {
 		@Id
 		private Integer id;
+		private PlainConverted plainConverted;
 		@ManyToOne
 		@JoinColumn(name = "parent_id")
 		@Fetch(graph = "globalGraph", type = FetchType.EAGER, batchSize = 5, cacheStoreMode = CacheStoreMode.BYPASS)
@@ -385,6 +411,18 @@ public class GlobalRegistrationBindingTests {
 		@Id
 		@UuidGenerator(style = UuidGenerator.Style.RANDOM)
 		private UUID id;
+	}
+
+	@MappedSuperclass
+	@NamedEntityGraph
+	public static class UnnamedGraphMappedSuperclass {
+		private String name;
+	}
+
+	@Entity(name = "UnnamedGraphEntity")
+	public static class UnnamedGraphEntity extends UnnamedGraphMappedSuperclass {
+		@Id
+		private Integer id;
 	}
 
 	public record GlobalConverted(String value) {

@@ -10,6 +10,9 @@ import java.util.Set;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
 import org.hibernate.boot.mapping.internal.view.EntityView;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
@@ -19,6 +22,7 @@ import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
@@ -27,6 +31,7 @@ import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelC
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.Test;
 
@@ -97,6 +102,32 @@ public class SimpleIdTests {
 					assertThat( entityIdentifierBinding.identifierSelectableNames() ).containsExactly( "id" );
 					assertThat( entityIdentifierBinding.attribute( "id" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
+				},
+				scope.getRegistry(),
+				BasicIdEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+			value = "org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests$IdentifierImplicitNamingStrategy"
+	))
+	void testImplicitIdentifierColumnUsesImplicitNamingStrategy(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( BasicIdEntity.class.getName() );
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "implicit_identifier_id" );
+
+					final EntityIdentifierBindingView entityIdentifierBinding = entityIdentifierBinding(
+							context,
+							BasicIdEntity.class
+					);
+					assertThat( entityIdentifierBinding.identifierSelectableNames() )
+							.containsExactly( "implicit_identifier_id" );
 				},
 				scope.getRegistry(),
 				BasicIdEntity.class
@@ -864,6 +895,16 @@ public class SimpleIdTests {
 				|| type == org.hibernate.mapping.Property.class
 				|| type == org.hibernate.mapping.Value.class
 				|| type == org.hibernate.mapping.Column.class;
+	}
+
+	public static class IdentifierImplicitNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl {
+		@Override
+		public Identifier determineIdentifierColumnName(ImplicitIdentifierColumnNameSource source) {
+			return toIdentifier(
+					"implicit_identifier_" + source.getIdentifierAttributePath().getProperty(),
+					source.getBuildingContext()
+			);
+		}
 	}
 
 	@Entity(name = "MapsIdParent")

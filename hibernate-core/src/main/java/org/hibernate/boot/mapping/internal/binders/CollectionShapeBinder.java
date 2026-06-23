@@ -31,8 +31,13 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.CustomSqlMapping;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.List;
+import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SortableValue;
+import org.hibernate.models.spi.ClassDetails;
 
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -47,7 +52,7 @@ import static org.hibernate.internal.util.StringHelper.isNotBlank;
 /// @author Steve Ebersole
 class CollectionShapeBinder {
 	static void apply(CollectionSource source, Collection collection, BindingState bindingState) {
-		validateOrderingAndSorting( source, collection );
+		validateOrderingAndSorting( source, collection, bindingState );
 		applyFetching( source, collection );
 		applyFetchProfileOverrides( source, collection, bindingState );
 		applyFilters( source, collection, bindingState );
@@ -60,7 +65,7 @@ class CollectionShapeBinder {
 			case ORDERED_SET, ORDERED_MAP -> applyOrdering( source, collection, bindingState );
 			case SORTED_SET, SORTED_MAP -> applySorting( source, collection );
 			default -> {
-				if ( source.orderBy() != null || source.sqlOrder() != null ) {
+				if ( hasOrdering( source, bindingState ) ) {
 					applyOrdering( source, collection, bindingState );
 				}
 			}
@@ -70,14 +75,14 @@ class CollectionShapeBinder {
 		}
 	}
 
-	private static void validateOrderingAndSorting(CollectionSource source, Collection collection) {
-		if ( hasOrdering( source ) && hasSorting( source ) ) {
+	private static void validateOrderingAndSorting(CollectionSource source, Collection collection, BindingState bindingState) {
+		if ( hasOrdering( source, bindingState ) && hasSorting( source ) ) {
 			throw new AnnotationException( "Collection '" + collection.getRole() + "' is both sorted and ordered" );
 		}
 	}
 
-	private static boolean hasOrdering(CollectionSource source) {
-		return source.orderBy() != null || source.sqlOrder() != null;
+	private static boolean hasOrdering(CollectionSource source, BindingState bindingState) {
+		return source.orderBy() != null || effectiveSqlOrder( source, bindingState ) != null;
 	}
 
 	private static boolean hasSorting(CollectionSource source) {
@@ -90,9 +95,9 @@ class CollectionShapeBinder {
 		final FetchType fetchType = source.fetchType();
 		collection.setLazy( fetchType == FetchType.LAZY );
 		collection.setExtraLazy( false );
-		final var hibernateFetch = source.hibernateFetch();
-		if ( hibernateFetch != null ) {
-			applyHibernateFetchStyle( hibernateFetch.value(), collection );
+		final var hibernateFetchMode = source.hibernateFetchMode();
+		if ( hibernateFetchMode != null ) {
+			applyHibernateFetchStyle( hibernateFetchMode, collection );
 		}
 		else {
 			collection.setFetchStyle( fetchType == FetchType.EAGER ? FetchStyle.JOIN : FetchStyle.SELECT );
@@ -115,6 +120,7 @@ class CollectionShapeBinder {
 				collection.setFetchStyle( FetchStyle.SELECT );
 				collection.setSubselectLoadable( true );
 				collection.getOwner().setSubselectLoadableCollections( true );
+				collection.getOwner().setSubselectLoadableAttributes( true );
 			}
 		}
 	}
@@ -246,13 +252,7 @@ class CollectionShapeBinder {
 						bindingState.getDatabase().getDialect(),
 						bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
 				),
-				source.associatedTypeRestriction() == null ? null
-						: getOverridableAnnotation(
-								source.elementType().determineRawClass(),
-								SQLRestriction.class,
-								bindingState.getDatabase().getDialect(),
-								bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
-						)
+				effectiveAssociatedTypeRestriction( source, bindingState )
 		);
 		if ( whereClause != null ) {
 			if ( hasAssociationTable ) {
@@ -369,27 +369,53 @@ class CollectionShapeBinder {
 		return "(" + associatedTypeRestriction.value() + ") and (" + memberRestriction.value() + ")";
 	}
 
-	private static void applyOrdering(CollectionSource source, Collection collection, BindingState bindingState) {
-		final SQLOrder sqlOrder = getOverridableAnnotation(
-				source.member(),
-				SQLOrder.class,
+	private static SQLRestriction effectiveAssociatedTypeRestriction(CollectionSource source, BindingState bindingState) {
+		if ( source.nature() == CollectionSource.Nature.ELEMENT_COLLECTION || source.elementType() == null ) {
+			return null;
+		}
+		return getOverridableAnnotation(
+				source.elementType().determineRawClass(),
+				SQLRestriction.class,
 				bindingState.getDatabase().getDialect(),
 				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
 		);
+	}
+
+	private static void applyOrdering(CollectionSource source, Collection collection, BindingState bindingState) {
+		final SQLOrder sqlOrder = effectiveSqlOrder( source, bindingState );
 		if ( sqlOrder != null ) {
 			if ( isNotBlank( sqlOrder.value() ) ) {
-				collection.setSqlOrderBy( sqlOrder.value() );
+				if ( source.nature() == CollectionSource.Nature.MANY_TO_MANY ) {
+					collection.setManyToManyOrdering( sqlOrder.value() );
+				}
+				else {
+					collection.setOrderBy( sqlOrder.value() );
+				}
 			}
 			return;
 		}
 
 		final var orderBy = source.orderBy();
 		if ( orderBy != null ) {
-			collection.setJpaOrderBy( orderByFragment( source, orderBy.value() ) );
+			if ( source.nature() == CollectionSource.Nature.MANY_TO_MANY ) {
+				collection.setManyToManyJpaOrdering( orderByFragment( source, orderBy.value(), bindingState ) );
+			}
+			else {
+				collection.setJpaOrderBy( orderByFragment( source, orderBy.value(), bindingState ) );
+			}
 		}
 	}
 
-	private static String orderByFragment(CollectionSource source, String orderByFragment) {
+	private static SQLOrder effectiveSqlOrder(CollectionSource source, BindingState bindingState) {
+		return getOverridableAnnotation(
+				source.member(),
+				SQLOrder.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
+	}
+
+	private static String orderByFragment(CollectionSource source, String orderByFragment, BindingState bindingState) {
 		if ( source.nature() == CollectionSource.Nature.ELEMENT_COLLECTION ) {
 			final String trimmed = orderByFragment.trim();
 			if ( trimmed.isBlank() || trimmed.equalsIgnoreCase( "asc" ) ) {
@@ -399,7 +425,58 @@ class CollectionShapeBinder {
 				return "$element$ desc";
 			}
 		}
+		else if ( source.elementType() != null ) {
+			final String trimmed = orderByFragment.trim();
+			if ( trimmed.isBlank() || trimmed.equalsIgnoreCase( "asc" ) ) {
+				return entityIdentifierOrderByFragment( source, bindingState, " asc" );
+			}
+			if ( trimmed.equalsIgnoreCase( "desc" ) ) {
+				return entityIdentifierOrderByFragment( source, bindingState, " desc" );
+			}
+		}
 		return orderByFragment;
+	}
+
+	private static String entityIdentifierOrderByFragment(
+			CollectionSource source,
+			BindingState bindingState,
+			String direction) {
+		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) bindingState.getTypeBinder(
+				targetClassDetails( source )
+		);
+		if ( targetTypeBinder == null ) {
+			return "";
+		}
+		final IdentifierBinding identifierBinding = bindingState.getIdentifierBinding(
+				targetTypeBinder.getManagedType().getHierarchy().getRoot()
+		);
+		if ( identifierBinding == null ) {
+			return "";
+		}
+		if ( identifierBinding.value() instanceof SortableValue sortableValue ) {
+			sortableValue.sortProperties();
+		}
+		final StringBuilder result = new StringBuilder();
+		for ( Selectable selectable : identifierBinding.value().getSelectables() ) {
+			if ( !result.isEmpty() ) {
+				result.append( ", " );
+			}
+			result.append( selectable.getText() );
+			result.append( direction );
+		}
+		return result.toString();
+	}
+
+	private static ClassDetails targetClassDetails(CollectionSource source) {
+		final ManyToMany manyToMany = source.manyToMany();
+		if ( manyToMany != null && manyToMany.targetEntity() != void.class ) {
+			return source.modelsContext().getClassDetailsRegistry().resolveClassDetails( manyToMany.targetEntity().getName() );
+		}
+		final OneToMany oneToMany = source.oneToMany();
+		if ( oneToMany != null && oneToMany.targetEntity() != void.class ) {
+			return source.modelsContext().getClassDetailsRegistry().resolveClassDetails( oneToMany.targetEntity().getName() );
+		}
+		return source.elementType().determineRawClass();
 	}
 
 	private static void applySorting(CollectionSource source, Collection collection) {

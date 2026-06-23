@@ -5,6 +5,8 @@
 package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,8 +27,12 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
@@ -54,6 +60,7 @@ import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.JavaTypeRegistration;
 import org.hibernate.boot.mapping.internal.categorize.JdbcTypeRegistration;
+import org.hibernate.boot.mapping.internal.categorize.JpaConverterRegistration;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.SequenceGeneratorRegistration;
@@ -64,12 +71,14 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.ModelsException;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
@@ -90,6 +99,10 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 /// @since 9.0
 /// @author Steve Ebersole
 public class BindingCoordinator {
+	private static final Comparator<TypeContributor> TYPE_CONTRIBUTOR_COMPARATOR = Comparator.comparingInt(
+			TypeContributor::ordinal
+	).thenComparing( typeContributor -> typeContributor.getClass().getName() );
+
 	private final CategorizedDomainModel categorizedDomainModel;
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
@@ -135,8 +148,43 @@ public class BindingCoordinator {
 	private void coordinateBinding() {
 		// todo : to really work on these, need to changes to MetadataBuildingContext/InFlightMetadataCollector
 
+		processTypeContributors();
 		coordinateGlobalBindings();
 		coordinateModelBindings();
+		processFetchProfiles( categorizedDomainModel.getGlobalRegistrations() );
+	}
+
+	private void processTypeContributors() {
+		final TypeConfiguration typeConfiguration = bindingState.getTypeConfiguration();
+		final TypeContributions typeContributions = new TypeContributions() {
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+				bindingState.addAttributeConverter( converterClass );
+			}
+
+			@Override
+			public void contributeType(CompositeUserType<?> type) {
+				throw new UnsupportedOperationException(
+						"CompositeUserType contributions from TypeContributor are not supported by the new boot pipeline"
+				);
+			}
+		};
+		sortedTypeContributors().forEach( (typeContributor) ->
+				typeContributor.contribute( typeContributions, bindingContext.getServiceRegistry() ) );
+	}
+
+	private List<TypeContributor> sortedTypeContributors() {
+		final Collection<TypeContributor> typeContributors = bindingContext.getBootstrapContext()
+				.getClassLoaderService()
+				.loadJavaServices( TypeContributor.class );
+		final List<TypeContributor> contributors = new ArrayList<>( typeContributors );
+		contributors.sort( TYPE_CONTRIBUTOR_COMPARATOR );
+		return contributors;
 	}
 
 	private void coordinateModelBindings() {
@@ -247,7 +295,7 @@ public class BindingCoordinator {
 		processNamedQueries( globalRegistrations );
 		processSqlResultSetMappings( globalRegistrations );
 		processNamedEntityGraphs( globalRegistrations );
-		processFetchProfiles( globalRegistrations );
+		processFetchProfileDeclarations( globalRegistrations );
 		processDatabaseObjects( globalRegistrations );
 		processJavaTypeRegistrations( globalRegistrations );
 		processJdbcTypeRegistrations( globalRegistrations );
@@ -346,6 +394,7 @@ public class BindingCoordinator {
 	}
 
 	private void processConverters(GlobalRegistrations globalRegistrations) {
+		globalRegistrations.getJpaConverters().forEach( this::processJpaConverter );
 		globalRegistrations.getConverterRegistrations().forEach( this::processConverter );
 	}
 
@@ -429,32 +478,83 @@ public class BindingCoordinator {
 
 	private void processFetchProfiles(GlobalRegistrations globalRegistrations) {
 		for ( FetchProfileRegistration registration : globalRegistrations.getFetchProfileRegistrations() ) {
-			FetchProfile profile = bindingState.getFetchProfile( registration.getName() );
+			final FetchProfile profile = resolveFetchProfile( registration );
 			if ( profile == null ) {
-				profile = new FetchProfile( registration.getName(), MetadataSource.OTHER );
-				bindingState.addFetchProfile( profile );
+				continue;
 			}
 			for ( FetchProfileRegistration.FetchOverride fetchOverride : registration.getFetchOverrides() ) {
+				if ( fetchOverride.fetch() == FetchType.LAZY && fetchOverride.mode() == FetchMode.JOIN ) {
+					throw new AnnotationException(
+							"Fetch profile '" + registration.getName()
+									+ "' has a '@FetchOverride' with 'fetch=LAZY' and 'mode=JOIN'"
+									+ " (join fetching is eager by nature)"
+					);
+				}
+				final PersistentClass entityBinding = resolveFetchProfileEntityBinding( registration, fetchOverride );
+				entityBinding.getProperty( fetchOverride.association() );
 				profile.addFetch( new FetchProfile.Fetch(
-						fetchOverride.entityName(),
+						entityBinding.getEntityName(),
 						fetchOverride.association(),
-						fetchMode( fetchOverride.style() ),
-						FetchType.EAGER
+						fetchOverride.mode(),
+						fetchOverride.fetch()
 				) );
 			}
 		}
 	}
 
-	private static FetchMode fetchMode(String style) {
-		if ( style == null ) {
-			return FetchMode.JOIN;
+	private void processFetchProfileDeclarations(GlobalRegistrations globalRegistrations) {
+		for ( FetchProfileRegistration registration : globalRegistrations.getFetchProfileRegistrations() ) {
+			resolveFetchProfile( registration );
 		}
-		for ( FetchMode mode : FetchMode.values() ) {
-			if ( mode.name().equalsIgnoreCase( style ) ) {
-				return mode;
+	}
+
+	private FetchProfile resolveFetchProfile(FetchProfileRegistration registration) {
+		FetchProfile profile = bindingState.getFetchProfile( registration.getName() );
+		if ( profile == null ) {
+			profile = new FetchProfile( registration.getName(), registration.getSource() );
+			bindingState.addFetchProfile( profile );
+			return profile;
+		}
+		if ( profile.getSource() != MetadataSource.ANNOTATIONS
+				&& registration.getSource() == MetadataSource.ANNOTATIONS ) {
+			return null;
+		}
+		if ( profile.getSource() == MetadataSource.ANNOTATIONS
+				&& registration.getSource() != MetadataSource.ANNOTATIONS ) {
+			profile = new FetchProfile( registration.getName(), registration.getSource() );
+			bindingState.addFetchProfile( profile );
+		}
+		return profile;
+	}
+
+	private PersistentClass resolveFetchProfileEntityBinding(
+			FetchProfileRegistration registration,
+			FetchProfileRegistration.FetchOverride fetchOverride) {
+		final var metadataCollector = bindingState.getMetadataBuildingContext().getMetadataCollector();
+		final var entityName = fetchOverride.entityName();
+		final var importedEntityName = metadataCollector.getImports().get( entityName );
+		PersistentClass entityBinding = metadataCollector.getEntityBinding( entityName );
+		if ( entityBinding == null && importedEntityName != null ) {
+			entityBinding = metadataCollector.getEntityBinding( importedEntityName );
+		}
+		if ( entityBinding == null ) {
+			for ( PersistentClass candidate : metadataCollector.getEntityBindings() ) {
+				if ( entityName.equals( candidate.getEntityName() )
+						|| entityName.equals( candidate.getJpaEntityName() )
+						|| entityName.equals( candidate.getClassName() )
+						|| entityName.equals( unqualify( candidate.getClassName() ) ) ) {
+					entityBinding = candidate;
+					break;
+				}
 			}
 		}
-		return FetchMode.JOIN;
+		if ( entityBinding == null ) {
+			throw new MappingException(
+					"Fetch profile '" + registration.getName()
+							+ "' references unknown entity '" + entityName + "'"
+			);
+		}
+		return entityBinding;
 	}
 
 	private void processDatabaseObjects(GlobalRegistrations globalRegistrations) {
@@ -555,14 +655,18 @@ public class BindingCoordinator {
 	}
 
 	private void processConverter(ConversionRegistration registration) {
-		if ( registration.explicitDomainType() == null ) {
-			bindingState.addAttributeConverter( attributeConverterClass( registration.converterType() ) );
-			return;
-		}
 		bindingState.addRegisteredConversion( new RegisteredConversion(
-				registration.explicitDomainType().toJavaClass(),
+				registration.explicitDomainType() == null ? void.class : registration.explicitDomainType().toJavaClass(),
 				attributeConverterClass( registration.converterType() ),
 				registration.autoApply()
+		) );
+	}
+
+	private void processJpaConverter(JpaConverterRegistration registration) {
+		bindingState.addAttributeConverter( ConverterDescriptors.of(
+				attributeConverterClass( registration.converterType() ),
+				registration.autoApply(),
+				false
 		) );
 	}
 

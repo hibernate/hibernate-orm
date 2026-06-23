@@ -53,7 +53,11 @@ import org.hibernate.models.spi.TypeDetails;
 
 import java.util.EnumSet;
 
+import jakarta.persistence.AttributeConverter;
+
 import static org.hibernate.boot.mapping.internal.categorize.CategorizationLogging.CATEGORIZATION_LOGGER;
+import static org.hibernate.internal.util.GenericsHelper.erasedType;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 
 /// Helpers/utilities for categorization
 ///
@@ -152,6 +156,10 @@ public class CategorizationHelper {
 			plural = true;
 			natures.add( AttributeNature.MANY_TO_ANY );
 		}
+		else if ( backingMember.isPlural() && hasCollectionElementConversion( backingMember ) ) {
+			plural = true;
+			natures.add( AttributeNature.ELEMENT_COLLECTION );
+		}
 		else {
 			plural = false;
 		}
@@ -217,5 +225,22 @@ public class CategorizationHelper {
 	private static boolean hasBasicConversion(MemberDetails backingMember) {
 		final Convert convert = backingMember.getDirectAnnotationUsage( Convert.class );
 		return convert != null && ( convert.attributeName() == null || convert.attributeName().isEmpty() );
+	}
+
+	private static boolean hasCollectionElementConversion(MemberDetails backingMember) {
+		final Convert convert = backingMember.getDirectAnnotationUsage( Convert.class );
+		return hasBasicConversion( backingMember )
+				&& !conversionTargetsMemberType( convert, backingMember );
+	}
+
+	private static boolean conversionTargetsMemberType(Convert convert, MemberDetails backingMember) {
+		if ( convert == null || convert.disableConversion() || convert.converter() == AttributeConverter.class ) {
+			return false;
+		}
+
+		final java.lang.reflect.Type converterDomainType = typeArguments( AttributeConverter.class, convert.converter() )[0];
+		final Class<?> converterDomainClass = erasedType( converterDomainType );
+		final Class<?> memberClass = backingMember.getType().determineRawClass().toJavaClass();
+		return converterDomainClass.isAssignableFrom( memberClass );
 	}
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -220,6 +221,13 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void applyMappedSuperclassProperty(Property property, PersistentClass entityBinding) {
+		final Property identifierProperty = entityBinding.getDeclaredIdentifierProperty();
+		if ( identifierProperty != null && property.getName().equals( identifierProperty.getName() ) ) {
+			throw new MappingException( "Property '" + property.getName()
+					+ "' is inherited from mapped superclass '" + getManagedType().getClassDetails().getName()
+					+ "' and may not be remapped as identifier property in entity '"
+					+ entityBinding.getEntityName() + "'" );
+		}
 		if ( hasDeclaredProperty( entityBinding, property.getName() ) ) {
 			return;
 		}

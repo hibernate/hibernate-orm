@@ -741,7 +741,17 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	private Class<?> graphMetamodelClass(NamedEntityGraphDefinition definition, MetadataContext context) {
-		return context.metamodelClass( managedTypeByName.get( definition.entityName() ) );
+		return context.metamodelClass( resolveEntityDomainTypeByJpaName( definition.entityName() ) );
+	}
+
+	private ManagedDomainType<?> resolveEntityDomainTypeByJpaName(String jpaEntityName) {
+		for ( var managedType : managedTypeByName.values() ) {
+			if ( managedType instanceof EntityDomainType<?> entityDomainType
+					&& jpaEntityName.equals( entityDomainType.getName() ) ) {
+				return entityDomainType;
+			}
+		}
+		return null;
 	}
 
 	private Class<?> metamodelClass(ManagedDomainType<?> managedDomainType) {

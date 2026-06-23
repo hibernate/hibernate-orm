@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.collection.propertyref</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-lazy>true</default-lazy>
+    <entity class="User" metadata-complete="true">
+        <table name="t_user"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="native"/>
+            </id>
+            <basic name="userid">
+                <column name="userid" nullable="false" length="32"/>
+            </basic>
+            <one-to-many name="mail" target-entity="Mail" fetch="EAGER"
+                         mapped-by="user" orphan-removal="true" classification="SET">
+                <cascade>
+                    <cascade-all/>
+                    <cascade-remove/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>

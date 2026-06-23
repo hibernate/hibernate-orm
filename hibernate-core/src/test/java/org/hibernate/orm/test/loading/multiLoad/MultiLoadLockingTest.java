@@ -211,7 +211,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(entitiesLoaded);
 			assertEquals(entityWithAggregateIdList.size(), entitiesLoaded.size());
 			entitiesLoaded.forEach(entity -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(entity)) );
-			checkStatement( 1, lockString );
+			checkStatement( 2, lockString );
 		} );
 		// test findMultiple
 		scope.inTransaction( session -> {
@@ -225,7 +225,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(entitiesLoaded);
 			assertEquals(entityWithAggregateIdList.size(), entitiesLoaded.size());
 			entitiesLoaded.forEach(entity -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(entity)) );
-			checkStatement( 1, lockString );
+			checkStatement( 2, lockString );
 		} );
 		// test byMultipleNaturalId
 		scope.inTransaction( session -> {
@@ -272,7 +272,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(usersLoaded);
 			assertEquals(userList.size(), usersLoaded.size());
 			usersLoaded.forEach(user -> assertEquals(LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode(user)) );
-			checkStatement( 1, lockString );
+			checkStatement( 2, lockString );
 		} );
 		// test findMultiple
 		scope.inTransaction( session -> {
@@ -284,7 +284,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(usersLoaded);
 			assertEquals(userList.size(), usersLoaded.size());
 			usersLoaded.forEach(user -> assertEquals(LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode(user)) );
-			checkStatement( 1, lockString );
+			checkStatement( 2, lockString );
 		} );
 		// test byMultipleNaturalId
 		scope.inTransaction( session -> {

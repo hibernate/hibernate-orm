@@ -50,7 +50,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private GraphSemantic graphSemantic;
 
 	private BatchSize batchSize;
-	private FindMultipleOption.SessionCheckMode sessionCheckMode = FindMultipleOption.SessionCheckMode.DISABLED;
+	private FindMultipleOption.SessionCheckMode sessionCheckMode = FindMultipleOption.SessionCheckMode.ENABLED;
 	private FindMultipleOption.RemovalsMode removalsMode = FindMultipleOption.RemovalsMode.REPLACE;
 	protected FindMultipleOption.OrderingMode orderingMode = FindMultipleOption.OrderingMode.ORDERED;
 
@@ -130,6 +130,11 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	public boolean isSecondLevelCacheCheckingEnabled() {
 		return cacheMode == CacheMode.NORMAL || cacheMode == CacheMode.GET;
+	}
+
+	@Override
+	public boolean isRefreshSession() {
+		return cacheMode == CacheMode.REFRESH_SESSION;
 	}
 
 	@Override

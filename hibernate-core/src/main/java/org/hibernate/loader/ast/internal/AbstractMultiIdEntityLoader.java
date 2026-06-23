@@ -209,7 +209,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> result,
 			int i) {
-		return (loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED
+		return !loadOptions.isRefreshSession()
+			&& (loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED
 				|| loadOptions.isSecondLevelCacheCheckingEnabled() )
 			&& isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
 	}
@@ -299,8 +300,9 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			@Nonnull LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
-		return loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED
-			|| loadOptions.isSecondLevelCacheCheckingEnabled()
+		return !loadOptions.isRefreshSession()
+			&& (loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED
+				|| loadOptions.isSecondLevelCacheCheckingEnabled())
 				// the user requested that we exclude ids corresponding to already managed
 				// entities from the generated load SQL. So here we will iterate all
 				// incoming id values and see whether it corresponds to an existing

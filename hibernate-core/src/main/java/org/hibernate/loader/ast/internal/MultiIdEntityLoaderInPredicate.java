@@ -189,7 +189,17 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			final int batchSize =  Math.min( numberOfIdsLeft, maxBatchSize );
 			final Object[] idsInBatch = new Object[batchSize];
 			arraycopy( unresolvableIds, idPosition, idsInBatch, 0, batchSize );
-			results.addAll( listEntitiesById( asList( idsInBatch ), lockOptions, loadOptions, session ) );
+			if ( idsInBatch.length == 1 ) {
+				final var singleResult = getLoadable().getEntityPersister()
+						.load( idsInBatch[0], null, lockOptions, session );
+				if ( singleResult != null ) {
+					//noinspection unchecked
+					results.add( (T) singleResult );
+				}
+			}
+			else {
+				results.addAll( performRegularMultiLoad( asList( idsInBatch ), lockOptions, loadOptions, session, idsInBatch.length ) );
+			}
 			numberOfIdsLeft = numberOfIdsLeft - batchSize;
 			idPosition += batchSize;
 		}

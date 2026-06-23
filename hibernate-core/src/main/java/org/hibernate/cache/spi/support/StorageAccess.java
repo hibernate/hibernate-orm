@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -19,31 +22,35 @@ public interface StorageAccess {
 	/**
 	 * Get an item from the cache.
 	 */
-	Object getFromCache(Object key, SharedSessionContractImplementor session);
+	@Nullable
+	Object getFromCache(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Put an item into the cache
 	 */
-	void putIntoCache(Object key, Object value, SharedSessionContractImplementor session);
+	void putIntoCache(
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Remove an item from the cache by key
 	 */
-	default void removeFromCache(Object key, SharedSessionContractImplementor session) {
+	default void removeFromCache(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		evictData( key );
 	}
 
 	/**
 	 * Clear data from the cache
 	 */
-	default void clearCache(SharedSessionContractImplementor session) {
+	default void clearCache(@Nonnull SharedSessionContractImplementor session) {
 		evictData();
 	}
 
 	/**
 	 * Does the cache contain this key?
 	 */
-	boolean contains(Object key);
+	boolean contains(@Nonnull Object key);
 
 	/**
 	 * Clear all data regardless of transaction/locking
@@ -53,7 +60,7 @@ public interface StorageAccess {
 	/**
 	 * Remove the entry regardless of transaction/locking
 	 */
-	void evictData(Object key);
+	void evictData(@Nonnull Object key);
 
 	/**
 	 * Release any resources.  Called during cache shutdown

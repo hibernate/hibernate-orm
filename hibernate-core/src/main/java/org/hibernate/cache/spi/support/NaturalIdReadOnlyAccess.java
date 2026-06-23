@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -21,10 +24,10 @@ import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
  */
 public class NaturalIdReadOnlyAccess extends AbstractNaturalIdDataAccess {
 	public NaturalIdReadOnlyAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			NaturalIdDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull NaturalIdDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
 		if ( config.isMutable() ) {
 			L2CACHE_LOGGER.readOnlyCachingMutableNaturalId( config.getNavigableRole().getFullPath() );
@@ -32,15 +35,16 @@ public class NaturalIdReadOnlyAccess extends AbstractNaturalIdDataAccess {
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.READ_ONLY;
 	}
 
 	@Override
 	public void unlockItem(
-			SharedSessionContractImplementor session,
-			Object key,
-			SoftLock lock) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 		evict( key );
 	}
 }

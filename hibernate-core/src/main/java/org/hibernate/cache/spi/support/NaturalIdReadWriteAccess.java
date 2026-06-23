@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Comparator;
 
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
@@ -25,55 +28,69 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	private final CacheKeysFactory keysFactory;
 
 	public NaturalIdReadWriteAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			NaturalIdDataCachingConfig naturalIdDataCachingConfig) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull NaturalIdDataCachingConfig naturalIdDataCachingConfig) {
 		super( region, storageAccess );
 		this.keysFactory = keysFactory;
 	}
 
 	@Deprecated
 	@Override
+	@Nonnull
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.NATURAL_ID;
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.READ_WRITE;
 	}
 
 	@Override
+	@Nullable
 	protected Comparator<Object> getVersionComparator() {
 		// natural id has no comparator
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Object generateCacheKey(
-			Object naturalIdValues,
-			EntityPersister rootEntityDescriptor,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object naturalIdValues,
+			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, rootEntityDescriptor, session );
 	}
 
 	@Override
-	public Object getNaturalIdValues(Object cacheKey) {
+	@Nonnull
+	public Object getNaturalIdValues(@Nonnull Object cacheKey) {
 		return keysFactory.getNaturalIdValues( cacheKey );
 	}
 
-	private void put(SharedSessionContractImplementor session, Object key, Object value) {
+	private void put(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		getStorageAccess().putIntoCache( key, new Item( value, null, nextTimestamp() ), session );
 	}
 
 	@Override
-	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean insert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean afterInsert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		try {
 			writeLock().lock();
 			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
@@ -91,12 +108,19 @@ public class NaturalIdReadWriteAccess extends AbstractReadWriteAccess implements
 	}
 
 	@Override
-	public boolean update(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean update(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		return false;
 	}
 
 	@Override
-	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock) {
+	public boolean afterUpdate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable SoftLock lock) {
 		try {
 			writeLock().lock();
 			final var item = (Lockable) getStorageAccess().getFromCache( key, session );

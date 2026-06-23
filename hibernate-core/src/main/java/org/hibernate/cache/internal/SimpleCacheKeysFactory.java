@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,36 +23,50 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 	public static CacheKeysFactory INSTANCE = new SimpleCacheKeysFactory();
 
 	@Override
-	public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	@Nonnull
+	public Object createCollectionKey(
+			@Nonnull Object id,
+			@Nonnull CollectionPersister persister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return id;
 	}
 
 	@Override
-	public Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	@Nonnull
+	public Object createEntityKey(
+			@Nonnull Object id,
+			@Nonnull EntityPersister persister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return id;
 	}
 
 	@Override
+	@Nonnull
 	public Object createNaturalIdKey(
-			Object naturalIdValues,
-			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object naturalIdValues,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
 		return NaturalIdCacheKey.from( naturalIdValues, persister, null, session );
 	}
 
 	@Override
-	public Object getEntityId(Object cacheKey) {
+	@Nonnull
+	public Object getEntityId(@Nonnull Object cacheKey) {
 		return cacheKey;
 	}
 
 	@Override
-	public Object getCollectionId(Object cacheKey) {
+	@Nonnull
+	public Object getCollectionId(@Nonnull Object cacheKey) {
 		return cacheKey;
 	}
 
 	@Override
-	public Object getNaturalIdValues(Object cacheKey) {
+	@Nonnull
+	public Object getNaturalIdValues(@Nonnull Object cacheKey) {
 		return ((NaturalIdCacheKey) cacheKey).getNaturalIdValues();
 	}
 }

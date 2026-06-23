@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Comparator;
@@ -32,13 +35,15 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	private final Lock writeLock = reentrantReadWriteLock.writeLock();
 
 	protected AbstractReadWriteAccess(
-			DomainDataRegion domainDataRegion,
-			DomainDataStorageAccess storageAccess) {
+			@Nonnull DomainDataRegion domainDataRegion,
+			@Nonnull DomainDataStorageAccess storageAccess) {
 		super( domainDataRegion, storageAccess );
 	}
 
+	@Nullable
 	protected abstract Comparator<Object> getVersionComparator();
 
+	@Nonnull
 	protected UUID uuid() {
 		return uuid;
 	}
@@ -60,7 +65,8 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	 * afterQuery the start of this transaction.
 	 */
 	@Override
-	public Object get(SharedSessionContractImplementor session, Object key) {
+	@Nullable
+	public Object get(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key) {
 			final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
 				L2CACHE_LOGGER.gettingCachedData( getRegion().getName(), getAccessType(), key );
@@ -93,34 +99,34 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
-	private static boolean isReadable(SharedSessionContractImplementor session, Lockable item) {
+	private static boolean isReadable(@Nonnull SharedSessionContractImplementor session, @Nonnull Lockable item) {
 		return item.isReadable( session.getCacheTransactionSynchronization().getCachingTimestamp() );
 	}
 
 	@Override
 	public boolean putFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		return doPutFromLoad( session, key, value, version, false );
 	}
 
 	@Override
 	public final boolean putFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version,
 			boolean minimalPutOverride) {
 		return doPutFromLoad( session, key, value, version, minimalPutOverride );
 	}
 
 	private boolean doPutFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version,
 			boolean minimalPutOverride) {
 		try {
 			final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
@@ -171,7 +177,10 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
-	private boolean isWritable(SharedSessionContractImplementor session, Object version, Lockable item) {
+	private boolean isWritable(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable Object version,
+			@Nullable Lockable item) {
 		return item == null
 			|| item.isWriteable( session.getCacheTransactionSynchronization().getCachingTimestamp(),
 									version, getVersionComparator() );
@@ -184,7 +193,11 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	protected abstract AccessedDataClassification getAccessedDataClassification();
 
 	@Override
-	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) {
+	@Nonnull
+	public SoftLock lockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable Object version) {
 		try {
 			writeLock.lock();
 			final long timeout = nextTimestamp() + getTimeout();
@@ -201,14 +214,18 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
-	private SoftLockImpl lock(Lockable item, Object version, long timeout) {
+	@Nonnull
+	private SoftLockImpl lock(@Nullable Lockable item, @Nullable Object version, long timeout) {
 		return item == null
 				? new SoftLockImpl( timeout, uuid, nextLockId(), version )
 				: item.lock( timeout, uuid, nextLockId() );
 	}
 
 	@Override
-	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
+	public void unlockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 		try {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 				L2CACHE_LOGGER.unlockingCacheItem( getRegion().getName(), getAccessType(), key );
@@ -235,12 +252,15 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		return getRegion().getRegionFactory().nextTimestamp();
 	}
 
-	protected void decrementLock(SharedSessionContractImplementor session, Object key, SoftLockImpl lock) {
+	protected void decrementLock(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull SoftLockImpl lock) {
 		lock.unlock( nextTimestamp() );
 		getStorageAccess().putIntoCache( key, lock, session );
 	}
 
-	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key) {
+	protected void handleLockExpiry(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key) {
 		L2CACHE_LOGGER.softLockedCacheExpired( getRegion().getName(), key );
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.cachedEntryExpired( key );
@@ -255,7 +275,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	}
 
 	@Override
-	public void remove(SharedSessionContractImplementor session, Object key) {
+	public void remove(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key) {
 		if ( getStorageAccess().getFromCache( key, session ) instanceof SoftLock ) {
 			if ( L2CACHE_LOGGER.isDebugEnabled() ) {
 				L2CACHE_LOGGER.debugf( "Skipping remove call in read-write access to maintain SoftLock: ", key );
@@ -268,7 +288,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 	}
 
 	@Override
-	public void removeAll(SharedSessionContractImplementor session) {
+	public void removeAll(@Nonnull SharedSessionContractImplementor session) {
 		// A no-op
 	}
 
@@ -286,23 +306,28 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		 * Returns <code>true</code> if the enclosed value can be replaced with one of the given version by a
 		 * transaction started at the given time.
 		 */
-		boolean isWriteable(long txTimestamp, Object version, Comparator<Object> versionComparator);
+		boolean isWriteable(
+				long txTimestamp,
+				@Nullable Object version,
+				@Nullable Comparator<Object> versionComparator);
 
 		/**
 		 * Returns the enclosed value.
 		 */
+		@Nullable
 		Object getValue();
 
 		/**
 		 * Returns <code>true</code> if the given lock can be unlocked using the given SoftLock instance as a handle.
 		 */
-		boolean isUnlockable(SoftLock lock);
+		boolean isUnlockable(@Nullable SoftLock lock);
 
 		/**
 		 * Locks this entry, stamping it with the UUID and lockId given, with the lock timeout occurring at the specified
 		 * time.  The returned Lock object can be used to unlock the entry in the future.
 		 */
-		SoftLockImpl lock(long timeout, UUID uuid, long lockId);
+		@Nonnull
+		SoftLockImpl lock(long timeout, @Nonnull UUID uuid, long lockId);
 	}
 
 	/**
@@ -318,7 +343,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		/**
 		 * Creates an unlocked item wrapping the given value with a version and creation timestamp.
 		 */
-		Item(Object value, Object version, long timestamp) {
+		Item(@Nonnull Object value, @Nullable Object version, long timestamp) {
 			this.value = value;
 			this.version = version;
 			this.timestamp = timestamp;
@@ -334,7 +359,10 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
-		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator<Object> versionComparator) {
+		public boolean isWriteable(
+				long txTimestamp,
+				@Nullable Object newVersion,
+				@Nullable Comparator<Object> versionComparator) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 				L2CACHE_LOGGER.checkingReadWriteItemWriteability( timestamp, version, txTimestamp, newVersion );
 			}
@@ -343,17 +371,19 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
+		@Nonnull
 		public Object getValue() {
 			return value;
 		}
 
 		@Override
-		public boolean isUnlockable(SoftLock lock) {
+		public boolean isUnlockable(@Nullable SoftLock lock) {
 			return false;
 		}
 
 		@Override
-		public SoftLockImpl lock(long timeout, UUID uuid, long lockId) {
+		@Nonnull
+		public SoftLockImpl lock(long timeout, @Nonnull UUID uuid, long lockId) {
 			return new SoftLockImpl( timeout, uuid, lockId, version );
 		}
 
@@ -387,7 +417,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		/**
 		 * Creates a locked item with the given identifiers and object version.
 		 */
-		SoftLockImpl(long timeout, UUID sourceUuid, long lockId, Object version) {
+		SoftLockImpl(long timeout, @Nonnull UUID sourceUuid, long lockId, @Nullable Object version) {
 			this.timeout = timeout;
 			this.lockId = lockId;
 			this.version = version;
@@ -401,7 +431,10 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
-		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator<Object> versionComparator) {
+		public boolean isWriteable(
+				long txTimestamp,
+				@Nullable Object newVersion,
+				@Nullable Comparator<Object> versionComparator) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 				L2CACHE_LOGGER.checkingReadWriteLockWriteability(
 						timeout,
@@ -430,12 +463,13 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
+		@Nullable
 		public Object getValue() {
 			return null;
 		}
 
 		@Override
-		public boolean isUnlockable(SoftLock lock) {
+		public boolean isUnlockable(@Nullable SoftLock lock) {
 			return equals( lock );
 		}
 
@@ -471,7 +505,8 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 
 		@Override
-		public SoftLockImpl lock(long timeout, UUID uuid, long lockId) {
+		@Nonnull
+		public SoftLockImpl lock(long timeout, @Nonnull UUID uuid, long lockId) {
 			concurrent = true;
 			multiplicity++;
 			this.timeout = timeout;

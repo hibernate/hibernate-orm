@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -20,9 +22,10 @@ public class StandardTimestampsCacheFactory implements TimestampsCacheFactory {
 	public static final StandardTimestampsCacheFactory INSTANCE = new StandardTimestampsCacheFactory();
 
 	@Override
+	@Nonnull
 	public TimestampsCache buildTimestampsCache(
-			CacheImplementor cacheManager,
-			TimestampsRegion timestampsRegion) {
+			@Nonnull CacheImplementor cacheManager,
+			@Nonnull TimestampsRegion timestampsRegion) {
 		return new TimestampsCacheEnabledImpl( timestampsRegion );
 	}
 }

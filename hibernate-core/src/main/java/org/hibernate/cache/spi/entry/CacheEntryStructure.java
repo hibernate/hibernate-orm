@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -19,7 +21,8 @@ public interface CacheEntryStructure {
 	 *
 	 * @return The structured form.
 	 */
-	Object structure(Object item);
+	@Nonnull
+	Object structure(@Nonnull Object item);
 
 	/**
 	 * Convert the previous structured form of the item back into its item form.
@@ -29,5 +32,6 @@ public interface CacheEntryStructure {
 	 *
 	 * @return The item
 	 */
-	Object destructure(Object structured, SessionFactoryImplementor factory);
+	@Nonnull
+	Object destructure(@Nonnull Object structured, @Nonnull SessionFactoryImplementor factory);
 }

@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -41,11 +44,11 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	private final DomainDataStorageAccess storageAccess;
 
 	public DomainDataRegionTemplate(
-			DomainDataRegionConfig regionConfig,
-			RegionFactory regionFactory,
-			DomainDataStorageAccess storageAccess,
-			CacheKeysFactory defaultKeysFactory,
-			DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull RegionFactory regionFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nullable CacheKeysFactory defaultKeysFactory,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		super( regionConfig, regionFactory, defaultKeysFactory, buildingContext );
 		this.storageAccess = storageAccess;
 		// now the super-type calls will have access to the `DomainDataStorageAccess` reference
@@ -55,13 +58,15 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	/**
 	 * Public for testing purposes
 	 */
+	@Nonnull
 	public DomainDataStorageAccess getCacheStorageAccess() {
 		return storageAccess;
 	}
 
 
 	@Override
-	public EntityDataAccess generateEntityAccess(EntityDataCachingConfig entityAccessConfig) {
+	@Nonnull
+	public EntityDataAccess generateEntityAccess(@Nonnull EntityDataCachingConfig entityAccessConfig) {
 		final var accessType = entityAccessConfig.getAccessType();
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.generatingEntityAccess(
@@ -77,7 +82,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		};
 	}
 
-	protected EntityDataAccess generateReadOnlyEntityAccess(EntityDataCachingConfig accessConfig) {
+	@Nonnull
+	protected EntityDataAccess generateReadOnlyEntityAccess(@Nonnull EntityDataCachingConfig accessConfig) {
 		return new EntityReadOnlyAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -86,7 +92,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	protected EntityDataAccess generateReadWriteEntityAccess(EntityDataCachingConfig accessConfig) {
+	@Nonnull
+	protected EntityDataAccess generateReadWriteEntityAccess(@Nonnull EntityDataCachingConfig accessConfig) {
 		return new EntityReadWriteAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -95,7 +102,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	protected EntityDataAccess generateNonStrictReadWriteEntityAccess(EntityDataCachingConfig accessConfig) {
+	@Nonnull
+	protected EntityDataAccess generateNonStrictReadWriteEntityAccess(@Nonnull EntityDataCachingConfig accessConfig) {
 		return new EntityNonStrictReadWriteAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -104,7 +112,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	protected EntityDataAccess generateTransactionalEntityDataAccess(EntityDataCachingConfig entityAccessConfig) {
+	@Nonnull
+	protected EntityDataAccess generateTransactionalEntityDataAccess(@Nonnull EntityDataCachingConfig entityAccessConfig) {
 		throw generateTransactionalNotSupportedException();
 	}
 
@@ -114,7 +123,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	}
 
 	@Override
-	public NaturalIdDataAccess generateNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
+	@Nonnull
+	public NaturalIdDataAccess generateNaturalIdAccess(@Nonnull NaturalIdDataCachingConfig accessConfig) {
 		final var accessType = accessConfig.getAccessType();
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.generatingNaturalIdAccess(
@@ -130,7 +140,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		};
 	}
 
-	protected NaturalIdDataAccess generateReadOnlyNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
+	@Nonnull
+	protected NaturalIdDataAccess generateReadOnlyNaturalIdAccess(@Nonnull NaturalIdDataCachingConfig accessConfig) {
 		return new NaturalIdReadOnlyAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -139,7 +150,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	protected NaturalIdDataAccess generateReadWriteNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
+	@Nonnull
+	protected NaturalIdDataAccess generateReadWriteNaturalIdAccess(@Nonnull NaturalIdDataCachingConfig accessConfig) {
 		return new NaturalIdReadWriteAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -148,7 +160,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	protected NaturalIdDataAccess generateNonStrictReadWriteNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
+	@Nonnull
+	protected NaturalIdDataAccess generateNonStrictReadWriteNaturalIdAccess(@Nonnull NaturalIdDataCachingConfig accessConfig) {
 		return new NaturalIdNonStrictReadWriteAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -157,12 +170,14 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(NaturalIdDataCachingConfig accessConfig) {
+	@Nonnull
+	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(@Nonnull NaturalIdDataCachingConfig accessConfig) {
 		throw generateTransactionalNotSupportedException();
 	}
 
 	@Override
-	public CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig accessConfig) {
+	@Nonnull
+	public CollectionDataAccess generateCollectionAccess(@Nonnull CollectionDataCachingConfig accessConfig) {
 		final var accessType = accessConfig.getAccessType();
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.generatingCollectionAccess(
@@ -178,7 +193,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		};
 	}
 
-	private CollectionDataAccess generateReadOnlyCollectionAccess(CollectionDataCachingConfig accessConfig) {
+	@Nonnull
+	private CollectionDataAccess generateReadOnlyCollectionAccess(@Nonnull CollectionDataCachingConfig accessConfig) {
 		return new CollectionReadOnlyAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -187,7 +203,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	private CollectionDataAccess generateReadWriteCollectionAccess(CollectionDataCachingConfig accessConfig) {
+	@Nonnull
+	private CollectionDataAccess generateReadWriteCollectionAccess(@Nonnull CollectionDataCachingConfig accessConfig) {
 		return new CollectionReadWriteAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -196,7 +213,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	private CollectionDataAccess generateNonStrictReadWriteCollectionAccess(CollectionDataCachingConfig accessConfig) {
+	@Nonnull
+	private CollectionDataAccess generateNonStrictReadWriteCollectionAccess(@Nonnull CollectionDataCachingConfig accessConfig) {
 		return new CollectionNonStrictReadWriteAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -205,7 +223,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		);
 	}
 
-	protected CollectionDataAccess generateTransactionalCollectionDataAccess(CollectionDataCachingConfig accessConfig) {
+	@Nonnull
+	protected CollectionDataAccess generateTransactionalCollectionDataAccess(@Nonnull CollectionDataCachingConfig accessConfig) {
 		throw generateTransactionalNotSupportedException();
 	}
 }

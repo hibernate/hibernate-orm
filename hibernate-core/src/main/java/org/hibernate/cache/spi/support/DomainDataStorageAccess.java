@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -19,7 +21,10 @@ public interface DomainDataStorageAccess extends StorageAccess {
 	 *
 	 * @implNote the method default is to call {@link #putIntoCache}
 	 */
-	default void putFromLoad(Object key, Object value, SharedSessionContractImplementor session) {
+	default void putFromLoad(
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nonnull SharedSessionContractImplementor session) {
 		putIntoCache( key, value, session );
 	}
 }

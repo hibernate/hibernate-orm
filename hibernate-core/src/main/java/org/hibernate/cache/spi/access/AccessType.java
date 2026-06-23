@@ -70,6 +70,7 @@ public enum AccessType {
 	 *
 	 * @see #getExternalName()
 	 */
+	@Nullable
 	public static AccessType fromExternalName(@Nullable String externalName) {
 		if ( externalName == null ) {
 			return null;

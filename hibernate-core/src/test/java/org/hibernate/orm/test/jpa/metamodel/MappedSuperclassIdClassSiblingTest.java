@@ -7,9 +7,12 @@ package org.hibernate.orm.test.jpa.metamodel;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -20,6 +23,7 @@ import jakarta.persistence.metamodel.EntityType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa( annotatedClasses = {
@@ -45,6 +49,17 @@ public class MappedSuperclassIdClassSiblingTest {
 		assertEquals( 2, compositeEntityType.getIdClassAttributes().size() );
 	}
 
+	@Test
+	void entitySubclassCannotDeclareAnotherId() {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
+			final MetadataSources metadataSources = new MetadataSources( ssr )
+					.addAnnotatedClass( ParentEntity.class )
+					.addAnnotatedClass( ChildEntityWithId.class );
+
+			assertThrows( RuntimeException.class, metadataSources::buildMetadata );
+		}
+	}
+
 	@MappedSuperclass
 	public abstract static class BaseEntity {
 		@Id
@@ -59,6 +74,18 @@ public class MappedSuperclassIdClassSiblingTest {
 	@Entity( name = "CompositeIdEntity" )
 	@IdClass( CompositeId.class )
 	public static class CompositeIdEntity extends BaseEntity {
+		@Id
+		Long otherId;
+	}
+
+	@Entity( name = "ParentEntity" )
+	public static class ParentEntity {
+		@Id
+		Long id;
+	}
+
+	@Entity( name = "ChildEntityWithId" )
+	public static class ChildEntityWithId extends ParentEntity {
 		@Id
 		Long otherId;
 	}

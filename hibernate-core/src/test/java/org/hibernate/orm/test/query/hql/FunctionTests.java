@@ -645,6 +645,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datetime truncation is not supported")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "date and timestamp are not compatible")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Datetime truncation is not supported")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <timestamptz> - <date>")
 	public void testDateTruncWithLocalDatetimeMinusLocalDate(SessionFactoryScope scope) {
 		scope.inTransaction( session ->
 				assertThat( session.createQuery( "select trunc(local datetime, day) - local date", Duration.class )

@@ -78,19 +78,19 @@ public interface FindMultipleOption extends FindOption {
 	///     		from the result by default, but can be {@linkplain RemovalsMode#INCLUDE included} if desired.
 	///
 	///
-	/// The default is [#DISABLED].
+	/// The default is [#ENABLED].
 	///
 	/// @since 7.2
 	enum SessionCheckMode implements FindMultipleOption {
-		/// The persistence context will be checked.  Identifiers for entities already contained
-		/// in the persistence context will not be sent to the database for loading.  If the
-		/// entity is marked for removal in the persistence context, whether it is returned
-		/// is controlled by {@linkplain RemovalsMode}.
+		/// The default.  The persistence context will be checked.  Identifiers for entities
+		/// already contained in the persistence context will not be sent to the database for
+		/// loading.  If the entity is marked for removal in the persistence context, whether
+		/// it is returned is controlled by {@linkplain RemovalsMode}.
 		///
 		/// @see RemovalsMode
 		ENABLED,
 
-		/// The default.  All identifiers to be loaded will be read from the database and returned.
+		/// All identifiers to be loaded will be read from the database and returned.
 		DISABLED
 	}
 

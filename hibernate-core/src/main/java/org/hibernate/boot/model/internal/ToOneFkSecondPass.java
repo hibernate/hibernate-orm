@@ -157,9 +157,12 @@ class ToOneFkSecondPass implements FkSecondPass {
 		manyToOne.setReferencedPropertyName( referencedPropertyName );
 		manyToOne.setReferenceToPrimaryKey( false );
 
-		final String entityName = targetEntity.getEntityName();
 		final var metadataCollector = buildingContext.getMetadataCollector();
-		metadataCollector.addUniquePropertyReference( entityName, referencedPropertyName );
-		metadataCollector.addPropertyReferencedAssociation( entityName, path, referencedPropertyName );
+		metadataCollector.addUniquePropertyReference( targetEntity.getEntityName(), referencedPropertyName );
+		metadataCollector.addPropertyReferencedAssociation(
+				persistentClass.getEntityName(),
+				path,
+				referencedPropertyName
+		);
 	}
 }

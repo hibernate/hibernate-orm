@@ -5,6 +5,7 @@
 package org.hibernate.cache.internal;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -105,7 +106,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void prime(Set<DomainDataRegionConfig> cacheRegionConfigs) {
+	public void prime(@Nonnull Set<DomainDataRegionConfig> cacheRegionConfigs) {
 		for ( var regionConfig : cacheRegionConfigs ) {
 			final var region = buildRegion( regionConfig );
 			regionsByName.put( region.getName(), region );
@@ -178,18 +179,21 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
+	@Nonnull
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
 	}
 
 	@Override
+	@Nonnull
 	public TimestampsCache getTimestampsCache() {
 		return timestampsCache;
 	}
 
 
 	@Override
-	public Region getRegion(String regionName) {
+	@Nullable
+	public Region getRegion(@Nonnull String regionName) {
 		// The Region in regionsByName has precedence over the
 		// QueryResultsRegion in #queryResultsRegionsByDuplicateName
 		return regionsByName.get( regionName );
@@ -428,6 +432,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
+	@Nullable
 	public QueryResultsCache getDefaultQueryResultsCache() {
 		return defaultQueryResultsCache;
 	}
@@ -441,7 +446,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public QueryResultsCache getQueryResultsCache(String regionName) throws HibernateException {
+	@Nullable
+	public QueryResultsCache getQueryResultsCache(@Nullable String regionName) throws HibernateException {
 		if ( !isQueryCacheEnabled() ) {
 			return null;
 		}
@@ -455,7 +461,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public QueryResultsCache getQueryResultsCacheStrictly(String regionName) {
+	@Nullable
+	public QueryResultsCache getQueryResultsCacheStrictly(@Nullable String regionName) {
 		if ( !isQueryCacheEnabled() ) {
 			return null;
 		}
@@ -551,17 +558,20 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Deprecations
 
 	@Override @Deprecated
-	public EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName) {
+	@Nullable
+	public EntityDataAccess getEntityRegionAccess(@Nonnull NavigableRole rootEntityName) {
 		return entityAccessMap.get( rootEntityName );
 	}
 
 	@Override @Deprecated
-	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName) {
+	@Nullable
+	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(@Nonnull NavigableRole rootEntityName) {
 		return naturalIdAccessMap.get( rootEntityName );
 	}
 
 	@Override @Deprecated
-	public CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole) {
+	@Nullable
+	public CollectionDataAccess getCollectionRegionAccess(@Nonnull NavigableRole collectionRole) {
 		return collectionAccessMap.get( collectionRole );
 	}
 }

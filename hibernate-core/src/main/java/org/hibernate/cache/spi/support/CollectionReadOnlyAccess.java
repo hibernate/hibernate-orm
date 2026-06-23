@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -17,14 +19,15 @@ import org.hibernate.cache.spi.access.AccessType;
  */
 public class CollectionReadOnlyAccess extends AbstractCollectionDataAccess {
 	public CollectionReadOnlyAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			CollectionDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull CollectionDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.READ_ONLY;
 	}

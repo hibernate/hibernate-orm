@@ -7,6 +7,7 @@ package org.hibernate.cache.spi.support;
 import java.util.Comparator;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -28,10 +29,10 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	private final Comparator<Object> versionComparator;
 
 	public EntityReadWriteAccess(
-			DomainDataRegion domainDataRegion,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			EntityDataCachingConfig entityAccessConfig) {
+			@Nonnull DomainDataRegion domainDataRegion,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull EntityDataCachingConfig entityAccessConfig) {
 		super( domainDataRegion, storageAccess );
 		this.keysFactory = keysFactory;
 		final var versionComparatorAccess =
@@ -43,17 +44,20 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.READ_WRITE;
 	}
 
 	@Deprecated
 	@Override
+	@Nonnull
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.ENTITY;
 	}
 
 	@Override
+	@Nullable
 	protected Comparator<Object> getVersionComparator() {
 		return versionComparator;
 	}
@@ -61,33 +65,42 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	@Override
 	@Nonnull
 	public Object generateCacheKey(
-			Object id,
-			EntityPersister rootEntityDescriptor,
-			SessionFactoryImplementor factory,
-			String tenantIdentifier) {
+			@Nonnull Object id,
+			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return keysFactory.createEntityKey( id, rootEntityDescriptor, factory, tenantIdentifier );
 	}
 
 	@Override
-	public Object getCacheKeyId(Object cacheKey) {
+	@Nonnull
+	public Object getCacheKeyId(@Nonnull Object cacheKey) {
 		return keysFactory.getEntityId( cacheKey );
 	}
 
-	private void put(SharedSessionContractImplementor session, Object key, Object value, Object version) {
+	private void put(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		getStorageAccess().putIntoCache( key, new Item( value, version, nextTimestamp() ), session );
 	}
 
 	@Override
 	public boolean insert(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		try {
 			writeLock().lock();
 			final var item = (Lockable) getStorageAccess().getFromCache( key, session );
@@ -106,22 +119,22 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 
 	@Override
 	public boolean update(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion) {
 		return false;
 	}
 
 	@Override
 	public boolean afterUpdate(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion,
-			SoftLock lock) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion,
+			@Nullable SoftLock lock) {
 		try {
 			writeLock().lock();
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );
@@ -148,6 +161,7 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	}
 
 	@Override
+	@Nullable
 	public SoftLock lockRegion() {
 		return null;
 	}

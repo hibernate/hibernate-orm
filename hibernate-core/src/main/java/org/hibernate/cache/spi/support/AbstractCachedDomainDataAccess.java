@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
@@ -22,18 +25,20 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 	private final DomainDataStorageAccess storageAccess;
 
 	protected AbstractCachedDomainDataAccess(
-			DomainDataRegion region,
-			DomainDataStorageAccess storageAccess) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull DomainDataStorageAccess storageAccess) {
 		this.region = region;
 		this.storageAccess = storageAccess;
 	}
 
 	@Override
+	@Nonnull
 	public DomainDataRegion getRegion() {
 		return region;
 	}
 
 	@Internal
+	@Nonnull
 	public DomainDataStorageAccess getStorageAccess() {
 		return storageAccess;
 	}
@@ -44,12 +49,13 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 	}
 
 	@Override
-	public boolean contains(Object key) {
+	public boolean contains(@Nonnull Object key) {
 		return getStorageAccess().contains( key );
 	}
 
 	@Override
-	public Object get(SharedSessionContractImplementor session, Object key) {
+	@Nullable
+	public Object get(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key) {
 		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		if ( traceEnabled ) {
 			L2CACHE_LOGGER.gettingCachedData( region.getName(), getAccessType(), key );
@@ -68,10 +74,10 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 
 	@Override
 	public boolean putFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.cachingDataFromLoad( region.getName(), getAccessType(), key, value );
 		}
@@ -81,10 +87,10 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 
 	@Override
 	public boolean putFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version,
 			boolean minimalPutOverride) {
 		if ( minimalPutOverride && getStorageAccess().contains( key ) ) {
 			if ( L2CACHE_LOGGER.isTraceEnabled() ) {
@@ -101,27 +107,28 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 	};
 
 	@Override
+	@Nonnull
 	public SoftLock lockRegion() {
 		return REGION_LOCK;
 	}
 
 	@Override
-	public void unlockRegion(SoftLock lock) {
+	public void unlockRegion(@Nullable SoftLock lock) {
 		evictAll();
 	}
 
 	@Override
-	public void remove(SharedSessionContractImplementor session, Object key) {
+	public void remove(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key) {
 		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override
-	public void removeAll(SharedSessionContractImplementor session) {
+	public void removeAll(@Nonnull SharedSessionContractImplementor session) {
 		getStorageAccess().clearCache( session );
 	}
 
 	@Override
-	public void evict(Object key) {
+	public void evict(@Nonnull Object key) {
 		getStorageAccess().evictData( key );
 	}
 

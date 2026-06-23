@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
@@ -20,51 +23,56 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class EntityNonStrictReadWriteAccess extends AbstractEntityDataAccess {
 	public EntityNonStrictReadWriteAccess(
-			DomainDataRegion domainDataRegion,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			EntityDataCachingConfig entityAccessConfig) {
+			@Nonnull DomainDataRegion domainDataRegion,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull EntityDataCachingConfig entityAccessConfig) {
 		super( domainDataRegion, keysFactory, storageAccess );
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.NONSTRICT_READ_WRITE;
 	}
 
 	@Override
 	public boolean insert(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		return false;
 	}
 
 	@Override
-	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
+	public boolean afterInsert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		return false;
 	}
 
 	@Override
 	public boolean update(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion) {
 		getStorageAccess().removeFromCache( key, session );
 		return false;
 	}
 
 	@Override
 	public boolean afterUpdate(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion,
-			SoftLock lock) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion,
+			@Nullable SoftLock lock) {
 		unlockItem( session, key, lock );
 		return false;
 	}
@@ -73,7 +81,10 @@ public class EntityNonStrictReadWriteAccess extends AbstractEntityDataAccess {
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
 	@Override
-	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) throws CacheException {
+	public void unlockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) throws CacheException {
 		getStorageAccess().removeFromCache( key, session );
 	}
 }

@@ -4,6 +4,9 @@
  */
 package org.hibernate.testing.cache;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -20,25 +23,31 @@ public class MapStorageAccessImpl implements DomainDataStorageAccess {
 	private ConcurrentMap<Object,Object> data;
 
 	@Internal
-	public Object getFromData(Object key) {
+	@Nullable
+	public Object getFromData(@Nonnull Object key) {
 		return data == null ? null : data.get( key );
 	}
 
 	@Override
-	public boolean contains(Object key) {
+	public boolean contains(@Nonnull Object key) {
 		return data != null && data.containsKey( key );
 	}
 
 	@Override
-	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
+	@Nullable
+	public Object getFromCache(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		return getFromData( key );
 	}
 
 	@Override
-	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
+	public void putIntoCache(
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nonnull SharedSessionContractImplementor session) {
 		getOrMakeDataMap().put( key, value );
 	}
 
+	@Nonnull
 	protected ConcurrentMap<Object,Object> getOrMakeDataMap() {
 		if ( data == null ) {
 			data = new ConcurrentHashMap<>();
@@ -47,7 +56,7 @@ public class MapStorageAccessImpl implements DomainDataStorageAccess {
 	}
 
 	@Override
-	public void removeFromCache(Object key, SharedSessionContractImplementor session) {
+	public void removeFromCache(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		if ( data == null ) {
 			return;
 		}
@@ -56,7 +65,7 @@ public class MapStorageAccessImpl implements DomainDataStorageAccess {
 	}
 
 	@Override
-	public void clearCache(SharedSessionContractImplementor session) {
+	public void clearCache(@Nonnull SharedSessionContractImplementor session) {
 		if ( data == null ) {
 			return;
 		}
@@ -72,7 +81,7 @@ public class MapStorageAccessImpl implements DomainDataStorageAccess {
 	}
 
 	@Override
-	public void evictData(Object key) {
+	public void evictData(@Nonnull Object key) {
 		if ( data != null ) {
 			data.remove( key );
 		}

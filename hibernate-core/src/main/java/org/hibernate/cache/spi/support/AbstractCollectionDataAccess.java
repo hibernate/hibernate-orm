@@ -5,6 +5,7 @@
 package org.hibernate.cache.spi.support;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -24,42 +25,55 @@ public abstract class AbstractCollectionDataAccess
 	private final CacheKeysFactory keysFactory;
 
 	public AbstractCollectionDataAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			CollectionDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull CollectionDataCachingConfig config) {
 		super( region, storageAccess );
 		this.keysFactory = keysFactory;
 	}
 
 	@Override
 	@Nonnull
-	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	public Object generateCacheKey(
+			@Nonnull Object id,
+			@Nonnull CollectionPersister persister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return keysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
-	public Object getCacheKeyId(Object cacheKey) {
+	@Nonnull
+	public Object getCacheKeyId(@Nonnull Object cacheKey) {
 		return keysFactory.getCollectionId( cacheKey );
 	}
 
 	@Override
-	public SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version) {
+	@Nullable
+	public SoftLock lockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable Object version) {
 		return null;
 	}
 
 	@Override
-	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
+	public void unlockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 
 	}
 
 	@Override
+	@Nullable
 	public SoftLock lockRegion() {
 		return null;
 	}
 
 	@Override
-	public void unlockRegion(SoftLock lock) {
+	public void unlockRegion(@Nullable SoftLock lock) {
 		clearCache();
 	}
 }

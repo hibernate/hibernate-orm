@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +35,7 @@ public interface QueryResultsCache {
 	/**
 	 * The underlying cache region being used.
 	 */
+	@Nonnull
 	QueryResultsRegion getRegion();
 
 	/**
@@ -48,9 +52,9 @@ public interface QueryResultsCache {
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
 	boolean put(
-			QueryKey key,
-			List<?> result,
-			SharedSessionContractImplementor session) throws HibernateException;
+			@Nonnull QueryKey key,
+			@Nonnull List<?> result,
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Attempt to retrieve a cached query result list for the given
@@ -71,10 +75,11 @@ public interface QueryResultsCache {
 	 *
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
+	@Nullable
 	List<?> get(
-			QueryKey key,
-			Set<String> spaces,
-			SharedSessionContractImplementor session) throws HibernateException;
+			@Nonnull QueryKey key,
+			@Nonnull Set<String> spaces,
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Attempt to retrieve a cached query result list for the given
@@ -94,20 +99,18 @@ public interface QueryResultsCache {
 	 *
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
+	@Nullable
 	List<?> get(
-			QueryKey key,
-			String[] spaces,
-			SharedSessionContractImplementor session) throws HibernateException;
+			@Nonnull QueryKey key,
+			@Nonnull String[] spaces,
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException;
+
+	void clear() throws CacheException;
 
 	/**
-	 * Clear all items from this query result cache.
-	 *
-	 * @throws CacheException Indicates a problem delegating to the underlying cache.
+	 * @deprecated This noop method is never called
 	 */
-	default void clear() throws CacheException {
-		getRegion().clear();
-	}
-
+	@Deprecated(since = "8.0", forRemoval = true)
 	default void destroy() {
 		// nothing to do, the region itself gets destroyed
 	}

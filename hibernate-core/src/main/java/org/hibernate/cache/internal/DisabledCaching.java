@@ -5,6 +5,7 @@
 package org.hibernate.cache.internal;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.util.Set;
 
 import jakarta.persistence.PersistenceException;
@@ -43,12 +44,13 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
 	}
 
 	@Override
-	public void prime(Set<DomainDataRegionConfig> cacheRegionConfigs) {
+	public void prime(@Nonnull Set<DomainDataRegionConfig> cacheRegionConfigs) {
 		// nothing to do
 	}
 
@@ -159,27 +161,32 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public Region getRegion(String fullRegionName) {
+	@Nullable
+	public Region getRegion(@Nonnull String fullRegionName) {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public TimestampsCache getTimestampsCache() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public QueryResultsCache getDefaultQueryResultsCache() {
 		return null;
 	}
 
 	@Override
-	public QueryResultsCache getQueryResultsCache(String regionName) {
+	@Nullable
+	public QueryResultsCache getQueryResultsCache(@Nullable String regionName) {
 		return null;
 	}
 
 	@Override
-	public QueryResultsCache getQueryResultsCacheStrictly(String regionName) {
+	@Nullable
+	public QueryResultsCache getQueryResultsCacheStrictly(@Nullable String regionName) {
 		return null;
 	}
 
@@ -194,17 +201,20 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override @Deprecated
-	public EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName) {
+	@Nullable
+	public EntityDataAccess getEntityRegionAccess(@Nonnull NavigableRole rootEntityName) {
 		return null;
 	}
 
 	@Override @Deprecated
-	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName) {
+	@Nullable
+	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(@Nonnull NavigableRole rootEntityName) {
 		return null;
 	}
 
 	@Override @Deprecated
-	public CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole) {
+	@Nullable
+	public CollectionDataAccess getCollectionRegionAccess(@Nonnull NavigableRole collectionRole) {
 		return null;
 	}
 

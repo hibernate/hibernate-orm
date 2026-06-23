@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.jcache.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -35,7 +37,8 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 	}
 
 	@Override
-	protected EntityDataAccess generateTransactionalEntityDataAccess(EntityDataCachingConfig entityAccessConfig) {
+	@Nonnull
+	protected EntityDataAccess generateTransactionalEntityDataAccess(@Nonnull EntityDataCachingConfig entityAccessConfig) {
 		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
@@ -45,7 +48,8 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 	}
 
 	@Override
-	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(NaturalIdDataCachingConfig accessConfig) {
+	@Nonnull
+	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(@Nonnull NaturalIdDataCachingConfig accessConfig) {
 		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),
@@ -55,7 +59,8 @@ public class JCacheDomainDataRegionImpl extends DomainDataRegionImpl {
 	}
 
 	@Override
-	protected CollectionDataAccess generateTransactionalCollectionDataAccess(CollectionDataCachingConfig accessConfig) {
+	@Nonnull
+	protected CollectionDataAccess generateTransactionalCollectionDataAccess(@Nonnull CollectionDataCachingConfig accessConfig) {
 		L2CACHE_LOGGER.nonStandardSupportForAccessType(
 				getName(),
 				AccessType.TRANSACTIONAL.getExternalName(),

@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.access;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -44,10 +47,11 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @return a key which can be used to identify an element unequivocally on this same region
 	 */
+	@Nonnull
 	Object generateCacheKey(
-			Object naturalIdValues,
-			EntityPersister rootEntityDescriptor,
-			SharedSessionContractImplementor session);
+			@Nonnull Object naturalIdValues,
+			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Performs reverse operation to {@link #generateCacheKey}, returning
@@ -56,7 +60,8 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @return the sequence of values which unequivocally identifies a cached element on this region
 	 */
-	Object getNaturalIdValues(Object cacheKey);
+	@Nonnull
+	Object getNaturalIdValues(@Nonnull Object cacheKey);
 
 	/**
 	 * Called afterQuery an item has been inserted (beforeQuery the transaction completes),
@@ -71,7 +76,10 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	boolean insert(SharedSessionContractImplementor session, Object key, Object value);
+	boolean insert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value);
 
 	/**
 	 * Called afterQuery an item has been inserted (afterQuery the transaction completes),
@@ -86,7 +94,10 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value);
+	boolean afterInsert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value);
 
 	/**
 	 * Called afterQuery an item has been updated (beforeQuery the transaction completes),
@@ -101,7 +112,10 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	boolean update(SharedSessionContractImplementor session, Object key, Object value);
+	boolean update(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value);
 
 	/**
 	 * Called afterQuery an item has been updated (afterQuery the transaction completes),
@@ -117,5 +131,9 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock);
+	boolean afterUpdate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable SoftLock lock);
 }

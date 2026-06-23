@@ -4,11 +4,15 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
@@ -31,6 +35,16 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	private final QueryResultsRegion cacheRegion;
 	private final TimestampsCache timestampsCache;
 
+	/**
+	 * Clear all items from this query result cache.
+	 *
+	 * @throws CacheException Indicates a problem delegating to the underlying cache.
+	 */
+	@Override
+	public void clear() throws CacheException {
+		getRegion().clear();
+	}
+
 	private record CacheItem(long timestamp, List<?> results)
 			implements Serializable {
 	}
@@ -43,15 +57,16 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	@Override
+	@Nonnull
 	public QueryResultsRegion getRegion() {
 		return cacheRegion;
 	}
 
 	@Override
 	public boolean put(
-			final QueryKey key,
-			final List<?> results,
-			final SharedSessionContractImplementor session) {
+			@Nonnull final QueryKey key,
+			@Nonnull final List<?> results,
+			@Nonnull final SharedSessionContractImplementor session) {
 		final var synchronization = session.getCacheTransactionSynchronization();
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 			L2CACHE_LOGGER.cachingQueryResults(
@@ -84,10 +99,11 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	@Override
+	@Nullable
 	public List<?> get(
-			final QueryKey key,
-			final Set<String> spaces,
-			final SharedSessionContractImplementor session) {
+			@Nonnull final QueryKey key,
+			@Nonnull final Set<String> spaces,
+			@Nonnull final SharedSessionContractImplementor session) {
 		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		if ( loggerTraceEnabled ) {
 			L2CACHE_LOGGER.checkingCachedQueryResults( cacheRegion.getName() );
@@ -117,10 +133,11 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 	}
 
 	@Override
+	@Nullable
 	public List<?> get(
-			final QueryKey key,
-			final String[] spaces,
-			final SharedSessionContractImplementor session) {
+			@Nonnull final QueryKey key,
+			@Nonnull final String[] spaces,
+			@Nonnull final SharedSessionContractImplementor session) {
 		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 
 		if ( loggerTraceEnabled ) {
@@ -149,7 +166,8 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 		return deepCopy( cacheItem.results );
 	}
 
-	private CacheItem getCachedData(QueryKey key, SharedSessionContractImplementor session) {
+	@Nullable
+	private CacheItem getCachedData(@Nonnull QueryKey key, @Nonnull SharedSessionContractImplementor session) {
 		final var eventMonitor = session.getEventMonitor();
 		final var cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		final var eventListenerManager = session.getEventListenerManager();

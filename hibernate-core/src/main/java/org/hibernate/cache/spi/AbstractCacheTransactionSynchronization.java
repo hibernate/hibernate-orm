@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * @author Steve Ebersole
  */
@@ -11,7 +13,7 @@ public abstract class AbstractCacheTransactionSynchronization implements CacheTr
 	private long lastTransactionCompletionTimestamp;
 	private final RegionFactory regionFactory;
 
-	public AbstractCacheTransactionSynchronization(RegionFactory regionFactory) {
+	public AbstractCacheTransactionSynchronization(@Nonnull RegionFactory regionFactory) {
 		// prime the timestamp for any non-transactional access - until (if) we
 		// 		later join a new txn
 		this.lastTransactionCompletionTimestamp = regionFactory.nextTimestamp();

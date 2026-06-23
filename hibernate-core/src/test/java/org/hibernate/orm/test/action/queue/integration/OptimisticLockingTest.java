@@ -6,6 +6,7 @@ package org.hibernate.orm.test.action.queue.integration;
 
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -142,6 +143,11 @@ public class OptimisticLockingTest {
 			// Expected - version conflict detected
 			em1.getTransaction().rollback();
 		}
+		//CockroachDB errors with a Serialization Exception
+		catch (RollbackException rbe) {
+			assertTrue( rbe.getCause() instanceof TransactionSerializationException );
+			em1.getTransaction().rollback();
+		}
 		finally {
 			em1.close();
 		}
@@ -265,6 +271,11 @@ public class OptimisticLockingTest {
 		}
 		catch ( OptimisticLockException e ) {
 			// Expected
+			em1.getTransaction().rollback();
+		}
+		//CockroachDB errors with a Serialization Exception
+		catch (RollbackException rbe) {
+			assertTrue( rbe.getCause() instanceof TransactionSerializationException );
 			em1.getTransaction().rollback();
 		}
 		finally {

@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -19,30 +22,40 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class NaturalIdNonStrictReadWriteAccess extends AbstractNaturalIdDataAccess {
 	public NaturalIdNonStrictReadWriteAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			NaturalIdDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull NaturalIdDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.NONSTRICT_READ_WRITE;
 	}
 
 	@Override
-	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
+	public void unlockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 		getStorageAccess().removeFromCache( key, session );
 	}
 
 	@Override
-	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean insert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		return false;
 	}
 
 	@Override
-	public boolean update(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean update(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		getStorageAccess().removeFromCache( key, session );
 		return false;
 	}

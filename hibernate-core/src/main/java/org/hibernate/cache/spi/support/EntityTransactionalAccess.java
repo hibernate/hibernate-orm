@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -16,55 +19,56 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class EntityTransactionalAccess extends AbstractEntityDataAccess {
 	public EntityTransactionalAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			EntityDataCachingConfig accessConfig) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull EntityDataCachingConfig accessConfig) {
 		super( region, keysFactory, storageAccess );
 	}
 
 	@Override
 	public boolean insert(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 
 	@Override
 	public boolean afterInsert(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		return false;
 	}
 
 	@Override
 	public boolean update(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion) {
 		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 
 	@Override
 	public boolean afterUpdate(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion,
-			SoftLock lock) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion,
+			@Nullable SoftLock lock) {
 		return false;
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.TRANSACTIONAL;
 	}

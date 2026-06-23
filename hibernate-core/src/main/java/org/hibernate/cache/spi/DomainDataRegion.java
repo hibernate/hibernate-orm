@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -42,7 +44,8 @@ public interface DomainDataRegion extends Region {
 	 *
 	 * @throws org.hibernate.cache.CacheException If the provider cannot provide the requested access
 	 */
-	EntityDataAccess getEntityDataAccess(NavigableRole rootEntityRole);
+	@Nonnull
+	EntityDataAccess getEntityDataAccess(@Nonnull NavigableRole rootEntityRole);
 
 	/**
 	 * Build a {@link NaturalIdDataAccess} instance representing access to
@@ -56,7 +59,8 @@ public interface DomainDataRegion extends Region {
 	 *
 	 * @throws org.hibernate.cache.CacheException If the provider cannot provide the requested access
 	 */
-	NaturalIdDataAccess getNaturalIdDataAccess(NavigableRole rootEntityRole);
+	@Nonnull
+	NaturalIdDataAccess getNaturalIdDataAccess(@Nonnull NavigableRole rootEntityRole);
 
 	/**
 	 * Build a {@link CollectionDataAccess} instance representing access to
@@ -70,5 +74,6 @@ public interface DomainDataRegion extends Region {
 	 *
 	 * @throws org.hibernate.cache.CacheException If the provider cannot provide the requested access
 	 */
-	CollectionDataAccess getCollectionDataAccess(NavigableRole collectionRole);
+	@Nonnull
+	CollectionDataAccess getCollectionDataAccess(@Nonnull NavigableRole collectionRole);
 }

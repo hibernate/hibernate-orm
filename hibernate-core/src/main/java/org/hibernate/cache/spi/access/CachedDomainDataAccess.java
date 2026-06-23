@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.access;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Cache;
 
 import org.hibernate.cache.CacheException;
@@ -31,11 +33,13 @@ public interface CachedDomainDataAccess {
 	/**
 	 * The region containing the data being accessed
 	 */
+	@Nonnull
 	DomainDataRegion getRegion();
 
 	/**
 	 * The type of access implemented
 	 */
+	@Nonnull
 	AccessType getAccessType();
 
 
@@ -54,7 +58,8 @@ public interface CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	Object get(SharedSessionContractImplementor session, Object key);
+	@Nullable
+	Object get(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key);
 
 	/**
 	 * Attempt to cache an object, after loading it from the database.
@@ -69,10 +74,10 @@ public interface CachedDomainDataAccess {
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
 	boolean putFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version);
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version);
 
 	/**
 	 * Attempt to cache an object, after loading from the database,
@@ -89,10 +94,10 @@ public interface CachedDomainDataAccess {
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
 	boolean putFromLoad(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object version,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version,
 			boolean minimalPutOverride);
 
 	/**
@@ -111,7 +116,11 @@ public interface CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version);
+	@Nullable
+	SoftLock lockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable Object version);
 
 	/**
 	 * Notify that an attempt to update or delete the keyed object has
@@ -124,7 +133,10 @@ public interface CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock);
+	void unlockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock);
 
 	/**
 	 * Notify that an item has become stale, before completion of the
@@ -136,14 +148,14 @@ public interface CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	void remove(SharedSessionContractImplementor session, Object key);
+	void remove(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key);
 
 	/**
 	 * Remove all data for this accessed type.
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	void removeAll(SharedSessionContractImplementor session);
+	void removeAll(@Nonnull SharedSessionContractImplementor session);
 
 
 
@@ -162,7 +174,7 @@ public interface CachedDomainDataAccess {
 	 * @return True if the underlying cache contains corresponding data; false
 	 * otherwise.
 	 */
-	boolean contains(Object key);
+	boolean contains(@Nonnull Object key);
 
 	/**
 	 * Lock the entire region
@@ -171,6 +183,7 @@ public interface CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
+	@Nullable
 	SoftLock lockRegion();
 
 	/**
@@ -181,7 +194,7 @@ public interface CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	void unlockRegion(SoftLock lock);
+	void unlockRegion(@Nullable SoftLock lock);
 
 	/**
 	 * Forcibly evict an item from the cache immediately without regard for transaction
@@ -196,7 +209,7 @@ public interface CachedDomainDataAccess {
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	void evict(Object key);
+	void evict(@Nonnull Object key);
 
 	/**
 	 * Forcibly evict all items from the cache immediately without regard for transaction

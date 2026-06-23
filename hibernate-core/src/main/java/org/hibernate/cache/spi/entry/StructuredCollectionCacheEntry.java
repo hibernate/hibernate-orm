@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -22,13 +24,15 @@ public class StructuredCollectionCacheEntry implements CacheEntryStructure {
 	public static final StructuredCollectionCacheEntry INSTANCE = new StructuredCollectionCacheEntry();
 
 	@Override
-	public Object structure(Object item) {
+	@Nonnull
+	public Object structure(@Nonnull Object item) {
 		final var entry = (CollectionCacheEntry) item;
 		return Arrays.asList( entry.getState() );
 	}
 
 	@Override
-	public Object destructure(Object structured, SessionFactoryImplementor factory) {
+	@Nonnull
+	public Object destructure(@Nonnull Object structured, @Nonnull SessionFactoryImplementor factory) {
 		final var list = (List<?>) structured;
 		return new CollectionCacheEntry( list.toArray( Serializable[]::new ) );
 	}

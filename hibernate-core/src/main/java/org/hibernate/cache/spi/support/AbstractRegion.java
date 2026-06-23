@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 
@@ -26,11 +28,13 @@ public abstract class AbstractRegion implements Region {
 	}
 
 	@Override
+	@Nonnull
 	public String getName() {
 		return name;
 	}
 
 	@Override
+	@Nonnull
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
 	}

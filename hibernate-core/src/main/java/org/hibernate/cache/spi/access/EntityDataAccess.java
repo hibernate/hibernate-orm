@@ -40,9 +40,9 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 */
 	@Nonnull
 	Object generateCacheKey(
-			Object id,
-			EntityPersister rootEntityDescriptor,
-			SessionFactoryImplementor factory,
+			@Nonnull Object id,
+			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier);
 
 	/**
@@ -51,7 +51,8 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @param cacheKey key previously returned from {@link #generateCacheKey}
 	 * @return original id passed to {@link #generateCacheKey}
 	 */
-	Object getCacheKeyId(Object cacheKey);
+	@Nonnull
+	Object getCacheKeyId(@Nonnull Object cacheKey);
 
 	/**
 	 * Called after an item has been inserted (before the transaction completes),
@@ -65,7 +66,11 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @return Were the contents of the cache actually changed by this operation?
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version);
+	boolean insert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version);
 
 	/**
 	 * Called after an item has been inserted (after the transaction completes).
@@ -78,7 +83,11 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @return Were the contents of the cache actual changed by this operation?
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
-	boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version);
+	boolean afterInsert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version);
 
 	/**
 	 * Called after an item has been updated (before the transaction completes),
@@ -94,11 +103,11 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
 	boolean update(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion);
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion);
 
 	/**
 	 * Called after an item has been updated (after the transaction completes).
@@ -114,10 +123,10 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
 	boolean afterUpdate(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object value,
-			Object currentVersion,
-			Object previousVersion,
-			SoftLock lock);
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object currentVersion,
+			@Nullable Object previousVersion,
+			@Nullable SoftLock lock);
 }

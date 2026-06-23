@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,12 +31,13 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	 *
 	 * @param persister The persister whose data needs to be structured.
 	 */
-	public StructuredCacheEntry(EntityPersister persister) {
+	public StructuredCacheEntry(@Nonnull EntityPersister persister) {
 		this.persister = persister;
 	}
 
 	@Override
-	public Object destructure(Object structured, SessionFactoryImplementor factory) {
+	@Nonnull
+	public Object destructure(@Nonnull Object structured, @Nonnull SessionFactoryImplementor factory) {
 		final var map = (Map<?,?>) structured;
 		final String subclass = (String) map.get( SUBCLASS_KEY );
 		final Object version = map.get( VERSION_KEY );
@@ -50,7 +53,8 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	}
 
 	@Override
-	public Object structure(Object item) {
+	@Nonnull
+	public Object structure(@Nonnull Object item) {
 		final var entry = (CacheEntry) item;
 		final String[] names = persister.getPropertyNames();
 		final Map<String,Object> map = new HashMap<>( names.length + 3, 1f );

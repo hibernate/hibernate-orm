@@ -4,6 +4,7 @@
  */
 package org.hibernate.jpa.event.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.resource.beans.spi.ManagedBean;
 
@@ -30,7 +31,7 @@ public class ListenerCallback extends AbstractCallback {
 	}
 
 	@Override
-	public void performCallback(Object entity) {
+	public void performCallback(@Nonnull Object entity) {
 		try {
 			callbackMethod.invoke( listenerManagedBean.getBeanInstance(), entity );
 		}

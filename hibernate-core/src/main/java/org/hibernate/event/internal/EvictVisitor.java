@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
@@ -13,6 +12,8 @@ import org.hibernate.type.CollectionType;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Evict any collections referenced by the object from the session cache.
@@ -25,20 +26,21 @@ public class EvictVisitor extends AbstractVisitor {
 
 	private final Object owner;
 
-	public EvictVisitor(EventSource session, Object owner) {
+	public EvictVisitor(@Nonnull EventSource session, @Nonnull Object owner) {
 		super(session);
 		this.owner = owner;
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	@Nullable
+	Object processCollection(@Nullable Object collection, @Nonnull CollectionType type) {
 		if ( collection != null ) {
 			evictCollection( collection, type );
 		}
 		return null;
 	}
 
-	public void evictCollection(Object value, CollectionType type) {
+	public void evictCollection(@Nullable Object value, @Nonnull CollectionType type) {
 		final var session = getSession();
 		final PersistentCollection<?> collection;
 		if ( type.hasHolder() ) {
@@ -60,7 +62,7 @@ public class EvictVisitor extends AbstractVisitor {
 		}
 	}
 
-	private void evictCollection(PersistentCollection<?> collection) {
+	private void evictCollection(@Nullable PersistentCollection<?> collection) {
 		final var session = getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var ce = persistenceContext.removeCollectionEntry( collection );
@@ -84,7 +86,7 @@ public class EvictVisitor extends AbstractVisitor {
 	}
 
 	@Override
-	boolean includeEntityProperty(Object[] values, int i) {
+	boolean includeEntityProperty(@Nonnull Object[] values, int i) {
 		return true;
 	}
 }

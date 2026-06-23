@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.event.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
@@ -26,7 +27,7 @@ public class EnversPreCollectionUpdateEventListenerImpl
 	}
 
 	@Override
-	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+	public void onPreUpdateCollection(@Nonnull PreCollectionUpdateEvent event) {
 		if ( shouldGenerateRevision( event ) ) {
 			final CollectionEntry collectionEntry = getCollectionEntry( event );
 			if ( !collectionEntry.getLoadedPersister().isInverse() ) {

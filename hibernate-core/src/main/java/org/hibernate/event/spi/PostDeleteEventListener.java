@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called after deleting an item from the datastore
@@ -10,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gavin King
  */
 public interface PostDeleteEventListener extends PostActionEventListener {
-	void onPostDelete(PostDeleteEvent event);
+	void onPostDelete(@Nonnull PostDeleteEvent event);
 }

@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultInitializeCollectionEventListener;
@@ -100,11 +101,11 @@ public class EventSink {
 	public static abstract class AbstractListener implements Listener {
 		private final EventSink listeners;
 
-		protected AbstractListener(EventSink listeners) {
+		protected AbstractListener(@Nonnull EventSink listeners) {
 			this.listeners = listeners;
 		}
 
-		public void addEvent(AbstractCollectionEvent event, Listener listener) {
+		public void addEvent(@Nonnull AbstractCollectionEvent event, @Nonnull Listener listener) {
 			listeners.addEvent( event, listener );
 		}
 	}
@@ -113,74 +114,74 @@ public class EventSink {
 			extends DefaultInitializeCollectionEventListener
 			implements Listener {
 		private final EventSink listeners;
-		private InitializationListener(EventSink listeners) {
+		private InitializationListener(@Nonnull EventSink listeners) {
 			this.listeners = listeners;
 		}
-		public void onInitializeCollection(InitializeCollectionEvent event) {
+		public void onInitializeCollection(@Nonnull InitializeCollectionEvent event) {
 			super.onInitializeCollection( event );
 			addEvent( event, this );
 		}
-		public void addEvent(AbstractCollectionEvent event, Listener listener) {
+		public void addEvent(@Nonnull AbstractCollectionEvent event, @Nonnull Listener listener) {
 			listeners.addEvent( event, listener );
 		}
 	}
 
 	public static class PreRecreateListener extends AbstractListener
 			implements PreCollectionRecreateEventListener {
-		private PreRecreateListener(EventSink listeners) {
+		private PreRecreateListener(@Nonnull EventSink listeners) {
 			super( listeners );
 		}
-		public void onPreRecreateCollection(PreCollectionRecreateEvent event) {
+		public void onPreRecreateCollection(@Nonnull PreCollectionRecreateEvent event) {
 			addEvent( event, this );
 		}
 	}
 
 	public static class PostRecreateListener extends AbstractListener
 			implements PostCollectionRecreateEventListener {
-		private PostRecreateListener(EventSink listeners) {
+		private PostRecreateListener(@Nonnull EventSink listeners) {
 			super( listeners );
 		}
-		public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
+		public void onPostRecreateCollection(@Nonnull PostCollectionRecreateEvent event) {
 			addEvent( event, this );
 		}
 	}
 
 	public static class PreRemoveListener extends AbstractListener
 			implements PreCollectionRemoveEventListener {
-		private PreRemoveListener(EventSink listeners) {
+		private PreRemoveListener(@Nonnull EventSink listeners) {
 			super( listeners );
 		}
-		public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
+		public void onPreRemoveCollection(@Nonnull PreCollectionRemoveEvent event) {
 			addEvent( event, this );
 		}
 	}
 
 	public static class PostRemoveListener extends AbstractListener
 			implements PostCollectionRemoveEventListener {
-		private PostRemoveListener(EventSink listeners) {
+		private PostRemoveListener(@Nonnull EventSink listeners) {
 			super( listeners );
 		}
-		public void onPostRemoveCollection(PostCollectionRemoveEvent event) {
+		public void onPostRemoveCollection(@Nonnull PostCollectionRemoveEvent event) {
 			addEvent( event, this );
 		}
 	}
 
 	public static class PreUpdateListener extends AbstractListener
 			implements PreCollectionUpdateEventListener {
-		private PreUpdateListener(EventSink listeners) {
+		private PreUpdateListener(@Nonnull EventSink listeners) {
 			super( listeners );
 		}
-		public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+		public void onPreUpdateCollection(@Nonnull PreCollectionUpdateEvent event) {
 			addEvent( event, this );
 		}
 	}
 
 	public static class PostUpdateListener extends AbstractListener
 			implements PostCollectionUpdateEventListener {
-		private PostUpdateListener(EventSink listeners) {
+		private PostUpdateListener(@Nonnull EventSink listeners) {
 			super( listeners );
 		}
-		public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
+		public void onPostUpdateCollection(@Nonnull PostCollectionUpdateEvent event) {
 			addEvent( event, this );
 		}
 	}

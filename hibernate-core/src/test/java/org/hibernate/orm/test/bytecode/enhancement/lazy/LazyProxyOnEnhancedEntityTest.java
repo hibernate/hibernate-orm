@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -73,7 +74,7 @@ public class LazyProxyOnEnhancedEntityTest {
 
 	private static class ImmediateLoadTrap implements LoadEventListener {
 		@Override
-		public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException {
+		public void onLoad(@Nonnull LoadEvent event, @Nonnull LoadType loadType) throws HibernateException {
 			if ( IMMEDIATE_LOAD == loadType ) {
 				String msg = loadType + ":" + event.getEntityClassName() + "#" + event.getEntityId();
 				throw new RuntimeException( msg );

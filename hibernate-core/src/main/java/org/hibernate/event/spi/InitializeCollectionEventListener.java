@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the contract for handling of collection initialization events
@@ -13,5 +14,5 @@ import org.hibernate.HibernateException;
  * @author Gavin King
  */
 public interface InitializeCollectionEventListener {
-	void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException;
+	void onInitializeCollection(@Nonnull InitializeCollectionEvent event) throws HibernateException;
 }

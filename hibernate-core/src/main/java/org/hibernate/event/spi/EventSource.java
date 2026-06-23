@@ -22,6 +22,7 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Get the ActionQueue for this session
 	 */
+	@Nonnull
 	org.hibernate.action.queue.spi.ActionQueue getActionQueue();
 
 	/**
@@ -29,7 +30,7 @@ public interface EventSource extends SessionImplementor {
 	 * or the given persister
 	 */
 	@Nonnull
-	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException;
+	Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) throws HibernateException;
 
 	/**
 	 * Obtain the best estimate of the entity name of the given entity
@@ -37,6 +38,7 @@ public interface EventSource extends SessionImplementor {
 	 * considering information held in the proxy, and whether the object
 	 * is already associated with this session.
 	 */
+	@Nonnull
 	String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry);
 
 	/**
@@ -51,36 +53,37 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Cascade merge an entity instance
 	 */
-	void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException;
+	void merge(@Nonnull String entityName, @Nonnull Object object, @Nonnull MergeContext copiedAlready) throws HibernateException;
 
 	/**
 	 * Cascade persist an entity instance
 	 */
-	void persist(String entityName, Object object, PersistContext createdAlready) throws HibernateException;
+	void persist(@Nonnull String entityName, @Nonnull Object object, @Nonnull PersistContext createdAlready) throws HibernateException;
 
 	/**
 	 * Cascade persist an entity instance during the flush process
 	 */
-	void persistOnFlush(String entityName, Object object, PersistContext copiedAlready);
+	void persistOnFlush(@Nonnull String entityName, @Nonnull Object object, @Nonnull PersistContext copiedAlready);
 
 	/**
 	 * Cascade refresh an entity instance
 	 */
-	void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException;
+	void refresh(@Nonnull String entityName, @Nonnull Object object, @Nonnull RefreshContext refreshedAlready) throws HibernateException;
 
 	/**
 	 * Cascade delete an entity instance
 	 */
-	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, DeleteContext transientEntities);
+	void delete(@Nonnull String entityName, @Nonnull Object child, boolean isCascadeDeleteEnabled, @Nonnull DeleteContext transientEntities);
 
 	/**
 	 * A specialized type of deletion for orphan removal that must occur prior to queued inserts and updates.
 	 */
 	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
 	//       This should be removed once action/task ordering is improved.
-	void removeOrphanBeforeUpdates(String entityName, Object child);
+	void removeOrphanBeforeUpdates(@Nonnull String entityName, @Nonnull Object child);
 
 	@Override
+	@Nonnull
 	default TransactionCompletionCallbacks getTransactionCompletionCallbacks() {
 		return getActionQueue();
 	}

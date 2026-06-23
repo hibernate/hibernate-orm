@@ -7,6 +7,7 @@ package org.hibernate.event.jpa.internal;
 import jakarta.persistence.EntityListenerRegistration;
 import org.hibernate.event.jpa.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackType;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Steve Ebersole
@@ -17,9 +18,9 @@ public class EntityListenerRegistrationImpl<E> implements EntityListenerRegistra
 	private final Callback<? super E> registeredCallback;
 
 	public EntityListenerRegistrationImpl(
-			EntityCallbacksImpl<E> entityCallbacks,
-			CallbackType registeredCallbackType,
-			Callback<? super E> registeredCallback) {
+			@Nonnull EntityCallbacksImpl<E> entityCallbacks,
+			@Nonnull CallbackType registeredCallbackType,
+			@Nonnull Callback<? super E> registeredCallback) {
 		this.entityCallbacks = entityCallbacks;
 		this.registeredCallbackType = registeredCallbackType;
 		this.registeredCallback = registeredCallback;

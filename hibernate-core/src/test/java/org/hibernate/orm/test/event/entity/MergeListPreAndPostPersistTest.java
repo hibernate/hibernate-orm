@@ -17,11 +17,6 @@ import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.PostInsertEvent;
-import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.event.spi.PreInsertEventListener;
-import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -29,6 +24,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,13 +57,9 @@ public class MergeListPreAndPostPersistTest {
 
 		addEntityListeners( scope, order );
 
-		scope.inTransaction( s -> {
-			s.merge( order );
-		} );
+		scope.inTransaction( s -> s.merge( order ) );
 
-		scope.inTransaction( s -> {
-			s.remove( order );
-		} );
+		scope.inTransaction( s -> s.remove( order ) );
 	}
 
 	@Entity(name = "`Order`")
@@ -79,7 +71,7 @@ public class MergeListPreAndPostPersistTest {
 		public String name;
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-		public List<Item> items = new ArrayList<Item>();
+		public List<Item> items = new ArrayList<>();
 
 		@Override
 		public boolean equals(Object o) {
@@ -135,30 +127,21 @@ public class MergeListPreAndPostPersistTest {
 		EventListenerRegistry registry = scope.getSessionFactory().getEventListenerRegistry();
 		registry.setListeners(
 				EventType.PRE_INSERT,
-				new PreInsertEventListener() {
-					@Override
-					public boolean onPreInsert(PreInsertEvent event) {
-						if ( event.getEntity() instanceof Order ) {
-							assertEquals( order, event.getEntity() );
-							assertEquals( order.items, ((Order) event.getEntity()).items );
-						}
-						return false;
+				event -> {
+					if ( event.getEntity() instanceof Order ) {
+						Assertions.assertEquals( order, event.getEntity() );
+						assertEquals( order.items, ((Order) event.getEntity()).items );
 					}
+					return false;
 				}
 		);
 
 		registry.setListeners(
 				EventType.POST_INSERT,
-				new PostInsertEventListener() {
-					public void onPostInsert(PostInsertEvent event) {
-						if ( event.getEntity() instanceof Order ) {
-							assertEquals( order, event.getEntity() );
-							assertEquals( order.items, ((Order) event.getEntity()).items );
-						}
-					}
-
-					public boolean requiresPostCommitHandling(EntityPersister persister) {
-						return false;
+				event -> {
+					if ( event.getEntity() instanceof Order ) {
+						Assertions.assertEquals( order, event.getEntity() );
+						assertEquals( order.items, ((Order) event.getEntity()).items );
 					}
 				}
 		);

@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called before updating the datastore
@@ -13,5 +15,5 @@ public interface PreUpsertEventListener {
 	/**
 	 * Return true if the operation should be vetoed
 	 */
-	boolean onPreUpsert(PreUpsertEvent event);
+	boolean onPreUpsert(@Nonnull PreUpsertEvent event);
 }

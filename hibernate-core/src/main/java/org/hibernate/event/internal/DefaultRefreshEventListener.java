@@ -31,6 +31,8 @@ import static org.hibernate.engine.internal.ProxyUtil.isUninitialized;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
@@ -41,7 +43,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	@Override
-	public void onRefresh(RefreshEvent event) throws HibernateException {
+	public void onRefresh(@Nonnull RefreshEvent event) {
 		onRefresh( event, RefreshContext.create() );
 	}
 
@@ -51,29 +53,28 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	 * @param event The refresh event to be handled.
 	 */
 	@Override
-	public void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) {
+	public void onRefresh(@Nonnull RefreshEvent event, @Nonnull RefreshContext refreshedAlready) {
 		final Object object = event.getObject();
+		//noinspection ConstantValue
 		if ( object == null ) {
 			throw new NullPointerException( "Attempted to refresh null" );
 		}
+		final var source = event.getEventSource();
+		if ( isUninitialized( object, source ) ) {
+			handleUninitializedProxy( event, refreshedAlready );
+		}
 		else {
-			final var source = event.getEventSource();
-			if ( isUninitialized( object, source ) ) {
-				handleUninitializedProxy( event, refreshedAlready );
+			final Object entity = forceInitialize( object, source );
+			if ( refreshedAlready.add( entity ) ) {
+				refresh( event, refreshedAlready, entity );
 			}
 			else {
-				final Object entity = forceInitialize( object, source );
-				if ( refreshedAlready.add( entity ) ) {
-					refresh( event, refreshedAlready, entity );
-				}
-				else {
-					EVENT_LISTENER_LOGGER.alreadyRefreshed();
-				}
+				EVENT_LISTENER_LOGGER.alreadyRefreshed();
 			}
 		}
 	}
 
-	private static void handleUninitializedProxy(RefreshEvent event, RefreshContext refreshedAlready) {
+	private static void handleUninitializedProxy(@Nonnull RefreshEvent event, @Nonnull RefreshContext refreshedAlready) {
 		final var source = event.getEventSource();
 		final Object object = event.getObject();
 		final boolean isTransient = !source.isManaged( object );
@@ -103,10 +104,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
-	private static EntityPersister getPersister(
-			LazyInitializer lazyInitializer,
-			EventSource source,
-			Object object,
+	private static @Nonnull EntityPersister getPersister(
+			@Nullable LazyInitializer lazyInitializer,
+			@Nonnull EventSource source,
+			@Nonnull Object object,
 			boolean isTransient) {
 		if ( lazyInitializer != null ) {
 			return source.getEntityPersister( lazyInitializer.getEntityName(), object );
@@ -119,7 +120,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
-	private static void refresh(RefreshEvent event, RefreshContext refreshedAlready, Object object) {
+	private static void refresh(
+			@Nonnull RefreshEvent event,
+			@Nonnull RefreshContext refreshedAlready,
+			@Nonnull Object object) {
 		final var source = event.getSession();
 		final var persistenceContext = source.getPersistenceContextInternal();
 		final var entry = persistenceContext.getEntry( object );
@@ -128,8 +132,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
 		}
 
-		final EntityPersister persister = entry.getPersister();
+		final var persister = entry.getPersister();
 		final Object id = entry.getId();
+
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			EVENT_LISTENER_LOGGER.refreshing(
 					infoString( persister, id, event.getFactory() ) );
@@ -161,14 +166,14 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	}
 
 	private static void refresh(
-			RefreshEvent event,
-			Object object,
-			EventSource source,
-			EntityPersister persister,
-			LazyInitializer initializer,
-			EntityEntry entry,
-			Object id,
-			PersistenceContext context) {
+			@Nonnull RefreshEvent event,
+			@Nullable Object object,
+			@Nonnull EventSource source,
+			@Nonnull EntityPersister persister,
+			@Nullable LazyInitializer initializer,
+			@Nullable EntityEntry entry,
+			@Nonnull Object id,
+			@Nonnull PersistenceContext context) {
 		if ( object != null ) {
 			final var instrumentationMetadata = persister.getBytecodeEnhancementMetadata();
 			if ( instrumentationMetadata.isEnhancedForLazyLoading() ) {
@@ -188,7 +193,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
 
-	private static void evictEntity(Object object, EntityPersister persister, Object id, EventSource source) {
+	private static void evictEntity(
+			@Nullable Object object,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object id,
+			@Nonnull EventSource source) {
 		if ( persister.canWriteToCache() ) {
 			Object previousVersion = null;
 			if ( persister.isVersionPropertyGenerated() ) {
@@ -210,15 +219,15 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
-	private static Object doRefresh(
-			RefreshEvent event,
-			EventSource source,
-			Object object,
-			EntityEntry entry,
-			EntityPersister persister,
-			LazyInitializer lazyInitializer,
-			Object id,
-			PersistenceContext persistenceContext) {
+	private static @Nullable Object doRefresh(
+			@Nonnull RefreshEvent event,
+			@Nonnull EventSource source,
+			@Nullable Object object,
+			@Nullable EntityEntry entry,
+			@Nonnull EntityPersister persister,
+			@Nullable LazyInitializer lazyInitializer,
+			@Nonnull Object id,
+			@Nonnull PersistenceContext persistenceContext) {
 		// Handle the requested lock mode, if any, in relation to the current
 		// lock mode, if any, of the entry.
 		final var lockOptions = event.getLockOptions();
@@ -276,10 +285,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	}
 
 	private static boolean isReadOnly(
-			EntityEntry entry,
-			EntityPersister persister,
-			LazyInitializer lazyInitializer,
-			EventSource source) {
+			@Nullable EntityEntry entry,
+			@Nonnull EntityPersister persister,
+			@Nullable LazyInitializer lazyInitializer,
+			@Nonnull EventSource source) {
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
 		if ( !persister.isMutable() ) {
@@ -296,16 +305,19 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
-	private static void evictCachedCollections(EntityPersister persister, Object id, EventSource source) {
+	private static void evictCachedCollections(
+			@Nonnull EntityPersister persister,
+			@Nonnull Object id,
+			@Nonnull EventSource source) {
 		evictCachedCollections( persister.getPropertyTypes(), id, source );
 	}
 
-	private static void evictCachedCollections(Type[] types, Object id, EventSource source)
+	private static void evictCachedCollections(@Nonnull Type[] types, @Nonnull Object id, @Nonnull EventSource source)
 			throws HibernateException {
 		final var factory = source.getFactory();
 		final var actionQueue = source.getActionQueue();
 		final var metamodel = factory.getMappingMetamodel();
-		for ( Type type : types ) {
+		for ( var type : types ) {
 			if ( type instanceof CollectionType collectionType ) {
 				final var collectionPersister =
 						metamodel.getCollectionDescriptor( collectionType.getRole() );

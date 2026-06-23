@@ -74,6 +74,8 @@ import static org.hibernate.event.spi.EventType.PRE_LOAD;
 import static org.hibernate.event.spi.EventType.PRE_UPDATE;
 import static org.hibernate.event.spi.EventType.PRE_UPSERT;
 import static org.hibernate.event.spi.EventType.REFRESH;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Standard implementation of EventListenerRegistry
@@ -86,11 +88,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	private final Map<Class<?>,Object> listenerClassToInstanceMap = new HashMap<>();
 
 	@SuppressWarnings("rawtypes")
-	private EventListenerRegistryImpl(EventListenerGroup[] eventListeners) {
+	private EventListenerRegistryImpl(@Nonnull EventListenerGroup[] eventListeners) {
 		this.eventListeners = eventListeners;
 	}
 
-	public <T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType) {
+	public <T> @Nonnull EventListenerGroup<T> getEventListenerGroup(@Nonnull EventType<T> eventType) {
 		if ( eventListeners.length < eventType.ordinal() + 1 ) {
 			// eventType is a custom EventType that has not been registered.
 			// registeredEventListeners array was not allocated enough space to
@@ -106,7 +108,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	@Override
-	public void addDuplicationStrategy(DuplicationStrategy strategy) {
+	public void addDuplicationStrategy(@Nonnull DuplicationStrategy strategy) {
 		for ( var group : eventListeners ) {
 			if ( group != null ) {
 				group.addDuplicationStrategy( strategy );
@@ -116,13 +118,14 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 	@Override
 	@SafeVarargs
-	public final <T> void setListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
+	public final <T> void setListeners(@Nonnull EventType<T> type, @Nonnull Class<? extends T>... listenerClasses) {
 		setListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
 	@SafeVarargs
 	@AllowReflection // Possible array types are registered in org.hibernate.graalvm.internal.StaticClassLists.typesNeedingArrayCopy
-	private <T> T[] resolveListenerInstances(EventType<T> type, Class<? extends T>... listenerClasses) {
+	@Nonnull
+	private <T> T[] resolveListenerInstances(@Nonnull EventType<T> type, @Nonnull Class<? extends T>... listenerClasses) {
 		@SuppressWarnings("unchecked")
 		final T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );
 		for ( int i = 0; i < listenerClasses.length; i++ ) {
@@ -131,7 +134,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		return listeners;
 	}
 
-	private <T> T resolveListenerInstance(Class<T> listenerClass) {
+	private <T> @Nonnull T resolveListenerInstance(@Nonnull Class<T> listenerClass) {
 		final T listenerInstance = listenerClass.cast( listenerClassToInstanceMap.get( listenerClass ) );
 		if ( listenerInstance == null ) {
 			final T newListenerInstance = instantiateListener( listenerClass );
@@ -143,7 +146,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		}
 	}
 
-	private <T> T instantiateListener(Class<T> listenerClass) {
+	private <T> @Nonnull T instantiateListener(@Nonnull Class<T> listenerClass) {
 		try {
 			//noinspection deprecation
 			return listenerClass.newInstance();
@@ -158,7 +161,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 	@Override
 	@SafeVarargs
-	public final <T> void setListeners(EventType<T> type, T... listeners) {
+	public final <T> void setListeners(@Nonnull EventType<T> type, @Nullable T... listeners) {
 		final var registeredListeners = getEventListenerGroup( type );
 		registeredListeners.clear();
 		if ( listeners != null ) {
@@ -170,25 +173,25 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 	@Override
 	@SafeVarargs
-	public final <T> void appendListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
+	public final <T> void appendListeners(@Nonnull EventType<T> type, @Nonnull Class<? extends T>... listenerClasses) {
 		appendListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
 	@Override
 	@SafeVarargs
-	public final <T> void appendListeners(EventType<T> type, T... listeners) {
+	public final <T> void appendListeners(@Nonnull EventType<T> type, @Nonnull T... listeners) {
 		getEventListenerGroup( type ).appendListeners( listeners );
 	}
 
 	@Override
 	@SafeVarargs
-	public final <T> void prependListeners(EventType<T> type, Class<? extends T>... listenerClasses) {
+	public final <T> void prependListeners(@Nonnull EventType<T> type, @Nonnull Class<? extends T>... listenerClasses) {
 		prependListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
 	@Override
 	@SafeVarargs
-	public final <T> void prependListeners(EventType<T> type, T... listeners) {
+	public final <T> void prependListeners(@Nonnull EventType<T> type, @Nonnull T... listeners) {
 		getEventListenerGroup( type ).prependListeners( listeners );
 	}
 
@@ -312,11 +315,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 		}
 
-		public <T> void prepareListeners(EventType<T> eventType) {
+		public <T> void prepareListeners(@Nonnull EventType<T> eventType) {
 			prepareListeners( eventType, null );
 		}
 
-		public <T> void prepareListeners(EventType<T> type, T defaultListener) {
+		public <T> void prepareListeners(@Nonnull EventType<T> type, @Nullable T defaultListener) {
 			prepareListeners(
 					type,
 					defaultListener,
@@ -329,9 +332,9 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		}
 
 		<T> void prepareListeners(
-				EventType<T> type,
-				T defaultListener,
-				Function<EventType<T>,EventListenerGroupImpl<T>> groupCreator) {
+				@Nonnull EventType<T> type,
+				@Nullable T defaultListener,
+				@Nonnull Function<EventType<T>,EventListenerGroupImpl<T>> groupCreator) {
 			final var listenerGroup = groupCreator.apply( type );
 			if ( defaultListener != null ) {
 				listenerGroup.appendListener( defaultListener );
@@ -339,12 +342,12 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			listenerGroupMap.put( type, listenerGroup );
 		}
 
-		public <T> EventListenerGroup<T> getListenerGroup(EventType<T> eventType) {
+		public <T> @Nullable EventListenerGroup<T> getListenerGroup(@Nonnull EventType<T> eventType) {
 			//noinspection unchecked
 			return (EventListenerGroup<T>) listenerGroupMap.get( eventType );
 		}
 
-		public EventListenerRegistry buildRegistry(Map<String, EventType<?>> registeredEventTypes) {
+		public @Nonnull EventListenerRegistry buildRegistry(@Nonnull Map<String, EventType<?>> registeredEventTypes) {
 			// validate contiguity of the event-type ordinals and build the EventListenerGroups array
 			final ArrayList<EventType<?>> eventTypeList =
 					new ArrayList<>( registeredEventTypes.values() );

@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import java.util.IdentityHashMap;
+import jakarta.annotation.Nonnull;
 
 /**
  * A {@link RefreshEvent} represents a {@linkplain org.hibernate.Session#refresh(Object) refresh operation}
@@ -15,12 +16,13 @@ import java.util.IdentityHashMap;
  */
 public interface RefreshContext {
 
-	boolean add(Object entity);
+	boolean add(@Nonnull Object entity);
 
 	default boolean isEmpty() {
 		return false;
 	}
 
+	@Nonnull
 	static RefreshContext create() {
 		// use extension to avoid creating
 		// a useless wrapper object
@@ -31,7 +33,7 @@ public interface RefreshContext {
 			}
 
 			@Override
-			public boolean add(Object entity) {
+			public boolean add(@Nonnull Object entity) {
 				return put(entity,entity)==null;
 			}
 

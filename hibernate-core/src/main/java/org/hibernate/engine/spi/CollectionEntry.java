@@ -71,8 +71,8 @@ public final class CollectionEntry implements Serializable {
 	 */
 	public CollectionEntry(
 			final PersistentCollection<?> collection,
-			final CollectionPersister loadedPersister,
-			final Object loadedKey,
+			@Nullable final CollectionPersister loadedPersister,
+			@Nullable final Object loadedKey,
 			final boolean ignore,
 			final boolean readOnly) {
 		this.ignore = ignore;
@@ -88,7 +88,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * For uninitialized detached collections
 	 */
-	public CollectionEntry(CollectionPersister loadedPersister, Object loadedKey) {
+	public CollectionEntry(@Nullable CollectionPersister loadedPersister, @Nullable Object loadedKey) {
 		// detached collection wrappers that get found + reattached
 		// during flush shouldn't be ignored
 		ignore = false;
@@ -121,8 +121,8 @@ public final class CollectionEntry implements Serializable {
 	 */
 	private CollectionEntry(
 			@Nullable String role,
-			Serializable snapshot,
-			Object loadedKey,
+			@Nullable Serializable snapshot,
+			@Nullable Object loadedKey,
 			boolean readOnly,
 			@Nullable SessionFactoryImplementor factory) {
 		this.role = role;
@@ -298,15 +298,19 @@ public final class CollectionEntry implements Serializable {
 		if ( session == null ) {
 			return false;
 		}
-		final var collectionFlushActionTracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
-		return collectionFlushActionTracker != null && collectionFlushActionTracker.hasQueuedCollectionAction( collection );
+		final var collectionFlushActionTracker =
+				session.getPersistenceContextInternal()
+						.getCollectionFlushActionTracker();
+		return collectionFlushActionTracker != null
+			&& collectionFlushActionTracker.hasQueuedCollectionAction( collection );
 	}
 
 	public boolean isIgnore() {
 		return ignore;
 	}
 
-	public @Nullable CollectionPersister getCurrentPersister() {
+	@Nullable
+	public CollectionPersister getCurrentPersister() {
 		return currentPersister;
 	}
 
@@ -318,7 +322,8 @@ public final class CollectionEntry implements Serializable {
 	 * This is only available late during the flush
 	 * cycle
 	 */
-	public @Nullable Object getCurrentKey() {
+	@Nullable
+	public Object getCurrentKey() {
 		return currentKey;
 	}
 
@@ -329,11 +334,13 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * This is only available late during the flush cycle
 	 */
-	public @Nullable CollectionPersister getLoadedPersister() {
+	@Nullable
+	public CollectionPersister getLoadedPersister() {
 		return loadedPersister;
 	}
 
-	public @Nullable Object getLoadedKey() {
+	@Nullable
+	public Object getLoadedKey() {
 		return loadedKey;
 	}
 

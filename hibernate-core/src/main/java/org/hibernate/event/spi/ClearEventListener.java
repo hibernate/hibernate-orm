@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Listener for notification of {@link org.hibernate.Session#clear()}
@@ -15,5 +17,5 @@ public interface ClearEventListener {
 	 *
 	 * @param event The event representing the clear
 	 */
-	void onClear(ClearEvent event);
+	void onClear(@Nonnull ClearEvent event);
 }

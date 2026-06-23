@@ -7,6 +7,7 @@ package org.hibernate.event.spi;
 import java.util.IdentityHashMap;
 
 import org.hibernate.event.internal.DefaultDeleteEventListener;
+import jakarta.annotation.Nonnull;
 
 /**
  * A {@link DeleteEvent} represents a {@linkplain org.hibernate.Session#remove delete operation}
@@ -19,9 +20,9 @@ import org.hibernate.event.internal.DefaultDeleteEventListener;
  */
 public interface DeleteContext {
 
-	boolean add(Object entity);
+	boolean add(@Nonnull Object entity);
 
-	static DeleteContext create() {
+	static @Nonnull DeleteContext create() {
 		// use extension to avoid creating
 		// a useless wrapper object
 		class Impl extends IdentityHashMap<Object,Object>
@@ -31,7 +32,7 @@ public interface DeleteContext {
 			}
 
 			@Override
-			public boolean add(Object entity) {
+			public boolean add(@Nonnull Object entity) {
 				return put(entity,entity)==null;
 			}
 		}

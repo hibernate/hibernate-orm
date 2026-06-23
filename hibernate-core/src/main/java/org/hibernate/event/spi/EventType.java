@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Enumeration of the recognized types of events, including meta-information about each.
@@ -78,6 +79,7 @@ public final class EventType<T> {
 	 */
 	private static final Map<String,EventType<?>> STANDARD_TYPE_BY_NAME_MAP = initStandardTypeNameMap();
 
+	@Nonnull
 	private static Map<String, EventType<?>> initStandardTypeNameMap() {
 		final Map<String, EventType<?>> typeByNameMap = new HashMap<>();
 		for ( Field field : EventType.class.getDeclaredFields() ) {
@@ -94,11 +96,13 @@ public final class EventType<T> {
 		return Collections.unmodifiableMap( typeByNameMap );
 	}
 
-	private static <T> EventType<T> create(String name, Class<T> listenerRole) {
+	@Nonnull
+	private static <T> EventType<T> create(@Nonnull String name, @Nonnull Class<T> listenerRole) {
 		return new EventType<>( name, listenerRole, STANDARD_TYPE_COUNTER.getAndIncrement(), true );
 	}
 
-	public static <T> EventType<T> create(String name, Class<T> listenerRole, int ordinal) {
+	@Nonnull
+	public static <T> EventType<T> create(@Nonnull String name, @Nonnull Class<T> listenerRole, int ordinal) {
 		return new EventType<>( name, listenerRole, ordinal, false );
 	}
 
@@ -111,7 +115,8 @@ public final class EventType<T> {
 	 *
 	 * @throws HibernateException If eventName is null, or if eventName does not correlate to any known event type.
 	 */
-	public static EventType<?> resolveEventTypeByName(final String eventName) {
+	@Nonnull
+	public static EventType<?> resolveEventTypeByName(@Nonnull final String eventName) {
 		if ( eventName == null ) {
 			throw new HibernateException( "event name to resolve cannot be null" );
 		}
@@ -125,6 +130,7 @@ public final class EventType<T> {
 	/**
 	 * Get a collection of all the standard {@link EventType} instances.
 	 */
+	@Nonnull
 	public static Collection<EventType<?>> values() {
 		return STANDARD_TYPE_BY_NAME_MAP.values();
 	}
@@ -134,7 +140,7 @@ public final class EventType<T> {
 	 *
 	 * Simply copy the values into its (passed) Map
 	 */
-	static void registerStandardTypes(Map<String, EventType<?>> eventTypes) {
+	static void registerStandardTypes(@Nonnull Map<String, EventType<?>> eventTypes) {
 		eventTypes.putAll( STANDARD_TYPE_BY_NAME_MAP );
 	}
 
@@ -143,17 +149,19 @@ public final class EventType<T> {
 	private final int ordinal;
 	private final boolean isStandardEvent;
 
-	private EventType(String eventName, Class<T> baseListenerInterface, int ordinal, boolean isStandardEvent) {
+	private EventType(@Nonnull String eventName, @Nonnull Class<T> baseListenerInterface, int ordinal, boolean isStandardEvent) {
 		this.eventName = eventName;
 		this.baseListenerInterface = baseListenerInterface;
 		this.ordinal = ordinal;
 		this.isStandardEvent = isStandardEvent;
 	}
 
+	@Nonnull
 	public String eventName() {
 		return eventName;
 	}
 
+	@Nonnull
 	public Class<T> baseListenerInterface() {
 		return baseListenerInterface;
 	}
@@ -178,6 +186,7 @@ public final class EventType<T> {
 	}
 
 	@Override
+	@Nonnull
 	public String toString() {
 		return eventName();
 	}

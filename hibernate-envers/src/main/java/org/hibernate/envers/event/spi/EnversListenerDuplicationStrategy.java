@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.event.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 
 /**
@@ -18,11 +19,13 @@ public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
 	public static final EnversListenerDuplicationStrategy INSTANCE = new EnversListenerDuplicationStrategy();
 
 	@Override
-	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original.getClass() ) && EnversListener.class.isInstance( listener );
+	public boolean areMatch(@Nonnull Object listener, @Nonnull Object original) {
+		return listener.getClass().equals( original.getClass() )
+			&& EnversListener.class.isInstance( listener );
 	}
 
 	@Override
+	@Nonnull
 	public Action getAction() {
 		return Action.KEEP_ORIGINAL;
 	}

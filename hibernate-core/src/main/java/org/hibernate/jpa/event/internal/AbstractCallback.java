@@ -4,6 +4,7 @@
  */
 package org.hibernate.jpa.event.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.event.jpa.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackType;
 
@@ -18,6 +19,7 @@ abstract class AbstractCallback implements Callback<Object> {
 	}
 
 	@Override
+	@Nonnull
 	public CallbackType getCallbackType() {
 		return callbackType;
 	}

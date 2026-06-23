@@ -12,7 +12,10 @@ import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterc
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -22,6 +25,9 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.persister.entity.AbstractEntityPersister.getCollectionKey;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Wrap collections in {@linkplain PersistentCollection collection wrappers}.
@@ -35,7 +41,7 @@ public class WrapVisitor extends ProxyVisitor {
 
 	private boolean substitute;
 
-	public WrapVisitor(Object entity, Object id, EventSource session) {
+	public WrapVisitor(@Nonnull Object entity, @Nullable Object id, @Nonnull EventSource session) {
 		super( session );
 		this.entity = entity;
 		this.id = id;
@@ -46,7 +52,8 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	protected Object processCollection(Object collection, CollectionType collectionType)
+	@Nullable
+	protected Object processCollection(@Nullable Object collection, @Nonnull CollectionType collectionType)
 			throws HibernateException {
 		if ( collection == null || collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 			return null;
@@ -62,7 +69,8 @@ public class WrapVisitor extends ProxyVisitor {
 		}
 	}
 
-	final Object processArrayOrNewCollection(Object collection, CollectionType collectionType)
+	@Nullable
+	final Object processArrayOrNewCollection(@Nullable Object collection, @Nonnull CollectionType collectionType)
 			throws HibernateException {
 		if ( collection == null ) {
 			//do nothing
@@ -94,49 +102,8 @@ public class WrapVisitor extends ProxyVisitor {
 						if ( lazyLoadingInterceptor.isAttributeLoaded( persister.getAttributeMapping().getAttributeName() ) ) {
 							final var entry = persistenceContext.getEntry( entity );
 							if ( entry.isExistsInDatabase() ) {
-								final Object key = getCollectionKey( persister, entity, entry, session );
-								if ( key != null ) {
-									var collectionInstance =
-											persistenceContext.getCollection( new CollectionKey( persister, key ) );
-									if ( collectionInstance == null ) {
-										// the collection has not been initialized and new collection values have been assigned,
-										// we need to be sure to delete all the collection elements before inserting the new ones
-										collectionInstance =
-												persister.getCollectionSemantics()
-														.instantiateWrapper( key, persister, session );
-											persistenceContext.addUninitializedCollection(
-													persister,
-													collectionInstance,
-													key,
-													entry.isReadOnly()
-											);
-											final var collectionFlushActionTracker =
-													persistenceContext.getCollectionFlushActionTracker();
-											if ( collectionFlushActionTracker instanceof FlushProcessingContext flushProcessingContext ) {
-												flushProcessingContext.queueCollectionRemove(
-														collectionInstance,
-														persister,
-														key,
-														false
-												);
-											}
-											else {
-												final var collectionToRemove = collectionInstance;
-												session.runInterceptorCallback(
-														() -> session.getInterceptor().onCollectionRemove( collectionToRemove, key ) );
-												session.getActionQueue().addAction(
-														new CollectionRemoveAction(
-																collectionToRemove,
-																persister,
-																key,
-																false,
-																session
-														)
-												);
-											}
-										}
-									}
-								}
+								scheduleRemoval( persister, entry, session, persistenceContext );
+							}
 						}
 					}
 				}
@@ -151,8 +118,63 @@ public class WrapVisitor extends ProxyVisitor {
 		}
 	}
 
+	private void scheduleRemoval(
+			@Nonnull CollectionPersister persister,
+			@Nonnull EntityEntry entry,
+			@Nonnull EventSource session,
+			@Nonnull PersistenceContext persistenceContext) {
+		final Object key = getCollectionKey( persister, entity, entry, session );
+		if ( key != null ) {
+			final var existing = persistenceContext.getCollection( new CollectionKey( persister, key ) );
+			if ( existing == null ) {
+				// the collection has not been initialized and new collection values have been assigned,
+				// we need to be sure to delete all the collection elements before inserting the new ones
+				final var collection =
+						persister.getCollectionSemantics()
+								.instantiateWrapper( key, persister, session );
+				persistenceContext.addUninitializedCollection(
+						persister,
+						collection,
+						key,
+						entry.isReadOnly()
+				);
+				scheduleRemoval( persister, session, persistenceContext, collection, key );
+			}
+		}
+	}
+
+	private static void scheduleRemoval(
+			@NotNull CollectionPersister persister,
+			@NotNull EventSource session,
+			@NotNull PersistenceContext persistenceContext,
+			@NotNull PersistentCollection<?> collectionToRemove,
+			@NotNull Object key) {
+		if ( persistenceContext.getCollectionFlushActionTracker()
+				instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.queueCollectionRemove(
+					collectionToRemove,
+					persister,
+					key,
+					false
+			);
+		}
+		else {
+			session.runInterceptorCallback(
+					() -> session.getInterceptor().onCollectionRemove( collectionToRemove, key ) );
+			session.getActionQueue().addAction(
+					new CollectionRemoveAction(
+							collectionToRemove,
+							persister,
+							key,
+							false,
+							session
+					)
+			);
+		}
+	}
+
 	@Override
-	protected void processValue(int i, Object[] values, Type[] types) {
+	protected void processValue(int i, @Nonnull Object[] values, @Nonnull Type[] types) {
 		final Object result = processValue( values[i], types[i] );
 		if ( result != null ) {
 			substitute = true;
@@ -161,7 +183,8 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	protected Object processComponent(Object component, CompositeType compositeType) throws HibernateException {
+	@Nullable
+	protected Object processComponent(@Nullable Object component, @Nonnull CompositeType compositeType) {
 		if ( component != null ) {
 			final Object[] values = compositeType.getPropertyValues( component, getSession() );
 			final Type[] types = compositeType.getSubtypes();
@@ -183,7 +206,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	public void process(Object object, EntityPersister persister) throws HibernateException {
+	public void process(@Nonnull Object object, @Nonnull EntityPersister persister) {
 		final Object[] values = persister.getValues( object );
 		final Type[] types = persister.getPropertyTypes();
 		processEntityPropertyValues( values, types );

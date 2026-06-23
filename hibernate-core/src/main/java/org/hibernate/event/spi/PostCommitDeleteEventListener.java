@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called after an entity delete is committed to the datastore.
@@ -15,5 +17,5 @@ public interface PostCommitDeleteEventListener extends PostDeleteEventListener {
 	 *
 	 * @param event the delete event to be handled
 	 */
-	void onPostDeleteCommitFailed(PostDeleteEvent event);
+	void onPostDeleteCommitFailed(@Nonnull PostDeleteEvent event);
 }

@@ -10,17 +10,21 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Steve Ebersole
  */
 public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListener {
 	@Override
-	public void onPostUpdate(PostUpdateEvent event) {
+	public void onPostUpdate(@Nonnull PostUpdateEvent event) {
 		handlePostUpdate( event.getEntity(), event.getPersister(), event.getSession() );
 	}
 
-	private void handlePostUpdate(Object entity, EntityPersister persister, SharedSessionContractImplementor source) {
+	private void handlePostUpdate(
+			@Nonnull Object entity,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		// mimic the preUpdate filter
 		if ( source.isStateless()
 				|| source.getPersistenceContextInternal().getEntry( entity ).getStatus() != Status.DELETED ) {
@@ -29,7 +33,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_UPDATE );
 	}
 }

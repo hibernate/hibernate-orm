@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -67,7 +68,7 @@ public class MultipleCollectionListeners {
 			this.listeners = listeners;
 		}
 
-		public void onInitializeCollection(InitializeCollectionEvent event) {
+		public void onInitializeCollection(@Nonnull InitializeCollectionEvent event) {
 			super.onInitializeCollection(event);
 			addEvent(event, this);
 		}
@@ -84,7 +85,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
-		public void onPreRecreateCollection(PreCollectionRecreateEvent event) {
+		public void onPreRecreateCollection(@Nonnull PreCollectionRecreateEvent event) {
 			addEvent(event, this);
 		}
 	}
@@ -108,7 +109,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
-		public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
+		public void onPreRemoveCollection(@Nonnull PreCollectionRemoveEvent event) {
 			addEvent(event, this);
 		}
 	}
@@ -132,7 +133,7 @@ public class MultipleCollectionListeners {
 			super(listeners);
 		}
 
-		public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+		public void onPreUpdateCollection(@Nonnull PreCollectionUpdateEvent event) {
 			addEvent(event, this);
 		}
 	}

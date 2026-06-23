@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.service.JavaServiceLoadable;
+import jakarta.annotation.Nonnull;
 
 /**
  * Integration contract for contributing event types and listeners to the Hibernate event system.
@@ -18,5 +19,5 @@ public interface EventEngineContributor {
 	/**
 	 * Apply the contributions
 	 */
-	void contribute(EventEngineContributions target);
+	void contribute(@Nonnull EventEngineContributions target);
 }

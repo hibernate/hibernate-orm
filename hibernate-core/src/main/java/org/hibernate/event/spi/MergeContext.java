@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.pretty.MessageHelper;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * {@code MergeContext} is a specialized {@link Map} implementation used by a
@@ -91,7 +93,7 @@ public class MergeContext implements Map<Object,Object> {
 		// key is a merge entity;
 		// value is a flag indicating if the merge entity is currently in the merge process.
 
-	public MergeContext(EventSource session, EntityCopyObserver entityCopyObserver){
+	public MergeContext(@Nonnull EventSource session, @Nonnull EntityCopyObserver entityCopyObserver){
 		this.session = session;
 		this.entityCopyObserver = entityCopyObserver;
 	}
@@ -113,7 +115,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * @return true if this MergeContext contains a cross-reference for the specified merge entity
 	 * @throws NullPointerException if mergeEntity is null
 	 */
-	public boolean containsKey(Object mergeEntity) {
+	public boolean containsKey(@Nonnull Object mergeEntity) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
@@ -128,7 +130,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * to a merge entity
 	 * @throws NullPointerException if managedEntity is null
 	 */
-	public boolean containsValue(Object managedEntity) {
+	public boolean containsValue(@Nonnull Object managedEntity) {
 		if ( managedEntity == null ) {
 			throw new NullPointerException( "null copies are not supported by " + getClass().getName() );
 		}
@@ -141,7 +143,7 @@ public class MergeContext implements Map<Object,Object> {
 	 *
 	 * @see Collections#unmodifiableSet(Set)
 	 */
-	public Set<Map.Entry<Object,Object>> entrySet() {
+	public @Nonnull Set<Map.Entry<Object,Object>> entrySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.entrySet() );
 	}
 
@@ -151,7 +153,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * @return  the managed entity associated with the specified merge Entity
 	 * @throws NullPointerException if mergeEntity is null
 	 */
-	public Object get(Object mergeEntity) {
+	public @Nullable Object get(@Nonnull Object mergeEntity) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
@@ -172,7 +174,7 @@ public class MergeContext implements Map<Object,Object> {
 	 *
 	 * @see Collections#unmodifiableSet(Set)
 	 */
-	public Set<Object> keySet() {
+	public @Nonnull Set<Object> keySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.keySet() );
 	}
 
@@ -195,7 +197,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * managed entity associated with <code>merge entity</code>
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
-	public Object put(Object mergeEntity, Object managedEntity) {
+	public @Nullable Object put(@Nonnull Object mergeEntity, @Nonnull Object managedEntity) {
 		return put( mergeEntity, managedEntity, Boolean.FALSE );
 	}
 
@@ -216,7 +218,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * managed entity associated with {@code mergeEntity}
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
-	public Object put(Object mergeEntity, Object managedEntity, boolean isOperatedOn) {
+	public @Nullable Object put(@Nonnull Object mergeEntity, @Nonnull Object managedEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null || managedEntity == null ) {
 			throw new NullPointerException( "null merge and managed entities are not supported by " + getClass().getName() );
 		}
@@ -274,7 +276,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * but associated value in <code>map</code> is different from the previous value in this MergeContext.
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
-	public void putAll(Map<?,?> map) {
+	public void putAll(@Nonnull Map<?,?> map) {
 		for ( var entry : map.entrySet() ) {
 			put( entry.getKey(), entry.getValue() );
 		}
@@ -285,7 +287,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * @param mergeEntity the merge entity.
 	 * @throws UnsupportedOperationException if called.
 	 */
-	public Object remove(Object mergeEntity) {
+	public @Nullable Object remove(@Nonnull Object mergeEntity) {
 		throw new UnsupportedOperationException(
 				String.format( "Operation not supported: %s.remove()", getClass().getName() )
 		);
@@ -305,7 +307,7 @@ public class MergeContext implements Map<Object,Object> {
 	 *
 	 * @see Collections#unmodifiableSet(Set)
 	 */
-	public Collection<Object> values() {
+	public @Nonnull Collection<Object> values() {
 		return Collections.unmodifiableSet( managedToMergeEntityXref.keySet() );
 	}
 
@@ -316,7 +318,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * false, if there is no mapping for mergeEntity.
 	 * @throws NullPointerException if mergeEntity is null
 	 */
-	public boolean isOperatedOn(Object mergeEntity) {
+	public boolean isOperatedOn(@Nonnull Object mergeEntity) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null merge entities are not supported by " + getClass().getName() );
 		}
@@ -331,7 +333,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * @throws NullPointerException if mergeEntity is null
 	 * @throws IllegalStateException if this MergeContext does not contain a a cross-reference for mergeEntity
 	 */
-	public void setOperatedOn(Object mergeEntity, boolean isOperatedOn) {
+	public void setOperatedOn(@Nonnull Object mergeEntity, boolean isOperatedOn) {
 		if ( mergeEntity == null ) {
 			throw new NullPointerException( "null entities are not supported by " + getClass().getName() );
 		}
@@ -353,11 +355,11 @@ public class MergeContext implements Map<Object,Object> {
 	 *
 	 * @see Collections#unmodifiableMap(Map)
 	 */
-	public Map<Object,Object> invertMap() {
+	public @Nonnull Map<Object,Object> invertMap() {
 		return Collections.unmodifiableMap( managedToMergeEntityXref );
 	}
 
-	private String printEntity(Object entity) {
+	private @Nonnull String printEntity(@Nonnull Object entity) {
 		if ( session.getPersistenceContextInternal().getEntry( entity ) != null ) {
 			return MessageHelper.infoString( session.getEntityName( entity ), session.getIdentifier( entity ) );
 		}
@@ -368,7 +370,7 @@ public class MergeContext implements Map<Object,Object> {
 		}
 	}
 
-	public EventSource getEventSource() {
+	public @Nonnull EventSource getEventSource() {
 		return session;
 	}
 }

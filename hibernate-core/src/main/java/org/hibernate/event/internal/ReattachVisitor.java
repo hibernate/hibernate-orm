@@ -14,6 +14,8 @@ import org.hibernate.type.Type;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Abstract superclass of visitors that reattach collections
@@ -26,14 +28,15 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	private final Object ownerIdentifier;
 	private final Object owner;
 
-	public ReattachVisitor(EventSource session, Object ownerIdentifier, Object owner) {
+	public ReattachVisitor(@Nonnull EventSource session, @Nonnull Object ownerIdentifier, @Nonnull Object owner) {
 		super( session );
 		this.ownerIdentifier = ownerIdentifier;
 		this.owner = owner;
 	}
 
 	@Override
-	Object processEntity(Object value, EntityType entityType) {
+	@Nullable
+	Object processEntity(@Nullable Object value, @Nonnull EntityType entityType) {
 		if ( value != null ) {
 			getSession().getPersistenceContext()
 					.reassociateIfUninitializedProxy( value );
@@ -48,7 +51,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The entity's identifier.
 	 */
-	final Object getOwnerIdentifier() {
+	final @Nonnull Object getOwnerIdentifier() {
 		return ownerIdentifier;
 	}
 
@@ -57,7 +60,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The entity.
 	 */
-	final Object getOwner() {
+	final @Nonnull Object getOwner() {
 		return owner;
 	}
 
@@ -65,7 +68,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	@Nullable
+	Object processComponent(@Nullable Object component, @Nonnull CompositeType componentType) {
 		final Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );
@@ -84,7 +88,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @param source The session from which the request originated.
 	 *
 	 */
-	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
+	void removeCollection(@Nonnull CollectionPersister role, @Nonnull Object collectionKey, @Nonnull EventSource source)
 			throws HibernateException {
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			EVENT_LISTENER_LOGGER.collectionDereferencedWhileTransient(
@@ -105,7 +109,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 *
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
-	final Object extractCollectionKeyFromOwner(CollectionPersister role) {
+	@Nonnull
+	final Object extractCollectionKeyFromOwner(@Nonnull CollectionPersister role) {
 		final var collectionType = role.getCollectionType();
 		return collectionType.useLHSPrimaryKey()
 				? ownerIdentifier :

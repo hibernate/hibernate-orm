@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.keymanytoone.bidir.component;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
@@ -164,7 +165,7 @@ public class EagerKeyManyToOneTest {
 		private int internalLoadCount = 0;
 
 		@Override
-		public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException {
+		public void onLoad(@Nonnull LoadEvent event, @Nonnull LoadType loadType) throws HibernateException {
 			if ( LoadEventListener.INTERNAL_LOAD_EAGER.getName().equals( loadType.getName() ) ) {
 				internalLoadCount++;
 				if ( internalLoadCount > 10 ) {

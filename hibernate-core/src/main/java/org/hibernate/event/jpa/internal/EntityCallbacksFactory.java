@@ -11,15 +11,17 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import jakarta.annotation.Nonnull;
 
 /// Builds Jakarta Persistence callbacks for an entity
 ///
 /// @author Steve Ebersole
 public class EntityCallbacksFactory {
+	@Nonnull
 	public static EntityCallbacks<Object> buildCallbacks(
-			PersistentClass persistentClass,
-			SessionFactoryOptions options,
-			ServiceRegistry serviceRegistry) {
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull SessionFactoryOptions options,
+			@Nonnull ServiceRegistry serviceRegistry) {
 		if ( !options.areJPACallbacksEnabled() || persistentClass.getClassName() == null ) {
 			return NoCallbacks.NO_CALLBACKS;
 		}

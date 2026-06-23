@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.boot.Metadata;
@@ -57,32 +58,32 @@ public class CollectionCacheInvalidator
 	}
 
 	@Override
-	public void onPostInsert(PostInsertEvent event) {
+	public void onPostInsert(@Nonnull PostInsertEvent event) {
 		if ( event.getSession() instanceof EventSource eventSource ) {
 			evictCache( event.getEntity(), event.getPersister(), eventSource, null );
 		}
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 		return true;
 	}
 
 	@Override
-	public void onPostDelete(PostDeleteEvent event) {
+	public void onPostDelete(@Nonnull PostDeleteEvent event) {
 		if ( event.getSession() instanceof EventSource eventSource ) {
 			evictCache( event.getEntity(), event.getPersister(), eventSource, null );
 		}
 	}
 
 	@Override
-	public void onPostUpdate(PostUpdateEvent event) {
+	public void onPostUpdate(@Nonnull PostUpdateEvent event) {
 		if ( event.getSession() instanceof EventSource eventSource ) {
 			evictCache( event.getEntity(), event.getPersister(), eventSource, event.getOldState() );
 		}
 	}
 
-	private void integrate(SessionFactoryImplementor sessionFactory) {
+	private void integrate(@Nonnull SessionFactoryImplementor sessionFactory) {
 		final var options = sessionFactory.getSessionFactoryOptions();
 		if ( options.isSecondLevelCacheEnabled()
 				&& options.isAutoEvictCollectionCache() ) {

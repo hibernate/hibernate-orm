@@ -5,6 +5,8 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Occurs after an entity instance is fully loaded.
@@ -16,11 +18,11 @@ public class PostLoadEvent extends AbstractSessionEvent {
 	private Object id;
 	private EntityPersister persister;
 
-	public PostLoadEvent(EventSource session) {
+	public PostLoadEvent(@Nonnull EventSource session) {
 		super(session);
 	}
 
-	public PostLoadEvent(Object id, EntityPersister persister, Object entity, EventSource session) {
+	public PostLoadEvent(@Nullable Object id, @Nullable EntityPersister persister, @Nullable Object entity, @Nonnull EventSource session) {
 		super(session);
 		this.id = id;
 		this.persister = persister;
@@ -33,29 +35,29 @@ public class PostLoadEvent extends AbstractSessionEvent {
 		persister = null;
 	}
 
-	public Object getEntity() {
+	public @Nullable Object getEntity() {
 		return entity;
 	}
 
-	public EntityPersister getPersister() {
+	public @Nullable EntityPersister getPersister() {
 		return persister;
 	}
 
-	public Object getId() {
+	public @Nullable Object getId() {
 		return id;
 	}
 
-	public PostLoadEvent setEntity(Object entity) {
+	public @Nonnull PostLoadEvent setEntity(@Nullable Object entity) {
 		this.entity = entity;
 		return this;
 	}
 
-	public PostLoadEvent setId(Object id) {
+	public @Nonnull PostLoadEvent setId(@Nullable Object id) {
 		this.id = id;
 		return this;
 	}
 
-	public PostLoadEvent setPersister(EntityPersister persister) {
+	public @Nonnull PostLoadEvent setPersister(@Nullable EntityPersister persister) {
 		this.persister = persister;
 		return this;
 	}

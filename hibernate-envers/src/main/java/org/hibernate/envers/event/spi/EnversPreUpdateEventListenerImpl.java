@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.event.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.event.spi.PreUpdateEvent;
@@ -20,7 +21,7 @@ public class EnversPreUpdateEventListenerImpl extends BaseEnversUpdateEventListe
 	}
 
 	@Override
-	public boolean onPreUpdate(PreUpdateEvent event) {
+	public boolean onPreUpdate(@Nonnull PreUpdateEvent event) {
 		final String entityName = event.getPersister().getEntityName();
 		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {
 			checkIfTransactionInProgress( event.getSession() );

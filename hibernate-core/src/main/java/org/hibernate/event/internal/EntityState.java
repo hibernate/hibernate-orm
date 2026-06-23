@@ -8,6 +8,8 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 public enum EntityState {
 	PERSISTENT, TRANSIENT, DETACHED, DELETED;
@@ -22,12 +24,13 @@ public enum EntityState {
 	 *
 	 * @return The state.
 	 */
+	@Nonnull
 	public static EntityState getEntityState(
-			Object entity,
-			String entityName,
-			EntityEntry entry, //pass this as an argument only to avoid double looking
-			SessionImplementor source,
-			Boolean assumedUnsaved) {
+			@Nonnull Object entity,
+			@Nullable String entityName,
+			@Nullable EntityEntry entry, //pass this as an argument only to avoid double looking
+			@Nonnull SessionImplementor source,
+			@Nullable Boolean assumedUnsaved) {
 
 		if ( entry != null ) { // the object is persistent
 			//the entity is associated with the session, so check its status

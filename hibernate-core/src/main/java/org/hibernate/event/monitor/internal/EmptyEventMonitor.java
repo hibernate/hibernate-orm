@@ -15,6 +15,8 @@ import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * An {@link EventMonitor} that ignores all events.
@@ -22,156 +24,156 @@ import org.hibernate.persister.entity.EntityPersister;
 public final class EmptyEventMonitor implements EventMonitor {
 
 	@Override
-	public DiagnosticEvent beginSessionOpenEvent() {
+	public @Nullable DiagnosticEvent beginSessionOpenEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeSessionOpenEvent(DiagnosticEvent sessionOpenEvent, SharedSessionContractImplementor session) {
+	public void completeSessionOpenEvent(@Nullable DiagnosticEvent sessionOpenEvent, @Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginSessionClosedEvent() {
+	public @Nullable DiagnosticEvent beginSessionClosedEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeSessionClosedEvent(
-			DiagnosticEvent sessionClosedEvent,
-			SharedSessionContractImplementor session) {
+			@Nullable DiagnosticEvent sessionClosedEvent,
+			@Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginJdbcConnectionAcquisitionEvent() {
+	public @Nullable DiagnosticEvent beginJdbcConnectionAcquisitionEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcConnectionAcquisitionEvent(
-			DiagnosticEvent jdbcConnectionAcquisitionEvent,
-			SharedSessionContractImplementor session,
-			Object tenantId) {
+			@Nullable DiagnosticEvent jdbcConnectionAcquisitionEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object tenantId) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginJdbcConnectionReleaseEvent() {
+	public @Nullable DiagnosticEvent beginJdbcConnectionReleaseEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcConnectionReleaseEvent(
-			DiagnosticEvent jdbcConnectionReleaseEvent,
-			SharedSessionContractImplementor session,
-			Object tenantId) {
+			@Nullable DiagnosticEvent jdbcConnectionReleaseEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object tenantId) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginJdbcPreparedStatementCreationEvent() {
+	public @Nullable DiagnosticEvent beginJdbcPreparedStatementCreationEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcPreparedStatementCreationEvent(
-			DiagnosticEvent jdbcPreparedStatementCreation,
-			String preparedStatementSql) {
+			@Nullable DiagnosticEvent jdbcPreparedStatementCreation,
+			@Nonnull String preparedStatementSql) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginJdbcPreparedStatementExecutionEvent() {
+	public @Nullable DiagnosticEvent beginJdbcPreparedStatementExecutionEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeJdbcPreparedStatementExecutionEvent(
-			DiagnosticEvent jdbcPreparedStatementExecutionEvent,
-			String preparedStatementSql) {
+			@Nullable DiagnosticEvent jdbcPreparedStatementExecutionEvent,
+			@Nonnull String preparedStatementSql) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginJdbcBatchExecutionEvent() {
+	public @Nullable DiagnosticEvent beginJdbcBatchExecutionEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeJdbcBatchExecutionEvent(DiagnosticEvent jdbcBatchExecutionEvent, String statementSql) {
+	public void completeJdbcBatchExecutionEvent(@Nullable DiagnosticEvent jdbcBatchExecutionEvent, @Nonnull String statementSql) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginCachePutEvent() {
+	public @Nullable DiagnosticEvent beginCachePutEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			Region region,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
 			boolean cacheContentChanged,
-			CacheActionDescription description) {
+			@Nonnull CacheActionDescription description) {
 
 	}
 
 	@Override
 	public void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			CachedDomainDataAccess cachedDomainDataAccess,
-			EntityPersister persister,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
+			@Nonnull EntityPersister persister,
 			boolean cacheContentChanged,
-			CacheActionDescription description) {
+			@Nonnull CacheActionDescription description) {
 
 	}
 
 	@Override
 	public void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			CachedDomainDataAccess cachedDomainDataAccess,
-			EntityPersister persister,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
+			@Nonnull EntityPersister persister,
 			boolean cacheContentChanged,
 			boolean isNatualId,
-			CacheActionDescription description) {
+			@Nonnull CacheActionDescription description) {
 
 	}
 
 	@Override
 	public void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			CachedDomainDataAccess cachedDomainDataAccess,
-			CollectionPersister persister,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
+			@Nonnull CollectionPersister persister,
 			boolean cacheContentChanged,
-			CacheActionDescription description) {
+			@Nonnull CacheActionDescription description) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginCacheGetEvent() {
+	public @Nullable DiagnosticEvent beginCacheGetEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeCacheGetEvent(
-			DiagnosticEvent cacheGetEvent,
-			SharedSessionContractImplementor session,
-			Region region,
+			@Nullable DiagnosticEvent cacheGetEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
 			boolean hit) {
 
 	}
 
 	@Override
 	public void completeCacheGetEvent(
-			DiagnosticEvent cacheGetEvent,
-			SharedSessionContractImplementor session,
-			Region region,
-			EntityPersister persister,
+			@Nullable DiagnosticEvent cacheGetEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
+			@Nonnull EntityPersister persister,
 			boolean isNaturalKey,
 			boolean hit) {
 
@@ -179,155 +181,155 @@ public final class EmptyEventMonitor implements EventMonitor {
 
 	@Override
 	public void completeCacheGetEvent(
-			DiagnosticEvent cacheGetEvent,
-			SharedSessionContractImplementor session,
-			Region region,
-			CollectionPersister persister,
+			@Nullable DiagnosticEvent cacheGetEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
+			@Nonnull CollectionPersister persister,
 			boolean hit) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginFlushEvent() {
+	public @Nullable DiagnosticEvent beginFlushEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeFlushEvent(DiagnosticEvent flushEvent, FlushEvent event) {
+	public void completeFlushEvent(@Nullable DiagnosticEvent flushEvent, @Nonnull FlushEvent event) {
 
 	}
 
 	@Override
-	public void completeFlushEvent(DiagnosticEvent flushEvent, FlushEvent event, boolean autoFlush) {
+	public void completeFlushEvent(@Nullable DiagnosticEvent flushEvent, @Nonnull FlushEvent event, boolean autoFlush) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginPartialFlushEvent() {
+	public @Nullable DiagnosticEvent beginPartialFlushEvent() {
 		return null;
 	}
 
 	@Override
-	public void completePartialFlushEvent(DiagnosticEvent flushEvent, AutoFlushEvent event) {
+	public void completePartialFlushEvent(@Nullable DiagnosticEvent flushEvent, @Nonnull AutoFlushEvent event) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginDirtyCalculationEvent() {
+	public @Nullable DiagnosticEvent beginDirtyCalculationEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeDirtyCalculationEvent(
-			DiagnosticEvent dirtyCalculationEvent,
-			SharedSessionContractImplementor session,
-			EntityPersister persister,
-			EntityEntry entry,
-			int[] dirtyProperties) {
+			@Nullable DiagnosticEvent dirtyCalculationEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull EntityPersister persister,
+			@Nonnull EntityEntry entry,
+			@Nullable int[] dirtyProperties) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginPrePartialFlush() {
+	public @Nullable DiagnosticEvent beginPrePartialFlush() {
 		return null;
 	}
 
 	@Override
 	public void completePrePartialFlush(
-			DiagnosticEvent prePartialFlush,
-			SharedSessionContractImplementor session) {
+			@Nullable DiagnosticEvent prePartialFlush,
+			@Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginEntityInsertEvent() {
+	public @Nullable DiagnosticEvent beginEntityInsertEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeEntityInsertEvent(
-			DiagnosticEvent event,
-			Object id, String entityName,
+			@Nullable DiagnosticEvent event,
+			@Nonnull Object id, @Nonnull String entityName,
 			boolean success,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginEntityUpdateEvent() {
+	public @Nullable DiagnosticEvent beginEntityUpdateEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeEntityUpdateEvent(
-			DiagnosticEvent event,
-			Object id, String entityName,
+			@Nullable DiagnosticEvent event,
+			@Nonnull Object id, @Nonnull String entityName,
 			boolean success,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginEntityUpsertEvent() {
+	public @Nullable DiagnosticEvent beginEntityUpsertEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeEntityUpsertEvent(DiagnosticEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session) {
+	public void completeEntityUpsertEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String entityName, boolean success, @Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginEntityDeleteEvent() {
+	public @Nullable DiagnosticEvent beginEntityDeleteEvent() {
 		return null;
 	}
 
 	@Override
 	public void completeEntityDeleteEvent(
-			DiagnosticEvent event,
-			Object id, String entityName,
+			@Nullable DiagnosticEvent event,
+			@Nonnull Object id, @Nonnull String entityName,
 			boolean success,
-			SharedSessionContractImplementor session) {
+			@Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginEntityLockEvent() {
+	public @Nullable DiagnosticEvent beginEntityLockEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeEntityLockEvent(DiagnosticEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session) {
+	public void completeEntityLockEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String entityName, @Nonnull LockMode lockMode, boolean success, @Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginCollectionRecreateEvent() {
+	public @Nullable DiagnosticEvent beginCollectionRecreateEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeCollectionRecreateEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+	public void completeCollectionRecreateEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String role, boolean success, @Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginCollectionUpdateEvent() {
+	public @Nullable DiagnosticEvent beginCollectionUpdateEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeCollectionUpdateEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+	public void completeCollectionUpdateEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String role, boolean success, @Nonnull SharedSessionContractImplementor session) {
 
 	}
 
 	@Override
-	public DiagnosticEvent beginCollectionRemoveEvent() {
+	public @Nullable DiagnosticEvent beginCollectionRemoveEvent() {
 		return null;
 	}
 
 	@Override
-	public void completeCollectionRemoveEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session) {
+	public void completeCollectionRemoveEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String role, boolean success, @Nonnull SharedSessionContractImplementor session) {
 
 	}
 }

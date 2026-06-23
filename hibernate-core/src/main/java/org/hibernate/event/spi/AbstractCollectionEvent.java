@@ -4,8 +4,11 @@
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.Internal;import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.Internal;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Defines a base class for events involving collections.
@@ -37,11 +40,11 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 	 */
 	@Internal
 	public AbstractCollectionEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			EventSource source,
-			Object owner,
-			Object ownerId) {
+			@Nullable CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull EventSource source,
+			@Nullable Object owner,
+			@Nullable Object ownerId) {
 		super( source );
 		this.collection = collection;
 		this.collectionPersister = collectionPersister;
@@ -63,11 +66,11 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 	 */
 	@Internal
 	public AbstractCollectionEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			String ownerEntityName,
-			Object owner,
-			Object ownerId) {
+			@Nullable CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull String ownerEntityName,
+			@Nullable Object owner,
+			@Nullable Object ownerId) {
 		super( null );
 		this.collection = collection;
 		this.owner = owner;
@@ -79,14 +82,14 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 	/**
 	 * The descriptor for the {@linkplain #getCollection() collection} mapping.
 	 */
-	public CollectionPersister getCollectionPersister() {
+	public @Nullable CollectionPersister getCollectionPersister() {
 		return collectionPersister;
 	}
 
 	/**
 	 * The (wrapped) collection instance affected by this event.
 	 */
-	public PersistentCollection<?> getCollection() {
+	public @Nonnull PersistentCollection<?> getCollection() {
 		return collection;
 	}
 
@@ -96,7 +99,7 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 	 * @return the affected owner; returns null if the entity is not in the persistence context
 	 * (e.g., because the collection from a detached entity was moved to a new owner)
 	 */
-	public Object getAffectedOwnerOrNull() {
+	public @Nullable Object getAffectedOwnerOrNull() {
 		return owner;
 	}
 
@@ -107,7 +110,7 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 	 * from the collection's loaded key (e.g., a property-ref is used for the
 	 * collection and does not include the entity's ID)
 	 */
-	public Object getAffectedOwnerIdOrNull() {
+	public @Nullable Object getAffectedOwnerIdOrNull() {
 		return ownerId;
 	}
 
@@ -117,32 +120,32 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 	 * @return the entity name; if the owner is not in the PersistenceContext, the
 	 * returned value may be a superclass name, instead of the actual class name
 	 */
-	public String getAffectedOwnerEntityName() {
+	public @Nullable String getAffectedOwnerEntityName() {
 		return ownerEntityName;
 	}
 
-	protected static CollectionPersister getLoadedCollectionPersister(PersistentCollection<?> collection, EventSource source) {
+	protected static @Nullable CollectionPersister getLoadedCollectionPersister(@Nonnull PersistentCollection<?> collection, @Nonnull EventSource source) {
 		final var entry = source.getPersistenceContextInternal().getCollectionEntry( collection );
 		return entry == null ? null : entry.getLoadedPersister();
 	}
 
-	protected static Object getLoadedOwnerOrNull( PersistentCollection<?> collection, EventSource source ) {
+	protected static @Nullable Object getLoadedOwnerOrNull( @Nonnull PersistentCollection<?> collection, @Nonnull EventSource source ) {
 		return source.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
 	}
 
-	protected static Object getLoadedOwnerIdOrNull(PersistentCollection<?> collection, EventSource source ) {
+	protected static @Nullable Object getLoadedOwnerIdOrNull(@Nonnull PersistentCollection<?> collection, @Nonnull EventSource source ) {
 		return source.getPersistenceContextInternal().getLoadedCollectionOwnerIdOrNull( collection );
 	}
 
-	protected static Object getOwnerIdOrNull(Object owner, EventSource source ) {
+	protected static @Nullable Object getOwnerIdOrNull(@Nullable Object owner, @Nonnull EventSource source ) {
 		final var ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
 		return ownerEntry == null ? null : ownerEntry.getId();
 	}
 
-	protected static String getAffectedOwnerEntityName(
-			CollectionPersister collectionPersister,
-			Object affectedOwner,
-			EventSource source ) {
+	protected static @Nullable String getAffectedOwnerEntityName(
+			@Nullable CollectionPersister collectionPersister,
+			@Nullable Object affectedOwner,
+			@Nonnull EventSource source ) {
 		if ( affectedOwner != null ) {
 			final var entry =
 					source.getPersistenceContextInternal()

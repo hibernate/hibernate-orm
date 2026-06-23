@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.sharedSession;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.FlushMode;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
@@ -176,12 +177,12 @@ public class SessionWithSharedConnectionTest {
 				EventType.POST_COMMIT_INSERT,
 				new PostInsertEventListener() {
 					@Override
-					public void onPostInsert(PostInsertEvent event) {
+					public void onPostInsert(@Nonnull PostInsertEvent event) {
 						((IrrelevantEntity) event.getEntity()).setName( postCommitMessage );
 					}
 
 					@Override
-					public boolean requiresPostCommitHandling(EntityPersister persister) {
+					public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 						return true;
 					}
 				}

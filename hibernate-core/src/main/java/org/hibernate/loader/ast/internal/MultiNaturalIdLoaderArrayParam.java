@@ -88,7 +88,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 						} );
 
 		return loadByArrayParameter(
-				normalizeKeys( naturalIds, getNaturalIdAttribute(), session, factory ),
+				normalizeKeys( naturalIds, getNaturalIdAttribute(), factory ),
 				sqlAst,
 				jdbcSelectOperation,
 				jdbcParameter,

@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import java.util.IdentityHashMap;
+import jakarta.annotation.Nonnull;
 
 /**
  * A {@link PersistEvent} represents a {@linkplain org.hibernate.Session#persist(Object) persist operation}
@@ -15,9 +16,9 @@ import java.util.IdentityHashMap;
  */
 public interface PersistContext {
 
-	boolean add(Object entity);
+	boolean add(@Nonnull Object entity);
 
-	static PersistContext create() {
+	static @Nonnull PersistContext create() {
 		// use extension to avoid creating
 		// a useless wrapper object
 		class Impl extends IdentityHashMap<Object,Object>
@@ -27,7 +28,7 @@ public interface PersistContext {
 			}
 
 			@Override
-			public boolean add(Object entity) {
+			public boolean add(@Nonnull Object entity) {
 				return put(entity,entity)==null;
 			}
 		}

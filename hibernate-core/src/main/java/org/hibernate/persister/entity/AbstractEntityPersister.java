@@ -4899,7 +4899,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public Object instantiate(Object id, SharedSessionContractImplementor session) {
+	@Nonnull
+	public Object instantiate(@Nullable Object id, @Nonnull SharedSessionContractImplementor session) {
 		final Object instance = getRepresentationStrategy().getInstantiator().instantiate();
 		linkToSession( instance, session );
 		if ( id != null ) {

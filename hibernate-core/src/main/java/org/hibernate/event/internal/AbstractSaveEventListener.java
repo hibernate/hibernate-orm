@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -35,6 +36,8 @@ import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_L
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * A convenience base class for listeners responding to persist or merge events.
@@ -56,12 +59,14 @@ public abstract class AbstractSaveEventListener<C> {
 	 *
 	 * @return The id used to save the entity.
 	 */
+	@SuppressWarnings("UnusedReturnValue")
+	@Nullable
 	protected Object saveWithRequestedId(
-			Object entity,
-			Object requestedId,
-			String entityName,
-			C context,
-			EventSource source) {
+			@Nonnull Object entity,
+			@Nonnull Object requestedId,
+			@Nullable String entityName,
+			@Nonnull C context,
+			@Nonnull EventSource source) {
 		final var persister = source.getEntityPersister( entityName, entity );
 		return performSave( entity, requestedId, persister, false, context, source, false );
 	}
@@ -81,11 +86,13 @@ public abstract class AbstractSaveEventListener<C> {
 	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
+	@SuppressWarnings("UnusedReturnValue")
+	@Nullable
 	protected Object saveWithGeneratedId(
-			Object entity,
-			String entityName,
-			C context,
-			EventSource source,
+			@Nonnull Object entity,
+			@Nullable String entityName,
+			@Nonnull C context,
+			@Nonnull EventSource source,
 			boolean requiresImmediateIdAccess) {
 		final var persister = source.getEntityPersister( entityName, entity );
 		final var generator = persister.getGenerator();
@@ -146,11 +153,12 @@ public abstract class AbstractSaveEventListener<C> {
 	 *
 	 * @return The generated id
 	 */
+	@Nonnull
 	private static Object generateId(
-			Object entity,
-			EventSource source,
-			BeforeExecutionGenerator generator,
-			EntityPersister persister) {
+			@Nonnull Object entity,
+			@Nonnull EventSource source,
+			@Nonnull BeforeExecutionGenerator generator,
+			@Nonnull EntityPersister persister) {
 		final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
 		final Object id = generator.generate( source, entity, currentValue, INSERT );
 		if ( id == null ) {
@@ -183,13 +191,14 @@ public abstract class AbstractSaveEventListener<C> {
 	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and on delayIdentityInserts
 	 */
+	@Nullable
 	protected Object performSave(
-			Object entity,
-			Object id,
-			EntityPersister persister,
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull EntityPersister persister,
 			boolean useIdentityColumn,
-			C context,
-			EventSource source,
+			@Nonnull C context,
+			@Nonnull EventSource source,
 			boolean delayIdentityInserts) {
 
 		// call this after generation of an id,
@@ -215,11 +224,19 @@ public abstract class AbstractSaveEventListener<C> {
 					infoString( persister, id, source.getFactory() ) );
 		}
 
-		final var key = useIdentityColumn ? null : entityKey( id, persister, source );
+		final EntityKey key;
+		if ( useIdentityColumn ) {
+			key = null;
+		}
+		else {
+			assert id != null;
+			key = entityKey( id, persister, source );
+		}
 		return performSaveOrReplicate( entity, key, persister, useIdentityColumn, context, source, delayIdentityInserts );
 	}
 
-	private static EntityKey entityKey(Object id, EntityPersister persister, EventSource source) {
+	@Nonnull
+	private static EntityKey entityKey(@Nonnull Object id, @Nonnull EntityPersister persister, @Nonnull EventSource source) {
 		final var key = source.generateEntityKey( id, persister );
 		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object old = persistenceContext.getEntity( key );
@@ -252,13 +269,14 @@ public abstract class AbstractSaveEventListener<C> {
 	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
+	@Nullable
 	protected Object performSaveOrReplicate(
-			Object entity,
-			EntityKey key,
-			EntityPersister persister,
+			@Nonnull Object entity,
+			@Nullable EntityKey key,
+			@Nonnull EntityPersister persister,
 			boolean useIdentityColumn,
-			C context,
-			EventSource source,
+			@Nonnull C context,
+			@Nonnull EventSource source,
 			boolean delayIdentityInserts) {
 
 		final Object id = key == null ? null : key.getIdentifier();
@@ -280,7 +298,11 @@ public abstract class AbstractSaveEventListener<C> {
 				persister
 		);
 		if ( original.getLoadedState() != null ) {
-			persistenceContext.getEntityHolder( key ).setEntityEntry( original );
+			final var holder = persistenceContext.getEntityHolder( key );
+			if ( holder == null ) {
+				throw new AssertionFailure( "Missing EntityHolder" );
+			}
+			holder.setEntityEntry( original );
 		}
 
 		cascadeBeforeSave( source, persister, entity, context );
@@ -312,7 +334,11 @@ public abstract class AbstractSaveEventListener<C> {
 		return finalId;
 	}
 
-	private static Object handleGeneratedId(boolean useIdentityColumn, Object id, AbstractEntityInsertAction insert) {
+	@Nullable
+	private static Object handleGeneratedId(
+			boolean useIdentityColumn,
+			@Nullable Object id,
+			@Nonnull AbstractEntityInsertAction insert) {
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
 			if ( insert instanceof EntityIdentityInsertAction entityIdentityInsertAction ) {
 				final Object generatedId = entityIdentityInsertAction.getGeneratedId();
@@ -331,7 +357,13 @@ public abstract class AbstractSaveEventListener<C> {
 		}
 	}
 
-	private Object[] cloneAndSubstituteValues(Object entity, EntityPersister persister, C context, EventSource source, Object id) {
+	@Nonnull
+	private Object[] cloneAndSubstituteValues(
+			@Nonnull Object entity,
+			@Nonnull EntityPersister persister,
+			@Nonnull C context,
+			@Nonnull EventSource source,
+			@Nullable Object id) {
 		final Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( context ), source );
 		final Type[] types = persister.getPropertyTypes();
 
@@ -354,15 +386,17 @@ public abstract class AbstractSaveEventListener<C> {
 		return values;
 	}
 
+	@Nonnull
 	private AbstractEntityInsertAction addInsertAction(
-			Object[] values,
-			Object id,
-			Object entity,
-			EntityPersister persister,
+			@Nonnull Object[] values,
+			@Nullable Object id,
+			@Nonnull Object entity,
+			@Nonnull EntityPersister persister,
 			boolean useIdentityColumn,
-			EventSource source,
+			@Nonnull EventSource source,
 			boolean delayIdentityInserts) {
 		if ( useIdentityColumn ) {
+			assert id == null;
 			final var insert = new EntityIdentityInsertAction(
 					values,
 					entity,
@@ -374,6 +408,7 @@ public abstract class AbstractSaveEventListener<C> {
 			return insert;
 		}
 		else {
+			assert id != null;
 			final var insert = new EntityInsertAction(
 					id,
 					values,
@@ -387,16 +422,17 @@ public abstract class AbstractSaveEventListener<C> {
 		}
 	}
 
-	protected Map<Object,Object> getMergeMap(C anything) {
+	@Nullable
+	protected Map<Object,Object> getMergeMap(@Nonnull C anything) {
 		return null;
 	}
 
 	protected boolean visitCollectionsBeforeSave(
-			Object entity,
-			Object id,
-			Object[] values,
-			Type[] types,
-			EventSource source) {
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] values,
+			@Nonnull Type[] types,
+			@Nonnull EventSource source) {
 		final var visitor = new WrapVisitor( entity, id, source );
 		// substitutes into values by side effect
 		visitor.processEntityPropertyValues( values, types );
@@ -417,11 +453,11 @@ public abstract class AbstractSaveEventListener<C> {
 	 *         reinjection of the values into the entity is required.
 	 */
 	protected boolean substituteValuesIfNecessary(
-			Object entity,
-			Object id,
-			Object[] values,
-			EntityPersister persister,
-			SessionImplementor source) {
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] values,
+			@Nonnull EntityPersister persister,
+			@Nonnull SessionImplementor source) {
 		boolean substitute = source.callInterceptorCallback(
 				() -> source.getInterceptor().onPersist(
 						entity,
@@ -446,10 +482,10 @@ public abstract class AbstractSaveEventListener<C> {
 	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeBeforeSave(
-			EventSource source,
-			EntityPersister persister,
-			Object entity,
-			C context) {
+			@Nonnull EventSource source,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object entity,
+			@Nonnull C context) {
 		// cascade save to many-to-one BEFORE the parent is saved
 		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
@@ -477,10 +513,10 @@ public abstract class AbstractSaveEventListener<C> {
 	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeAfterSave(
-			EventSource source,
-			EntityPersister persister,
-			Object entity,
-			C context) {
+			@Nonnull EventSource source,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object entity,
+			@Nonnull C context) {
 		// cascade save to collections AFTER the collection owner was saved
 		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
@@ -499,6 +535,11 @@ public abstract class AbstractSaveEventListener<C> {
 		}
 	}
 
+	@Nonnull
 	protected abstract CascadingAction<C> getCascadeAction();
 
+	@Nonnull
+	static String getLoggableName(@Nullable String entityName, @Nonnull Object entity) {
+		return entityName == null ? entity.getClass().getName() : entityName;
+	}
 }

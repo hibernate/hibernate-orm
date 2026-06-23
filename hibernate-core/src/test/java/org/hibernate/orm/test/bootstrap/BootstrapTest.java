@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.FetchType;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
@@ -402,10 +403,10 @@ public class BootstrapTest {
 				SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
 				// Supply a SessionFactory-level Interceptor
-				sessionFactoryBuilder.applyInterceptor(new CustomSessionFactoryInterceptor());
+				sessionFactoryBuilder.applyInterceptor( new CustomSessionFactoryInterceptor() );
 
 				// Add a custom observer
-				sessionFactoryBuilder.addSessionFactoryObservers(new CustomSessionFactoryObserver());
+				sessionFactoryBuilder.addSessionFactoryObservers( new CustomSessionFactoryObserver() );
 
 				// Apply a CDI BeanManager (for JPA event listeners)
 				sessionFactoryBuilder.applyBeanManager(getBeanManager());
@@ -448,7 +449,7 @@ public class BootstrapTest {
 			Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 			integrationSettings.put(
 				AvailableSettings.INTERCEPTOR,
-				new CustomSessionFactoryInterceptor()
+					new CustomSessionFactoryInterceptor()
 		);
 
 			EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
@@ -533,32 +534,23 @@ public class BootstrapTest {
 	}
 	//end::bootstrap-event-listener-registration-example[]
 
-	public class CustomDuplicationStrategy implements DuplicationStrategy {
+	public static class CustomDuplicationStrategy implements DuplicationStrategy {
 
 		@Override
-		public boolean areMatch(Object listener, Object original) {
+		public boolean areMatch(@Nonnull Object listener, @Nonnull Object original) {
 			return false;
 		}
 
 		@Override
+		@Nonnull
 		public Action getAction() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 	}
 
-	public class CustomSessionFactoryInterceptor implements Interceptor {}
+	public static class CustomSessionFactoryInterceptor implements Interceptor {}
 
-	public class CustomSessionFactoryObserver implements SessionFactoryObserver {
-
-		@Override
-		public void sessionFactoryCreated(SessionFactory factory) {
-
-		}
-
-		@Override
-		public void sessionFactoryClosed(SessionFactory factory) {
-
-		}
+	public static class CustomSessionFactoryObserver implements SessionFactoryObserver {
 	}
 
 	//tag::bootstrap-jpa-compliant-PersistenceUnit-example[]

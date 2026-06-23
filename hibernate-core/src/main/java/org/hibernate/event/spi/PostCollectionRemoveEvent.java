@@ -7,6 +7,8 @@ package org.hibernate.event.spi;
 import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * An event that occurs after a collection is removed
@@ -16,10 +18,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 	@Internal
 	public PostCollectionRemoveEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			EventSource source,
-			Object loadedOwner) {
+			@Nonnull CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull EventSource source,
+			@Nullable Object loadedOwner) {
 		super(
 				collectionPersister,
 				collection,
@@ -31,11 +33,11 @@ public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 
 	@Internal
 	public PostCollectionRemoveEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			EventSource source,
-			Object affectedOwner,
-			Object affectedOwnerId) {
+			@Nonnull CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull EventSource source,
+			@Nullable Object affectedOwner,
+			@Nullable Object affectedOwnerId) {
 		super(
 				collectionPersister,
 				collection,
@@ -47,11 +49,11 @@ public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 
 	@Internal
 	public PostCollectionRemoveEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			Object id,
-			String entityName,
-			Object loadedOwner) {
+			@Nonnull CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nullable Object id,
+			@Nonnull String entityName,
+			@Nullable Object loadedOwner) {
 		super( collectionPersister, collection, entityName, loadedOwner, id );
 	}
 }

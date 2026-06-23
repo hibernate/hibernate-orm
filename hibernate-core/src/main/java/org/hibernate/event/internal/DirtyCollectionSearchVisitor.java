@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
@@ -13,6 +12,8 @@ import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Do we have a dirty collection here?
@@ -32,14 +33,10 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	private boolean currentPropertyVersionable;
 	private boolean dirty;
 
-	public DirtyCollectionSearchVisitor(Object entity, EventSource session, boolean[] propertyVersionability) {
-		this( entity, session, propertyVersionability, false );
-	}
-
 	public DirtyCollectionSearchVisitor(
-			Object entity,
-			EventSource session,
-			boolean[] propertyVersionability,
+			@Nonnull Object entity,
+			@Nonnull EventSource session,
+			@Nonnull boolean[] propertyVersionability,
 			boolean includeNonVersionedCollections) {
 		super( session );
 		this.propertyVersionability = propertyVersionability;
@@ -57,7 +54,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	@Nullable Object processCollection(@Nullable Object collection, @Nonnull CollectionType type) {
 		if ( includeNonVersionedCollections
 				&& !currentPropertyVersionable
 				&& type.isInverse( getSession().getFactory() ) ) {
@@ -88,7 +85,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	}
 
 	@Override
-	public void processEntityPropertyValues(Object[] values, Type[] types) throws HibernateException {
+	public void processEntityPropertyValues(@Nonnull Object[] values, @Nonnull Type[] types) {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( includeEntityProperty( values, i ) ) {
 				currentPropertyVersionable = propertyVersionability[i];
@@ -98,7 +95,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	}
 
 	@Override
-	boolean includeEntityProperty(Object[] values, int i) {
+	boolean includeEntityProperty(@Nonnull Object[] values, int i) {
 		return ( includeNonVersionedCollections || propertyVersionability[i] )
 			&& super.includeEntityProperty( values, i );
 	}

@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called after an entity insert is committed to the datastore.
@@ -15,5 +17,5 @@ public interface PostCommitInsertEventListener extends PostInsertEventListener {
 	 *
 	 * @param event the insert event to be handled
 	 */
-	void onPostInsertCommitFailed(PostInsertEvent event);
+	void onPostInsertCommitFailed(@Nonnull PostInsertEvent event);
 }

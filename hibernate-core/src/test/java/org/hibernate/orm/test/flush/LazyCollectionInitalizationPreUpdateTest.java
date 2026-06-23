@@ -7,6 +7,7 @@ package org.hibernate.orm.test.flush;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Hibernate;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreUpdateEvent;
@@ -119,10 +120,9 @@ public class LazyCollectionInitalizationPreUpdateTest {
 
 	public static class Listener implements PreUpdateEventListener {
 		@Override
-		public boolean onPreUpdate(PreUpdateEvent event) {
+		public boolean onPreUpdate(@Nonnull PreUpdateEvent event) {
 			final Object entity = event.getEntity();
-			if ( entity instanceof TreeNode ) {
-				final TreeNode treeNode = (TreeNode) entity;
+			if ( entity instanceof TreeNode treeNode ) {
 				assertThat( Hibernate.isInitialized( treeNode.getSomeSet() ) ).isFalse();
 				treeNode.getSomeSet().forEach( entry -> {
 					assertThat( entry.getName() ).isEqualTo( "referenced" );

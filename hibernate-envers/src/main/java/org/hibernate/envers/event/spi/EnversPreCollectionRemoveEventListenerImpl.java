@@ -6,6 +6,7 @@ package org.hibernate.envers.event.spi;
 
 import java.io.Serializable;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -29,9 +30,9 @@ public class EnversPreCollectionRemoveEventListenerImpl
 	}
 
 	@Override
-	public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
+	public void onPreRemoveCollection(@Nonnull PreCollectionRemoveEvent event) {
 		if ( shouldGenerateRevision( event ) ) {
-			final CollectionEntry collectionEntry = getCollectionEntry( event );
+			final var collectionEntry = getCollectionEntry( event );
 			if ( collectionEntry != null ) {
 				if ( !collectionEntry.getLoadedPersister().isInverse() ) {
 					Serializable oldColl = collectionEntry.getSnapshot();

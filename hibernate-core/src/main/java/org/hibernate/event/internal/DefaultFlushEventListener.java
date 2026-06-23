@@ -4,11 +4,11 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the default flush event listeners used by hibernate for
@@ -22,7 +22,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	 *
 	 * @param event The flush event to be handled.
 	 */
-	public void onFlush(FlushEvent event) throws HibernateException {
+	public void onFlush(@Nonnull FlushEvent event) {
 		final var source = event.getSession();
 
 		final var eventMonitor = source.getEventMonitor();

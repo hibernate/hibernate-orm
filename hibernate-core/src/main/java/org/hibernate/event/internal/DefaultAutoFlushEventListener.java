@@ -5,12 +5,12 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.FlushMode;
-import org.hibernate.HibernateException;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+import jakarta.annotation.Nonnull;
 
 
 /**
@@ -27,7 +27,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	 * @param event The auto-flush event to be handled.
 	 */
 	@Override
-	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
+	public void onAutoFlush(@Nonnull AutoFlushEvent event) {
 		final var source = event.getSession();
 		final var eventListenerManager = source.getEventListenerManager();
 		final var eventMonitor = source.getEventMonitor();
@@ -83,17 +83,17 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		}
 	}
 
-	private static boolean flushIsReallyNeeded(AutoFlushEvent event, EventSource source) {
+	private static boolean flushIsReallyNeeded(@Nonnull AutoFlushEvent event, @Nonnull EventSource source) {
 		return source.getHibernateFlushMode() == FlushMode.ALWAYS
 			|| source.getActionQueue().areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
-	private static boolean flushMightBeNeeded(AutoFlushEvent event, EventSource source) {
+	private static boolean flushMightBeNeeded(@Nonnull AutoFlushEvent event, @Nonnull EventSource source) {
 		return flushMightBeNeededForMode( event, source )
 			&& nonEmpty( source );
 	}
 
-	private static boolean flushMightBeNeededForMode(AutoFlushEvent event, EventSource source) {
+	private static boolean flushMightBeNeededForMode(@Nonnull AutoFlushEvent event, @Nonnull EventSource source) {
 		return switch ( source.getHibernateFlushMode() ) {
 			case ALWAYS -> true;
 			case AUTO -> {
@@ -104,7 +104,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		};
 	}
 
-	private static boolean nonEmpty(EventSource source) {
+	private static boolean nonEmpty(@Nonnull EventSource source) {
 		final var persistenceContext = source.getPersistenceContextInternal();
 		return persistenceContext.getNumberOfManagedEntities() > 0
 			|| persistenceContext.getCollectionEntriesSize() > 0;

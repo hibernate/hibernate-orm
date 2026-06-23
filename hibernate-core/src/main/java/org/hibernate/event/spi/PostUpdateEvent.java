@@ -6,6 +6,8 @@ package org.hibernate.event.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Occurs after the datastore is updated
@@ -19,27 +21,30 @@ public class PostUpdateEvent extends AbstractPostDatabaseOperationEvent {
 	private final int[] dirtyProperties;
 
 	public PostUpdateEvent(
-			Object entity,
-			Object id,
-			Object[] state,
-			Object[] oldState,
-			int[] dirtyProperties,
-			EntityPersister persister,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nullable Object[] oldState,
+			@Nullable int[] dirtyProperties,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;
 		this.oldState = oldState;
 		this.dirtyProperties = dirtyProperties;
 	}
 
+	@Nullable
 	public Object[] getOldState() {
 		return oldState;
 	}
 
+	@Nonnull
 	public Object[] getState() {
 		return state;
 	}
 
+	@Nullable
 	public int[] getDirtyProperties() {
 		return dirtyProperties;
 	}

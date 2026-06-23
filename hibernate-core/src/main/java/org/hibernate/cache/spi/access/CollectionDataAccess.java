@@ -35,9 +35,9 @@ public interface CollectionDataAccess extends CachedDomainDataAccess {
 	 */
 	@Nonnull
 	Object generateCacheKey(
-			Object id,
-			CollectionPersister collectionDescriptor,
-			SessionFactoryImplementor factory,
+			@Nonnull Object id,
+			@Nonnull CollectionPersister collectionDescriptor,
+			@Nonnull SessionFactoryImplementor factory,
 			@Nullable String tenantIdentifier);
 
 	/**
@@ -47,7 +47,8 @@ public interface CollectionDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @return original key passed to {@link #generateCacheKey}
 	 */
-	Object getCacheKeyId(Object cacheKey);
+	@Nonnull
+	Object getCacheKeyId(@Nonnull Object cacheKey);
 
 
 }

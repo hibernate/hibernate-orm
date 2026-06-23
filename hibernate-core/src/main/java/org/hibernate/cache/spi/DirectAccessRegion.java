@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -19,10 +22,14 @@ public interface DirectAccessRegion extends Region {
 	/**
 	 * Get value by key
 	 */
-	Object getFromCache(Object key, SharedSessionContractImplementor session);
+	@Nullable
+	Object getFromCache(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Put a value by key
 	 */
-	void putIntoCache(Object key, Object value, SharedSessionContractImplementor session);
+	void putIntoCache(
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nonnull SharedSessionContractImplementor session);
 }

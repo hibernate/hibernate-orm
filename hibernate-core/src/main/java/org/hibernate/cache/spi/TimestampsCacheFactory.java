@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Responsible for building the {@link TimestampsCache} to use for
  * managing query results with respect to staleness of the underlying
@@ -18,5 +20,8 @@ public interface TimestampsCacheFactory {
 	/**
 	 * Build the {@link TimestampsCache}.
 	 */
-	TimestampsCache buildTimestampsCache(CacheImplementor cacheManager, TimestampsRegion timestampsRegion);
+	@Nonnull
+	TimestampsCache buildTimestampsCache(
+			@Nonnull CacheImplementor cacheManager,
+			@Nonnull TimestampsRegion timestampsRegion);
 }

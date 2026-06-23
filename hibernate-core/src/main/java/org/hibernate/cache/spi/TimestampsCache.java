@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Collection;
 
 import org.hibernate.cache.CacheException;
@@ -27,8 +30,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public interface TimestampsCache {
 	/**
-	 * The region used to store all timestamp data.
+	 * The region used to store all timestamp data, or null of the timestamp
+	 * cache is not enabled.
+	 *
+	 * @deprecated This method is never called.
 	 */
+	@Nullable
 	TimestampsRegion getRegion();
 
 	/**
@@ -36,39 +43,41 @@ public interface TimestampsCache {
 	 * against the timestamp region data.
 	 */
 	void preInvalidate(
-			String[] spaces,
-			SharedSessionContractImplementor session);
+			@Nonnull String[] spaces,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Perform invalidation of the passed spaces (table names)
 	 * against the timestamp region data.
 	 */
 	void invalidate(
-			String[] spaces,
-			SharedSessionContractImplementor session);
+			@Nonnull String[] spaces,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Perform an up-to-date check for the given set of query spaces as
 	 * part of verifying the validity of cached query results.
 	 */
 	boolean isUpToDate(
-			String[] spaces,
-			Long timestamp,
-			SharedSessionContractImplementor session);
+			@Nonnull String[] spaces,
+			@Nonnull Long timestamp,
+			@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Perform an up-to-date check for the given set of query spaces as
 	 * part of verifying the validity of cached query results.
 	 */
 	boolean isUpToDate(
-			Collection<String> spaces,
-			Long timestamp,
-			SharedSessionContractImplementor session);
+			@Nonnull Collection<String> spaces,
+			@Nonnull Long timestamp,
+			@Nonnull SharedSessionContractImplementor session);
 
-	default void clear() throws CacheException {
-		getRegion().clear();
-	}
+	void clear() throws CacheException;
 
+	/**
+	 * @deprecated This noop method is never called
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	default void destroy() {
 		// nothing to do - the region itself is destroyed
 	}

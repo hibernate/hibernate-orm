@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -19,12 +21,14 @@ public class UnstructuredCacheEntry implements CacheEntryStructure {
 	public static final UnstructuredCacheEntry INSTANCE = new UnstructuredCacheEntry();
 
 	@Override
-	public Object structure(Object item) {
+	@Nonnull
+	public Object structure(@Nonnull Object item) {
 		return item;
 	}
 
 	@Override
-	public Object destructure(Object structured, SessionFactoryImplementor factory) {
+	@Nonnull
+	public Object destructure(@Nonnull Object structured, @Nonnull SessionFactoryImplementor factory) {
 		return structured;
 	}
 

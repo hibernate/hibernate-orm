@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -19,20 +22,24 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class CollectionNonStrictReadWriteAccess extends AbstractCollectionDataAccess {
 	public CollectionNonStrictReadWriteAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			CollectionDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull CollectionDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.READ_WRITE;
 	}
 
 	@Override
-	public void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock) {
+	public void unlockItem(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 		getStorageAccess().removeFromCache( key, session );
 	}
 }

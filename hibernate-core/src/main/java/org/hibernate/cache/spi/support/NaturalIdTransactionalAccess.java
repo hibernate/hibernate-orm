@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -14,14 +16,15 @@ import org.hibernate.cache.spi.access.AccessType;
  */
 public class NaturalIdTransactionalAccess extends AbstractNaturalIdDataAccess {
 	public NaturalIdTransactionalAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			NaturalIdDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull NaturalIdDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.TRANSACTIONAL;
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.spi.DirectAccessRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -28,17 +31,22 @@ public abstract class DirectAccessRegionTemplate extends AbstractRegion implemen
 		this.storageAccess = storageAccess;
 	}
 
+	@Nonnull
 	public StorageAccess getStorageAccess() {
 		return storageAccess;
 	}
 
 	@Override
-	public Object getFromCache(Object key, SharedSessionContractImplementor session) {
+	@Nullable
+	public Object getFromCache(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		return getStorageAccess().getFromCache( key, session );
 	}
 
 	@Override
-	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
+	public void putIntoCache(
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nonnull SharedSessionContractImplementor session) {
 		getStorageAccess().putIntoCache( key, value, session );
 	}
 

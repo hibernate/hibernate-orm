@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 
@@ -32,11 +34,13 @@ public interface Region {
 	/**
 	 * Retrieve the unqualified name of this region.
 	 */
+	@Nonnull
 	String getName();
 
 	/**
 	 * The RegionFactory that generated this Region
 	 */
+	@Nonnull
 	RegionFactory getRegionFactory();
 
 	/**

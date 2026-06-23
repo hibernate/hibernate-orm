@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 
 /**
@@ -26,6 +29,7 @@ public interface CacheEntry extends Serializable {
 	 *
 	 * @return The entry's exact entity type.
 	 */
+	@Nonnull
 	String getSubclass();
 
 	/**
@@ -33,6 +37,7 @@ public interface CacheEntry extends Serializable {
 	 *
 	 * @return The version of the entity represented by this entry
 	 */
+	@Nullable
 	Object getVersion();
 
 	/**
@@ -44,5 +49,6 @@ public interface CacheEntry extends Serializable {
 	 *
 	 * @return The disassembled state
 	 */
+	@Nullable
 	Serializable[] getDisassembledState();
 }

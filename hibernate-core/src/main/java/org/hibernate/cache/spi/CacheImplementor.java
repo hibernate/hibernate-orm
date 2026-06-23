@@ -38,37 +38,39 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	SessionFactoryImplementor getSessionFactory();
 
 	/**
-	 * The underlying RegionFactory in use.
+	 * The underlying {@link RegionFactory} in use.
 	 *
-	 * @apiNote CacheImplementor acts partially as a wrapper for details
-	 * of interacting with the configured RegionFactory.  Care should
-	 * be taken when accessing the RegionFactory directly.
+	 * @apiNote {@code CacheImplementor} acts partially as a wrapper for
+	 *          details of interacting with the configured {@code RegionFactory}.
+	 *          Care should be taken when accessing the {@code RegionFactory}
+	 *          directly.
 	 */
+	@Nonnull
 	RegionFactory getRegionFactory();
 
 	/**
 	 * An initialization phase allowing the caching provider to prime itself
-	 * from the passed configs
+	 * from the passed configurations.
 	 *
 	 * @since 5.3
 	 */
-	void prime(Set<DomainDataRegionConfig> cacheRegionConfigs);
+	void prime(@Nonnull Set<DomainDataRegionConfig> cacheRegionConfigs);
 
 	/**
 	 * Get a cache Region by name. If there is both a {@link DomainDataRegion}
 	 * and a {@link QueryResultsRegion} with the specified name, then the
 	 * {@link DomainDataRegion} will be returned.
 	 *
-	 * @apiNote It is only valid to call this method after {@link #prime} has
-	 * been performed
+	 * @apiNote It is illegal to call this method before {@link #prime} has
+	 *          been called.
 	 *
 	 * @since 5.3
 	 */
 	@Nullable
-	Region getRegion(String regionName);
+	Region getRegion(@Nonnull String regionName);
 
 	/**
-	 * The unqualified name of all regions.  Intended for use with {@link #getRegion}
+	 * The unqualified name of all regions. Intended for use with {@link #getRegion}.
 	 *
 	 * @since 5.3
 	 */
@@ -76,42 +78,45 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	Set<String> getCacheRegionNames();
 
 	/**
-	 * Find the cache data access strategy for Hibernate's timestamps cache.
-	 * Will return {@code null} if Hibernate is not configured for query result caching
+	 * The cache data access strategy for the timestamp cache, or return {@code null}
+	 * if Hibernate is not configured for query result caching.
 	 *
 	 * @since 5.3
 	 */
+	@Nullable
 	TimestampsCache getTimestampsCache();
 
 	/**
-	 * Access to the "default" region used to store query results when caching
-	 * was requested but no region was explicitly named.  Will return {@code null}
-	 * if Hibernate is not configured for query result caching
+	 * Access to the "default" region used to store query results when caching is
+	 * requested, but no region was explicitly named, or return {@code null} if
+	 * Hibernate is not configured for query result caching.
 	 */
+	@Nullable
 	QueryResultsCache getDefaultQueryResultsCache();
 
 	/**
-	 * Get query cache by {@code region name} or create a new one if none exist.
-	 *
-	 * If the region name is null, then default query cache region will be returned.
-	 *
-	 * Will return {@code null} if Hibernate is not configured for query result caching
+	 * Get the named region of the query results cache, creating it if it does not
+	 * already exist. If the given region name is null, the default query cache
+	 * region is returned. Return {@code null} if Hibernate is not configured for
+	 * query result caching.
 	 */
-	QueryResultsCache getQueryResultsCache(String regionName);
+	@Nullable
+	QueryResultsCache getQueryResultsCache(@Nullable String regionName);
 
 	/**
-	 * Get the named QueryResultRegionAccess but not creating one if it
-	 * does not already exist.  This is intended for use by statistics.
+	 * Get the named region of the query cache, but without creating it if it does
+	 * not already exist, or return {@code null} if Hibernate is not configured for
+	 * query result caching or if no such region (yet) exists.
 	 *
-	 * Will return {@code null} if Hibernate is not configured for query result
-	 * caching or if no such region (yet) exists
+	 * @apiNote This is intended for use by statistics.
 	 *
 	 * @since 5.3
 	 */
-	QueryResultsCache getQueryResultsCacheStrictly(String regionName);
+	@Nullable
+	QueryResultsCache getQueryResultsCacheStrictly(@Nullable String regionName);
 
 	/**
-	 * Clean up the default query cache
+	 * Clean up the default query results cache.
 	 *
 	 * @deprecated only because it's currently never called
 	 */
@@ -129,46 +134,49 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	void close();
 
 	/**
-	 * Find the cache data access strategy for an entity.  Will
-	 * return {@code null} when the entity is not configured for caching.
+	 * Find the cache data access strategy for an entity, or return {@code null}
+	 * if the given entity is not configured for caching.
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @implSpec It is only valid to call this method after {@link #prime} has
-	 * been performed
+	 * @implSpec It is illegal to call this method before {@link #prime} has
+	 *           been called.
 	 *
 	 * @apiNote Use {@link EntityPersister#getCacheAccessStrategy()} instead
 	 */
 	@Internal
 	@Remove
-	EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName);
+	@Nullable
+	EntityDataAccess getEntityRegionAccess(@Nonnull NavigableRole rootEntityName);
 
 	/**
-	 * Find the cache data access strategy for the given entity's natural-id cache.
-	 * Will return {@code null} when the entity does not define a natural-id, or its
-	 * natural-id is not configured for caching.
+	 * Find the cache data access strategy for the given entity's natural id cache,
+	 * or return {@code null} when the entity does not define a natural id, or its
+	 * natural id is not configured for caching.
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @implSpec It is only valid to call this method after {@link #prime} has
-	 * been performed
+	 * @implSpec It is illegal to call this method before {@link #prime} has
+	 *           been called.
 	 *
-	 * @apiNote  Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
+	 * @apiNote Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
 	@Internal
 	@Remove
-	NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName);
+	@Nullable
+	NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(@Nonnull NavigableRole rootEntityName);
 
 	/**
-	 * Find the cache data access strategy for the given collection.  Will
-	 * return {@code null} when the collection is not configured for caching.
+	 * Find the cache data access strategy for the given collection, or return
+	 * {@code null} when the collection is not configured for caching.
 	 *
-	 * @implSpec It is only valid to call this method after {@link #prime} has
-	 * been performed
+	 * @implSpec It is illegal to call this method before {@link #prime} has
+	 *           been called.
 	 *
-	 * @apiNote  Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
+	 * @apiNote Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
 	@Internal
 	@Remove
-	CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole);
+	@Nullable
+	CollectionDataAccess getCollectionRegionAccess(@Nonnull NavigableRole collectionRole);
 }

@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
@@ -38,11 +41,11 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 * @throws HibernateException Generally indicates a problem performing the dis-assembly.
 	 */
 	public StandardCacheEntryImpl(
-			final Object[] state,
-			final EntityPersister persister,
-			final Object version,
-			final SharedSessionContractImplementor session,
-			final Object owner) throws HibernateException {
+			@Nonnull final Object[] state,
+			@Nonnull final EntityPersister persister,
+			@Nullable final Object version,
+			@Nonnull final SharedSessionContractImplementor session,
+			@Nullable final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
 		this.disassembledState = CacheEntryHelper.disassemble(
 				state,
@@ -55,7 +58,10 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		this.version = version;
 	}
 
-	StandardCacheEntryImpl(Serializable[] disassembledState, String subclass, Object version) {
+	StandardCacheEntryImpl(
+			@Nonnull Serializable[] disassembledState,
+			@Nonnull String subclass,
+			@Nullable Object version) {
 		this.disassembledState = disassembledState;
 		this.subclass = subclass;
 		this.version = version;
@@ -69,6 +75,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	}
 
 	@Override
+	@Nonnull
 	public Serializable[] getDisassembledState() {
 		// todo: this was added to support initializing an entity's EntityEntry snapshot during reattach;
 		// this should be refactored to instead expose a method to assemble an EntityEntry based on this
@@ -77,11 +84,13 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	}
 
 	@Override
+	@Nonnull
 	public String getSubclass() {
 		return subclass;
 	}
 
 	@Override
+	@Nullable
 	public Object getVersion() {
 		return version;
 	}
@@ -115,12 +124,13 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	 * @see org.hibernate.type.Type#assemble
 	 * @see org.hibernate.type.Type#disassemble
 	 */
+	@Nonnull
 	public Object[] assemble(
-			final Object instance,
-			final Object id,
-			final EntityPersister persister,
-			final Interceptor interceptor,
-			final SharedSessionContractImplementor session) throws HibernateException {
+			@Nonnull final Object instance,
+			@Nonnull final Object id,
+			@Nonnull final EntityPersister persister,
+			@Nonnull final Interceptor interceptor,
+			@Nonnull final SharedSessionContractImplementor session) throws HibernateException {
 		if ( !persister.getEntityName().equals( subclass ) ) {
 			throw new AssertionFailure( "Tried to assemble a different subclass instance" );
 		}

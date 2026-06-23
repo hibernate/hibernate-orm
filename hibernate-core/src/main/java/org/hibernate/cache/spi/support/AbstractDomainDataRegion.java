@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Map;
 
 import org.hibernate.cache.CacheException;
@@ -41,10 +44,10 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	private Map<NavigableRole,CollectionDataAccess> collectionDataAccessMap;
 
 	public AbstractDomainDataRegion(
-			DomainDataRegionConfig regionConfig,
-			RegionFactory regionFactory,
-			CacheKeysFactory defaultKeysFactory,
-			DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull RegionFactory regionFactory,
+			@Nullable CacheKeysFactory defaultKeysFactory,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 //		super( regionFactory.qualify( regionConfig.getRegionName() ), regionFactory );
 		super( regionConfig.getRegionName(), regionFactory );
 
@@ -65,8 +68,8 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	 * (atm) from AbstractDomainDataRegion's constructor
 	 */
 	protected void completeInstantiation(
-			DomainDataRegionConfig regionConfig,
-			DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		L2CACHE_LOGGER.domainDataRegionCreated( regionConfig.getRegionName(), effectiveKeysFactory );
 
 		entityDataAccessMap = generateEntityDataAccessMap( regionConfig );
@@ -75,16 +78,19 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 	}
 
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
+	@Nonnull
 	public CacheKeysFactory getEffectiveKeysFactory() {
 		return effectiveKeysFactory;
 	}
 
 	@Override
-	public EntityDataAccess getEntityDataAccess(NavigableRole rootEntityRole) {
+	@Nonnull
+	public EntityDataAccess getEntityDataAccess(@Nonnull NavigableRole rootEntityRole) {
 		final var access = entityDataAccessMap.get( rootEntityRole );
 		if ( access == null ) {
 			throw new IllegalArgumentException( "Caching was not configured for entity: " + rootEntityRole.getFullPath() );
@@ -94,7 +100,8 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 
 
 	@Override
-	public NaturalIdDataAccess getNaturalIdDataAccess(NavigableRole rootEntityRole) {
+	@Nonnull
+	public NaturalIdDataAccess getNaturalIdDataAccess(@Nonnull NavigableRole rootEntityRole) {
 		final var access = naturalIdDataAccessMap.get( rootEntityRole );
 		if ( access == null ) {
 			throw new IllegalArgumentException( "Caching was not configured for entity natural id: " + rootEntityRole.getFullPath() );
@@ -103,7 +110,8 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	@Override
-	public CollectionDataAccess getCollectionDataAccess(NavigableRole collectionRole) {
+	@Nonnull
+	public CollectionDataAccess getCollectionDataAccess(@Nonnull NavigableRole collectionRole) {
 		final var access = collectionDataAccessMap.get( collectionRole );
 		if ( access == null ) {
 			throw new IllegalArgumentException( "Caching was not configured for collection: " + collectionRole.getFullPath() );
@@ -114,12 +122,15 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// creation
 
-	protected abstract EntityDataAccess generateEntityAccess(EntityDataCachingConfig entityAccessConfig);
-	protected abstract CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig cachingConfig);
-	protected abstract NaturalIdDataAccess generateNaturalIdAccess(NaturalIdDataCachingConfig naturalIdAccessConfig);
+	@Nonnull
+	protected abstract EntityDataAccess generateEntityAccess(@Nonnull EntityDataCachingConfig entityAccessConfig);
+	@Nonnull
+	protected abstract CollectionDataAccess generateCollectionAccess(@Nonnull CollectionDataCachingConfig cachingConfig);
+	@Nonnull
+	protected abstract NaturalIdDataAccess generateNaturalIdAccess(@Nonnull NaturalIdDataCachingConfig naturalIdAccessConfig);
 
 	private Map<NavigableRole, EntityDataAccess> generateEntityDataAccessMap(
-			DomainDataRegionConfig regionConfig) {
+			@Nonnull DomainDataRegionConfig regionConfig) {
 		final var entityCaching = regionConfig.getEntityCaching();
 		if ( entityCaching.isEmpty() ) {
 			return emptyMap();
@@ -133,7 +144,8 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 		return unmodifiableMap( accessMap );
 	}
 
-	private Map<NavigableRole, NaturalIdDataAccess> generateNaturalIdDataAccessMap(DomainDataRegionConfig regionConfig) {
+	private Map<NavigableRole, NaturalIdDataAccess> generateNaturalIdDataAccessMap(
+			@Nonnull DomainDataRegionConfig regionConfig) {
 		final var naturalIdCaching = regionConfig.getNaturalIdCaching();
 		if ( naturalIdCaching.isEmpty() ) {
 			return emptyMap();
@@ -148,7 +160,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	private Map<NavigableRole, CollectionDataAccess> generateCollectionDataAccessMap(
-			DomainDataRegionConfig regionConfig) {
+			@Nonnull DomainDataRegionConfig regionConfig) {
 		final var collectionCaching = regionConfig.getCollectionCaching();
 		if ( collectionCaching.isEmpty() ) {
 			return emptyMap();
@@ -188,19 +200,19 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 		void destroy();
 	}
 
-	protected void releaseDataAccess(EntityDataAccess cacheAccess) {
+	protected void releaseDataAccess(@Nonnull EntityDataAccess cacheAccess) {
 		if ( cacheAccess instanceof Destructible destructible ) {
 			destructible.destroy();
 		}
 	}
 
-	protected void releaseDataAccess(NaturalIdDataAccess cacheAccess) {
+	protected void releaseDataAccess(@Nonnull NaturalIdDataAccess cacheAccess) {
 		if ( cacheAccess instanceof Destructible destructible ) {
 			destructible.destroy();
 		}
 	}
 
-	protected void releaseDataAccess(CollectionDataAccess cacheAccess) {
+	protected void releaseDataAccess(@Nonnull CollectionDataAccess cacheAccess) {
 		if ( cacheAccess instanceof Destructible destructible ) {
 			destructible.destroy();
 		}

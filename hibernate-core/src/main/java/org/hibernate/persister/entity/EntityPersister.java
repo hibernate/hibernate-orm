@@ -1196,7 +1196,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The instantiated entity.
 	 */
-	Object instantiate(Object id, SharedSessionContractImplementor session);
+	@Nonnull
+	Object instantiate(@Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Is the given object an instance of this entity?

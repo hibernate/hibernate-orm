@@ -5,7 +5,6 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.DetachedObjectException;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.event.spi.LockEvent;
 import org.hibernate.event.spi.LockEventListener;
@@ -13,6 +12,7 @@ import org.hibernate.event.spi.LockEventListener;
 
 import static org.hibernate.engine.internal.ProxyUtil.forceInitialize;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the default lock event listeners used by hibernate to lock entities
@@ -28,9 +28,10 @@ public class DefaultLockEventListener implements LockEventListener {
 	 * @param event The lock event to be handled.
 	 */
 	@Override
-	public void onLock(LockEvent event) throws HibernateException {
+	public void onLock(@Nonnull LockEvent event) {
 
 		final Object instance = event.getObject();
+		//noinspection ConstantValue
 		if ( instance == null ) {
 			throw new NullPointerException( "Attempted to lock null" );
 		}
@@ -49,6 +50,7 @@ public class DefaultLockEventListener implements LockEventListener {
 		if ( entry == null && instance == entity ) {
 			throw new DetachedObjectException( "Given entity is not associated with the persistence context" );
 		}
+		assert entry != null;
 
 		upgradeLock( entity, entry, event.getLockOptions(), source );
 	}

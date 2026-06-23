@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.spi.CascadingAction;
@@ -20,9 +19,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import static org.hibernate.engine.internal.ProxyUtil.assertInitialized;
 import static org.hibernate.event.internal.EntityState.getEntityState;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
-import static org.hibernate.event.internal.EventUtil.getLoggableName;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the default event listener used by Hibernate for persisting
@@ -35,7 +34,7 @@ public class DefaultPersistEventListener
 		implements PersistEventListener {
 
 	@Override
-	protected CascadingAction<PersistContext> getCascadeAction() {
+	protected @Nonnull CascadingAction<PersistContext> getCascadeAction() {
 		return CascadingActions.PERSIST;
 	}
 
@@ -46,7 +45,7 @@ public class DefaultPersistEventListener
 	 *
 	 */
 	@Override
-	public void onPersist(PersistEvent event) throws HibernateException {
+	public void onPersist(@Nonnull PersistEvent event) {
 		onPersist( event, PersistContext.create() );
 	}
 
@@ -57,7 +56,7 @@ public class DefaultPersistEventListener
 	 *
 	 */
 	@Override
-	public void onPersist(PersistEvent event, PersistContext createCache) throws HibernateException {
+	public void onPersist(@Nonnull PersistEvent event, @Nonnull PersistContext createCache) {
 		final Object object = event.getObject();
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
@@ -75,7 +74,7 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	private void persist(PersistEvent event, PersistContext createCache, Object entity) {
+	private void persist(@Nonnull PersistEvent event, @Nonnull PersistContext createCache, @Nonnull Object entity) {
 		final var source = event.getSession();
 		final var entityEntry = source.getPersistenceContextInternal().getEntry( entity );
 		final String entityName = entityName( event, entity, entityEntry );
@@ -101,7 +100,10 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	private static String entityName(PersistEvent event, Object entity, EntityEntry entityEntry) {
+	private static @Nonnull String entityName(
+			@Nonnull PersistEvent event,
+			@Nonnull Object entity,
+			@Nonnull EntityEntry entityEntry) {
 		final String explicitEntityName = event.getEntityName();
 		if ( explicitEntityName != null ) {
 			return explicitEntityName;
@@ -114,7 +116,7 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	protected void entityIsPersistent(PersistEvent event, PersistContext createCache) {
+	protected void entityIsPersistent(@Nonnull PersistEvent event, @Nonnull PersistContext createCache) {
 		final var source = event.getSession();
 		final String entityName = event.getEntityName();
 		//TODO: check that entry.getIdentifier().equals(requestedId)
@@ -129,13 +131,17 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	private void justCascade(PersistContext createCache, EventSource source, Object entity, EntityPersister persister) {
+	private void justCascade(
+			@Nonnull PersistContext createCache,
+			@Nonnull EventSource source,
+			@Nonnull Object entity,
+			@Nonnull EntityPersister persister) {
 		//TODO: merge into one method!
 		cascadeBeforeSave( source, persister, entity, createCache );
 		cascadeAfterSave( source, persister, entity, createCache );
 	}
 
-	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
+	protected void entityIsTransient(@Nonnull PersistEvent event, @Nonnull PersistContext createCache) {
 		EVENT_LISTENER_LOGGER.persistingTransientInstance();
 		final Object entity = assertInitialized( event.getObject() );
 		if ( createCache.add( entity ) ) {
@@ -144,7 +150,7 @@ public class DefaultPersistEventListener
 		}
 	}
 
-	private void entityIsDeleted(PersistEvent event, PersistContext createCache) {
+	private void entityIsDeleted(@Nonnull PersistEvent event, @Nonnull PersistContext createCache) {
 		final var source = event.getSession();
 		final Object entity = assertInitialized( event.getObject() );
 		final var persister = source.getEntityPersister( event.getEntityName(), entity );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.jpa.event.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.jpa.event.spi.CallbackType;
 
 import java.lang.reflect.InvocationTargetException;
@@ -23,7 +24,7 @@ public class EntityCallback extends AbstractCallback {
 	}
 
 	@Override
-	public void performCallback(Object entity) {
+	public void performCallback(@Nonnull Object entity) {
 		try {
 			callbackMethod.invoke( entity );
 		}

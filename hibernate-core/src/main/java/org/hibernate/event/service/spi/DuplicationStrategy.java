@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Defines listener duplication checking strategy, both in terms of when a duplication is detected (see
@@ -28,12 +30,13 @@ public interface DuplicationStrategy {
 	 *
 	 * @return {@literal true} if the two instances are considered a duplication; {@literal false} otherwise
 	 */
-	boolean areMatch(Object listener, Object original);
+	boolean areMatch(@Nonnull Object listener, @Nonnull Object original);
 
 	/**
 	 * How should a duplication be handled?
 	 *
 	 * @return The strategy for handling duplication
 	 */
+	@Nonnull
 	Action getAction();
 }

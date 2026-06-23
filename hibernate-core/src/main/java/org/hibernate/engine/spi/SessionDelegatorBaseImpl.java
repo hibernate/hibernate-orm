@@ -1514,7 +1514,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	@Nonnull
-	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException {
+	public Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) throws HibernateException {
 		return delegate.instantiate( persister, id );
 	}
 

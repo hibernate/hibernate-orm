@@ -664,7 +664,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void persist(String entityName, Object object, PersistContext copiedAlready) {
+	public void persist(@Nonnull String entityName, @Nonnull Object object, @Nonnull PersistContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
@@ -737,7 +737,7 @@ public class SessionImpl
 	// persistOnFlush() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
+	public void persistOnFlush(@Nonnull String entityName, @Nonnull Object object, @Nonnull PersistContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		final var persistEvent = new PersistEvent( entityName, object, this );
@@ -777,7 +777,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void merge(String entityName, Object object, MergeContext copiedAlready) {
+	public void merge(@Nonnull String entityName, @Nonnull Object object, @Nonnull MergeContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
@@ -832,7 +832,7 @@ public class SessionImpl
 	// delete() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
+	public void delete(@Nonnull String entityName, @Nonnull Object object, boolean isCascadeDeleteEnabled, @Nonnull DeleteContext transientEntities) {
 		checkOpenOrWaitingForAutoClose();
 		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpdates();
 		final boolean traceEnabled = SESSION_LOGGER.isTraceEnabled();
@@ -849,7 +849,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void removeOrphanBeforeUpdates(String entityName, Object child) {
+	public void removeOrphanBeforeUpdates(@Nonnull String entityName, @Nonnull Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
 		//       This should be removed once action/task ordering is improved.
 		logRemoveOrphanBeforeUpdates( "begin", entityName, child );
@@ -1115,7 +1115,7 @@ public class SessionImpl
 			event.setEntityId( null );
 			event.setInstanceToLoad( null );
 			event.setResult( null );
-			event.setLockOptions( null );
+			event.setLockOptions( LockOptions.NONE );
 			event.setReadOnly( null );
 			loadEvent = event;
 		}
@@ -1283,7 +1283,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) {
+	public void refresh(@Nonnull String entityName, @Nonnull Object object, @Nonnull RefreshContext refreshedAlready) {
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
@@ -1537,7 +1537,7 @@ public class SessionImpl
 	 */
 	@Override
 	@Nonnull
-	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) {
+	public Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		Object result = callInterceptorCallback(
@@ -1761,6 +1761,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry) {
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
@@ -1796,13 +1797,14 @@ public class SessionImpl
 		return getEntityEntry( object ).getPersister().getEntityName();
 	}
 
-	private void checkOwnsProxy(LazyInitializer lazyInitializer) {
+	private void checkOwnsProxy(@Nonnull LazyInitializer lazyInitializer) {
 		if ( lazyInitializer.getSession() != this ) {
 			throw new DetachedObjectException( "Given proxy is not associated with the persistence context" );
 		}
 	}
 
-	private EntityEntry getEntityEntry(Object object) {
+	@Nonnull
+	private EntityEntry getEntityEntry(@Nonnull Object object) {
 		final var entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
 			throw new UnmanagedObjectException( "Given entity is not associated with the persistence context" );
@@ -1846,6 +1848,7 @@ public class SessionImpl
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public ActionQueue getActionQueue() {
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();

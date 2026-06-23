@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.event.spi.EventType;
+import jakarta.annotation.Nonnull;
 
 /**
  * Contract for a groups of events listeners for a particular event type.
@@ -25,6 +26,7 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @return The event type.
 	 */
+	@Nonnull
 	EventType<T> getEventType();
 
 	/**
@@ -42,6 +44,7 @@ public interface EventListenerGroup<T> {
 	 * @return The Iterable.
 	 */
 	@Deprecated
+	@Nonnull
 	Iterable<T> listeners();
 
 	/**
@@ -53,29 +56,29 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @param strategy The duplication strategy
 	 */
-	void addDuplicationStrategy(DuplicationStrategy strategy);
+	void addDuplicationStrategy(@Nonnull DuplicationStrategy strategy);
 
 	/**
 	 * Add a listener to the group.
 	 */
-	void appendListener(T listener);
+	void appendListener(@Nonnull T listener);
 
 	/**
 	 * Add the given listeners to the group.
 	 */
 	@SuppressWarnings("unchecked") // heap pollution due to varargs
-	void appendListeners(T... listeners);
+	void appendListeners(@Nonnull T... listeners);
 
 	/**
 	 * Add a listener to the group.
 	 */
-	void prependListener(T listener);
+	void prependListener(@Nonnull T listener);
 
 	/**
 	 * Add the given listeners to the group.
 	 */
 	@SuppressWarnings("unchecked") // heap pollution due to varargs
-	void prependListeners(T... listeners);
+	void prependListeners(@Nonnull T... listeners);
 
 	/**
 	 * Clears both the list of event listeners and every {@link DuplicationStrategy},
@@ -102,7 +105,9 @@ public interface EventListenerGroup<T> {
 	 * @param <U> the kind of event
 	 */
 	@Incubating
-	<U> void fireLazyEventOnEachListener(Supplier<U> eventSupplier, BiConsumer<T,U> actionOnEvent);
+	<U> void fireLazyEventOnEachListener(
+			@Nonnull Supplier<U> eventSupplier,
+			@Nonnull BiConsumer<T,U> actionOnEvent);
 
 	/**
 	 * Similar as {@link #fireLazyEventOnEachListener(Supplier, BiConsumer)} except it
@@ -112,7 +117,9 @@ public interface EventListenerGroup<T> {
 	 * @param <U> the kind of event
 	 */
 	@Incubating
-	<U> void fireEventOnEachListener(U event, BiConsumer<T,U> actionOnEvent);
+	<U> void fireEventOnEachListener(
+			@Nonnull U event,
+			@Nonnull BiConsumer<T,U> actionOnEvent);
 
 	/**
 	 * Similar to {@link #fireEventOnEachListener(Object, BiConsumer)}, but allows passing
@@ -121,7 +128,10 @@ public interface EventListenerGroup<T> {
 	 * reduce allocations.
 	 */
 	@Incubating
-	<U,X> void fireEventOnEachListener(U event, X param, EventActionWithParameter<T,U,X> actionOnEvent);
+	<U,X> void fireEventOnEachListener(
+			@Nonnull U event,
+			@Nonnull X param,
+			@Nonnull EventActionWithParameter<T,U,X> actionOnEvent);
 
 	/**
 	 * Similar to {@link #fireEventOnEachListener(Object, BiConsumer)}, but Reactive friendly:
@@ -139,7 +149,10 @@ public interface EventListenerGroup<T> {
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
 	@Incubating
-	<R, U, RL> CompletionStage<R> fireEventOnEachListener(U event, Function<RL, Function<U, CompletionStage<R>>> fun);
+	@Nonnull
+	<R, U, RL> CompletionStage<R> fireEventOnEachListener(
+			@Nonnull U event,
+			@Nonnull Function<RL, Function<U, CompletionStage<R>>> fun);
 
 	/**
 	 * Similar to {@link #fireEventOnEachListener(Object, Object, EventActionWithParameter)},
@@ -158,7 +171,11 @@ public interface EventListenerGroup<T> {
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
 	@Incubating
-	<R, U, RL, X> CompletionStage<R> fireEventOnEachListener(U event, X param, Function<RL, BiFunction<U, X, CompletionStage<R>>> fun);
+	@Nonnull
+	<R, U, RL, X> CompletionStage<R> fireEventOnEachListener(
+			@Nonnull U event,
+			@Nonnull X param,
+			@Nonnull Function<RL, BiFunction<U, X, CompletionStage<R>>> fun);
 
 	/**
 	 * Similar to {@link #fireLazyEventOnEachListener(Supplier, BiConsumer)}, but Reactive
@@ -181,6 +198,9 @@ public interface EventListenerGroup<T> {
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
 	@Incubating
-	<R, U, RL> CompletionStage<R> fireLazyEventOnEachListener(Supplier<U> eventSupplier, Function<RL, Function<U, CompletionStage<R>>> fun);
+	@Nonnull
+	<R, U, RL> CompletionStage<R> fireLazyEventOnEachListener(
+			@Nonnull Supplier<U> eventSupplier,
+			@Nonnull Function<RL, Function<U, CompletionStage<R>>> fun);
 
 }

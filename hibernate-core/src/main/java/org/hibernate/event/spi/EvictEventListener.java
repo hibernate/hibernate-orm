@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the contract for handling of evict events generated from a session.
@@ -18,5 +19,5 @@ public interface EvictEventListener {
 	 *
 	 * @param event The evict event to be handled.
 	 */
-	void onEvict(EvictEvent event) throws HibernateException;
+	void onEvict(@Nonnull EvictEvent event) throws HibernateException;
 }

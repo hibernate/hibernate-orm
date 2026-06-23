@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EntityManagerFactory;
@@ -169,7 +170,7 @@ public class ListenerTest {
 	//tag::events-interceptors-load-listener-example-part2[]
 	public static class SecuredLoadEntityListener implements LoadEventListener {
 		// this is the single method defined by the LoadEventListener interface
-		public void onLoad(LoadEvent event, LoadType loadType)
+		public void onLoad(@Nonnull LoadEvent event, @Nonnull LoadType loadType)
 				throws HibernateException {
 			if ( !Principal.isAuthorized( event.getEntityClassName(), event.getEntityId() ) ) {
 				throw new SecurityException( "Unauthorized access" );

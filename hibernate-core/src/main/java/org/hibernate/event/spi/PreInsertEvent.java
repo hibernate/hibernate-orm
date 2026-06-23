@@ -4,8 +4,10 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Represents a {@code pre-insert} event, which occurs just prior to
@@ -26,11 +28,11 @@ public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
 	 * @param source The session from which the event originated.
 	 */
 	public PreInsertEvent(
-			Object entity,
-			Object id,
-			Object[] state,
-			EntityPersister persister,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;
 	}
@@ -40,6 +42,7 @@ public class PreInsertEvent extends AbstractPreDatabaseOperationEvent {
 	 *
 	 * @return Value for property 'state'.
 	 */
+	@Nonnull
 	public Object[] getState() {
 		return state;
 	}

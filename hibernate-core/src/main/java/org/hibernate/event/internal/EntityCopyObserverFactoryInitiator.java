@@ -31,7 +31,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	public static final EntityCopyObserverFactoryInitiator INSTANCE = new EntityCopyObserverFactoryInitiator();
 
 	@Override
-	public EntityCopyObserverFactory initiateService(@Nonnull final Map<String, Object> configurationValues, @Nonnull final ServiceRegistryImplementor registry) {
+	public @Nonnull EntityCopyObserverFactory initiateService(@Nonnull final Map<String, Object> configurationValues, @Nonnull final ServiceRegistryImplementor registry) {
 		final Object value = getConfigurationValue( configurationValues );
 		if ( value instanceof EntityCopyObserverFactory factory ) {
 			return factory;
@@ -65,7 +65,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 		}
 	}
 
-	private Object getConfigurationValue(final Map<?,?> configurationValues) {
+	private @Nonnull Object getConfigurationValue(@Nonnull final Map<?,?> configurationValues) {
 		final Object value = configurationValues.get( MERGE_ENTITY_COPY_OBSERVER );
 		if ( value == null ) {
 			return EntityCopyNotAllowedObserver.SHORT_NAME; //default
@@ -87,7 +87,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	private record EntityCopyObserverFactoryFromClass(Class<? extends EntityCopyObserver> observerClass)
 			implements EntityCopyObserverFactory {
 		@Override
-		public EntityCopyObserver createEntityCopyObserver() {
+		public @Nonnull EntityCopyObserver createEntityCopyObserver() {
 			try {
 				return observerClass.newInstance();
 			}

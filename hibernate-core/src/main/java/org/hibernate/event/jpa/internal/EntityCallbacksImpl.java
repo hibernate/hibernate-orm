@@ -17,101 +17,103 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import jakarta.annotation.Nonnull;
 
-/// Implementation of EntityCallbacks
+/// Implementation of [EntityCallbacks]
 ///
 /// @author Steve Ebersole
 public class EntityCallbacksImpl<E> implements EntityCallbacks<E>, Serializable {
 	private final Map<CallbackType, List<Callback<? super E>>> callbacks;
 
-	private EntityCallbacksImpl(Map<CallbackType, List<Callback<? super E>>> callbacks) {
+	private EntityCallbacksImpl(@Nonnull Map<CallbackType, List<Callback<? super E>>> callbacks) {
 		this.callbacks = callbacks;
 	}
 
-	private List<Callback<? super E>> getCallbacks(CallbackType callbackType) {
+	@Nonnull
+	private List<Callback<? super E>> getCallbacks(@Nonnull CallbackType callbackType) {
 		return callbacks.get( callbackType );
 	}
 
 	@Override
-	public boolean hasRegisteredCallbacks(CallbackType callbackType) {
+	public boolean hasRegisteredCallbacks(@Nonnull CallbackType callbackType) {
 		return isNotEmpty( getCallbacks( callbackType ) );
 	}
 
 	@Override
-	public <S extends E> boolean preCreate(S entity) {
+	public <S extends E> boolean preCreate(@Nonnull S entity) {
 		return callback( CallbackType.PRE_PERSIST, entity );
 	}
 
 	@Override
-	public <S extends E> boolean postCreate(S entity) {
+	public <S extends E> boolean postCreate(@Nonnull S entity) {
 		return callback( CallbackType.POST_PERSIST, entity );
 	}
 
 	@Override
-	public <S extends E> boolean preMerge(S entity) {
+	public <S extends E> boolean preMerge(@Nonnull S entity) {
 		return callback( CallbackType.PRE_MERGE, entity );
 	}
 
 	@Override
-	public <S extends E> boolean preInsert(S entity) {
+	public <S extends E> boolean preInsert(@Nonnull S entity) {
 		return callback( CallbackType.PRE_INSERT, entity );
 	}
 
 	@Override
-	public <S extends E> boolean postInsert(S entity) {
+	public <S extends E> boolean postInsert(@Nonnull S entity) {
 		return callback( CallbackType.POST_INSERT, entity );
 	}
 
 	@Override
-	public <S extends E> boolean preUpdate(S entity) {
+	public <S extends E> boolean preUpdate(@Nonnull S entity) {
 		return callback( CallbackType.PRE_UPDATE, entity );
 	}
 
 	@Override
-	public <S extends E> boolean postUpdate(S entity) {
+	public <S extends E> boolean postUpdate(@Nonnull S entity) {
 		return callback( CallbackType.POST_UPDATE, entity );
 	}
 
 	@Override
-	public <S extends E> boolean preUpsert(S entity) {
+	public <S extends E> boolean preUpsert(@Nonnull S entity) {
 		return callback( CallbackType.PRE_UPSERT, entity );
 	}
 
 	@Override
-	public <S extends E> boolean postUpsert(S entity) {
+	public <S extends E> boolean postUpsert(@Nonnull S entity) {
 		return callback( CallbackType.POST_UPSERT, entity );
 	}
 
 	@Override
-	public <S extends E> boolean preRemove(S entity) {
+	public <S extends E> boolean preRemove(@Nonnull S entity) {
 		return callback( CallbackType.PRE_REMOVE, entity );
 	}
 
 	@Override
-	public <S extends E> boolean postRemove(S entity) {
+	public <S extends E> boolean postRemove(@Nonnull S entity) {
 		return callback( CallbackType.POST_REMOVE, entity );
 	}
 
 	@Override
-	public <S extends E> boolean preDelete(S entity) {
+	public <S extends E> boolean preDelete(@Nonnull S entity) {
 		return callback( CallbackType.PRE_DELETE, entity );
 	}
 
 	@Override
-	public <S extends E> boolean postDelete(S entity) {
+	public <S extends E> boolean postDelete(@Nonnull S entity) {
 		return callback( CallbackType.POST_DELETE, entity );
 	}
 
 	@Override
-	public <S extends E> boolean postLoad(S entity) {
+	public <S extends E> boolean postLoad(@Nonnull S entity) {
 		return callback( CallbackType.POST_LOAD, entity );
 	}
 
-	private boolean callback(CallbackType callbackType, E entity) {
+	private boolean callback(@Nonnull CallbackType callbackType, @Nonnull E entity) {
 		return callback( getCallbacks( callbackType ), entity );
 	}
 
-	private boolean callback(List<Callback<? super E>> callbacks, E entity) {
+	private boolean callback(@Nonnull List<Callback<? super E>> callbacks, @Nonnull E entity) {
 		if ( isNotEmpty( callbacks ) ) {
 			for ( var callback : callbacks ) {
 				callback.performCallback( entity );
@@ -124,24 +126,26 @@ public class EntityCallbacksImpl<E> implements EntityCallbacks<E>, Serializable 
 	}
 
 	/// @see jakarta.persistence.EntityManagerFactory#addListener
-	public EntityListenerRegistration addListener(CallbackType type, Consumer<? super E> listener) {
-		final List<Callback<? super E>> callbacks = getCallbacks( type );
+	@Nonnull
+	public EntityListenerRegistration addListener(@Nonnull CallbackType type, @Nonnull Consumer<? super E> listener) {
+		final var callbacks = getCallbacks( type );
 		var callback = new AddedCallbackImpl<>( type, listener );
 		callbacks.add( callback );
 		return new EntityListenerRegistrationImpl<>( this, type, callback );
 	}
 
 	/// @see jakarta.persistence.EntityManagerFactory#addListener
-	public EntityListenerRegistration addListener(CallbackType type, Callback<? super E> callback) {
-		final List<Callback<? super E>> callbacks = getCallbacks( type );
+	@Nonnull
+	public EntityListenerRegistration addListener(@Nonnull CallbackType type, @Nonnull Callback<? super E> callback) {
+		final var callbacks = getCallbacks( type );
 		callbacks.add( callback );
 		return new EntityListenerRegistrationImpl<>( this, type, callback );
 	}
 
 	/// package-protected access to remove a callback used to support
 	/// JPA's [jakarta.persistence.EntityListenerRegistration].
-	void remove(CallbackType type, Callback<? super E> callback) {
-		final List<Callback<? super E>> callbacks = getCallbacks( type );
+	void remove(@Nonnull CallbackType type, @Nonnull Callback<? super E> callback) {
+		final var callbacks = getCallbacks( type );
 		callbacks.remove( callback );
 	}
 
@@ -154,14 +158,16 @@ public class EntityCallbacksImpl<E> implements EntityCallbacks<E>, Serializable 
 			}
 		}
 
-		public void registerCallback(Callback<? super E> callback) {
+		public void registerCallback(@Nonnull Callback<? super E> callback) {
 			getCallbacks( callback.getCallbackType() ).add( callback );
 		}
 
-		private List<Callback<? super E>> getCallbacks(CallbackType callbackType) {
+		@Nonnull
+		private List<Callback<? super E>> getCallbacks(@Nonnull CallbackType callbackType) {
 			return callbacks.get( callbackType );
 		}
 
+		@Nonnull
 		public EntityCallbacksImpl<E> build() {
 			return new EntityCallbacksImpl<>( new EnumMap<>( callbacks ) );
 		}

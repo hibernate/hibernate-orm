@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called before injecting property values into a newly
@@ -11,5 +13,5 @@ package org.hibernate.event.spi;
  * @author Gavin King
  */
 public interface PreLoadEventListener {
-	void onPreLoad(PreLoadEvent event);
+	void onPreLoad(@Nonnull PreLoadEvent event);
 }

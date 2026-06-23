@@ -8,6 +8,8 @@ import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Timeouts;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Event class for {@link org.hibernate.Session#lock}.
@@ -23,7 +25,7 @@ public class LockEvent extends AbstractSessionEvent {
 	private final LockOptions lockOptions;
 	private String entityName;
 
-	public LockEvent(String entityName, Object object, LockOptions lockOptions, EventSource source) {
+	public LockEvent(@Nullable String entityName, @Nonnull Object object, @Nonnull LockOptions lockOptions, @Nonnull EventSource source) {
 		super(source);
 
 		if (object == null) {
@@ -42,7 +44,7 @@ public class LockEvent extends AbstractSessionEvent {
 		this.lockOptions = lockOptions;
 	}
 
-	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
+	public LockEvent(@Nonnull Object object, @Nonnull LockOptions lockOptions, @Nonnull EventSource source) {
 		this( null, object, lockOptions, source );
 	}
 
@@ -50,7 +52,7 @@ public class LockEvent extends AbstractSessionEvent {
 	 * @deprecated Use {@linkplain LockEvent#LockEvent(Object, LockOptions, EventSource)} instead.
 	 */
 	@Deprecated(since = "7", forRemoval = true)
-	public LockEvent(Object object, LockMode lockMode, EventSource source) {
+	public LockEvent(@Nonnull Object object, @Nonnull LockMode lockMode, @Nonnull EventSource source) {
 		this( object, lockMode.toLockOptions(), source );
 	}
 
@@ -58,27 +60,30 @@ public class LockEvent extends AbstractSessionEvent {
 	 * @deprecated Use {@linkplain LockEvent#LockEvent(String, Object, LockOptions, EventSource)} instead.
 	 */
 	@Deprecated(since = "7", forRemoval = true)
-	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
+	public LockEvent(@Nullable String entityName, @Nonnull Object object, @Nonnull LockMode lockMode, @Nonnull EventSource source) {
 		this( entityName, object, lockMode.toLockOptions(), source );
 	}
 
+	@Nonnull
 	public Object getObject() {
 		return object;
 	}
 
-	public void setObject(Object object) {
+	public void setObject(@Nonnull Object object) {
 		this.object = object;
 	}
 
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
+	@Nullable
 	public String getEntityName() {
 		return entityName;
 	}
 
-	public void setEntityName(String entityName) {
+	public void setEntityName(@Nullable String entityName) {
 		this.entityName = entityName;
 	}
 
@@ -87,6 +92,7 @@ public class LockEvent extends AbstractSessionEvent {
 	 * @deprecated Use {@linkplain #getLockOptions()} instead.
 	 */
 	@Deprecated(since = "7.1")
+	@Nonnull
 	public LockMode getLockMode() {
 		return lockOptions.getLockMode();
 	}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -53,8 +55,11 @@ public class LoaderHelper {
 	 * @param session The session which is the source of the event being processed.
 	 */
 	public static void upgradeLock(
-			Object object, EntityEntry entry, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		final LockMode requestedLockMode = lockOptions.getLockMode();
+			@Nonnull Object object,
+			@Nonnull EntityEntry entry,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SharedSessionContractImplementor session) {
+		final var requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// Request is for a more restrictive lock than the lock already held
 			final var persister = entry.getPersister();
@@ -139,14 +144,16 @@ public class LoaderHelper {
 	/**
 	 * Determine if the influencers associated with the given Session indicate read-only
 	 */
-	public static Boolean getReadOnlyFromLoadQueryInfluencers(SharedSessionContractImplementor session) {
+	@Nullable
+	public static Boolean getReadOnlyFromLoadQueryInfluencers(@Nonnull SharedSessionContractImplementor session) {
 		return getReadOnlyFromLoadQueryInfluencers( session.getLoadQueryInfluencers() );
 	}
 
 	/**
 	 * Determine if given influencers indicate read-only
 	 */
-	public static Boolean getReadOnlyFromLoadQueryInfluencers(LoadQueryInfluencers influencers) {
+	@Nullable
+	public static Boolean getReadOnlyFromLoadQueryInfluencers(@Nullable LoadQueryInfluencers influencers) {
 		return influencers == null ? null : influencers.getReadOnly();
 	}
 
@@ -159,16 +166,14 @@ public class LoaderHelper {
 	 * key {@linkplain org.hibernate.cfg.AvailableSettings#JPA_LOAD_BY_ID_COMPLIANCE coercion} is enabled, the
 	 * values will be coerced to the key type.
 	 *
+	 * @param <K> The key type
 	 * @param keys The keys to normalize
 	 * @param keyPart The ModelPart describing the key
-	 *
-	 * @param <K> The key type
 	 */
 	public static <K> K[] normalizeKeys(
-			K[] keys,
-			BasicValuedModelPart keyPart,
-			SharedSessionContractImplementor session,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull K[] keys,
+			@Nonnull BasicValuedModelPart keyPart,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		assert keys.getClass().isArray();
 
 		//noinspection unchecked
@@ -215,20 +220,17 @@ public class LoaderHelper {
 	 * @param <K> The type of the keys
 	 */
 	public static <R,K> List<R> loadByArrayParameter(
-			K[] idsToInitialize,
-			SelectStatement sqlAst,
-			JdbcSelect jdbcOperation,
-			JdbcParameter jdbcParameter,
-			JdbcMapping arrayJdbcMapping,
-			Object entityId,
-			Object entityInstance,
-			EntityMappingType rootEntityDescriptor,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
-		assert jdbcOperation != null;
-		assert jdbcParameter != null;
-
+			@Nonnull K[] idsToInitialize,
+			@Nonnull SelectStatement sqlAst,
+			@Nonnull JdbcSelect jdbcOperation,
+			@Nonnull JdbcParameter jdbcParameter,
+			@Nonnull JdbcMapping arrayJdbcMapping,
+			@Nullable Object entityId,
+			@Nullable Object entityInstance,
+			@Nullable EntityMappingType rootEntityDescriptor,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var bindings = new JdbcParameterBindingsImpl( 1);
 		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize ) );
 		return session.getJdbcServices().getJdbcSelectExecutor().list(

@@ -45,9 +45,10 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 import static org.hibernate.engine.internal.ProxyUtil.assertInitialized;
 import static org.hibernate.event.internal.EntityState.getEntityState;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
-import static org.hibernate.event.internal.EventUtil.getLoggableName;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -60,7 +61,8 @@ public class DefaultMergeEventListener
 		implements MergeEventListener {
 
 	@Override
-	protected Map<Object,Object> getMergeMap(MergeContext context) {
+	@Nonnull
+	protected Map<Object,Object> getMergeMap(@Nonnull MergeContext context) {
 		return context.invertMap();
 	}
 
@@ -71,7 +73,7 @@ public class DefaultMergeEventListener
 	 *
 	 */
 	@Override
-	public void onMerge(MergeEvent event) throws HibernateException {
+	public void onMerge(@Nonnull MergeEvent event) {
 		final var session = event.getSession();
 		final var entityCopyObserver =
 				session.getFactory().getEntityCopyObserver().createEntityCopyObserver();
@@ -93,39 +95,40 @@ public class DefaultMergeEventListener
 	 *
 	 */
 	@Override
-	public void onMerge(MergeEvent event, MergeContext copiedAlready) throws HibernateException {
+	public void onMerge(@Nonnull MergeEvent event, @Nonnull MergeContext copiedAlready) {
 		final Object original = event.getOriginal();
 		// NOTE: `original` is the value being merged
-		if ( original != null ) {
-			final var source = event.getSession();
-			final var lazyInitializer = extractLazyInitializer( original );
-			if ( lazyInitializer != null ) {
-				if ( lazyInitializer.isUninitialized() ) {
-					EVENT_LISTENER_LOGGER.ignoringUninitializedProxy();
-					event.setResult( source.getReference( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
-				}
-				else {
-					doMerge( event, copiedAlready, lazyInitializer.getImplementation() );
-				}
+//		if ( original != null ) {
+		final var source = event.getSession();
+		final var lazyInitializer = extractLazyInitializer( original );
+		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.isUninitialized() ) {
+				EVENT_LISTENER_LOGGER.ignoringUninitializedProxy();
+				event.setResult( source.getReference( lazyInitializer.getEntityName(),
+						lazyInitializer.getInternalIdentifier() ) );
 			}
-			else if ( isPersistentAttributeInterceptable( original ) ) {
-				if ( asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor()
-						instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
-					EVENT_LISTENER_LOGGER.ignoringUninitializedEnhancedProxy();
-					event.setResult( source.byId( proxyInterceptor.getEntityName() )
-							.getReference( proxyInterceptor.getIdentifier() ) );
-				}
-				else {
-					doMerge( event, copiedAlready, original );
-				}
+			else {
+				doMerge( event, copiedAlready, lazyInitializer.getImplementation() );
+			}
+		}
+		else if ( isPersistentAttributeInterceptable( original ) ) {
+			if ( asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
+				EVENT_LISTENER_LOGGER.ignoringUninitializedEnhancedProxy();
+				event.setResult( source.byId( proxyInterceptor.getEntityName() )
+						.getReference( proxyInterceptor.getIdentifier() ) );
 			}
 			else {
 				doMerge( event, copiedAlready, original );
 			}
 		}
+		else {
+			doMerge( event, copiedAlready, original );
+		}
+//		}
 	}
 
-	private void doMerge(MergeEvent event, MergeContext copiedAlready, Object entity) {
+	private void doMerge(@Nonnull MergeEvent event, @Nonnull MergeContext copiedAlready, @Nonnull Object entity) {
 		if ( copiedAlready.containsKey( entity ) && copiedAlready.isOperatedOn( entity ) ) {
 			EVENT_LISTENER_LOGGER.alreadyInMergeProcess();
 			event.setResult( entity );
@@ -140,7 +143,7 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	private void merge(MergeEvent event, MergeContext copiedAlready, Object entity) {
+	private void merge(@Nonnull MergeEvent event, @Nonnull MergeContext copiedAlready, @Nonnull Object entity) {
 		final var source = event.getSession();
 		// Check the persistence context for an entry relating to this
 		// entity to be merged...
@@ -218,11 +221,12 @@ public class DefaultMergeEventListener
 		}
 	}
 
+	@Nonnull
 	private static Object copyCompositeTypeId(
-			Object id,
-			CompositeType compositeType,
-			EventSource session,
-			MergeContext mergeContext) {
+			@Nullable Object id,
+			@Nonnull CompositeType compositeType,
+			@Nonnull EventSource session,
+			@Nonnull MergeContext mergeContext) {
 		final var factory = session.getSessionFactory();
 		final Object idCopy = compositeType.deepCopy( id, factory );
 		final Type[] subtypes = compositeType.getSubtypes();
@@ -234,12 +238,13 @@ public class DefaultMergeEventListener
 		return compositeType.replacePropertyValues( idCopy, copiedValues, session );
 	}
 
+	@Nullable
 	private static Object copy(
-			EventSource session,
-			MergeContext mergeContext,
-			Type subtype,
-			Object propertyValue,
-			SessionFactoryImplementor factory) {
+			@Nonnull EventSource session,
+			@Nonnull MergeContext mergeContext,
+			@Nonnull Type subtype,
+			@Nonnull Object propertyValue,
+			@Nonnull SessionFactoryImplementor factory) {
 		if ( subtype instanceof EntityType ) {
 			// the value of the copy in the MergeContext has the id assigned
 			final Object object = mergeContext.get( propertyValue );
@@ -256,7 +261,7 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	protected void entityIsPersistent(MergeEvent event, MergeContext copyCache) {
+	protected void entityIsPersistent(@Nonnull MergeEvent event, @Nonnull MergeContext copyCache) {
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 		final Object entity = event.getEntity();
 		final var source = event.getSession();
@@ -272,7 +277,7 @@ public class DefaultMergeEventListener
 		event.setResult( entity );
 	}
 
-	protected void entityIsTransient(MergeEvent event, Object id, MergeContext copyCache) {
+	protected void entityIsTransient(@Nonnull MergeEvent event, @Nullable Object id, @Nonnull MergeContext copyCache) {
 		final Object entity = event.getEntity();
 		final var session = event.getSession();
 		final var interceptor = session.getInterceptor();
@@ -345,8 +350,13 @@ public class DefaultMergeEventListener
 		}
 	}
 
+	@Nonnull
 	private static Object copyEntity(
-			MergeContext copyCache, Object entity, EventSource session, EntityPersister persister, Object id) {
+			@Nonnull MergeContext copyCache,
+			@Nonnull Object entity,
+			@Nonnull EventSource session,
+			@Nonnull EntityPersister persister,
+			@Nullable Object id) {
 		final Object existingCopy = copyCache.get( entity );
 		if ( existingCopy != null ) {
 			persister.setIdentifier( existingCopy, id, session );
@@ -361,11 +371,12 @@ public class DefaultMergeEventListener
 	}
 
 	private static class CollectionVisitor extends WrapVisitor {
-		CollectionVisitor(Object entity, Object id, EventSource session) {
+		CollectionVisitor(@Nonnull Object entity, @Nullable Object id, @Nonnull EventSource session) {
 			super( entity, id, session );
 		}
 		@Override
-		protected Object processCollection(Object collection, CollectionType collectionType) {
+		@Nullable
+		protected Object processCollection(@Nullable Object collection, @Nonnull CollectionType collectionType) {
 			if ( collection instanceof PersistentCollection<?> persistentCollection ) {
 				final var session = getSession();
 				final var persister =
@@ -375,7 +386,8 @@ public class DefaultMergeEventListener
 						session.getPersistenceContextInternal()
 								.getCollectionEntry( persistentCollection );
 				if ( !persistentCollection.equalsSnapshot( persister ) ) {
-					collectionEntry.resetStoredSnapshot( persistentCollection, persistentCollection.getSnapshot( persister ) );
+					collectionEntry.resetStoredSnapshot( persistentCollection,
+							persistentCollection.getSnapshot( persister ) );
 				}
 			}
 			return null;
@@ -383,11 +395,11 @@ public class DefaultMergeEventListener
 	}
 
 	private void saveTransientEntity(
-			Object entity,
-			String entityName,
-			Object requestedId,
-			EventSource source,
-			MergeContext copyCache) {
+			@Nonnull Object entity,
+			@Nullable String entityName,
+			@Nullable Object requestedId,
+			@Nonnull EventSource source,
+			@Nonnull MergeContext copyCache) {
 		//this bit is only *really* absolutely necessary for handling
 		//requestedId, but is also good if we merge multiple object
 		//graphs, since it helps ensure uniqueness
@@ -399,7 +411,11 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	protected void entityIsDetached(MergeEvent event, Object copiedId, Object originalId, MergeContext copyCache) {
+	protected void entityIsDetached(
+			@Nonnull MergeEvent event,
+			@Nullable Object copiedId,
+			@Nullable Object originalId,
+			@Nonnull MergeContext copyCache) {
 		final Object entity = event.getEntity();
 		final var session = event.getSession();
 		final var persister = session.getEntityPersister( event.getEntityName(), entity );
@@ -411,6 +427,7 @@ public class DefaultMergeEventListener
 				copiedId == null
 						? persister.getIdentifierType().deepCopy( originalId, event.getFactory() )
 						: copiedId;
+		assert clonedIdentifier != null;
 		final Object id = getDetachedEntityId( event, originalId, persister );
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			EVENT_LISTENER_LOGGER.mergingDetachedInstance( infoString( entityName, id ) );
@@ -478,10 +495,10 @@ public class DefaultMergeEventListener
 	}
 
 	private void verifyImmutableAttributes(
-			EntityPersister persister,
-			Object[] sourceValues,
-			Object[] targetValues,
-			EventSource session) {
+			@Nonnull EntityPersister persister,
+			@Nonnull Object[] sourceValues,
+			@Nonnull Object[] targetValues,
+			@Nonnull EventSource session) {
 		for ( int i : persister.getImmutablePropertyIndexes() ) {
 			final Object sourceValue = sourceValues[i];
 			final Object targetValue = targetValues[i];
@@ -496,7 +513,13 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	private static Object targetEntity(MergeEvent event, Object entity, EntityPersister persister, Object id, Object result) {
+	@Nonnull
+	private static Object targetEntity(
+			@Nonnull MergeEvent event,
+			@Nonnull Object entity,
+			@Nonnull EntityPersister persister,
+			@Nullable Object id,
+			@Nonnull Object result) {
 		final var source = event.getSession();
 		final String entityName = persister.getEntityName();
 		final Object target = unproxyManagedForDetachedMerging( entity, result, persister, source );
@@ -522,7 +545,11 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	private static Object getDetachedEntityId(MergeEvent event, Object originalId, EntityPersister persister) {
+	@Nullable
+	private static Object getDetachedEntityId(
+			@Nonnull MergeEvent event,
+			@Nullable Object originalId,
+			@Nonnull EntityPersister persister) {
 		final var source = event.getSession();
 		final Object id = event.getRequestedId();
 		if ( id == null ) {
@@ -537,11 +564,12 @@ public class DefaultMergeEventListener
 		}
 	}
 
+	@Nonnull
 	private static Object unproxyManagedForDetachedMerging(
-			Object incoming,
-			Object managed,
-			EntityPersister persister,
-			EventSource source) {
+			@Nonnull Object incoming,
+			@Nonnull Object managed,
+			@Nonnull EntityPersister persister,
+			@Nonnull EventSource source) {
 		if ( isHibernateProxy( managed ) ) {
 			return assertInitialized( managed );
 		}
@@ -575,7 +603,7 @@ public class DefaultMergeEventListener
 		return managed;
 	}
 
-	private static void markInterceptorDirty(final Object entity, final Object target) {
+	private static void markInterceptorDirty(@Nonnull final Object entity, @Nonnull final Object target) {
 		// for enhanced entities, copy over the dirty attributes
 		if ( isSelfDirtinessTracker( entity ) && isSelfDirtinessTracker( target ) ) {
 			// clear, because setting the embedded attributes dirties them
@@ -595,7 +623,11 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	private static boolean isVersionChanged(Object entity, EventSource source, EntityPersister persister, Object target) {
+	private static boolean isVersionChanged(
+			@Nonnull Object entity,
+			@Nonnull EventSource source,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object target) {
 		if ( persister.isVersioned() ) {
 			// for merging of versioned entities, we consider the version having
 			// been changed only when:
@@ -619,7 +651,10 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	private static boolean existsInDatabase(Object entity, EventSource source, EntityPersister persister) {
+	private static boolean existsInDatabase(
+			@Nonnull Object entity,
+			@Nonnull EventSource source,
+			@Nonnull EntityPersister persister) {
 		final var persistenceContext = source.getPersistenceContextInternal();
 		var entry = persistenceContext.getEntry( entity );
 		if ( entry == null ) {
@@ -643,10 +678,10 @@ public class DefaultMergeEventListener
 	 * @param copyCache A cache of already copied instance.
 	 */
 	protected void cascadeOnMerge(
-			final EventSource source,
-			final EntityPersister persister,
-			final Object entity,
-			final MergeContext copyCache) {
+			@Nonnull final EventSource source,
+			@Nonnull final EntityPersister persister,
+			@Nonnull final Object entity,
+			@Nonnull final MergeContext copyCache) {
 		final var persistenceContext = source.getPersistenceContextInternal();
 		persistenceContext.incrementCascadeLevel();
 		try {
@@ -664,7 +699,10 @@ public class DefaultMergeEventListener
 		}
 	}
 
-	private static void firePreMergeCallbacks(EventSource session, EntityPersister persister, Object entity) {
+	private static void firePreMergeCallbacks(
+			@Nonnull EventSource session,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object entity) {
 		final var callbacks = persister.getEntityCallbacks();
 		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_MERGE ) ) {
 			session.runEntityLifecycleCallback( () -> callbacks.preMerge( entity ) );
@@ -672,7 +710,7 @@ public class DefaultMergeEventListener
 	}
 
 	@Override
-	protected CascadingAction<MergeContext> getCascadeAction() {
+	protected @Nonnull CascadingAction<MergeContext> getCascadeAction() {
 		return CascadingActions.MERGE;
 	}
 
@@ -680,13 +718,19 @@ public class DefaultMergeEventListener
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-	protected void cascadeAfterSave(EventSource source, EntityPersister persister, Object entity, MergeContext anything)
-			throws HibernateException {}
+	protected void cascadeAfterSave(
+			@Nonnull EventSource source,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object entity,
+			@Nonnull MergeContext anything) {}
 
 	/**
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-	protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, MergeContext anything)
-			throws HibernateException {}
+	protected void cascadeBeforeSave(
+			@Nonnull EventSource source,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object entity,
+			@Nonnull MergeContext anything) {}
 }

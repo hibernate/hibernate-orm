@@ -7,6 +7,7 @@ package org.hibernate.event.internal;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.event.spi.PersistContext;
+import jakarta.annotation.Nonnull;
 
 /**
  * When persist is used as the cascade action, persistOnFlush should be used
@@ -14,7 +15,7 @@ import org.hibernate.event.spi.PersistContext;
  */
 public class DefaultPersistOnFlushEventListener extends DefaultPersistEventListener {
 	@Override
-	protected CascadingAction<PersistContext> getCascadeAction() {
+	protected @Nonnull CascadingAction<PersistContext> getCascadeAction() {
 		return CascadingActions.PERSIST_ON_FLUSH;
 	}
 }

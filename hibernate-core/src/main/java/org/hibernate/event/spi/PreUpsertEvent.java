@@ -6,6 +6,7 @@ package org.hibernate.event.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Represents a pre-upsert event, which occurs just prior to
@@ -25,11 +26,11 @@ public class PreUpsertEvent extends AbstractPreDatabaseOperationEvent {
 	 * @param source The session from which the event originated.
 	 */
 	public PreUpsertEvent(
-			Object entity,
-			Object id,
-			Object[] state,
-			EntityPersister persister,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;
 	}
@@ -39,6 +40,7 @@ public class PreUpsertEvent extends AbstractPreDatabaseOperationEvent {
 	 *
 	 * @return The current state.
 	 */
+	@Nonnull
 	public Object[] getState() {
 		return state;
 	}

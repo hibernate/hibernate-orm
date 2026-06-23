@@ -5,6 +5,7 @@
 package org.hibernate.engine.spi;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaStatement;
 import org.hibernate.HibernateException;
@@ -95,7 +96,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	@Override
 	@Nonnull
-	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException;
+	Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) throws HibernateException;
 
 	/**
 	 * Initiate a flush to force deletion of a re-persisted entity.

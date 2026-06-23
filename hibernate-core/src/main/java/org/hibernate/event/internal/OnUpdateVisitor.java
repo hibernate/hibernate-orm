@@ -4,10 +4,11 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * When a detached entity is passed to {@link org.hibernate.Session#remove(Object)},
@@ -24,12 +25,13 @@ import org.hibernate.type.CollectionType;
  */
 public class OnUpdateVisitor extends ReattachVisitor {
 
-	public OnUpdateVisitor(EventSource session, Object key, Object owner) {
+	public OnUpdateVisitor(@Nonnull EventSource session, @Nonnull Object key, @Nonnull Object owner) {
 		super( session, key, owner );
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	@Nullable
+	Object processCollection(@Nullable Object collection, @Nonnull CollectionType type) {
 		final var session = getSession();
 		final var persister =
 				session.getFactory().getMappingMetamodel()

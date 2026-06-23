@@ -7,6 +7,7 @@ package org.hibernate.event.internal;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
+import jakarta.annotation.Nonnull;
 
 /**
  * An {@link EntityCopyObserver} implementation that allows multiple representations of
@@ -28,10 +29,10 @@ public final class EntityCopyAllowedObserver implements EntityCopyObserver {
 
 	@Override
 	public void entityCopyDetected(
-			Object managedEntity,
-			Object mergeEntity1,
-			Object mergeEntity2,
-			EventSource session) {
+			@Nonnull Object managedEntity,
+			@Nonnull Object mergeEntity1,
+			@Nonnull Object mergeEntity2,
+			@Nonnull EventSource session) {
 		// do nothing.
 	}
 
@@ -40,7 +41,7 @@ public final class EntityCopyAllowedObserver implements EntityCopyObserver {
 	}
 
 	@Override
-	public void topLevelMergeComplete(EventSource session) {
+	public void topLevelMergeComplete(@Nonnull EventSource session) {
 		// do nothing.
 	}
 

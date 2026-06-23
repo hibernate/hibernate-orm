@@ -7,6 +7,7 @@ package org.hibernate.event.service.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
@@ -286,12 +287,13 @@ public class EventListenerDuplicationStrategyTest {
 		static final ReplaceOriginalStrategy INSTANCE = new ReplaceOriginalStrategy();
 
 		@Override
-		public boolean areMatch(Object listener, Object original) {
+		public boolean areMatch(@Nonnull Object listener, @Nonnull Object original) {
 			// We just want to replace the original listener with the extra so that we can test with multiple listeners
 			return original instanceof OriginalListener && listener instanceof ExpectedListener;
 		}
 
 		@Override
+		@Nonnull
 		public Action getAction() {
 			return Action.REPLACE_ORIGINAL;
 		}
@@ -302,12 +304,13 @@ public class EventListenerDuplicationStrategyTest {
 		static final KeepOriginalStrategy INSTANCE = new KeepOriginalStrategy();
 
 		@Override
-		public boolean areMatch(Object listener, Object original) {
+		public boolean areMatch(@Nonnull Object listener, @Nonnull Object original) {
 			// We just want this to work for original and expected listener
 			return original instanceof OriginalListener && listener instanceof ExpectedListener;
 		}
 
 		@Override
+		@Nonnull
 		public Action getAction() {
 			return Action.KEEP_ORIGINAL;
 		}
@@ -318,12 +321,13 @@ public class EventListenerDuplicationStrategyTest {
 		static final ErrorStrategy INSTANCE = new ErrorStrategy();
 
 		@Override
-		public boolean areMatch(Object listener, Object original) {
+		public boolean areMatch(@Nonnull Object listener, @Nonnull Object original) {
 			// We just want this to work for original and expected listener
 			return original instanceof OriginalListener && listener instanceof ExpectedListener;
 		}
 
 		@Override
+		@Nonnull
 		public Action getAction() {
 			return Action.ERROR;
 		}

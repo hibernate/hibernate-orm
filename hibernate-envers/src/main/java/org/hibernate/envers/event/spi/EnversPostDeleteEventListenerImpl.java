@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.event.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
@@ -25,7 +26,7 @@ public class EnversPostDeleteEventListenerImpl extends BaseEnversEventListener i
 	}
 
 	@Override
-	public void onPostDelete(PostDeleteEvent event) {
+	public void onPostDelete(@Nonnull PostDeleteEvent event) {
 		final String entityName = event.getPersister().getEntityName();
 
 		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {

@@ -17,6 +17,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the default evict event listener used by hibernate for evicting entities
@@ -35,10 +36,11 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 *
 	 */
 	@Override
-	public void onEvict(EvictEvent event) throws HibernateException {
+	public void onEvict(@Nonnull EvictEvent event) {
 		final var source = event.getSession();
 		final var persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
+		//noinspection ConstantValue
 		if ( object == null ) {
 			throw new NullPointerException( "null passed to Session.evict()" );
 		}
@@ -79,7 +81,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 * This is different to the legacy Hibernate behavior, but is what JPA 2.1
 	 * requires with EntityManager.detach().
 	 */
-	private static void checkEntity(Object object, EventSource source) {
+	private static void checkEntity(@Nonnull Object object, @Nonnull EventSource source) {
 		final String entityName = source.getSession().guessEntityName( object );
 		if ( entityName != null ) {
 			try {
@@ -97,10 +99,10 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	}
 
 	protected void doEvict(
-			final Object object,
-			final EntityKey key,
-			final EntityPersister persister,
-			final EventSource session)
+			@Nonnull final Object object,
+			@Nonnull final EntityKey key,
+			@Nonnull final EntityPersister persister,
+			@Nonnull final EventSource session)
 			throws HibernateException {
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			EVENT_LISTENER_LOGGER.evicting( infoString( persister ) );

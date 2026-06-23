@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
@@ -76,7 +77,7 @@ public class BeanValidationEventListener
 	}
 
 	@Override
-	public boolean onPreInsert(PreInsertEvent event) {
+	public boolean onPreInsert(@Nonnull PreInsertEvent event) {
 		if ( !event.getSession().isStateless() ) {
 			validate(
 					event.getEntity(),
@@ -93,7 +94,7 @@ public class BeanValidationEventListener
 	}
 
 	@Override
-	public boolean onPreUpdate(PreUpdateEvent event) {
+	public boolean onPreUpdate(@Nonnull PreUpdateEvent event) {
 		validate(
 				event.getEntity(),
 				event.getPersister(),
@@ -103,7 +104,7 @@ public class BeanValidationEventListener
 	}
 
 	@Override
-	public boolean onPreDelete(PreDeleteEvent event) {
+	public boolean onPreDelete(@Nonnull PreDeleteEvent event) {
 		if ( !event.getSession().isStateless() ) {
 			validate(
 					event.getEntity(),
@@ -120,7 +121,7 @@ public class BeanValidationEventListener
 	}
 
 	@Override
-	public boolean onPreUpsert(PreUpsertEvent event) {
+	public boolean onPreUpsert(@Nonnull PreUpsertEvent event) {
 		validate(
 				event.getEntity(),
 				event.getPersister(),
@@ -130,12 +131,12 @@ public class BeanValidationEventListener
 	}
 
 	@Override
-	public void onMerge(MergeEvent event) {
+	public void onMerge(@Nonnull MergeEvent event) {
 		validateMerge( event );
 	}
 
 	@Override
-	public void onMerge(MergeEvent event, MergeContext copiedAlready) {
+	public void onMerge(@Nonnull MergeEvent event, @Nonnull MergeContext copiedAlready) {
 		validateMerge( event );
 	}
 
@@ -147,7 +148,7 @@ public class BeanValidationEventListener
 	}
 
 	@Override
-	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+	public void onPreUpdateCollection(@Nonnull PreCollectionUpdateEvent event) {
 		validate(
 				event.getAffectedOwnerOrNull(),
 				event.getCollectionPersister().getOwnerEntityPersister(),

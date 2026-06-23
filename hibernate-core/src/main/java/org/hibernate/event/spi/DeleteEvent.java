@@ -3,6 +3,9 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 
 /**
  * Event class for {@link org.hibernate.Session#remove}.
@@ -22,7 +25,7 @@ public class DeleteEvent extends AbstractSessionEvent {
 	//       This should be removed once action/task ordering is improved.
 	private boolean orphanRemovalBeforeUpdates;
 
-	public DeleteEvent(Object object, EventSource source) {
+	public DeleteEvent(@Nonnull Object object, @Nonnull EventSource source) {
 		super(source);
 		if (object == null) {
 			throw new IllegalArgumentException( "Entity may not be null" );
@@ -30,19 +33,19 @@ public class DeleteEvent extends AbstractSessionEvent {
 		this.object = object;
 	}
 
-	public DeleteEvent(String entityName, Object object, EventSource source) {
+	public DeleteEvent(@Nullable String entityName, @Nonnull Object object, @Nonnull EventSource source) {
 		this(object, source);
 		this.entityName = entityName;
 	}
 
-	public DeleteEvent(String entityName, Object object, boolean cascadeDeleteEnabled, EventSource source) {
+	public DeleteEvent(@Nullable String entityName, @Nonnull Object object, boolean cascadeDeleteEnabled, @Nonnull EventSource source) {
 		this(object, source);
 		this.entityName = entityName;
 		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
 	}
 
-	public DeleteEvent(String entityName, Object object, boolean cascadeDeleteEnabled,
-			boolean orphanRemovalBeforeUpdates, EventSource source) {
+	public DeleteEvent(@Nullable String entityName, @Nonnull Object object, boolean cascadeDeleteEnabled,
+			boolean orphanRemovalBeforeUpdates, @Nonnull EventSource source) {
 		this(object, source);
 		this.entityName = entityName;
 		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
@@ -54,10 +57,12 @@ public class DeleteEvent extends AbstractSessionEvent {
 	 *
 	 * @return The entity to be deleted.
 	 */
+	@Nonnull
 	public Object getObject() {
 		return object;
 	}
 
+	@Nullable
 	public String getEntityName() {
 		return entityName;
 	}

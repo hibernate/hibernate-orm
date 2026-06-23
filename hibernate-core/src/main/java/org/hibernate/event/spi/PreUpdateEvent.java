@@ -6,6 +6,8 @@ package org.hibernate.event.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Represents a {@code pre-update} event, which occurs just prior to
@@ -29,12 +31,12 @@ public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
 	 * @param source The session from which the event originated.
 	 */
 	public PreUpdateEvent(
-			Object entity,
-			Object id,
-			Object[] state,
-			Object[] oldState,
-			EntityPersister persister,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nullable Object[] oldState,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;
 		this.oldState = oldState;
@@ -45,6 +47,7 @@ public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
 	 *
 	 * @return The current state.
 	 */
+	@Nonnull
 	public Object[] getState() {
 		return state;
 	}
@@ -55,6 +58,7 @@ public class PreUpdateEvent extends AbstractPreDatabaseOperationEvent {
 	 *
 	 * @return The loaded state, or null.
 	 */
+	@Nullable
 	public Object[] getOldState() {
 		return oldState;
 	}

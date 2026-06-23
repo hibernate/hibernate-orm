@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 
 /**
@@ -15,7 +17,7 @@ package org.hibernate.event.spi;
 public class DirtyCheckEvent extends AbstractSessionEvent {
 	private boolean dirty;
 
-	public DirtyCheckEvent(EventSource source) {
+	public DirtyCheckEvent(@Nonnull EventSource source) {
 		super(source);
 	}
 

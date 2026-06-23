@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the contract for handling of lock events generated from a session.
@@ -17,5 +18,5 @@ public interface LockEventListener {
 	 *
 	 * @param event The lock event to be handled.
 	 */
-	void onLock(LockEvent event) throws HibernateException;
+	void onLock(@Nonnull LockEvent event) throws HibernateException;
 }

@@ -9,6 +9,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
+import jakarta.annotation.Nonnull;
 
 /**
  * A visitor able to reattach {@linkplain PersistentCollection collections}
@@ -18,7 +19,7 @@ import org.hibernate.type.CollectionType;
  */
 public abstract class ProxyVisitor extends AbstractVisitor {
 
-	public ProxyVisitor(EventSource session) {
+	public ProxyVisitor(@Nonnull EventSource session) {
 		super(session);
 	}
 
@@ -27,16 +28,17 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * was snapshotted and detached?
 	 */
 	protected static boolean isOwnerUnchanged(
-			CollectionPersister persister, Object id, PersistentCollection<?> snapshot) {
+			@Nonnull CollectionPersister persister,
+			@Nonnull Object id,
+			@Nonnull PersistentCollection<?> snapshot) {
 		return isCollectionSnapshotValid( snapshot )
 			&& persister.getRole().equals( snapshot.getRole() )
 			&& persister.getKeyType().isEqual( id, snapshot.getKey() );
 	}
 
-	private static boolean isCollectionSnapshotValid(PersistentCollection<?> snapshot) {
-		return snapshot != null
-			&& snapshot.getRole() != null
-			&& snapshot.getKey() != null;
+	private static boolean isCollectionSnapshotValid(@Nonnull PersistentCollection<?> snapshot) {
+		assert snapshot != null;
+		return snapshot.getRole() != null && snapshot.getKey() != null;
 	}
 
 	/**
@@ -44,7 +46,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * collection wrapper, using a snapshot carried with the collection
 	 * wrapper
 	 */
-	protected void reattachCollection(PersistentCollection<?> collection, CollectionType type)
+	protected void reattachCollection(@Nonnull PersistentCollection<?> collection, @Nonnull CollectionType type)
 			throws HibernateException {
 		final var session = getSession();
 		final var metamodel = session.getFactory().getMappingMetamodel();

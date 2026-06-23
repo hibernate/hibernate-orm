@@ -16,6 +16,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 
 import static org.hibernate.event.internal.EntityCopyLogging.EVENT_COPY_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import jakarta.annotation.Nonnull;
 
 /**
  * An {@link EntityCopyObserver} implementation that allows multiple representations of
@@ -46,10 +47,10 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 
 	@Override
 	public void entityCopyDetected(
-			Object managedEntity,
-			Object mergeEntity1,
-			Object mergeEntity2,
-			EventSource session) {
+			@Nonnull Object managedEntity,
+			@Nonnull Object mergeEntity1,
+			@Nonnull Object mergeEntity2,
+			@Nonnull EventSource session) {
 		final String entityName = session.getEntityName( managedEntity );
 		if ( EVENT_COPY_LOGGER.isTraceEnabled() ) {
 			EVENT_COPY_LOGGER.duplicateRepresentationBeingMerged(
@@ -77,7 +78,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		detachedEntitiesForManaged.add( mergeEntity2 );
 	}
 
-	private void incrementEntityNameCount(String entityName) {
+	private void incrementEntityNameCount(@Nonnull String entityName) {
 		Integer countBeforeIncrement = 0;
 		if ( countsByEntityName == null ) {
 			// Use a TreeMap so counts can be logged by entity name in alphabetic order.
@@ -105,7 +106,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 	}
 
 	@Override
-	public void topLevelMergeComplete(EventSource session) {
+	public void topLevelMergeComplete(@Nonnull EventSource session) {
 		// Log the summary.
 		if ( countsByEntityName != null ) {
 			for ( var entry : countsByEntityName.entrySet() ) {
@@ -131,7 +132,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		}
 	}
 
-	private String renderList(Set<Object> mergeEntities, Object managedEntity) {
+	private @Nonnull String renderList(@Nonnull Set<Object> mergeEntities, @Nonnull Object managedEntity) {
 		final var list = new StringBuilder();
 		boolean first = true;
 		for ( Object mergeEntity : mergeEntities ) {

@@ -634,7 +634,8 @@ public interface PersistenceContext {
 	/**
 	 * Access to collection action state for the current flush.
 	 */
-	@Nullable CollectionFlushActionTracker getCollectionFlushActionTracker();
+	@Nullable
+	CollectionFlushActionTracker getCollectionFlushActionTracker();
 
 	/**
 	 * Set the collection action state for the current flush.

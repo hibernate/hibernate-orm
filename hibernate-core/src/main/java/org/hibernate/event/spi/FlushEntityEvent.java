@@ -5,6 +5,8 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.engine.spi.EntityEntry;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Gavin King
@@ -22,57 +24,69 @@ public class FlushEntityEvent extends AbstractSessionEvent {
 	private boolean allowedToReuse;//allows this event instance to be reused for multiple events: special case to GC
 	private int instanceGenerationId;//in support of event instance reuse: to double check no recursive/nested use is happening
 
-	public FlushEntityEvent(EventSource source, Object entity, EntityEntry entry) {
+	public FlushEntityEvent(@Nonnull EventSource source, @Nonnull Object entity, @Nonnull EntityEntry entry) {
 		super(source);
 		this.entity = entity;
 		this.entityEntry = entry;
 	}
 
+	@Nonnull
 	public EntityEntry getEntityEntry() {
 		return entityEntry;
 	}
+
+	@Nullable
 	public Object[] getDatabaseSnapshot() {
 		return databaseSnapshot;
 	}
-	public void setDatabaseSnapshot(Object[] databaseSnapshot) {
+	public void setDatabaseSnapshot(@Nullable Object[] databaseSnapshot) {
 		this.databaseSnapshot = databaseSnapshot;
 	}
 	public boolean hasDatabaseSnapshot() {
 		return databaseSnapshot!=null;
 	}
+
 	public boolean isDirtyCheckHandledByInterceptor() {
 		return dirtyCheckHandledByInterceptor;
 	}
 	public void setDirtyCheckHandledByInterceptor(boolean dirtyCheckHandledByInterceptor) {
 		this.dirtyCheckHandledByInterceptor = dirtyCheckHandledByInterceptor;
 	}
+
 	public boolean isDirtyCheckPossible() {
 		return dirtyCheckPossible;
 	}
 	public void setDirtyCheckPossible(boolean dirtyCheckPossible) {
 		this.dirtyCheckPossible = dirtyCheckPossible;
 	}
+
+	@Nullable
 	public int[] getDirtyProperties() {
 		return dirtyProperties;
 	}
-	public void setDirtyProperties(int[] dirtyProperties) {
+	public void setDirtyProperties(@Nullable int[] dirtyProperties) {
 		this.dirtyProperties = dirtyProperties;
 	}
 	public boolean hasDirtyProperties() {
 		return dirtyProperties != null && dirtyProperties.length != 0;
 	}
+
 	public boolean hasDirtyCollection() {
 		return hasDirtyCollection;
 	}
 	public void setHasDirtyCollection(boolean hasDirtyCollection) {
 		this.hasDirtyCollection = hasDirtyCollection;
 	}
+
+	@Nullable
 	public Object[] getPropertyValues() {
 		return propertyValues;
 	}
-	public void setPropertyValues(Object[] propertyValues) {
+	public void setPropertyValues(@Nullable Object[] propertyValues) {
 		this.propertyValues = propertyValues;
 	}
+
+	@Nonnull
 	public Object getEntity() {
 		return entity;
 	}
@@ -89,7 +103,7 @@ public class FlushEntityEvent extends AbstractSessionEvent {
 	 * @param entity same as constructor parameter
 	 * @param entry same as constructor parameter
 	 */
-	public void resetAndReuseEventInstance(Object entity, EntityEntry entry) {
+	public void resetAndReuseEventInstance(@Nonnull Object entity, @Nonnull EntityEntry entry) {
 		this.entity = entity;
 		this.entityEntry = entry;
 		this.allowedToReuse = false;

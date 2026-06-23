@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called before recreating a collection
@@ -10,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gail Badner
  */
 public interface PreCollectionRecreateEventListener {
-	void onPreRecreateCollection(PreCollectionRecreateEvent event);
+	void onPreRecreateCollection(@Nonnull PreCollectionRecreateEvent event);
 }

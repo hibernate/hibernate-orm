@@ -4,15 +4,15 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreFlushEvent;
 import org.hibernate.event.spi.PreFlushEventListener;
+import jakarta.annotation.Nonnull;
 
 public class DefaultPreFlushEventListener extends AbstractFlushingEventListener implements PreFlushEventListener {
 
 	@Override
-	public void onAutoPreFlush(PreFlushEvent event) throws HibernateException {
+	public void onAutoPreFlush(@Nonnull PreFlushEvent event) {
 		final var source = event.getEventSource();
 		final var eventListenerManager = source.getEventListenerManager();
 		eventListenerManager.prePartialFlushStart();
@@ -33,19 +33,19 @@ public class DefaultPreFlushEventListener extends AbstractFlushingEventListener 
 	}
 
 
-	private static boolean preFlushMightBeNeeded(EventSource source) {
+	private static boolean preFlushMightBeNeeded(@Nonnull EventSource source) {
 		return flushMightBeNeededForMode( source )
 			&& nonEmpty( source );
 	}
 
-	private static boolean flushMightBeNeededForMode(EventSource source) {
+	private static boolean flushMightBeNeededForMode(@Nonnull EventSource source) {
 		return switch ( source.getHibernateFlushMode() ) {
 			case ALWAYS, AUTO -> true;
 			case MANUAL, COMMIT -> false;
 		};
 	}
 
-	private static boolean nonEmpty(EventSource source) {
+	private static boolean nonEmpty(@Nonnull EventSource source) {
 		final var persistenceContext = source.getPersistenceContextInternal();
 		return persistenceContext.getNumberOfManagedEntities() > 0
 			|| persistenceContext.getCollectionEntriesSize() > 0;

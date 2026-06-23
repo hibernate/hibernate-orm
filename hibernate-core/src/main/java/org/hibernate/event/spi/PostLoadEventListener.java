@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Occurs after an entity instance is fully loaded.
@@ -10,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Kabir Khan
  */
 public interface PostLoadEventListener {
-	void onPostLoad(PostLoadEvent event);
+	void onPostLoad(@Nonnull PostLoadEvent event);
 }

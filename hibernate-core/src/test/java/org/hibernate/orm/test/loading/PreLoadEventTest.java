@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.loading;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
@@ -50,7 +51,7 @@ public class PreLoadEventTest {
 
 	public static class AssertingPreLoadEventListener implements PreLoadEventListener {
 		@Override
-		public void onPreLoad(PreLoadEvent event) {
+		public void onPreLoad(@Nonnull PreLoadEvent event) {
 			event.getPersister().getValues( event.getEntity() );
 			assertThat( event.getState() ).isNotNull();
 			assertThat( event.getState() ).hasSize( 1 );

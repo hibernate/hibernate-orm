@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.event.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.synchronization.AuditProcess;
 import org.hibernate.envers.internal.synchronization.work.AddWorkUnit;
@@ -25,7 +26,7 @@ public class EnversPostInsertEventListenerImpl extends BaseEnversEventListener i
 	}
 
 	@Override
-	public void onPostInsert(PostInsertEvent event) {
+	public void onPostInsert(@Nonnull PostInsertEvent event) {
 		final String entityName = event.getPersister().getEntityName();
 
 		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {

@@ -4,8 +4,10 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Base for events which denote database operations.
@@ -31,10 +33,10 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 	 * @param persister The entity's persister.
 	 */
 	public AbstractDatabaseOperationEvent(
-			SharedSessionContractImplementor source,
-			Object entity,
-			Object id,
-			EntityPersister persister) {
+			@Nonnull SharedSessionContractImplementor source,
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull EntityPersister persister) {
 		super( source );
 		this.entity = entity;
 		this.id = id;
@@ -44,21 +46,21 @@ public abstract class AbstractDatabaseOperationEvent extends AbstractEvent {
 	/**
 	 * Retrieves the entity involved in the database operation.
 	 */
-	public Object getEntity() {
+	public @Nonnull Object getEntity() {
 		return entity;
 	}
 
 	/**
 	 * The id to be used in the database operation.
 	 */
-	public Object getId() {
+	public @Nullable Object getId() {
 		return id;
 	}
 
 	/**
 	 * The persister for the entity.
 	 */
-	public EntityPersister getPersister() {
+	public @Nonnull EntityPersister getPersister() {
 		return persister;
 	}
 }

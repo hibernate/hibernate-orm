@@ -17,6 +17,7 @@ import static org.hibernate.collection.spi.AbstractPersistentCollection.checkPer
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Gavin King
@@ -27,7 +28,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 * called by a collection that wants to initialize itself
 	 */
 	@Override
-	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException {
+	public void onInitializeCollection(@Nonnull InitializeCollectionEvent event) {
 		final var collection = event.getCollection();
 		final var source = event.getSession();
 		final var persistenceContext = source.getPersistenceContextInternal();
@@ -37,13 +38,15 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		}
 		if ( !collection.wasInitialized() ) {
 			final var loadedPersister = collectionEntry.getLoadedPersister();
-			checkPersister(collection, loadedPersister);
+			checkPersister( collection, loadedPersister );
 			final Object loadedKey = collectionEntry.getLoadedKey();
 			if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 				EVENT_LISTENER_LOGGER.initializingCollection(
 						collectionInfoString( loadedPersister, collection, loadedKey, source ) );
 			}
 
+			assert loadedPersister != null
+				&& loadedKey != null;
 			final boolean foundInCache = initializeFromCache( loadedKey, loadedPersister, collection, source );
 			if ( foundInCache ) {
 				EVENT_LISTENER_LOGGER.collectionInitializedFromCache();
@@ -63,10 +66,10 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	}
 
 	public static void handlePotentiallyEmptyCollection(
-			PersistentCollection<?> collection,
-			PersistenceContext persistenceContext,
-			Object loadedKey,
-			CollectionPersister loadedPersister) {
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull PersistenceContext persistenceContext,
+			@Nonnull Object loadedKey,
+			@Nonnull CollectionPersister loadedPersister) {
 		if ( !collection.wasInitialized() ) {
 			collection.initializeEmptyCollection( loadedPersister );
 			ResultsHelper.finalizeCollectionLoading(
@@ -92,10 +95,10 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 *         false otherwise.
 	 */
 	private boolean initializeFromCache(
-			Object id,
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
-			SessionImplementor source) {
+			@Nonnull Object id,
+			@Nonnull CollectionPersister persister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull SessionImplementor source) {
 		if ( source.getLoadQueryInfluencers().hasEnabledFilters()
 				&& persister.isAffectedByEnabledFilters( source ) ) {
 			EVENT_LISTENER_LOGGER.disregardingCachedVersionDueToEnabledFilters();

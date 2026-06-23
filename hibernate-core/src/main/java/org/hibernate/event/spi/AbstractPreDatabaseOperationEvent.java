@@ -4,8 +4,10 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Represents an operation that is about to be executed by the database.
@@ -23,10 +25,10 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractDatabase
 	 * @param persister The entity's persister.
 	 */
 	public AbstractPreDatabaseOperationEvent(
-			SharedSessionContractImplementor source,
-			Object entity,
-			Object id,
-			EntityPersister persister) {
+			@Nonnull SharedSessionContractImplementor source,
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull EntityPersister persister) {
 		super( source, entity, id, persister );
 	}
 }

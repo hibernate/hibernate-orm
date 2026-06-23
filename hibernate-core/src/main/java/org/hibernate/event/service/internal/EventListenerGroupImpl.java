@@ -29,6 +29,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Standard EventListenerGroup implementation
@@ -41,10 +43,11 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private static final DuplicationStrategy DEFAULT_DUPLICATION_STRATEGY =
 			new DuplicationStrategy() {
 				@Override
-				public boolean areMatch(Object listener, Object original) {
+				public boolean areMatch(@Nonnull Object listener, @Nonnull Object original) {
 					return listener.getClass().equals( original.getClass() );
 				}
 				@Override
+				@Nonnull
 				public Action getAction() {
 					return Action.ERROR;
 				}
@@ -54,7 +57,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private static final CompletableFuture<?> COMPLETED = completedFuture( null );
 	@SuppressWarnings("unchecked")
-	private static <R> CompletableFuture<R> nullCompletion() {
+	private static <R> @Nonnull CompletableFuture<R> nullCompletion() {
 		return (CompletableFuture<R>) COMPLETED;
 	}
 
@@ -68,13 +71,13 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private volatile T[] listeners = null;
 	private volatile List<T> listenersAsList = emptyList();
 
-	public EventListenerGroupImpl(EventType<T> eventType, boolean isJpaBootstrap) {
+	public EventListenerGroupImpl(@Nonnull EventType<T> eventType, boolean isJpaBootstrap) {
 		this.eventType = eventType;
 		this.isJpaBootstrap = isJpaBootstrap;
 	}
 
 	@Override
-	public EventType<T> getEventType() {
+	public @Nonnull EventType<T> getEventType() {
 		return eventType;
 	}
 
@@ -100,7 +103,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	// For efficiency reasons we use both a representation as List and as array;
 	// ensure consistency between the two fields by delegating any mutation to both
 	// fields to this method.
-	private synchronized void setListeners(T[] newListeners) {
+	private synchronized void setListeners(@Nullable T[] newListeners) {
 		listeners = newListeners;
 		listenersAsList = newListeners == null || newListeners.length == 0
 				? emptyList()
@@ -113,7 +116,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public final <U> void fireLazyEventOnEachListener(Supplier<U> eventSupplier, BiConsumer<T,U> actionOnEvent) {
+	public final <U> void fireLazyEventOnEachListener(@Nonnull Supplier<U> eventSupplier, @Nonnull BiConsumer<T,U> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null && ls.length != 0 ) {
 			final U event = eventSupplier.get();
@@ -125,7 +128,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public final <U> void fireEventOnEachListener(U event, BiConsumer<T,U> actionOnEvent) {
+	public final <U> void fireEventOnEachListener(@Nonnull U event, @Nonnull BiConsumer<T,U> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null ) {
 			//noinspection ForLoopReplaceableByForEach
@@ -136,7 +139,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public <U,X> void fireEventOnEachListener(U event, X parameter, EventActionWithParameter<T, U, X> actionOnEvent) {
+	public <U,X> void fireEventOnEachListener(@Nonnull U event, @Nonnull X parameter, @Nonnull EventActionWithParameter<T, U, X> actionOnEvent) {
 		final T[] ls = listeners;
 		if ( ls != null ) {
 			//noinspection ForLoopReplaceableByForEach
@@ -147,9 +150,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public <R, U, RL> CompletionStage<R> fireEventOnEachListener(
-			final U event,
-			final Function<RL, Function<U, CompletionStage<R>>> fun) {
+	public <R, U, RL> @Nonnull CompletionStage<R> fireEventOnEachListener(
+			@Nonnull final U event,
+			@Nonnull final Function<RL, Function<U, CompletionStage<R>>> fun) {
 		CompletionStage<R> ret = nullCompletion();
 		final T[] ls = listeners;
 		if ( ls != null ) {
@@ -163,8 +166,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public <R, U, RL, X> CompletionStage<R> fireEventOnEachListener(
-			U event, X param, Function<RL, BiFunction<U, X, CompletionStage<R>>> fun) {
+	public <R, U, RL, X> @Nonnull CompletionStage<R> fireEventOnEachListener(
+			@Nonnull U event, @Nonnull X param, @Nonnull Function<RL, BiFunction<U, X, CompletionStage<R>>> fun) {
 		CompletionStage<R> ret = nullCompletion();
 		final T[] ls = listeners;
 		if ( ls != null ) {
@@ -178,9 +181,9 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public <R, U, RL> CompletionStage<R> fireLazyEventOnEachListener(
-			Supplier<U> eventSupplier,
-			Function<RL, Function<U, CompletionStage<R>>> fun) {
+	public <R, U, RL> @Nonnull CompletionStage<R> fireLazyEventOnEachListener(
+			@Nonnull Supplier<U> eventSupplier,
+			@Nonnull Function<RL, Function<U, CompletionStage<R>>> fun) {
 		CompletionStage<R> ret = nullCompletion();
 		final T[] ls = listeners;
 		if ( ls != null && ls.length != 0 ) {
@@ -195,7 +198,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public void addDuplicationStrategy(DuplicationStrategy strategy) {
+	public void addDuplicationStrategy(@Nonnull DuplicationStrategy strategy) {
 		if ( duplicationStrategies == DEFAULT_DUPLICATION_STRATEGIES ) {
 			// At minimum make sure we do not register the same exact listener class multiple times.
 			duplicationStrategies = new LinkedHashSet<>( DEFAULT_DUPLICATION_STRATEGIES );
@@ -204,20 +207,20 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public void appendListener(T listener) {
+	public void appendListener(@Nonnull T listener) {
 		handleListenerAddition( listener, this::internalAppend );
 	}
 
 	@Override
 	@SafeVarargs
-	public final void appendListeners(T... listeners) {
+	public final void appendListeners(@Nonnull T... listeners) {
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < listeners.length; i++ ) {
 			handleListenerAddition( listeners[i], this::internalAppend );
 		}
 	}
 
-	private void internalAppend(T listener) {
+	private void internalAppend(@Nonnull T listener) {
 		prepareListener( listener );
 		final T[] listenersRead = listeners;
 		final T[] listenersWrite;
@@ -241,20 +244,20 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@Override
-	public void prependListener(T listener) {
+	public void prependListener(@Nonnull T listener) {
 		handleListenerAddition( listener, this::internalPrepend );
 	}
 
 	@Override
 	@SafeVarargs
-	public final void prependListeners(T... listeners) {
+	public final void prependListeners(@Nonnull T... listeners) {
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < listeners.length; i++ ) {
 			handleListenerAddition( listeners[i], this::internalPrepend );
 		}
 	}
 
-	private void internalPrepend(T listener) {
+	private void internalPrepend(@Nonnull T listener) {
 		prepareListener( listener );
 		final T[] listenersRead = listeners;
 		final T[] listenersWrite;
@@ -277,7 +280,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 		setListeners( listenersWrite );
 	}
 
-	private void handleListenerAddition(T listener, Consumer<T> additionHandler) {
+	private void handleListenerAddition(@Nonnull T listener, @Nonnull Consumer<T> additionHandler) {
 		final T[] listenersRead = listeners;
 		if ( listenersRead == null ) {
 			additionHandler.accept( listener );
@@ -344,15 +347,16 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	@SuppressWarnings("unchecked")
 	@AllowReflection // Possible array types are registered in org.hibernate.graalvm.internal.StaticClassLists.typesNeedingArrayCopy
+	@Nonnull
 	private T[] createListenerArrayForWrite(int len) {
 		return (T[]) Array.newInstance( eventType.baseListenerInterface(), len );
 	}
 
-	private void prepareListener(T listener) {
+	private void prepareListener(@Nonnull T listener) {
 		checkAgainstBaseInterface( listener );
 	}
 
-	private void checkAgainstBaseInterface(T listener) {
+	private void checkAgainstBaseInterface(@Nonnull T listener) {
 		if ( !eventType.baseListenerInterface().isInstance( listener ) ) {
 			throw new EventListenerRegistrationException( "Listener did not implement expected interface ["
 					+ eventType.baseListenerInterface().getName() + "]" );
@@ -366,7 +370,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	 */
 	@Override
 	@Deprecated
-	public final Iterable<T> listeners() {
+	public final @Nonnull Iterable<T> listeners() {
 		return listenersAsList;
 	}
 }

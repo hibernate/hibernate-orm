@@ -6,6 +6,7 @@ package org.hibernate.event.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Represents an operation successfully executed by the database.
@@ -25,10 +26,10 @@ public abstract class AbstractPostDatabaseOperationEvent extends AbstractDatabas
 	 * @param persister The entity's persister.
 	 */
 	public AbstractPostDatabaseOperationEvent(
-			SharedSessionContractImplementor source,
-			Object entity,
-			Object id,
-			EntityPersister persister) {
+			@Nonnull SharedSessionContractImplementor source,
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull EntityPersister persister) {
 		super( source, entity, id, persister );
 	}
 

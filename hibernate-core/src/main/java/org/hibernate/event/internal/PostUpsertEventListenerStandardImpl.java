@@ -9,25 +9,26 @@ import org.hibernate.event.spi.PostUpsertEvent;
 import org.hibernate.event.spi.PostUpsertEventListener;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Gavin King
  */
 public class PostUpsertEventListenerStandardImpl implements PostUpsertEventListener {
 	@Override
-	public void onPostUpsert(PostUpsertEvent event) {
+	public void onPostUpsert(@Nonnull PostUpsertEvent event) {
 		handlePostUpsert( event.getEntity(), event.getPersister(), event.getSession() );
 	}
 
 	private void handlePostUpsert(
-			Object entity,
-			EntityPersister persister,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object entity,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().postUpsert( entity ) );
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_UPSERT );
 	}
 }

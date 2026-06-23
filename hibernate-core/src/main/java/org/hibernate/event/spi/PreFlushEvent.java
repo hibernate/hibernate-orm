@@ -6,6 +6,7 @@ package org.hibernate.event.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.spi.QueryParameterBindings;
+import jakarta.annotation.Nonnull;
 
 /**
  * An event that occurs just before arguments are bound to JDBC
@@ -22,11 +23,12 @@ public class PreFlushEvent extends AbstractSessionEvent {
 	private boolean preFlushRequired;
 	private final QueryParameterBindings parameterBindings;
 
-	public PreFlushEvent(QueryParameterBindings parameterBindings, EventSource source) {
+	public PreFlushEvent(@Nonnull QueryParameterBindings parameterBindings, @Nonnull EventSource source) {
 		super( source );
 		this.parameterBindings = parameterBindings;
 	}
 
+	@Nonnull
 	public QueryParameterBindings getParameterBindings() {
 		return parameterBindings;
 	}

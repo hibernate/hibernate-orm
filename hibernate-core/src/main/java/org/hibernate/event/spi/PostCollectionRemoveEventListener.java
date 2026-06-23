@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called after removing a collection
@@ -10,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gail Badner
  */
 public interface PostCollectionRemoveEventListener {
-	void onPostRemoveCollection(PostCollectionRemoveEvent event);
+	void onPostRemoveCollection(@Nonnull PostCollectionRemoveEvent event);
 }

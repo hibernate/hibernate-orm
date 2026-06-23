@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Called after updating the datastore
@@ -10,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gavin King
  */
 public interface PostUpsertEventListener extends PostActionEventListener {
-	void onPostUpsert(PostUpsertEvent event);
+	void onPostUpsert(@Nonnull PostUpsertEvent event);
 }

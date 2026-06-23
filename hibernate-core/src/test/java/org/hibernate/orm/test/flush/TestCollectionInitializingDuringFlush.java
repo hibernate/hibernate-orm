@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.flush;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Hibernate;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -114,7 +115,7 @@ public class TestCollectionInitializingDuringFlush {
 		private boolean foundAny = false;
 
 		@Override
-		public boolean onPreUpdate(PreUpdateEvent event) {
+		public boolean onPreUpdate(@Nonnull PreUpdateEvent event) {
 			executed = true;
 
 			final Object[] oldValues = event.getOldState();

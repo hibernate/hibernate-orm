@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import java.util.Set;
+import jakarta.annotation.Nonnull;
 
 /**
  * Event class for {@link org.hibernate.FlushMode#AUTO automatic}
@@ -18,21 +19,22 @@ public class AutoFlushEvent extends FlushEvent {
 	private boolean flushRequired;
 	private final boolean skipPreFlush;
 
-	public AutoFlushEvent(Set<String> querySpaces, EventSource source) {
+	public AutoFlushEvent(@Nonnull Set<String> querySpaces, @Nonnull EventSource source) {
 		this( querySpaces, false, source );
 	}
 
-	public AutoFlushEvent(Set<String> querySpaces, boolean skipPreFlush, EventSource source) {
+	public AutoFlushEvent(@Nonnull Set<String> querySpaces, boolean skipPreFlush, @Nonnull EventSource source) {
 		super( source );
 		this.querySpaces = querySpaces;
 		this.skipPreFlush = skipPreFlush;
 	}
 
+	@Nonnull
 	public Set<String> getQuerySpaces() {
 		return querySpaces;
 	}
 
-	public void setQuerySpaces(Set<String> querySpaces) {
+	public void setQuerySpaces(@Nonnull Set<String> querySpaces) {
 		this.querySpaces = querySpaces;
 	}
 

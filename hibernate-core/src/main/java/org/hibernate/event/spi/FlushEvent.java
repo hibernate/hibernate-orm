@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * Event class for stateful session flush.
@@ -15,7 +17,7 @@ public class FlushEvent extends AbstractSessionEvent {
 	private int numberOfEntitiesProcessed;
 	private int numberOfCollectionsProcessed;
 
-	public FlushEvent(EventSource source) {
+	public FlushEvent(@Nonnull EventSource source) {
 		super( source );
 	}
 

@@ -6,6 +6,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
+import jakarta.annotation.Nonnull;
 
 /**
  * Called before injecting property values into a newly
@@ -16,7 +17,7 @@ import org.hibernate.event.spi.PreLoadEventListener;
 public class DefaultPreLoadEventListener implements PreLoadEventListener {
 
 	@Override
-	public void onPreLoad(PreLoadEvent event) {
+	public void onPreLoad(@Nonnull PreLoadEvent event) {
 		final var persister = event.getPersister();
 		event.getSession().runInterceptorCallback(
 				() -> event.getSession().getInterceptor().onLoad(

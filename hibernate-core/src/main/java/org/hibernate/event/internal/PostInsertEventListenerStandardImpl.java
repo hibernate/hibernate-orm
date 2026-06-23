@@ -8,6 +8,7 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Kabir Khan
@@ -15,7 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class PostInsertEventListenerStandardImpl implements PostInsertEventListener {
 	@Override
-	public void onPostInsert(PostInsertEvent event) {
+	public void onPostInsert(@Nonnull PostInsertEvent event) {
 		final Object entity = event.getEntity();
 		final var callbacks = event.getPersister().getEntityCallbacks();
 		event.getSession()
@@ -26,7 +27,7 @@ public class PostInsertEventListenerStandardImpl implements PostInsertEventListe
 	}
 
 	@Override
-	public boolean requiresPostCommitHandling(EntityPersister persister) {
+	public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 		final var callbacks = persister.getEntityCallbacks();
 		return callbacks.hasRegisteredCallbacks( CallbackType.POST_PERSIST )
 			|| callbacks.hasRegisteredCallbacks( CallbackType.POST_INSERT );

@@ -10,6 +10,7 @@ import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
+import jakarta.annotation.Nonnull;
 
 /**
  * Historically, the listeners for the post-commit events simply reused the
@@ -25,7 +26,7 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 	private final Class<?> extendedListenerContract;
 
 	public PostCommitEventListenerGroupImpl(
-			EventType<T> eventType,
+			@Nonnull EventType<T> eventType,
 			boolean isJpaBootstrap) {
 		super( eventType, isJpaBootstrap );
 
@@ -44,12 +45,12 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 	}
 
 	@Override
-	public void appendListener(T listener) {
+	public void appendListener(@Nonnull T listener) {
 		checkAgainstExtendedContract( listener );
 		super.appendListener( listener );
 	}
 
-	private void checkAgainstExtendedContract(T listener) {
+	private void checkAgainstExtendedContract(@Nonnull T listener) {
 		if ( !extendedListenerContract.isInstance( listener ) ) {
 			EVENT_LISTENER_LOGGER.warnf(
 					"Encountered event listener [%s] for post-commit event [%s] "
@@ -63,7 +64,7 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 	}
 
 	@Override
-	public void prependListener(T listener) {
+	public void prependListener(@Nonnull T listener) {
 		checkAgainstExtendedContract( listener );
 		super.prependListener( listener );
 	}

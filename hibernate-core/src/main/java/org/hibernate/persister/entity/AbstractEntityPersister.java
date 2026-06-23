@@ -2395,10 +2395,14 @@ public abstract class AbstractEntityPersister
 			&& ( currentAttributeName.length() == nameLength || currentAttributeName.charAt(nameLength) == '.' );
 	}
 
-	private static int nextAttributeNameIndex(
+	private static int skipDuplicateAndNestedAttributeNames(
 			final AttributeMapping attributeMapping,
 			final String[] attributeNames,
 			int index) {
+		// The attributeNames array can contain the same attribute name multiple times,
+		// which we want to skip. Similarly, it can contain nested paths, which we also want to skip,
+		// because we work with top-level attribute indexes and have no way to flush nested attributes,
+		// so we seek to the attributeNames element that isn't a prefix of the current attributeMapping
 		while ( index < attributeNames.length && isPrefix( attributeMapping, attributeNames[index] ) ) {
 			index++;
 		}
@@ -2420,7 +2424,7 @@ public abstract class AbstractEntityPersister
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 				fields.add( attributeMapping.getStateArrayPosition() );
-				index = nextAttributeNameIndex( attributeMapping, attributeNames, index + 1 );
+				index = skipDuplicateAndNestedAttributeNames( attributeMapping, attributeNames, index + 1 );
 				if ( index >= attributeNames.length ) {
 					break;
 				}
@@ -2480,13 +2484,12 @@ public abstract class AbstractEntityPersister
 				int index = 0;
 				for ( int i = 0; i < attributeMappings.size(); i++ ) {
 					final AttributeMapping attributeMapping = attributeMappings.get( i );
-					final String attributeName = attributeMapping.getAttributeName();
 					if ( isPrefix( attributeMapping, attributeNames[index] ) ) {
 						final int position = attributeMapping.getStateArrayPosition();
 						if ( propertyUpdateability[position] && !fields.contains( position ) ) {
 							fields.add( position );
 						}
-						index = nextAttributeNameIndex( attributeMapping, attributeNames, index + 1 );
+						index = skipDuplicateAndNestedAttributeNames( attributeMapping, attributeNames, index + 1 );
 						if ( index >= attributeNames.length ) {
 							break;
 						}

@@ -348,7 +348,6 @@ public class MetadataContext {
 						// but we have already accounted for the embedded property mappings
 						// in #applyIdMetadata && #buildIdClassAttributes
 						if ( !isIdentifierProperty( property, mappedSuperclass )
-							&& !isIdentifierPropertyDeclaredOnMappedSuperclass( property, mappedSuperclass )
 							// skip the version property, it was already handled previously.
 							&& !isVersion( mappedSuperclass, property ) ) {
 							buildAttribute( property, jpaType );
@@ -413,36 +412,9 @@ public class MetadataContext {
 	private static boolean isIdentifierProperty(Property property, MappedSuperclass mappedSuperclass) {
 		final var identifierMapper = mappedSuperclass.getIdentifierMapper();
 		return identifierMapper != null
-			&& contains( identifierMapper.getPropertyNames(), property.getName() );
-	}
-
-	private boolean isIdentifierPropertyDeclaredOnMappedSuperclass(Property property, MappedSuperclass mappedSuperclass) {
-		return getMappedSuperclassIdentifierProperty( mappedSuperclass ) == property;
-	}
-
-	private Property getMappedSuperclassIdentifierProperty(MappedSuperclass mappedSuperclass) {
-		for ( var property : mappedSuperclass.getDeclaredProperties() ) {
-			for ( var persistentClass : entityTypesByPersistentClass.keySet() ) {
-				if ( isMappedSuperclassInHierarchy( persistentClass, mappedSuperclass ) ) {
-					final var identifierProperty = persistentClass.getIdentifierProperty();
-					if ( identifierProperty != null && identifierProperty.getName().equals( property.getName() ) ) {
-						return property;
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	private boolean isMappedSuperclassInHierarchy(PersistentClass persistentClass, MappedSuperclass mappedSuperclass) {
-		MappedSuperclass current = getMappedSuperclass( persistentClass );
-		while ( current != null ) {
-			if ( current == mappedSuperclass ) {
-				return true;
-			}
-			current = getMappedSuperclass( current );
-		}
-		return false;
+			&& contains( identifierMapper.getPropertyNames(), property.getName() )
+			|| mappedSuperclass.getIdentifierProperty() != null
+				&& property.getName().equals( mappedSuperclass.getIdentifierProperty().getName() );
 	}
 
 	private <T> void addAttribute(EmbeddableDomainType<T> embeddable, Property property, Component component) {
@@ -662,10 +634,7 @@ public class MetadataContext {
 		final var managedType = (ManagedDomainType<X>) jpaMappingType;
 		final var attributeContainer = (AttributeContainer<X>) managedType;
 		if ( mappingType.hasIdentifierProperty() ) {
-			var declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
-			if ( declaredIdentifierProperty == null ) {
-				declaredIdentifierProperty = getMappedSuperclassIdentifierProperty( mappingType );
-			}
+			final var declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if ( declaredIdentifierProperty != null ) {
 				final var attribute =
 						(SingularPersistentAttribute<X, ?>)

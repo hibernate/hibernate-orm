@@ -415,22 +415,7 @@ public class BinderHelper {
 	 * and other attributes.
 	 */
 	public static Property shallowCopy(Property property) {
-		final var clone = new SyntheticProperty();
-		clone.setCascade( property.getCascade() );
-		clone.setInsertable( property.isInsertable() );
-		clone.setLazy( property.isLazy() );
-		clone.setName( property.getName() );
-		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
-		clone.setOptimisticLocked( property.isOptimisticLocked() );
-		clone.setTemporalExcluded( property.isTemporalExcluded() );
-		clone.setAuditedExcluded( property.isAuditedExcluded() );
-		clone.setOptional( property.isOptional() );
-		clone.setPersistentClass( property.getPersistentClass() );
-		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
-		clone.setSelectable( property.isSelectable() );
-		clone.setUpdatable( property.isUpdatable() );
-		clone.setValue( property.getValue() );
-		return clone;
+		return property.syntheticCopy();
 	}
 
 	private static List<Property> findPropertiesByColumns(

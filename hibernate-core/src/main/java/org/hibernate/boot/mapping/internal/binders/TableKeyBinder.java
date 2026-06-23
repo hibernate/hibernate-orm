@@ -517,7 +517,7 @@ public class TableKeyBinder {
 		key.setNullable( collectionKeyNullable( collectionTableBinding.joinColumns() ) );
 		key.setUpdateable( collectionKeyUpdatable( collectionTableBinding.joinColumns() ) );
 
-		final List<Column> targetColumns = targetIdentifierColumns( entityIdentifierBinding );
+		final List<Column> targetColumns = collectionTableTargetColumns( collectionTableBinding, entityIdentifierBinding );
 		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
 				collectionTableBinding.joinColumns(),
 				targetColumns,
@@ -559,6 +559,18 @@ public class TableKeyBinder {
 		for ( Column column : key.getColumns() ) {
 			column.setNullable( key.isNullable() );
 		}
+	}
+
+	private List<Column> collectionTableTargetColumns(
+			CollectionTableBinding collectionTableBinding,
+			IdentifierBinding entityIdentifierBinding) {
+		if ( referencesJoinedSubclassKey(
+				collectionTableBinding.collection().getOwner(),
+				collectionTableBinding.joinColumns()
+		) ) {
+			return ( (JoinedSubclass) collectionTableBinding.collection().getOwner() ).getKey().getColumns();
+		}
+		return targetIdentifierColumns( entityIdentifierBinding );
 	}
 
 	private String implicitCollectionKeyColumnName(CollectionTableBinding collectionTableBinding, Column referencedColumn) {
@@ -722,7 +734,10 @@ public class TableKeyBinder {
 			String sourceRole) {
 		final List<Identifier> referencedColumnNames = referencedColumnNames( joinColumns );
 		if ( referencedColumnNames.isEmpty()
-				|| columnNamesMatch( ownerBinding.getIdentifier().getColumns(), referencedColumnNames ) ) {
+				|| columnNamesReferenceSameColumns( ownerBinding.getIdentifier().getColumns(), referencedColumnNames ) ) {
+			return null;
+		}
+		if ( referencesJoinedSubclassKey( ownerBinding, joinColumns ) ) {
 			return null;
 		}
 		for ( Property property : referenceableProperties( ownerBinding ) ) {
@@ -746,6 +761,14 @@ public class TableKeyBinder {
 		throw new MappingException(
 				"Could not resolve non-primary-key table key columns " + referencedColumnNames + " - " + sourceRole
 		);
+	}
+
+	private boolean referencesJoinedSubclassKey(PersistentClass ownerBinding, List<JoinColumn> joinColumns) {
+		final List<Identifier> referencedColumnNames = referencedColumnNames( joinColumns );
+		return !referencedColumnNames.isEmpty()
+				&& ownerBinding instanceof JoinedSubclass joinedSubclass
+				&& joinedSubclass.getKey() != null
+				&& columnNamesReferenceSameColumns( joinedSubclass.getKey().getColumns(), referencedColumnNames );
 	}
 
 	private List<Property> referenceableProperties(PersistentClass ownerBinding) {
@@ -858,11 +881,10 @@ public class TableKeyBinder {
 			result.setPropertyAccessorName( property.getPropertyAccessorName() );
 			return result;
 		}
-		final Property clone = property.copy();
+		final SyntheticProperty clone = property.syntheticCopy();
+		clone.setNaturalIdentifier( false );
 		clone.setInsertable( false );
 		clone.setUpdatable( false );
-		clone.setNaturalIdentifier( false );
-		clone.setPersistentClass( ownerBinding );
 		return clone;
 	}
 
@@ -907,6 +929,29 @@ public class TableKeyBinder {
 		final Database database = bindingState.getDatabase();
 		for ( int i = 0; i < columns.size(); i++ ) {
 			if ( !columns.get( i ).getNameIdentifier( database ).matches( referencedColumnNames.get( i ) ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean columnNamesReferenceSameColumns(List<Column> columns, List<Identifier> referencedColumnNames) {
+		if ( columns.size() != referencedColumnNames.size() ) {
+			return false;
+		}
+		final Database database = bindingState.getDatabase();
+		final boolean[] matchedReferencedColumns = new boolean[referencedColumnNames.size()];
+		for ( Column column : columns ) {
+			boolean matched = false;
+			for ( int i = 0; i < referencedColumnNames.size(); i++ ) {
+				if ( !matchedReferencedColumns[i]
+						&& column.getNameIdentifier( database ).matches( referencedColumnNames.get( i ) ) ) {
+					matchedReferencedColumns[i] = true;
+					matched = true;
+					break;
+				}
+			}
+			if ( !matched ) {
 				return false;
 			}
 		}

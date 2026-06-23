@@ -1821,6 +1821,20 @@ dependent table primary key uses the declared key column name.
   --tests 'org.hibernate.orm.test.inheritance.repeatedtable.AlternativeToRepeatedTableTest'
 ----
 
+Progress note: collection-table owner keys now keep identifier semantics when
+explicit `referencedColumnName` values name the same identifier columns in a
+different order.  This matches the legacy behavior where ordering is handled by
+join-column reordering, rather than by materializing a synthetic non-PK
+property-ref.  Joined-subclass collection owner keys also resolve explicit
+references to the subclass table key columns against the joined-subclass key
+columns while still using the owner identifier value.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.manytomany.ManyToManyTest'
+----
+
 Progress note: the embedded-id association-identifier join-table slice now
 passes at boot-model level.  `ComponentBinder` no longer rejects embedded-id
 to-one members solely because they are inverse one-to-ones or use `@JoinTable`;

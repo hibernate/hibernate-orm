@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -224,6 +225,50 @@ public class GlobalRegistrationBindingTests {
 					assertThat( uuidGenerator ).isInstanceOf( org.hibernate.id.uuid.UuidGenerator.class );
 					assertThat( ( (org.hibernate.id.uuid.UuidGenerator) uuidGenerator ).getValueGenerator() )
 							.isInstanceOf( StandardRandomStrategy.class );
+				},
+				scope.getRegistry(),
+				GlobalRegistrationEntity.class,
+				UuidGeneratedEntity.class,
+				PlainConverter.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testGlobalRegistrationsUseRuntimeHandoffCarriers(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var metadata = context.getMetadata();
+
+					final var hqlNames = new ArrayList<String>();
+					metadata.visitNamedHqlQueryDefinitions( (definition) ->
+							hqlNames.add( definition.getRegistrationName() ) );
+					assertThat( hqlNames )
+							.contains( "globalJpaQuery", "globalJpaStatement", "globalHibernateQuery" );
+
+					final var nativeNames = new ArrayList<String>();
+					metadata.visitNamedNativeQueryDefinitions( (definition) ->
+							nativeNames.add( definition.getRegistrationName() ) );
+					assertThat( nativeNames )
+							.contains( "globalNativeQuery", "globalNativeStatement", "globalMappedNativeQuery" );
+
+					final var procedureNames = new ArrayList<String>();
+					metadata.visitNamedProcedureCallDefinition( (definition) ->
+							procedureNames.add( definition.getRegistrationName() ) );
+					assertThat( procedureNames ).contains( "globalProcedure" );
+
+					final var resultSetMappingNames = new ArrayList<String>();
+					metadata.visitNamedResultSetMappingDefinition( (definition) ->
+							resultSetMappingNames.add( definition.getRegistrationName() ) );
+					assertThat( resultSetMappingNames )
+							.contains( "globalIdMapping", "globalEntityMapping", "globalConstructorMapping" );
+
+					assertThat( metadata.getFilterDefinitions() ).containsKey( "globalFilter" );
+					assertThat( metadata.getNamedEntityGraphs() )
+							.containsKeys( "globalGraph", "GlobalRegistrationEntity", "globalParsedGraph" );
+					assertThat( metadata.getFetchProfiles() )
+							.anySatisfy( (fetchProfile) ->
+									assertThat( fetchProfile.getName() ).isEqualTo( "globalFetchProfile" ) );
 				},
 				scope.getRegistry(),
 				GlobalRegistrationEntity.class,

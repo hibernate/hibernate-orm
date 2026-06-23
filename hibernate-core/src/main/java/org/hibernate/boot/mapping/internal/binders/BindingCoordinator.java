@@ -151,7 +151,7 @@ public class BindingCoordinator {
 		processTypeContributors();
 		coordinateGlobalBindings();
 		coordinateModelBindings();
-		processFetchProfiles( categorizedDomainModel.getGlobalRegistrations() );
+		coordinateGlobalBindingsRequiringModel();
 	}
 
 	private void processTypeContributors() {
@@ -303,6 +303,12 @@ public class BindingCoordinator {
 		processInstantiators( globalRegistrations );
 		processEventListeners( globalRegistrations );
 		processFilterDefinitions( globalRegistrations );
+	}
+
+	private void coordinateGlobalBindingsRequiringModel() {
+		// Fetch profile declarations can be registered up front, but fetch overrides
+		// validate entity/association names and therefore need the entity model first.
+		processFetchProfiles( categorizedDomainModel.getGlobalRegistrations() );
 	}
 
 	private <P> void runPhase(List<ManagedTypeBinder> binders, Class<P> phaseType, Consumer<P> phaseAction) {

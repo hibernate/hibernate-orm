@@ -287,8 +287,8 @@ managed types, but they do not participate in entity inheritance.
 Global registrations are persistence-unit scoped things collected while
 categorizing.  They are exposed through:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/GlobalRegistrations.java[`GlobalRegistrations`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/GlobalRegistrationsImpl.java[`GlobalRegistrationsImpl`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/GlobalRegistrations.java[`GlobalRegistrations`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/GlobalRegistrationsImpl.java[`GlobalRegistrationsImpl`]
 
 Examples include:
 
@@ -306,7 +306,11 @@ If a new annotation or XML element affects the whole persistence unit rather tha
 one mapped attribute or entity binding, it probably belongs in global
 registrations.  Categorization should collect it, and the binding coordinator
 should have a small processing method that applies it to the appropriate ORM
-boot collector or registry.
+boot collector or registry.  Most registrations are applied before entity
+binding.  Registrations that need bound model state should have an explicit late
+phase; fetch profile overrides are the current example because the declaration
+can be created up front, while the override has to validate entity and
+association names after entity binding.
 
 
 == Entity Hierarchies

@@ -53,6 +53,7 @@ public class BindingTestingHelper {
 						metadataCollector.getPersistenceUnitMetadata()
 				)
 		);
+		bootstrapContext.getTypeConfiguration().scope( metadataBuildingContext );
 		final AvailableResources availableResources = buildAvailableResources( metadataBuildingContext, domainClasses );
 		final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
 				availableResources,

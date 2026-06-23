@@ -7,6 +7,7 @@ package org.hibernate.cache.spi.support;
 import java.util.Comparator;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -28,10 +29,10 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 	private final CacheKeysFactory keysFactory;
 
 	public CollectionReadWriteAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			CollectionDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull CollectionDataCachingConfig config) {
 		super( region, storageAccess );
 		this.keysFactory = keysFactory;
 		this.versionComparator = config.getOwnerVersionComparator();
@@ -39,11 +40,13 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 
 	@Deprecated
 	@Override
+	@Nonnull
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.COLLECTION;
 	}
 
 	@Override
+	@Nonnull
 	public AccessType getAccessType() {
 		return AccessType.READ_WRITE;
 	}
@@ -51,42 +54,54 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 	@Override
 	@Nonnull
 	public Object generateCacheKey(
-			Object id,
-			CollectionPersister collectionDescriptor,
-			SessionFactoryImplementor factory,
-			String tenantIdentifier) {
+			@Nonnull Object id,
+			@Nonnull CollectionPersister collectionDescriptor,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return keysFactory.createCollectionKey( id, collectionDescriptor, factory, tenantIdentifier );
 	}
 
 	@Override
-	public Object getCacheKeyId(Object cacheKey) {
+	@Nonnull
+	public Object getCacheKeyId(@Nonnull Object cacheKey) {
 		return keysFactory.getCollectionId( cacheKey );
 	}
 
 	@Override
+	@Nullable
 	protected Comparator<Object> getVersionComparator() {
 		return versionComparator;
 	}
 
 	@Override
-	public Object get(SharedSessionContractImplementor session, Object key) {
+	@Nullable
+	public Object get(@Nonnull SharedSessionContractImplementor session, @Nonnull Object key) {
 		return super.get( session, key );
 	}
 
 	@Override
-	public boolean putFromLoad(SharedSessionContractImplementor session, Object key, Object value, Object version) {
+	public boolean putFromLoad(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable Object version) {
 		return super.putFromLoad( session, key, value, version );
 	}
 
 	@Override
+	@Nonnull
 	public SoftLock lockItem(
-			SharedSessionContractImplementor session, Object key, Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable Object version) {
 		return super.lockItem( session, key, version );
 	}
 
 	@Override
 	public void unlockItem(
-			SharedSessionContractImplementor session, Object key, SoftLock lock) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 		super.unlockItem( session, key, lock );
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -23,7 +25,8 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 	public static final StructuredMapCacheEntry INSTANCE = new StructuredMapCacheEntry();
 
 	@Override
-	public Object structure(Object item) {
+	@Nonnull
+	public Object structure(@Nonnull Object item) {
 		final var entry = (CollectionCacheEntry) item;
 		final Serializable[] state = entry.getState();
 		final Map<Serializable,Serializable> map = mapOfSize( state.length );
@@ -34,7 +37,8 @@ public class StructuredMapCacheEntry implements CacheEntryStructure {
 	}
 
 	@Override
-	public Object destructure(Object structured, SessionFactoryImplementor factory) {
+	@Nonnull
+	public Object destructure(@Nonnull Object structured, @Nonnull SessionFactoryImplementor factory) {
 		final var map = (Map<?,?>) structured;
 		final Serializable[] state = new Serializable[ map.size()*2 ];
 		int i = 0;

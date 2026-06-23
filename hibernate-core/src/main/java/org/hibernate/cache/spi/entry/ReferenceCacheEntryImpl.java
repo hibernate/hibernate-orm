@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.entry;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 
 import org.hibernate.persister.entity.EntityPersister;
@@ -24,7 +27,7 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	 * @param reference The reference entity instance
 	 * @param subclassPersister The specific subclass persister
 	 */
-	public ReferenceCacheEntryImpl(Object reference, EntityPersister subclassPersister) {
+	public ReferenceCacheEntryImpl(@Nonnull Object reference, @Nonnull EntityPersister subclassPersister) {
 		this.reference = reference;
 		this.subclassPersister = subclassPersister;
 	}
@@ -34,6 +37,7 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	 *
 	 * @return The stored reference
 	 */
+	@Nonnull
 	public Object getReference() {
 		return reference;
 	}
@@ -44,21 +48,25 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	}
 
 	@Override
+	@Nonnull
 	public String getSubclass() {
 		return subclassPersister.getEntityName();
 	}
 
+	@Nonnull
 	public EntityPersister getSubclassPersister() {
 		return subclassPersister;
 	}
 
 	@Override
+	@Nullable
 	public Object getVersion() {
 		// reference data cannot be versioned
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public Serializable[] getDisassembledState() {
 		// reference data is not disassembled into the cache
 		return null;

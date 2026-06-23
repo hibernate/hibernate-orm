@@ -48,7 +48,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		this( DefaultCacheKeysFactory.INSTANCE );
 	}
 
-	public JCacheRegionFactory(CacheKeysFactory cacheKeysFactory) {
+	public JCacheRegionFactory(@Nonnull CacheKeysFactory cacheKeysFactory) {
 		this.cacheKeysFactory = cacheKeysFactory;
 	}
 
@@ -58,6 +58,7 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
+	@Nonnull
 	protected CacheKeysFactory getImplicitCacheKeysFactory() {
 		return cacheKeysFactory;
 	}

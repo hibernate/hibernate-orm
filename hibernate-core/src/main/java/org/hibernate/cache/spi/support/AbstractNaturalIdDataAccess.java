@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.cfg.spi.NaturalIdDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -19,71 +22,89 @@ public abstract class AbstractNaturalIdDataAccess extends AbstractCachedDomainDa
 	private final CacheKeysFactory keysFactory;
 
 	public AbstractNaturalIdDataAccess(
-			DomainDataRegion region,
-			CacheKeysFactory keysFactory,
-			DomainDataStorageAccess storageAccess,
-			NaturalIdDataCachingConfig config) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory keysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess,
+			@Nonnull NaturalIdDataCachingConfig config) {
 		super( region, storageAccess );
 		this.keysFactory = keysFactory;
 	}
 
 	@Override
+	@Nonnull
 	public Object generateCacheKey(
-			Object naturalIdValues,
-			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object naturalIdValues,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor session) {
 		return keysFactory.createNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
-	public Object getNaturalIdValues(Object cacheKey) {
+	@Nonnull
+	public Object getNaturalIdValues(@Nonnull Object cacheKey) {
 		return keysFactory.getNaturalIdValues( cacheKey );
 	}
 
 
 	@Override
-	public boolean insert(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean insert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 
 	@Override
-	public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean afterInsert(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		return false;
 	}
 
 	@Override
-	public boolean update(SharedSessionContractImplementor session, Object key, Object value) {
+	public boolean update(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value) {
 		getStorageAccess().putIntoCache( key, value, session );
 		return true;
 	}
 
 	@Override
-	public boolean afterUpdate(SharedSessionContractImplementor session, Object key, Object value, SoftLock lock) {
+	public boolean afterUpdate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nonnull Object value,
+			@Nullable SoftLock lock) {
 		return false;
 	}
 
 	@Override
+	@Nullable
 	public SoftLock lockRegion() {
 		return null;
 	}
 
 	@Override
-	public void unlockRegion(SoftLock lock) {
+	public void unlockRegion(@Nullable SoftLock lock) {
 		clearCache();
 	}
 
+	@Override
+	@Nullable
 	public SoftLock lockItem(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable Object version) {
 		return null;
 	}
 
 	@Override
 	public void unlockItem(
-			SharedSessionContractImplementor session,
-			Object key,
-			SoftLock lock) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 	}
 }

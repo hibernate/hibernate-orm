@@ -5,6 +5,9 @@
 package org.hibernate.cache.internal;
 
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -43,7 +46,12 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 	public static final String SHORT_NAME = "default";
 	public static final DefaultCacheKeysFactory INSTANCE = new DefaultCacheKeysFactory();
 
-	public static Object staticCreateCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	@Nonnull
+	public static Object staticCreateCollectionKey(
+			@Nonnull Object id,
+			@Nonnull CollectionPersister persister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		final Type keyType = persister.getKeyType();
 		final var coercedId = getCoercedId( id, keyType );
 		final var disassembledKey = keyType.disassemble( coercedId, factory );
@@ -54,7 +62,12 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 				: new CacheKeyImplementation( coercedId, disassembledKey, keyType, role, tenantIdentifier );
 	}
 
-	public static Object staticCreateEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	@Nonnull
+	public static Object staticCreateEntityKey(
+			@Nonnull Object id,
+			@Nonnull EntityPersister persister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		final Type keyType = persister.getIdentifierType();
 		final var coercedId = getCoercedId( id, keyType );
 		final var disassembledKey = keyType.disassemble( coercedId, factory );
@@ -65,20 +78,23 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 				: new CacheKeyImplementation( coercedId, disassembledKey, keyType, rootEntityName, tenantIdentifier );
 	}
 
-	private static Object getCoercedId(Object id, Type keyType) {
+	@Nonnull
+	private static Object getCoercedId(@Nonnull Object id, @Nonnull Type keyType) {
 		return keyType instanceof BasicType<?> basicType
 				? basicType.getJavaTypeDescriptor().coerce( id )
 				: id;
 	}
 
+	@Nonnull
 	public static Object staticCreateNaturalIdKey(
-			Object naturalIdValues,
-			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object naturalIdValues,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor session) {
 		return NaturalIdCacheKey.from( naturalIdValues, persister, session );
 	}
 
-	public static Object staticGetEntityId(Object cacheKeyObject) {
+	@Nonnull
+	public static Object staticGetEntityId(@Nonnull Object cacheKeyObject) {
 		if ( cacheKeyObject instanceof BasicCacheKeyImplementation basicCacheKey ) {
 			return basicCacheKey.id;
 		}
@@ -90,41 +106,60 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 		}
 	}
 
-	public static Object staticGetCollectionId(Object cacheKey) {
+	@Nonnull
+	public static Object staticGetCollectionId(@Nonnull Object cacheKey) {
 		return staticGetEntityId( cacheKey );
 	}
 
-	public static Object staticGetNaturalIdValues(Object cacheKey) {
+	@Nonnull
+	public static Object staticGetNaturalIdValues(@Nonnull Object cacheKey) {
 		return ( (NaturalIdCacheKey) cacheKey ).getNaturalIdValues();
 	}
 
 	@Override
-	public Object createCollectionKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	@Nonnull
+	public Object createCollectionKey(
+			@Nonnull Object id,
+			@Nonnull CollectionPersister persister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return staticCreateCollectionKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
-	public Object createEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
+	@Nonnull
+	public Object createEntityKey(
+			@Nonnull Object id,
+			@Nonnull EntityPersister persister,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return staticCreateEntityKey( id, persister, factory, tenantIdentifier );
 	}
 
 	@Override
-	public Object createNaturalIdKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+	@Nonnull
+	public Object createNaturalIdKey(
+			@Nonnull Object naturalIdValues,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor session) {
 		return staticCreateNaturalIdKey( naturalIdValues, persister, session );
 	}
 
 	@Override
-	public Object getEntityId(Object cacheKey) {
+	@Nonnull
+	public Object getEntityId(@Nonnull Object cacheKey) {
 		return staticGetEntityId( cacheKey );
 	}
 
 	@Override
-	public Object getCollectionId(Object cacheKey) {
+	@Nonnull
+	public Object getCollectionId(@Nonnull Object cacheKey) {
 		return staticGetCollectionId( cacheKey );
 	}
 
 	@Override
-	public Object getNaturalIdValues(Object cacheKey) {
+	@Nonnull
+	public Object getNaturalIdValues(@Nonnull Object cacheKey) {
 		return staticGetNaturalIdValues( cacheKey );
 	}
 }

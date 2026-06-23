@@ -5,6 +5,7 @@
 package org.hibernate.cache.spi.support;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -23,9 +24,9 @@ public abstract class AbstractEntityDataAccess
 	private final CacheKeysFactory cacheKeysFactory;
 
 	public AbstractEntityDataAccess(
-			DomainDataRegion region,
-			CacheKeysFactory cacheKeysFactory,
-			DomainDataStorageAccess storageAccess) {
+			@Nonnull DomainDataRegion region,
+			@Nonnull CacheKeysFactory cacheKeysFactory,
+			@Nonnull DomainDataStorageAccess storageAccess) {
 		super( region, storageAccess );
 		this.cacheKeysFactory = cacheKeysFactory;
 	}
@@ -33,10 +34,10 @@ public abstract class AbstractEntityDataAccess
 	@Override
 	@Nonnull
 	public Object generateCacheKey(
-			Object id,
-			EntityPersister rootEntityDescriptor,
-			SessionFactoryImplementor factory,
-			String tenantIdentifier) {
+			@Nonnull Object id,
+			@Nonnull EntityPersister rootEntityDescriptor,
+			@Nonnull SessionFactoryImplementor factory,
+			@Nullable String tenantIdentifier) {
 		return cacheKeysFactory.createEntityKey(
 				id,
 				rootEntityDescriptor,
@@ -46,31 +47,35 @@ public abstract class AbstractEntityDataAccess
 	}
 
 	@Override
-	public Object getCacheKeyId(Object cacheKey) {
+	@Nonnull
+	public Object getCacheKeyId(@Nonnull Object cacheKey) {
 		return cacheKeysFactory.getEntityId( cacheKey );
 	}
 
 	@Override
+	@Nullable
 	public SoftLock lockRegion() {
 		return null;
 	}
 
 	@Override
-	public void unlockRegion(SoftLock lock) {
+	public void unlockRegion(@Nullable SoftLock lock) {
 		clearCache();
 	}
 
+	@Override
+	@Nullable
 	public SoftLock lockItem(
-			SharedSessionContractImplementor session,
-			Object key,
-			Object version) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable Object version) {
 		return null;
 	}
 
 	@Override
 	public void unlockItem(
-			SharedSessionContractImplementor session,
-			Object key,
-			SoftLock lock) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object key,
+			@Nullable SoftLock lock) {
 	}
 }

@@ -32,6 +32,7 @@ public abstract class RegionFactoryTemplate extends AbstractRegionFactory {
 		);
 	}
 
+	@Nonnull
 	protected CacheKeysFactory getImplicitCacheKeysFactory() {
 		return DefaultCacheKeysFactory.INSTANCE;
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.cache.spi.support;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
@@ -20,11 +23,11 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 public class DomainDataRegionImpl extends DomainDataRegionTemplate {
 
 	public DomainDataRegionImpl(
-			DomainDataRegionConfig regionConfig,
-			RegionFactoryTemplate regionFactory,
-			DomainDataStorageAccess domainDataStorageAccess,
-			CacheKeysFactory defaultKeysFactory,
-			DomainDataRegionBuildingContext buildingContext) {
+			@Nonnull DomainDataRegionConfig regionConfig,
+			@Nonnull RegionFactoryTemplate regionFactory,
+			@Nonnull DomainDataStorageAccess domainDataStorageAccess,
+			@Nullable CacheKeysFactory defaultKeysFactory,
+			@Nonnull DomainDataRegionBuildingContext buildingContext) {
 		super(
 				regionConfig,
 				regionFactory,
@@ -35,7 +38,8 @@ public class DomainDataRegionImpl extends DomainDataRegionTemplate {
 	}
 
 	@Override
-	protected EntityDataAccess generateTransactionalEntityDataAccess(EntityDataCachingConfig entityAccessConfig) {
+	@Nonnull
+	protected EntityDataAccess generateTransactionalEntityDataAccess(@Nonnull EntityDataCachingConfig entityAccessConfig) {
 		return new EntityTransactionalAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -45,7 +49,8 @@ public class DomainDataRegionImpl extends DomainDataRegionTemplate {
 	}
 
 	@Override
-	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(NaturalIdDataCachingConfig accessConfig) {
+	@Nonnull
+	protected NaturalIdDataAccess generateTransactionalNaturalIdDataAccess(@Nonnull NaturalIdDataCachingConfig accessConfig) {
 		return new NaturalIdTransactionalAccess(
 				this,
 				getEffectiveKeysFactory(),
@@ -55,7 +60,8 @@ public class DomainDataRegionImpl extends DomainDataRegionTemplate {
 	}
 
 	@Override
-	protected CollectionDataAccess generateTransactionalCollectionDataAccess(CollectionDataCachingConfig accessConfig) {
+	@Nonnull
+	protected CollectionDataAccess generateTransactionalCollectionDataAccess(@Nonnull CollectionDataCachingConfig accessConfig) {
 		return new CollectionTransactionAccess(
 				this,
 				getEffectiveKeysFactory(),

@@ -4,8 +4,12 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Collection;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,14 +33,15 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	}
 
 	@Override
+	@Nonnull
 	public TimestampsRegion getRegion() {
 		return timestampsRegion;
 	}
 
 	@Override
 	public void preInvalidate(
-			String[] spaces,
-			SharedSessionContractImplementor session) {
+			@Nonnull String[] spaces,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		final var regionFactory = factory.getCache().getRegionFactory();
 		final var statistics = factory.getStatistics();
@@ -78,8 +83,8 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 
 	@Override
 	public void invalidate(
-			String[] spaces,
-			SharedSessionContractImplementor session) {
+			@Nonnull String[] spaces,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		final var statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
@@ -118,9 +123,9 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 
 	@Override
 	public boolean isUpToDate(
-			String[] spaces,
-			Long timestamp,
-			SharedSessionContractImplementor session) {
+			@Nonnull String[] spaces,
+			@Nonnull Long timestamp,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var statistics = session.getFactory().getStatistics();
 		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
@@ -131,10 +136,10 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	}
 
 	private boolean isSpaceOutOfDate(
-			String space,
-			Long timestamp,
-			SharedSessionContractImplementor session,
-			StatisticsImplementor statistics) {
+			@Nonnull String space,
+			@Nonnull Long timestamp,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull StatisticsImplementor statistics) {
 		final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
 		if ( lastUpdate == null ) {
 			// the last update timestamp for the given space was evicted from the
@@ -155,9 +160,9 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 
 	@Override
 	public boolean isUpToDate(
-			Collection<String> spaces,
-			Long timestamp,
-			SharedSessionContractImplementor session) {
+			@Nonnull Collection<String> spaces,
+			@Nonnull Long timestamp,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var statistics = session.getFactory().getStatistics();
 		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
@@ -167,7 +172,10 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		return true;
 	}
 
-	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
+	@Nullable
+	private Long getLastUpdateTimestampForSpace(
+			@Nonnull String space,
+			@Nonnull SharedSessionContractImplementor session) {
 		boolean found = false;
 		final var eventMonitor = session.getEventMonitor();
 		final var eventListenerManager = session.getEventListenerManager();
@@ -184,4 +192,8 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		}
 	}
 
+	@Override
+	public void clear() throws CacheException {
+		getRegion().clear();
+	}
 }

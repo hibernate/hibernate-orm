@@ -34,6 +34,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SettingProvider;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -237,7 +238,7 @@ public class PendingBulkOperationCleanupActionTest {
 		}
 
 		@Override
-		public EntityDataAccess generateEntityAccess(EntityDataCachingConfig entityAccessConfig) {
+		public EntityDataAccess generateEntityAccess(@NonNull EntityDataCachingConfig entityAccessConfig) {
 			if ( testEntityDataAccess == null ) {
 				testEntityDataAccess = new TestEntityDataAccess(
 						this,
@@ -271,20 +272,20 @@ public class PendingBulkOperationCleanupActionTest {
 		}
 
 		@Override
-		public boolean insert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
+		public boolean insert(@NonNull SharedSessionContractImplementor session, @NonNull Object key, @NonNull Object value, Object version) {
 			return false;
 		}
 
 		@Override
-		public boolean afterInsert(SharedSessionContractImplementor session, Object key, Object value, Object version) {
+		public boolean afterInsert(@NonNull SharedSessionContractImplementor session, @NonNull Object key, @NonNull Object value, Object version) {
 			return false;
 		}
 
 		@Override
 		public boolean update(
-				SharedSessionContractImplementor session,
-				Object key,
-				Object value,
+				@NonNull SharedSessionContractImplementor session,
+				@NonNull Object key,
+				@NonNull Object value,
 				Object currentVersion,
 				Object previousVersion) {
 			return false;
@@ -292,9 +293,9 @@ public class PendingBulkOperationCleanupActionTest {
 
 		@Override
 		public boolean afterUpdate(
-				SharedSessionContractImplementor session,
-				Object key,
-				Object value,
+				@NonNull SharedSessionContractImplementor session,
+				@NonNull Object key,
+				@NonNull Object value,
 				Object currentVersion,
 				Object previousVersion,
 				SoftLock lock) {
@@ -302,8 +303,9 @@ public class PendingBulkOperationCleanupActionTest {
 		}
 
 		@Override
+		@Nonnull
 		public AccessType getAccessType() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

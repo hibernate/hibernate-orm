@@ -4,8 +4,12 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Collection;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -18,35 +22,40 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public class TimestampsCacheDisabledImpl implements TimestampsCache {
 	@Override
+	@Nullable
 	public TimestampsRegion getRegion() {
 		return null;
 	}
 
 	@Override
-	public void preInvalidate(String[] spaces, SharedSessionContractImplementor session) {
+	public void preInvalidate(@Nonnull String[] spaces, @Nonnull SharedSessionContractImplementor session) {
 		//noop
 	}
 
 	@Override
-	public void invalidate(String[] spaces, SharedSessionContractImplementor session) {
+	public void invalidate(@Nonnull String[] spaces, @Nonnull SharedSessionContractImplementor session) {
 		//noop
 	}
 
 	@Override
 	public boolean isUpToDate(
-			String[] spaces,
-			Long timestamp,
-			SharedSessionContractImplementor session) {
+			@Nonnull String[] spaces,
+			@Nonnull Long timestamp,
+			@Nonnull SharedSessionContractImplementor session) {
 		//noop
 		return false;
 	}
 
 	@Override
 	public boolean isUpToDate(
-			Collection<String> spaces,
-			Long timestamp,
-			SharedSessionContractImplementor session) {
+			@Nonnull Collection<String> spaces,
+			@Nonnull Long timestamp,
+			@Nonnull SharedSessionContractImplementor session) {
 		//noop
 		return false;
+	}
+
+	@Override
+	public void clear() throws CacheException {
 	}
 }

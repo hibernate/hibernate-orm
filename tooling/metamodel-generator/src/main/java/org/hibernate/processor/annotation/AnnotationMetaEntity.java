@@ -15,6 +15,7 @@ import org.hibernate.processor.ImportContextImpl;
 import org.hibernate.processor.ProcessLaterException;
 import org.hibernate.processor.model.ImportContext;
 import org.hibernate.processor.model.MetaAttribute;
+import org.hibernate.processor.spi.QuarkusDataTypeNames;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
@@ -647,6 +648,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addRepositoryMembers(TypeElement element) {
+		final QuarkusDataTypeNames typeNames = context.quarkusDataTypeNames();
 		Element managedBlockingRepository = null;
 		Element statelessBlockingRepository = null;
 		Element managedReactiveRepository = null;
@@ -660,19 +662,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					continue;
 				}
 				if ( implementsInterface( (TypeElement) enclosedElement,
-						Constants.QUARKUS_DATA_MANAGED_BLOCKING_REPOSITORY_BASE ) ) {
+						typeNames.managedBlockingRepositoryBase() ) ) {
 					managedBlockingRepository = enclosedElement;
 				}
 				else if ( implementsInterface( (TypeElement) enclosedElement,
-						Constants.QUARKUS_DATA_STATELESS_BLOCKING_REPOSITORY_BASE ) ) {
+						typeNames.statelessBlockingRepositoryBase() ) ) {
 					statelessBlockingRepository = enclosedElement;
 				}
 				else if ( implementsInterface( (TypeElement) enclosedElement,
-						Constants.QUARKUS_DATA_MANAGED_REACTIVE_REPOSITORY_BASE ) ) {
+						typeNames.managedReactiveRepositoryBase() ) ) {
 					managedReactiveRepository = enclosedElement;
 				}
 				else if ( implementsInterface( (TypeElement) enclosedElement,
-						Constants.QUARKUS_DATA_STATELESS_REACTIVE_REPOSITORY_BASE ) ) {
+						typeNames.statelessReactiveRepositoryBase() ) ) {
 					statelessReactiveRepository = enclosedElement;
 				}
 			}
@@ -681,15 +683,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			// FIXME: perhaps import id type?
 			final var idType = findIdType();
 			addAccessors( managedBlockingRepository, idType, "managedBlocking",
-					QUARKUS_DATA_MANAGED_BLOCKING_REPOSITORY_BASE, nestedRepositories );
+					typeNames.managedBlockingRepositoryBase(), nestedRepositories );
 			addAccessors( statelessBlockingRepository, idType, "statelessBlocking",
-					QUARKUS_DATA_STATELESS_BLOCKING_REPOSITORY_BASE, nestedRepositories );
+					typeNames.statelessBlockingRepositoryBase(), nestedRepositories );
 			// Only add those if HR is in the classpath, otherwise it causes a compilation issue
 			if ( context.usesQuarkusReactiveCommon() ) {
 				addAccessors( managedReactiveRepository, idType, "managedReactive",
-						QUARKUS_DATA_MANAGED_REACTIVE_REPOSITORY_BASE, nestedRepositories );
+						typeNames.managedReactiveRepositoryBase(), nestedRepositories );
 				addAccessors( statelessReactiveRepository, idType, "statelessReactive",
-						QUARKUS_DATA_STATELESS_REACTIVE_REPOSITORY_BASE, nestedRepositories );
+						typeNames.statelessReactiveRepositoryBase(), nestedRepositories );
 			}
 		}
 	}
@@ -1139,7 +1141,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					repository = true;
 					sessionType = addRepositoryConstructor( getter );
 				}
-				else if ( !isQuarkusDataRepository( element ) && !isQuarkusDataType( element ) ) {
+				else if ( !isQuarkusDataRepository( element, context.quarkusDataTypeNames() ) && !isQuarkusDataType( element ) ) {
 					// For Panache 1 subtypes, we look at the session type, but no DAO,
 					// we want static methods
 					sessionType = fullReturnType( getter );
@@ -1299,15 +1301,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean isQuarkusDataType(TypeElement type) {
-		return implementsInterface( type, QUARKUS_DATA_ENTITY_MARKER )
-			|| isQuarkusDataRepository( type );
+		final QuarkusDataTypeNames typeNames = context.quarkusDataTypeNames();
+		return implementsInterface( type, typeNames.entityMarker() )
+			|| isQuarkusDataRepository( type, typeNames );
 	}
 
-	public static boolean isQuarkusDataRepository(TypeElement type) {
-		return implementsInterface( type, QUARKUS_DATA_MANAGED_BLOCKING_REPOSITORY_BASE )
-			|| implementsInterface( type, QUARKUS_DATA_STATELESS_BLOCKING_REPOSITORY_BASE )
-			|| implementsInterface( type, QUARKUS_DATA_MANAGED_REACTIVE_REPOSITORY_BASE )
-			|| implementsInterface( type, QUARKUS_DATA_STATELESS_REACTIVE_REPOSITORY_BASE );
+	public static boolean isQuarkusDataRepository(TypeElement type, QuarkusDataTypeNames typeNames) {
+		return implementsInterface( type, typeNames.managedBlockingRepositoryBase() )
+			|| implementsInterface( type, typeNames.statelessBlockingRepositoryBase() )
+			|| implementsInterface( type, typeNames.managedReactiveRepositoryBase() )
+			|| implementsInterface( type, typeNames.statelessReactiveRepositoryBase() );
 	}
 
 	/**
@@ -1360,8 +1363,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private String setupQuarkusRepositoryConstructor(@Nullable ExecutableElement getter, @Nullable TypeElement element) {
 		// FIXME: probably go in this branch if we have a getter too?
 		if ( isBlockingFavored( element ) ) {
-			final var name = quarkusSessionGetterName( getter, element );
-			final var sessionType = quarkusSessionType( getter, element );
+			final var typeNames = context.quarkusDataTypeNames();
+			final var name = quarkusSessionGetterName( getter, element, typeNames );
+			final var sessionType = quarkusSessionType( getter, element, typeNames );
 			putMember( name,
 					new RepositoryConstructor(
 							this,
@@ -1382,7 +1386,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			importType( Constants.QUARKUS_SESSION_OPERATIONS );
 			// use this getter to get the method, do not generate an injection point for its type
-			if ( element != null && isQuarkusDataStatelessReactiveRepository( element ) ) {
+			if ( element != null && isQuarkusDataStatelessReactiveRepository( element, context.quarkusDataTypeNames() ) ) {
 				sessionGetter = "SessionOperations.getStatelessSession()";
 				return UNI_MUTINY_STATELESS_SESSION;
 			}
@@ -1393,11 +1397,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static String quarkusSessionGetterName(@Nullable ExecutableElement getter, @Nullable TypeElement element) {
+	private static String quarkusSessionGetterName(@Nullable ExecutableElement getter, @Nullable TypeElement element,
+			QuarkusDataTypeNames typeNames) {
 		if ( getter != null ) {
 			return getter.getSimpleName().toString();
 		}
-		else if ( element != null && isQuarkusDataStatelessBlockingRepository( element ) ) {
+		else if ( element != null && isQuarkusDataStatelessBlockingRepository( element, typeNames ) ) {
 			return "getStatelessSession";
 		}
 		else { // good default
@@ -1405,11 +1410,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private String quarkusSessionType(@Nullable ExecutableElement getter, @Nullable TypeElement element) {
+	private String quarkusSessionType(@Nullable ExecutableElement getter, @Nullable TypeElement element,
+			QuarkusDataTypeNames typeNames) {
 		if ( getter != null ) {
 			return fullReturnType( getter );
 		}
-		else if ( element != null && isQuarkusDataStatelessBlockingRepository( element ) ) {
+		else if ( element != null && isQuarkusDataStatelessBlockingRepository( element, typeNames ) ) {
 			return HIB_STATELESS_SESSION;
 		}
 		else { // good default
@@ -1419,9 +1425,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean isBlockingFavored(@Nullable TypeElement element) {
 		if ( element != null ) {
+			final QuarkusDataTypeNames typeNames = context.quarkusDataTypeNames();
 			if ( context.usesQuarkusDataHibernate()
-					&& isQuarkusDataRepository( element ) ) {
-				return isQuarkusDataBlockingRepository( element );
+					&& isQuarkusDataRepository( element, typeNames ) ) {
+				return isQuarkusDataBlockingRepository( element, typeNames );
 			}
 			else {
 				// look for any annotated method, see if they return a Uni
@@ -1436,17 +1443,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return context.usesQuarkusOrm();
 	}
 
-	private static boolean isQuarkusDataBlockingRepository(@Nonnull TypeElement element) {
-		return implementsInterface( element, QUARKUS_DATA_MANAGED_BLOCKING_REPOSITORY_BASE )
-			|| implementsInterface( element, QUARKUS_DATA_STATELESS_BLOCKING_REPOSITORY_BASE );
+	private static boolean isQuarkusDataBlockingRepository(@Nonnull TypeElement element, QuarkusDataTypeNames typeNames) {
+		return implementsInterface( element, typeNames.managedBlockingRepositoryBase() )
+			|| implementsInterface( element, typeNames.statelessBlockingRepositoryBase() );
 	}
 
-	private static boolean isQuarkusDataStatelessReactiveRepository(@Nonnull TypeElement element) {
-		return implementsInterface( element, QUARKUS_DATA_STATELESS_REACTIVE_REPOSITORY_BASE );
+	private static boolean isQuarkusDataStatelessReactiveRepository(@Nonnull TypeElement element, QuarkusDataTypeNames typeNames) {
+		return implementsInterface( element, typeNames.statelessReactiveRepositoryBase() );
 	}
 
-	private static boolean isQuarkusDataStatelessBlockingRepository(@Nonnull TypeElement element) {
-		return implementsInterface( element, QUARKUS_DATA_STATELESS_BLOCKING_REPOSITORY_BASE );
+	private static boolean isQuarkusDataStatelessBlockingRepository(@Nonnull TypeElement element, QuarkusDataTypeNames typeNames) {
+		return implementsInterface( element, typeNames.statelessBlockingRepositoryBase() );
 	}
 
 	/**

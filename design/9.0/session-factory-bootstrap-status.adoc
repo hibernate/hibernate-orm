@@ -82,6 +82,12 @@ Current routing:
 Longer term, these native surfaces should converge on a smaller replacement
 native bootstrap API before deprecation.
 
+Cleanup reminder: once that replacement API is concrete, mark the remaining
+legacy staged bootstrap contracts as deprecated and `@Remove`.  Cover
+`MetadataBuilder`, `MetadataSources`, `Metadata`, staged `Configuration`
+entry points, and any surviving `SessionFactoryBuilder` /
+`EntityManagerFactoryBuilder` API, SPI, service, or implementation classes.
+
 == Construction Handoff
 
 The construction seam is implemented:

@@ -270,6 +270,14 @@ only after the replacement native workflow is concrete enough to be named in
 deprecation messages.  The public `SessionFactoryBuilder` surface has already
 been removed on this branch.
 
+When that replacement workflow is named, remember to go back through the legacy
+staged bootstrap APIs and mark the remaining public compatibility contracts as
+deprecated and `@Remove`.  This includes `MetadataBuilder`, `MetadataSources`,
+`Metadata`, `Configuration` entry points that only exist to support staged
+metadata building, and any surviving `SessionFactoryBuilder` /
+`EntityManagerFactoryBuilder` friends in API, SPI, service, or implementation
+packages.
+
 Before deprecation, the branch should satisfy these conditions:
 
 * Native source contribution has a replacement for the supported

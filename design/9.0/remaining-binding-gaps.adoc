@@ -2114,6 +2114,11 @@ These should not be rediscovered as binder gaps unless the ORM 9 scope changes:
 * `AvailableSettings.CFG_XML_FILE`;
 * public `EntityManagerFactoryBuilder`;
 * public `SessionFactoryBuilder`;
+* follow-up deprecation / `@Remove` marking for legacy staged bootstrap
+  contracts once replacement native bootstrap guidance is concrete, including
+  `MetadataBuilder`, `MetadataSources`, `Metadata`, staged `Configuration`
+  entry points, and any surviving builder API/SPI/service/implementation
+  friends;
 * `@SelectBeforeUpdate` as a Hibernate annotation;
 * dynamic XML mapped-superclass support, meaning `<mapped-superclass/>` without
   a backing Java class;

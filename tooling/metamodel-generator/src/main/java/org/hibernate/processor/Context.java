@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.hibernate.processor.spi.QuarkusDataTypeNames;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -108,6 +111,8 @@ public final class Context {
 	private boolean usesQuarkusReactive = false;
 	private boolean usesQuarkusDataHibernate = false;
 	private boolean usesQuarkusReactiveCommon = false;
+
+	private QuarkusDataTypeNames quarkusDataTypeNames;
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
@@ -493,6 +498,14 @@ public final class Context {
 
 	public boolean usesQuarkusDataHibernate() {
 		return usesQuarkusDataHibernate;
+	}
+
+	public void setQuarkusDataTypeNames(QuarkusDataTypeNames quarkusDataTypeNames) {
+		this.quarkusDataTypeNames = quarkusDataTypeNames;
+	}
+
+	public QuarkusDataTypeNames quarkusDataTypeNames() {
+		return quarkusDataTypeNames;
 	}
 
 	public void setUsesQuarkusReactiveCommon(boolean b) {

@@ -3721,6 +3721,13 @@
                                     </xsd:documentation>
                                 </xsd:annotation>
                             </xsd:element>
+                            <xsd:element name="map-key-jdbc-type-code" type="xsd:int" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>
+                                        @org.hibernate.annotations.MapKeyJdbcTypeCode
+                                    </xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
                         </xsd:sequence>
                         <xsd:sequence>
                             <xsd:element name="map-key-join-column" type="orm:map-key-join-column" minOccurs="0" maxOccurs="unbounded"/>

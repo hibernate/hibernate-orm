@@ -174,6 +174,10 @@ public class CommonPluralAttributeProcessing {
 			XmlAnnotationHelper.applyMapKeyJdbcTypeDescriptor( jaxbPluralAttribute.getMapKeyJdbcType(), memberDetails, xmlDocumentContext );
 		}
 
+		if ( jaxbPluralAttribute.getMapKeyJdbcTypeCode() != null ) {
+			XmlAnnotationHelper.applyMapKeyJdbcTypeCode( jaxbPluralAttribute.getMapKeyJdbcTypeCode(), memberDetails, xmlDocumentContext );
+		}
+
 		JoinColumnProcessing.applyMapKeyJoinColumns(
 				jaxbPluralAttribute.getMapKeyJoinColumns(),
 				memberDetails,

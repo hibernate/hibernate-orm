@@ -9,6 +9,8 @@ import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
 import org.hibernate.processor.annotation.NonManagedMetamodel;
 import org.hibernate.processor.model.Metamodel;
+import org.hibernate.processor.spi.DefaultQuarkusDataTypeNames;
+import org.hibernate.processor.spi.QuarkusDataTypeNames;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.xml.JpaDescriptorParser;
 
@@ -37,6 +39,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -283,9 +287,11 @@ public class HibernateProcessor extends AbstractProcessor {
 		var quarkusOrmPanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.orm.panache" );
+		final var quarkusDataTypeNames = loadQuarkusDataTypeNames();
+		context.setQuarkusDataTypeNames( quarkusDataTypeNames );
 		var quarkusDataHibernatePackage =
 				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "io.quarkus.data.hibernate" );
+						.getPackageElement( quarkusDataTypeNames.packageName() );
 		var quarkusReactivePanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.reactive.panache" );
@@ -358,6 +364,16 @@ public class HibernateProcessor extends AbstractProcessor {
 		return pack != null
 			//HHH-18019 ecj always returns a non-null PackageElement
 			&& !pack.getEnclosedElements().isEmpty();
+	}
+
+	private static QuarkusDataTypeNames loadQuarkusDataTypeNames() {
+		final Iterator<QuarkusDataTypeNames> iterator =
+				ServiceLoader.load( QuarkusDataTypeNames.class, QuarkusDataTypeNames.class.getClassLoader() )
+						.iterator();
+		if ( iterator.hasNext() ) {
+			return iterator.next();
+		}
+		return new DefaultQuarkusDataTypeNames();
 	}
 
 	@Override
@@ -584,7 +600,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private boolean isImplicitRepository(TypeElement typeElement) {
-		if ( AnnotationMetaEntity.isQuarkusDataRepository( typeElement ) ) {
+		if ( AnnotationMetaEntity.isQuarkusDataRepository( typeElement, context.quarkusDataTypeNames() ) ) {
 			return true;
 		}
 		for ( var member : typeElement.getEnclosedElements() ) {

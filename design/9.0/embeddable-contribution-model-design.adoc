@@ -452,6 +452,13 @@ A conservative migration path:
    where it currently reverse-engineers subtype, discriminator, and declaring
    class state from `Component`.
 
+During the `MetadataBuildingProcess` transition, these contribution and
+component-mapping products should remain internal to the new pipeline or be
+projected into the legacy-compatible `Component` shape.  Do not attach new
+descriptor state to shared `org.hibernate.mapping` contracts as authoritative
+state unless legacy boot also populates that same state, or until legacy boot no
+longer exposes the same mapping objects to runtime consumers.
+
 == Open Questions
 
 * Should `ComponentSource` evolve directly into `EmbeddableContribution`, or

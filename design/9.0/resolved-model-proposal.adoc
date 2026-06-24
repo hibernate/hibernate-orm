@@ -167,6 +167,12 @@ a real ambiguity, preserves source/application correspondence, or lets current
 consumers continue using compatibility views without forcing the old flattened
 shape to be the only source of truth.
 
+While `MetadataBuildingProcess` remains an active boot path, this rule has an
+extra guardrail: new descriptor/contribution state should not be attached to
+shared mapping contracts unless both boot paths populate it as authoritative
+state.  Until then, keep richer resolved intent inside the new pipeline and
+project it into the legacy-compatible `org.hibernate.mapping` shape.
+
 == Near-Term Implementation Rule
 
 The first implementation slices should build enough horizontal binding model to

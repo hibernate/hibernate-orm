@@ -32,6 +32,12 @@ The current ORM 9 boot pipeline therefore has better identifier binding
 ownership than before, but it still uses legacy-compatible mapping objects as
 the main semantic bridge for non-aggregated identifier representation.
 
+While `MetadataBuildingProcess` remains an active boot path, identifier
+correspondence should remain an internal boot/runtime product unless legacy boot
+also populates the same state.  The new pipeline should continue to materialize
+the legacy-compatible identifier mapping shape until correspondence can be the
+authoritative representation for all supported boot paths.
+
 == Relationship To Key Creation
 
 This design is related to, but separate from,

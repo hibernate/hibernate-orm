@@ -2124,10 +2124,13 @@ These should not be rediscovered as binder gaps unless the ORM 9 scope changes:
   a backing Java class;
 * constructor-level `@Instantiator` binding until Hibernate Models exposes the
   needed constructor-target annotation metadata in a new release;
-* boot-model `StateManagementDescriptor` support on shared mapping contracts
-  while `MetadataBuildingProcess` remains active.  Current state-management
-  support should continue to project through the compatibility bridge described
-  in `state-management-design.adoc`.
+* boot-model descriptor/contribution state on shared mapping contracts while
+  `MetadataBuildingProcess` remains active, including
+  `StateManagementDescriptor`, aggregate `ComponentStorage`, mapped-superclass
+  and embeddable contribution descriptors, and identifier correspondence.
+  Current support should continue to project through the compatibility bridges
+  described in the focused design docs until those products can become
+  authoritative for all supported boot paths.
 
 Remaining XML/runtime vestiges of removed features should be cleaned up in their
 own slices rather than silently reintroduced through the new pipeline.

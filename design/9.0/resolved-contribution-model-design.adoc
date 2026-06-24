@@ -34,6 +34,13 @@ Binding should preserve source and application correspondence.  Legacy
 `org.hibernate.mapping` objects should be materialized compatibility views, not
 the only semantic record.
 
+While `MetadataBuildingProcess` remains an active boot path, this means richer
+resolved contribution state should live inside the new pipeline and be projected
+into legacy-compatible mapping shapes.  Do not attach new descriptor or
+contribution state to shared mapping contracts as authoritative state unless
+legacy boot also populates that state, or until legacy boot no longer exposes
+the same mapping objects to runtime and schema consumers.
+
 In practical terms:
 
 * source declaration order is preserved as source information;

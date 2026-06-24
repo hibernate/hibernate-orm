@@ -4,6 +4,14 @@
 These are concrete `org.hibernate.mapping` changes suggested by the phased binder prototype.
 They are separate from prototype implementation details: the point is to remember which pieces should move into ORM proper when integrating this work.
 
+Transition rule: while `MetadataBuildingProcess` remains an active boot path,
+new-pipeline-only resolved intent should be projected into the legacy-compatible
+mapping shape rather than attached to shared `org.hibernate.mapping` contracts
+as authoritative state.  The changes below become direct mapping-model changes
+when both boot paths can populate them consistently, or when the legacy path has
+been removed far enough that runtime and schema consumers have one source of
+truth.
+
 
 == Represent custom SQL mutations as one mapping value
 

@@ -104,6 +104,7 @@ import org.hibernate.boot.models.annotations.internal.IndexJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyJavaTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyJdbcTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
@@ -1198,6 +1199,21 @@ public class XmlAnnotationHelper {
 				.getClassDetailsRegistry()
 				.resolveClassDetails( descriptorClassName );
 		typeAnn.value( descriptorClass.toJavaClass() );
+	}
+
+	public static void applyMapKeyJdbcTypeDescriptor(
+			String descriptorClassName,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final ClassDetails descriptorClassDetails = xmlDocumentContext
+				.getModelBuildingContext()
+				.getClassDetailsRegistry()
+				.resolveClassDetails( descriptorClassName );
+		final MapKeyJdbcTypeAnnotation jdbcTypeAnn = (MapKeyJdbcTypeAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.MAP_KEY_JDBC_TYPE,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		jdbcTypeAnn.value( descriptorClassDetails.toJavaClass() );
 	}
 
 	private static void applyJdbcTypeDescriptor(

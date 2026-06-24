@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <entity class="org.hibernate.orm.test.boot.models.xml.attr.ElementCollectionTests$SimpleEntity" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <element-collection name="data" classification="MAP">
+                <map-key-column name="data_key"/>
+                <map-key-java-type>org.hibernate.type.descriptor.java.StringJavaType</map-key-java-type>
+                <column name="data_value"/>
+                <collection-table name="entity_data">
+                    <join-column name="entity_id"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>

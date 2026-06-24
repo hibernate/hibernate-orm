@@ -25,6 +25,9 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -295,6 +298,8 @@ public class SmokeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Benchmark/concurrency test takes too long on Spanner Emulator")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Benchmark/concurrency test takes too long on Spanner Emulator")
 	public void testQueryConcurrency(SessionFactoryScope scope) throws InterruptedException {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();

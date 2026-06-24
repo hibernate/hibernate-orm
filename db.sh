@@ -1106,50 +1106,48 @@ spanner_pg() {
 
 spanner_emulator() {
   local dialect=${1:-GOOGLE_STANDARD_SQL}
-  DB_COUNT=$(( DB_COUNT * 2 ))
-  if [[ $DB_COUNT -gt 4 ]]; then
-    DB_COUNT=4
-  fi
+  local db_count=${DB_COUNT}
 
   compose_down "spanner"
 
-  # Start all emulator containers using compose
-  for n in $(seq 1 ${DB_COUNT}); do
-    local container_name="spanner_${n}"
-    local port=$((9010 + n))
-    local rest_port=$((9020 + n))
+  # Start ONLY ONE emulator container
+  local container_name="spanner"
+  local port=9010
+  local rest_port=9020
 
-    echo "Starting Spanner emulator instance ${n} on port ${port}..."
-    SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
-      $CONTAINER_CLI compose -p "${COMPOSE_PROJECT}_spanner_${n}" -f "docker-compose/latest/spanner/docker-compose.yaml" up -d $COMPOSE_WAIT
-    if [[ -z "$COMPOSE_WAIT" ]]; then
-        SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
-          compose_wait 120 -p "${COMPOSE_PROJECT}_spanner_${n}" -f "docker-compose/latest/spanner/docker-compose.yaml"
-    fi
-  done
+  echo "Starting Spanner emulator..."
+  SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
+    $CONTAINER_CLI compose -p "${COMPOSE_PROJECT}_spanner" -f "docker-compose/latest/spanner/docker-compose.yaml" up -d $COMPOSE_WAIT
+  if [[ -z "$COMPOSE_WAIT" ]]; then
+      SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
+        compose_wait 120 -p "${COMPOSE_PROJECT}_spanner" -f "docker-compose/latest/spanner/docker-compose.yaml"
+  fi
 
-  # Configure instances
-  for n in $(seq 1 ${DB_COUNT}); do
-    local rest_port=$((9020 + n))
-    echo "Configuring Spanner emulator instance ${n} on port ${rest_port}..."
-    local host="localhost:${rest_port}"
+  # Configure instance (only one instance needed)
+  local host="localhost:${rest_port}"
+  echo "Configuring Spanner emulator instance on port ${rest_port}..."
+
+  curl -s -X POST "http://${host}/v1/projects/orm-test-project/instances" \
+    -H "Content-Type: application/json" \
+    -d '{
+          "instanceId": "orm-test-instance",
+          "instance": {
+            "config": "emulator-config",
+            "displayName": "Test Instance",
+            "nodeCount": 1
+          }
+        }' >/dev/null || true
+
+  # Create multiple databases
+  for n in $(seq 1 ${db_count}); do
+    local db_name="orm-test-db_${n}"
+    echo "Creating Spanner emulator database ${db_name}..."
     local create_statement
 
-    curl -s -X POST "http://${host}/v1/projects/orm-test-project/instances" \
-      -H "Content-Type: application/json" \
-      -d '{
-            "instanceId": "orm-test-instance",
-            "instance": {
-              "config": "emulator-config",
-              "displayName": "Test Instance",
-              "nodeCount": 1
-            }
-          }' >/dev/null || true
-
     if [[ "$dialect" == "POSTGRESQL" ]]; then
-       create_statement="CREATE DATABASE \"orm-test-db\""
+       create_statement="CREATE DATABASE \"${db_name}\""
     else
-       create_statement="CREATE DATABASE \`orm-test-db\`"
+       create_statement="CREATE DATABASE \`${db_name}\`"
     fi
 
     curl -s -X POST "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases" \
@@ -1161,12 +1159,12 @@ spanner_emulator() {
 
     local update_statements=""
     if [[ "$dialect" == "POSTGRESQL" ]]; then
-      update_statements='"ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = '"'UTC'"'", "ALTER DATABASE \"orm-test-db\" SET \"spanner.version_retention_period\" = '"'10s'"'"'
+      update_statements='"ALTER DATABASE \"'"${db_name}"'\" SET \"spanner.default_time_zone\" = '"'UTC'"'", "ALTER DATABASE \"'"${db_name}"'\" SET \"spanner.version_retention_period\" = '"'10s'"'"'
     else
-      update_statements='"ALTER DATABASE `orm-test-db` SET OPTIONS ( default_time_zone = '"'UTC'"', version_retention_period = '"'10s'"' )"'
+      update_statements='"ALTER DATABASE `'"${db_name}"'` SET OPTIONS ( default_time_zone = '"'UTC'"', version_retention_period = '"'10s'"' )"'
     fi
 
-    curl -s -X PATCH "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db/ddl" \
+    curl -s -X PATCH "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases/${db_name}/ddl" \
       -H "Content-Type: application/json" \
       -d '{
             "statements": [

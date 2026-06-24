@@ -1,6 +1,6 @@
 services:
   spanner:
-    image: ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.54@sha256:caf1bd24c081e005837b5977bae5a250e25cb4da9f25ec1abc91936ad67e4de2}
+    image: ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.55@sha256:9ebd95223201708874838c019e46da99c02f5960f8fe487e521b1503e25db7a6}
     container_name: ${SPANNER_CONTAINER_NAME:-spanner}
     ports:
       - "${SPANNER_GRPC_PORT:-9011}:9010"

@@ -62,7 +62,7 @@ shrinkwrap = "1.2.6"
 shrinkwrapDescriptors = "2.0.0"
 weld = "6.0.4.Final"
 wildFlyTxnClient = "3.0.5.Final"
-hibernateValidator = "9.1.0.Final"
+hibernateValidator = "9.1.1.Final"
 jaxen = "2.0.6"
 xerces = "2.12.2"
 dom4j = "2.2.0"
@@ -106,7 +106,7 @@ jsoup = "1.22.2"
 slf4j = "2.0.18"
 
 # Asciidocs
-hibernate-asciidoctor-theme = "6.1.2.Final"
+hibernate-asciidoctor-theme = "6.1.3.Final"
 hibernate-extensions = "3.2.1.Final"
 asciidoctorj = "3.0.0"
 

@@ -271,7 +271,8 @@ public class HbmXmlTransformer {
 		this.componentHandler = new HbmXmlTransformerComponentHandler(
 				transformationState.getEmbeddableInfoByRole(),
 				mappingXmlBinding.getRoot(),
-				this::transferBaseAttributes
+				this::transferBaseAttributes,
+				hbmXmlBinding.getRoot().getDefaultAccess()
 		);
 	}
 

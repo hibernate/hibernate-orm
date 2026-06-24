@@ -105,6 +105,7 @@ import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyJavaTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyJdbcTypeAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyJdbcTypeCodeAnnotation;
 import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
@@ -1214,6 +1215,21 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		jdbcTypeAnn.value( descriptorClassDetails.toJavaClass() );
+	}
+
+	public static void applyMapKeyJdbcTypeCode(
+			Integer jdbcTypeCode,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jdbcTypeCode == null ) {
+			return;
+		}
+
+		final MapKeyJdbcTypeCodeAnnotation typeCodeAnn = (MapKeyJdbcTypeCodeAnnotation) memberDetails.applyAnnotationUsage(
+				HibernateAnnotations.MAP_KEY_JDBC_TYPE_CODE,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		typeCodeAnn.value( jdbcTypeCode );
 	}
 
 	private static void applyJdbcTypeDescriptor(

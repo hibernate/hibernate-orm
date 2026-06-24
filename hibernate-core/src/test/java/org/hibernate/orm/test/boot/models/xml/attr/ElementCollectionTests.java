@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -69,6 +70,26 @@ public class ElementCollectionTests {
 		final MapKeyJdbcType mapKeyJdbcTypeAnn = dataField.getDirectAnnotationUsage( MapKeyJdbcType.class );
 		assertThat( mapKeyJdbcTypeAnn ).isNotNull();
 		assertThat( mapKeyJdbcTypeAnn.value() ).isEqualTo( VarcharJdbcType.class );
+	}
+
+	@Test
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void testMapKeyJdbcTypeCode(ServiceRegistryScope scope) {
+		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
+				.addXmlMappings( "mappings/models/attr/element-collection/map-key-jdbc-type-code.xml" )
+				.build();
+
+		final ModelsContext modelsContext = createBuildingContext( managedResources, serviceRegistry );
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+
+		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
+
+		final FieldDetails dataField = classDetails.findFieldByName( "data" );
+
+		final MapKeyJdbcTypeCode mapKeyJdbcTypeCodeAnn = dataField.getDirectAnnotationUsage( MapKeyJdbcTypeCode.class );
+		assertThat( mapKeyJdbcTypeCodeAnn ).isNotNull();
+		assertThat( mapKeyJdbcTypeCodeAnn.value() ).isEqualTo( java.sql.Types.VARCHAR );
 	}
 
 	@SuppressWarnings("unused")

@@ -29,6 +29,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.Generator;
@@ -45,7 +46,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
+import org.hibernate.type.CustomCollectionType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -62,12 +66,15 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Converter;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.Fetch;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.FieldResult;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -269,9 +276,156 @@ public class GlobalRegistrationBindingTests {
 					assertThat( metadata.getFetchProfiles() )
 							.anySatisfy( (fetchProfile) ->
 									assertThat( fetchProfile.getName() ).isEqualTo( "globalFetchProfile" ) );
+
+					final var bootTypeConfiguration = metadata.getTypeConfiguration();
+					try (var sessionFactory = metadata.buildSessionFactory()) {
+						final var runtimeTypeConfiguration = sessionFactory.getMappingMetamodel().getTypeConfiguration();
+						assertThat( runtimeTypeConfiguration ).isSameAs( bootTypeConfiguration );
+						assertThat( runtimeTypeConfiguration.getJavaTypeRegistry().findDescriptor( GlobalJavaTypeDomain.class ) )
+								.isInstanceOf( GlobalJavaType.class );
+						assertThat( runtimeTypeConfiguration.getJdbcTypeRegistry().getDescriptor( GlobalJdbcType.CODE ) )
+								.isInstanceOf( GlobalJdbcType.class );
+
+						final var entityDescriptor = sessionFactory.getMappingMetamodel()
+								.getEntityDescriptor( GlobalRegistrationEntity.class );
+						assertThat( entityDescriptor.getPropertyType( "globalUserTypeDomain" ) )
+								.isInstanceOf( CustomType.class );
+						entityDescriptor.getPropertyType( "globalEmbeddable" );
+						entityDescriptor.getPropertyType( "globalInstantiatedEmbeddable" );
+
+						final var collectionDescriptor = sessionFactory.getMappingMetamodel()
+								.getCollectionDescriptor( GlobalRegistrationEntity.class.getName() + ".globalBag" );
+						assertThat( collectionDescriptor.getCollectionSemantics() )
+								.isInstanceOf( CustomCollectionTypeSemantics.class );
+						final var semantics = (CustomCollectionTypeSemantics) collectionDescriptor.getCollectionSemantics();
+						assertThat( semantics.getCollectionType() ).isInstanceOf( CustomCollectionType.class );
+						final var collectionType = (CustomCollectionType) semantics.getCollectionType();
+						assertThat( collectionType.getUserType() ).isInstanceOf( GlobalCollectionType.class );
+						assertThat( ( (GlobalCollectionType) collectionType.getUserType() ).parameters )
+								.containsEntry( "role", "global" );
+					}
 				},
 				scope.getRegistry(),
 				GlobalRegistrationEntity.class,
+				UuidGeneratedEntity.class,
+				PlainConverter.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testNamedQueryRegistrationsResolveAtRuntime(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						final var namedObjectRepository = sessionFactory.getQueryEngine().getNamedObjectRepository();
+
+						assertThat( namedObjectRepository.getSelectionQueryMemento( "globalJpaQuery" ).getSelectionString() )
+								.isEqualTo( "from GlobalRegistrationEntity" );
+						assertThat( namedObjectRepository.getSelectionQueryMemento( "globalHibernateQuery" ).getSelectionString() )
+								.isEqualTo( "from GlobalRegistrationEntity" );
+						assertThat( namedObjectRepository.getSelectionQueryMemento( "globalNativeQuery" ).getSelectionString() )
+								.isEqualTo( "select * from global_registration_entities" );
+						assertThat( namedObjectRepository.getSelectionQueryMemento( "globalMappedNativeQuery" ).getSelectionString() )
+								.isEqualTo( "select id as id from global_registration_entities" );
+						assertThat( namedObjectRepository.getMutationQueryMemento( "globalJpaStatement" ) )
+								.isNotNull();
+						assertThat( namedObjectRepository.getMutationQueryMemento( "globalNativeStatement" ) )
+								.isNotNull();
+						assertThat( namedObjectRepository.getResultSetMappingMemento( "globalIdMapping" ) )
+								.isNotNull();
+						assertThat( namedObjectRepository.getResultSetMappingMemento( "globalEntityMapping" ) )
+								.isNotNull();
+						assertThat( namedObjectRepository.getResultSetMappingMemento( "globalConstructorMapping" ) )
+								.isNotNull();
+						final var procedureMemento = namedObjectRepository.getCallableQueryMemento( "globalProcedure" );
+						assertThat( procedureMemento.getCallableName() ).isEqualTo( "global_registration_procedure" );
+						assertThat( procedureMemento.getParameterMementos() ).singleElement();
+
+						try (var session = sessionFactory.openSession()) {
+							assertThat( session.createNamedQuery( "globalJpaQuery", GlobalRegistrationEntity.class ) )
+									.isNotNull();
+							assertThat( session.createNamedQuery( "globalHibernateQuery", GlobalRegistrationEntity.class ) )
+									.isNotNull();
+							assertThat( session.createNamedQuery( "globalNativeQuery" ) )
+									.isNotNull();
+							assertThat( session.createNamedQuery( "globalMappedNativeQuery" ) )
+									.isNotNull();
+							assertThat( session.createNamedMutationQuery( "globalJpaStatement" ) ).isNotNull();
+							assertThat( session.createNamedMutationQuery( "globalNativeStatement" ) ).isNotNull();
+							final var procedure = session.createNamedStoredProcedureQuery( "globalProcedure" );
+							assertThat( procedure.getProcedureName() )
+									.isEqualTo( "global_registration_procedure" );
+						}
+					}
+				},
+				scope.getRegistry(),
+				GlobalRegistrationEntity.class,
+				UuidGeneratedEntity.class,
+				PlainConverter.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAuxiliaryDatabaseObjectUsesMetadataHandoffCarrier(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var database = context.getMetadata().getDatabase();
+					final var sqlStringGenerationContext =
+							SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
+					assertThat( database.getAuxiliaryDatabaseObjects() )
+							.singleElement()
+							.satisfies( (auxiliaryDatabaseObject) -> {
+								assertThat( auxiliaryDatabaseObject.appliesToDialect( database.getDialect() ) ).isTrue();
+								assertThat( auxiliaryDatabaseObject.sqlCreateStrings( sqlStringGenerationContext ) )
+										.containsExactly( "create sequence binding_aux_sequence" );
+								assertThat( auxiliaryDatabaseObject.sqlDropStrings( sqlStringGenerationContext ) )
+										.containsExactly( "drop sequence binding_aux_sequence" );
+							} );
+				},
+				scope.getRegistry(),
+				List.of( "mappings/models/bind/auxiliary-database-object.xml" )
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdentifierGeneratorRegistrationsReachRuntime(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						sessionFactory.getSchemaManager().create( true );
+						try {
+							final var sequenceEntity = new GlobalSequenceGeneratedEntity();
+							final var tableEntity = new GlobalTableGeneratedEntity();
+							final var genericEntity = new GlobalGenericGeneratedEntity();
+							final var uuidEntity = new UuidGeneratedEntity();
+
+							try (var session = sessionFactory.openSession()) {
+								final var transaction = session.beginTransaction();
+								session.persist( sequenceEntity );
+								session.persist( tableEntity );
+								session.persist( genericEntity );
+								session.persist( uuidEntity );
+								transaction.commit();
+							}
+
+							assertThat( sequenceEntity.id ).isNotNull();
+							assertThat( tableEntity.id ).isNotNull();
+							assertThat( genericEntity.id ).isEqualTo( 1 );
+							assertThat( uuidEntity.id ).isNotNull();
+						}
+						finally {
+							sessionFactory.getSchemaManager().drop( true );
+						}
+					}
+				},
+				scope.getRegistry(),
+				GlobalRegistrationEntity.class,
+				GlobalSequenceGeneratedEntity.class,
+				GlobalTableGeneratedEntity.class,
+				GlobalGenericGeneratedEntity.class,
 				UuidGeneratedEntity.class,
 				PlainConverter.class
 		);
@@ -438,6 +592,14 @@ public class GlobalRegistrationBindingTests {
 		@Id
 		private Integer id;
 		private PlainConverted plainConverted;
+		private GlobalJavaTypeDomain globalJavaTypeDomain;
+		private GlobalUserTypeDomain globalUserTypeDomain;
+		@Embedded
+		private GlobalEmbeddable globalEmbeddable;
+		@Embedded
+		private GlobalInstantiatedEmbeddable globalInstantiatedEmbeddable;
+		@ElementCollection
+		private java.util.Collection<String> globalBag;
 		@ManyToOne
 		@JoinColumn(name = "parent_id")
 		@Fetch(graph = "globalGraph", type = FetchType.EAGER, batchSize = 5, cacheStoreMode = CacheStoreMode.BYPASS)
@@ -456,6 +618,27 @@ public class GlobalRegistrationBindingTests {
 		@Id
 		@UuidGenerator(style = UuidGenerator.Style.RANDOM)
 		private UUID id;
+	}
+
+	@Entity(name = "GlobalSequenceGeneratedEntity")
+	public static class GlobalSequenceGeneratedEntity {
+		@Id
+		@GeneratedValue(generator = "global_seq")
+		private Long id;
+	}
+
+	@Entity(name = "GlobalTableGeneratedEntity")
+	public static class GlobalTableGeneratedEntity {
+		@Id
+		@GeneratedValue(generator = "global_table")
+		private Long id;
+	}
+
+	@Entity(name = "GlobalGenericGeneratedEntity")
+	public static class GlobalGenericGeneratedEntity {
+		@Id
+		@GeneratedValue(generator = "org.hibernate.orm.test.boot.models.bind.GlobalRegistrationBindingTests$GlobalIdentifierGenerator")
+		private Integer id;
 	}
 
 	@MappedSuperclass
@@ -686,10 +869,17 @@ public class GlobalRegistrationBindingTests {
 		}
 	}
 
-	public static class GlobalCollectionType implements UserCollectionType {
+	public static class GlobalCollectionType implements UserCollectionType, org.hibernate.usertype.ParameterizedType {
+		private java.util.Properties parameters;
+
+		@Override
+		public void setParameterValues(java.util.Properties parameters) {
+			this.parameters = parameters;
+		}
+
 		@Override
 		public CollectionClassification getClassification() {
-			return CollectionClassification.LIST;
+			return CollectionClassification.BAG;
 		}
 
 		@Override

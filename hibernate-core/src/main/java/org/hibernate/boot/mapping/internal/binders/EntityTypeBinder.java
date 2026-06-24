@@ -817,7 +817,8 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			BindingContext bindingContext) {
 		final Cacheable cacheableAnn = managedType.getClassDetails().getDirectAnnotationUsage( Cacheable.class );
 		final SharedCacheMode sharedCacheMode = bindingContext.getSharedCacheMode();
-		typeBinding.setCached( isCacheable( sharedCacheMode, cacheableAnn ) );
+		final CacheRegion cacheRegion = managedType.getHierarchy().getCacheRegion();
+		typeBinding.setCached( cacheRegion.isExplicit() || isCacheable( sharedCacheMode, cacheableAnn ) );
 	}
 
 	private static boolean isCacheable(SharedCacheMode sharedCacheMode, Cacheable explicitCacheableAnn) {
@@ -878,6 +879,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		bindTenantId( getManagedType(), typeBinding, modelBinders, getOptions(), getBindingState(), getBindingContext() );
 
 		processSoftDelete( typeBinding.getIdentityTable(), typeBinding, getManagedType().getClassDetails() );
+		StateManagementBindingPhase.registerRootEntity( getManagedType().getClassDetails(), typeBinding, getBindingState() );
 		processOptimisticLocking( typeBinding, getManagedType() );
 		processCacheRegions( getManagedType(), typeBinding, getManagedType().getClassDetails() );
 	}
@@ -1037,7 +1039,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			SoftDelete softDeleteConfig,
 			BindingState state,
 			BindingContext context) {
-		final Database database = state.getMetadataBuildingContext().getMetadataCollector().getDatabase();
+		final Database database = state.getDatabase();
 		final PhysicalNamingStrategy namingStrategy = context.getPhysicalNamingStrategy();
 		final SoftDeleteType strategy = softDeleteConfig.strategy();
 		final String logicalColumnName = coalesce(

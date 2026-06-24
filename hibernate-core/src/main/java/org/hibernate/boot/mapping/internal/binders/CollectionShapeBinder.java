@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
@@ -41,6 +42,7 @@ import jakarta.persistence.OneToMany;
 
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /// Applies collection-shape metadata after the concrete collection mapping exists.
 ///
@@ -58,9 +60,11 @@ class CollectionShapeBinder {
 		applyFilters( source, collection, bindingState );
 		applyRestrictions( source, collection, bindingState );
 		applyCustomSql( source, collection, bindingState );
+		applyCaching( source, collection );
 		applyQueryCacheLayout( source, collection );
 		applyCustomLoader( source, collection, bindingState );
 		applyCollectionType( source, collection );
+		StateManagementBindingPhase.registerCollection( source, collection, bindingState );
 		switch ( source.classification() ) {
 			case ORDERED_SET, ORDERED_MAP -> applyOrdering( source, collection, bindingState );
 			case SORTED_SET, SORTED_MAP -> applySorting( source, collection );
@@ -336,6 +340,17 @@ class CollectionShapeBinder {
 		final QueryCacheLayout queryCacheLayout = source.member().getDirectAnnotationUsage( QueryCacheLayout.class );
 		if ( queryCacheLayout != null ) {
 			collection.setQueryCacheLayout( queryCacheLayout.layout() );
+		}
+	}
+
+	private static void applyCaching(CollectionSource source, Collection collection) {
+		final Cache cache = source.member().getDirectAnnotationUsage( Cache.class );
+		if ( cache != null ) {
+			final var accessType = cache.usage().toAccessType();
+			if ( accessType != null ) {
+				collection.setCacheConcurrencyStrategy( accessType.getExternalName() );
+				collection.setCacheRegionName( nullIfEmpty( cache.region() ) );
+			}
 		}
 	}
 

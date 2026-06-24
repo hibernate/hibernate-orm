@@ -25,7 +25,6 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 public abstract class CollectionSecondPass implements SecondPass {
 
 	private final Collection collection;
-	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer();
 
 	public CollectionSecondPass(Collection collection) {
 		this.collection = collection;
@@ -39,6 +38,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 		}
 
 		secondPass( persistentClasses );
+		final var collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer( persistentClasses::get );
 		collectionKeyMappingMaterializer.materializeAllKeys(
 				collectionKeyMappingMaterializer.resolveTableKey( collection )
 		);

@@ -31,11 +31,12 @@ import jakarta.persistence.MapKey;
 class InversePluralAssociationBinder {
 	private final EntityTypeBinder entityBinder;
 	private final BindingState bindingState;
-	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer();
+	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer;
 
 	InversePluralAssociationBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
 		this.bindingState = entityBinder.getBindingState();
+		this.collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer( bindingState::getEntityBinding );
 	}
 
 	void bindInverseAssociations() {

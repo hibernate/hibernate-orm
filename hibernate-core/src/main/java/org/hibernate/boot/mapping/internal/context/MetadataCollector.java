@@ -11,12 +11,17 @@ import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -41,8 +46,37 @@ import jakarta.persistence.AttributeConverter;
 /// @since 9.0
 /// @author Steve Ebersole
 public interface MetadataCollector {
+	/// Database model receiving relational metadata contributions.
+	Database getDatabase();
+
+	/// Create or resolve a table mapping in the metadata product.
+	Table getOrCreateTable(
+			String schema,
+			String catalog,
+			String name,
+			String subselect,
+			boolean isAbstract,
+			MetadataBuildingContext buildingContext,
+			boolean isExplicit);
+
+	/// Create a denormalized table mapping in the metadata product.
+	DenormalizedTable createDenormalizedTable(
+			String schema,
+			String catalog,
+			String name,
+			boolean isAbstract,
+			String subselect,
+			Table includedTable,
+			MetadataBuildingContext buildingContext);
+
 	/// Register an entity binding.
 	void addEntityBinding(PersistentClass entityBinding);
+
+	/// Resolve an entity binding by Hibernate entity name.
+	PersistentClass getEntityBinding(String entityName);
+
+	/// Visit every registered entity binding.
+	Iterable<PersistentClass> getEntityBindings();
 
 	/// Register a mapped-superclass binding.
 	void addMappedSuperclass(Class<?> mappedSuperclassClass, MappedSuperclass mappedSuperclass);
@@ -53,8 +87,14 @@ public interface MetadataCollector {
 	/// Register an entity-name import.
 	void addImport(String importName, String entityName);
 
+	/// Resolve an entity-name import.
+	String getImport(String importName);
+
 	/// Register a unique property reference.
 	void addUniquePropertyReference(String referencedEntityName, String referencedPropertyName);
+
+	/// Register a property reference.
+	void addPropertyReference(String referencedEntityName, String referencedPropertyName);
 
 	/// Register an identifier generator.
 	void addIdentifierGenerator(IdentifierGeneratorDefinition identifierGeneratorDefinition);
@@ -92,14 +132,23 @@ public interface MetadataCollector {
 	/// Register a custom user type.
 	void registerUserType(Class<?> domainClass, Class<? extends UserType<?>> userTypeClass);
 
+	/// Resolve a registered custom user type.
+	Class<? extends UserType<?>> findRegisteredUserType(Class<?> domainClass);
+
 	/// Register a custom composite user type.
 	void registerCompositeUserType(Class<?> embeddableClass, Class<? extends CompositeUserType<?>> userTypeClass);
+
+	/// Resolve a registered custom composite user type.
+	Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableClass);
 
 	/// Register a collection type.
 	void addCollectionTypeRegistration(
 			CollectionClassification classification,
 			Class<? extends UserCollectionType> userTypeClass,
 			Map<String,String> parameters);
+
+	/// Resolve a registered collection type.
+	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
 
 	/// Register an embeddable instantiator.
 	void registerEmbeddableInstantiator(

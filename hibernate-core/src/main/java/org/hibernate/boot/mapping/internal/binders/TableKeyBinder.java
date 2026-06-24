@@ -74,7 +74,7 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
 public class TableKeyBinder {
 	private final EntityTypeBinder entityBinder;
 	private final BindingState bindingState;
-	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer();
+	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer;
 	private final DependentTableKeyMappingMaterializer dependentTableKeyMappingMaterializer = new DependentTableKeyMappingMaterializer();
 	private final IndexMappingMaterializer indexMappingMaterializer = new IndexMappingMaterializer();
 	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
@@ -82,6 +82,7 @@ public class TableKeyBinder {
 	public TableKeyBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
 		this.bindingState = entityBinder.getBindingState();
+		this.collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer( bindingState::getEntityBinding );
 	}
 
 	public void bindTableKeys() {
@@ -199,9 +200,7 @@ public class TableKeyBinder {
 				|| !( collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany oneToMany ) ) {
 			return;
 		}
-		final var referencedEntity = bindingState.getMetadataBuildingContext()
-				.getMetadataCollector()
-				.getEntityBinding( oneToMany.getReferencedEntityName() );
+		final var referencedEntity = bindingState.getEntityBinding( oneToMany.getReferencedEntityName() );
 		if ( referencedEntity == null ) {
 			return;
 		}
@@ -492,12 +491,10 @@ public class TableKeyBinder {
 		);
 		if ( referencedOwnerKey != null ) {
 			collectionTableBinding.collection().setReferencedPropertyName( referencedOwnerKey.property().getName() );
-			bindingState.getMetadataBuildingContext()
-					.getMetadataCollector()
-					.addPropertyReference(
-							collectionTableBinding.collection().getOwner().getEntityName(),
-							referencedOwnerKey.property().getName()
-					);
+			bindingState.addPropertyReference(
+					collectionTableBinding.collection().getOwner().getEntityName(),
+					referencedOwnerKey.property().getName()
+			);
 			final DependantValue key = createDependentKeyValue(
 					table,
 					referencedOwnerKey,

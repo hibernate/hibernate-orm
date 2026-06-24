@@ -220,7 +220,7 @@ public interface TableSource {
 
 		@Override
 		public String comment() {
-			return "";
+			return collectionTable.comment();
 		}
 
 		@Override

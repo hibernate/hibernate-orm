@@ -181,9 +181,7 @@ class CollectionIndexBinder {
 
 		final Class<?> mapKeyJavaType = source.mapKeyType().determineRawClass().toJavaClass();
 		final Class<? extends CompositeUserType<?>> registeredCompositeUserType =
-				bindingState.getMetadataBuildingContext()
-						.getMetadataCollector()
-						.findRegisteredCompositeUserType( mapKeyJavaType );
+				bindingState.findRegisteredCompositeUserType( mapKeyJavaType );
 		if ( registeredCompositeUserType != null ) {
 			final CompositeUserType<?> compositeUserType = instantiateCompositeUserType(
 					registeredCompositeUserType,

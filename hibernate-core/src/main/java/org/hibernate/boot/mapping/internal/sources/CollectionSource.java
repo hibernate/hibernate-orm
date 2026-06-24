@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.CollectionId;
@@ -466,7 +467,17 @@ public record CollectionSource(
 	}
 
 	private static boolean sameClass(ClassDetails one, ClassDetails another) {
-		return one != null && another != null && one.getClassName().equals( another.getClassName() );
+		if ( one == null || another == null ) {
+			return false;
+		}
+
+		final String oneClassName = one.getClassName();
+		final String anotherClassName = another.getClassName();
+		if ( oneClassName != null || anotherClassName != null ) {
+			return Objects.equals( oneClassName, anotherClassName );
+		}
+
+		return Objects.equals( one.getName(), another.getName() );
 	}
 
 	public Column elementColumn() {

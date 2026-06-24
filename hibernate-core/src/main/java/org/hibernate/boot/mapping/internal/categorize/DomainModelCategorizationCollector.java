@@ -81,9 +81,11 @@ public class DomainModelCategorizationCollector {
 		final JaxbPersistenceUnitMetadataImpl persistenceUnitMetadata = jaxbRoot.getPersistenceUnitMetadata();
 		if ( persistenceUnitMetadata != null ) {
 			final JaxbPersistenceUnitDefaultsImpl persistenceUnitDefaults = persistenceUnitMetadata.getPersistenceUnitDefaults();
-			final JaxbEntityListenerContainerImpl listenerContainer = persistenceUnitDefaults.getEntityListenerContainer();
-			if ( listenerContainer != null ) {
-				getGlobalRegistrations().collectEntityListenerRegistrations( listenerContainer.getEntityListeners() );
+			if ( persistenceUnitDefaults != null ) {
+				final JaxbEntityListenerContainerImpl listenerContainer = persistenceUnitDefaults.getEntityListenerContainer();
+				if ( listenerContainer != null ) {
+					getGlobalRegistrations().collectEntityListenerRegistrations( listenerContainer.getEntityListeners() );
+				}
 			}
 		}
 

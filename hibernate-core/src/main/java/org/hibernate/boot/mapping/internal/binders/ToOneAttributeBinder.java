@@ -340,7 +340,7 @@ class ToOneAttributeBinder {
 			applyNotFound( source, value );
 			applyFetchProfileOverrides( source, ownerBinding, propertyName, bindingState );
 
-		final boolean logicalOneToOne = source.isLogicalOneToOne();
+		final boolean logicalOneToOne = isLogicalOneToOne( source, joinTable );
 		if ( logicalOneToOne ) {
 			value.markAsLogicalOneToOne();
 		}
@@ -413,6 +413,15 @@ class ToOneAttributeBinder {
 			) );
 		}
 		return value;
+	}
+
+	private static boolean isLogicalOneToOne(ToOneSource source, JoinTable joinTable) {
+		if ( source.isLogicalOneToOne() ) {
+			return true;
+		}
+
+		final List<JoinColumn> joinColumns = source.valueJoinColumns( joinTable );
+		return joinColumns.size() == 1 && joinColumns.get( 0 ).unique();
 	}
 
 	private static ResolvedForeignKey resolvePrimaryKeyForeignKey(

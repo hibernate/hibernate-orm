@@ -63,8 +63,6 @@ class ForeignKeyBinder {
 		final ForeignKey foreignKey;
 		if ( value.isReferenceToPrimaryKey() ) {
 			final PersistentClass referencedEntity = entityBinder.getBindingState()
-					.getMetadataBuildingContext()
-					.getMetadataCollector()
 					.getEntityBinding( value.getReferencedEntityName() );
 			foreignKey = referencedEntity == null
 					? null
@@ -76,8 +74,6 @@ class ForeignKeyBinder {
 		}
 		else if ( value instanceof ManyToOne manyToOne ) {
 			final PersistentClass referencedEntity = entityBinder.getBindingState()
-					.getMetadataBuildingContext()
-					.getMetadataCollector()
 					.getEntityBinding( manyToOne.getReferencedEntityName() );
 			foreignKey = referencedEntity == null
 					? null
@@ -107,8 +103,6 @@ class ForeignKeyBinder {
 			return;
 		}
 		final PersistentClass referencedEntity = entityBinder.getBindingState()
-				.getMetadataBuildingContext()
-				.getMetadataCollector()
 				.getEntityBinding( tableForeignKeyBinding.referencedEntityName() );
 		final ForeignKey foreignKey = referencedEntity == null
 				? null
@@ -126,8 +120,6 @@ class ForeignKeyBinder {
 			return null;
 		}
 		final PersistentClass referencedEntity = entityBinder.getBindingState()
-				.getMetadataBuildingContext()
-				.getMetadataCollector()
 				.getEntityBinding( referencedEntityName );
 		if ( referencedEntity == null ) {
 			return null;

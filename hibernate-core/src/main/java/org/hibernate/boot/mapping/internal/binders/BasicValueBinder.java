@@ -785,6 +785,16 @@ public class BasicValueBinder {
 			default -> source.member().getDirectAnnotationUsage( Type.class );
 		};
 		if ( typeAnn == null ) {
+			if ( basicValue.getJpaAttributeConverterDescriptor() == null ) {
+				final Class<?> rawJavaType = source.rawJavaType();
+				if ( rawJavaType != null ) {
+					final var registeredUserType = bindingState.findRegisteredUserType( rawJavaType );
+					if ( registeredUserType != null ) {
+						basicValue.setExplicitTypeParams( Map.of() );
+						basicValue.setExplicitCustomType( registeredUserType );
+					}
+				}
+			}
 			return;
 		}
 

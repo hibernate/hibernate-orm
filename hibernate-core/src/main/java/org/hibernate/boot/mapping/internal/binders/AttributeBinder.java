@@ -183,6 +183,7 @@ public class AttributeBinder {
 
 		applyNaturalId( binding );
 		applyCollation( binding );
+		StateManagementBindingPhase.registerProperty( attributeBinding.member(), binding, bindingState );
 		applyLazyGroup( binding );
 	}
 

@@ -11,13 +11,16 @@ import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -44,8 +47,55 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	}
 
 	@Override
+	public Database getDatabase() {
+		return metadataCollector.getDatabase();
+	}
+
+	@Override
+	public Table getOrCreateTable(
+			String schema,
+			String catalog,
+			String name,
+			String subselect,
+			boolean isAbstract,
+			org.hibernate.boot.spi.MetadataBuildingContext buildingContext,
+			boolean isExplicit) {
+		return metadataCollector.addTable( schema, catalog, name, subselect, isAbstract, buildingContext, isExplicit );
+	}
+
+	@Override
+	public DenormalizedTable createDenormalizedTable(
+			String schema,
+			String catalog,
+			String name,
+			boolean isAbstract,
+			String subselect,
+			Table includedTable,
+			org.hibernate.boot.spi.MetadataBuildingContext buildingContext) {
+		return (DenormalizedTable) metadataCollector.addDenormalizedTable(
+				schema,
+				catalog,
+				name,
+				isAbstract,
+				subselect,
+				includedTable,
+				buildingContext
+		);
+	}
+
+	@Override
 	public void addEntityBinding(PersistentClass entityBinding) {
 		metadataCollector.addEntityBinding( entityBinding );
+	}
+
+	@Override
+	public PersistentClass getEntityBinding(String entityName) {
+		return metadataCollector.getEntityBinding( entityName );
+	}
+
+	@Override
+	public Iterable<PersistentClass> getEntityBindings() {
+		return metadataCollector.getEntityBindings();
 	}
 
 	@Override
@@ -64,8 +114,18 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	}
 
 	@Override
+	public String getImport(String importName) {
+		return metadataCollector.getImports().get( importName );
+	}
+
+	@Override
 	public void addUniquePropertyReference(String referencedEntityName, String referencedPropertyName) {
 		metadataCollector.addUniquePropertyReference( referencedEntityName, referencedPropertyName );
+	}
+
+	@Override
+	public void addPropertyReference(String referencedEntityName, String referencedPropertyName) {
+		metadataCollector.addPropertyReference( referencedEntityName, referencedPropertyName );
 	}
 
 	@Override
@@ -129,10 +189,20 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	}
 
 	@Override
+	public Class<? extends UserType<?>> findRegisteredUserType(Class<?> domainClass) {
+		return metadataCollector.findRegisteredUserType( domainClass );
+	}
+
+	@Override
 	public void registerCompositeUserType(
 			Class<?> embeddableClass,
 			Class<? extends CompositeUserType<?>> userTypeClass) {
 		metadataCollector.registerCompositeUserType( embeddableClass, userTypeClass );
+	}
+
+	@Override
+	public Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableClass) {
+		return metadataCollector.findRegisteredCompositeUserType( embeddableClass );
 	}
 
 	@Override
@@ -147,6 +217,12 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 						parameters
 				)
 		);
+	}
+
+	@Override
+	public InFlightMetadataCollector.CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(
+			CollectionClassification classification) {
+		return metadataCollector.findCollectionTypeRegistration( classification );
 	}
 
 	@Override

@@ -11,6 +11,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
@@ -65,6 +67,7 @@ class ElementCollectionAttributeBinder {
 	private final String collectionRolePath;
 	private final CollectionValueIntent collectionValueIntent;
 	private final boolean registerCollectionBindings;
+	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	ElementCollectionAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
@@ -338,27 +341,32 @@ class ElementCollectionAttributeBinder {
 		return component;
 	}
 
-		private BasicValue bindBasicElementValue(CollectionSource source, Table table) {
-			final BasicValue element = new BasicValue( bindingState.getMetadataBuildingContext(), table );
-			element.setTable( table );
-			BasicValueBinder.bindBasicValue(
-					BasicValueSource.collectionElement( source.member(), source.elementType(), bindingContext ),
-					null,
-					element,
-					bindingOptions,
+	private BasicValue bindBasicElementValue(CollectionSource source, Table table) {
+		final BasicValue element = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		element.setTable( table );
+		BasicValueBinder.bindBasicValue(
+				BasicValueSource.collectionElement( source.member(), source.elementType(), bindingContext ),
+				null,
+				element,
+				bindingOptions,
 				bindingState,
 				bindingContext
-			);
+		);
 
-			final jakarta.persistence.Column column = source.elementColumn();
-			final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(
-					ColumnSource.from( column ),
-					() -> implicitElementColumnName( source )
+		final jakarta.persistence.Column column = source.elementColumn();
+		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(
+				ColumnSource.from( column ),
+				() -> implicitElementColumnName( source )
+		);
+		table.addColumn( elementColumn );
+		element.addColumn( elementColumn );
+		if ( elementColumn.isUnique() ) {
+			uniqueKeyMappingMaterializer.materializeUniqueKey(
+					ResolvedUniqueKey.from( elementColumn, table, bindingState.getMetadataBuildingContext() )
 			);
-			table.addColumn( elementColumn );
-			element.addColumn( elementColumn );
-			return element;
 		}
+		return element;
+	}
 
 		private String implicitElementColumnName(CollectionSource source) {
 			return bindingContext.getImplicitNamingStrategy()

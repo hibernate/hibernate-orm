@@ -83,6 +83,7 @@ public class ColumnBinder {
 		final int scale = columnSource == null ? scaleByDefault : columnSource.scale( scaleByDefault );
 		result.setScale( scale > 0 ? scale : null );
 		applyCheckConstraints( result, columnSource );
+		applyComment( result, columnSource );
 		applyOptions( result, columnSource );
 		return result;
 	}
@@ -157,9 +158,19 @@ public class ColumnBinder {
 							bindingState
 					) );
 			applyOptions( column, columnSource );
+			applyComment( column, columnSource );
 			value.getTable().addColumn( column );
 		}
 		return discriminatorType;
+	}
+
+	private static void applyComment(Column column, ColumnSource columnSource) {
+		if ( columnSource != null ) {
+			final String comment = columnSource.comment();
+			if ( StringHelper.isNotEmpty( comment ) ) {
+				column.setComment( comment );
+			}
+		}
 	}
 
 	private static void applyOptions(Column column, ColumnSource columnSource) {

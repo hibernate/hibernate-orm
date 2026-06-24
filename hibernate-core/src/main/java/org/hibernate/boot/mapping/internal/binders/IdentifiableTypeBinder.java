@@ -7,6 +7,7 @@ package org.hibernate.boot.mapping.internal.binders;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
@@ -166,6 +167,29 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			Consumer<Property> propertyConsumer,
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings) {
+		bindDeclaredAttributes(
+				modelBinders,
+				sourceType,
+				ownerType,
+				attributeOwnerBinding,
+				primaryTable,
+				propertyConsumer,
+				includePluralAttributes,
+				registerCollectionBindings,
+				(attributeMetadata) -> true
+		);
+	}
+
+	protected void bindDeclaredAttributes(
+			ModelBinders modelBinders,
+			IdentifiableTypeMetadata sourceType,
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass attributeOwnerBinding,
+			Table primaryTable,
+			Consumer<Property> propertyConsumer,
+			boolean includePluralAttributes,
+			boolean registerCollectionBindings,
+			Predicate<AttributeMetadata> attributeFilter) {
 		sourceType.forEachAttribute( (index, attributeMetadata) -> {
 			if ( sourceType.getHierarchy().getIdMapping().contains( attributeMetadata )
 					|| attributeMetadata.getMember().hasDirectAnnotationUsage( Id.class )
@@ -175,6 +199,9 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				return;
 			}
 			if ( !includePluralAttributes && isPlural( attributeMetadata.getNature() ) ) {
+				return;
+			}
+			if ( !attributeFilter.test( attributeMetadata ) ) {
 				return;
 			}
 			if ( overridesSuperAttribute( sourceType, attributeMetadata ) ) {
@@ -261,9 +288,10 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			return new AttributeBindingView( usageBinding );
 		}
 
-		final AttributeDeclarationBinding declarationBinding = resolveAttributeDeclaration(
+		final AttributeDeclarationBinding declarationBinding = resolveOrCreateAttributeDeclaration(
+				sourceType,
 				declaringTypeBinding,
-				attributeName
+				attributeMetadata
 		);
 		final StandardAttributeUsageBinding usageBinding = createAttributeUsage(
 				declarationBinding,
@@ -425,18 +453,28 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		return null;
 	}
 
-	private AttributeDeclarationBinding resolveAttributeDeclaration(
+	private AttributeDeclarationBinding resolveOrCreateAttributeDeclaration(
+			IdentifiableTypeMetadata sourceType,
 			ManagedTypeBinding declaringTypeBinding,
-			String attributeName) {
+			AttributeMetadata attributeMetadata) {
+		final String attributeName = attributeMetadata.getName();
 		for ( AttributeDeclarationBinding declaredAttribute : declaringTypeBinding.declaredAttributes() ) {
 			if ( declaredAttribute.attributeName().equals( attributeName ) ) {
 				return declaredAttribute;
 			}
 		}
-		throw new IllegalStateException(
-				"Unable to resolve attribute declaration `" + attributeName + "` for "
-						+ declaringTypeBinding.classDetails().getName()
+		final IdentifiableAttributeDeclarationBinding attributeBinding = IdentifiableAttributeDeclarationBinding.from(
+				attributeMetadata,
+				declaringTypeBinding,
+				declaringTypeBinding,
+				attributeMetadata.getMember(),
+				sourceType.getAccessType(),
+				attributeMetadata.getNature(),
+				sourceType.getClassDetails().getName() + "." + attributeName,
+				attributeName
 		);
+		declaringTypeBinding.addDeclaredAttribute( attributeBinding );
+		return attributeBinding;
 	}
 
 	private boolean isPlural(AttributeNature nature) {

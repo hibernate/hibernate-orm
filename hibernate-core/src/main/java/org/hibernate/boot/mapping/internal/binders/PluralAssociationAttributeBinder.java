@@ -397,6 +397,12 @@ class PluralAssociationAttributeBinder {
 				attributeMetadata.getName()
 		);
 		collection.setElement( element );
+		StateManagementBindingPhase.registerOneToManyCollection(
+				source,
+				collection,
+				element.getReferencedEntityName(),
+				bindingState
+		);
 
 		if ( collection instanceof org.hibernate.mapping.Map map ) {
 			CollectionIndexBinder.bindMapKey(

@@ -8,6 +8,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassContribution;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
@@ -21,6 +22,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 
 /// Binder for a mapped-superclass type.
 ///
@@ -118,7 +121,8 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				new Table( "orm", getManagedType().getClassDetails().getName() + "#mapped-superclass" ),
 				binding::addDeclaredProperty,
 				true,
-				false
+				false,
+				(attributeMetadata) -> !isUnresolvedGenericToOne( attributeMetadata )
 		);
 		applyDeclaredPropertiesToNearestEntityConsumers( getManagedType() );
 	}
@@ -232,11 +236,47 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			return;
 		}
 
+		addGenericDeclaredPropertyIfNeeded( property );
 		entityBinding.addMappedSuperclassProperty( property, binding );
+	}
+
+	private void addGenericDeclaredPropertyIfNeeded(Property property) {
+		final AttributeMetadata attribute = getManagedType().findAttribute( property.getName() );
+		if ( !isUnresolvedGenericToOne( attribute ) || hasDeclaredProperty( binding, property.getName() ) ) {
+			return;
+		}
+
+		final Property genericProperty = property.copy();
+		genericProperty.setGeneric( true );
+		genericProperty.setGenericSpecialization( false );
+		genericProperty.setReturnedClassName( attribute.getMember().getType().getName() );
+
+		final Value genericValue = property.getValue().copy();
+		if ( genericValue instanceof ToOne toOne ) {
+			toOne.setReferencedEntityName( attribute.getMember().getType().getName() );
+			toOne.setTypeName( attribute.getMember().getType().getName() );
+		}
+		genericProperty.setValue( genericValue );
+		binding.addDeclaredProperty( genericProperty );
+	}
+
+	private boolean isUnresolvedGenericToOne(AttributeMetadata attributeMetadata) {
+		return attributeMetadata != null
+			&& attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.TO_ONE
+			&& !attributeMetadata.getMember().getType().isResolved();
 	}
 
 	private boolean hasDeclaredProperty(PersistentClass entityBinding, String propertyName) {
 		for ( var declaredProperty : entityBinding.getDeclaredProperties() ) {
+			if ( propertyName.equals( declaredProperty.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasDeclaredProperty(MappedSuperclass mappedSuperclass, String propertyName) {
+		for ( var declaredProperty : mappedSuperclass.getDeclaredProperties() ) {
 			if ( propertyName.equals( declaredProperty.getName() ) ) {
 				return true;
 			}

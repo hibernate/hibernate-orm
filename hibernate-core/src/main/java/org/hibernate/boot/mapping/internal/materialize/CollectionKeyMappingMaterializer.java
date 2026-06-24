@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.materialize;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -35,6 +36,19 @@ import org.hibernate.mapping.Value;
 public class CollectionKeyMappingMaterializer {
 	private final ForeignKeyMappingMaterializer foreignKeyMappingMaterializer = new ForeignKeyMappingMaterializer();
 	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
+	private final Function<String, PersistentClass> entityBindingResolver;
+
+	public CollectionKeyMappingMaterializer() {
+		this( (entityName) -> {
+			throw new IllegalStateException(
+					"Collection foreign-key materialization requires an entity-binding resolver"
+			);
+		} );
+	}
+
+	public CollectionKeyMappingMaterializer(Function<String, PersistentClass> entityBindingResolver) {
+		this.entityBindingResolver = entityBindingResolver;
+	}
 
 	public ResolvedCollectionTableKey resolveTableKey(Collection collection) {
 		return new ResolvedCollectionTableKey( collection );
@@ -72,9 +86,7 @@ public class CollectionKeyMappingMaterializer {
 
 	private void materializeValueForeignKey(Collection collection, Value value, String sourceRole) {
 		if ( value instanceof ToOne toOne ) {
-			final PersistentClass referencedEntity = collection.getBuildingContext()
-					.getMetadataCollector()
-					.getEntityBinding( toOne.getReferencedEntityName() );
+			final PersistentClass referencedEntity = entityBindingResolver.apply( toOne.getReferencedEntityName() );
 			if ( referencedEntity != null ) {
 				foreignKeyMappingMaterializer.materializeForeignKey( toOne, referencedEntity, sourceRole );
 			}

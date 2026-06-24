@@ -24,12 +24,15 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EntityListener;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.PostDelete;
 import jakarta.persistence.PostInsert;
+import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostUpsert;
 import jakarta.persistence.PreDelete;
 import jakarta.persistence.PreInsert;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreMerge;
 import jakarta.persistence.PreUpsert;
 
@@ -85,6 +88,41 @@ public class CallbackTests {
 				},
 				scope.getRegistry(),
 				Jpa4LifecycleEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testLifecycleCallbacksReachRuntime(ServiceRegistryScope scope) {
+		RuntimeCallbackListener.prePersistCount = 0;
+		RuntimeCallbackEntity.postLoadCount = 0;
+
+		checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						sessionFactory.getSchemaManager().create( true );
+						try {
+							try (var session = sessionFactory.openSession()) {
+								final var transaction = session.beginTransaction();
+								session.persist( new RuntimeCallbackEntity( 1, "one" ) );
+								assertThat( RuntimeCallbackListener.prePersistCount ).isEqualTo( 1 );
+								transaction.commit();
+							}
+
+							try (var session = sessionFactory.openSession()) {
+								final var transaction = session.beginTransaction();
+								assertThat( session.find( RuntimeCallbackEntity.class, 1 ) ).isNotNull();
+								assertThat( RuntimeCallbackEntity.postLoadCount ).isEqualTo( 1 );
+								transaction.commit();
+							}
+						}
+						finally {
+							sessionFactory.getSchemaManager().drop( true );
+						}
+					}
+				},
+				scope.getRegistry(),
+				RuntimeCallbackEntity.class
 		);
 	}
 
@@ -163,6 +201,39 @@ public class CallbackTests {
 
 		@PreMerge
 		public void preMerge() {
+		}
+	}
+
+	@Entity(name = "RuntimeCallbackEntity")
+	@EntityListeners(RuntimeCallbackListener.class)
+	public static class RuntimeCallbackEntity {
+		private static int postLoadCount;
+
+		@Id
+		private Integer id;
+		private String name;
+
+		protected RuntimeCallbackEntity() {
+			// for Hibernate use
+		}
+
+		public RuntimeCallbackEntity(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		@PostLoad
+		public void postLoad() {
+			postLoadCount++;
+		}
+	}
+
+	public static class RuntimeCallbackListener {
+		private static int prePersistCount;
+
+		@PrePersist
+		public void prePersist(RuntimeCallbackEntity entity) {
+			prePersistCount++;
 		}
 	}
 }

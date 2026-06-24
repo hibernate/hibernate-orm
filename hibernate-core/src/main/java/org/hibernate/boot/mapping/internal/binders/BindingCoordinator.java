@@ -213,6 +213,7 @@ public class BindingCoordinator {
 		runPhase( binders, TypeBindingPhase.TableKeys.class, TypeBindingPhase.TableKeys::bindTableKeys );
 		runPhase( binders, TypeBindingPhase.InverseAssociations.class, TypeBindingPhase.InverseAssociations::bindInverseAssociations );
 		runPhase( binders, TypeBindingPhase.ForeignKeys.class, TypeBindingPhase.ForeignKeys::bindForeignKeys );
+		StateManagementBindingPhase.process( bindingState );
 
 		// process identifiers
 		categorizedDomainModel.forEachEntityHierarchy( (index, hierarchy) -> {
@@ -536,15 +537,14 @@ public class BindingCoordinator {
 	private PersistentClass resolveFetchProfileEntityBinding(
 			FetchProfileRegistration registration,
 			FetchProfileRegistration.FetchOverride fetchOverride) {
-		final var metadataCollector = bindingState.getMetadataBuildingContext().getMetadataCollector();
 		final var entityName = fetchOverride.entityName();
-		final var importedEntityName = metadataCollector.getImports().get( entityName );
-		PersistentClass entityBinding = metadataCollector.getEntityBinding( entityName );
+		final var importedEntityName = bindingState.getImport( entityName );
+		PersistentClass entityBinding = bindingState.getEntityBinding( entityName );
 		if ( entityBinding == null && importedEntityName != null ) {
-			entityBinding = metadataCollector.getEntityBinding( importedEntityName );
+			entityBinding = bindingState.getEntityBinding( importedEntityName );
 		}
 		if ( entityBinding == null ) {
-			for ( PersistentClass candidate : metadataCollector.getEntityBindings() ) {
+			for ( PersistentClass candidate : bindingState.getEntityBindings() ) {
 				if ( entityName.equals( candidate.getEntityName() )
 						|| entityName.equals( candidate.getJpaEntityName() )
 						|| entityName.equals( candidate.getClassName() )
@@ -828,7 +828,9 @@ public class BindingCoordinator {
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		for ( TableGenerator tableGeneratorAnn : tableGenerators ) {
-			// process both the table and the generator
+			bindingState.addIdentifierGenerator(
+					buildTableGeneratorDefinition( new TableGeneratorRegistration( tableGeneratorAnn.name(), tableGeneratorAnn ) )
+			);
 		}
 
 		final SequenceGenerator[] sequenceGenerators = typeClassDetails.getRepeatedAnnotationUsages(
@@ -836,9 +838,10 @@ public class BindingCoordinator {
 				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		for ( SequenceGenerator sequenceGeneratorAnn : sequenceGenerators ) {
-			// process both the sequence and the generator
+			bindingState.addIdentifierGenerator(
+					buildSequenceGeneratorDefinition( new SequenceGeneratorRegistration( sequenceGeneratorAnn.name(), sequenceGeneratorAnn ) )
+			);
 		}
-
 	}
 
 }

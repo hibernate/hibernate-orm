@@ -23,6 +23,7 @@ public class CacheRegion {
 	private String regionName;
 	private AccessType accessType;
 	private boolean cacheLazyProperties;
+	private final boolean explicit;
 
 	/// Create a cache-region descriptor from an optional {@link Cache} annotation
 	/// and implicit cache settings.
@@ -30,6 +31,7 @@ public class CacheRegion {
 			Cache cacheAnnotation,
 			AccessType implicitCacheAccessType,
 			String implicitRegionName) {
+		explicit = cacheAnnotation != null;
 		if ( cacheAnnotation == null ) {
 			regionName = implicitRegionName;
 			accessType = implicitCacheAccessType;
@@ -76,6 +78,10 @@ public class CacheRegion {
 
 	public boolean isCacheLazyProperties() {
 		return cacheLazyProperties;
+	}
+
+	public boolean isExplicit() {
+		return explicit;
 	}
 
 	public void setCacheLazyProperties(boolean cacheLazyProperties) {

@@ -208,10 +208,13 @@ class AssociationIdentifierBinder {
 						identifierBinding.columns(),
 						entityIdentifierBinding.identifierSelectableNames()
 				);
-		associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey()
-				.reorderColumns( identifierColumns );
+		if ( associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey().getOriginalOrder() == null ) {
+			associationIdentifierBinding.ownerBinding().getTable().getPrimaryKey()
+					.reorderColumns( identifierColumns );
+		}
+		final ArrayList<Column> orderedIdentifierColumns = new ArrayList<>( identifierColumns );
 		associationIdentifierBinding.identifierColumns().clear();
-		associationIdentifierBinding.identifierColumns().addAll( identifierColumns );
+		associationIdentifierBinding.identifierColumns().addAll( orderedIdentifierColumns );
 	}
 
 	private List<Column> orderColumnsBySelectableNames(List<Column> columns, List<String> selectableNames) {

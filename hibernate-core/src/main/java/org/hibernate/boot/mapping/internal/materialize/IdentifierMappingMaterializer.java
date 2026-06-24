@@ -6,10 +6,13 @@ package org.hibernate.boot.mapping.internal.materialize;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
@@ -473,6 +476,8 @@ public class IdentifierMappingMaterializer {
 				final BasicValue basicValue = createBasicIdValue( table, member, type );
 				final Property rootProperty = createProperty( idAttribute.getName(), basicValue, member );
 				if ( !hasIdClass ) {
+					rootProperty.setInsertable( false );
+					rootProperty.setUpdatable( false );
 					typeBinding.addProperty( rootProperty );
 				}
 				CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
@@ -549,6 +554,8 @@ public class IdentifierMappingMaterializer {
 				final Property rootProperty = createProperty( idAttribute.getName(), toOne, member );
 				applyToOneIdentifierPropertyOptions( idAttribute, type, rootProperty, associationMember );
 				if ( !hasIdClass ) {
+					rootProperty.setInsertable( false );
+					rootProperty.setUpdatable( false );
 					typeBinding.addProperty( rootProperty );
 				}
 				CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
@@ -1219,8 +1226,18 @@ public class IdentifierMappingMaterializer {
 				GeneratorStrategies.generatorStrategy( generationType, generatedValue.generator(), member.getType() ),
 				generatedValue.generator(),
 				state.getMetadataBuildingContext(),
-				null
+				localGenerators( member )
 		);
+	}
+
+	private Map<String, IdentifierGeneratorDefinition> localGenerators(MemberDetails member) {
+		final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>();
+		GeneratorBinder.visitIdGeneratorDefinitions(
+				member,
+				generator -> localGenerators.put( generator.getName(), generator ),
+				state.getMetadataBuildingContext()
+		);
+		return localGenerators;
 	}
 
 	private Property createProperty(String name, org.hibernate.mapping.Value value, MemberDetails member) {

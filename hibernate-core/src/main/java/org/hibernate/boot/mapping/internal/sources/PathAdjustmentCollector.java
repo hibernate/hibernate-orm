@@ -7,6 +7,7 @@ package org.hibernate.boot.mapping.internal.sources;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -79,7 +80,17 @@ class PathAdjustmentCollector {
 	}
 
 	private static boolean sameClass(ClassDetails one, ClassDetails another) {
-		return one != null && another != null && one.getClassName().equals( another.getClassName() );
+		if ( one == null || another == null ) {
+			return false;
+		}
+
+		final String oneClassName = one.getClassName();
+		final String anotherClassName = another.getClassName();
+		if ( oneClassName != null || anotherClassName != null ) {
+			return Objects.equals( oneClassName, anotherClassName );
+		}
+
+		return Objects.equals( one.getName(), another.getName() );
 	}
 
 	private void collectMemberAdjustments(MemberDetails member, org.hibernate.models.spi.ModelsContext modelsContext) {

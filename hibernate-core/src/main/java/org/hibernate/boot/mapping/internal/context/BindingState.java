@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.context;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -32,6 +34,8 @@ import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.sources.CollectionSource;
+import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -39,12 +43,17 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -68,21 +77,43 @@ public interface BindingState {
 	MetadataBuildingContext getMetadataBuildingContext();
 
 	/// Database model being populated during binding.
-	default Database getDatabase() {
-		return getMetadataBuildingContext().getMetadataCollector().getDatabase();
-	}
+	@Nonnull Database getDatabase();
+
+	/// Create or resolve a table mapping in the metadata product.
+	@Nonnull Table getOrCreateTable(
+			String schema,
+			String catalog,
+			String name,
+			String subselect,
+			boolean isAbstract,
+			boolean isExplicit);
+
+	/// Create a denormalized table mapping in the metadata product.
+	@Nonnull DenormalizedTable createDenormalizedTable(
+			String schema,
+			String catalog,
+			String name,
+			boolean isAbstract,
+			String subselect,
+			Table includedTable);
 
 	/// JDBC services used for dialect and identifier handling.
-	JdbcServices getJdbcServices();
+	@Nonnull JdbcServices getJdbcServices();
 
 	/// Type configuration used while binding values and metadata registrations.
-	TypeConfiguration getTypeConfiguration();
+	@Nonnull TypeConfiguration getTypeConfiguration();
 
 	/// Horizontal binding model populated from categorized source facts.
-	BootBindingModel getBootBindingModel();
+	@Nonnull BootBindingModel getBootBindingModel();
 
 	/// Register an entity binding with the metadata collector.
 	void addEntityBinding(PersistentClass entityBinding);
+
+	/// Resolve an entity binding already registered with the metadata collector.
+	@Nullable PersistentClass getEntityBinding(String entityName);
+
+	/// Visit entity bindings already registered with the metadata collector.
+	@Nonnull Iterable<PersistentClass> getEntityBindings();
 
 	/// Register a mapped-superclass binding for eventual publication to the metadata collector.
 	void addMappedSuperclass(Class<?> mappedSuperclassClass, MappedSuperclass mappedSuperclass);
@@ -93,8 +124,14 @@ public interface BindingState {
 	/// Register an entity-name import for eventual publication to the metadata collector.
 	void addImport(String importName, String entityName);
 
+	/// Resolve an entity-name import already registered with the metadata collector.
+	@Nullable String getImport(String importName);
+
 	/// Register a unique property reference with the metadata collector.
 	void addUniquePropertyReference(String referencedEntityName, String referencedPropertyName);
+
+	/// Register a property reference with the metadata collector.
+	void addPropertyReference(String referencedEntityName, String referencedPropertyName);
 
 	/// Register an identifier generator for eventual publication to the metadata collector.
 	void addIdentifierGenerator(IdentifierGeneratorDefinition identifierGeneratorDefinition);
@@ -109,7 +146,7 @@ public interface BindingState {
 	void addFetchProfile(FetchProfile fetchProfile);
 
 	/// Resolve a fetch profile already published to, or pending for, the metadata collector.
-	FetchProfile getFetchProfile(String name);
+	@Nullable FetchProfile getFetchProfile(String name);
 
 	/// Register an auxiliary database object for eventual publication to the metadata collector.
 	void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
@@ -132,14 +169,23 @@ public interface BindingState {
 	/// Register a custom user type for eventual publication to the metadata collector.
 	void registerUserType(Class<?> domainClass, Class<? extends UserType<?>> userTypeClass);
 
+	/// Resolve a registered custom user type.
+	Class<? extends UserType<?>> findRegisteredUserType(Class<?> domainClass);
+
 	/// Register a custom composite user type for eventual publication to the metadata collector.
 	void registerCompositeUserType(Class<?> embeddableClass, Class<? extends CompositeUserType<?>> userTypeClass);
+
+	/// Resolve a registered custom composite user type.
+	Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableClass);
 
 	/// Register a collection type for eventual publication to the metadata collector.
 	void addCollectionTypeRegistration(
 			CollectionClassification classification,
 			Class<? extends UserCollectionType> userTypeClass,
 			java.util.Map<String,String> parameters);
+
+	/// Resolve a registered collection type.
+	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
 
 	/// Register an embeddable instantiator for eventual publication to the metadata collector.
 	void registerEmbeddableInstantiator(
@@ -235,6 +281,39 @@ public interface BindingState {
 
 	/// Visit table-key foreign-key constraints waiting for late binding.
 	void forEachTableForeignKeyBinding(java.util.function.Consumer<TableForeignKeyBinding> consumer);
+
+	/// Register an entity whose state-management annotations are applied after core mapping binding.
+	void addStateManagementRootBinding(ClassDetails classDetails, RootClass rootClass);
+
+	/// Visit entity state-management bindings.
+	void forEachStateManagementRootBinding(java.util.function.BiConsumer<ClassDetails, RootClass> consumer);
+
+	/// Register a property whose state-management annotations are applied after core mapping binding.
+	void addStateManagementPropertyBinding(MemberDetails memberDetails, Property property);
+
+	/// Visit property state-management bindings.
+	void forEachStateManagementPropertyBinding(java.util.function.BiConsumer<MemberDetails, Property> consumer);
+
+	/// Register a collection whose state-management annotations are applied after core mapping binding.
+	void addStateManagementCollectionBinding(CollectionSource source, Collection collection);
+
+	/// Visit collection state-management bindings.
+	void forEachStateManagementCollectionBinding(java.util.function.BiConsumer<CollectionSource, Collection> consumer);
+
+	/// Register a FK-on-child one-to-many collection whose audit table needs the target entity name.
+	void addStateManagementOneToManyCollectionBinding(
+			CollectionSource source,
+			Collection collection,
+			String referencedEntityName);
+
+	/// Visit FK-on-child one-to-many collection state-management bindings.
+	void forEachStateManagementOneToManyCollectionBinding(StateManagementOneToManyCollectionConsumer consumer);
+
+	/// Consumer for one-to-many collection state-management bindings.
+	@FunctionalInterface
+	interface StateManagementOneToManyCollectionConsumer {
+		void accept(CollectionSource source, Collection collection, String referencedEntityName);
+	}
 
 	/// Register the identifier binding produced for an entity hierarchy root.
 	void addIdentifierBinding(EntityTypeMetadata rootType, IdentifierBinding identifierBinding);

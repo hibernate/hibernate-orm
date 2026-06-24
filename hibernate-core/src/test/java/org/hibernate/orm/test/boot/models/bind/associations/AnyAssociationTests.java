@@ -32,7 +32,6 @@ import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
-import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
@@ -252,13 +251,13 @@ public class AnyAssociationTests {
 					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) entityBinding.getProperty( "target" )
 							.getValue();
 
-					assertThat( value.getMetaValues() ).isEmpty();
-					assertThat( value.getDiscriminatorDescriptor().resolve().getDomainJavaType().getJavaType() )
-							.isEqualTo( String.class );
-					assertThat( ( (MetaType) ( (AnyType) value.getType() ).getDiscriminatorType() )
-							.getImplicitValueStrategy() )
-							.isSameAs( FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY );
-				},
+						assertThat( value.getMetaValues() ).isEmpty();
+						assertThat( value.getDiscriminatorDescriptor().resolve().getDomainJavaType().getJavaType() )
+								.isEqualTo( String.class );
+						assertThat( ( (MetaType) ( (AnyType) value.getType() ).getDiscriminatorType() )
+								.getImplicitValueStrategy() )
+								.isNull();
+					},
 				scope.getRegistry(),
 				DefaultImplicitDiscriminatorHolder.class,
 				TargetOne.class
@@ -659,14 +658,14 @@ public class AnyAssociationTests {
 					final Collection collection = (Collection) entityBinding.getProperty( "targets" ).getValue();
 					final org.hibernate.mapping.Any element = (org.hibernate.mapping.Any) collection.getElement();
 
-					assertThat( collection.getCollectionTable() ).isNotSameAs( entityBinding.getTable() );
-					assertThat( collection.getKey().getColumns() ).extracting( Column::getName )
-							.containsExactly( "ImplicitJoinTableManyAnyHolder_id" );
-					assertThat( ( (Column) element.getDiscriminatorDescriptor().getColumn() ).getName() )
-							.isEqualTo( "targets_type" );
-					assertThat( ( (Column) element.getKeyDescriptor().getColumn() ).getName() )
-							.isEqualTo( "targets_id" );
-				},
+						assertThat( collection.getCollectionTable() ).isNotSameAs( entityBinding.getTable() );
+						assertThat( collection.getKey().getColumns() ).extracting( Column::getName )
+								.containsExactly( "ImplicitJoinTableManyAnyHolder_id" );
+						assertThat( ( (Column) element.getDiscriminatorDescriptor().getColumn() ).getName() )
+								.isEqualTo( "targets_class" );
+						assertThat( ( (Column) element.getKeyDescriptor().getColumn() ).getName() )
+								.isEqualTo( "targets_id" );
+					},
 				scope.getRegistry(),
 				ImplicitJoinTableManyHolder.class,
 				TargetOne.class

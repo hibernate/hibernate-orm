@@ -95,10 +95,7 @@ class CollectionMappingHelper {
 							collectionType.type(),
 							extractParameters( collectionType.parameters() ),
 							bindingState.getMetadataBuildingContext().getBootstrapContext(),
-							bindingState.getMetadataBuildingContext()
-									.getMetadataCollector()
-									.getMetadataBuildingOptions()
-									.isAllowExtensionsInCdi()
+							bindingState.getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
 					);
 			return new CustomCollectionType(
 					customTypeBeanResolver.get().getBeanInstance().getClassification(),
@@ -119,10 +116,7 @@ class CollectionMappingHelper {
 						registration.implementation(),
 						registration.parameters(),
 						bindingState.getMetadataBuildingContext().getBootstrapContext(),
-						bindingState.getMetadataBuildingContext()
-								.getMetadataCollector()
-								.getMetadataBuildingOptions()
-								.isAllowExtensionsInCdi()
+						bindingState.getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
 				)
 		);
 	}
@@ -131,9 +125,7 @@ class CollectionMappingHelper {
 			CollectionSource source,
 			BindingState bindingState) {
 		final CollectionTypeRegistrationDescriptor registration =
-				bindingState.getMetadataBuildingContext()
-						.getMetadataCollector()
-						.findCollectionTypeRegistration( source.classification() );
+				bindingState.findCollectionTypeRegistration( source.classification() );
 		if ( registration != null ) {
 			return registration;
 		}
@@ -142,17 +134,13 @@ class CollectionMappingHelper {
 		if ( declaredClassification == source.classification() ) {
 			return null;
 		}
-		return bindingState.getMetadataBuildingContext()
-				.getMetadataCollector()
-				.findCollectionTypeRegistration( declaredClassification );
+		return bindingState.findCollectionTypeRegistration( declaredClassification );
 	}
 
 	private static CollectionClassification registrationClassification(
 			CollectionSource source,
 			BindingState bindingState) {
-		if ( bindingState.getMetadataBuildingContext()
-				.getMetadataCollector()
-				.findCollectionTypeRegistration( source.classification() ) != null ) {
+		if ( bindingState.findCollectionTypeRegistration( source.classification() ) != null ) {
 			return source.classification();
 		}
 		return declaredClassification( source.member() );

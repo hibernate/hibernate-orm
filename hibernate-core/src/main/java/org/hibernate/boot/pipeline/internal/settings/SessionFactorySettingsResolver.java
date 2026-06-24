@@ -66,6 +66,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MOD
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /// Projects resolved bootstrap settings into settings needed for SessionFactory
 /// construction.
@@ -261,7 +262,7 @@ public class SessionFactorySettingsResolver {
 						configurationValues.get( CacheSettings.QUERY_CACHE_FACTORY ),
 						StandardTimestampsCacheFactory.INSTANCE
 				),
-				asString( configurationValues.get( CacheSettings.CACHE_REGION_PREFIX ) ),
+				asStringNullIfEmpty( configurationValues.get( CacheSettings.CACHE_REGION_PREFIX ) ),
 				asBoolean(
 						configurationValues.get( CacheSettings.USE_MINIMAL_PUTS ),
 						regionFactory == null || regionFactory.isMinimalPutsEnabledByDefault()
@@ -410,6 +411,10 @@ public class SessionFactorySettingsResolver {
 
 	private static String asString(Object value) {
 		return value == null ? null : value.toString();
+	}
+
+	private static String asStringNullIfEmpty(Object value) {
+		return value == null ? null : nullIfEmpty( value.toString() );
 	}
 
 	private static Boolean asBoolean(Object value, boolean defaultValue) {

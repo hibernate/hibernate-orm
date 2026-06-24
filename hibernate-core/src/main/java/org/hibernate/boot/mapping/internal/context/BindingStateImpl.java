@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.internal.FilterDefBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -41,7 +42,9 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -51,11 +54,16 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -107,6 +115,11 @@ public class BindingStateImpl implements BindingState {
 	private final java.util.List<InverseToOneAssociationBinding> inverseToOneAssociationBindings = new java.util.ArrayList<>();
 	private final java.util.List<ForeignKeyBinding> foreignKeyBindings = new java.util.ArrayList<>();
 	private final java.util.List<TableForeignKeyBinding> tableForeignKeyBindings = new java.util.ArrayList<>();
+	private final java.util.List<StateManagementRootBinding> stateManagementRootBindings = new java.util.ArrayList<>();
+	private final java.util.List<StateManagementPropertyBinding> stateManagementPropertyBindings = new java.util.ArrayList<>();
+	private final java.util.List<StateManagementCollectionBinding> stateManagementCollectionBindings = new java.util.ArrayList<>();
+	private final java.util.List<StateManagementOneToManyCollectionBinding> stateManagementOneToManyCollectionBindings =
+			new java.util.ArrayList<>();
 
 	private final Map<ClassDetails, ManagedTypeBinder> typeBinders = new HashMap<>();
 	private final Map<ClassDetails, IdentifiableTypeBinder> typeBindersBySuper = new HashMap<>();
@@ -115,7 +128,7 @@ public class BindingStateImpl implements BindingState {
 	public BindingStateImpl(MetadataBuildingContext metadataBuildingContext, MetadataCollector metadataCollector) {
 		this.metadataBuildingContext = metadataBuildingContext;
 		this.metadataCollector = metadataCollector;
-		this.database = metadataBuildingContext.getMetadataCollector().getDatabase();
+		this.database = metadataCollector.getDatabase();
 		this.jdbcServices = metadataBuildingContext.getBootstrapContext().getServiceRegistry().getService( JdbcServices.class );
 	}
 
@@ -124,22 +137,60 @@ public class BindingStateImpl implements BindingState {
 		return metadataBuildingContext;
 	}
 
-	@Override
+	@Override @Nonnull
 	public Database getDatabase() {
 		return database;
 	}
 
-	@Override
+	@Override @Nonnull
+	public Table getOrCreateTable(
+			String schema,
+			String catalog,
+			String name,
+			String subselect,
+			boolean isAbstract,
+			boolean isExplicit) {
+		return metadataCollector.getOrCreateTable(
+				schema,
+				catalog,
+				name,
+				subselect,
+				isAbstract,
+				metadataBuildingContext,
+				isExplicit
+		);
+	}
+
+	@Override @Nonnull
+	public DenormalizedTable createDenormalizedTable(
+			String schema,
+			String catalog,
+			String name,
+			boolean isAbstract,
+			String subselect,
+			Table includedTable) {
+		return metadataCollector.createDenormalizedTable(
+				schema,
+				catalog,
+				name,
+				isAbstract,
+				subselect,
+				includedTable,
+				metadataBuildingContext
+		);
+	}
+
+	@Override @Nonnull
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
 	}
 
-	@Override
+	@Override @Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return metadataBuildingContext.getBootstrapContext().getTypeConfiguration();
 	}
 
-	@Override
+	@Override @Nonnull
 	public BootBindingModel getBootBindingModel() {
 		return bootBindingModel;
 	}
@@ -147,6 +198,16 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public void addEntityBinding(PersistentClass entityBinding) {
 		metadataCollector.addEntityBinding( entityBinding );
+	}
+
+	@Override
+	public PersistentClass getEntityBinding(String entityName) {
+		return metadataCollector.getEntityBinding( entityName );
+	}
+
+	@Override @Nonnull
+	public Iterable<PersistentClass> getEntityBindings() {
+		return metadataCollector.getEntityBindings();
 	}
 
 	@Override
@@ -165,8 +226,18 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
+	public String getImport(String importName) {
+		return metadataCollector.getImport( importName );
+	}
+
+	@Override
 	public void addUniquePropertyReference(String referencedEntityName, String referencedPropertyName) {
 		metadataCollector.addUniquePropertyReference( referencedEntityName, referencedPropertyName );
+	}
+
+	@Override
+	public void addPropertyReference(String referencedEntityName, String referencedPropertyName) {
+		metadataCollector.addPropertyReference( referencedEntityName, referencedPropertyName );
 	}
 
 	@Override
@@ -230,8 +301,18 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
+	public Class<? extends UserType<?>> findRegisteredUserType(Class<?> domainClass) {
+		return metadataCollector.findRegisteredUserType( domainClass );
+	}
+
+	@Override
 	public void registerCompositeUserType(Class<?> embeddableClass, Class<? extends CompositeUserType<?>> userTypeClass) {
 		metadataCollector.registerCompositeUserType( embeddableClass, userTypeClass );
+	}
+
+	@Override
+	public Class<? extends CompositeUserType<?>> findRegisteredCompositeUserType(Class<?> embeddableClass) {
+		return metadataCollector.findRegisteredCompositeUserType( embeddableClass );
 	}
 
 	@Override
@@ -240,6 +321,11 @@ public class BindingStateImpl implements BindingState {
 			Class<? extends UserCollectionType> userTypeClass,
 			Map<String, String> parameters) {
 		metadataCollector.addCollectionTypeRegistration( classification, userTypeClass, parameters );
+	}
+
+	@Override
+	public CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification) {
+		return metadataCollector.findCollectionTypeRegistration( classification );
 	}
 
 	@Override
@@ -446,6 +532,71 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public void forEachTableForeignKeyBinding(java.util.function.Consumer<TableForeignKeyBinding> consumer) {
 		tableForeignKeyBindings.forEach( consumer );
+	}
+
+	@Override
+	public void addStateManagementRootBinding(ClassDetails classDetails, RootClass rootClass) {
+		stateManagementRootBindings.add( new StateManagementRootBinding( classDetails, rootClass ) );
+	}
+
+	@Override
+	public void forEachStateManagementRootBinding(BiConsumer<ClassDetails, RootClass> consumer) {
+		stateManagementRootBindings.forEach( binding -> consumer.accept( binding.classDetails, binding.rootClass ) );
+	}
+
+	@Override
+	public void addStateManagementPropertyBinding(MemberDetails memberDetails, Property property) {
+		stateManagementPropertyBindings.add( new StateManagementPropertyBinding( memberDetails, property ) );
+	}
+
+	@Override
+	public void forEachStateManagementPropertyBinding(BiConsumer<MemberDetails, Property> consumer) {
+		stateManagementPropertyBindings.forEach(
+				binding -> consumer.accept( binding.memberDetails, binding.property )
+		);
+	}
+
+	@Override
+	public void addStateManagementCollectionBinding(CollectionSource source, Collection collection) {
+		stateManagementCollectionBindings.add( new StateManagementCollectionBinding( source, collection ) );
+	}
+
+	@Override
+	public void forEachStateManagementCollectionBinding(BiConsumer<CollectionSource, Collection> consumer) {
+		stateManagementCollectionBindings.forEach( binding -> consumer.accept( binding.source, binding.collection ) );
+	}
+
+	@Override
+	public void addStateManagementOneToManyCollectionBinding(
+			CollectionSource source,
+			Collection collection,
+			String referencedEntityName) {
+		stateManagementOneToManyCollectionBindings.add(
+				new StateManagementOneToManyCollectionBinding( source, collection, referencedEntityName )
+		);
+	}
+
+	@Override
+	public void forEachStateManagementOneToManyCollectionBinding(
+			StateManagementOneToManyCollectionConsumer consumer) {
+		stateManagementOneToManyCollectionBindings.forEach(
+				binding -> consumer.accept( binding.source, binding.collection, binding.referencedEntityName )
+		);
+	}
+
+	private record StateManagementRootBinding(ClassDetails classDetails, RootClass rootClass) {
+	}
+
+	private record StateManagementPropertyBinding(MemberDetails memberDetails, Property property) {
+	}
+
+	private record StateManagementCollectionBinding(CollectionSource source, Collection collection) {
+	}
+
+	private record StateManagementOneToManyCollectionBinding(
+			CollectionSource source,
+			Collection collection,
+			String referencedEntityName) {
 	}
 
 	private String resolveSchemaName(Identifier explicit) {

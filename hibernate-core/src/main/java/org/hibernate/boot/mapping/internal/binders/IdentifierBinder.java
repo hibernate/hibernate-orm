@@ -465,13 +465,16 @@ public class IdentifierBinder {
 		ClassDetails currentType = idClassType;
 		while ( currentType != null && currentType != ClassDetails.OBJECT_CLASS_DETAILS ) {
 			for ( MemberDetails field : currentType.getFields() ) {
+				if ( !field.isPersistable() ) {
+					continue;
+				}
 				final String attributeName = field.resolveAttributeName();
 				if ( attributeName != null && !memberNames.contains( attributeName ) ) {
 					memberNames.add( attributeName );
 				}
 			}
 			for ( MethodDetails method : currentType.getMethods() ) {
-				if ( method.getMethodKind() == MethodDetails.MethodKind.OTHER ) {
+				if ( !method.isPersistable() || method.getMethodKind() == MethodDetails.MethodKind.OTHER ) {
 					continue;
 				}
 				final String attributeName = method.resolveAttributeName();
@@ -508,12 +511,12 @@ public class IdentifierBinder {
 		}
 		while ( idClassType != null && idClassType != ClassDetails.OBJECT_CLASS_DETAILS ) {
 			for ( MemberDetails field : idClassType.getFields() ) {
-				if ( idAttribute.getName().equals( field.resolveAttributeName() ) ) {
+				if ( field.isPersistable() && idAttribute.getName().equals( field.resolveAttributeName() ) ) {
 					return field;
 				}
 			}
 			for ( MemberDetails method : idClassType.getMethods() ) {
-				if ( idAttribute.getName().equals( method.resolveAttributeName() ) ) {
+				if ( method.isPersistable() && idAttribute.getName().equals( method.resolveAttributeName() ) ) {
 					return method;
 				}
 			}

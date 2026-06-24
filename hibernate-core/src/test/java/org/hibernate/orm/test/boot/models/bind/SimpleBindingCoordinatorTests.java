@@ -5,9 +5,16 @@
 package org.hibernate.orm.test.boot.models.bind;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.Hibernate;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.relational.PhysicalTable;
 import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
@@ -19,7 +26,15 @@ import org.hibernate.type.SqlTypes;
 
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.SchemaValidationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -129,5 +144,292 @@ public class SimpleBindingCoordinatorTests {
 				scope.getRegistry(),
 				SimpleEntity.class
 		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testMinimalMetadataBuildsSessionFactory(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						assertThat( sessionFactory.getMappingMetamodel()
+								.getEntityDescriptor( SessionFactoryBuildableEntity.class ) ).isNotNull();
+					}
+				},
+				scope.getRegistry(),
+				SessionFactoryBuildableEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testSchemaManagerUsesNewPipelineDatabaseModel(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var table = context.getMetadataCollector()
+							.getDatabase()
+							.getDefaultNamespace()
+							.locateTable( Identifier.toIdentifier( "schema_export_entities" ) );
+					assertThat( table ).isNotNull();
+					assertThat( table.getColumn( Identifier.toIdentifier( "name" ) ) ).isNotNull();
+
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						sessionFactory.getSchemaManager().create( true );
+						try {
+							validateSchema( sessionFactory );
+
+							try (var session = sessionFactory.openSession()) {
+								final var transaction = session.beginTransaction();
+								session.persist( new SchemaExportEntity( 1, "one" ) );
+								transaction.commit();
+							}
+						}
+						finally {
+							sessionFactory.getSchemaManager().drop( true );
+						}
+					}
+				},
+				scope.getRegistry(),
+				SchemaExportEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testFilterDefinitionsReachRuntimeAndApply(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						final var activeStatusDefinition = sessionFactory.getFilterDefinition( "activeStatus" );
+						assertThat( activeStatusDefinition.getDefaultFilterCondition() ).isEqualTo( "status = 1" );
+						assertThat( activeStatusDefinition.isAutoEnabled() ).isTrue();
+						assertThat( activeStatusDefinition.isAppliedToLoadByKey() ).isTrue();
+
+						final var byNameDefinition = sessionFactory.getFilterDefinition( "byFilterName" );
+						assertThat( byNameDefinition.getDefaultFilterCondition() ).isEqualTo( "name = :name" );
+						assertThat( byNameDefinition.isAutoEnabled() ).isFalse();
+						assertThat( byNameDefinition.isAppliedToLoadByKey() ).isTrue();
+						assertThat( byNameDefinition.getParameterNames() ).containsExactly( "name" );
+						assertThat( byNameDefinition.getParameterJdbcMapping( "name" ).getJdbcJavaType().getJavaType() )
+								.isEqualTo( String.class );
+
+						sessionFactory.getSchemaManager().create( true );
+						try {
+							try (var session = sessionFactory.openSession()) {
+								final var transaction = session.beginTransaction();
+								session.persist( new FilterHandoffEntity( 1, "alpha", 1 ) );
+								session.persist( new FilterHandoffEntity( 2, "beta", 1 ) );
+								session.persist( new FilterHandoffEntity( 3, "inactive", 0 ) );
+								transaction.commit();
+							}
+
+							try (var session = sessionFactory.openSession()) {
+								assertThat( session.getEnabledFilter( "activeStatus" ) ).isNotNull();
+								assertThat( session.find( FilterHandoffEntity.class, 3 ) ).isNull();
+								assertThat( session.createQuery(
+										"from FilterHandoffEntity order by id",
+										FilterHandoffEntity.class
+								).getResultList() )
+										.extracting( FilterHandoffEntity::getName )
+										.containsExactly( "alpha", "beta" );
+
+								session.enableFilter( "byFilterName" ).setParameter( "name", "beta" );
+								assertThat( session.createQuery(
+										"from FilterHandoffEntity order by id",
+										FilterHandoffEntity.class
+								).getResultList() )
+										.extracting( FilterHandoffEntity::getName )
+										.containsExactly( "beta" );
+							}
+						}
+						finally {
+							sessionFactory.getSchemaManager().drop( true );
+						}
+					}
+				},
+				scope.getRegistry(),
+				FilterHandoffEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testFetchProfileAndEntityGraphReachRuntimeAndApply(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						assertThat( sessionFactory.containsFetchProfileDefinition( "child-with-parent-profile" ) )
+								.isTrue();
+						assertThat( sessionFactory.findEntityGraphByName( "child-with-parent-graph" ) )
+								.isNotNull();
+
+						sessionFactory.getSchemaManager().create( true );
+						try {
+							try (var session = sessionFactory.openSession()) {
+								final var transaction = session.beginTransaction();
+								final var parent = new FetchHandoffParent( 1, "parent" );
+								session.persist( parent );
+								session.persist( new FetchHandoffChild( 1, "child", parent ) );
+								transaction.commit();
+							}
+
+							try (var session = sessionFactory.openSession()) {
+								final var child = session.createQuery(
+										"from FetchHandoffChild",
+										FetchHandoffChild.class
+								).getSingleResult();
+								assertThat( Hibernate.isInitialized( child.getParent() ) ).isFalse();
+							}
+
+							try (var session = sessionFactory.openSession()) {
+								session.enableFetchProfile( "child-with-parent-profile" );
+								assertThat( session.isFetchProfileEnabled( "child-with-parent-profile" ) ).isTrue();
+								final var child = session.createQuery(
+										"from FetchHandoffChild",
+										FetchHandoffChild.class
+								).getSingleResult();
+								assertThat( Hibernate.isInitialized( child.getParent() ) ).isTrue();
+							}
+
+							try (var session = sessionFactory.openSession()) {
+								final var graph = session.getEntityGraph(
+										FetchHandoffChild.class,
+										"child-with-parent-graph"
+								);
+								assertThat( graph.hasAttributeNode( "parent" ) ).isTrue();
+								final var child = session.createQuery(
+										"from FetchHandoffChild",
+										FetchHandoffChild.class
+								).setEntityGraph( graph, GraphSemantic.LOAD ).getSingleResult();
+								assertThat( Hibernate.isInitialized( child.getParent() ) ).isTrue();
+							}
+						}
+						finally {
+							sessionFactory.getSchemaManager().drop( true );
+						}
+					}
+				},
+				scope.getRegistry(),
+				FetchHandoffParent.class,
+				FetchHandoffChild.class
+		);
+	}
+
+	private static void validateSchema(org.hibernate.SessionFactory sessionFactory) {
+		try {
+			sessionFactory.getSchemaManager().validate();
+		}
+		catch (SchemaValidationException e) {
+			throw new AssertionError( e );
+		}
+	}
+
+	@Entity(name = "SessionFactoryBuildableEntity")
+	public static class SessionFactoryBuildableEntity {
+		@Id
+		private Integer id;
+		private String name;
+	}
+
+	@Entity(name = "SchemaExportEntity")
+	@jakarta.persistence.Table(name = "schema_export_entities")
+	public static class SchemaExportEntity {
+		@Id
+		private Integer id;
+
+		@jakarta.persistence.Column(nullable = false, length = 40)
+		private String name;
+
+		protected SchemaExportEntity() {
+		}
+
+		public SchemaExportEntity(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
+
+	@Entity(name = "FilterHandoffEntity")
+	@jakarta.persistence.Table(name = "filter_handoff_entities")
+	@FilterDef(name = "activeStatus", defaultCondition = "status = 1", autoEnabled = true, applyToLoadByKey = true)
+	@FilterDef(
+			name = "byFilterName",
+			defaultCondition = "name = :name",
+			parameters = @ParamDef(name = "name", type = String.class),
+			applyToLoadByKey = true
+	)
+	@Filter(name = "activeStatus")
+	@Filter(name = "byFilterName")
+	public static class FilterHandoffEntity {
+		@Id
+		private Integer id;
+
+		private String name;
+
+		private int status;
+
+		protected FilterHandoffEntity() {
+		}
+
+		public FilterHandoffEntity(Integer id, String name, int status) {
+			this.id = id;
+			this.name = name;
+			this.status = status;
+		}
+
+		public String getName() {
+			return name;
+		}
+	}
+
+	@Entity(name = "FetchHandoffParent")
+	@jakarta.persistence.Table(name = "fetch_handoff_parents")
+	public static class FetchHandoffParent {
+		@Id
+		private Integer id;
+
+		private String name;
+
+		protected FetchHandoffParent() {
+		}
+
+		public FetchHandoffParent(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
+
+	@Entity(name = "FetchHandoffChild")
+	@jakarta.persistence.Table(name = "fetch_handoff_children")
+	@NamedEntityGraph(name = "child-with-parent-graph", attributeNodes = @NamedAttributeNode("parent"))
+	@FetchProfile(
+			name = "child-with-parent-profile",
+			fetchOverrides = @FetchProfile.FetchOverride(
+					entity = FetchHandoffChild.class,
+					association = "parent"
+			)
+	)
+	public static class FetchHandoffChild {
+		@Id
+		private Integer id;
+
+		private String name;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "parent_id")
+		private FetchHandoffParent parent;
+
+		protected FetchHandoffChild() {
+		}
+
+		public FetchHandoffChild(Integer id, String name, FetchHandoffParent parent) {
+			this.id = id;
+			this.name = name;
+			this.parent = parent;
+		}
+
+		public FetchHandoffParent getParent() {
+			return parent;
+		}
 	}
 }

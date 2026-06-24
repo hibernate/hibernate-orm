@@ -68,6 +68,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
+import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.JpaEventListenerStyle;
@@ -141,6 +142,7 @@ import org.hibernate.boot.mapping.internal.xml.attr.CommonAttributeProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.ForeignKeyProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.JoinColumnProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.TableProcessing;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
@@ -683,6 +685,17 @@ public class XmlAnnotationHelper {
 	private static Class<? extends Generator> generatorClass(
 			JaxbGenericIdGeneratorImpl jaxbGenerator,
 			XmlDocumentContext xmlDocumentContext) {
+		final Class<? extends Generator> legacyGeneratorClass = GeneratorStrategies.mapLegacyNamedGenerator(
+				jaxbGenerator.getClazz(),
+				xmlDocumentContext.getBootstrapContext()
+						.getServiceRegistry()
+						.requireService( JdbcServices.class )
+						.getDialect()
+		);
+		if ( legacyGeneratorClass != null ) {
+			return legacyGeneratorClass;
+		}
+
 		final Class<?> generatorClass = xmlDocumentContext.getBootstrapContext()
 				.getClassLoaderService()
 				.classForName( jaxbGenerator.getClazz() );

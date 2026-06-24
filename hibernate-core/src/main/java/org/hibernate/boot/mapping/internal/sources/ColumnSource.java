@@ -71,6 +71,10 @@ public interface ColumnSource {
 
 	String options();
 
+	default String comment() {
+		return "";
+	}
+
 	String table();
 
 	default CheckConstraint[] checkConstraints() {
@@ -126,6 +130,11 @@ public interface ColumnSource {
 		@Override
 		public String options() {
 			return column.options();
+		}
+
+		@Override
+		public String comment() {
+			return column.comment();
 		}
 
 		@Override
@@ -191,6 +200,11 @@ public interface ColumnSource {
 		}
 
 		@Override
+		public String comment() {
+			return joinColumn.comment();
+		}
+
+		@Override
 		public String table() {
 			return joinColumn.table();
 		}
@@ -253,6 +267,11 @@ public interface ColumnSource {
 		}
 
 		@Override
+		public String comment() {
+			return mapKeyColumn.comment();
+		}
+
+		@Override
 		public String table() {
 			return mapKeyColumn.table();
 		}
@@ -312,6 +331,11 @@ public interface ColumnSource {
 		@Override
 		public String options() {
 			return mapKeyJoinColumn.options();
+		}
+
+		@Override
+		public String comment() {
+			return mapKeyJoinColumn.comment();
 		}
 
 		@Override

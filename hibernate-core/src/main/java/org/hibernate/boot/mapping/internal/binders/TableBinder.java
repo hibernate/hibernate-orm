@@ -218,15 +218,15 @@ public class TableBinder {
 				QuotedIdentifierTarget.CATALOG_NAME
 		);
 
-		final DenormalizedTable binding = (DenormalizedTable) bindingState.getMetadataBuildingContext().getMetadataCollector().addDenormalizedTable(
+		final DenormalizedTable binding = bindingState.createDenormalizedTable(
 				logicalSchemaName == null ? null : logicalSchemaName.getCanonicalName(),
 				logicalCatalogName == null  ? null : logicalCatalogName.getCanonicalName(),
 				logicalName.getCanonicalName(),
 				type.isAbstract(),
 				null,
-				unionBaseTable,
-				bindingState.getMetadataBuildingContext()
+				unionBaseTable
 		);
+		registerLegacyLogicalTableName( logicalName, binding );
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
 		applyType( binding, tableSource );
@@ -275,18 +275,17 @@ public class TableBinder {
 				}
 		);
 
-		return new InLineView(
-				logicalName,
-				bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
-						null,
-						null,
-						logicalName.getCanonicalName(),
-						subselectAnn.value(),
-						true,
-						bindingState.getMetadataBuildingContext(),
-						false
-				)
+		final Table binding = bindingState.getOrCreateTable(
+				null,
+				null,
+				logicalName.getCanonicalName(),
+				subselectAnn.value(),
+				true,
+				false
 		);
+		registerLegacyLogicalTableName( logicalName, binding );
+
+		return new InLineView( logicalName, binding );
 	}
 
 	private TableReference bindPhysicalTable(
@@ -314,15 +313,15 @@ public class TableBinder {
 		final Identifier logicalSchemaName = bindingOptions.getDefaultSchemaName();
 		final Identifier logicalCatalogName = bindingOptions.getDefaultCatalogName();
 
-		final Table binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final Table binding = bindingState.getOrCreateTable(
 					toCanonicalName( logicalSchemaName ),
 					toCanonicalName( logicalCatalogName ),
 					logicalName.getText(),
 					null,
 					type.isAbstract(),
-					bindingState.getMetadataBuildingContext(),
 				false
 		);
+		registerLegacyLogicalTableName( logicalName, binding );
 
 		applyComment( binding, null );
 		applyHibernateChecks( binding, type );
@@ -380,15 +379,15 @@ public class TableBinder {
 				QuotedIdentifierTarget.CATALOG_NAME
 		);
 
-		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final var binding = bindingState.getOrCreateTable(
 				explicitSchemaName( tableSource, logicalSchemaName ),
 				explicitCatalogName( tableSource, logicalCatalogName ),
 				nameForAddTable( logicalName, tableSource.nonEmptyName() != null ),
 				null,
 				type.isAbstract(),
-				bindingState.getMetadataBuildingContext(),
 				tableSource.nonEmptyName() != null
 		);
+		registerLegacyLogicalTableName( logicalName, binding );
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
@@ -446,6 +445,10 @@ public class TableBinder {
 				physicalSchemaName,
 				binding
 		);
+	}
+
+	private void registerLegacyLogicalTableName(Identifier logicalName, Table table) {
+		bindingState.getMetadataBuildingContext().getMetadataCollector().addTableNameBinding( logicalName, table );
 	}
 
 	public PhysicalTable bindCollectionTable(
@@ -531,15 +534,15 @@ public class TableBinder {
 				QuotedIdentifierTarget.CATALOG_NAME
 		);
 
-		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final var binding = bindingState.getOrCreateTable(
 					explicitSchemaName( tableSource, logicalSchemaName ),
 					explicitCatalogName( tableSource, logicalCatalogName ),
 					logicalName.getText(),
 					null,
 					isAbstract,
-					bindingState.getMetadataBuildingContext(),
 				tableSource != null && tableSource.nonEmptyName() != null
 		);
+		registerLegacyLogicalTableName( logicalName, binding );
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
@@ -672,15 +675,15 @@ public class TableBinder {
 				QuotedIdentifierTarget.CATALOG_NAME
 		);
 
-		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final var binding = bindingState.getOrCreateTable(
 				explicitSchemaName( tableSource, schemaName ),
 				explicitCatalogName( tableSource, catalogName ),
 				nameForAddTable( logicalName, tableSource.nonEmptyName() != null ),
 				null,
 				false,
-				bindingState.getMetadataBuildingContext(),
 				tableSource.nonEmptyName() != null
 		);
+		registerLegacyLogicalTableName( logicalName, binding );
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
@@ -945,7 +948,7 @@ public class TableBinder {
 	private Column createColumn(String logicalName) {
 		final String physicalName = physicalNamingStrategy
 				.toPhysicalColumnName(
-						bindingState.getMetadataBuildingContext().getMetadataCollector().getDatabase().toIdentifier( logicalName ),
+						bindingState.getDatabase().toIdentifier( logicalName ),
 						jdbcEnvironment
 				)
 				.render( jdbcEnvironment.getDialect() );

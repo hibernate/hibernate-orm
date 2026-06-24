@@ -4,8 +4,10 @@
  */
 package org.hibernate.orm.test.boot.models.bind;
 
+import java.util.List;
 import java.util.Set;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
@@ -25,8 +27,12 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+import org.hibernate.usertype.CompositeUserType;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Steve Ebersole
@@ -35,6 +41,14 @@ public class BindingTestingHelper {
 	public static void checkDomainModel(
 			DomainModelCheck check,
 			StandardServiceRegistry serviceRegistry,
+			Class<?>... domainClasses) {
+		checkDomainModel( check, serviceRegistry, List.of(), domainClasses );
+	}
+
+	public static void checkDomainModel(
+			DomainModelCheck check,
+			StandardServiceRegistry serviceRegistry,
+			List<String> mappingFiles,
 			Class<?>... domainClasses) {
 		final BootstrapContextImpl bootstrapContext = buildBootstrapContext( serviceRegistry );
 
@@ -54,7 +68,12 @@ public class BindingTestingHelper {
 				)
 		);
 		bootstrapContext.getTypeConfiguration().scope( metadataBuildingContext );
-		final AvailableResources availableResources = buildAvailableResources( metadataBuildingContext, domainClasses );
+		applyDialectTypeContributions( metadataBuildingContext );
+		final AvailableResources availableResources = buildAvailableResources(
+				metadataBuildingContext,
+				mappingFiles,
+				domainClasses
+		);
 		final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
 				availableResources,
 				metadataBuildingContext
@@ -102,6 +121,34 @@ public class BindingTestingHelper {
 		} );
 	}
 
+	private static void applyDialectTypeContributions(MetadataBuildingContext metadataBuildingContext) {
+		final var bootstrapContext = metadataBuildingContext.getBootstrapContext();
+		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final var typeContributions = new TypeContributions() {
+			@Override
+			public org.hibernate.type.spi.TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+				metadataBuildingContext.getMetadataCollector().getConverterRegistry().addAttributeConverter(
+						converterClass
+				);
+			}
+
+			@Override
+			public void contributeType(CompositeUserType<?> type) {
+				metadataBuildingContext.getBuildingOptions().getCompositeUserTypes().add( type );
+			}
+		};
+
+		bootstrapContext.getServiceRegistry()
+				.requireService( JdbcServices.class )
+				.getDialect()
+				.contribute( typeContributions, bootstrapContext.getServiceRegistry() );
+	}
+
 	public static Set<EntityHierarchy> buildHierarchyMetadata(Class<?>... classes) {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
 			final MetadataBuildingContext metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -134,9 +181,19 @@ public class BindingTestingHelper {
 	}
 
 	private static AvailableResources buildAvailableResources(MetadataBuildingContext metadataBuildingContext, Class<?>... classes) {
+		return buildAvailableResources( metadataBuildingContext, List.of(), classes );
+	}
+
+	private static AvailableResources buildAvailableResources(
+			MetadataBuildingContext metadataBuildingContext,
+			List<String> mappingFiles,
+			Class<?>... classes) {
 		final HibernatePersistenceConfiguration persistenceConfiguration = new HibernatePersistenceConfiguration( "test" );
 		for ( Class<?> clazz : classes ) {
 			persistenceConfiguration.managedClass( clazz );
+		}
+		for ( String mappingFile : mappingFiles ) {
+			persistenceConfiguration.mappingFile( mappingFile );
 		}
 		return AvailableResources.from(
 				persistenceConfiguration,

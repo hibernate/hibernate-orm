@@ -2018,11 +2018,29 @@ Open parity questions:
 * Column and table options have focused propagation coverage.  Keep them in
   the schema-detail guardrail set for combination testing with quoted
   identifiers, collection tables, association tables, and joined inheritance.
+  The current new-pipeline slice propagates column comments, collection-table
+  comments, local sequence/table generator definitions used by generated ids,
+  XML legacy generator strategy tokens such as `native`, dynamic XML entity
+  override lookup, and single-column unique flags on basic element-collection
+  values.  The unique-constraint create-table assertion now accepts first-column
+  inline `unique` DDL.
 +
 [source,bash]
 ----
 ./gradlew :hibernate-core:test -x :hibernate-testing:test \
-  --tests org.hibernate.orm.test.schemaupdate.columnoptions.ColumnOptionsTest
+  --tests org.hibernate.orm.test.schemaupdate.columnoptions.ColumnOptionsTest \
+  --tests org.hibernate.orm.test.schemaupdate.tableoptions.TableOptionsTest \
+  --tests org.hibernate.orm.test.schemaupdate.CommentGenerationTest \
+  --tests org.hibernate.orm.test.schemaupdate.TableCommentTest \
+  --tests org.hibernate.orm.test.schemaupdate.tablecomment.JpaTableCommentTest \
+  --tests 'org.hibernate.orm.test.annotations.comment.*' \
+  --tests 'org.hibernate.orm.test.annotations.comment.jpa.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.checkconstraint.column.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.checkconstraint.table.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.uniqueconstraint.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.index.*' \
+  --tests org.hibernate.orm.test.mapping.identifier.RowIdTest \
+  --tests org.hibernate.orm.test.mapping.identifier.SimplePartitionKeyTest
 ----
 * Unique constraints, indexes, checks, comments, row ids, partition keys,
   generated columns, column transformers, formulas, nationalized/time-zone
@@ -2050,6 +2068,10 @@ Open parity questions:
   inference is covered as an explicit unsupported shape.  Runtime-adjacent
   lazy, join-fetch, entity-graph, filter-enabled load-by-key, and detached
   initialization behavior is covered by the focused fetch slice below.
+  Implicit discriminator value strategy is carried only when
+  `@AnyDiscriminatorImplicitValues` is present, matching legacy behavior for
+  explicit discriminator mappings while still allowing the runtime converter to
+  apply its no-explicit-mapping fallback.
 +
 [source,bash]
 ----

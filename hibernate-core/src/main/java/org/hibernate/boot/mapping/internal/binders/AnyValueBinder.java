@@ -254,7 +254,7 @@ class AnyValueBinder {
 	private ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(AnySource source) {
 		final AnyDiscriminatorImplicitValues implicitValues = source.implicitDiscriminatorValues();
 		if ( implicitValues == null ) {
-			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+			return null;
 		}
 		return switch ( implicitValues.value() ) {
 			case FULL_NAME -> FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;

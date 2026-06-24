@@ -101,6 +101,38 @@ This model works, but it spreads state-management intent across annotations,
 table mutations, auxiliary columns, state-management strategy classes, settings,
 services, and runtime mappings.
 
+== Current New-Pipeline Shape
+
+The new boot pipeline now has an explicit
+`org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase`.
+
+This is a transitional compatibility phase, not yet the proposed descriptor
+model.  General entity, attribute, and collection binders register
+state-management work as they create the normal mapping objects.  The
+coordinator then runs `StateManagementBindingPhase` after the core table,
+collection, association-target, and foreign-key work has completed.
+
+The phase currently projects state-management annotations into the same mapping
+shape expected by legacy boot processing and runtime consumers:
+
+* entity-level temporal, audit, and changelog declarations are applied to the
+  corresponding `PersistentClass` / `RootClass` state;
+* property-level `@Temporal.Excluded` and `@Audited.Excluded` are applied to
+  `Property` flags;
+* audited and temporal collection declarations are applied to `Collection`
+  state;
+* temporal and audit helpers still create the auxiliary columns, auxiliary
+  tables, primary-key changes, and runtime-facing `Stateful` metadata;
+* changelog discovery and changeset-supplier registration remain part of the
+  state-management binding concern.
+
+This keeps the new pipeline aligned with the existing
+`org.hibernate.mapping`/runtime contract while isolating the side effects behind
+a named phase.  The important current policy is that the new pipeline
+materializes the expected legacy mapping shape.  It should not yet attach new
+`StateManagementDescriptor` instances directly to shared mapping contracts such
+as `PersistentClass`, `Collection`, or `Property`.
+
 == Design Goals
 
 State management should be explicit in both boot and runtime models.
@@ -164,7 +196,8 @@ CategorizedDomainModel
 == Proposed Boot Model
 
 State management should be represented as a descriptor attached to stateful
-mapping targets.
+mapping targets, but this is a later phase of the design rather than the
+current compatibility bridge.
 
 Possible shape:
 
@@ -209,6 +242,20 @@ should not be the only representation of state-management intent.  `Stateful`
 currently stores the state-management type, auxiliary table, auxiliary columns,
 primary-key flags, and partitioning flags.  That is useful metadata, but it is
 closer to the applied mapping result than the normalized source plan.
+
+Descriptor state should not be attached to `PersistentClass`, `Collection`, or
+other shared `org.hibernate.mapping` contracts while `MetadataBuildingProcess`
+remains an active boot path.  Doing so would create two possible sources of
+truth: descriptors populated by the new pipeline and legacy side-effect state
+populated by legacy boot.  Until that split is removed, descriptor-like state
+should live inside the new pipeline as source contributions or resolved plans
+and should be projected into the legacy mapping shape.
+
+The trigger to move this proposed model onto the boot mapping objects is when
+the descriptor can become authoritative for all supported boot paths, or when
+`MetadataBuildingProcess` has been removed far enough that runtime and schema
+consumers no longer need to handle both descriptor-populated and
+side-effect-populated mappings.
 
 == Changelog Model
 
@@ -265,9 +312,9 @@ package, type, and member scopes before applying table changes.
 
 == Binder Shape
 
-The binder should have a dedicated state-management phase.
+The binder has a dedicated state-management phase.
 
-Current transitional shape:
+Previous transitional shape:
 
 [source]
 ----
@@ -288,18 +335,18 @@ collect state-management contributions
     -> publish runtime state-management descriptors
 ----
 
-In the current pipeline this likely maps to:
+The current implemented bridge maps this to:
 
 * entity metadata phase for entity-level temporal/audit/changelog declarations;
 * attribute/property creation for exclusion flags;
 * collection binding or collection-shape phase for collection-level temporal and
   audit declarations;
-* a later table-key/state-management phase for history-table primary keys,
-  audit-table foreign keys, and changelog validation.
+* `StateManagementBindingPhase`, which applies the registered work after core
+  table/key/association/foreign-key binding has enough mapping state available.
 
 The existing `TemporalHelper` and `AuditHelper` can be used as a bridge, but the
-bridge should be isolated behind new-pipeline state-management binders rather
-than called opportunistically from general entity and collection code.
+bridge is isolated behind `StateManagementBindingPhase` rather than called
+opportunistically from general entity and collection code.
 
 == Runtime Model Direction
 
@@ -357,7 +404,7 @@ The implementation should be incremental.
 
 1. Register descriptors for `@Audited`, `@Audited.*`, `@Changelog`, and
    `@Changelog.*` so the new model layer can see the annotations.
-2. Add a state-management binder facade in the new pipeline.
+2. Add `StateManagementBindingPhase` in the new pipeline.
 3. Initially delegate entity-level `@Temporal` to `TemporalHelper` as a bridge,
    with mapping-state tests for auxiliary columns, history table, partitioning,
    and primary-key behavior.
@@ -375,6 +422,24 @@ The implementation should be incremental.
 Each bridge slice should record which legacy helper behavior it relies on and
 which part should eventually move into a first-class pipeline product.
 
+Steps 2 through 8 are represented in the current bridge by registrations into
+`BindingState` and application through `StateManagementBindingPhase`.  The bridge
+intentionally continues to populate `Stateful`, auxiliary tables/columns, and
+property exclusion flags so existing runtime consumers observe the legacy boot
+shape.
+
+The next implementation boundary is not to add descriptors to
+`PersistentClass`, `Collection`, or `Property`.  The next boundary is to add an
+internal contribution/resolution object only when state-management behavior
+requires whole-model reasoning, for example package defaults, changelog-driven
+changeset-id type resolution, or validation of combinations before table
+mutation.
+
+The proposed boot mapping descriptors should wait until the legacy
+`MetadataBuildingProcess` path is removed or no longer exposes the same shared
+mapping objects to runtime/schema consumers.  At that point the descriptor can
+become the authoritative boot-model state rather than a parallel representation.
+
 == Open Questions
 
 How much commonality should exist between temporal, audit, changelog, and soft
@@ -387,10 +452,12 @@ flattening temporal and audit into an abstraction that hides their differences.
 
 Where should state-management descriptors live?
 
-Possible options include storing descriptors directly on existing mapping
-contracts, storing them beside the mapping contracts and projecting into
-`Stateful` for compatibility, or adding parallel state to the mapping model
-during the transition away from `MetamodelBuildingProcess`.
+During the `MetadataBuildingProcess` transition, descriptors should not live
+directly on existing shared mapping contracts.  The safe transitional option is
+to store descriptor-like source or resolved state inside the new pipeline and
+project it into `Stateful` and other existing mapping state for compatibility.
+After legacy boot removal, descriptors can move onto the boot mapping model and
+become authoritative.
 
 What should replace `Stateful` long term?
 
@@ -401,9 +468,12 @@ compatibility projection of a more explicit state-management model.
 Where is the correct phase boundary for table mutation?
 
 Temporal and audit support mutate tables, columns, primary keys, foreign keys,
-and auxiliary table metadata.  The pipeline needs a named phase boundary for
-that work, but it is not yet clear how much should happen during entity and
-collection binding versus a later state-management/table-finalization phase.
+and auxiliary table metadata.  The current named phase boundary is
+`StateManagementBindingPhase`, run after core binding has created the mapping
+objects needed by the legacy helper projection.  A later descriptor model may
+split this into contribution collection, resolution, validation, and
+materialization, but the current bridge should keep table mutation centralized
+in the state-management phase.
 
 How should changelog discovery affect changeset type resolution?
 
@@ -446,15 +516,16 @@ runtime redesign.
 
 Near-term work should proceed in conservative parity slices:
 
-* add annotation descriptors for audit and changelog annotations;
-* prove entity-level `@Temporal` binding in the new pipeline;
-* prove `@Temporal.Excluded`;
-* prove collection-level `@Temporal`;
-* prove basic `@Audited` root entity support;
-* prove `@Audited.Excluded`;
-* prove audit table overrides and secondary-table audit support;
-* prove audited collection support;
-* prove `@Changelog` discovery and supplier registration.
+* keep the `StateManagementBindingPhase` bridge covered with focused mapping
+  and runtime assertions;
+* finish any remaining `@Changelog` discovery, validation, and
+  changeset-supplier/type-resolution parity;
+* characterize package-level state-management defaults before deciding whether
+  they need an internal contribution/resolution object;
+* add an internal state-management contribution/resolution object only when the
+  bridge needs whole-model reasoning before table mutation;
+* defer boot mapping `StateManagementDescriptor` attachment until it can be the
+  authoritative model instead of a new-pipeline-only parallel representation.
 
 Focused tests should assert `org.hibernate.mapping` state and runtime mapping
 state, not only successful bootstrap.

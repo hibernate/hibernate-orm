@@ -70,7 +70,7 @@ the relevant deferred phases have run.
 == Original PoC Comparison
 
 The original https://github.com/sebersole/hibernate-annotation-source/tree/9d78eb96d16b86658d4f557a9df73a5d0332fb57[annotation-source PoC] already explored a closely related
-intermediate model under `org.hibernate.boot.models.intermediate`.  It used a
+intermediate model in a historical PoC package.  It used a
 `Metadata` suffix in names such as managed type, identifiable type, entity,
 mapped superclass, attribute, column, relational value, override, conversion,
 and entity hierarchy metadata.
@@ -85,7 +85,7 @@ important evidence for the shape:
   `org.hibernate.mapping.Property` creation;
 * it had an entity hierarchy product before `RootClass` / `Subclass`
   materialization;
-* it had a first materialization phase under `boot.models.bind.internal` that
+* it had a first materialization phase in the historical PoC bind package that
   created `PersistentClass`, `Property`, `BasicValue`, `Column`, `Table`, and
   `Join` instances from the intermediate model.
 

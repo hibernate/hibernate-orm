@@ -62,11 +62,11 @@ link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/sou
 link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
 answers: "What source material should this boot process consider?"
 
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/CategorizedDomainModel.java[`CategorizedDomainModel`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
 answers: "After interpreting that source material, what persistent types,
 attributes, hierarchies, and global registrations does binding need?"
 
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
 answers: "How do we turn that categorized model into ordered binding facts,
 pending work, and materialization requests in a dependency-safe order?"
 
@@ -87,17 +87,17 @@ Imagine a persistence unit with one class, `Customer`, annotated with `@Entity`.
 
 1. link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
 receives `Customer` as a managed class detail.
-2. link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/DomainModelCategorizer.java[`DomainModelCategorizer`]
+2. link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
 sees `@Entity` on `Customer` and records it as a persistent entity type.  It
 also collects any global registrations declared on the class, such as
 `@NamedQuery`.
-3. link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
+3. link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
 creates a single-class hierarchy with `Customer` as the root.
 4. The result, a
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/CategorizedDomainModel.java[`CategorizedDomainModel`],
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`],
 now contains one entity hierarchy, zero mapped superclasses, and zero
 embeddables.
-5. link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
+5. link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
 walks that hierarchy and records the ordered binding facts needed for tables,
 identifiers, attributes, and constraints.
 6. Materializers consume those binding facts and resolved products, creating or
@@ -205,7 +205,7 @@ or embeddable.
 Categorization starts with XML that has been pre-processed from
 `AvailableResources`:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/xml/spi/XmlPreProcessor.java[`XmlPreProcessor`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/xml/XmlPreProcessor.java[`XmlPreProcessor`]
 
 This happens before annotation processing because XML can affect what is visible
 to Hibernate Models.  For example, XML can contribute mapped classes, dynamic
@@ -232,21 +232,21 @@ inventory to categorized model.
 
 Touchpoint:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/DomainModelCategorizer.java[`DomainModelCategorizer`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
 
 The high-level sequence is:
 
 1. Pre-process XML into ORM's `XmlPreProcessingResult`.
 2. Build the complete list of known class and package names.
 3. Create a
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`].
 4. Process XML through ORM's `XmlProcessor`.
 5. Apply each known `ClassDetails` to the collector.
 6. Apply deferred XML overlays.
 7. Build inheritance state from the visible persistent types.
 8. Build entity hierarchies.
 9. Create the
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/CategorizedDomainModel.java[`CategorizedDomainModel`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`].
 
 The categorizer uses the existing bootstrap `ModelsContext`; it does not create a
 separate source model registry.
@@ -259,7 +259,7 @@ model.
 
 Touchpoint:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`]
 
 It records:
 
@@ -318,7 +318,7 @@ association names after entity binding.
 After all visible persistent types are collected, categorization builds
 inheritance state:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/ManagedTypeInheritanceState.java[`ManagedTypeInheritanceState`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/ManagedTypeInheritanceState.java[`ManagedTypeInheritanceState`]
 
 This state is scoped to the visible source set.  It does not scan every class
 reachable from the classpath.  If a persistent superclass exists in Java but was
@@ -326,11 +326,11 @@ not included in `AvailableResources`, the inheritance state decides how to handl
 that missing type.
 
 Then
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
 creates hierarchy objects:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/EntityHierarchy.java[`EntityHierarchy`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchy.java[`EntityHierarchy`]
 
 An `EntityHierarchy` starts from a root entity.  Its absolute root may be a
 mapped superclass above that root entity.  Each hierarchy also records facts that
@@ -345,8 +345,8 @@ locking.
 
 Touchpoints:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/CategorizedDomainModel.java[`CategorizedDomainModel`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/CategorizedDomainModelImpl.java[`CategorizedDomainModelImpl`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModelImpl.java[`CategorizedDomainModelImpl`]
 
 It exposes:
 
@@ -359,7 +359,7 @@ It deliberately does not expose categorization-time infrastructure such as the
 `ClassDetailsRegistry` or `AnnotationDescriptorRegistry`.  If later binding code
 needs services, it should get them from binding/categorization context objects,
 not by treating
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/CategorizedDomainModel.java[`CategorizedDomainModel`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
 as a service locator.
 
 
@@ -372,14 +372,14 @@ materializers for mapping-object population.
 
 Touchpoint:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
 
 `BindingCoordinator.coordinateBinding(...)` receives:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/CategorizedDomainModel.java[`CategorizedDomainModel`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingState.java[`BindingState`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingOptions.java[`BindingOptions`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingContext.java[`BindingContext`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingState.java[`BindingState`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingOptions.java[`BindingOptions`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingContext.java[`BindingContext`]
 
 The categorized model describes what should be bound.  The binding state is the
 mutable place where semantic binding products, compatibility mapping shells, and
@@ -418,7 +418,7 @@ The current global binding step processes:
 
 JPA event listeners are different: they are consumed while binding entity
 metadata through
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/EntityTypeMetadata.java[`EntityTypeMetadata#getCompleteJpaEventListeners()`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityTypeMetadata.java[`EntityTypeMetadata#getCompleteJpaEventListeners()`].
 
 
 [[_bootstrap_phase_contract]]
@@ -475,6 +475,13 @@ synthetic properties, and other work that requires both sides to be bound
 | Creating new side channels when typed pending state or resolved products can
 carry the dependency
 
+| State-management compatibility finalization
+| Temporal, audit, changelog, and related state-management side effects that
+must be projected into the existing `org.hibernate.mapping` shape after core
+tables, values, keys, associations, and foreign keys are available
+| Attaching new boot-model descriptor state to shared mapping contracts while
+`MetadataBuildingProcess` is still an active boot path
+
 | Validation and compatibility finalization
 | Mapping consistency checks and transitional compatibility behavior still
 needed by old mapping consumers
@@ -489,6 +496,18 @@ foreign-key materializers run after association targets and inverse structures
 are stable, and collection/index materializers run after collection key, element,
 and index columns are known.
 
+State management follows the same rule.  `StateManagementBindingPhase` is the
+current compatibility bridge for `@Temporal`, `@Audited`, `@Changelog`, and
+related state-management annotations.  Earlier binders register the
+state-management work they discover; the phase applies it after the normal
+mapping objects are available and projects the result into the legacy
+`org.hibernate.mapping` / `Stateful` shape expected by existing runtime and
+schema consumers.  Do not attach a new `StateManagementDescriptor` directly to
+`PersistentClass`, `Collection`, `Property`, or other shared mapping contracts
+while `MetadataBuildingProcess` remains active.  Descriptor-like state should
+remain internal to the new pipeline until it can become authoritative for all
+supported boot paths.
+
 If materialization ordering becomes too large for the binding phase interfaces
 to express clearly, introduce a small materialization coordinator with the same
 contract: each materialization phase consumes resolved products, creates or
@@ -502,16 +521,16 @@ entity or mapped superclass in hierarchy order, the coordinator creates a
 `ManagedTypeBinder`:
 
 * entities use
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/EntityTypeBinder.java[`EntityTypeBinder`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/EntityTypeBinder.java[`EntityTypeBinder`]
 * mapped superclasses use
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/MappedSuperTypeBinder.java[`MappedSuperTypeBinder`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/MappedSuperTypeBinder.java[`MappedSuperTypeBinder`]
 
 Touchpoints:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ManagedTypeBinder.java[`ManagedTypeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/EntityTypeBinder.java[`EntityTypeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/MappedSuperTypeBinder.java[`MappedSuperTypeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ModelBinders.java[`ModelBinders`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ManagedTypeBinder.java[`ManagedTypeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/EntityTypeBinder.java[`EntityTypeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/MappedSuperTypeBinder.java[`MappedSuperTypeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ModelBinders.java[`ModelBinders`]
 
 While each binder is created, the coordinator immediately calls
 `bindTypeSkeleton()`.  The skeleton is a compatibility anchor with just enough
@@ -543,7 +562,7 @@ back at raw source metadata or mutable mapping objects.
 
 The phase contracts live here:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/TypeBindingPhase.java[`TypeBindingPhase`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/TypeBindingPhase.java[`TypeBindingPhase`]
 
 The order is:
 
@@ -587,6 +606,9 @@ The order is:
 
 | `ForeignKeys`
 | Resolve and materialize physical foreign-key constraints after values, table keys, and inverse structures are available.
+
+| `StateManagement`
+| Apply registered temporal, audit, changelog, and related state-management work as a compatibility projection into the legacy mapping shape.
 |===
 
 Binders implement only the phases they participate in.  The coordinator checks
@@ -603,7 +625,7 @@ resolved product such as `ResolvedForeignKey`, `ResolvedUniqueKey`, or
 
 The prototype avoids callback-style second passes by recording typed pending
 state in
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingState.java[`BindingState`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingState.java[`BindingState`].
 
 Examples:
 
@@ -646,12 +668,12 @@ they use small source descriptors that normalize source facts.
 
 Examples:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/sources/ColumnSource.java[`ColumnSource`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/sources/TableSource.java[`TableSource`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/sources/BasicValueSource.java[`BasicValueSource`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/sources/ToOneSource.java[`ToOneSource`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/sources/CollectionSource.java[`CollectionSource`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/sources/ComponentSource.java[`ComponentSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/ColumnSource.java[`ColumnSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/TableSource.java[`TableSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/BasicValueSource.java[`BasicValueSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/ToOneSource.java[`ToOneSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/CollectionSource.java[`CollectionSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/ComponentSource.java[`ComponentSource`]
 
 These descriptors are important because one Java member can produce multiple
 mapping values.  A map-valued member, for example, has collection structure,
@@ -668,12 +690,12 @@ When adding support for a new annotation or XML construct, first decide what kin
 of thing it is:
 
 * A persistence-unit scoped registration belongs in
-  link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/GlobalRegistrationsImpl.java[`GlobalRegistrationsImpl`].
+  link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/GlobalRegistrationsImpl.java[`GlobalRegistrationsImpl`].
 * A class-level persistent-type fact usually belongs in entity, mapped-superclass,
   embeddable, or hierarchy metadata.
 * A member-level fact usually belongs in
-  link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/AttributeMetadata.java[`AttributeMetadata`],
-  link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/KeyMapping.java[`KeyMapping`],
+  link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/AttributeMetadata.java[`AttributeMetadata`],
+  link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/KeyMapping.java[`KeyMapping`],
   or a source descriptor consumed later by binding.
 * XML that changes annotation visibility or metadata-complete behavior must be
   handled before ordinary annotation categorization.
@@ -689,7 +711,7 @@ A useful workflow:
 4. Record the earliest binding fact or compatibility shell in the earliest safe
    phase.
 5. If anything depends on later state, register typed pending state in
-   link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingState.java[`BindingState`].
+   link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingState.java[`BindingState`].
 6. Resolve the pending state in the narrowest phase that has the dependency
    available.
 7. Materialize mapping objects through an existing materializer, or add a narrow
@@ -741,7 +763,7 @@ mapped classes and can change the annotation model that categorization sees.
 
 *Do instead:* run the full categorization pipeline in your test or debug
 scenario, including
-link:../../hibernate-core/src/main/java/org/hibernate/boot/models/xml/spi/XmlPreProcessor.java[`XmlPreProcessor`],
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/xml/XmlPreProcessor.java[`XmlPreProcessor`],
 even if the bug looks purely annotation-related.
 
 Do not resolve non-primary-key association targets during ordinary member
@@ -797,22 +819,23 @@ annotations or XML.
 Start with the pipeline:
 
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/DomainModelCategorizer.java[`DomainModelCategorizer`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/CategorizedDomainModel.java[`CategorizedDomainModel`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/TypeBindingPhase.java[`TypeBindingPhase`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/TypeBindingPhase.java[`TypeBindingPhase`]
 
 Then follow the feature-specific binder:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ToOneAttributeBinder.java[`ToOneAttributeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ElementCollectionAttributeBinder.java[`ElementCollectionAttributeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/PluralAssociationAttributeBinder.java[`PluralAssociationAttributeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ComponentBinder.java[`ComponentBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ForeignKeyBinder.java[`ForeignKeyBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ToOneAttributeBinder.java[`ToOneAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ElementCollectionAttributeBinder.java[`ElementCollectionAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/PluralAssociationAttributeBinder.java[`PluralAssociationAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ComponentBinder.java[`ComponentBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ForeignKeyBinder.java[`ForeignKeyBinder`]
 
 For tests, look under:
 
-* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/process[`src/test/java/org/hibernate/models/orm/process`]
-* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/resources[`src/test/java/org/hibernate/models/orm/resources`]
-* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/bind[`src/test/java/org/hibernate/models/orm/bind`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/source[`src/test/java/org/hibernate/orm/test/boot/models/source`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/categorize[`src/test/java/org/hibernate/orm/test/boot/models/categorize`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/bind[`src/test/java/org/hibernate/orm/test/boot/models/bind`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml[`src/test/java/org/hibernate/orm/test/boot/models/xml`]

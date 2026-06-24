@@ -79,6 +79,17 @@ existing `Component` and `AggregateComponentSecondPass` behavior, but new design
 work should not assume that second-pass table mutation is the desired final
 shape.
 
+The current compatibility policy is to keep materializing the mapping shape that
+legacy boot and runtime consumers already understand.  The new pipeline may
+collect richer aggregate intent internally, but it should project that intent
+into `Component`, `AggregateColumn`, `AggregateComponentSecondPass`, and existing
+database aggregate metadata for now.
+
+As with other transitional boot-model work, explicit storage descriptors should
+not be attached directly to shared `org.hibernate.mapping` contracts while
+`MetadataBuildingProcess` remains an active boot path, unless the legacy path is
+also changed to populate the same descriptor as authoritative state.
+
 == Proposed Mapping Model
 
 An embeddable/component should have an explicit storage descriptor.
@@ -120,9 +131,16 @@ should be able to answer directly:
 * what ordered aggregate members exist inside the aggregate value;
 * where nested aggregate components appear.
 
-This could initially be implemented as a descriptor attached to `Component`
+This could eventually be implemented as a descriptor attached to `Component`
 rather than a replacement for `Component`.  Replacing `Component` wholesale would
 be far more invasive and is not necessary to get a clearer model.
+
+That attachment should wait until the descriptor can be authoritative for all
+supported boot paths, or until `MetadataBuildingProcess` has been removed far
+enough that runtime and schema consumers no longer need to handle both
+descriptor-populated and legacy side-effect-populated aggregate mappings.
+Before that point, descriptor-like state should remain an internal new-pipeline
+contribution or resolved plan that is projected into the current mapping shape.
 
 === Flattened Storage
 
@@ -306,23 +324,47 @@ This should be incremental.
 
 1. Keep closing parity gaps with the existing `Component` / `AggregateColumn` /
    second-pass bridge.
-2. Introduce a storage descriptor on `Component` or beside it, initially backed
-   by the same data currently stored directly on `Component`.
-3. Teach the new binder to resolve component storage before child attribute
+2. Add internal contribution/resolution state only when the bridge needs
+   whole-shape reasoning before projecting into the legacy mapping model.
+3. Use that internal state to characterize aggregate source roles, validation,
+   aggregate column placement, database-object contribution, and unsupported
+   combinations.
+4. Introduce a storage descriptor on `Component` or beside it only when it can
+   become authoritative for all supported boot paths, or when
+   `MetadataBuildingProcess` has been removed far enough to avoid a parallel
+   representation.
+5. Teach the new binder to resolve component storage before child attribute
    binding.
-4. Add an aggregate member container so aggregate child selectables are never
+6. Add an aggregate member container so aggregate child selectables are never
    temporarily bound as owner-table columns.
-5. Build runtime aggregate access strategies from the explicit storage
+7. Build runtime aggregate access strategies from the explicit storage
    descriptor.
-6. Move SQL generation, extraction, and mutation code to consume the runtime
+8. Move SQL generation, extraction, and mutation code to consume the runtime
    aggregate model directly.
-7. Retire second-pass table mutation once all aggregate paths bind into their
+9. Retire second-pass table mutation once all aggregate paths bind into their
    final containers.
+
+The trigger for steps 4 through 9 is not simply that the new pipeline has a
+working aggregate bridge.  The trigger is one of:
+
+* `MetadataBuildingProcess` is removed or no longer produces the same shared
+  `Component` mappings consumed by runtime and schema tooling;
+* legacy aggregate binding is intentionally updated to populate the same storage
+  descriptor so both boot paths share one source of truth;
+* a supported aggregate shape cannot be represented through the bridge without
+  excessive table mutation, duplicated runtime inference, or unmaintainable
+  side channels.
 
 == Open Questions
 
 Should aggregate storage be represented as a descriptor attached to `Component`,
 or as a distinct mapping value type?
+
+During the `MetadataBuildingProcess` transition, this should remain an internal
+new-pipeline design question rather than new state attached to shared mapping
+contracts.  The safe near-term answer is to project into the existing
+`Component` / `AggregateColumn` shape and keep descriptor-like state inside the
+new pipeline until it can become authoritative.
 
 Can `UserDefinedObjectType` remain the right database metadata object for SQL
 `STRUCT`, or should aggregate member metadata move behind a more general
@@ -357,4 +399,7 @@ Near-term parity work should continue to be explicit about what it proves:
   just successful metadata creation.
 
 Each parity slice should also record whether it reinforces the current bridge or
-exposes a need for the proposed first-class aggregate storage model.
+exposes a need for the proposed first-class aggregate storage model.  Exposing
+that need does not by itself mean attaching descriptors to `Component`; it may
+first mean adding internal resolved aggregate intent that still materializes the
+legacy-compatible mapping shape.

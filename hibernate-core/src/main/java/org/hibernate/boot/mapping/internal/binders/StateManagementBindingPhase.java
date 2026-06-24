@@ -38,6 +38,7 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 /// without spreading the transition through general binders.
 ///
 /// @since 9.0
+/// @author Steve Ebersole
 class StateManagementBindingPhase {
 	static void registerRootEntity(ClassDetails classDetails, RootClass rootClass, BindingState bindingState) {
 		bindingState.addStateManagementRootBinding( classDetails, rootClass );

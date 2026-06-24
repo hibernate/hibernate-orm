@@ -2058,7 +2058,8 @@ Open parity questions:
 
 Open parity questions:
 
-* `@Struct` remains deferred to aggregate/UDT design.
+* `@Struct` and related aggregate/UDT parity should proceed through the
+  compatibility bridge described in `aggregate-mapping-design.adoc`.
 * Aggregate embeddables, arrays of aggregate values, JSON/XML aggregate storage,
   nested aggregate components, and aggregate validation should be handled under
   `aggregate-mapping-design.adoc`.
@@ -2118,8 +2119,10 @@ These should not be rediscovered as binder gaps unless the ORM 9 scope changes:
   a backing Java class;
 * constructor-level `@Instantiator` binding until Hibernate Models exposes the
   needed constructor-target annotation metadata in a new release;
-* broader state-management/audit support for `Audited`, `Changelog`, and
-  related annotations.
+* boot-model `StateManagementDescriptor` support on shared mapping contracts
+  while `MetadataBuildingProcess` remains active.  Current state-management
+  support should continue to project through the compatibility bridge described
+  in `state-management-design.adoc`.
 
 Remaining XML/runtime vestiges of removed features should be cleaned up in their
 own slices rather than silently reintroduced through the new pipeline.

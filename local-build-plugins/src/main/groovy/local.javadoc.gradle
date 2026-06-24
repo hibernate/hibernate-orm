@@ -67,6 +67,7 @@ tasks.withType(Javadoc).configureEach {
         quiet()
 
         addBooleanOption('Xdoclint:all,-missing', true)
+        addBooleanOption('-no-fonts', true)
         // uncomment the `Werror` to get a bit more failures ;)
         // addBooleanOption('Werror', true)
 

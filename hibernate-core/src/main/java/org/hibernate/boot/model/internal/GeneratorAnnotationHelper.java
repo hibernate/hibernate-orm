@@ -47,8 +47,10 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.beanContainer;
 import static org.hibernate.boot.model.internal.GeneratorBinder.instantiateGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectBaselineProperties;
 import static org.hibernate.boot.model.internal.GeneratorParameters.fallbackAllocationSize;
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.config.ConfigurationHelper.setIfNotEmpty;
 
@@ -195,8 +197,13 @@ public class GeneratorAnnotationHelper {
 					},
 					generatorAnnotation == null
 							? null
-							: (a, properties) ->
-									SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+							: (a, properties) -> {
+								SequenceStyleGenerator.applyConfiguration( a, properties::put );
+								final String schema = defaultSchema( a.schema(), idMember, buildingContext );
+								if ( isNotBlank( schema ) ) {
+									properties.put( PersistentIdentifierGenerator.SCHEMA, schema );
+								}
+							},
 					creationContext
 			);
 			return sequenceStyleGenerator;
@@ -232,10 +239,16 @@ public class GeneratorAnnotationHelper {
 					},
 					generatorAnnotation == null
 							? null
-							: (a, properties) -> org.hibernate.id.enhanced.TableGenerator.applyConfiguration(
-									generatorAnnotation,
-									properties::put
-							),
+							: (a, properties) -> {
+								org.hibernate.id.enhanced.TableGenerator.applyConfiguration(
+										a,
+										properties::put
+								);
+								final String schema = defaultSchema( a.schema(), idMember, buildingContext );
+								if ( isNotBlank( schema ) ) {
+									properties.put( PersistentIdentifierGenerator.SCHEMA, schema );
+								}
+							},
 					creationContext
 			);
 			return tableGenerator;

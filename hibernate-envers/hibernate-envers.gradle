@@ -59,7 +59,7 @@ tasks.withType( Test.class ).configureEach { test ->
     if ( project.db == "h2" || project.db == "hsqldb" || project.db == "postgresql" || project.db == "pgsql" || project.db == "edb"
             || project.db == "oracle_xe" || project.db == "mysql" || project.db == "mariadb"
             || project.db == "db2" || project.db == "mssql" || project.db == "cockroachdb" || project.db == "hana"
-            || project.db == "tidb" ) {
+            || project.db == "tidb" || project.db == "spanner" || project.db == "spannerpgsql" ) {
         // Most systems have multi-threading and maxing out a core on both threads will hurt performance
         // Also, as soon as we hit 16+ threads, the returns are diminishing, so divide by 4
         def threadCount = Runtime.runtime.availableProcessors()
@@ -104,18 +104,7 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = testThreads
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
-    else if ( project.db == "spannerpgsql" || project.db == "spanner" ) {
-        def threadCount = Runtime.runtime.availableProcessors()
-        def testThreads = project.findProperty( "test.threads" )
-        if ( testThreads == null ) {
-            testThreads = Math.min( threadCount, 4 )
-        }
-        else {
-            testThreads = Integer.parseInt( testThreads.toString() )
-        }
-        test.maxParallelForks = Math.min( testThreads, 4 )
-        test.systemProperty 'maxParallelForks', test.maxParallelForks
-    }
+
 }
 
 sourcesJar {

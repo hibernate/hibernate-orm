@@ -923,10 +923,6 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		return false;
 	}
 
-	@Override
-	public boolean supportsIfExistsAfterAlterTable() {
-		return false;
-	}
 
 	@Override
 	public boolean supportsDistinctFromPredicate() {

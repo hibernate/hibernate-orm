@@ -729,6 +729,11 @@ public class SpannerDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return true;
+	}
+
 	/* SELECT-related functions */
 
 	@Override

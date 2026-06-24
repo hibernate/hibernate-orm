@@ -3707,6 +3707,13 @@
                                 <xsd:element name="map-key-formula" type="xsd:string" minOccurs="0"/>
                             </xsd:choice>
                             <xsd:element name="map-key-type" type="orm:user-type" minOccurs="0"/>
+                            <xsd:element name="map-key-java-type" type="xsd:string" minOccurs="0">
+                                <xsd:annotation>
+                                    <xsd:documentation>
+                                        @org.hibernate.annotations.MapKeyJavaType
+                                    </xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:element>
                         </xsd:sequence>
                         <xsd:sequence>
                             <xsd:element name="map-key-join-column" type="orm:map-key-join-column" minOccurs="0" maxOccurs="unbounded"/>

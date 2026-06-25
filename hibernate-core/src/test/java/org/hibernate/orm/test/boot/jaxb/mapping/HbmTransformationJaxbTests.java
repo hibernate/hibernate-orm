@@ -334,6 +334,27 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20600" )
+	public void testComponentPropertyAccessTransientDetection(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/component-access-transient/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+
+			assertThat( embeddable.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactlyInAnyOrder( "street", "city" );
+
+			assertThat( embeddable.getAttributes().getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.as( "getFullAddress() is an unmapped getter — with property access it must be marked transient" )
+					.contains( "fullAddress" )
+					.as( "Mapped properties should not be marked transient" )
+					.doesNotContain( "street", "city" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20599" )
 	public void testCompositeElementColumnTableTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {

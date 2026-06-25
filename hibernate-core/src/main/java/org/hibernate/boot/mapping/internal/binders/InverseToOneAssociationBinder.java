@@ -121,11 +121,8 @@ class InverseToOneAssociationBinder {
 				targetTypeBinder,
 				owningJoin
 		);
-		UniquePropertyReferenceBinder.bindUniquePropertyReference(
-				bindingState,
-				inverseValue,
-				inverseBinding.mappedBy()
-		);
+		inverseValue.setReferencedPropertyName( inverseBinding.mappedBy() );
+		bindingState.addUniquePropertyReference( inverseValue.getReferencedEntityName(), inverseBinding.mappedBy() );
 		inverseBinding.property().setValue( inverseValue );
 		inverseBinding.ownerBinding().addJoin( inverseJoin );
 		inverseBinding.ownerBinding().movePropertyToJoin( inverseBinding.property(), inverseJoin );

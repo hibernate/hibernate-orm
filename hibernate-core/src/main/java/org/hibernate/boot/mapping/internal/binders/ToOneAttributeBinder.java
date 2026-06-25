@@ -350,6 +350,7 @@ class ToOneAttributeBinder {
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
 
 		if ( mapsId == null ) {
+			final boolean valueColumnsOptional = joinTable == null && optional;
 			bindJoinColumns(
 					valueJoinColumns,
 					value,
@@ -359,7 +360,7 @@ class ToOneAttributeBinder {
 					resolveSharedIdentifierColumns( ownerType, associationTable, bindingState ),
 					bindingState.getDatabase(),
 					logicalOneToOne,
-					optional,
+					valueColumnsOptional,
 					ownerBinding,
 					source,
 					ownerClassName + "." + propertyName,

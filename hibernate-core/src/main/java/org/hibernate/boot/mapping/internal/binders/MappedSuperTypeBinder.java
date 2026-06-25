@@ -5,6 +5,7 @@
 package org.hibernate.boot.mapping.internal.binders;
 
 import org.hibernate.MappingException;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -24,6 +25,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.MemberDetails;
 
 /// Binder for a mapped-superclass type.
 ///
@@ -163,9 +165,11 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	private void applyDeclaredIdentifierAndVersion(PersistentClass entityBinding) {
 		final KeyMapping idMapping = getManagedType().getHierarchy().getIdMapping();
 		if ( declaresKeyAttribute( idMapping ) ) {
-			final var identifierProperty = entityBinding.getDeclaredIdentifierProperty();
+			final var identifierProperty = entityBinding.getDeclaredIdentifierProperty() == null
+					? entityBinding.getIdentifierProperty()
+					: entityBinding.getDeclaredIdentifierProperty();
 			if ( identifierProperty != null && declaresAttribute( identifierProperty.getName(), idMapping ) ) {
-				binding.setDeclaredIdentifierProperty( identifierProperty );
+				binding.setDeclaredIdentifierProperty( prepareDeclaredIdentifierProperty( identifierProperty ) );
 			}
 			final var identifierMapper = entityBinding.getDeclaredIdentifierMapper();
 			if ( identifierMapper != null ) {
@@ -222,6 +226,35 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 					.getDeclaringType()
 					.getClassName()
 					.equals( getManagedType().getClassDetails().getClassName() );
+	}
+
+	private Property prepareDeclaredIdentifierProperty(Property identifierProperty) {
+		final AttributeMetadata attribute = getManagedType().findAttribute( identifierProperty.getName() );
+		if ( attribute == null || attribute.getMember().getType().isResolved() ) {
+			return identifierProperty;
+		}
+
+		final MemberDetails member = attribute.getMember();
+		final Property declaredProperty = identifierProperty.copy();
+		declaredProperty.setGeneric( true );
+		declaredProperty.setReturnedClassName( member.getType().getName() );
+
+		final Value declaredValue = identifierProperty.getValue().copy();
+		if ( declaredValue instanceof Component component ) {
+			component.setComponentClassName( member.getType().determineRawClass().getClassName() );
+			final Class<?> componentClass = component.getComponentClass();
+			final var propertyIterator = component.getProperties().iterator();
+			while ( propertyIterator.hasNext() ) {
+				try {
+					propertyIterator.next().getGetter( componentClass );
+				}
+				catch (PropertyNotFoundException e) {
+					propertyIterator.remove();
+				}
+			}
+		}
+		declaredProperty.setValue( declaredValue );
+		return declaredProperty;
 	}
 
 	private void applyMappedSuperclassProperty(Property property, PersistentClass entityBinding) {

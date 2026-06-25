@@ -126,7 +126,9 @@ public class IdentifierMappingMaterializer {
 
 		final Property idProperty = createProperty( idAttribute.getName(), idValue, idAttributeMember );
 		typeBinding.setIdentifierProperty( idProperty );
-		typeBinding.setDeclaredIdentifierProperty( idProperty );
+		if ( declaresAttribute( typeMetadata, idAttribute ) ) {
+			typeBinding.setDeclaredIdentifierProperty( idProperty );
+		}
 
 		final Column column = bindIdColumn(
 				typeBinding,
@@ -164,6 +166,7 @@ public class IdentifierMappingMaterializer {
 		idValue.setComponentClassName( keyType.getClassName() );
 		idValue.setTable( table );
 		idValue.setTypeUsingReflection( type.getClassDetails().getClassName(), aggregatedKeyMapping.getAttributeName() );
+		applyIdGeneratorType( idValue, aggregatedKeyMapping.getAttribute().getMember() );
 		typeBinding.setIdentifier( idValue );
 		typeBinding.setEmbeddedIdentifier( true );
 
@@ -173,7 +176,9 @@ public class IdentifierMappingMaterializer {
 				aggregatedKeyMapping.getAttribute().getMember()
 		);
 		typeBinding.setIdentifierProperty( idProperty );
-		typeBinding.setDeclaredIdentifierProperty( idProperty );
+		if ( declaresAttribute( type, aggregatedKeyMapping.getAttribute() ) ) {
+			typeBinding.setDeclaredIdentifierProperty( idProperty );
+		}
 		CustomMappingBinder.callAttributeBinders(
 				aggregatedKeyMapping.getAttribute().getMember(),
 				typeBinding,
@@ -1205,12 +1210,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private void applyGeneratedValue(BasicValue idValue, MemberDetails member) {
-		if ( GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
-				idValue,
-				member,
-				state.getMetadataBuildingContext(),
-				idValue.getTable().getName() + "." + member.getName()
-		) ) {
+		if ( applyIdGeneratorType( idValue, member ) ) {
 			return;
 		}
 
@@ -1230,6 +1230,15 @@ public class IdentifierMappingMaterializer {
 		);
 	}
 
+	private boolean applyIdGeneratorType(org.hibernate.mapping.SimpleValue idValue, MemberDetails member) {
+		return GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
+				idValue,
+				member,
+				state.getMetadataBuildingContext(),
+				idValue.getTable().getName() + "." + member.getName()
+		);
+	}
+
 	private Map<String, IdentifierGeneratorDefinition> localGenerators(MemberDetails member) {
 		final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>();
 		GeneratorBinder.visitIdGeneratorDefinitions(
@@ -1238,6 +1247,13 @@ public class IdentifierMappingMaterializer {
 				state.getMetadataBuildingContext()
 		);
 		return localGenerators;
+	}
+
+	private boolean declaresAttribute(EntityTypeMetadata type, AttributeMetadata attribute) {
+		return attribute.getMember()
+				.getDeclaringType()
+				.getClassName()
+				.equals( type.getClassDetails().getClassName() );
 	}
 
 	private Property createProperty(String name, org.hibernate.mapping.Value value, MemberDetails member) {

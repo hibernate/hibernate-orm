@@ -26,11 +26,12 @@ import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableMemberDetails;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * @author Marco Belladelli
@@ -83,7 +84,7 @@ public class CommonPluralAttributeProcessing {
 
 		XmlAnnotationHelper.applyCollectionId( jaxbPluralAttribute.getCollectionId(), memberDetails, xmlDocumentContext );
 
-		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getOrderBy() ) ) {
+		if ( isNotEmpty( jaxbPluralAttribute.getOrderBy() ) ) {
 			final OrderByJpaAnnotation orderByAnn = (OrderByJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.ORDER_BY,
 					buildingContext
@@ -93,7 +94,7 @@ public class CommonPluralAttributeProcessing {
 
 		applyOrderColumn( jaxbPluralAttribute, memberDetails, xmlDocumentContext );
 
-		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getSort() ) ) {
+		if ( isNotEmpty( jaxbPluralAttribute.getSort() ) ) {
 			final SortComparatorAnnotation sortAnn = (SortComparatorAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.SORT_COMPARATOR,
 					buildingContext
@@ -114,7 +115,7 @@ public class CommonPluralAttributeProcessing {
 					JpaAnnotations.MAP_KEY,
 					buildingContext
 			);
-			if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getMapKey().getName() ) ) {
+			if ( isNotEmpty( jaxbPluralAttribute.getMapKey().getName() ) ) {
 				// since name() is deprecated with value() as a replacement
 				mapKeyAnn.value( jaxbPluralAttribute.getMapKey().getName() );
 				mapKeyAnn.name( "" );
@@ -165,17 +166,18 @@ public class CommonPluralAttributeProcessing {
 		if ( jaxbPluralAttribute.getMapKeyType() != null ) {
 			XmlAnnotationHelper.applyMapKeyUserType( jaxbPluralAttribute.getMapKeyType(), memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbPluralAttribute.getMapKeyJavaType() != null ) {
+		else if ( jaxbPluralAttribute.getMapKeyJavaType() != null ) {
 			XmlAnnotationHelper.applyMapKeyJavaTypeDescriptor( jaxbPluralAttribute.getMapKeyJavaType(), memberDetails, xmlDocumentContext );
 		}
 
-		if ( jaxbPluralAttribute.getMapKeyJdbcType() != null ) {
+		if ( isNotEmpty( jaxbPluralAttribute.getMapKeyJdbcType() ) ) {
 			XmlAnnotationHelper.applyMapKeyJdbcTypeDescriptor( jaxbPluralAttribute.getMapKeyJdbcType(), memberDetails, xmlDocumentContext );
 		}
-
-		if ( jaxbPluralAttribute.getMapKeyJdbcTypeCode() != null ) {
+		else if ( jaxbPluralAttribute.getMapKeyJdbcTypeCode() != null ) {
 			XmlAnnotationHelper.applyMapKeyJdbcTypeCode( jaxbPluralAttribute.getMapKeyJdbcTypeCode(), memberDetails, xmlDocumentContext );
+		}
+		else if ( isNotEmpty( jaxbPluralAttribute.getMapKeyJdbcTypeName() ) ) {
+			XmlAnnotationHelper.applyMapKeyJdbcTypeName( jaxbPluralAttribute.getMapKeyJdbcTypeName(), memberDetails, xmlDocumentContext );
 		}
 
 		JoinColumnProcessing.applyMapKeyJoinColumns(

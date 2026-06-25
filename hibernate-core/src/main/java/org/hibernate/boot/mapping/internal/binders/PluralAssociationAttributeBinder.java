@@ -15,6 +15,7 @@ import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
+import org.hibernate.boot.mapping.internal.sources.ToOneSource.JoinColumnOrFormulaSource;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
@@ -364,6 +365,8 @@ class PluralAssociationAttributeBinder {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
 					collection,
 					source.associationJoinColumns(),
+					source.associationJoinColumns().stream().map( JoinColumnOrFormulaSource::column ).toList(),
+					source.associationInverseJoinColumns(),
 					ForeignKeySource.firstSpecified(
 							ForeignKeySource.fromFirstSpecifiedJoinColumn( source.associationJoinColumns() ),
 							associationTableForeignKey( source )
@@ -453,6 +456,7 @@ class PluralAssociationAttributeBinder {
 					collection,
 					source.oneToManyJoinColumns(),
 					source.oneToManyJoinColumnsOrFormulas(),
+					List.of(),
 					ForeignKeySource.firstSpecified(
 							source.oneToManyForeignKeySource(),
 							ForeignKeySource.from( source.joinTable() )

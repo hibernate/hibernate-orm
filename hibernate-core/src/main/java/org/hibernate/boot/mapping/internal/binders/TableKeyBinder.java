@@ -36,13 +36,15 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.SyntheticProperty;
@@ -180,14 +182,11 @@ public class TableKeyBinder {
 		collectionTableBinding.collection().setKey( key );
 		if ( !key.hasFormula() ) {
 			if ( collectionTableBinding.oneToManyAssociationTable() ) {
-				collectionKeyMappingMaterializer.materializeValuePrimaryKey(
-						collectionTableBinding.collection().getCollectionTable(),
-						collectionTableBinding.collection().getElement(),
-						collectionTableBinding.collection().getRole() + ".element"
-				);
+				materializeOneToManyAssociationTablePrimaryKey( collectionTableBinding );
 				for ( Column column : collectionTableBinding.collection().getElement().getColumns() ) {
 					column.setUnique( false );
 				}
+				applyInverseJoinColumnUniqueKeys( collectionTableBinding );
 			}
 			else {
 				collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
@@ -211,6 +210,32 @@ public class TableKeyBinder {
 		}
 		applyUniqueConstraints( collectionTableBinding );
 		applyIndexes( collectionTableBinding );
+	}
+
+	private void materializeOneToManyAssociationTablePrimaryKey(CollectionTableBinding collectionTableBinding) {
+		if ( collectionTableBinding.collection() instanceof IndexedCollection indexedCollection
+				&& !indexIsPartOfElement( indexedCollection ) ) {
+			final PrimaryKey primaryKey = new PrimaryKey( indexedCollection.getCollectionTable() );
+			primaryKey.addColumns( indexedCollection.getKey() );
+			primaryKey.addColumns( indexedCollection.getIndex() );
+			indexedCollection.getCollectionTable().setPrimaryKey( primaryKey );
+			return;
+		}
+
+		collectionKeyMappingMaterializer.materializeValuePrimaryKey(
+				collectionTableBinding.collection().getCollectionTable(),
+				collectionTableBinding.collection().getElement(),
+				collectionTableBinding.collection().getRole() + ".element"
+		);
+	}
+
+	private boolean indexIsPartOfElement(IndexedCollection collection) {
+		for ( Selectable selectable : collection.getIndex().getSelectables() ) {
+			if ( selectable.isFormula() || !collection.getCollectionTable().containsColumn( (Column) selectable ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void createOneToManyBackref(CollectionTableBinding collectionTableBinding, DependantValue key) {
@@ -264,6 +289,28 @@ public class TableKeyBinder {
 							null,
 							collectionTableBinding.collection().getRole()
 					)
+			);
+		}
+	}
+
+	private void applyInverseJoinColumnUniqueKeys(CollectionTableBinding collectionTableBinding) {
+		final List<JoinColumn> inverseJoinColumns = collectionTableBinding.inverseJoinColumns();
+		if ( inverseJoinColumns.isEmpty() ) {
+			return;
+		}
+
+		final Table table = collectionTableBinding.collection().getCollectionTable();
+		final List<Column> elementColumns = collectionTableBinding.collection().getElement().getColumns();
+		for ( int i = 0; i < inverseJoinColumns.size(); i++ ) {
+			final JoinColumn inverseJoinColumn = inverseJoinColumns.get( i );
+			if ( !inverseJoinColumn.unique() ) {
+				continue;
+			}
+			final Column column = StringHelper.isNotEmpty( inverseJoinColumn.name() )
+					? resolveColumn( table, inverseJoinColumn.name() )
+					: elementColumns.get( i );
+			uniqueKeyMappingMaterializer.materializeUniqueKey(
+					ResolvedUniqueKey.from( column, table, metadataBuildingContext() )
 			);
 		}
 	}

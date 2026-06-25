@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
+import jakarta.persistence.AccessType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
@@ -139,6 +140,12 @@ public class HbmXmlTransformerComponentHandler {
 		embeddable.setMetadataComplete( true );
 		embeddable.setName( embeddableName );
 		embeddable.setClazz( embeddableClassName );
+
+		final String componentAccess = hbmComponent.getAccess();
+		final String effectiveAccess = componentAccess != null ? componentAccess : defaultAccess;
+		if ( effectiveAccess == null || "property".equalsIgnoreCase( effectiveAccess ) ) {
+			embeddable.setAccess( AccessType.PROPERTY );
+		}
 
 		embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
 		if ( nestedAttributeProcessor != null ) {

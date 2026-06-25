@@ -114,7 +114,7 @@ Trigger the CI release job to automatically publish artifacts and documentation.
 
 * Do *not* mark the Jira Release as "released" or close issues,
   the release job triggers Jira automation that does it for you.
-* Do *not* update the repository (in particular changelog.txt and README.md), 
+* Do *not* update the repository (in particular changelog.md and README.md), 
   the release job does it for you.
 * Trigger the release on CI:
   * Go to CI, to [the "hibernate-orm-release" CI job](https://ci.hibernate.org/job/hibernate-orm-release/).

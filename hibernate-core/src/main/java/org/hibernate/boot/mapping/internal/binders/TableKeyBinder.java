@@ -785,7 +785,7 @@ public class TableKeyBinder {
 			String sourceRole) {
 		final LinkedHashSet<Property> result = new LinkedHashSet<>();
 		for ( Identifier referencedColumnName : referencedColumnNames ) {
-			final Property property = findPropertyContainingColumn( ownerBinding, referencedColumnName );
+			final Property property = findPropertyContainingColumn( ownerBinding, referencedColumnName, referencedColumnNames );
 			if ( property == null ) {
 				return List.of();
 			}
@@ -801,9 +801,12 @@ public class TableKeyBinder {
 		return properties;
 	}
 
-	private Property findPropertyContainingColumn(PersistentClass ownerBinding, Identifier referencedColumnName) {
+	private Property findPropertyContainingColumn(
+			PersistentClass ownerBinding,
+			Identifier referencedColumnName,
+			List<Identifier> referencedColumnNames) {
 		for ( Property property : referenceableProperties( ownerBinding ) ) {
-			final Property match = findPropertyContainingColumn( property, referencedColumnName );
+			final Property match = findPropertyContainingColumn( property, referencedColumnName, referencedColumnNames );
 			if ( match != null ) {
 				return match;
 			}
@@ -811,13 +814,17 @@ public class TableKeyBinder {
 		return null;
 	}
 
-	private Property findPropertyContainingColumn(Property property, Identifier referencedColumnName) {
-		if ( property.getValue() instanceof ToOne ) {
+	private Property findPropertyContainingColumn(
+			Property property,
+			Identifier referencedColumnName,
+			List<Identifier> referencedColumnNames) {
+		if ( property.getValue() instanceof ToOne toOne
+				&& columnNamesMatch( toOne.getColumns(), referencedColumnNames ) ) {
 			return null;
 		}
 		if ( property.getValue() instanceof Component component ) {
 			for ( Property subProperty : component.getProperties() ) {
-				final Property match = findPropertyContainingColumn( subProperty, referencedColumnName );
+				final Property match = findPropertyContainingColumn( subProperty, referencedColumnName, referencedColumnNames );
 				if ( match != null ) {
 					return match;
 				}

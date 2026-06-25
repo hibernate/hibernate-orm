@@ -4,11 +4,13 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDelete;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -38,6 +40,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.UniqueConstraint;
 
 /// Binds association-valued plural attributes.
@@ -640,11 +644,7 @@ class PluralAssociationAttributeBinder {
 			boolean uniqueByDefault) {
 		final ManyToOne element = new ManyToOne( bindingState.getMetadataBuildingContext(), table );
 		final List<JoinColumn> inverseJoinColumns = source.associationInverseJoinColumns();
-		final boolean referenceToPrimaryKey = ToOneAttributeBinder.referencesPrimaryKey(
-				inverseJoinColumns,
-				target.identifierColumns(),
-				bindingState.getDatabase()
-		);
+		final boolean referenceToPrimaryKey = referencesPrimaryKey( inverseJoinColumns, target );
 		element.setReferencedEntityName( target.entityName() );
 		element.setReferenceToPrimaryKey( referenceToPrimaryKey );
 		element.setTypeName( target.entityName() );
@@ -673,6 +673,11 @@ class PluralAssociationAttributeBinder {
 			) );
 		}
 		if ( registerCollectionBindings ) {
+			final List<org.hibernate.mapping.Column> targetPrimaryKeyColumns = referencedPrimaryKeyColumns(
+					inverseJoinColumns,
+					target,
+					referenceToPrimaryKey
+			);
 			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 					ownerBinding,
 					element,
@@ -686,7 +691,7 @@ class PluralAssociationAttributeBinder {
 									element.getReferencedEntityName(),
 									SelectableOrderResolver.resolveByTargetOrder(
 											element.getColumns(),
-											target.identifierColumns(),
+											targetPrimaryKeyColumns,
 											ownerType.getClassDetails().getClassName()
 													+ "." + attributeMetadata.getName()
 									)
@@ -749,7 +754,11 @@ class PluralAssociationAttributeBinder {
 			Table table,
 			boolean uniqueByDefault,
 			String propertyName) {
-		final List<org.hibernate.mapping.Column> targetColumns = target.identifierColumns();
+		final List<org.hibernate.mapping.Column> targetColumns = referencedPrimaryKeyColumns(
+				joinColumnAnns,
+				target,
+				referenceToPrimaryKey
+		);
 
 		if ( referenceToPrimaryKey && !joinColumnAnns.isEmpty() && joinColumnAnns.size() != targetColumns.size() ) {
 			throw new MappingException(
@@ -785,6 +794,82 @@ class PluralAssociationAttributeBinder {
 			table.addColumn( column );
 			value.addColumn( column );
 		}
+	}
+
+	private boolean referencesPrimaryKey(List<JoinColumn> joinColumns, TargetEntityBinding target) {
+		return ToOneAttributeBinder.referencesPrimaryKey( joinColumns, target.identifierColumns(), bindingState.getDatabase() )
+			|| referencesPrimaryKeyJoinColumns( joinColumns, targetPrimaryKeyJoinColumns( target ) );
+	}
+
+	private List<org.hibernate.mapping.Column> referencedPrimaryKeyColumns(
+			List<JoinColumn> joinColumns,
+			TargetEntityBinding target,
+			boolean referenceToPrimaryKey) {
+		if ( !referenceToPrimaryKey
+				|| ToOneAttributeBinder.referencesPrimaryKey( joinColumns, target.identifierColumns(), bindingState.getDatabase() ) ) {
+			return target.identifierColumns();
+		}
+		final PrimaryKeyJoinColumn[] primaryKeyJoinColumns = targetPrimaryKeyJoinColumns( target );
+		if ( referencesPrimaryKeyJoinColumns( joinColumns, primaryKeyJoinColumns ) ) {
+			return primaryKeyJoinColumns( primaryKeyJoinColumns );
+		}
+		return target.identifierColumns();
+	}
+
+	private PrimaryKeyJoinColumn[] targetPrimaryKeyJoinColumns(TargetEntityBinding target) {
+		final ClassDetails classDetails = target.typeBinder().getManagedType().getClassDetails();
+		final PrimaryKeyJoinColumns primaryKeyJoinColumns = classDetails.getDirectAnnotationUsage(
+				PrimaryKeyJoinColumns.class
+		);
+		if ( primaryKeyJoinColumns != null ) {
+			return primaryKeyJoinColumns.value();
+		}
+		return classDetails.getRepeatedAnnotationUsages(
+				PrimaryKeyJoinColumn.class,
+				target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+		);
+	}
+
+	private boolean referencesPrimaryKeyJoinColumns(
+			List<JoinColumn> joinColumns,
+			PrimaryKeyJoinColumn[] primaryKeyJoinColumns) {
+		if ( joinColumns.size() != primaryKeyJoinColumns.length ) {
+			return false;
+		}
+		final ArrayList<PrimaryKeyJoinColumn> unmatchedPrimaryKeyJoinColumns = new ArrayList<>(
+				List.of( primaryKeyJoinColumns )
+		);
+		for ( JoinColumn joinColumn : joinColumns ) {
+			final PrimaryKeyJoinColumn primaryKeyJoinColumn = findPrimaryKeyJoinColumn(
+					unmatchedPrimaryKeyJoinColumns,
+					joinColumn.referencedColumnName()
+			);
+			if ( primaryKeyJoinColumn == null ) {
+				return false;
+			}
+			unmatchedPrimaryKeyJoinColumns.remove( primaryKeyJoinColumn );
+		}
+		return unmatchedPrimaryKeyJoinColumns.isEmpty();
+	}
+
+	private PrimaryKeyJoinColumn findPrimaryKeyJoinColumn(
+			List<PrimaryKeyJoinColumn> primaryKeyJoinColumns,
+			String columnName) {
+		final Identifier columnIdentifier = bindingState.getDatabase().toIdentifier( columnName );
+		for ( PrimaryKeyJoinColumn primaryKeyJoinColumn : primaryKeyJoinColumns ) {
+			if ( bindingState.getDatabase().toIdentifier( primaryKeyJoinColumn.name() ).matches( columnIdentifier ) ) {
+				return primaryKeyJoinColumn;
+			}
+		}
+		return null;
+	}
+
+	private List<org.hibernate.mapping.Column> primaryKeyJoinColumns(PrimaryKeyJoinColumn[] primaryKeyJoinColumns) {
+		final ArrayList<org.hibernate.mapping.Column> result = new ArrayList<>( primaryKeyJoinColumns.length );
+		for ( PrimaryKeyJoinColumn primaryKeyJoinColumn : primaryKeyJoinColumns ) {
+			result.add( new org.hibernate.mapping.Column( primaryKeyJoinColumn.name() ) );
+		}
+		return result;
 	}
 
 	private TargetEntityBinding resolveTargetEntityBinding(CollectionSource source) {

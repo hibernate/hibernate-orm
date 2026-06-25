@@ -331,6 +331,82 @@ Follow-up association collection naming slice:
   --tests 'org.hibernate.orm.test.annotations.manytomany.defaults.JpaCompliantManyToManyImplicitNamingTest'
 ----
 
+Follow-up collection owner-key / property-ref slice:
+
+* Non-primary-key collection owner-key resolution now avoids selecting an
+  association property merely because the association join columns match all
+  referenced owner columns.  This keeps unidirectional collection owner keys
+  from pointing at an unrelated `ToOne` mapping when the owner also has an
+  association over the same physical columns.
+* Synthetic non-primary-key owner keys may still include a `ToOne` property as
+  one part of a larger composite key.  This covers join-table mappings whose
+  owner key spans an association column plus an identifier column, such as
+  self-referencing many-to-many nodes keyed by `(tree, id)`.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.cuk.JoinColumnOccursOutOfOrderTest \
+  --tests org.hibernate.orm.test.collection.NonPkJoinColumnCollectionTest \
+  --tests org.hibernate.orm.test.collection.NonPkCompositeJoinColumnCollectionTest \
+  --tests org.hibernate.orm.test.unidir.UnidirectionalOneToManyNonPkJoinColumnTest \
+  --tests org.hibernate.orm.test.collection.propertyref.ReferencedColumnNameTest
+
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyGenericTest \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyNonGenericTest \
+  --tests org.hibernate.orm.test.cuk.JoinColumnOccursOutOfOrderTest
+
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.orderupdates.OrderUpdateNestedEmbeddedIdTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyNestedEmbeddedIdTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyEmbeddedIdFKNotNullableTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyNestedEmbeddedIdOutOfOrderJoinColumnsTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyIdClassFKTest \
+  --tests org.hibernate.orm.test.idclass.NestedIdClassTest \
+  --tests org.hibernate.orm.test.idclass.IdClassWithEagerManyToOneAbstractParentTest \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyGenericTest \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyNonGenericTest \
+  --tests org.hibernate.orm.test.annotations.refcolnames.constraints.OneToManyRefColumnNameTest
+----
+* `OneToManyNonPrimaryKeyJoinTest` still fails in this sampled environment,
+  but it boots and executes SQL; the observed failure is the statistics counter
+  reporting zero prepared statements, not a collection owner-key binding
+  failure.
+
+Follow-up inheritance / joined-subclass association-table slice:
+
+* The mapped-superclass and table-per-class table-context guardrail is green,
+  so the earlier broad-run signal for mapped-superclass table references is no
+  longer a strong open bucket.
+* Plural association element keys now treat join-table inverse join columns
+  that reference a joined-subclass `@PrimaryKeyJoinColumn(name = ...)` as
+  primary-key references, matching the to-one path.  The binder also carries
+  those joined-subclass key columns into FK materialization so association-table
+  FKs target the subclass table key column rather than the root identifier
+  column name.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.constraint.NonRootTablePolymorphicTests.verifyRuntimeModel
+
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest \
+  --tests 'org.hibernate.orm.test.annotations.tableperclass.*' \
+  --tests org.hibernate.orm.test.inheritance.TablePerClassTest \
+  --tests org.hibernate.orm.test.inheritance.OneToManyAbstractTablePerClassTest \
+  --tests org.hibernate.orm.test.inheritance.ManyToManyAbstractTablePerClassTest
+----
+* Full `NonRootTablePolymorphicTests` still has a boot-model assertion drift:
+  the runtime path passes, but the boot assertion expects primary-key FKs to
+  expose no explicit referenced columns while the current FK materializer carries
+  explicit referenced PK columns for some paths.  Treat that as a key
+  materializer boot-model shape question, not as unresolved joined-subclass
+  association-table binding.
+
 Follow-up inverse to-many list classification slice:
 
 * Plain Java `List` attributes still default to indexed `LIST` mappings with

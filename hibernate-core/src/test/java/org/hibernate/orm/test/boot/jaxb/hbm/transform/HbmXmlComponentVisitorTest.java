@@ -22,6 +22,8 @@ import org.hibernate.boot.jaxb.spi.Binding;
 
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.AccessType;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -190,6 +192,71 @@ public class HbmXmlComponentVisitorTest {
 		JaxbEntityMappingsImpl result = processWithHandler( hbmMapping );
 
 		assertThat( result.getEmbeddables() ).isEmpty();
+	}
+
+	@Test
+	void embeddableDefaultAccessIsProperty() {
+		JaxbHbmHibernateMapping hbmMapping = new JaxbHbmHibernateMapping();
+
+		JaxbHbmRootEntityType entity = new JaxbHbmRootEntityType();
+		entity.setName( "MyEntity" );
+
+		JaxbHbmCompositeAttributeType component = new JaxbHbmCompositeAttributeType();
+		component.setName( "address" );
+		component.setClazz( "com.example.Address" );
+		entity.getAttributes().add( component );
+
+		hbmMapping.getClazz().add( entity );
+
+		JaxbEntityMappingsImpl result = processWithHandler( hbmMapping );
+
+		assertThat( result.getEmbeddables() )
+				.hasSize( 1 )
+				.allSatisfy( e -> assertThat( e.getAccess() ).isEqualTo( AccessType.PROPERTY ) );
+	}
+
+	@Test
+	void embeddableExplicitFieldAccess() {
+		JaxbHbmHibernateMapping hbmMapping = new JaxbHbmHibernateMapping();
+
+		JaxbHbmRootEntityType entity = new JaxbHbmRootEntityType();
+		entity.setName( "MyEntity" );
+
+		JaxbHbmCompositeAttributeType component = new JaxbHbmCompositeAttributeType();
+		component.setName( "address" );
+		component.setClazz( "com.example.Address" );
+		component.setAccess( "field" );
+		entity.getAttributes().add( component );
+
+		hbmMapping.getClazz().add( entity );
+
+		JaxbEntityMappingsImpl result = processWithHandler( hbmMapping );
+
+		assertThat( result.getEmbeddables() )
+				.hasSize( 1 )
+				.allSatisfy( e -> assertThat( e.getAccess() ).isNull() );
+	}
+
+	@Test
+	void embeddableExplicitPropertyAccess() {
+		JaxbHbmHibernateMapping hbmMapping = new JaxbHbmHibernateMapping();
+
+		JaxbHbmRootEntityType entity = new JaxbHbmRootEntityType();
+		entity.setName( "MyEntity" );
+
+		JaxbHbmCompositeAttributeType component = new JaxbHbmCompositeAttributeType();
+		component.setName( "address" );
+		component.setClazz( "com.example.Address" );
+		component.setAccess( "property" );
+		entity.getAttributes().add( component );
+
+		hbmMapping.getClazz().add( entity );
+
+		JaxbEntityMappingsImpl result = processWithHandler( hbmMapping );
+
+		assertThat( result.getEmbeddables() )
+				.hasSize( 1 )
+				.allSatisfy( e -> assertThat( e.getAccess() ).isEqualTo( AccessType.PROPERTY ) );
 	}
 
 	/**

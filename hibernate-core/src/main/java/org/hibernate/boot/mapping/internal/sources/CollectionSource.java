@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.mapping.internal.sources;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -31,9 +34,14 @@ import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.mapping.internal.binders.CascadeBinder;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.models.internal.ModelsHelper;
+import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.models.internal.CollectionElementSwitch;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.MapKeySwitch;
+import org.hibernate.models.internal.MapValueSwitch;
+import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -214,26 +222,84 @@ public record CollectionSource(
 				hierarchyRootType,
 				modelsContext
 		);
-
-		final TypeDetails elementType = elementCollectionElementType( member, modelsContext );
+		final TypeDetails collectionType = collectionType( member, ownerType, modelsContext );
+		TypeDetails elementType = elementCollectionElementType( member, collectionType, modelsContext );
+		if ( ownerType != null && modelsContext != null && Object.class.getName().equals( elementType.getName() ) ) {
+			final TypeDetails reflectedElementType = reflectedCollectionElementType( member, ownerType, modelsContext );
+			if ( reflectedElementType != null ) {
+				elementType = reflectedElementType;
+			}
+		}
 		return new CollectionSource(
 				elementType.determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Entity.class )
 						? Nature.MANY_TO_MANY
 						: Nature.ELEMENT_COLLECTION,
 				classification,
 				member,
-					elementType,
-					mapKeyType( member, classification, modelsContext ),
-					collectionTable,
-					effectiveJoinTable( member, associationOverride ),
-					associationOverride,
-					locateAttributeOverride( member, ownerType, hierarchyRootType, modelsContext ),
-					modelsContext
+				elementType,
+				mapKeyType( member, ownerType, collectionType, classification, modelsContext ),
+				collectionTable,
+				effectiveJoinTable( member, associationOverride ),
+				associationOverride,
+				locateAttributeOverride( member, ownerType, hierarchyRootType, modelsContext ),
+				modelsContext
 			);
+	}
+
+	private static TypeDetails collectionType(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ModelsContext modelsContext) {
+		if ( ownerType == null ) {
+			return member.getType();
+		}
+
+		final TypeDetails resolvedType = member.resolveRelativeType( ownerType );
+		if ( modelsContext == null ) {
+			return resolvedType;
+		}
+
+		final Type reflectedType = GenericsHelper.actualInheritedMemberType( ownerType.toJavaClass(), member.toJavaMember() );
+		final TypeDetails reflectedTypeDetails = typeDetails( reflectedType, ownerType, modelsContext );
+		return reflectedTypeDetails == null ? resolvedType : reflectedTypeDetails;
+	}
+
+	private static TypeDetails typeDetails(
+			Type type,
+			ClassDetails ownerType,
+			ModelsContext modelsContext) {
+		if ( type instanceof Class<?> javaClass ) {
+			return new ClassTypeDetailsImpl(
+					modelsContext.getClassDetailsRegistry().resolveClassDetails( javaClass.getName() ),
+					TypeDetails.Kind.CLASS
+			);
+		}
+		if ( type instanceof ParameterizedType parameterizedType
+				&& parameterizedType.getRawType() instanceof Class<?> rawClass ) {
+			final List<TypeDetails> arguments = new ArrayList<>( parameterizedType.getActualTypeArguments().length );
+			for ( Type argument : parameterizedType.getActualTypeArguments() ) {
+				final TypeDetails argumentDetails = typeDetails( argument, ownerType, modelsContext );
+				if ( argumentDetails == null ) {
+					return null;
+				}
+				arguments.add( argumentDetails );
+			}
+			return new ParameterizedTypeDetailsImpl(
+					modelsContext.getClassDetailsRegistry().resolveClassDetails( rawClass.getName() ),
+					arguments,
+					ownerType
+			);
+		}
+		if ( type instanceof TypeVariable<?> typeVariable && typeVariable.getBounds().length > 0 ) {
+			return typeDetails( typeVariable.getBounds()[0], ownerType, modelsContext );
+		}
+		return null;
 	}
 
 	private static TypeDetails mapKeyType(
 			MemberDetails member,
+			ClassDetails ownerType,
+			TypeDetails collectionType,
 			CollectionClassification classification,
 			ModelsContext modelsContext) {
 		if ( classification.toJpaClassification() != jakarta.persistence.metamodel.PluralAttribute.CollectionType.MAP ) {
@@ -247,10 +313,22 @@ public record CollectionSource(
 					TypeDetails.Kind.CLASS
 			);
 		}
-		return member.getMapKeyType();
+		final TypeDetails mapKeyType = collectionType == null
+				? member.getMapKeyType()
+				: MapKeySwitch.extractMapKeyType( collectionType );
+		if ( ownerType != null && modelsContext != null && Object.class.getName().equals( mapKeyType.getName() ) ) {
+			final TypeDetails reflectedMapKeyType = reflectedMapKeyType( member, ownerType, modelsContext );
+			if ( reflectedMapKeyType != null ) {
+				return reflectedMapKeyType;
+			}
+		}
+		return mapKeyType;
 	}
 
-	private static TypeDetails elementCollectionElementType(MemberDetails member, ModelsContext modelsContext) {
+	private static TypeDetails elementCollectionElementType(
+			MemberDetails member,
+			TypeDetails collectionType,
+			ModelsContext modelsContext) {
 		final Target xmlTarget = member.getDirectAnnotationUsage( Target.class );
 		if ( xmlTarget != null && modelsContext != null ) {
 			return resolveXmlTargetType( xmlTarget, modelsContext );
@@ -263,14 +341,14 @@ public record CollectionSource(
 					TypeDetails.Kind.CLASS
 			);
 		}
-		return member.getElementType();
+		return collectionType == null ? member.getElementType() : collectionElementType( collectionType );
 	}
 
 	/// Creates a collection source for an owning many-to-many association member.
 	public static CollectionSource manyToMany(
 			MemberDetails member,
 			ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_MANY, member, modelsContext, null );
+		return association( Nature.MANY_TO_MANY, member, null, null, modelsContext, null );
 	}
 
 	/// Creates a collection source for an owning many-to-many association member,
@@ -279,14 +357,25 @@ public record CollectionSource(
 			MemberDetails member,
 			AssociationOverride associationOverride,
 			ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_MANY, member, modelsContext, associationOverride );
+		return association( Nature.MANY_TO_MANY, member, null, null, modelsContext, associationOverride );
+	}
+
+	/// Creates a collection source for an owning many-to-many association member,
+	/// resolving inherited generic element and map-key types relative to the owner.
+	public static CollectionSource manyToMany(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			AssociationOverride associationOverride,
+			ModelsContext modelsContext) {
+		return association( Nature.MANY_TO_MANY, member, ownerType, hierarchyRootType, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member.
 	public static CollectionSource oneToMany(
 			MemberDetails member,
 			ModelsContext modelsContext) {
-		return association( Nature.ONE_TO_MANY, member, modelsContext, null );
+		return association( Nature.ONE_TO_MANY, member, null, null, modelsContext, null );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member,
@@ -295,35 +384,91 @@ public record CollectionSource(
 			MemberDetails member,
 			AssociationOverride associationOverride,
 			ModelsContext modelsContext) {
-		return association( Nature.ONE_TO_MANY, member, modelsContext, associationOverride );
+		return association( Nature.ONE_TO_MANY, member, null, null, modelsContext, associationOverride );
+	}
+
+	/// Creates a collection source for an owning one-to-many association member,
+	/// resolving inherited generic element and map-key types relative to the owner.
+	public static CollectionSource oneToMany(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			AssociationOverride associationOverride,
+			ModelsContext modelsContext) {
+		return association( Nature.ONE_TO_MANY, member, ownerType, hierarchyRootType, modelsContext, associationOverride );
 	}
 
 	/// Creates a collection source for a heterogeneous many-to-any association member.
 	public static CollectionSource manyToAny(
 			MemberDetails member,
 			ModelsContext modelsContext) {
-		return association( Nature.MANY_TO_ANY, member, modelsContext, null );
+		return association( Nature.MANY_TO_ANY, member, null, null, modelsContext, null );
 	}
 
 	private static CollectionSource association(
 			Nature nature,
 			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
 			ModelsContext modelsContext,
 			AssociationOverride associationOverride) {
-		final CollectionSource source = elementCollection( member, modelsContext );
+		final CollectionSource source = elementCollection( member, ownerType, hierarchyRootType, modelsContext );
 		final TypeDetails elementType = associationElementType( member, source.elementType, modelsContext );
 		return new CollectionSource(
 				nature,
 				source.classification,
 				source.member,
 				elementType,
-					source.mapKeyType,
-					source.collectionTable,
-					effectiveJoinTable( member, associationOverride ),
-					associationOverride,
-					source.attributeOverride,
-					modelsContext
+				source.mapKeyType,
+				source.collectionTable,
+				effectiveJoinTable( member, associationOverride ),
+				associationOverride,
+				source.attributeOverride,
+				modelsContext
 			);
+	}
+
+	private static TypeDetails collectionElementType(TypeDetails collectionType) {
+		if ( collectionType.getTypeKind() == TypeDetails.Kind.ARRAY ) {
+			return collectionType.asArrayType().getConstituentType();
+		}
+		if ( collectionType.isImplementor( java.util.Map.class ) ) {
+			return MapValueSwitch.extractMapValueType( collectionType );
+		}
+		return CollectionElementSwitch.extractCollectionElementType( collectionType );
+	}
+
+	private static TypeDetails reflectedCollectionElementType(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ModelsContext modelsContext) {
+		final Type reflectedType = GenericsHelper.actualInheritedMemberType( ownerType.toJavaClass(), member.toJavaMember() );
+		if ( reflectedType instanceof ParameterizedType parameterizedType
+				&& parameterizedType.getRawType() instanceof Class<?> rawClass ) {
+			if ( java.util.Map.class.isAssignableFrom( rawClass ) ) {
+				return typeDetails( parameterizedType.getActualTypeArguments()[1], ownerType, modelsContext );
+			}
+			if ( java.util.Collection.class.isAssignableFrom( rawClass ) ) {
+				return typeDetails( parameterizedType.getActualTypeArguments()[0], ownerType, modelsContext );
+			}
+		}
+		if ( reflectedType instanceof Class<?> javaClass && javaClass.isArray() ) {
+			return typeDetails( javaClass.getComponentType(), ownerType, modelsContext );
+		}
+		return null;
+	}
+
+	private static TypeDetails reflectedMapKeyType(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ModelsContext modelsContext) {
+		final Type reflectedType = GenericsHelper.actualInheritedMemberType( ownerType.toJavaClass(), member.toJavaMember() );
+		if ( reflectedType instanceof ParameterizedType parameterizedType
+				&& parameterizedType.getRawType() instanceof Class<?> rawClass
+				&& java.util.Map.class.isAssignableFrom( rawClass ) ) {
+			return typeDetails( parameterizedType.getActualTypeArguments()[0], ownerType, modelsContext );
+		}
+		return null;
 	}
 
 	private static JoinTable effectiveJoinTable(MemberDetails member, AssociationOverride associationOverride) {

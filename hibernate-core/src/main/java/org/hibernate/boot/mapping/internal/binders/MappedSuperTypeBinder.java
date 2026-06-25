@@ -285,7 +285,9 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 	private void addGenericDeclaredPropertyIfNeeded(Property property) {
 		final AttributeMetadata attribute = getManagedType().findAttribute( property.getName() );
-		if ( !isUnresolvedGenericAttribute( attribute ) || hasDeclaredProperty( binding, property.getName() ) ) {
+		if ( !isUnresolvedGenericAttribute( attribute )
+				|| !supportsGenericDeclaredProperty( attribute )
+				|| hasDeclaredProperty( binding, property.getName() ) ) {
 			return;
 		}
 
@@ -308,6 +310,11 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		binding.addDeclaredProperty( genericProperty );
 	}
 
+	private boolean supportsGenericDeclaredProperty(AttributeMetadata attribute) {
+		return attribute.getNature() == org.hibernate.boot.models.AttributeNature.TO_ONE
+			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.BASIC;
+	}
+
 	private BasicValue genericBasicValue(BasicValue source) {
 		final BasicValue basicValue = new BasicValue( getBindingState().getMetadataBuildingContext(), source.getTable() );
 		basicValue.setTable( source.getTable() );
@@ -326,12 +333,22 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private boolean isUnresolvedGenericAttribute(AttributeMetadata attributeMetadata) {
-		if ( attributeMetadata == null
-				|| ( attributeMetadata.getNature() != org.hibernate.boot.models.AttributeNature.TO_ONE
-						&& attributeMetadata.getNature() != org.hibernate.boot.models.AttributeNature.BASIC ) ) {
+		if ( attributeMetadata == null ) {
+			return false;
+		}
+		if ( !isGenericBridgeAttribute( attributeMetadata ) ) {
 			return false;
 		}
 		return memberTypeUsesTypeVariable( attributeMetadata.getMember().toJavaMember() );
+	}
+
+	private boolean isGenericBridgeAttribute(AttributeMetadata attributeMetadata) {
+		return attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.TO_ONE
+			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.BASIC
+			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.ELEMENT_COLLECTION
+			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.MANY_TO_MANY
+			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.ONE_TO_MANY
+			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;
 	}
 
 	private boolean memberTypeUsesTypeVariable(java.lang.reflect.Member member) {

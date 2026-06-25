@@ -31,6 +31,9 @@ The most relevant orientation documents are:
 * link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`]
 * link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
 * link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+* link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
 * link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`]
 * link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
 * link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
@@ -63,102 +66,68 @@ Binding/model work has also moved forward:
 
 == Current Uncommitted Slice
 
-The active uncommitted slice is explicit key creation for mapping
-materialization.
+The active uncommitted slice is generic inheritance parity in the new boot
+pipeline, especially generic attributes inherited from mapped superclasses and
+entity superclasses.
 
-Added materializers:
+The core problem is documented in
+link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]:
+generic attributes have declaration facts, such as `T`, `List<T>`, and bounds,
+and usage facts, such as `Integer`, `String`, or `List<Foo>` after inheritance
+or embedding.  The boot binding model can represent this distinction with
+declaration and usage bindings, but the legacy `org.hibernate.mapping`
+handoff collapses it back into `Property` flags and copied `Value` objects.
 
-* `CollectionKeyMappingMaterializer`
-* `DependentTableKeyMappingMaterializer`
-* `ForeignKeyMappingMaterializer`
-* `PrimaryTableKeyMappingMaterializer`
-* `UniqueKeyMappingMaterializer`
+Current code changes in this slice:
 
-Routed callers include:
+* `BasicValueSource` has a factory that accepts a resolved `TypeDetails` plus an
+  optional explicit Java type for inherited type-variable cases.
+* `BasicValueMappingMaterializer` uses that factory for inherited generic
+  basic attributes so enum/converter/basic type resolution can use the concrete
+  usage type while still coming from the inherited member.
+* `MappedSuperTypeBinder` skips unresolved generic basic/to-one declarations
+  during the initial mapped-superclass declaration pass, then creates explicit
+  generic declaration views for the mapped-superclass side.
+* For mapped-superclass generic basic declarations, `MappedSuperTypeBinder`
+  creates a fresh `Object`-typed `BasicValue` with cloned selectables rather
+  than copying an already-resolved concrete `BasicValue`.  This preserves the
+  public generic JPA-domain model without re-owning DDL columns.
+* `IdentifiableTypeBinder#applyGenericPropertyMarkers(...)` now detects Java
+  type-variable usage from the source member signature rather than relying on
+  `TypeDetails#isResolved()`.
+* `EntityTypeBinder` adds concrete generic specializations for generic
+  properties inherited from entity superclasses and copies the basic-value
+  details needed by concrete runtime mapping.
 
-* `TableKeyBinder`
-* `InversePluralAssociationBinder`
-* `TableBinder`
-* `IdentifierBinder`
-* `IdentifierMappingMaterializer`
-* `AssociationIdentifierBinder`
+Behavior verified in this slice:
 
-The key design document is
-link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
+* `GenericBasicValuedPathTest` now passes: public criteria paths for generic
+  mapped-superclass id/basic attributes report `Object`, while
+  `SqmPath#getResolvedModel()` resolves to `Integer` / `String`.
+* The nearby generics regression set still passes:
+  `SingleTableAndGenericsTest`, `EnumeratedAndGenericsTest`,
+  `EmbeddableWithGenericAndMappedSuperClassTest`,
+  `MappedSuperclassAndGenericsTest`, `GenericAbstractSubtypeSerializableTest`,
+  and `GenericBasicValuedPathTest`.
 
-Current status:
+Design/doc changes in this slice:
 
-* collection/dependent-table primary-key creation is routed through an explicit
-  materializer bridge and resolved table-key products;
-* primary-table primary-key creation is routed through an explicit materializer
-  bridge and `ResolvedPrimaryTableKey` product;
-* new-pipeline association and table-key foreign-key creation is routed through
-  `ResolvedForeignKey` products and an explicit materializer;
-* cheap legacy second-pass collection, entity-join, joined-subclass, inverse
-  many-to-many, and to-one foreign-key callers now delegate through the same
-  materializer bridges;
-* legacy `CreateKeySecondPass` root primary-key creation now delegates through
-  the resolved primary-table key product;
-* `PersistentClass#createPrimaryKey()` remains as an unused compatibility
-  bridge until hidden creation APIs are removed or narrowed;
-* legacy annotation-binding `TableBinder` now projects `AnnotatedJoinColumns`
-  into the same resolved foreign-key product;
-* value-driven unique-key creation for `@Column(unique = true)`,
-  `@JoinColumn(unique = true)`, one-to-one, and synthetic property-reference
-  paths now routes through `ResolvedUniqueKey` and `UniqueKeyMappingMaterializer`;
-* natural-id, table-level `@UniqueConstraint`, collection-table unique
-  constraints, and set-table nullable-element unique keys also route through the
-  resolved unique-key product;
-* annotation-driven fallback indexes, new-pipeline entity/secondary table
-  indexes, and new-pipeline collection-table indexes now route through
-  `ResolvedIndex` and `IndexMappingMaterializer`;
-* new-pipeline table-source `@UniqueConstraint` declarations also feed the
-  resolved unique-key materializer; collection/join table declarations remain
-  deferred to `TableKeyBinder` until their columns are known;
-* low-level `Table#createForeignKey(...)` remains the table registry operation
-  used by explicit foreign-key materialization;
-* low-level `Table` unique-key registry helpers remain as compatibility
-  primitives used by explicit unique-key materialization;
-* Slice 5 bridge-drain work has removed the obvious materializer-owned
-  compatibility fallback methods; the materializers now create equivalent
-  mapping keys directly from resolved products;
-* `CollectionKeyMappingMaterializer` no longer calls
-  `Collection#createAllKeys()`; it now materializes collection element, owner,
-  and map-index FKs plus collection-table PK/UK finalization directly;
-* collection element and map-index `ToOne` FKs now use `ResolvedForeignKey`
-  products instead of the legacy association-FK fallback;
-* the legacy association-FK fallback method on `ForeignKeyMappingMaterializer`
-  has been removed; remaining primary-key association fallback callers use the
-  `ToOne`-to-`ResolvedForeignKey` materialization path directly;
-* the legacy table-key FK fallback method on `ForeignKeyMappingMaterializer`
-  has been removed; collection owner keys and defensive table-key fallback
-  callers use `KeyValue`-to-`ResolvedForeignKey` materialization directly;
-* entity-join, joined-subclass, and property-ref FK wrapper methods on
-  `ForeignKeyMappingMaterializer` have been removed; their callers now use
-  resolved FK materialization entry points directly;
-* a materializer ownership audit found no production boot
-  `getOrCreateIndex(...)` callers outside `IndexMappingMaterializer` and
-  `Table` itself, and moved the remaining legacy collection inverse set
-  primary-key creation into `CollectionKeyMappingMaterializer`;
-* remaining direct `PrimaryKey` creation outside materializers is limited to
-  compatibility methods on `org.hibernate.mapping` and auxiliary table helpers
-  such as audit tables and temporal history tables;
-* legacy hidden helpers on `Value`, `KeyValue`, `Collection`,
-  `PersistentClass`, `Join`, `Map`, `Subclass`, `SimpleValue`, and `ToOne` are
-  deprecated since 9.0, marked for removal, and retained as transitional
-  compatibility methods.
-  Their Javadocs now identify them as compatibility-only hooks and point ORM
-  boot code to the appropriate materializer replacement;
+* Added link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`].
+* Linked it from link:index.adoc[`index.adoc`].
+* The design note explicitly says that generic declaration/usage facts should
+  be carried toward runtime as metadata or adapter input, with
+  `MetadataContext` / JPA-domain model creation as the first runtime-adjacent
+  consumer.
+* It also says not to make entity persisters, SQL AST, schema export, dirty
+  checking, or runtime mapping types depend directly on a new generic model
+  until `MetadataBuildingProcess` is gone or both boot paths populate the same
+  adapter metadata.
 
-This slice is not a full mapping-key redesign yet.
-It is the bridge that makes remaining hidden key creation visible and easier to
-drain.
-
-The key/materialization work is close enough to the finish line that a fresh
-conversation can safely switch back to
-link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`] and use the
-phase/materializer contract as background rather than continuing horizontally
-through more key-creation cleanup.
+This is still bridge work, not the final generic inheritance model.  The final
+model should be part of the mapped-superclass / embeddable contribution model
+once the legacy boot handoff no longer forces generic behavior through
+`Property#isGeneric()`, `Property#isGenericSpecialization()`, copied values, and
+`MetadataContext#addConcreteGenericAttribute(...)`.
 
 == Deliberate Transitional Bridges
 
@@ -181,26 +150,26 @@ Do not treat these as accidental leftovers:
 
 == Useful Guardrails
 
-The most recent focused guardrail for the active key-creation slice passed:
+The most recent focused guardrails for the active generic-inheritance slice
+passed:
 
 [source,bash]
 ----
-./gradlew :hibernate-core:test -x :hibernate-testing:test \
-  --tests 'org.hibernate.orm.test.boot.models.bind.id.*' \
-  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.EmbeddedTest.testEmbeddableInsideEmbeddable' \
-  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides.PluralEmbeddedOverrideTests' \
-  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.override.AssociationOverrideTest.testSchemaCreation'
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.annotations.generics.GenericBasicValuedPathTest \
+  --console=plain
 ----
-
-Earlier embedded/override guardrails also passed after the component and
-collection intent work:
 
 [source,bash]
 ----
-./gradlew :hibernate-core:test -x :hibernate-testing:test \
-  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.*' \
-  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.override.*' \
-  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides.*'
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.inheritance.discriminator.SingleTableAndGenericsTest \
+  --tests org.hibernate.orm.test.annotations.enumerated.EnumeratedAndGenericsTest \
+  --tests org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest \
+  --tests org.hibernate.orm.test.annotations.generics.MappedSuperclassAndGenericsTest \
+  --tests org.hibernate.orm.test.annotations.generics.GenericAbstractSubtypeSerializableTest \
+  --tests org.hibernate.orm.test.annotations.generics.GenericBasicValuedPathTest \
+  --console=plain
 ----
 
 Always run:
@@ -210,54 +179,43 @@ Always run:
 git diff --check
 ----
 
-Expect Java deprecation warnings because the current slice deliberately marks
-legacy helpers for removal.
+Expect Java deprecation warnings during Gradle runs.
 
 == Recommended Next Slices
 
 The best next step depends on the desired risk profile.
 
-If switching back to binding parity:
+Recommended next slice:
 
-* start from link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`];
-* refresh the source-confirmed gap list against the current code, because recent
-  materialization work may have closed or reframed some table-key, FK, unique
-  key, index, and collection-table shapes;
-* choose one focused bucket and verify it with a small `hibernate-core` test
-  run before broadening;
-* keep fixes aligned with the bootstrap phase contract in
-  link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]:
-  categorize source facts, bind intents and pending work, and materialize
-  `org.hibernate.mapping` artifacts only through the appropriate materializer or
-  compatibility bridge.
+* Continue the generic inheritance bucket with
+  `org.hibernate.orm.test.annotations.generics.GenericsInheritanceTest`.
+  Earlier focused triage showed an initialization failure with a
+  `ClassCastException` in `PluralAssociationAttributeBinder`, which likely
+  represents the next generic inherited plural-association shape after the
+  basic/id path work.
+* Keep fixes in the boot pipeline: source/categorization, binding,
+  materialization, and handoff metadata.  Avoid SQL-AST/runtime behavior
+  changes unless the failure proves the legacy mapping handoff cannot express
+  the needed fact.
+* Use link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+  as the local design guide.  Near-term fixes are bridges; the authoritative
+  generic declaration/usage/contribution model should wait until
+  `MetadataBuildingProcess` is removed or a runtime adapter is populated by
+  both boot paths.
+* Re-run the generics guardrail set above after each concrete fix.
 
-If finishing the active key-creation work:
+Secondary next slices:
 
-* continue link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`];
-* continue the Slice 4 index tail by centralizing index annotation
-  interpretation;
-* decide whether audit/temporal auxiliary-table primary-key construction should
-  get its own resolved materializer product or remain outside the boot mapping
-  key-creation slices;
-* keep `Table#createForeignKey(...)` and unique-key registry helpers as
-  low-level table primitives until all higher-level hidden helpers are drained;
-* then narrow or retire deprecated hidden helpers such as
-  `PersistentClass#createPrimaryKey()`, `Value#createForeignKey()`,
-  `KeyValue#createForeignKeyOfEntity()`, and `Join#createForeignKey()`.
-
-If returning to model-shape work:
-
-* continue mapped-superclass declaration/application modeling from
+* If `GenericsInheritanceTest` turns out to be a different plural-association
+  bucket, document the failure shape and decide whether to continue generic
+  plural inheritance or return to the broader binding-gap list.
+* If returning to model-shape work, continue mapped-superclass
+  declaration/application modeling from
   link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
-  and link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`];
-* then continue embeddable contribution/view modeling from
-  link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`].
-
-If pursuing a second consumer of binding views:
-
-* continue link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`];
-* move actual static metamodel injection responsibility into the view-backed
-  JPA consumer rather than only producing source/planning data.
+  and link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].
+* If returning to binding parity, refresh
+  link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`] against the
+  current worktree before selecting the next bucket.
 
 If looking for correctness failures:
 

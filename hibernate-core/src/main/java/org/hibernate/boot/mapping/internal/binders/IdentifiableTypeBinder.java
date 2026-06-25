@@ -380,11 +380,15 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			);
 			case MANY_TO_MANY -> CollectionSource.manyToMany(
 					attributeMetadata.getMember(),
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
 					locateAssociationOverride( ownerType, attributeMetadata.getName() ),
 					modelsContext
 			);
 			case ONE_TO_MANY -> CollectionSource.oneToMany(
 					attributeMetadata.getMember(),
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
 					locateAssociationOverride( ownerType, attributeMetadata.getName() ),
 					modelsContext
 			);

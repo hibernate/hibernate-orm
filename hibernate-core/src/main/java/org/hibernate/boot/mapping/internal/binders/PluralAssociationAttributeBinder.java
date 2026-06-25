@@ -195,6 +195,8 @@ class PluralAssociationAttributeBinder {
 		final CollectionSource source = collectionValueIntent == null
 				? CollectionSource.manyToMany(
 						attributeMetadata.getMember(),
+						ownerType.getClassDetails(),
+						ownerType.getHierarchy().getRoot().getClassDetails(),
 						associationOverride,
 						bindingContext.getBootstrapContext().getModelsContext()
 				)
@@ -210,6 +212,8 @@ class PluralAssociationAttributeBinder {
 		final CollectionSource source = collectionValueIntent == null
 				? CollectionSource.oneToMany(
 						attributeMetadata.getMember(),
+						ownerType.getClassDetails(),
+						ownerType.getHierarchy().getRoot().getClassDetails(),
 						associationOverride,
 						bindingContext.getBootstrapContext().getModelsContext()
 				)

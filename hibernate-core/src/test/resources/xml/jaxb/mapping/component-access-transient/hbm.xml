@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!--
+    The component maps only "street" and "city" out of the Address class.
+    Address also has a getFullAddress() getter with no backing field.
+    With the default property access, "fullAddress" must be detected
+    as a transient property.  If the transformer incorrectly used
+    field access, it would look at fields instead and miss it.
+-->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.componentaccesstransient">
+	<class name="Person">
+		<id name="id" type="long">
+			<generator class="increment"/>
+		</id>
+		<property name="name" column="person_name"/>
+		<component name="address" class="Address">
+			<property name="street" column="addr_street"/>
+			<property name="city" column="addr_city"/>
+		</component>
+	</class>
+</hibernate-mapping>

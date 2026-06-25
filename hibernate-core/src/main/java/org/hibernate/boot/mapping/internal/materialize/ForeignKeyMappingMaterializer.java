@@ -13,6 +13,8 @@ import org.hibernate.boot.mapping.internal.binders.SelectableOrderResolution;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.ForeignKeyColumnMapping;
+import org.hibernate.mapping.ForeignKeyColumnMappings;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
@@ -121,7 +123,7 @@ public class ForeignKeyMappingMaterializer {
 
 		final ForeignKey mappingForeignKey = foreignKey.table().createForeignKey(
 				foreignKey.foreignKeyName(),
-				foreignKey.selectableOrder().foreignKeyColumnMappings(),
+				foreignKeyColumnMappings( foreignKey, referencedEntity ),
 				foreignKey.referencedEntityName(),
 				foreignKey.foreignKeyDefinition(),
 				foreignKey.foreignKeyOptions()
@@ -131,6 +133,28 @@ public class ForeignKeyMappingMaterializer {
 			mappingForeignKey.setReferencedTable( foreignKey.referencedTable() );
 		}
 		return mappingForeignKey;
+	}
+
+	private ForeignKeyColumnMappings foreignKeyColumnMappings(
+			ResolvedForeignKey foreignKey,
+			PersistentClass referencedEntity) {
+		final SelectableOrderResolution selectableOrder = foreignKey.selectableOrder();
+		return new ForeignKeyColumnMappings(
+				selectableOrder.correspondences().stream()
+						.map( (correspondence) -> new ForeignKeyColumnMapping(
+								correspondence.localColumn(),
+								referencesPrimaryKey( selectableOrder, referencedEntity )
+										? null
+										: correspondence.referencedColumn()
+						) )
+						.toList()
+		);
+	}
+
+	private boolean referencesPrimaryKey(
+			SelectableOrderResolution selectableOrder,
+			PersistentClass referencedEntity) {
+		return referencedEntity.getIdentifier().getColumns().equals( selectableOrder.referencedColumns() );
 	}
 
 	public ForeignKey materializeForeignKey(ToOne value, PersistentClass referencedEntity, String sourceRole) {

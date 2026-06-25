@@ -45,6 +45,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.ModelsException;
 
@@ -739,6 +740,7 @@ public class TableKeyBinder {
 		}
 		for ( Property property : referenceableProperties( ownerBinding ) ) {
 			if ( property.getValue() instanceof SimpleValue simpleValue
+					&& !( simpleValue instanceof ToOne )
 					&& columnNamesMatch( simpleValue.getColumns(), referencedColumnNames ) ) {
 				materializeUniqueKey( simpleValue, sourceRole );
 				return new ReferencedOwnerKey( property, simpleValue, simpleValue.getColumns() );
@@ -810,6 +812,9 @@ public class TableKeyBinder {
 	}
 
 	private Property findPropertyContainingColumn(Property property, Identifier referencedColumnName) {
+		if ( property.getValue() instanceof ToOne ) {
+			return null;
+		}
 		if ( property.getValue() instanceof Component component ) {
 			for ( Property subProperty : component.getProperties() ) {
 				final Property match = findPropertyContainingColumn( subProperty, referencedColumnName );

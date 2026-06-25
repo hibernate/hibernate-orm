@@ -37,6 +37,10 @@ public interface BookDao {
 	@HQL("from Book where isbn = :isbn")
 	Book findByIsbn(String isbn);
 
+	@org.jetbrains.annotations.Nullable
+	@HQL("from Book where isbn = :isbn")
+	Book findByIsbnNullable(String isbn);
+
 	@HQL("delete from Book where isbn = :isbn")
 	int deleteByIsbn(String isbn);
 

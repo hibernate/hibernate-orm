@@ -123,6 +123,20 @@ Use this document when changing mapped-superclass binding, `PersistentClass`
 inheritance links, property closure behavior, or table/override handling for
 mapped-superclass attributes.
 
+link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+
+This is the focused design note for generic persistent attributes inherited
+through entity, mapped-superclass, and embeddable hierarchies.  It audits the
+current bridge based on `Property#isGeneric()`,
+`Property#isGenericSpecialization()`, copied values, and
+`MetadataContext#addConcreteGenericAttribute(...)`, and records why the
+authoritative model should use declaration/usage/contribution facts instead.
+
+Use this document when changing generic type-variable handling, inherited
+generic basic attributes or ids, generic public JPA-domain path behavior,
+concrete generic SQM resolution, or the bridge between generic binding products
+and legacy `org.hibernate.mapping` values.
+
 link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
 
 This is the design note for reshaping embeddable inheritance and generic

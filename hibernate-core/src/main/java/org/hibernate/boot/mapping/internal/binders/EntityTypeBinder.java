@@ -64,6 +64,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
@@ -73,6 +74,8 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
+import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -364,6 +367,108 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// split foreign keys and attributes into more focused phases.
 	public void bindMembers() {
 		prepareBinding( modelBinders );
+		addGenericProperties();
+	}
+
+	private void addGenericProperties() {
+		if ( !isConcreteEntity() ) {
+			return;
+		}
+
+		var superEntity = binding.getSuperPersistentClass();
+		while ( superEntity != null ) {
+			for ( Property declaredProperty : superEntity.getDeclaredProperties() ) {
+				if ( declaredProperty.isGeneric() ) {
+					addGenericPropertySpecialization( declaredProperty );
+				}
+			}
+			superEntity = superEntity.getSuperPersistentClass();
+		}
+	}
+
+	private boolean isConcreteEntity() {
+		return binding.isAbstract() == null || !binding.isAbstract();
+	}
+
+	private void addGenericPropertySpecialization(Property declaredProperty) {
+		if ( hasDeclaredProperty( declaredProperty.getName() ) ) {
+			return;
+		}
+
+		final AttributeMetadata attribute = findDeclaringSuperEntityAttribute( declaredProperty.getName() );
+		if ( attribute == null ) {
+			return;
+		}
+
+		final TypeDetails resolvedType = attribute.getMember().resolveRelativeType( getManagedType().getClassDetails() );
+		final Property actualProperty = declaredProperty.copy();
+		actualProperty.setGeneric( false );
+		actualProperty.setGenericSpecialization( true );
+		actualProperty.setReturnedClassName( resolvedType.getName() );
+
+		final var value = declaredProperty.getValue().copy();
+		if ( value instanceof BasicValue basicValue && declaredProperty.getValue() instanceof BasicValue originalBasicValue ) {
+			basicValue.setImplicitJavaTypeAccess( (typeConfiguration) ->
+					resolvedType.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE
+							? ParameterizedTypeImpl.from( resolvedType.asParameterizedType() )
+							: resolvedType.determineRawClass().toJavaClass() );
+			copyBasicValueDetails( basicValue, originalBasicValue );
+			getBindingState().getMetadataBuildingContext()
+					.getMetadataCollector()
+					.registerValueMappingResolver( basicValue::resolve );
+		}
+		actualProperty.setValue( value );
+		binding.addProperty( actualProperty );
+	}
+
+	private boolean hasDeclaredProperty(String propertyName) {
+		for ( Property property : binding.getDeclaredProperties() ) {
+			if ( propertyName.equals( property.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private AttributeMetadata findDeclaringSuperEntityAttribute(String propertyName) {
+		IdentifiableTypeMetadata superType = getManagedType().getSuperType();
+		while ( superType != null ) {
+			final AttributeMetadata attribute = superType.findAttribute( propertyName );
+			if ( attribute != null && superType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
+				return attribute;
+			}
+			superType = superType.getSuperType();
+		}
+		return null;
+	}
+
+	private void copyBasicValueDetails(BasicValue target, BasicValue source) {
+		target.setExplicitTypeParams( source.getExplicitTypeParams() );
+		target.setTypeParameters( source.getTypeParameters() );
+		target.setJpaAttributeConverterDescriptor( source.getJpaAttributeConverterDescriptor() );
+		target.setExplicitJavaTypeAccess( source.getExplicitJavaTypeAccess() );
+
+		final var explicitJdbcTypeAccess = source.getExplicitJdbcTypeAccess();
+		if ( explicitJdbcTypeAccess != null ) {
+			final var typeConfiguration = getBindingContext().getBootstrapContext().getTypeConfiguration();
+			final var explicitJdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
+			target.setExplicitJdbcTypeAccess( (ignored) ->
+					explicitJdbcType == null ? source.resolve().getJdbcType() : explicitJdbcType );
+		}
+		else {
+			target.setExplicitJdbcTypeAccess( (ignored) -> source.resolve().getJdbcType() );
+		}
+
+		target.setExplicitMutabilityPlanAccess( source.getExplicitMutabilityPlanAccess() );
+		target.setEnumerationStyle( source.getEnumeratedType() );
+		target.setTimeZoneStorageType( source.getTimeZoneStorageType() );
+		target.setTemporalPrecision( source.getTemporalPrecision() );
+		if ( source.isLob() ) {
+			target.makeLob();
+		}
+		if ( source.isNationalized() ) {
+			target.makeNationalized();
+		}
 	}
 
 	private void checkOverrides() {

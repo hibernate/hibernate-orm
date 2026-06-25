@@ -4,6 +4,13 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -490,7 +497,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			AttributeMetadata attributeMetadata,
 			Property property) {
 		final TypeDetails declaredType = attributeMetadata.getMember().getType();
-		if ( declaredType.isResolved() ) {
+		if ( !memberTypeUsesTypeVariable( attributeMetadata.getMember().toJavaMember() ) ) {
 			return;
 		}
 
@@ -504,6 +511,37 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			property.setGenericSpecialization( true );
 			property.setReturnedClassName( resolvedType.getName() );
 		}
+	}
+
+	private boolean memberTypeUsesTypeVariable(Member member) {
+		final Type type;
+		if ( member instanceof Field field ) {
+			type = field.getGenericType();
+		}
+		else if ( member instanceof Method method ) {
+			type = method.getGenericReturnType();
+		}
+		else {
+			type = null;
+		}
+		return typeUsesTypeVariable( type );
+	}
+
+	private boolean typeUsesTypeVariable(Type type) {
+		if ( type instanceof TypeVariable<?> ) {
+			return true;
+		}
+		if ( type instanceof ParameterizedType parameterizedType ) {
+			for ( Type argument : parameterizedType.getActualTypeArguments() ) {
+				if ( typeUsesTypeVariable( argument ) ) {
+					return true;
+				}
+			}
+		}
+		else if ( type instanceof GenericArrayType genericArrayType ) {
+			return typeUsesTypeVariable( genericArrayType.getGenericComponentType() );
+		}
+		return false;
 	}
 
 	private boolean overridesSuperAttribute(

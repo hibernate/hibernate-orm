@@ -18,6 +18,7 @@ import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -26,6 +27,11 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
+
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 
 /// Binder for a mapped-superclass type.
 ///
@@ -124,7 +130,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				binding::addDeclaredProperty,
 				true,
 				false,
-				(attributeMetadata) -> !isUnresolvedGenericToOne( attributeMetadata )
+				(attributeMetadata) -> !isUnresolvedGenericAttribute( attributeMetadata )
 		);
 		applyDeclaredPropertiesToNearestEntityConsumers( getManagedType() );
 	}
@@ -230,7 +236,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 	private Property prepareDeclaredIdentifierProperty(Property identifierProperty) {
 		final AttributeMetadata attribute = getManagedType().findAttribute( identifierProperty.getName() );
-		if ( attribute == null || attribute.getMember().getType().isResolved() ) {
+		if ( !isUnresolvedGenericAttribute( attribute ) ) {
 			return identifierProperty;
 		}
 
@@ -252,6 +258,10 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 					propertyIterator.remove();
 				}
 			}
+		}
+		else if ( identifierProperty.getValue() instanceof BasicValue basicValue ) {
+			declaredProperty.setValue( genericBasicValue( basicValue ) );
+			return declaredProperty;
 		}
 		declaredProperty.setValue( declaredValue );
 		return declaredProperty;
@@ -275,7 +285,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 	private void addGenericDeclaredPropertyIfNeeded(Property property) {
 		final AttributeMetadata attribute = getManagedType().findAttribute( property.getName() );
-		if ( !isUnresolvedGenericToOne( attribute ) || hasDeclaredProperty( binding, property.getName() ) ) {
+		if ( !isUnresolvedGenericAttribute( attribute ) || hasDeclaredProperty( binding, property.getName() ) ) {
 			return;
 		}
 
@@ -289,14 +299,70 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			toOne.setReferencedEntityName( attribute.getMember().getType().getName() );
 			toOne.setTypeName( attribute.getMember().getType().getName() );
 		}
+		else if ( property.getValue() instanceof BasicValue basicValue ) {
+			genericProperty.setValue( genericBasicValue( basicValue ) );
+			binding.addDeclaredProperty( genericProperty );
+			return;
+		}
 		genericProperty.setValue( genericValue );
 		binding.addDeclaredProperty( genericProperty );
 	}
 
-	private boolean isUnresolvedGenericToOne(AttributeMetadata attributeMetadata) {
-		return attributeMetadata != null
-			&& attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.TO_ONE
-			&& !attributeMetadata.getMember().getType().isResolved();
+	private BasicValue genericBasicValue(BasicValue source) {
+		final BasicValue basicValue = new BasicValue( getBindingState().getMetadataBuildingContext(), source.getTable() );
+		basicValue.setTable( source.getTable() );
+		basicValue.setTypeName( Object.class.getName() );
+		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Object.class );
+		for ( int i = 0; i < source.getSelectables().size(); i++ ) {
+			final var selectable = source.getSelectables().get( i );
+			if ( selectable instanceof org.hibernate.mapping.Column column ) {
+				basicValue.addColumn( column.clone(), source.isColumnInsertable( i ), source.isColumnUpdateable( i ) );
+			}
+			else if ( selectable instanceof org.hibernate.mapping.Formula formula ) {
+				basicValue.addFormula( new org.hibernate.mapping.Formula( formula.getFormula() ) );
+			}
+		}
+		return basicValue;
+	}
+
+	private boolean isUnresolvedGenericAttribute(AttributeMetadata attributeMetadata) {
+		if ( attributeMetadata == null
+				|| ( attributeMetadata.getNature() != org.hibernate.boot.models.AttributeNature.TO_ONE
+						&& attributeMetadata.getNature() != org.hibernate.boot.models.AttributeNature.BASIC ) ) {
+			return false;
+		}
+		return memberTypeUsesTypeVariable( attributeMetadata.getMember().toJavaMember() );
+	}
+
+	private boolean memberTypeUsesTypeVariable(java.lang.reflect.Member member) {
+		final Type type;
+		if ( member instanceof java.lang.reflect.Field field ) {
+			type = field.getGenericType();
+		}
+		else if ( member instanceof java.lang.reflect.Method method ) {
+			type = method.getGenericReturnType();
+		}
+		else {
+			type = null;
+		}
+		return typeUsesTypeVariable( type );
+	}
+
+	private boolean typeUsesTypeVariable(Type type) {
+		if ( type instanceof TypeVariable<?> ) {
+			return true;
+		}
+		if ( type instanceof ParameterizedType parameterizedType ) {
+			for ( Type argument : parameterizedType.getActualTypeArguments() ) {
+				if ( typeUsesTypeVariable( argument ) ) {
+					return true;
+				}
+			}
+		}
+		else if ( type instanceof GenericArrayType genericArrayType ) {
+			return typeUsesTypeVariable( genericArrayType.getGenericComponentType() );
+		}
+		return false;
 	}
 
 	private boolean hasDeclaredProperty(PersistentClass entityBinding, String propertyName) {

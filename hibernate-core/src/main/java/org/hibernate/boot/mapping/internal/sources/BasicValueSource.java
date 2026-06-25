@@ -208,6 +208,18 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.ATTRIBUTE, member, type, null, attributeConversion( member, bindingContext ) );
 	}
 
+	/// Creates a source for a normal singular basic attribute whose type has
+	/// already been resolved for a concrete entity usage, including a reflected
+	/// Java-type fallback when Hibernate Models can only expose the type-variable
+	/// upper bound.
+	public static BasicValueSource attribute(
+			MemberDetails member,
+			TypeDetails type,
+			Class<?> explicitJavaType,
+			BindingContext bindingContext) {
+		return new BasicValueSource( Kind.ATTRIBUTE, member, type, explicitJavaType, attributeConversion( member, bindingContext ) );
+	}
+
 	/// Creates a source for a basic embeddable/component member.
 	///
 	/// This is distinct from [#attribute(MemberDetails)] so embeddable-member-specific

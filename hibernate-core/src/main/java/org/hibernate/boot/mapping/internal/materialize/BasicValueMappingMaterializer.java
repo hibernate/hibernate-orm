@@ -7,6 +7,7 @@ package org.hibernate.boot.mapping.internal.materialize;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
+import java.lang.reflect.Type;
 
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -25,6 +26,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 
@@ -67,7 +69,12 @@ public class BasicValueMappingMaterializer {
 		property.setLob( member.hasDirectAnnotationUsage( Lob.class ) );
 
 		BasicValueBinder.bindBasicValue(
-				BasicValueSource.attribute( member, attributeBinding.resolvedType(), bindingContext ),
+				BasicValueSource.attribute(
+						member,
+						attributeBinding.resolvedType(),
+						resolveInheritedTypeVariableJavaType( attributeBinding ),
+						bindingContext
+				),
 				property,
 				basicValue,
 				bindingOptions,
@@ -78,6 +85,20 @@ public class BasicValueMappingMaterializer {
 		new AttributeOptionsMappingMaterializer().materializeOptions( attributeBinding, property, basicValue );
 
 		return basicValue;
+	}
+
+	private Class<?> resolveInheritedTypeVariableJavaType(AttributeBindingView attributeBinding) {
+		final MemberDetails member = attributeBinding.member();
+		if ( attributeBinding.ownerType() == attributeBinding.declaringType() ) {
+			return null;
+		}
+
+		final Type actualMemberType = GenericsHelper.actualInheritedMemberType(
+				attributeBinding.ownerType().classDetails().toJavaClass(),
+				member.toJavaMember()
+		);
+		final Class<?> erasedType = GenericsHelper.erasedType( actualMemberType );
+		return erasedType == attributeBinding.resolvedType().determineRawClass().toJavaClass() ? null : erasedType;
 	}
 
 	public void materializeVersionBasicValue(

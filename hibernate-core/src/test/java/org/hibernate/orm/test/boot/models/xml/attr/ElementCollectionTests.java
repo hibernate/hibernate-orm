@@ -92,6 +92,26 @@ public class ElementCollectionTests {
 		assertThat( mapKeyJdbcTypeCodeAnn.value() ).isEqualTo( java.sql.Types.VARCHAR );
 	}
 
+	@Test
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void testMapKeyJdbcTypeName(ServiceRegistryScope scope) {
+		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
+				.addXmlMappings( "mappings/models/attr/element-collection/map-key-jdbc-type-name.xml" )
+				.build();
+
+		final ModelsContext modelsContext = createBuildingContext( managedResources, serviceRegistry );
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+
+		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
+
+		final FieldDetails dataField = classDetails.findFieldByName( "data" );
+
+		final MapKeyJdbcTypeCode mapKeyJdbcTypeCodeAnn = dataField.getDirectAnnotationUsage( MapKeyJdbcTypeCode.class );
+		assertThat( mapKeyJdbcTypeCodeAnn ).isNotNull();
+		assertThat( mapKeyJdbcTypeCodeAnn.value() ).isEqualTo( java.sql.Types.VARCHAR );
+	}
+
 	@SuppressWarnings("unused")
 	@Entity(name = "SimpleEntity")
 	@Table(name = "SimpleEntity")

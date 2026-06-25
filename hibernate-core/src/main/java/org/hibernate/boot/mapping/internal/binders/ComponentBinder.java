@@ -268,7 +268,7 @@ public class ComponentBinder {
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-				columns.addAll( bindProperties(
+				final List<Column> nestedColumns = bindProperties(
 						ownerType,
 						ownerBinding,
 						nestedSource,
@@ -281,7 +281,9 @@ public class ComponentBinder {
 						nullableByDefault,
 						updatable,
 						registerCollectionBindings
-				) );
+				);
+				AggregateComponentBinder.processAggregate( ownerBinding, nestedSource, nestedComponent, table, state );
+				columns.addAll( nestedColumns );
 				continue;
 			}
 

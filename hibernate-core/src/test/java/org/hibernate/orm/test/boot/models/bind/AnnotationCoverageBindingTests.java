@@ -117,6 +117,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.mapping.BasicValue;
@@ -446,6 +447,529 @@ public class AnnotationCoverageBindingTests {
 
 	@Test
 	@ServiceRegistry
+	void testJsonAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( JsonAggregateEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "publisher" ).getValue();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.JSON );
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				JsonAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testXmlAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( XmlAggregateEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "publisher" ).getValue();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.SQLXML );
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				XmlAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testPluralJsonAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Collection collection = context.getMetadataCollector()
+							.getCollectionBinding( PluralJsonAggregateEntity.class.getName() + ".publishers" );
+					final Component component = (Component) collection.getElement();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.JSON );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				PluralJsonAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testPluralXmlAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Collection collection = context.getMetadataCollector()
+							.getCollectionBinding( PluralXmlAggregateEntity.class.getName() + ".publishers" );
+					final Component component = (Component) collection.getElement();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.SQLXML );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				PluralXmlAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testArrayJsonAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ArrayJsonAggregateEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "publishers" ).getValue();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.JSON_ARRAY );
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				ArrayJsonAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testArrayXmlAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ArrayXmlAggregateEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "publishers" ).getValue();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.XML_ARRAY );
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				ArrayXmlAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testArrayJsonXmlAggregateRuntimeModel(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						final var mappingMetamodel = sessionFactory.getMappingMetamodel();
+
+						final var jsonEntity = mappingMetamodel.getEntityDescriptor( ArrayJsonAggregateEntity.class );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) jsonEntity.findAttributeMapping( "publishers" ),
+								"publisher_info",
+								SqlTypes.JSON
+						);
+
+						final var xmlEntity = mappingMetamodel.getEntityDescriptor( ArrayXmlAggregateEntity.class );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) xmlEntity.findAttributeMapping( "publishers" ),
+								"publisher_info",
+								SqlTypes.SQLXML
+						);
+					}
+				},
+				scope.getRegistry(),
+				ArrayJsonAggregateEntity.class,
+				ArrayXmlAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testArrayStructAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ArrayStructAggregateEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "publishers" ).getValue();
+
+					assertThat( component.getStructName().render() ).isEqualTo( "publisher_type" );
+					assertThat( component.getStructColumnNames() ).containsExactly( "code", "name" );
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.STRUCT_ARRAY );
+					assertThat( component.getAggregateColumn().getSqlType() ).isEqualTo( "publisher_type array" );
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+
+					final var userDefinedType = context.getMetadata().getDatabase()
+							.getDefaultNamespace()
+							.locateUserDefinedType( context.getMetadata().getDatabase().toIdentifier( "publisher_type" ) );
+					assertThat( userDefinedType ).isNotNull();
+					assertThat( userDefinedType.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code", "name" );
+				},
+				scope.getRegistry(),
+				ArrayStructAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testPluralStructAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Collection collection = context.getMetadataCollector()
+							.getCollectionBinding( PluralStructAggregateEntity.class.getName() + ".publishers" );
+					final Component component = (Component) collection.getElement();
+
+					assertThat( component.getStructName().render() ).isEqualTo( "publisher_type" );
+					assertThat( component.getStructColumnNames() ).containsExactly( "code", "name" );
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.STRUCT_ARRAY );
+					assertThat( component.getAggregateColumn().getSqlType() ).isEqualTo( "publisher_type array" );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+
+					final var userDefinedType = context.getMetadata().getDatabase()
+							.getDefaultNamespace()
+							.locateUserDefinedType( context.getMetadata().getDatabase().toIdentifier( "publisher_type" ) );
+					assertThat( userDefinedType ).isNotNull();
+					assertThat( userDefinedType.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code", "name" );
+				},
+				scope.getRegistry(),
+				PluralStructAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testMapValueStructAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Collection collection = context.getMetadataCollector()
+							.getCollectionBinding( MapValueStructAggregateEntity.class.getName() + ".publishers" );
+					final Component component = (Component) collection.getElement();
+
+					assertThat( component.getStructName().render() ).isEqualTo( "publisher_type" );
+					assertThat( component.getStructColumnNames() ).containsExactly( "code", "name" );
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.STRUCT_ARRAY );
+					assertThat( component.getAggregateColumn().getSqlType() ).isEqualTo( "publisher_type array" );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_key", "publisher_info" )
+							.doesNotContain( "name", "code" );
+
+					final var userDefinedType = context.getMetadata().getDatabase()
+							.getDefaultNamespace()
+							.locateUserDefinedType( context.getMetadata().getDatabase().toIdentifier( "publisher_type" ) );
+					assertThat( userDefinedType ).isNotNull();
+					assertThat( userDefinedType.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code", "name" );
+				},
+				scope.getRegistry(),
+				MapValueStructAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testMapKeyStructAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) context.getMetadataCollector()
+							.getCollectionBinding( MapKeyStructAggregateEntity.class.getName() + ".publisherNames" );
+					final Component component = (Component) collection.getIndex();
+
+					assertThat( component.getStructName().render() ).isEqualTo( "publisher_type" );
+					assertThat( component.getStructColumnNames() ).containsExactly( "code", "name" );
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_key" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.STRUCT );
+					assertThat( component.getAggregateColumn().getSqlType() ).isEqualTo( "publisher_type" );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_key", "publisher_name" )
+							.doesNotContain( "name", "code" );
+
+					final var userDefinedType = context.getMetadata().getDatabase()
+							.getDefaultNamespace()
+							.locateUserDefinedType( context.getMetadata().getDatabase().toIdentifier( "publisher_type" ) );
+					assertThat( userDefinedType ).isNotNull();
+					assertThat( userDefinedType.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code", "name" );
+				},
+				scope.getRegistry(),
+				MapKeyStructAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testMapValueJsonAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Collection collection = context.getMetadataCollector()
+							.getCollectionBinding( MapValueJsonAggregateEntity.class.getName() + ".publishers" );
+					final Component component = (Component) collection.getElement();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.JSON );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_key", "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				MapValueJsonAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testMapValueXmlAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Collection collection = context.getMetadataCollector()
+							.getCollectionBinding( MapValueXmlAggregateEntity.class.getName() + ".publishers" );
+					final Component component = (Component) collection.getElement();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.SQLXML );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_key", "publisher_info" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				MapValueXmlAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testMapKeyJsonAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) context.getMetadataCollector()
+							.getCollectionBinding( MapKeyJsonAggregateEntity.class.getName() + ".publisherNames" );
+					final Component component = (Component) collection.getIndex();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_key" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.JSON );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_key", "publisher_name" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				MapKeyJsonAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testMapKeyXmlAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) context.getMetadataCollector()
+							.getCollectionBinding( MapKeyXmlAggregateEntity.class.getName() + ".publisherNames" );
+					final Component component = (Component) collection.getIndex();
+
+					assertThat( component.getStructName() ).isNull();
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_key" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.SQLXML );
+					assertThat( collection.getCollectionTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_key", "publisher_name" )
+							.doesNotContain( "name", "code" );
+				},
+				scope.getRegistry(),
+				MapKeyXmlAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testNestedStructAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( NestedStructAggregateEntity.class.getName() );
+					final Component contract = (Component) entityBinding.getProperty( "contract" ).getValue();
+					final Component publisher = (Component) contract.getProperty( "publisher" ).getValue();
+
+					assertThat( contract.getStructName().render() ).isEqualTo( "publisher_contract_type" );
+					assertThat( contract.getStructColumnNames() ).containsExactly( "publisher_info", "region" );
+					assertThat( contract.getAggregateColumn() ).isNotNull();
+					assertThat( contract.getAggregateColumn().getName() ).isEqualTo( "contract_info" );
+					assertThat( contract.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.STRUCT );
+					assertThat( contract.getAggregateColumn().getSqlType() ).isEqualTo( "publisher_contract_type" );
+
+					assertThat( publisher.getStructName().render() ).isEqualTo( "publisher_type" );
+					assertThat( publisher.getStructColumnNames() ).containsExactly( "code", "name" );
+					assertThat( publisher.getAggregateColumn() ).isNotNull();
+					assertThat( publisher.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( publisher.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.STRUCT );
+					assertThat( publisher.getAggregateColumn().getSqlType() ).isEqualTo( "publisher_type" );
+
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "id", "contract_info" )
+							.doesNotContain( "publisher_info", "region", "name", "code" );
+
+					final var database = context.getMetadata().getDatabase();
+					final var publisherType = database.getDefaultNamespace()
+							.locateUserDefinedType( database.toIdentifier( "publisher_type" ) );
+					assertThat( publisherType ).isNotNull();
+					assertThat( publisherType.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code", "name" );
+
+					final var contractType = database.getDefaultNamespace()
+							.locateUserDefinedType( database.toIdentifier( "publisher_contract_type" ) );
+					assertThat( contractType ).isNotNull();
+					assertThat( contractType.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "publisher_info", "region" );
+				},
+				scope.getRegistry(),
+				NestedStructAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testNestedJsonAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( NestedJsonAggregateEntity.class.getName() );
+					final Component contract = (Component) entityBinding.getProperty( "contract" ).getValue();
+					final Component publisher = (Component) contract.getProperty( "publisher" ).getValue();
+
+					assertThat( contract.getStructName() ).isNull();
+					assertThat( contract.getAggregateColumn() ).isNotNull();
+					assertThat( contract.getAggregateColumn().getName() ).isEqualTo( "contract_info" );
+					assertThat( contract.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.JSON );
+
+					assertThat( publisher.getStructName() ).isNull();
+					assertThat( publisher.getAggregateColumn() ).isNotNull();
+					assertThat( publisher.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( publisher.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.JSON );
+					assertThat( publisher.getParentAggregateColumn() ).isSameAs( contract.getAggregateColumn() );
+
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "id", "contract_info" )
+							.doesNotContain( "publisher_info", "region", "name", "code" );
+				},
+				scope.getRegistry(),
+				NestedJsonAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testNestedXmlAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( NestedXmlAggregateEntity.class.getName() );
+					final Component contract = (Component) entityBinding.getProperty( "contract" ).getValue();
+					final Component publisher = (Component) contract.getProperty( "publisher" ).getValue();
+
+					assertThat( contract.getStructName() ).isNull();
+					assertThat( contract.getAggregateColumn() ).isNotNull();
+					assertThat( contract.getAggregateColumn().getName() ).isEqualTo( "contract_info" );
+					assertThat( contract.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.SQLXML );
+
+					assertThat( publisher.getStructName() ).isNull();
+					assertThat( publisher.getAggregateColumn() ).isNotNull();
+					assertThat( publisher.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( publisher.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.SQLXML );
+					assertThat( publisher.getParentAggregateColumn() ).isSameAs( contract.getAggregateColumn() );
+
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "id", "contract_info" )
+							.doesNotContain( "publisher_info", "region", "name", "code" );
+				},
+				scope.getRegistry(),
+				NestedXmlAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testStructuralMemberAnnotationCoverage(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -532,6 +1056,17 @@ public class AnnotationCoverageBindingTests {
 		assertThat( property.getValueGeneratorCreator() )
 				.as( property.getName() )
 				.isNotNull();
+	}
+
+	private static void assertAggregateRuntimeMapping(
+			EmbeddableValuedModelPart modelPart,
+			String selectableName,
+			int... expectedJdbcTypeCodes) {
+		final var aggregateMapping = modelPart.getEmbeddableTypeDescriptor().getAggregateMapping();
+		assertThat( aggregateMapping ).isNotNull();
+		assertThat( aggregateMapping.getSelectableName() ).isEqualTo( selectableName );
+		assertThat( expectedJdbcTypeCodes )
+				.contains( aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() );
 	}
 
 	@Test
@@ -1194,6 +1729,271 @@ public class AnnotationCoverageBindingTests {
 		private String code;
 	}
 
+	@Entity(name = "JsonAggregateEntity")
+	@Table(name = "json_aggregate_entities")
+	public static class JsonAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@JdbcTypeCode(SqlTypes.JSON)
+		@Column(name = "publisher_info")
+		private FormatPublisher publisher;
+	}
+
+	@Entity(name = "XmlAggregateEntity")
+	@Table(name = "xml_aggregate_entities")
+	public static class XmlAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@JdbcTypeCode(SqlTypes.SQLXML)
+		@Column(name = "publisher_info")
+		private FormatPublisher publisher;
+	}
+
+	@Embeddable
+	public static class FormatPublisher {
+		@Column(name = "name", columnDefinition = "varchar(255)")
+		private String name;
+
+		@Column(name = "code", columnDefinition = "varchar(32)")
+		private String code;
+	}
+
+	@Entity(name = "PluralJsonAggregateEntity")
+	@Table(name = "plural_json_aggregate_entities")
+	public static class PluralJsonAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "plural_json_publishers")
+		@JdbcTypeCode(SqlTypes.JSON)
+		@Column(name = "publisher_info")
+		private Set<FormatPublisher> publishers;
+	}
+
+	@Entity(name = "PluralXmlAggregateEntity")
+	@Table(name = "plural_xml_aggregate_entities")
+	public static class PluralXmlAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "plural_xml_publishers")
+		@JdbcTypeCode(SqlTypes.SQLXML)
+		@Column(name = "publisher_info")
+		private Set<FormatPublisher> publishers;
+	}
+
+	@Entity(name = "ArrayJsonAggregateEntity")
+	@Table(name = "array_json_aggregate_entities")
+	public static class ArrayJsonAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		@Column(name = "publisher_info")
+		private FormatPublisher[] publishers;
+	}
+
+	@Entity(name = "ArrayXmlAggregateEntity")
+	@Table(name = "array_xml_aggregate_entities")
+	public static class ArrayXmlAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@JdbcTypeCode(SqlTypes.XML_ARRAY)
+		@Column(name = "publisher_info")
+		private FormatPublisher[] publishers;
+	}
+
+	@Entity(name = "ArrayStructAggregateEntity")
+	@Table(name = "array_struct_aggregate_entities")
+	public static class ArrayStructAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Struct(name = "publisher_type", attributes = { "code", "name" })
+		@Column(name = "publisher_info")
+		private StructPublisher[] publishers;
+	}
+
+	@Entity(name = "PluralStructAggregateEntity")
+	@Table(name = "plural_struct_aggregate_entities")
+	public static class PluralStructAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "plural_struct_publishers")
+		@Column(name = "publisher_info")
+		private Set<StructPublisher> publishers;
+	}
+
+	@Entity(name = "MapValueStructAggregateEntity")
+	@Table(name = "map_value_struct_aggregate_entities")
+	public static class MapValueStructAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "map_value_struct_publishers")
+		@MapKeyColumn(name = "publisher_key")
+		@Column(name = "publisher_info")
+		private Map<String, StructPublisher> publishers;
+	}
+
+	@Entity(name = "MapKeyStructAggregateEntity")
+	@Table(name = "map_key_struct_aggregate_entities")
+	public static class MapKeyStructAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "map_key_struct_publishers")
+		@MapKeyColumn(name = "publisher_key")
+		@Column(name = "publisher_name")
+		private Map<StructPublisher, String> publisherNames;
+	}
+
+	@Entity(name = "MapValueJsonAggregateEntity")
+	@Table(name = "map_value_json_aggregate_entities")
+	public static class MapValueJsonAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "map_value_json_publishers")
+		@MapKeyColumn(name = "publisher_key")
+		@JdbcTypeCode(SqlTypes.JSON)
+		@Column(name = "publisher_info")
+		private Map<String, FormatPublisher> publishers;
+	}
+
+	@Entity(name = "MapValueXmlAggregateEntity")
+	@Table(name = "map_value_xml_aggregate_entities")
+	public static class MapValueXmlAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "map_value_xml_publishers")
+		@MapKeyColumn(name = "publisher_key")
+		@JdbcTypeCode(SqlTypes.SQLXML)
+		@Column(name = "publisher_info")
+		private Map<String, FormatPublisher> publishers;
+	}
+
+	@Entity(name = "MapKeyJsonAggregateEntity")
+	@Table(name = "map_key_json_aggregate_entities")
+	public static class MapKeyJsonAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "map_key_json_publishers")
+		@MapKeyJdbcTypeCode(SqlTypes.JSON)
+		@MapKeyColumn(name = "publisher_key")
+		@Column(name = "publisher_name")
+		private Map<FormatPublisher, String> publisherNames;
+	}
+
+	@Entity(name = "MapKeyXmlAggregateEntity")
+	@Table(name = "map_key_xml_aggregate_entities")
+	public static class MapKeyXmlAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable(name = "map_key_xml_publishers")
+		@MapKeyJdbcTypeCode(SqlTypes.SQLXML)
+		@MapKeyColumn(name = "publisher_key")
+		@Column(name = "publisher_name")
+		private Map<FormatPublisher, String> publisherNames;
+	}
+
+	@Entity(name = "NestedStructAggregateEntity")
+	@Table(name = "nested_struct_aggregate_entities")
+	public static class NestedStructAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Embedded
+		@Column(name = "contract_info")
+		private StructPublisherContract contract;
+	}
+
+	@Embeddable
+	@Struct(name = "publisher_contract_type", attributes = { "publisher_info", "region" })
+	public static class StructPublisherContract {
+		@Embedded
+		@Column(name = "publisher_info")
+		private StructPublisher publisher;
+
+		@Column(name = "region", columnDefinition = "varchar(32)")
+		private String region;
+	}
+
+	@Entity(name = "NestedJsonAggregateEntity")
+	@Table(name = "nested_json_aggregate_entities")
+	public static class NestedJsonAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@JdbcTypeCode(SqlTypes.JSON)
+		@Column(name = "contract_info")
+		private JsonPublisherContract contract;
+	}
+
+	@Embeddable
+	public static class JsonPublisherContract {
+		@JdbcTypeCode(SqlTypes.JSON)
+		@Column(name = "publisher_info")
+		private FormatPublisher publisher;
+
+		@Column(name = "region", columnDefinition = "varchar(32)")
+		private String region;
+	}
+
+	@Entity(name = "NestedXmlAggregateEntity")
+	@Table(name = "nested_xml_aggregate_entities")
+	public static class NestedXmlAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@JdbcTypeCode(SqlTypes.SQLXML)
+		@Column(name = "contract_info")
+		private XmlPublisherContract contract;
+	}
+
+	@Embeddable
+	public static class XmlPublisherContract {
+		@JdbcTypeCode(SqlTypes.SQLXML)
+		@Column(name = "publisher_info")
+		private FormatPublisher publisher;
+
+		@Column(name = "region", columnDefinition = "varchar(32)")
+		private String region;
+	}
+
 	public static class LocalStringJavaType extends AbstractClassJavaType<String> implements BasicJavaType<String> {
 		public LocalStringJavaType() {
 			super( String.class );
@@ -1704,6 +2504,11 @@ public class AnnotationCoverageBindingTests {
 					int aggregateColumnTypeCode,
 					org.hibernate.mapping.Column column) {
 				return aggregateParentAssignmentExpression + "." + columnExpression;
+			}
+
+			@Override
+			public boolean requiresAggregateCustomWriteExpressionRenderer(int aggregateSqlTypeCode) {
+				return false;
 			}
 		};
 

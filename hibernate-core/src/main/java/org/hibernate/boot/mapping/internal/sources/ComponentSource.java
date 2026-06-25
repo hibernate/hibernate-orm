@@ -13,6 +13,8 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Struct;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -23,6 +25,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -147,7 +150,7 @@ public record ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
 				resolveEmbeddableType( member, bindingContext, false ),
-				member.getType(),
+				embeddedAttributeTypeVariableScope( member ),
 				new PathAdjustmentCollector( member, bindingContext ),
 				fallbackAccessType( member ),
 				"",
@@ -167,7 +170,7 @@ public record ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
 				resolveEmbeddableType( member, ownerType, bindingContext ),
-				member.resolveRelativeType( ownerType ),
+				embeddedAttributeTypeVariableScope( member, ownerType ),
 				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
 				defaultAccessType,
 				"",
@@ -469,7 +472,7 @@ public record ComponentSource(
 
 		return collectionElement
 				? member.getElementType().determineRawClass()
-				: member.getType().determineRawClass();
+				: embeddedAttributeTypeVariableScope( member ).determineRawClass();
 	}
 
 	private static ClassDetails resolveEmbeddableType(
@@ -482,7 +485,44 @@ public record ComponentSource(
 					.resolveClassDetails( targetEmbeddable.value().getName() );
 		}
 
-		return member.resolveRelativeType( ownerType ).determineRawClass();
+		return embeddedAttributeTypeVariableScope( member, ownerType ).determineRawClass();
+	}
+
+	private static TypeDetails embeddedAttributeTypeVariableScope(MemberDetails member) {
+		return isAggregateArray( member ) ? member.getElementType() : member.getType();
+	}
+
+	private static TypeDetails embeddedAttributeTypeVariableScope(MemberDetails member, TypeVariableScope ownerType) {
+		return embeddedAttributeTypeVariableScope( member ).determineRelativeType( ownerType );
+	}
+
+	private static boolean isAggregateArray(MemberDetails member) {
+		return member.isArray()
+				&& member.getElementType() != null
+				&& ( member.hasDirectAnnotationUsage( Struct.class )
+					|| isAggregateJdbcTypeCode( member )
+					|| member.getElementType().determineRawClass().hasDirectAnnotationUsage( Struct.class ) );
+	}
+
+	private static boolean isAggregateJdbcTypeCode(MemberDetails member) {
+		final JdbcTypeCode jdbcTypeCode = member.getDirectAnnotationUsage( JdbcTypeCode.class );
+		if ( jdbcTypeCode == null ) {
+			return false;
+		}
+		return isAggregateJdbcTypeCode( jdbcTypeCode.value() );
+	}
+
+	private static boolean isAggregateJdbcTypeCode(int jdbcTypeCode) {
+		return switch ( jdbcTypeCode ) {
+			case SqlTypes.STRUCT,
+					SqlTypes.JSON,
+					SqlTypes.SQLXML,
+					SqlTypes.STRUCT_ARRAY,
+					SqlTypes.STRUCT_TABLE,
+					SqlTypes.JSON_ARRAY,
+					SqlTypes.XML_ARRAY -> true;
+			default -> false;
+		};
 	}
 
 	private static TargetEmbeddable resolveTargetEmbeddable(MemberDetails member, boolean collectionElement) {

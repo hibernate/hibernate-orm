@@ -76,8 +76,16 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.ModelsException;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
@@ -149,6 +157,7 @@ public class BindingCoordinator {
 		// todo : to really work on these, need to changes to MetadataBuildingContext/InFlightMetadataCollector
 
 		processTypeContributors();
+		applyFallbackJdbcTypeContributions();
 		coordinateGlobalBindings();
 		coordinateModelBindings();
 		coordinateGlobalBindingsRequiringModel();
@@ -176,6 +185,39 @@ public class BindingCoordinator {
 		};
 		sortedTypeContributors().forEach( (typeContributor) ->
 				typeContributor.contribute( typeContributions, bindingContext.getServiceRegistry() ) );
+	}
+
+	private void applyFallbackJdbcTypeContributions() {
+		final var jdbcTypeRegistry = bindingState.getTypeConfiguration().getJdbcTypeRegistry();
+
+		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
+
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.JSON_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.JSON ).getDdlTypeCode() == SqlTypes.JSON ) {
+				jdbcTypeRegistry.addTypeConstructor( JsonArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( JsonAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
+		}
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.XML_ARRAY ) == null ) {
+			if ( jdbcTypeRegistry.getDescriptor( SqlTypes.SQLXML ).getDdlTypeCode() == SqlTypes.SQLXML ) {
+				jdbcTypeRegistry.addTypeConstructor( XmlArrayJdbcTypeConstructor.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addTypeConstructor( XmlAsStringArrayJdbcTypeConstructor.INSTANCE );
+			}
+		}
+		if ( jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY ) == null ) {
+			final JdbcTypeConstructor constructor =
+					jdbcTypeRegistry.getConstructor(
+							bindingState.getMetadataBuildingContext().getPreferredSqlTypeCodeForArray()
+					);
+			if ( constructor != null ) {
+				jdbcTypeRegistry.addTypeConstructor( SqlTypes.ARRAY, constructor );
+			}
+		}
 	}
 
 	private List<TypeContributor> sortedTypeContributors() {

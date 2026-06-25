@@ -406,12 +406,7 @@ class CollectionShapeBinder {
 		final SQLOrder sqlOrder = effectiveSqlOrder( source, bindingState );
 		if ( sqlOrder != null ) {
 			if ( isNotBlank( sqlOrder.value() ) ) {
-				if ( source.nature() == CollectionSource.Nature.MANY_TO_MANY ) {
-					collection.setManyToManyOrdering( sqlOrder.value() );
-				}
-				else {
-					collection.setOrderBy( sqlOrder.value() );
-				}
+				collection.setOrderBy( sqlOrder.value() );
 			}
 			return;
 		}

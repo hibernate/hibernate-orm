@@ -90,6 +90,61 @@ not be attached directly to shared `org.hibernate.mapping` contracts while
 `MetadataBuildingProcess` remains an active boot path, unless the legacy path is
 also changed to populate the same descriptor as authoritative state.
 
+Current bridge status:
+
+* singular embedded `@Struct` attributes materialize the legacy-compatible
+  `Component` / `AggregateColumn` / `AggregateComponentSecondPass` shape;
+* element-collection `@Struct` values use the same bridge, with the aggregate
+  column on the collection table and plural struct SQL type defaults derived
+  from the preferred array strategy;
+* element-collection map-value and map-key aggregate values use the same
+  bridge.  Map values reuse the collection-element source role and read
+  value-side `@JdbcTypeCode` for JSON/XML aggregates.  Map keys use the map-key
+  source role, read the aggregate column from `@MapKeyColumn`, and read
+  key-side `@MapKeyJdbcTypeCode` for JSON/XML aggregates;
+* nested `@Struct` values use the same bridge.  Nested component binding runs
+  aggregate processing after nested member binding so the outer aggregate can
+  treat the nested aggregate column as one ordered member;
+* Java array-valued `@Struct` attributes use the same bridge.  Categorization
+  treats the array attribute as an aggregate component source, the component
+  binds against the array element embeddable type, and the aggregate column uses
+  the plural struct SQL type/default dialect array type;
+* singular JSON/XML aggregate embeddables use the same bridge when an
+  embeddable-valued member declares `@JdbcTypeCode(SqlTypes.JSON)` or
+  `@JdbcTypeCode(SqlTypes.SQLXML)`.  The JDBC type code supplies the aggregate
+  column type instead of UDT metadata;
+* nested JSON/XML aggregate embeddables use the same bridge.  Nested component
+  binding applies aggregate processing to the inner JSON/XML component and
+  carries the outer aggregate column as the nested component's parent aggregate
+  column;
+* element-collection JSON/XML aggregate embeddables use the same bridge.  The
+  aggregate column is bound on the collection table and the member
+  `@JdbcTypeCode(SqlTypes.JSON)` / `@JdbcTypeCode(SqlTypes.SQLXML)` supplies the
+  aggregate column type;
+* Java array-valued JSON/XML aggregate embeddables use the same bridge when the
+  array member declares `@JdbcTypeCode(SqlTypes.JSON_ARRAY)` or
+  `@JdbcTypeCode(SqlTypes.XML_ARRAY)`.  Categorization treats the array as an
+  aggregate component source, the component binds against the array element
+  embeddable type, and the aggregate column carries the array aggregate SQL type.
+  Runtime-model smoke coverage verifies these mappings cross the
+  `buildSessionFactory()` boundary after the new pipeline registers the same
+  fallback JSON/XML array JDBC type constructors that legacy boot registers.
+  XML array annotation/runtime coverage uses an aggregate-support-capable test
+  dialect because H2's production aggregate support only handles JSON assignment
+  expressions in this path;
+* element-collection JSON/XML aggregate embeddables currently have boot-model
+  bridge coverage only.  A runtime-model smoke attempt reaches
+  `buildSessionFactory()` and exposes a `CollectionTableGroup` /
+  `StandardVirtualTableGroup` recursion for aggregate collection elements.
+  A legacy `MetadataSources` characterization using the same mapping shape
+  reaches the same recursion, so this is not tracked as a new-pipeline
+  binding/materialization parity gap.  Any follow-up belongs at the runtime
+  collection table-group/model boundary, not in source discovery or aggregate
+  column materialization;
+* the bridge still intentionally binds component members first and lets
+  `AggregateComponentSecondPass` validate, order, contribute UDT metadata, and
+  remove flattened member columns from the owner or collection table.
+
 == Proposed Mapping Model
 
 An embeddable/component should have an explicit storage descriptor.
@@ -389,12 +444,24 @@ How should nested aggregate values be represented in SQL AST paths?
 
 Near-term parity work should continue to be explicit about what it proves:
 
-* singular embedded `@Struct` support;
-* plural `@Struct` support for element-collection values;
-* map-value and map-key aggregate embeddables;
-* nested aggregate embeddables;
-* aggregate arrays;
-* JSON/XML aggregate parity if currently supported by legacy bootstrap;
+* singular embedded `@Struct` support: covered by the current bridge;
+* plural `@Struct` support for element-collection values: covered by the
+  current bridge for collection elements;
+* map-value and map-key `@Struct` aggregate embeddables: covered by the current
+  bridge for element-collection values and map keys;
+* map-value and map-key JSON/XML aggregate embeddables: covered by the current
+  bridge for element-collection values and map keys;
+* nested `@Struct` aggregate embeddables: covered by the current bridge;
+* Java array-valued `@Struct` aggregate embeddables: covered by the current
+  bridge;
+* singular JSON/XML aggregate embeddables: covered by the current bridge;
+* nested JSON/XML aggregate embeddables: covered by the current bridge;
+* plural JSON/XML aggregate embeddables: covered by the current bridge for
+  element-collection values at the boot-model boundary; runtime collection
+  element support still needs the table-group recursion follow-up described
+  above, but current evidence says that is not a new boot-pipeline parity gap;
+* Java array-valued JSON/XML aggregate embeddables: covered by the current
+  bridge and by focused runtime-model smoke coverage;
 * runtime mapping and SQL generation tests that assert observable behavior, not
   just successful metadata creation.
 

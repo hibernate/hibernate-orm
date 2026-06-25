@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import jakarta.annotation.Nonnull;
@@ -28,7 +29,7 @@ public abstract class AbstractPostDatabaseOperationEvent extends AbstractDatabas
 	public AbstractPostDatabaseOperationEvent(
 			@Nonnull SharedSessionContractImplementor source,
 			@Nonnull Object entity,
-			@Nonnull Object id,
+			@Nullable Object id,
 			@Nonnull EntityPersister persister) {
 		super( source, entity, id, persister );
 	}

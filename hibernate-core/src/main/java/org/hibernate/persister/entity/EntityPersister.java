@@ -864,7 +864,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean canWriteToCache();
 
 	/**
-	 * Does this class have a cache.
+	 * Does this class have a cache?
 	 *
 	 * @deprecated Use {@link #canReadFromCache()} and/or {@link #canWriteToCache()}
 	 *             depending on need

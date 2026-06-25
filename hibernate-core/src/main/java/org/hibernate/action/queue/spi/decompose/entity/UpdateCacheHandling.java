@@ -69,6 +69,7 @@ public class UpdateCacheHandling {
 		}
 
 		final var cache = persister.getCacheAccessStrategy();
+		assert cache != null;
 		final Object cacheKey = cache.generateCacheKey(
 				action.getId(),
 				persister,
@@ -85,30 +86,30 @@ public class UpdateCacheHandling {
 			EntityEntry entry,
 			SharedSessionContractImplementor session) {
 		final var persister = action.getPersister();
-		if ( !persister.canWriteToCache() ) {
-			return;
-		}
-
-		if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
-			persister.getCacheAccessStrategy().remove( session, cacheUpdate.cacheKey() );
-		}
-		else if ( session.getCacheMode().isPutEnabled() ) {
-			cacheUpdate.cacheEntry = buildStructuredCacheEntry(
-					action.getInstance(),
-					nextVersion,
-					action.getState(),
-					persister,
-					session
-			);
-			cacheUpdate.nextVersion = nextVersion;
-			final boolean put = updateCache( action, cacheUpdate, persister, session );
-
-			final var statistics = session.getFactory().getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
-						persister.getCacheAccessStrategy().getRegion().getName()
+		if ( persister.canWriteToCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
+				cache.remove( session, cacheUpdate.cacheKey() );
+			}
+			else if ( session.getCacheMode().isPutEnabled() ) {
+				cacheUpdate.cacheEntry = buildStructuredCacheEntry(
+						action.getInstance(),
+						nextVersion,
+						action.getState(),
+						persister,
+						session
 				);
+				cacheUpdate.nextVersion = nextVersion;
+				final boolean put = updateCache( action, cacheUpdate, persister, session );
+
+				final var statistics = session.getFactory().getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							cache.getRegion().getName()
+					);
+				}
 			}
 		}
 	}
@@ -119,16 +120,15 @@ public class UpdateCacheHandling {
 			CacheUpdate cacheUpdate,
 			SharedSessionContractImplementor session) {
 		final var persister = action.getPersister();
-		if ( !persister.canWriteToCache() ) {
-			return;
-		}
-
-		final var cache = persister.getCacheAccessStrategy();
-		if ( cacheUpdateRequired( success, persister, cacheUpdate, session ) ) {
-			cacheAfterUpdate( action, cacheUpdate, cache, session );
-		}
-		else {
-			cache.unlockItem( session, cacheUpdate.cacheKey(), cacheUpdate.lock() );
+		if ( persister.canWriteToCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			if ( cacheUpdateRequired( success, persister, cacheUpdate, session ) ) {
+				cacheAfterUpdate( action, cacheUpdate, cache, session );
+			}
+			else {
+				cache.unlockItem( session, cacheUpdate.cacheKey(), cacheUpdate.lock() );
+			}
 		}
 	}
 
@@ -147,12 +147,13 @@ public class UpdateCacheHandling {
 			SharedSessionContractImplementor session) {
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
+		final var cache = persister.getCacheAccessStrategy();
+		assert cache != null;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
 			eventListenerManager.cachePutStart();
-			update = cacheAccessStrategy.update(
+			update = cache.update(
 					session,
 					cacheUpdate.cacheKey(),
 					cacheUpdate.cacheEntry(),
@@ -165,7 +166,7 @@ public class UpdateCacheHandling {
 			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
-					cacheAccessStrategy,
+					cache,
 					action.getPersister(),
 					update,
 					EventMonitor.CacheActionDescription.ENTITY_UPDATE

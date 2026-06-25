@@ -45,7 +45,7 @@ public class PreDeleteHandling implements PreExecutionCallback {
 			return false;
 		}
 
-		final PreDeleteEvent event = new PreDeleteEvent(
+		final var event = new PreDeleteEvent(
 				action.getInstance(),
 				action.getId(),
 				action.getState(),

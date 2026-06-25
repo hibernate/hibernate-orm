@@ -233,10 +233,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 			}
 		}
 		else {
-			throw new EntityActionVetoException(
-					"The EntityInsertAction was vetoed.",
-					insert
-			);
+			throw new EntityActionVetoException( insert );
 		}
 		registerCleanupActions( insert );
 	}
@@ -257,10 +254,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 			}
 		}
 		else {
-			throw new EntityActionVetoException(
-					"The EntityInsertAction was vetoed.",
-					insert
-			);
+			throw new EntityActionVetoException( insert );
 		}
 	}
 

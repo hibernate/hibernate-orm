@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.PropertyValueException;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
@@ -55,7 +57,9 @@ public class UnresolvedEntityInsertActions {
 	 *
 	 * @throws IllegalArgumentException if {@code dependencies is null or empty}.
 	 */
-	public void addUnresolvedEntityInsertAction(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
+	public void addUnresolvedEntityInsertAction(
+			@Nonnull AbstractEntityInsertAction insert,
+			@Nonnull NonNullableTransientDependencies dependencies) {
 		if ( dependencies == null || dependencies.isEmpty() ) {
 			throw new IllegalArgumentException(
 					"Attempt to add an unresolved insert action that has no non-nullable transient entities."
@@ -75,6 +79,7 @@ public class UnresolvedEntityInsertActions {
 	 * Returns the unresolved insert actions.
 	 * @return the unresolved insert actions.
 	 */
+	@Nonnull
 	public Iterable<AbstractEntityInsertAction> getDependentEntityInsertActions() {
 		return dependenciesByAction.keySet();
 	}
@@ -120,7 +125,7 @@ public class UnresolvedEntityInsertActions {
 		}
 	}
 
-	private void logCannotResolveNonNullableTransientDependencies(SharedSessionContractImplementor session) {
+	private void logCannotResolveNonNullableTransientDependencies(@Nonnull SharedSessionContractImplementor session) {
 		for ( var entry : dependentActionsByTransientEntity.entrySet() ) {
 			final Object transientEntity = entry.getKey();
 			final String transientEntityName = session.guessEntityName( transientEntity );
@@ -157,7 +162,9 @@ public class UnresolvedEntityInsertActions {
 		return dependenciesByAction.isEmpty();
 	}
 
-	private void addDependenciesByTransientEntity(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
+	private void addDependenciesByTransientEntity(
+			@Nonnull AbstractEntityInsertAction insert,
+			@Nonnull NonNullableTransientDependencies dependencies) {
 		for ( Object transientEntity : dependencies.getNonNullableTransientEntities() ) {
 			var dependentActions = dependentActionsByTransientEntity.get( transientEntity );
 			if ( dependentActions == null ) {
@@ -178,7 +185,9 @@ public class UnresolvedEntityInsertActions {
 	 *
 	 * @throws IllegalArgumentException if {@code managedEntity} did not have managed or read-only status.
 	 */
-	public Set<AbstractEntityInsertAction> resolveDependentActions(Object managedEntity, SessionImplementor session) {
+	public @Nonnull Set<AbstractEntityInsertAction> resolveDependentActions(
+			@Nonnull Object managedEntity,
+			@Nonnull SessionImplementor session) {
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( managedEntity );
 		final Status status = entityEntry.getStatus();
 		if ( status != Status.MANAGED && status != Status.READ_ONLY ) {
@@ -245,6 +254,7 @@ public class UnresolvedEntityInsertActions {
 	}
 
 	@Override
+	@Nonnull
 	public String toString() {
 		final var representation = new StringBuilder( getClass().getSimpleName() ).append( '[' );
 		for ( var entry : dependenciesByAction.entrySet() ) {
@@ -265,7 +275,7 @@ public class UnresolvedEntityInsertActions {
 	 * @param oos - the output stream
 	 * @throws IOException if there is an error writing this object to the output stream.
 	 */
-	public void serialize(ObjectOutputStream oos) throws IOException {
+	public void serialize(@Nonnull ObjectOutputStream oos) throws IOException {
 		final int queueSize = dependenciesByAction.size();
 		ACTION_LOGGER.serializingUnresolvedInsertEntries(queueSize);
 		oos.writeInt( queueSize );
@@ -284,9 +294,11 @@ public class UnresolvedEntityInsertActions {
 	 * @throws IOException if there is an error writing this object to the output stream.
 	 * @throws ClassNotFoundException if there is a class that cannot be loaded.
 	 */
+	@Nonnull
 	public static UnresolvedEntityInsertActions deserialize(
-			ObjectInputStream ois,
-			EventSource session) throws IOException, ClassNotFoundException {
+			@Nonnull ObjectInputStream ois,
+			@Nonnull EventSource session)
+				throws IOException, ClassNotFoundException {
 
 		final var rtn = new UnresolvedEntityInsertActions();
 

@@ -126,9 +126,9 @@ public interface SessionLogging extends BasicLogger {
 	@Message(id = 90010104, value = "Property '%s' is not serializable, value won't be set")
 	void nonSerializableProperty(String propertyName);
 
-	@LogMessage(level = WARN)
-	@Message(id = 90010105, value = "Property having key null is illegal, value won't be set")
-	void nullPropertyKey();
+//	@LogMessage(level = WARN)
+//	@Message(id = 90010105, value = "Property having key null is illegal, value won't be set")
+//	void nullPropertyKey();
 
 	@LogMessage(level = TRACE)
 	@Message("Serializing Session [%s]")

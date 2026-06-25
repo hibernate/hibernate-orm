@@ -207,6 +207,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				previousVersion = persister.getVersion( object );
 			}
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,

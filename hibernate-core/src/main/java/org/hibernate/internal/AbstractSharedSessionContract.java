@@ -429,6 +429,7 @@ abstract class AbstractSharedSessionContract
 				: new HashMap<>( properties );
 	}
 
+	@Nonnull
 	protected abstract Map<String, Object> getInitialProperties();
 
 	@Override
@@ -436,24 +437,39 @@ abstract class AbstractSharedSessionContract
 		checkOpen();
 		//noinspection ConstantValue
 		if ( propertyName == null ) {
-			SESSION_LOGGER.nullPropertyKey();
+			throw new IllegalArgumentException( "Null property name" );
 		}
-		else if ( !(value instanceof Serializable) ) {
+		else if ( value != null && !(value instanceof Serializable) ) {
 			SESSION_LOGGER.nonSerializableProperty( propertyName );
 		}
 		else {
-			// store property for future reference
-			if ( properties == null ) {
+			// the first time we explicitly set a
+			// property, it's worth caching the
+			// initial properties
+			final Map<String, Object> properties;
+			if ( this.properties == null ) {
 				properties = getInitialProperties();
+				this.properties = properties;
 			}
-			properties.put( propertyName, value );
-			// now actually update the setting if
-			// it's one that affects this Session
-			interpretProperty( propertyName, value );
+			else {
+				properties = this.properties;
+			}
+			if ( value == null ) {
+				properties.remove( propertyName );
+			}
+			else {
+				properties.put( propertyName, value );
+				// now actually update the setting if
+				// it's one that affects this Session
+				interpretProperty( propertyName, value, properties );
+			}
 		}
 	}
 
-	protected abstract void interpretProperty(String propertyName, Object value);
+	protected abstract void interpretProperty(
+			@Nonnull String propertyName,
+			@Nullable Object value,
+			@Nonnull Map<String, Object> properties);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1352,6 +1368,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final CacheTransactionSynchronization getCacheTransactionSynchronization() {
 		return cacheTransactionSynchronization;
 	}
@@ -2479,6 +2496,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nullable
 	public Integer getJdbcBatchSize() {
 		return jdbcBatchSize;
 	}

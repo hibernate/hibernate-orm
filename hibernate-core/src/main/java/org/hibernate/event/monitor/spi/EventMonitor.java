@@ -173,7 +173,7 @@ public interface EventMonitor {
 
 	@Nullable DiagnosticEvent beginEntityInsertEvent();
 
-	void completeEntityInsertEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String entityName, boolean success, @Nonnull SharedSessionContractImplementor session);
+	void completeEntityInsertEvent(@Nullable DiagnosticEvent event, @Nullable Object id, @Nonnull String entityName, boolean success, @Nonnull SharedSessionContractImplementor session);
 
 	@Nullable DiagnosticEvent beginEntityUpdateEvent();
 

@@ -45,7 +45,7 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			@Nonnull final EntityPersister persister,
 			@Nullable final Object version,
 			@Nonnull final SharedSessionContractImplementor session,
-			@Nullable final Object owner) throws HibernateException {
+			@Nullable final Object owner) {
 		// disassembled state gets put in a new array (we write to cache by value!)
 		this.disassembledState = CacheEntryHelper.disassemble(
 				state,

@@ -13,7 +13,6 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -98,7 +97,7 @@ public class InitFromCacheTest {
 							scope.getSessionFactory(),
 							null
 					);
-					final Object cachedItem = entityDataAccess.get( (SharedSessionContractImplementor) s, cacheKey );
+					final Object cachedItem = entityDataAccess.get( s, cacheKey );
 					assertNotNull( cachedItem );
 					assertTyping( StandardCacheEntryImpl.class, cachedItem );
 				}

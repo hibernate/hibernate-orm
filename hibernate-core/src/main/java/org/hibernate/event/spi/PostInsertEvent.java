@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import jakarta.annotation.Nonnull;
@@ -18,7 +19,7 @@ public class PostInsertEvent extends AbstractPostDatabaseOperationEvent {
 
 	public PostInsertEvent(
 			@Nonnull Object entity,
-			@Nonnull Object id,
+			@Nullable Object id,
 			@Nonnull Object[] state,
 			@Nonnull EntityPersister persister,
 			@Nonnull SharedSessionContractImplementor source) {

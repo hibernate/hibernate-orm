@@ -833,7 +833,8 @@ public abstract class AbstractEntityPersister
 		return containingClass;
 	}
 
-	private NamedQueryMemento<?> getNamedQueryMemento(MetadataImplementor bootModel) {
+	@Nonnull
+	private NamedQueryMemento<?> getNamedQueryMemento(@Nonnull MetadataImplementor bootModel) {
 		final var memento =
 				factory.getQueryEngine().getNamedObjectRepository()
 						.resolve( factory, bootModel, queryLoaderName );
@@ -1578,15 +1579,16 @@ public abstract class AbstractEntityPersister
 		if ( session.getCacheMode().isGetEnabled()
 				&& canReadFromCache()
 				&& isLazyPropertiesCacheable() ) {
-			final var cacheAccess = getCacheAccessStrategy();
+			final var cache = getCacheAccessStrategy();
+			assert cache != null;
 			final Object cacheKey =
-					cacheAccess.generateCacheKey(
+					cache.generateCacheKey(
 							id,
 							this,
 							session.getFactory(),
 							session.getTenantIdentifier()
 					);
-			final Object structuredEntry = fromSharedCache( session, cacheKey, this, cacheAccess );
+			final Object structuredEntry = fromSharedCache( session, cacheKey, this, cache );
 			if ( structuredEntry != null ) {
 				final var cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( structuredEntry, factory );
 				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
@@ -4437,7 +4439,13 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	@Nonnull
-	public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
+	public CacheEntry buildCacheEntry(
+			@Nonnull Object entity,
+			@Nonnull Object[] state,
+			@Nullable Object version,
+			@Nonnull SharedSessionContractImplementor session) {
+		assert entity != null;
+		assert state != null;
 		return cacheEntryHelper.buildCacheEntry( entity, state, version, session );
 	}
 
@@ -4470,9 +4478,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public BasicType<?> getVersionType() {
-		return getVersionPropertyIndex() == NO_VERSION_INDX
+		final int versionPropertyIndex = getVersionPropertyIndex();
+		return versionPropertyIndex == NO_VERSION_INDX
 				? null
-				: (BasicType<?>) getPropertyTypes()[getVersionPropertyIndex()];
+				: (BasicType<?>) getPropertyTypes()[versionPropertyIndex];
 	}
 
 	@Override
@@ -4569,10 +4578,12 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
+			final var cache = getCacheAccessStrategy();
+			assert cache != null;
 			final Object cacheKey =
-					getCacheAccessStrategy()
-							.generateCacheKey( id, this, session.getFactory(), session.getTenantIdentifier() );
-			final Object cacheEntry = fromSharedCache( session, cacheKey, this, getCacheAccessStrategy() );
+					cache.generateCacheKey( id, this,
+							session.getFactory(), session.getTenantIdentifier() );
+			final Object cacheEntry = fromSharedCache( session, cacheKey, this, cache );
 			if ( cacheEntry != null ) {
 				return false;
 			}
@@ -5179,7 +5190,11 @@ public abstract class AbstractEntityPersister
 		CacheEntryStructure getCacheEntryStructure();
 
 		@Nonnull
-		CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);
+		CacheEntry buildCacheEntry(
+				@Nonnull Object entity,
+				@Nonnull Object[] state,
+				@Nullable Object version,
+				@Nonnull SharedSessionContractImplementor session);
 	}
 
 	private record StandardCacheEntryHelper(EntityPersister persister)
@@ -5193,7 +5208,11 @@ public abstract class AbstractEntityPersister
 
 		@Override
 		@Nonnull
-		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
+		public CacheEntry buildCacheEntry(
+				@Nonnull Object entity,
+				@Nonnull Object[] state,
+				@Nullable Object version,
+				@Nonnull SharedSessionContractImplementor session) {
 			return new StandardCacheEntryImpl( state, persister, version, session, entity );
 		}
 	}
@@ -5209,7 +5228,11 @@ public abstract class AbstractEntityPersister
 
 		@Override
 		@Nonnull
-		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
+		public CacheEntry buildCacheEntry(
+				@Nonnull Object entity,
+				@Nonnull Object[] state,
+				@Nullable Object version,
+				@Nonnull SharedSessionContractImplementor session) {
 			return new ReferenceCacheEntryImpl( entity, persister );
 		}
 	}
@@ -5229,7 +5252,11 @@ public abstract class AbstractEntityPersister
 
 		@Override
 		@Nonnull
-		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
+		public CacheEntry buildCacheEntry(
+				@Nonnull Object entity,
+				@Nonnull Object[] state,
+				@Nullable Object version,
+				@Nonnull SharedSessionContractImplementor session) {
 			return new StandardCacheEntryImpl( state, persister, version, session, entity );
 		}
 	}
@@ -5245,7 +5272,11 @@ public abstract class AbstractEntityPersister
 
 		@Override
 		@Nonnull
-		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
+		public CacheEntry buildCacheEntry(
+				@Nonnull Object entity,
+				@Nonnull Object[] state,
+				@Nullable Object version,
+				@Nonnull SharedSessionContractImplementor session) {
 			throw new HibernateException( "Illegal attempt to build cache entry for non-cached entity" );
 		}
 	}

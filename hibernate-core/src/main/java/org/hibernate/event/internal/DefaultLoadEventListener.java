@@ -510,6 +510,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final Object cacheKey;
 		final boolean canWriteToCache = persister.canWriteToCache();
 		if ( canWriteToCache ) {
+			assert cache != null;
 			cacheKey = cache.generateCacheKey(
 					event.getEntityId(),
 					persister,

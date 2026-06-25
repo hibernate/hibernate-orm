@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -23,7 +25,9 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 public final class CollectionUpdateAction extends CollectionAction {
 
 	private final boolean emptySnapshot;
+	@Nullable
 	private final Object affectedOwner;
+	@Nullable
 	private final Object affectedOwnerId;
 
 	/**
@@ -35,19 +39,38 @@ public final class CollectionUpdateAction extends CollectionAction {
 	 * @param session The session
 	 */
 	public CollectionUpdateAction(
-				final PersistentCollection<?> collection,
-				final CollectionPersister persister,
-				final Object id,
+				final @Nonnull PersistentCollection<?> collection,
+				final @Nonnull CollectionPersister persister,
+				final @Nonnull Object id,
 				final boolean emptySnapshot,
-				final EventSource session) {
+				final @Nonnull EventSource session) {
 		super( persister, collection, id, session );
+		assert collection != null;
+		assert persister != null;
+		assert id != null;
 		this.emptySnapshot = emptySnapshot;
 		// Capture the owner at action creation time so it's available when the post-event
 		// fires (which may be after the collection owner reference has been cleared)
-		this.affectedOwner = collection.getOwner();
+		affectedOwner = collection.getOwner();
 		// Also capture the owner ID from the entity entry at action creation time
 		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
-		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
+		affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
+	}
+
+	@Override
+	@Nonnull
+	public PersistentCollection<?> getCollection() {
+		final var collection = super.getCollection();
+		assert collection != null;
+		return collection;
+	}
+
+	@Override
+	@Nonnull
+	public Object getKey() {
+		final Object key = super.getKey();
+		assert key != null;
+		return key;
 	}
 
 	public boolean isEmptySnapshot() {
@@ -55,7 +78,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	public void execute() {
 		final Object key = getKey();
 		final var session = getSession();
 		final var persister = getPersister();
@@ -121,7 +144,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	 * in order to limit the chance of a unique key violation.
 	 */
 	@Override
-	public int compareTo(ComparableExecutable executable) {
+	public int compareTo(@Nonnull ComparableExecutable executable) {
 		if ( executable instanceof CollectionUpdateAction that
 				&& getPrimarySortClassifier().equals( executable.getPrimarySortClassifier() ) ) {
 			final var persister = getPersister();
@@ -143,6 +166,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 						PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
 
+	@Nonnull
 	private PreCollectionUpdateEvent newPreCollectionUpdateEvent() {
 		return new PreCollectionUpdateEvent( getPersister(), getCollection(), eventSource() );
 	}
@@ -153,14 +177,17 @@ public final class CollectionUpdateAction extends CollectionAction {
 						PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}
 
+	@Nonnull
 	private PostCollectionUpdateEvent newPostCollectionUpdateEvent() {
 		return new PostCollectionUpdateEvent( getPersister(), getCollection(), eventSource() );
 	}
 
+	@Nullable
 	public Object getAffectedOwner() {
 		return affectedOwner;
 	}
 
+	@Nullable
 	public Object getAffectedOwnerId() {
 		return affectedOwnerId;
 	}

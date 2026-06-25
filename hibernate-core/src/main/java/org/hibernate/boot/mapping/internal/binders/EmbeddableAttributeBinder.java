@@ -33,7 +33,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
-import jakarta.persistence.Convert;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
@@ -277,24 +276,7 @@ class EmbeddableAttributeBinder {
 	}
 
 	private Table resolveComponentTable(MemberDetails attributeMember) {
-		final Table[] result = { resolveExplicitEmbeddedTable( attributeMember ) };
-		visitColumnSources( componentSource, (path, member) -> {
-			if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToOne.class )
-					|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToOne.class ) ) {
-				ToOneAttributeBinder.resolveJoinColumns( member, resolveAssociationOverride( path, member ) ).forEach( (joinColumn) -> {
-					if ( StringHelper.isNotEmpty( joinColumn.table() ) ) {
-						applyTable( attributeMember, joinColumn.table(), result );
-					}
-				} );
-			}
-			else {
-				final ColumnSource columnSource = resolveColumnSource( path, member );
-				if ( columnSource != null && StringHelper.isNotEmpty( columnSource.table() ) ) {
-					applyTable( attributeMember, columnSource.table(), result );
-				}
-			}
-		} );
-		return result[0];
+		return resolveExplicitEmbeddedTable( attributeMember );
 	}
 
 	private Table resolveExplicitEmbeddedTable(MemberDetails attributeMember) {
@@ -312,58 +294,7 @@ class EmbeddableAttributeBinder {
 					attributeMember.getDeclaringType().getName(),
 					attributeBinding.attributeName()
 			) );
-		}
-		return tableReference.binding();
-	}
-
-	private void applyTable(MemberDetails attributeMember, String tableName, Table[] result) {
-		final Identifier identifier = Identifier.toIdentifier( tableName );
-		final TableReference tableReference = bindingState.getTableByName( identifier.getCanonicalName() );
-		if ( tableReference == null ) {
-			throw new MappingException( String.format( Locale.ROOT,
-					"Could not resolve table `%s` for embeddable attribute %s.%s",
-					tableName,
-					attributeMember.getDeclaringType().getName(),
-					attributeBinding.attributeName()
-			) );
-		}
-		final Table table = tableReference.binding();
-		if ( result[0] != primaryTable && result[0] != table ) {
-			throw new MappingException( String.format( Locale.ROOT,
-					"Embeddable attributes cannot span multiple tables - %s.%s",
-					attributeMember.getDeclaringType().getName(),
-					attributeBinding.attributeName()
-			) );
-		}
-		result[0] = table;
-	}
-
-	private void visitColumnSources(
-			ComponentSource source,
-			java.util.function.BiConsumer<String, MemberDetails> consumer) {
-		for ( ComponentSource.ComponentMember componentMember : source.members() ) {
-			final MemberDetails member = componentMember.member();
-			final org.hibernate.models.spi.ClassDetails nestedComponentType =
-					ComponentSource.resolveEmbeddableType( member, bindingContext, false );
-			if ( member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
-					|| nestedComponentType.hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
-				visitColumnSources( source.nested( componentMember, bindingContext ), consumer );
 			}
-			else {
-				consumer.accept( componentMember.path(), member );
-			}
+			return tableReference.binding();
 		}
-	}
-
-	private ColumnSource resolveColumnSource(String memberPath, MemberDetails member) {
-		return componentSource.columnSource( memberPath, member );
-	}
-
-	private Convert resolveConversion(String memberPath, MemberDetails member) {
-		return componentSource.conversion( memberPath, member );
-	}
-
-	private jakarta.persistence.AssociationOverride resolveAssociationOverride(String memberPath, MemberDetails member) {
-		return componentSource.associationOverride( memberPath );
-	}
 }

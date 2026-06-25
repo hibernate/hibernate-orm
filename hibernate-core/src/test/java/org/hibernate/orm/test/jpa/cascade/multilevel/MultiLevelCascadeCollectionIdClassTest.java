@@ -27,6 +27,8 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
+import org.hibernate.annotations.Bag;
+
 import org.jboss.logging.Logger;
 
 import org.junit.jupiter.api.Test;
@@ -117,6 +119,7 @@ public class MultiLevelCascadeCollectionIdClassTest {
 		private Long idNum;
 
 		@OneToMany(mappedBy = "mainEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+		@Bag
 		private List<SubEntity> subEntities = new ArrayList<>();
 
 		public void addSubEntity(SubEntity subEntity) {
@@ -180,9 +183,11 @@ public class MultiLevelCascadeCollectionIdClassTest {
 		private MainEntity mainEntity;
 
 		@OneToMany(mappedBy = "subEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+		@Bag
 		private List<SubSubEntity> subSubEntities = new ArrayList<>();
 
 		@OneToMany(mappedBy = "subEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+		@Bag
 		private List<AnotherSubSubEntity> anotherSubSubEntities = new ArrayList<>();
 
 		public Long getSubIdNum() {

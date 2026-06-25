@@ -47,8 +47,14 @@ public class PrimaryTableKeyMappingMaterializer {
 	}
 
 	public void addIdentifierColumn(ResolvedPrimaryTableKey primaryTableKey, Column column) {
+		column.setNullable( false );
 		primaryTableKey.addIdentifierColumn( column );
-		initializePrimaryKey( primaryTableKey ).addColumn( column );
+		final PrimaryKey primaryKey = initializePrimaryKey( primaryTableKey );
+		final Column canonicalColumn = primaryTableKey.table().getColumn( column );
+		if ( canonicalColumn != null ) {
+			canonicalColumn.setNullable( false );
+		}
+		primaryKey.addColumn( column );
 	}
 
 	public void finalizePrimaryKey(ResolvedPrimaryTableKey primaryTableKey) {

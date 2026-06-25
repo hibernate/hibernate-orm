@@ -87,7 +87,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "isJpaBootstrap" -> settings.jpaBootstrap();
 				case "getSessionFactoryName" -> settings.sessionFactoryName();
 				case "isSessionFactoryNameAlsoJndiName" -> settings.sessionFactoryNameAlsoJndiName();
-				case "isStatisticsEnabled" -> false;
+				case "isStatisticsEnabled" -> settings.statisticsEnabled();
 				case "getStatementObserver" -> settings.statementObserver();
 				case "getStatementInspector" -> settings.statementInspector();
 				case "getInitialSessionCacheMode" -> settings.initialSessionCacheMode();

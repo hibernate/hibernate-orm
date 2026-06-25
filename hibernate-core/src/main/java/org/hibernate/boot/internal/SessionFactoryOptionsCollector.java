@@ -138,6 +138,7 @@ public class SessionFactoryOptionsCollector {
 						: settings.initializeLazyStateOutsideTransactionsEnabled(),
 				settings.unownedAssociationTransientCheck(),
 				settings.bidirectionalAssociationManagementEnabled(),
+				statisticsSupport != null ? statisticsSupport : settings.statisticsEnabled(),
 				interceptor != null ? interceptor : settings.interceptor(),
 				collectSessionFactoryObservers( settings ),
 				validatorFactory != null ? validatorFactory : settings.validatorFactoryReference(),

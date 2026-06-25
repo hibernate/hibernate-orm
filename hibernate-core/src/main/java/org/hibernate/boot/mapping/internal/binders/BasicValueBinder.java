@@ -605,19 +605,23 @@ public class BasicValueBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		if ( source.kind() == BasicValueSource.Kind.MAP_KEY ) {
-			final MapKeyEnumerated mapKeyEnumerated = source.member().getDirectAnnotationUsage( MapKeyEnumerated.class );
-			if ( mapKeyEnumerated != null ) {
-				validateEnumeratedType( source );
-				basicValue.setEnumerationStyle( mapKeyEnumerated.value() );
+		switch ( source.kind() ) {
+			case MAP_KEY -> {
+				final MapKeyEnumerated mapKeyEnumerated = source.member().getDirectAnnotationUsage( MapKeyEnumerated.class );
+				if ( mapKeyEnumerated != null ) {
+					validateEnumeratedType( source );
+					basicValue.setEnumerationStyle( mapKeyEnumerated.value() );
+				}
 			}
-			return;
-		}
-
-		final Enumerated enumerated = source.member().getDirectAnnotationUsage( Enumerated.class );
-		if ( enumerated != null ) {
-			validateEnumeratedType( source );
-			basicValue.setEnumerationStyle( enumerated.value() == null ? ORDINAL : enumerated.value() );
+			case LIST_INDEX, COLLECTION_ID, ANY_DISCRIMINATOR, ANY_KEY -> {
+			}
+			case ATTRIBUTE, EMBEDDABLE_MEMBER, COLLECTION_ELEMENT, IDENTIFIER -> {
+				final Enumerated enumerated = source.member().getDirectAnnotationUsage( Enumerated.class );
+				if ( enumerated != null ) {
+					validateEnumeratedType( source );
+					basicValue.setEnumerationStyle( enumerated.value() == null ? ORDINAL : enumerated.value() );
+				}
+			}
 		}
 	}
 

@@ -36,6 +36,7 @@ import org.hibernate.models.spi.ClassDetails;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
@@ -222,6 +223,7 @@ class PluralAssociationAttributeBinder {
 		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			return bindInverseOneToMany( source, oneToMany.mappedBy(), property );
 		}
+		validateOnDeleteJoinColumn();
 		if ( source.joinTable() == null && !source.oneToManyJoinColumnsOrFormulas().isEmpty() ) {
 			return bindOneToManyWithForeignKey( source, property );
 		}
@@ -368,7 +370,8 @@ class PluralAssociationAttributeBinder {
 					),
 					resolveOnDeleteAction(),
 					associationTableUniqueConstraints( source ),
-					associationTableIndexes( source )
+					associationTableIndexes( source ),
+					uniqueTargetColumns
 			) );
 			bindingState.addCollectionBinding( collection );
 		}
@@ -453,13 +456,14 @@ class PluralAssociationAttributeBinder {
 					ForeignKeySource.firstSpecified(
 							source.oneToManyForeignKeySource(),
 							ForeignKeySource.from( source.joinTable() )
-					),
-					resolveOnDeleteAction(),
-					new jakarta.persistence.UniqueConstraint[0],
-					new jakarta.persistence.Index[0]
-			) );
-			bindingState.addCollectionBinding( collection );
-		}
+						),
+						resolveOnDeleteAction(),
+						new jakarta.persistence.UniqueConstraint[0],
+						new jakarta.persistence.Index[0],
+						false
+				) );
+				bindingState.addCollectionBinding( collection );
+			}
 		return collection;
 	}
 
@@ -701,7 +705,10 @@ class PluralAssociationAttributeBinder {
 													+ "." + attributeMetadata.getName()
 									)
 							)
-							: null
+							: null,
+					referenceToPrimaryKey
+							? List.of()
+							: ToOneAttributeBinder.referencedColumnNames( inverseJoinColumns )
 			) );
 		}
 		return element;
@@ -742,6 +749,25 @@ class PluralAssociationAttributeBinder {
 	private org.hibernate.annotations.OnDeleteAction resolveOnDeleteAction() {
 		final OnDelete onDelete = attributeMetadata.getMember().getDirectAnnotationUsage( OnDelete.class );
 		return onDelete == null ? null : onDelete.action();
+	}
+
+	private void validateOnDeleteJoinColumn() {
+		if ( attributeMetadata.getMember().hasDirectAnnotationUsage( OnDelete.class ) && !hasExplicitJoinColumn() ) {
+			throw new AnnotationException(
+					"Unidirectional '@OneToMany' association '" + ownerBinding.getEntityName() + "."
+							+ attributeMetadata.getName()
+							+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'"
+			);
+		}
+	}
+
+	private boolean hasExplicitJoinColumn() {
+		if ( attributeMetadata.getMember().hasDirectAnnotationUsage( JoinColumn.class )
+				|| attributeMetadata.getMember().hasDirectAnnotationUsage( JoinColumns.class ) ) {
+			return true;
+		}
+		final JoinTable joinTable = attributeMetadata.getMember().getDirectAnnotationUsage( JoinTable.class );
+		return joinTable != null && joinTable.joinColumns().length > 0;
 	}
 
 	private void applyOnDelete(ManyToOne value) {

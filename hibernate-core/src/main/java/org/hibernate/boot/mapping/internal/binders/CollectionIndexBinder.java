@@ -594,7 +594,8 @@ class CollectionIndexBinder {
 			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 					collection.getOwner(),
 					index,
-					source.mapKeyForeignKeySource()
+					source.mapKeyForeignKeySource(),
+					referenceToPrimaryKey ? List.of() : referencedColumnNames( source.mapKeyJoinColumns() )
 			) );
 		}
 

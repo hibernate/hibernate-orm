@@ -510,6 +510,18 @@ public record CollectionSource(
 			return CollectionClassification.SET;
 		}
 		if ( collectionType.isImplementor( java.util.List.class ) ) {
+			if ( isUnownedToMany( member ) && !hasExplicitListIndex( member ) ) {
+				return CollectionClassification.BAG;
+			}
+			if ( isOrdered( member ) ) {
+				if ( hasOrderColumn( member ) ) {
+					throw new AnnotationException(
+							"Property '" + member.getDeclaringType().getName() + "." + member.resolveAttributeName()
+									+ "' may not combine '@OrderColumn' with '@OrderBy' or '@SQLOrder'"
+					);
+				}
+				return CollectionClassification.BAG;
+			}
 			return member.hasDirectAnnotationUsage( Bag.class )
 					? CollectionClassification.BAG
 					: CollectionClassification.LIST;
@@ -615,6 +627,27 @@ public record CollectionSource(
 	private static boolean isOrdered(MemberDetails member) {
 		return member.hasDirectAnnotationUsage( OrderBy.class )
 				|| member.hasDirectAnnotationUsage( SQLOrder.class );
+	}
+
+	private static boolean hasOrderColumn(MemberDetails member) {
+		return member.hasDirectAnnotationUsage( OrderColumn.class );
+	}
+
+	private static boolean hasExplicitListIndex(MemberDetails member) {
+		return hasOrderColumn( member )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexBase.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJdbcType.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJdbcTypeCode.class )
+				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJavaType.class );
+	}
+
+	private static boolean isUnownedToMany(MemberDetails member) {
+		final ManyToMany manyToMany = member.getDirectAnnotationUsage( ManyToMany.class );
+		if ( manyToMany != null && StringHelper.isNotEmpty( manyToMany.mappedBy() ) ) {
+			return true;
+		}
+		final OneToMany oneToMany = member.getDirectAnnotationUsage( OneToMany.class );
+		return oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() );
 	}
 
 	/// The direct `@ManyToMany` annotation.

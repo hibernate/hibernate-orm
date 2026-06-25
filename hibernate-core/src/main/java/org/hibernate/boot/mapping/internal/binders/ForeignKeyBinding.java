@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import java.util.List;
+
 import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.mapping.PersistentClass;
@@ -22,11 +24,32 @@ public record ForeignKeyBinding(
 		PersistentClass ownerBinding,
 		ToOne value,
 		ForeignKeySource foreignKeySource,
-		ResolvedForeignKey resolvedForeignKey) {
+		ResolvedForeignKey resolvedForeignKey,
+		List<String> referencedColumnNames) {
+	public ForeignKeyBinding {
+		referencedColumnNames = List.copyOf( referencedColumnNames );
+	}
+
+	public ForeignKeyBinding(
+			PersistentClass ownerBinding,
+			ToOne value,
+			ForeignKeySource foreignKeySource,
+			ResolvedForeignKey resolvedForeignKey) {
+		this( ownerBinding, value, foreignKeySource, resolvedForeignKey, List.of() );
+	}
+
+	public ForeignKeyBinding(
+			PersistentClass ownerBinding,
+			ToOne value,
+			ForeignKeySource foreignKeySource,
+			List<String> referencedColumnNames) {
+		this( ownerBinding, value, foreignKeySource, null, referencedColumnNames );
+	}
+
 	public ForeignKeyBinding(
 			PersistentClass ownerBinding,
 			ToOne value,
 			ForeignKeySource foreignKeySource) {
-		this( ownerBinding, value, foreignKeySource, null );
+		this( ownerBinding, value, foreignKeySource, null, List.of() );
 	}
 }

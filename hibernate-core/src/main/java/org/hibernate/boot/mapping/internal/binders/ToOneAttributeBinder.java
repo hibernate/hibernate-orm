@@ -422,7 +422,10 @@ class ToOneAttributeBinder {
 							target.identifierColumns(),
 							referenceToPrimaryKey,
 							ownerClassName + "." + propertyName
-					)
+					),
+					referenceToPrimaryKey || propertyRef != null
+							? List.of()
+							: referencedColumnNamesSources( valueJoinColumns )
 			) );
 		}
 		return value;

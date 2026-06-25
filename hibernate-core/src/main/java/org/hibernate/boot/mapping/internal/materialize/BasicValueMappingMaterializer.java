@@ -22,6 +22,7 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -130,6 +131,7 @@ public class BasicValueMappingMaterializer {
 			ComponentSource source,
 			ComponentMemberBinding componentMember,
 			Property property,
+			PersistentClass ownerBinding,
 			Table table,
 			List<String> columnNamingPatterns,
 			boolean uniqueByDefault,
@@ -138,12 +140,13 @@ public class BasicValueMappingMaterializer {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext(), table );
-		basicValue.setTable( table );
-		property.setValue( basicValue );
-
 		final MemberDetails member = componentMember.member();
 		final BasicValueIntent basicValueIntent = componentMember.basicValueIntent();
+		final Table valueTable = resolveTable( basicValueIntent, ownerBinding, table );
+		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext(), valueTable );
+		basicValue.setTable( valueTable );
+		property.setValue( basicValue );
+
 		if ( basicValueIntent.isFormula() ) {
 			basicValue.addFormula( new org.hibernate.mapping.Formula( basicValueIntent.formulaExpression() ) );
 			property.setOptional( true );
@@ -180,7 +183,20 @@ public class BasicValueMappingMaterializer {
 				bindingState,
 				bindingContext
 		);
-		return new MaterializedBasicValue( basicValue, column );
+			return new MaterializedBasicValue( basicValue, column );
+	}
+
+	private static Table resolveTable(
+			BasicValueIntent basicValueIntent,
+			PersistentClass ownerBinding,
+			Table defaultTable) {
+		final String tableName = basicValueIntent.columnSource() == null
+				? basicValueIntent.tableName()
+				: basicValueIntent.columnSource().table();
+		if ( tableName == null || tableName.isEmpty() ) {
+			return defaultTable;
+		}
+		return ownerBinding.getTable( tableName );
 	}
 
 	private Column bindComponentMemberColumn(

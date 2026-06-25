@@ -111,6 +111,9 @@ public record ResolvedSessionFactorySettings(
 		/// Whether flush-time bidirectional association management is enabled.
 		boolean bidirectionalAssociationManagementEnabled,
 
+		/// Whether runtime statistics collection is enabled.
+		boolean statisticsEnabled,
+
 		/// Factory-wide interceptor applied to Sessions unless overridden.
 		Interceptor interceptor,
 
@@ -282,6 +285,7 @@ public record ResolvedSessionFactorySettings(
 				initializeLazyStateOutsideTransactionsEnabled,
 				unownedAssociationTransientCheck,
 				bidirectionalAssociationManagementEnabled,
+				statisticsEnabled,
 				interceptor,
 				sessionFactoryObservers,
 				validatorFactoryReference,

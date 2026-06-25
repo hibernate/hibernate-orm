@@ -321,10 +321,10 @@ class AssociationTargetBinder {
 		);
 		component.setComponentClassName( targetBinding.getClassName() );
 		component.setEmbedded( true );
+		component.setPreservePropertyOrder( true );
 		for ( Property property : properties ) {
 			component.addProperty( cloneProperty( targetBinding, property ) );
 		}
-		component.sortProperties();
 
 		final SyntheticProperty syntheticProperty = new SyntheticProperty();
 		syntheticProperty.setName( syntheticPropertyName );

@@ -32,7 +32,8 @@ public record CollectionTableBinding(
 		ForeignKeySource foreignKeySource,
 		OnDeleteAction onDeleteAction,
 		UniqueConstraint[] uniqueConstraints,
-		Index[] indexes) {
+		Index[] indexes,
+		boolean oneToManyAssociationTable) {
 	public CollectionTableBinding(
 			Collection collection,
 			List<JoinColumn> joinColumns,
@@ -47,7 +48,28 @@ public record CollectionTableBinding(
 				foreignKeySource,
 				onDeleteAction,
 				uniqueConstraints,
-				indexes
+				indexes,
+				false
+		);
+	}
+
+	public CollectionTableBinding(
+			Collection collection,
+			List<JoinColumn> joinColumns,
+			ForeignKeySource foreignKeySource,
+			OnDeleteAction onDeleteAction,
+			UniqueConstraint[] uniqueConstraints,
+			Index[] indexes,
+			boolean oneToManyAssociationTable) {
+		this(
+				collection,
+				joinColumns,
+				joinColumns.stream().map( JoinColumnOrFormulaSource::column ).toList(),
+				foreignKeySource,
+				onDeleteAction,
+				uniqueConstraints,
+				indexes,
+				oneToManyAssociationTable
 		);
 	}
 }

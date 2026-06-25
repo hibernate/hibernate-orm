@@ -77,16 +77,42 @@ class ForeignKeyBinder {
 					.getEntityBinding( manyToOne.getReferencedEntityName() );
 			foreignKey = referencedEntity == null
 					? null
-					: foreignKeyMappingMaterializer.materializeForeignKey(
-							manyToOne,
-							referencedEntity,
-							foreignKeyBinding.ownerBinding().getEntityName() + "." + manyToOne.getTable().getName()
-					);
+					: materializePropertyRefForeignKey( foreignKeyBinding, manyToOne, referencedEntity );
 		}
 		else {
 			foreignKey = null;
 		}
 		applyForeignKeySource( foreignKey, foreignKeyBinding.foreignKeySource() );
+	}
+
+	private ForeignKey materializePropertyRefForeignKey(
+			ForeignKeyBinding foreignKeyBinding,
+			ManyToOne manyToOne,
+			PersistentClass referencedEntity) {
+		final String sourceRole = foreignKeyBinding.ownerBinding().getEntityName() + "." + manyToOne.getTable().getName();
+		if ( foreignKeyBinding.referencedColumnNames().isEmpty() ) {
+			return foreignKeyMappingMaterializer.materializeForeignKey( manyToOne, referencedEntity, sourceRole );
+		}
+		final org.hibernate.mapping.Property referencedProperty =
+				referencedEntity.getReferencedProperty( manyToOne.getReferencedPropertyName() );
+		if ( referencedProperty == null ) {
+			return foreignKeyMappingMaterializer.materializeForeignKey( manyToOne, referencedEntity, sourceRole );
+		}
+		return foreignKeyMappingMaterializer.materializeForeignKey(
+				ResolvedForeignKey.from(
+						manyToOne,
+						manyToOne.getReferencedEntityName(),
+						SelectableOrderResolver.resolveByReferencedNames(
+								manyToOne.getColumns(),
+								referencedProperty.getColumns(),
+								foreignKeyBinding.referencedColumnNames(),
+								entityBinder.getBindingState().getDatabase(),
+								sourceRole
+						),
+						referencedProperty.getValue().getTable()
+				),
+				referencedEntity
+		);
 	}
 
 	private void bindTableForeignKey(TableForeignKeyBinding tableForeignKeyBinding) {

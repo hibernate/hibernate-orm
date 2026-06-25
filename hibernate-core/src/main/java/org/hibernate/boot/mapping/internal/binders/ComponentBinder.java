@@ -204,10 +204,10 @@ public class ComponentBinder {
 			if ( isToOneMember( member ) ) {
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
 				final ToOneValueIntent toOneValueIntent = componentMember.toOneValueIntent();
-				final Value value = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
-						? bindAssociationIdentifierMember(
-								ownerType,
-								ownerBinding,
+					final Value value = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
+							? bindAssociationIdentifierMember(
+									ownerType,
+									ownerBinding,
 								source.componentType(),
 								componentMember,
 								property,
@@ -230,12 +230,15 @@ public class ComponentBinder {
 								options,
 								state,
 								context
-						);
-				property.setValue( value );
-				component.addProperty( property, componentMember.declaringType() );
-				applyCollation( ownerType, componentMember, property );
-				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-				if ( value instanceof ManyToOne manyToOne ) {
+							);
+					property.setValue( value );
+					if ( !hasJoinTable( member, toOneValueIntent ) ) {
+						alignComponentTable( component, property );
+					}
+					component.addProperty( property, componentMember.declaringType() );
+					applyCollation( ownerType, componentMember, property );
+					CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+					if ( value instanceof ManyToOne manyToOne ) {
 					manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
 					columns.addAll( manyToOne.getColumns() );
 				}
@@ -264,51 +267,54 @@ public class ComponentBinder {
 				);
 				embeddableMappingMaterializer.prepareComponentForBinding( nestedComponent, nestedSource );
 
-				final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
-				component.addProperty( property, componentMember.declaringType() );
-				applyCollation( ownerType, componentMember, property );
-				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-				final List<Column> nestedColumns = bindProperties(
-						ownerType,
-						ownerBinding,
+					final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
+					final List<Column> nestedColumns = bindProperties(
+							ownerType,
+							ownerBinding,
 						nestedSource,
 						nestedComponent,
 						table,
 						associationIdentifierColumns,
 						extendColumnNamingPatterns( columnNamingPatterns, nestedComponent ),
 						columnConsumer,
-						uniqueByDefault,
-						nullableByDefault,
-						updatable,
-						registerCollectionBindings
-				);
-				AggregateComponentBinder.processAggregate( ownerBinding, nestedSource, nestedComponent, table, state );
-				columns.addAll( nestedColumns );
-				continue;
-			}
+							uniqueByDefault,
+							nullableByDefault,
+							updatable,
+							registerCollectionBindings
+					);
+					AggregateComponentBinder.processAggregate( ownerBinding, nestedSource, nestedComponent, table, state );
+					columns.addAll( nestedColumns );
+					alignComponentTable( component, property );
+					component.addProperty( property, componentMember.declaringType() );
+					applyCollation( ownerType, componentMember, property );
+					CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+					continue;
+				}
 
-			final Property property = propertyMappingMaterializer.createProperty( attributeName, null, member );
+				final Property property = propertyMappingMaterializer.createProperty( attributeName, null, member );
 				final MaterializedBasicValue basicValue = basicValueMappingMaterializer.createComponentMemberBasicValue(
 						source,
 						componentMember,
 						property,
-					table,
-					columnNamingPatterns,
-					uniqueByDefault,
+						ownerBinding,
+						table,
+						columnNamingPatterns,
+						uniqueByDefault,
 					nullableByDefault,
 					updatable,
-					options,
+						options,
 						state,
 						context
 				);
 				if ( component.isPolymorphic() && componentMember.declaringType() != source.componentType() ) {
 					property.setOptional( true );
 				}
+				alignComponentTable( component, property );
 				component.addProperty( property, componentMember.declaringType() );
-			applyCollation( ownerType, componentMember, property );
-			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-			if ( basicValue.column() != null ) {
-				final Column column = basicValue.column();
+				applyCollation( ownerType, componentMember, property );
+				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				if ( basicValue.column() != null ) {
+					final Column column = basicValue.column();
 				columnConsumer.accept( member, column );
 				columns.add( column );
 			}
@@ -625,6 +631,52 @@ public class ComponentBinder {
 							+ "' is collection-valued; embeddables used as entity identifiers may not contain plural attributes"
 			);
 		}
+		if ( source.kind() == ComponentSource.Kind.COLLECTION_ELEMENT ) {
+			throw new AnnotationException(
+					"Property '" + componentMember.fullPath()
+							+ "' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a "
+							+ annotationName( componentMember.nature() )
+			);
+		}
+	}
+
+	private static String annotationName(AttributeNature nature) {
+		return switch ( nature ) {
+			case ELEMENT_COLLECTION -> "'@ElementCollection'";
+			case MANY_TO_MANY -> "'@ManyToMany'";
+			case ONE_TO_MANY -> "'@OneToMany'";
+			case MANY_TO_ANY -> "'@ManyToAny'";
+			default -> "plural attribute";
+		};
+	}
+
+	private static boolean hasJoinTable(MemberDetails member, ToOneValueIntent toOneValueIntent) {
+		return isSpecified( member.getDirectAnnotationUsage( JoinTable.class ) )
+				|| toOneValueIntent.associationOverride() != null
+						&& isSpecified( toOneValueIntent.associationOverride().joinTable() );
+	}
+
+	private static boolean isSpecified(JoinTable joinTable) {
+		return joinTable != null
+				&& ( !isEmpty( joinTable.name() )
+						|| joinTable.joinColumns().length > 0
+						|| joinTable.inverseJoinColumns().length > 0 );
+	}
+
+	private static void alignComponentTable(Component component, Property property) {
+		final Table propertyTable = property.getValue().getTable();
+		if ( propertyTable == null || propertyTable.equals( component.getTable() ) ) {
+			return;
+		}
+		if ( component.getPropertySpan() == 0 ) {
+			component.setTable( propertyTable );
+			return;
+		}
+		throw new AnnotationException(
+				"Embeddable class '" + component.getComponentClassName()
+						+ "' has properties mapped to two different tables"
+						+ " (all properties of the embeddable class must map to the same table)"
+		);
 	}
 
 	private static EntityTypeMetadata resolveOwnerEntityType(IdentifiableTypeMetadata ownerType) {

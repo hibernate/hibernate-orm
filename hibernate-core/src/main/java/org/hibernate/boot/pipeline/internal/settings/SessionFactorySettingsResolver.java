@@ -123,6 +123,7 @@ public class SessionFactorySettingsResolver {
 						bootstrapSettings.jpaBootstrap()
 				),
 				resolveBidirectionalAssociationManagementEnabled( configurationValues ),
+				asBoolean( configurationValues.get( AvailableSettings.GENERATE_STATISTICS ), false ),
 				resolveInterceptor( configurationValues, standardServiceRegistry ),
 				resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),
 				resolveValidatorFactoryReference( configurationValues ),

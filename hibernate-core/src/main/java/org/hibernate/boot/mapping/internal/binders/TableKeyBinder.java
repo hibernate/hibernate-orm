@@ -179,9 +179,21 @@ public class TableKeyBinder {
 		key.setOnDeleteAction( collectionTableBinding.onDeleteAction() );
 		collectionTableBinding.collection().setKey( key );
 		if ( !key.hasFormula() ) {
-			collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
-					collectionKeyMappingMaterializer.resolveTableKey( collectionTableBinding.collection() )
-			);
+			if ( collectionTableBinding.oneToManyAssociationTable() ) {
+				collectionKeyMappingMaterializer.materializeValuePrimaryKey(
+						collectionTableBinding.collection().getCollectionTable(),
+						collectionTableBinding.collection().getElement(),
+						collectionTableBinding.collection().getRole() + ".element"
+				);
+				for ( Column column : collectionTableBinding.collection().getElement().getColumns() ) {
+					column.setUnique( false );
+				}
+			}
+			else {
+				collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
+						collectionKeyMappingMaterializer.resolveTableKey( collectionTableBinding.collection() )
+				);
+			}
 		}
 		createOneToManyBackref( collectionTableBinding, key );
 		if ( !key.hasFormula() ) {
@@ -545,13 +557,15 @@ public class TableKeyBinder {
 							table,
 							identifierColumn,
 							null,
-							() -> implicitCollectionKeyColumnName( collectionTableBinding, identifierColumn )
+							() -> implicitCollectionKeyColumnName( collectionTableBinding, identifierColumn ),
+							key.isNullable()
 					)
 					: bindKeyColumn(
 							table,
 							identifierColumn,
 							joinColumn,
-							() -> implicitCollectionKeyColumnName( collectionTableBinding, identifierColumn )
+							() -> implicitCollectionKeyColumnName( collectionTableBinding, identifierColumn ),
+							key.isNullable()
 					);
 			table.addColumn( keyColumn );
 			key.addColumn(
@@ -730,8 +744,8 @@ public class TableKeyBinder {
 			final JoinColumn joinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
 			final Column targetColumn = referencedOwnerKey.targetColumns().get( i );
 			final Column keyColumn = orderedJoinColumns.isEmpty()
-					? bindKeyColumn( table, targetColumn, null )
-					: bindKeyColumn( table, targetColumn, joinColumn );
+					? bindKeyColumn( table, targetColumn, null, key.isNullable() )
+					: bindKeyColumn( table, targetColumn, joinColumn, key.isNullable() );
 			table.addColumn( keyColumn );
 			key.addColumn(
 					keyColumn,
@@ -871,10 +885,10 @@ public class TableKeyBinder {
 		final Component component = new Component( metadataBuildingContext(), ownerBinding );
 		component.setComponentClassName( ownerBinding.getClassName() );
 		component.setEmbedded( true );
+		component.setPreservePropertyOrder( true );
 		for ( Property property : properties ) {
 			component.addProperty( cloneProperty( ownerBinding, property ) );
 		}
-		component.sortProperties();
 
 		final SyntheticProperty syntheticProperty = new SyntheticProperty();
 		syntheticProperty.setName( syntheticPropertyName );
@@ -1000,7 +1014,15 @@ public class TableKeyBinder {
 	}
 
 	private Column bindKeyColumn(Table table, Column identifierColumn, jakarta.persistence.JoinColumn joinColumn) {
-		return bindKeyColumn( table, identifierColumn, joinColumn, identifierColumn::getName );
+		return bindKeyColumn( table, identifierColumn, joinColumn, identifierColumn::getName, false );
+	}
+
+	private Column bindKeyColumn(
+			Table table,
+			Column identifierColumn,
+			jakarta.persistence.JoinColumn joinColumn,
+			boolean nullableByDefault) {
+		return bindKeyColumn( table, identifierColumn, joinColumn, identifierColumn::getName, nullableByDefault );
 	}
 
 	private Column bindKeyColumn(
@@ -1008,13 +1030,21 @@ public class TableKeyBinder {
 			Column identifierColumn,
 			jakarta.persistence.JoinColumn joinColumn,
 			java.util.function.Supplier<String> implicitName) {
+		return bindKeyColumn( table, identifierColumn, joinColumn, implicitName, false );
+	}
+
+	private Column bindKeyColumn(
+			Table table,
+			Column identifierColumn,
+			jakarta.persistence.JoinColumn joinColumn,
+			java.util.function.Supplier<String> implicitName,
+			boolean nullableByDefault) {
 		final Column result = ColumnBinder.bindColumn(
 				ColumnSource.from( joinColumn ),
 				implicitName,
 				false,
-				false
+				nullableByDefault
 		);
-		result.setNullable( false );
 		table.addColumn( result );
 		return result;
 	}

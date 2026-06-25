@@ -31,6 +31,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -79,7 +80,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 				Model.class,
 				OneToManyTest.OnDeleteUnidirectionalOneToManyParent.class,
 				OneToManyTest.OnDeleteUnidirectionalOneToManyChild.class
-		})
+		},
+		xmlMappings = "org/hibernate/orm/test/annotations/onetomany/orm.xml"
+)
+@SessionFactory
 public class OneToManyTest {
 
 

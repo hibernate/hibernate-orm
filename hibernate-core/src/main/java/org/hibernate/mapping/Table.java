@@ -288,6 +288,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			column.uniqueInteger = columns.size();
 		}
 		else {
+			if ( !column.isNullable() ) {
+				oldColumn.setNullable( false );
+			}
+			else if ( !oldColumn.isNullable() ) {
+				column.setNullable( false );
+			}
 			column.uniqueInteger = oldColumn.uniqueInteger;
 		}
 	}

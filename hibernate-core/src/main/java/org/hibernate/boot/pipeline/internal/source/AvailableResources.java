@@ -14,10 +14,12 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -229,11 +231,7 @@ public record AvailableResources(
 			);
 		} );
 		sourceContributions.packageNames().forEach( (packageName) -> {
-			applyClassDetails(
-					classDetailsRegistry.resolveClassDetails( packageName + ".package-info" ),
-					managedClassDetails,
-					packageDetailsList
-			);
+			applyPackageDetails( packageName, classDetailsRegistry, packageDetailsList );
 		} );
 
 		final var xmlBindings = new ArrayList<Binding<JaxbEntityMappingsImpl>>();
@@ -344,11 +342,7 @@ public record AvailableResources(
 			);
 		} );
 		metadataSources.getAnnotatedPackages().forEach( (packageName) -> {
-			applyClassDetails(
-					classDetailsRegistry.resolveClassDetails( packageName + ".package-info" ),
-					managedClassDetails,
-					packageDetailsList
-			);
+			applyPackageDetails( packageName, classDetailsRegistry, packageDetailsList );
 		} );
 
 		final var xmlBindings = new ArrayList<>( metadataSources.getMappingXmlBindings() );
@@ -367,6 +361,21 @@ public record AvailableResources(
 		}
 		else {
 			managedClassDetails.add( classDetails );
+		}
+	}
+
+	private static void applyPackageDetails(
+			String packageName,
+			ClassDetailsRegistry classDetailsRegistry,
+			Collection<ClassDetails> packageDetails) {
+		try {
+			final ClassDetails packageInfoDetails = classDetailsRegistry.resolveClassDetails( packageName + ".package-info" );
+			if ( packageInfoDetails.getClassName().endsWith( "package-info" ) ) {
+				packageDetails.add( packageInfoDetails );
+			}
+		}
+		catch (ClassLoadingException ignored) {
+			// An annotated package name does not require a loadable package-info class.
 		}
 	}
 

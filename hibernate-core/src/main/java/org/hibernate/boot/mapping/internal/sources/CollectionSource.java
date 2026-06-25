@@ -4,15 +4,17 @@
  */
 package org.hibernate.boot.mapping.internal.sources;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaClass;
@@ -23,8 +25,12 @@ import org.hibernate.annotations.CollectionIdMutability;
 import org.hibernate.annotations.CollectionIdType;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.annotations.JoinColumnsOrFormulas;
+import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SQLJoinTableRestriction;
@@ -33,15 +39,14 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.boot.mapping.internal.binders.CascadeBinder;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.sources.ToOneSource.JoinColumnOrFormulaSource;
 import org.hibernate.boot.models.internal.ModelsHelper;
-import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.internal.CollectionElementSwitch;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.MapKeySwitch;
 import org.hibernate.models.internal.MapValueSwitch;
-import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -73,6 +78,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.OrderBy;
 import org.jetbrains.annotations.NotNull;
+
+import static org.hibernate.models.spi.TypeDetailsHelper.resolveRelativeType;
 
 /// Source-model facts for an [org.hibernate.mapping.Collection].
 ///
@@ -137,7 +144,7 @@ public record CollectionSource(
 		///
 		/// This is the source-level decision that eventually drives which
 		/// [org.hibernate.mapping.Collection] subclass is created.  Keeping it here makes
-		/// rules such as "`List` means indexed list unless `@Bag` is present" explicit.
+		/// rules such as "`List` means indexed list unless `@Bag` is in effect" explicit.
 		CollectionClassification classification,
 
 		/// The plural Hibernate Models member that contributed this collection mapping.
@@ -224,20 +231,14 @@ public record CollectionSource(
 			ClassDetails hierarchyRootType,
 			ModelsContext modelsContext) {
 		final CollectionTable collectionTable = member.getDirectAnnotationUsage( CollectionTable.class );
-		final CollectionClassification classification = determineClassification( member );
+		final CollectionClassification classification = determineClassification( member, collectionType );
 		final AssociationOverride associationOverride = locateAssociationOverride(
 				member,
 				ownerType,
 				hierarchyRootType,
 				modelsContext
 		);
-		TypeDetails elementType = elementCollectionElementType( member, collectionType, modelsContext );
-		if ( ownerType != null && modelsContext != null && Object.class.getName().equals( elementType.getName() ) ) {
-			final TypeDetails reflectedElementType = reflectedCollectionElementType( member, ownerType, modelsContext );
-			if ( reflectedElementType != null ) {
-				elementType = reflectedElementType;
-			}
-		}
+		final TypeDetails elementType = elementCollectionElementType( member, ownerType, collectionType, modelsContext );
 		return new CollectionSource(
 				elementType.determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Entity.class )
 						? Nature.MANY_TO_MANY
@@ -262,46 +263,7 @@ public record CollectionSource(
 			return member.getType();
 		}
 
-		final TypeDetails resolvedType = member.resolveRelativeType( ownerType );
-		if ( modelsContext == null ) {
-			return resolvedType;
-		}
-
-		final Type reflectedType = GenericsHelper.actualInheritedMemberType( ownerType.toJavaClass(), member.toJavaMember() );
-		final TypeDetails reflectedTypeDetails = typeDetails( reflectedType, ownerType, modelsContext );
-		return reflectedTypeDetails == null ? resolvedType : reflectedTypeDetails;
-	}
-
-	private static TypeDetails typeDetails(
-			Type type,
-			ClassDetails ownerType,
-			ModelsContext modelsContext) {
-		if ( type instanceof Class<?> javaClass ) {
-			return new ClassTypeDetailsImpl(
-					modelsContext.getClassDetailsRegistry().resolveClassDetails( javaClass.getName() ),
-					TypeDetails.Kind.CLASS
-			);
-		}
-		if ( type instanceof ParameterizedType parameterizedType
-				&& parameterizedType.getRawType() instanceof Class<?> rawClass ) {
-			final List<TypeDetails> arguments = new ArrayList<>( parameterizedType.getActualTypeArguments().length );
-			for ( Type argument : parameterizedType.getActualTypeArguments() ) {
-				final TypeDetails argumentDetails = typeDetails( argument, ownerType, modelsContext );
-				if ( argumentDetails == null ) {
-					return null;
-				}
-				arguments.add( argumentDetails );
-			}
-			return new ParameterizedTypeDetailsImpl(
-					modelsContext.getClassDetailsRegistry().resolveClassDetails( rawClass.getName() ),
-					arguments,
-					ownerType
-			);
-		}
-		if ( type instanceof TypeVariable<?> typeVariable && typeVariable.getBounds().length > 0 ) {
-			return typeDetails( typeVariable.getBounds()[0], ownerType, modelsContext );
-		}
-		return null;
+		return member.resolveRelativeType( ownerType );
 	}
 
 	private static TypeDetails mapKeyType(
@@ -321,20 +283,16 @@ public record CollectionSource(
 					TypeDetails.Kind.CLASS
 			);
 		}
-		final TypeDetails mapKeyType = collectionType == null
-				? member.getMapKeyType()
-				: MapKeySwitch.extractMapKeyType( collectionType );
-		if ( ownerType != null && modelsContext != null && Object.class.getName().equals( mapKeyType.getName() ) ) {
-			final TypeDetails reflectedMapKeyType = reflectedMapKeyType( member, ownerType, modelsContext );
-			if ( reflectedMapKeyType != null ) {
-				return reflectedMapKeyType;
-			}
+		final TypeDetails memberMapKeyType = member.getMapKeyType();
+		if ( memberMapKeyType != null ) {
+			return ownerType == null ? memberMapKeyType : resolveRelativeType( memberMapKeyType, ownerType );
 		}
-		return mapKeyType;
+		return collectionType == null ? null : MapKeySwitch.extractMapKeyType( collectionType );
 	}
 
 	private static TypeDetails elementCollectionElementType(
 			MemberDetails member,
+			ClassDetails ownerType,
 			TypeDetails collectionType,
 			ModelsContext modelsContext) {
 		final Target xmlTarget = member.getDirectAnnotationUsage( Target.class );
@@ -349,7 +307,11 @@ public record CollectionSource(
 					TypeDetails.Kind.CLASS
 			);
 		}
-		return collectionType == null ? member.getElementType() : collectionElementType( collectionType );
+		final TypeDetails memberElementType = member.getElementType();
+		if ( memberElementType != null ) {
+			return ownerType == null ? memberElementType : resolveRelativeType( memberElementType, ownerType );
+		}
+		return collectionElementType( collectionType, modelsContext );
 	}
 
 	/// Creates a collection source for an owning many-to-many association member.
@@ -455,47 +417,22 @@ public record CollectionSource(
 			);
 	}
 
-	private static TypeDetails collectionElementType(TypeDetails collectionType) {
+	private static TypeDetails collectionElementType(TypeDetails collectionType, ModelsContext modelsContext) {
 		if ( collectionType.getTypeKind() == TypeDetails.Kind.ARRAY ) {
 			return collectionType.asArrayType().getConstituentType();
+		}
+		final Class<?> rawClass = collectionType.determineRawClass().toJavaClass();
+		if ( rawClass.isArray() && modelsContext != null ) {
+			return new ClassTypeDetailsImpl(
+					modelsContext.getClassDetailsRegistry()
+							.resolveClassDetails( rawClass.getComponentType().getName() ),
+					TypeDetails.Kind.CLASS
+			);
 		}
 		if ( collectionType.isImplementor( java.util.Map.class ) ) {
 			return MapValueSwitch.extractMapValueType( collectionType );
 		}
 		return CollectionElementSwitch.extractCollectionElementType( collectionType );
-	}
-
-	private static TypeDetails reflectedCollectionElementType(
-			MemberDetails member,
-			ClassDetails ownerType,
-			ModelsContext modelsContext) {
-		final Type reflectedType = GenericsHelper.actualInheritedMemberType( ownerType.toJavaClass(), member.toJavaMember() );
-		if ( reflectedType instanceof ParameterizedType parameterizedType
-				&& parameterizedType.getRawType() instanceof Class<?> rawClass ) {
-			if ( java.util.Map.class.isAssignableFrom( rawClass ) ) {
-				return typeDetails( parameterizedType.getActualTypeArguments()[1], ownerType, modelsContext );
-			}
-			if ( java.util.Collection.class.isAssignableFrom( rawClass ) ) {
-				return typeDetails( parameterizedType.getActualTypeArguments()[0], ownerType, modelsContext );
-			}
-		}
-		if ( reflectedType instanceof Class<?> javaClass && javaClass.isArray() ) {
-			return typeDetails( javaClass.getComponentType(), ownerType, modelsContext );
-		}
-		return null;
-	}
-
-	private static TypeDetails reflectedMapKeyType(
-			MemberDetails member,
-			ClassDetails ownerType,
-			ModelsContext modelsContext) {
-		final Type reflectedType = GenericsHelper.actualInheritedMemberType( ownerType.toJavaClass(), member.toJavaMember() );
-		if ( reflectedType instanceof ParameterizedType parameterizedType
-				&& parameterizedType.getRawType() instanceof Class<?> rawClass
-				&& java.util.Map.class.isAssignableFrom( rawClass ) ) {
-			return typeDetails( parameterizedType.getActualTypeArguments()[0], ownerType, modelsContext );
-		}
-		return null;
 	}
 
 	private static JoinTable effectiveJoinTable(MemberDetails member, AssociationOverride associationOverride) {
@@ -550,15 +487,20 @@ public record CollectionSource(
 		return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 	}
 
-	private static CollectionClassification determineClassification(MemberDetails member) {
-		final Class<?> collectionType = member.getType().determineRawClass().toJavaClass();
-		if ( collectionType.isArray() ) {
+	private static CollectionClassification determineClassification(MemberDetails member, TypeDetails collectionType) {
+		if ( collectionType.getTypeKind() == TypeDetails.Kind.ARRAY ) {
 			return CollectionClassification.ARRAY;
+		}
+		if ( !collectionType.isImplementor( Collection.class ) && !collectionType.isImplementor( Map.class ) ) {
+			throw new AnnotationException(
+					"Property '" + member.getDeclaringType().getName() + "." + member.resolveAttributeName()
+							+ "' is not a collection and may not be a '@OneToMany', '@ManyToMany', or '@ElementCollection'"
+			);
 		}
 		if ( isIdentifierBag( member ) ) {
 			return CollectionClassification.ID_BAG;
 		}
-		if ( java.util.Set.class.isAssignableFrom( collectionType ) ) {
+		if ( collectionType.isImplementor( java.util.Set.class ) ) {
 			if ( isSorted( member, collectionType ) ) {
 				return CollectionClassification.SORTED_SET;
 			}
@@ -567,17 +509,12 @@ public record CollectionSource(
 			}
 			return CollectionClassification.SET;
 		}
-		if ( java.util.List.class.isAssignableFrom( collectionType )
-				&& !member.hasDirectAnnotationUsage( Bag.class ) ) {
-			if ( isOrdered( member ) && !hasListIndexIndicator( member ) ) {
-				return CollectionClassification.BAG;
-			}
-			if ( isUnownedToMany( member ) && !hasListIndexIndicator( member ) ) {
-				return CollectionClassification.BAG;
-			}
-			return CollectionClassification.LIST;
+		if ( collectionType.isImplementor( java.util.List.class ) ) {
+			return member.hasDirectAnnotationUsage( Bag.class )
+					? CollectionClassification.BAG
+					: CollectionClassification.LIST;
 		}
-		if ( java.util.Map.class.isAssignableFrom( collectionType ) ) {
+		if ( collectionType.isImplementor( Map.class ) ) {
 			if ( isSorted( member, collectionType ) ) {
 				return CollectionClassification.SORTED_MAP;
 			}
@@ -668,33 +605,16 @@ public record CollectionSource(
 				|| member.hasDirectAnnotationUsage( CollectionIdType.class );
 	}
 
-	private static boolean isSorted(MemberDetails member, Class<?> collectionType) {
+	private static boolean isSorted(MemberDetails member, TypeDetails collectionType) {
 		return member.hasDirectAnnotationUsage( SortNatural.class )
 				|| member.hasDirectAnnotationUsage( SortComparator.class )
-				|| java.util.SortedSet.class.isAssignableFrom( collectionType )
-				|| java.util.SortedMap.class.isAssignableFrom( collectionType );
+				|| collectionType.isImplementor( SortedSet.class )
+				|| collectionType.isImplementor( SortedMap.class );
 	}
 
 	private static boolean isOrdered(MemberDetails member) {
 		return member.hasDirectAnnotationUsage( OrderBy.class )
 				|| member.hasDirectAnnotationUsage( SQLOrder.class );
-	}
-
-	private static boolean hasListIndexIndicator(MemberDetails member) {
-		return member.hasDirectAnnotationUsage( OrderColumn.class )
-				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexBase.class )
-				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJavaType.class )
-				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJdbcType.class )
-				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ListIndexJdbcTypeCode.class );
-	}
-
-	private static boolean isUnownedToMany(MemberDetails member) {
-		final ManyToMany manyToMany = member.getDirectAnnotationUsage( ManyToMany.class );
-		if ( manyToMany != null && StringHelper.isNotEmpty( manyToMany.mappedBy() ) ) {
-			return true;
-		}
-		final OneToMany oneToMany = member.getDirectAnnotationUsage( OneToMany.class );
-		return oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() );
 	}
 
 	/// The direct `@ManyToMany` annotation.
@@ -820,6 +740,10 @@ public record CollectionSource(
 		return member.getDirectAnnotationUsage( OrderColumn.class );
 	}
 
+	public boolean isMutable() {
+		return !member.hasDirectAnnotationUsage( Immutable.class );
+	}
+
 	/// JPA order-by fragment declared for ordered sets/maps.
 	public OrderBy orderBy() {
 		return member.getDirectAnnotationUsage( OrderBy.class );
@@ -940,9 +864,73 @@ public record CollectionSource(
 			result.addAll( Arrays.asList( plural.value() ) );
 			return result;
 		}
+		final JoinColumnsOrFormulas joinColumnsOrFormulas = member.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
+		if ( joinColumnsOrFormulas != null ) {
+			return listJoinColumns( joinColumnsOrFormulas.value() );
+		}
+		final JoinColumnOrFormula[] joinColumnOrFormulas =
+				member.getRepeatedAnnotationUsages( JoinColumnOrFormula.class, modelsContext );
+		if ( joinColumnOrFormulas.length > 0 ) {
+			return listJoinColumns( joinColumnOrFormulas );
+		}
 
 		final JoinColumn singular = member.getDirectAnnotationUsage( JoinColumn.class );
 		return singular == null ? List.of() : List.of( singular );
+	}
+
+	public List<JoinColumnOrFormulaSource> oneToManyJoinColumnsOrFormulas() {
+		if ( associationOverride != null && associationOverride.joinColumns().length > 0 ) {
+			return listJoinColumnSources( extractJoinColumns( associationOverride.joinColumns() ) );
+		}
+		final JoinColumnsOrFormulas joinColumnsOrFormulas = member.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
+		if ( joinColumnsOrFormulas != null ) {
+			return listJoinColumnOrFormulaSources( joinColumnsOrFormulas.value() );
+		}
+		final JoinColumnOrFormula[] joinColumnOrFormulas =
+				member.getRepeatedAnnotationUsages( JoinColumnOrFormula.class, modelsContext );
+		if ( joinColumnOrFormulas.length > 0 ) {
+			return listJoinColumnOrFormulaSources( joinColumnOrFormulas );
+		}
+		final JoinFormula joinFormula = member.getDirectAnnotationUsage( JoinFormula.class );
+		if ( joinFormula != null ) {
+			return List.of( JoinColumnOrFormulaSource.formula( joinFormula ) );
+		}
+		return listJoinColumnSources( oneToManyJoinColumns() );
+	}
+
+	private static List<JoinColumnOrFormulaSource> listJoinColumnSources(List<JoinColumn> joinColumns) {
+		if ( joinColumns.isEmpty() ) {
+			return List.of();
+		}
+		final ArrayList<JoinColumnOrFormulaSource> result = new ArrayList<>( joinColumns.size() );
+		for ( JoinColumn joinColumn : joinColumns ) {
+			result.add( JoinColumnOrFormulaSource.column( joinColumn ) );
+		}
+		return result;
+	}
+
+	private static List<JoinColumn> listJoinColumns(JoinColumnOrFormula[] joinColumnsOrFormulas) {
+		final ArrayList<JoinColumn> result = new ArrayList<>( joinColumnsOrFormulas.length );
+		for ( JoinColumnOrFormula joinColumnOrFormula : joinColumnsOrFormulas ) {
+			if ( StringHelper.isEmpty( joinColumnOrFormula.formula().value() ) ) {
+				result.add( joinColumnOrFormula.column() );
+			}
+		}
+		return result.isEmpty() ? List.of() : result;
+	}
+
+	private static List<JoinColumnOrFormulaSource> listJoinColumnOrFormulaSources(
+			JoinColumnOrFormula[] joinColumnsOrFormulas) {
+		final ArrayList<JoinColumnOrFormulaSource> result = new ArrayList<>( joinColumnsOrFormulas.length );
+		for ( JoinColumnOrFormula joinColumnOrFormula : joinColumnsOrFormulas ) {
+			if ( StringHelper.isNotEmpty( joinColumnOrFormula.formula().value() ) ) {
+				result.add( JoinColumnOrFormulaSource.formula( joinColumnOrFormula.formula() ) );
+			}
+			else {
+				result.add( JoinColumnOrFormulaSource.column( joinColumnOrFormula.column() ) );
+			}
+		}
+		return result;
 	}
 
 	public ForeignKeySource oneToManyForeignKeySource() {

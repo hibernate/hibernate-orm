@@ -246,9 +246,10 @@ class AnyValueBinder {
 	}
 
 	private boolean hasExplicitKeyType(AnySource source) {
+		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
 		return source.keyJavaClass() != null
-				|| source.member().hasDirectAnnotationUsage( AnyKeyJavaType.class )
-				|| source.member().hasDirectAnnotationUsage( AnyKeyType.class );
+				|| source.member().locateAnnotationUsage( AnyKeyJavaType.class, modelsContext ) != null
+				|| source.member().locateAnnotationUsage( AnyKeyType.class, modelsContext ) != null;
 	}
 
 	private ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(AnySource source) {

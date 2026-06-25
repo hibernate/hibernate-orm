@@ -8,6 +8,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -111,6 +112,7 @@ public class CollectionLoaderTest {
 		private String name;
 
 		@ElementCollection
+		@Bag
 		@SQLInsert(sql = "INSERT INTO person_phones (person_id, phones, valid) VALUES (?, ?, true) ")
 		@SQLDeleteAll(sql = "UPDATE person_phones SET valid = false WHERE person_id = ?")
 		@SQLSelect(sql = "SELECT phones FROM Person_phones WHERE person_id = ? and valid = true")

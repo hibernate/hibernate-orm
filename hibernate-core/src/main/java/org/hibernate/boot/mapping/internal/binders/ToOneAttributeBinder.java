@@ -348,6 +348,11 @@ class ToOneAttributeBinder {
 		final boolean optional = mapsId == null && source.optional();
 		property.setOptional( optional );
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
+		final List<Column> sharedIdentifierColumns = resolveSharedIdentifierColumns(
+				ownerType,
+				associationTable,
+				bindingState
+		);
 
 		if ( mapsId == null ) {
 			final boolean valueColumnsOptional = joinTable == null && optional;
@@ -357,7 +362,7 @@ class ToOneAttributeBinder {
 					target,
 					associationTable,
 					referenceToPrimaryKey,
-					resolveSharedIdentifierColumns( ownerType, associationTable, bindingState ),
+					sharedIdentifierColumns,
 					bindingState.getDatabase(),
 					logicalOneToOne,
 					valueColumnsOptional,
@@ -401,7 +406,13 @@ class ToOneAttributeBinder {
 					ownerClassName + "." + propertyName
 			) );
 		}
-		if ( mapsId == null ) {
+		if ( mapsId == null && !isUnconstrainedSharedIdentifierOneToOne(
+				value,
+				logicalOneToOne,
+				optional,
+				sharedIdentifierColumns,
+				bindingState.getDatabase()
+		) ) {
 			bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 					ownerBinding,
 					value,
@@ -415,6 +426,27 @@ class ToOneAttributeBinder {
 			) );
 		}
 		return value;
+	}
+
+	private static boolean isUnconstrainedSharedIdentifierOneToOne(
+			ManyToOne value,
+			boolean logicalOneToOne,
+			boolean optional,
+			List<Column> sharedIdentifierColumns,
+			Database database) {
+		if ( !logicalOneToOne || !optional || sharedIdentifierColumns.isEmpty() ) {
+			return false;
+		}
+		final List<Column> valueColumns = value.getColumns();
+		if ( valueColumns.size() != sharedIdentifierColumns.size() ) {
+			return false;
+		}
+		for ( Column column : valueColumns ) {
+			if ( !isSharedIdentifierColumn( column, sharedIdentifierColumns, database ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static boolean isLogicalOneToOne(ToOneSource source, JoinTable joinTable) {
@@ -899,7 +931,7 @@ class ToOneAttributeBinder {
 		return orderedJoinColumns;
 	}
 
-	private static List<JoinColumnOrFormulaSource> orderJoinColumnSources(
+	static List<JoinColumnOrFormulaSource> orderJoinColumnSources(
 			List<JoinColumnOrFormulaSource> joinColumns,
 			List<Column> targetColumns,
 			Database database,

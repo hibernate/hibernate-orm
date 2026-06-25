@@ -1307,8 +1307,9 @@ public class MappingModelCreationHelper {
 					allowColumnTypeIndexMatch
 			);
 			if ( selectableIndex < 0 ) {
-				if ( selectableSource instanceof ToOne toOne
-						&& ( toOne.getReferencedPropertyName() != null || toOne.hasFormula() ) ) {
+				if ( ( selectableSource instanceof ToOne toOne
+						&& ( toOne.getReferencedPropertyName() != null || toOne.hasFormula() ) )
+						|| selectableSource instanceof DependantValue dependantValue && dependantValue.hasFormula() ) {
 					return identitySelectableOrder( columnSpan );
 				}
 				if ( matchedSelectableCount == 0 && noRemainingSelectableMatches(

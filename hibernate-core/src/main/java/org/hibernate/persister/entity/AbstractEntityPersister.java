@@ -6148,7 +6148,9 @@ public abstract class AbstractEntityPersister
 					this,
 					propertyAccess,
 					cascadeStyle,
-					getFetchStyle( stateArrayPosition ),
+					stateArrayPosition < 0 && value instanceof org.hibernate.mapping.Collection collection
+							? collection.getFetchStyle()
+							: getFetchStyle( stateArrayPosition ),
 					creationProcess
 			);
 		}

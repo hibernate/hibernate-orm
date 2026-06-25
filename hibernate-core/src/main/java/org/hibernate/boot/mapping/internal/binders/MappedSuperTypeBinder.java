@@ -28,11 +28,6 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
 
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-
 /// Binder for a mapped-superclass type.
 ///
 /// Construction intentionally creates only the local {@link MappedSuperclass}
@@ -343,7 +338,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		if ( !isGenericBridgeAttribute( attributeMetadata ) ) {
 			return false;
 		}
-		return memberTypeUsesTypeVariable( attributeMetadata.getMember().toJavaMember() );
+		return memberTypeUsesTypeVariable( attributeMetadata );
 	}
 
 	private boolean isGenericBridgeAttribute(AttributeMetadata attributeMetadata) {
@@ -353,37 +348,6 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.MANY_TO_MANY
 			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.ONE_TO_MANY
 			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;
-	}
-
-	private boolean memberTypeUsesTypeVariable(java.lang.reflect.Member member) {
-		final Type type;
-		if ( member instanceof java.lang.reflect.Field field ) {
-			type = field.getGenericType();
-		}
-		else if ( member instanceof java.lang.reflect.Method method ) {
-			type = method.getGenericReturnType();
-		}
-		else {
-			type = null;
-		}
-		return typeUsesTypeVariable( type );
-	}
-
-	private boolean typeUsesTypeVariable(Type type) {
-		if ( type instanceof TypeVariable<?> ) {
-			return true;
-		}
-		if ( type instanceof ParameterizedType parameterizedType ) {
-			for ( Type argument : parameterizedType.getActualTypeArguments() ) {
-				if ( typeUsesTypeVariable( argument ) ) {
-					return true;
-				}
-			}
-		}
-		else if ( type instanceof GenericArrayType genericArrayType ) {
-			return typeUsesTypeVariable( genericArrayType.getGenericComponentType() );
-		}
-		return false;
 	}
 
 	private boolean hasDeclaredProperty(PersistentClass entityBinding, String propertyName) {

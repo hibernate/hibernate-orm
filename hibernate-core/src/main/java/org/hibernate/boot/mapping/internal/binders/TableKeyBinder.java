@@ -26,6 +26,7 @@ import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
+import org.hibernate.boot.mapping.internal.sources.ToOneSource.JoinColumnOrFormulaSource;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -34,6 +35,7 @@ import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
@@ -176,27 +178,32 @@ public class TableKeyBinder {
 		);
 		key.setOnDeleteAction( collectionTableBinding.onDeleteAction() );
 		collectionTableBinding.collection().setKey( key );
-		collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
-				collectionKeyMappingMaterializer.resolveTableKey( collectionTableBinding.collection() )
-		);
+		if ( !key.hasFormula() ) {
+			collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
+					collectionKeyMappingMaterializer.resolveTableKey( collectionTableBinding.collection() )
+			);
+		}
 		createOneToManyBackref( collectionTableBinding, key );
-		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
-				entityBinder.getTypeBinding(),
-				key,
-				entityBinder.getTypeBinding().getEntityName(),
-				collectionTableBinding.foreignKeySource(),
-				resolveTableForeignKey(
+		if ( !key.hasFormula() ) {
+			bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
+					entityBinder.getTypeBinding(),
+					key,
+					entityBinder.getTypeBinding().getEntityName(),
+					collectionTableBinding.foreignKeySource(),
+					resolveTableForeignKey(
 						key,
 						entityBinder.getTypeBinding().getEntityName(),
 						collectionTableBinding.collection().getRole()
-				)
-		) );
+					)
+			) );
+		}
 		applyUniqueConstraints( collectionTableBinding );
 		applyIndexes( collectionTableBinding );
 	}
 
 	private void createOneToManyBackref(CollectionTableBinding collectionTableBinding, DependantValue key) {
 		if ( collectionTableBinding.collection().isInverse()
+				|| key.hasFormula()
 				|| key.isNullable()
 				|| !( collectionTableBinding.collection().getElement() instanceof org.hibernate.mapping.OneToMany oneToMany ) ) {
 			return;
@@ -516,15 +523,22 @@ public class TableKeyBinder {
 		key.setUpdateable( collectionKeyUpdatable( collectionTableBinding.joinColumns() ) );
 
 		final List<Column> targetColumns = collectionTableTargetColumns( collectionTableBinding, entityIdentifierBinding );
-		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
-				collectionTableBinding.joinColumns(),
+		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumnSources(
+				collectionTableBinding.joinColumnOrFormulas(),
 				targetColumns,
 				bindingState.getDatabase(),
 				entityBinder.getManagedType().getClassDetails().getClassName(),
 				collectionTableBinding.collection().getRole()
 		);
 		for ( int i = 0; i < targetColumns.size(); i++ ) {
-			final JoinColumn joinColumn = orderedJoinColumns.isEmpty() ? null : orderedJoinColumns.get( i );
+			final JoinColumnOrFormulaSource joinColumnOrFormula = orderedJoinColumns.isEmpty()
+					? null
+					: orderedJoinColumns.get( i );
+			if ( joinColumnOrFormula != null && joinColumnOrFormula.formula() != null ) {
+				key.addFormula( new Formula( joinColumnOrFormula.formula().value() ) );
+				continue;
+			}
+			final JoinColumn joinColumn = joinColumnOrFormula == null ? null : joinColumnOrFormula.column();
 			final Column identifierColumn = targetColumns.get( i );
 			final Column keyColumn = orderedJoinColumns.isEmpty()
 					? bindKeyColumn(
@@ -554,6 +568,9 @@ public class TableKeyBinder {
 	private void applyCollectionKeyNullabilityAndMutability(CollectionTableBinding collectionTableBinding, DependantValue key) {
 		key.setNullable( collectionKeyNullable( collectionTableBinding.joinColumns() ) );
 		key.setUpdateable( collectionKeyUpdatable( collectionTableBinding.joinColumns() ) );
+		if ( key.hasFormula() ) {
+			return;
+		}
 		for ( Column column : key.getColumns() ) {
 			column.setNullable( key.isNullable() );
 		}

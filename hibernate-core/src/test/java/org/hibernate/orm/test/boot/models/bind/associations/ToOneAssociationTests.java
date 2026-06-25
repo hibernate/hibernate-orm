@@ -288,7 +288,7 @@ public class ToOneAssociationTests {
 					assertThat( value.isLogicalOneToOne() ).isTrue();
 					assertThat( value.getReferencedEntityName() ).isEqualTo( MappedByJoinTableOneToOneChild.class.getName() );
 					assertThat( value.getReferencedPropertyName() ).isEqualTo( "parent" );
-					assertThat( value.isReferenceToPrimaryKey() ).isFalse();
+					assertThat( value.isReferenceToPrimaryKey() ).isTrue();
 					assertThat( value.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "child_id" );
@@ -319,7 +319,7 @@ public class ToOneAssociationTests {
 					assertThat( value.isLogicalOneToOne() ).isTrue();
 					assertThat( value.getReferencedEntityName() ).isEqualTo( MappedBySecondaryTableOneToOneChild.class.getName() );
 					assertThat( value.getReferencedPropertyName() ).isEqualTo( "parent" );
-					assertThat( value.isReferenceToPrimaryKey() ).isFalse();
+					assertThat( value.isReferenceToPrimaryKey() ).isTrue();
 					assertThat( value.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "id" );
@@ -332,15 +332,22 @@ public class ToOneAssociationTests {
 
 	@Test
 	@ServiceRegistry
-	void testInverseOneToOneMappedByManyToOneFails(ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> checkDomainModel(
+	void testInverseOneToOneMappedByManyToOne(ServiceRegistryScope scope) {
+		checkDomainModel(
 				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( InvalidMappedByOneToOneParent.class.getName() );
+					final org.hibernate.mapping.Property property = entityBinding.getProperty( "child" );
+					assertThat( property.getValue() ).isInstanceOf( org.hibernate.mapping.OneToOne.class );
+					final org.hibernate.mapping.OneToOne value = (org.hibernate.mapping.OneToOne) property.getValue();
+
+					assertThat( value.getReferencedEntityName() ).isEqualTo( InvalidMappedByManyToOneChild.class.getName() );
+					assertThat( value.getMappedByProperty() ).isEqualTo( "parent" );
 				},
 				scope.getRegistry(),
 				InvalidMappedByOneToOneParent.class,
 				InvalidMappedByManyToOneChild.class
-		) ).isInstanceOf( MappingException.class )
-				.hasMessageContaining( "mappedBy did not name an owning one-to-one attribute" );
+		);
 	}
 
 	@Test

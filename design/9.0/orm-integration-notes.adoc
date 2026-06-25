@@ -122,6 +122,19 @@ The prototype currently solves this by carrying `BasicValueSource.Kind` and havi
 When integrating upstream, either `BasicValue` needs to retain the source role and know which annotation vocabulary applies, or the binder needs to normalize these role-specific annotations into mapping-model metadata before later type resolution.
 The important point is that storing only the source member/type still leaves `BasicValue` unable to distinguish `@JdbcType` from `@MapKeyJdbcType`, `@ListIndexJdbcType`, `@AnyKeyJdbcType`, and similar role-specific controls.
 
+For binding-time checks, prefer the Hibernate Models type graph over Java
+reflection shapes.  For example, validating that `@Enumerated` or
+`@MapKeyEnumerated` applies to an enum should use the value's effective
+`TypeDetails` and `ClassDetails#isEnum()` where that information is available,
+including array constituent types.  `BasicValueSource#rawJavaType()` and other
+`Class<?>`-based bridges are acceptable as transitional fallbacks for synthetic
+or explicit-override values that do not yet retain a `TypeDetails`, but they
+should not become the primary representation for source-model decisions.  The
+longer-term direction is for basic-value sources to carry a richer effective
+Java-type descriptor that preserves `ClassDetails` even for explicit Java type
+overrides, and to collapse to Java reflection types only at the legacy
+`org.hibernate.mapping` handoff boundary.
+
 Prototype touchpoints:
 
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/BasicValueSource.java[`BasicValueSource`] records the source member, effective value type, basic-value role, explicit Java type override, and selected converter.

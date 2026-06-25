@@ -7,6 +7,7 @@ package org.hibernate.boot.mapping.internal.binders;
 import java.util.List;
 
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.boot.mapping.internal.sources.ToOneSource.JoinColumnOrFormulaSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.mapping.Collection;
 
@@ -27,8 +28,26 @@ import jakarta.persistence.UniqueConstraint;
 public record CollectionTableBinding(
 		Collection collection,
 		List<JoinColumn> joinColumns,
+		List<JoinColumnOrFormulaSource> joinColumnOrFormulas,
 		ForeignKeySource foreignKeySource,
 		OnDeleteAction onDeleteAction,
 		UniqueConstraint[] uniqueConstraints,
 		Index[] indexes) {
+	public CollectionTableBinding(
+			Collection collection,
+			List<JoinColumn> joinColumns,
+			ForeignKeySource foreignKeySource,
+			OnDeleteAction onDeleteAction,
+			UniqueConstraint[] uniqueConstraints,
+			Index[] indexes) {
+		this(
+				collection,
+				joinColumns,
+				joinColumns.stream().map( JoinColumnOrFormulaSource::column ).toList(),
+				foreignKeySource,
+				onDeleteAction,
+				uniqueConstraints,
+				indexes
+		);
+	}
 }

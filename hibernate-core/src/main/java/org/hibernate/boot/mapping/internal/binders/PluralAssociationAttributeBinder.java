@@ -222,7 +222,7 @@ class PluralAssociationAttributeBinder {
 		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			return bindInverseOneToMany( source, oneToMany.mappedBy(), property );
 		}
-		if ( source.joinTable() == null && !source.oneToManyJoinColumns().isEmpty() ) {
+		if ( source.joinTable() == null && !source.oneToManyJoinColumnsOrFormulas().isEmpty() ) {
 			return bindOneToManyWithForeignKey( source, property );
 		}
 		return bindAssociation( source, true, property );
@@ -244,7 +244,7 @@ class PluralAssociationAttributeBinder {
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setInverse( true );
 		collection.setMappedByProperty( mappedBy );
-		collection.setMutable( true );
+		collection.setMutable( source.isMutable() );
 		collection.setOptimisticLocked( true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
@@ -277,7 +277,7 @@ class PluralAssociationAttributeBinder {
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setInverse( true );
 		collection.setMappedByProperty( mappedBy );
-		collection.setMutable( true );
+		collection.setMutable( source.isMutable() );
 		collection.setOptimisticLocked( true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
@@ -314,7 +314,7 @@ class PluralAssociationAttributeBinder {
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
-		collection.setMutable( true );
+		collection.setMutable( source.isMutable() );
 		collection.setOptimisticLocked( true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
@@ -385,7 +385,7 @@ class PluralAssociationAttributeBinder {
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
-		collection.setMutable( true );
+		collection.setMutable( source.isMutable() );
 		collection.setOptimisticLocked( true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
@@ -447,12 +447,13 @@ class PluralAssociationAttributeBinder {
 		}
 		if ( registerCollectionBindings ) {
 			bindingState.addCollectionTableBinding( new CollectionTableBinding(
-						collection,
-						source.oneToManyJoinColumns(),
-						ForeignKeySource.firstSpecified(
-								source.oneToManyForeignKeySource(),
-								ForeignKeySource.from( source.joinTable() )
-						),
+					collection,
+					source.oneToManyJoinColumns(),
+					source.oneToManyJoinColumnsOrFormulas(),
+					ForeignKeySource.firstSpecified(
+							source.oneToManyForeignKeySource(),
+							ForeignKeySource.from( source.joinTable() )
+					),
 					resolveOnDeleteAction(),
 					new jakarta.persistence.UniqueConstraint[0],
 					new jakarta.persistence.Index[0]
@@ -473,7 +474,7 @@ class PluralAssociationAttributeBinder {
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
-		collection.setMutable( true );
+		collection.setMutable( source.isMutable() );
 		collection.setOptimisticLocked( true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),

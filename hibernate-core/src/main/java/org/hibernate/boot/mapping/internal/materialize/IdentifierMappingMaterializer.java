@@ -222,6 +222,7 @@ public class IdentifierMappingMaterializer {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
 		idValue.setFlattened( true );
+		idValue.setPreservePropertyOrder( true );
 		idValue.setComponentClassName( idMapping.getIdClassType().getClassName() );
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
@@ -229,6 +230,7 @@ public class IdentifierMappingMaterializer {
 
 		final Component identifierMapper = new Component( state.getMetadataBuildingContext(), typeBinding );
 		identifierMapper.setFlattened( true );
+		identifierMapper.setPreservePropertyOrder( true );
 		identifierMapper.setComponentClassName( typeBinding.getClassName() );
 		identifierMapper.setTable( table );
 		typeBinding.setIdentifierMapper( identifierMapper );
@@ -436,10 +438,8 @@ public class IdentifierMappingMaterializer {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
 		idValue.setFlattened( true );
+		idValue.setPreservePropertyOrder( true );
 		final boolean separateIdentifierMapper = hasIdClass && !wholeDerivedIdClass || noIdClassMapsId;
-		if ( !hasIdClass || wholeDerivedIdClass ) {
-			idValue.setPreservePropertyOrder( true );
-		}
 		if ( hasIdClass && !wholeDerivedIdClass ) {
 			idValue.setComponentClassName( idMapping.getIdClassType().getClassName() );
 		}
@@ -457,7 +457,7 @@ public class IdentifierMappingMaterializer {
 			identifierMapper.setFlattened( true );
 			identifierMapper.setComponentClassName( typeBinding.getClassName() );
 			identifierMapper.setTable( table );
-			if ( noIdClassMapsId ) {
+			if ( hasIdClass || noIdClassMapsId ) {
 				identifierMapper.setPreservePropertyOrder( true );
 			}
 		}
@@ -665,6 +665,7 @@ public class IdentifierMappingMaterializer {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
 		idValue.setFlattened( true );
+		idValue.setPreservePropertyOrder( true );
 		idValue.setComponentClassName( idMapping.getIdClassType().getClassName() );
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
@@ -672,6 +673,7 @@ public class IdentifierMappingMaterializer {
 
 		final Component identifierMapper = new Component( state.getMetadataBuildingContext(), typeBinding );
 		identifierMapper.setFlattened( true );
+		identifierMapper.setPreservePropertyOrder( true );
 		identifierMapper.setComponentClassName( typeBinding.getClassName() );
 		identifierMapper.setTable( table );
 		typeBinding.setIdentifierMapper( identifierMapper );
@@ -1250,10 +1252,17 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private boolean declaresAttribute(EntityTypeMetadata type, AttributeMetadata attribute) {
-		return attribute.getMember()
-				.getDeclaringType()
-				.getClassName()
-				.equals( type.getClassDetails().getClassName() );
+		return isSameType( attribute.getMember().getDeclaringType(), type.getClassDetails() );
+	}
+
+	private static boolean isSameType(org.hibernate.models.spi.ClassDetails one, org.hibernate.models.spi.ClassDetails another) {
+		if ( one == another ) {
+			return true;
+		}
+		if ( one.getClassName() != null && one.getClassName().equals( another.getClassName() ) ) {
+			return true;
+		}
+		return one.getName() != null && one.getName().equals( another.getName() );
 	}
 
 	private Property createProperty(String name, org.hibernate.mapping.Value value, MemberDetails member) {
@@ -1282,7 +1291,7 @@ public class IdentifierMappingMaterializer {
 		final Column column = ColumnBinder.bindColumn(
 				ColumnSource.from( columnAnn ),
 				implicitName,
-				true,
+				false,
 				false
 		);
 		basicValue.addColumn( column, columnAnn == null || columnAnn.insertable(), false );

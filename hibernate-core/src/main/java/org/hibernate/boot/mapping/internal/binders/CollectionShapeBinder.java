@@ -413,11 +413,13 @@ class CollectionShapeBinder {
 
 		final var orderBy = source.orderBy();
 		if ( orderBy != null ) {
+			final String orderByFragment = orderByFragment( source, orderBy.value(), bindingState );
 			if ( source.nature() == CollectionSource.Nature.MANY_TO_MANY ) {
-				collection.setManyToManyJpaOrdering( orderByFragment( source, orderBy.value(), bindingState ) );
+				collection.setJpaOrderBy( orderByFragment );
+				collection.setManyToManyJpaOrdering( orderByFragment );
 			}
 			else {
-				collection.setJpaOrderBy( orderByFragment( source, orderBy.value(), bindingState ) );
+				collection.setJpaOrderBy( orderByFragment );
 			}
 		}
 	}
@@ -441,7 +443,7 @@ class CollectionShapeBinder {
 				return "$element$ desc";
 			}
 		}
-		else if ( source.elementType() != null ) {
+		else if ( source.elementType() != null && source.nature() != CollectionSource.Nature.MANY_TO_MANY ) {
 			final String trimmed = orderByFragment.trim();
 			if ( trimmed.isBlank() || trimmed.equalsIgnoreCase( "asc" ) ) {
 				return entityIdentifierOrderByFragment( source, bindingState, " asc" );

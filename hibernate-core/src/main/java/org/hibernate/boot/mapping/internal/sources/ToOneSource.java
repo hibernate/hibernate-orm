@@ -429,11 +429,11 @@ public record ToOneSource(
 	}
 
 	public record JoinColumnOrFormulaSource(JoinColumn column, JoinFormula formula) {
-		static JoinColumnOrFormulaSource column(JoinColumn column) {
+		public static JoinColumnOrFormulaSource column(JoinColumn column) {
 			return new JoinColumnOrFormulaSource( column, null );
 		}
 
-		static JoinColumnOrFormulaSource formula(JoinFormula formula) {
+		public static JoinColumnOrFormulaSource formula(JoinFormula formula) {
 			return new JoinColumnOrFormulaSource( null, formula );
 		}
 

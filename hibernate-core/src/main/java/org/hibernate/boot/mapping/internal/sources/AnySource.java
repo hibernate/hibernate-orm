@@ -105,25 +105,26 @@ public record AnySource(
 			throw new ModelsException( "Missing @Any annotation - " + member.getName() );
 		}
 
-		final var anyKeyJavaClass = member.getDirectAnnotationUsage( AnyKeyJavaClass.class );
+		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var anyKeyJavaClass = member.locateAnnotationUsage( AnyKeyJavaClass.class, modelsContext );
 		final JoinTable joinTable = member.getDirectAnnotationUsage( JoinTable.class );
 		final List<JoinColumn> keyColumns = joinTable == null
 				? joinColumns( member )
 				: listJoinColumns( joinTable.inverseJoinColumns() );
-		return new AnySource(
-				member,
-				any.fetch() == FetchType.LAZY,
-				any.optional(),
-				CascadeBinder.aggregateCascadeTypes( any.cascade(), false, bindingState ),
-				member.getDirectAnnotationUsage( Column.class ),
-				effectiveFormula( member, bindingState ),
-				member.getDirectAnnotationUsage( AnyDiscriminator.class ),
-				discriminatorValues( member, bindingContext ),
-				member.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class ),
-				joinTable,
-				keyColumns,
-				anyKeyJavaClass == null ? null : anyKeyJavaClass.value()
-		);
+			return new AnySource(
+					member,
+					any.fetch() == FetchType.LAZY,
+					any.optional(),
+					CascadeBinder.aggregateCascadeTypes( any.cascade(), false, bindingState ),
+					member.getDirectAnnotationUsage( Column.class ),
+					effectiveFormula( member, bindingState ),
+					member.locateAnnotationUsage( AnyDiscriminator.class, modelsContext ),
+					discriminatorValues( member, bindingContext ),
+					member.locateAnnotationUsage( AnyDiscriminatorImplicitValues.class, modelsContext ),
+					joinTable,
+					keyColumns,
+					anyKeyJavaClass == null ? null : anyKeyJavaClass.value()
+			);
 	}
 
 	public static AnySource createManyToAny(
@@ -138,7 +139,8 @@ public record AnySource(
 
 		final List<JoinColumn> inverseJoinColumns = collectionSource.associationInverseJoinColumns();
 
-		final var anyKeyJavaClass = member.getDirectAnnotationUsage( AnyKeyJavaClass.class );
+		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var anyKeyJavaClass = member.locateAnnotationUsage( AnyKeyJavaClass.class, modelsContext );
 		return new AnySource(
 				member,
 				manyToAny.fetch() == FetchType.LAZY,
@@ -146,9 +148,9 @@ public record AnySource(
 				CascadeBinder.aggregateCascadeTypes( manyToAny.cascade(), false, bindingState ),
 				member.getDirectAnnotationUsage( Column.class ),
 				effectiveFormula( member, bindingState ),
-				member.getDirectAnnotationUsage( AnyDiscriminator.class ),
+				member.locateAnnotationUsage( AnyDiscriminator.class, modelsContext ),
 				discriminatorValues( member, bindingContext ),
-				member.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class ),
+				member.locateAnnotationUsage( AnyDiscriminatorImplicitValues.class, modelsContext ),
 				collectionSource.joinTable(),
 				inverseJoinColumns,
 				anyKeyJavaClass == null ? null : anyKeyJavaClass.value()
@@ -202,12 +204,22 @@ public record AnySource(
 			) ) );
 		}
 		if ( result.isEmpty() ) {
-			final AnyDiscriminatorValues values = member.getDirectAnnotationUsage( AnyDiscriminatorValues.class );
+			final AnyDiscriminatorValues values = bindingContext == null
+					? member.getDirectAnnotationUsage( AnyDiscriminatorValues.class )
+					: member.locateAnnotationUsage(
+							AnyDiscriminatorValues.class,
+							bindingContext.getBootstrapContext().getModelsContext()
+					);
 			if ( values != null ) {
 				result.addAll( Arrays.asList( values.value() ) );
 			}
 			else {
-				final AnyDiscriminatorValue value = member.getDirectAnnotationUsage( AnyDiscriminatorValue.class );
+				final AnyDiscriminatorValue value = bindingContext == null
+						? member.getDirectAnnotationUsage( AnyDiscriminatorValue.class )
+						: member.locateAnnotationUsage(
+								AnyDiscriminatorValue.class,
+								bindingContext.getBootstrapContext().getModelsContext()
+						);
 				if ( value != null ) {
 					result.add( value );
 				}

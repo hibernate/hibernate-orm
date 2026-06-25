@@ -677,12 +677,33 @@ public class DynamicModelHelper {
 		final String target = jaxbAssociationAttribute.getTargetEntity();
 		if ( isNotEmpty( target ) ) {
 			final var modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
+			final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+			final String targetEntityName = xmlDocumentContext.resolveTargetEntityName( target );
+			final var existingClassDetails = classDetailsRegistry.findClassDetails( targetEntityName );
+			if ( existingClassDetails != null ) {
+				return new ClassTypeDetailsImpl( existingClassDetails, TypeDetails.Kind.CLASS );
+			}
+			if ( xmlDocumentContext.isDynamicManagedTypeName( targetEntityName ) ) {
+				final var dynamicClassDetails = ModelsHelper.resolveClassDetails(
+						targetEntityName,
+						classDetailsRegistry,
+						() -> new DynamicClassDetails(
+								targetEntityName,
+								null,
+								false,
+								null,
+								null,
+								modelsContext
+						)
+				);
+				return new ClassTypeDetailsImpl( dynamicClassDetails, TypeDetails.Kind.CLASS );
+			}
 			final var classDetails = ModelsHelper.resolveClassDetails(
-					target,
+					targetEntityName,
 					xmlDocumentContext,
-					modelsContext.getClassDetailsRegistry(),
+					classDetailsRegistry,
 					() -> new DynamicClassDetails(
-							target,
+							targetEntityName,
 							null,
 							false,
 							null,

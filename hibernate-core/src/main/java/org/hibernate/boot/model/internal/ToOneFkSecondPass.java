@@ -50,8 +50,18 @@ class ToOneFkSecondPass implements FkSecondPass {
 		this.persistentClass = persistentClass;
 		this.buildingContext = buildingContext;
 		this.unique = unique;
-		this.entityClassName = persistentClass.getClassName();
-		this.path = entityClassName != null ? path.substring( entityClassName.length() + 1 ) : path;
+		this.entityClassName = persistentClass.getClassName() != null
+				? persistentClass.getClassName()
+				: persistentClass.getEntityName();
+		if ( entityClassName != null && path.startsWith( entityClassName + "." ) ) {
+			this.path = path.substring( entityClassName.length() + 1 );
+		}
+		else if ( path.startsWith( "null." ) ) {
+			this.path = path.substring( 5 );
+		}
+		else {
+			this.path = path;
+		}
 		this.annotatedEntity = annotatedEntity;
 	}
 

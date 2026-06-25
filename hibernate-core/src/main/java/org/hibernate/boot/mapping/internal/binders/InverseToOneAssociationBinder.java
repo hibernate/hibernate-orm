@@ -55,13 +55,6 @@ class InverseToOneAssociationBinder {
 							+ "." + inverseBinding.attributeMetadata().getName()
 			);
 		}
-		if ( !owningToOne.isLogicalOneToOne() ) {
-			throw new MappingException(
-					"Inverse @OneToOne mappedBy did not name an owning one-to-one attribute - "
-							+ inverseBinding.ownerType().getClassDetails().getClassName()
-							+ "." + inverseBinding.attributeMetadata().getName()
-			);
-		}
 		if ( !referencesOwnerTypeOrSupertype( inverseBinding.ownerBinding(), owningToOne.getReferencedEntityName() ) ) {
 			throw new MappingException(
 					"Inverse @OneToOne mappedBy named a to-one attribute that targets `"

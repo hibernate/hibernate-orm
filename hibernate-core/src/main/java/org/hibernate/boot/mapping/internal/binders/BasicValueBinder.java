@@ -68,6 +68,8 @@ import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.usertype.DynamicParameterizedType;
+import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
@@ -525,22 +527,23 @@ public class BasicValueBinder {
 			case MAP_KEY -> {
 				final var javaTypeAnn = member.getDirectAnnotationUsage( MapKeyJavaType.class );
 				if ( javaTypeAnn != null ) {
-					applyJavaType( member, basicValue, javaTypeAnn.value() );
+					applyJavaType( member, basicValue, javaTypeAnn.value(), bindingState );
 				}
 			}
 			case LIST_INDEX -> {
 				final var javaTypeAnn = member.getDirectAnnotationUsage( ListIndexJavaType.class );
 				if ( javaTypeAnn != null ) {
-					applyJavaType( member, basicValue, javaTypeAnn.value() );
+					applyJavaType( member, basicValue, javaTypeAnn.value(), bindingState );
 				}
 			}
 			case ANY_KEY -> {
-				final var javaTypeAnn = member.getDirectAnnotationUsage( AnyKeyJavaType.class );
+				final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+				final var javaTypeAnn = member.locateAnnotationUsage( AnyKeyJavaType.class, modelsContext );
 				if ( javaTypeAnn != null ) {
-					applyJavaType( member, basicValue, javaTypeAnn.value() );
+					applyJavaType( member, basicValue, javaTypeAnn.value(), bindingState );
 				}
 				else {
-					final var typeAnn = member.getDirectAnnotationUsage( AnyKeyType.class );
+					final var typeAnn = member.locateAnnotationUsage( AnyKeyType.class, modelsContext );
 					if ( typeAnn != null ) {
 						applyAnyKeyType( member, basicValue, typeAnn.value() );
 					}
@@ -549,7 +552,7 @@ public class BasicValueBinder {
 			case COLLECTION_ID -> {
 				final var javaTypeAnn = member.getDirectAnnotationUsage( CollectionIdJavaType.class );
 				if ( javaTypeAnn != null ) {
-					applyJavaType( member, basicValue, javaTypeAnn.value() );
+					applyJavaType( member, basicValue, javaTypeAnn.value(), bindingState );
 				}
 			}
 			default -> bindJavaType( member, property, basicValue, bindingOptions, bindingState, bindingContext );
@@ -576,8 +579,9 @@ public class BasicValueBinder {
 				bindExplicitJdbcType( member, basicValue, jdbcTypeAnn == null ? null : jdbcTypeAnn.value(), jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value() );
 			}
 			case ANY_KEY -> {
-				final var jdbcTypeAnn = member.getDirectAnnotationUsage( AnyKeyJdbcType.class );
-				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( AnyKeyJdbcTypeCode.class );
+				final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+				final var jdbcTypeAnn = member.locateAnnotationUsage( AnyKeyJdbcType.class, modelsContext );
+				final var jdbcTypeCodeAnn = member.locateAnnotationUsage( AnyKeyJdbcTypeCode.class, modelsContext );
 				bindExplicitJdbcType( member, basicValue, jdbcTypeAnn == null ? null : jdbcTypeAnn.value(), jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value() );
 			}
 			case COLLECTION_ID -> {
@@ -604,12 +608,32 @@ public class BasicValueBinder {
 		if ( source.kind() == BasicValueSource.Kind.MAP_KEY ) {
 			final MapKeyEnumerated mapKeyEnumerated = source.member().getDirectAnnotationUsage( MapKeyEnumerated.class );
 			if ( mapKeyEnumerated != null ) {
+				validateEnumeratedType( source );
 				basicValue.setEnumerationStyle( mapKeyEnumerated.value() );
 			}
 			return;
 		}
 
-		bindEnumerated( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
+		final Enumerated enumerated = source.member().getDirectAnnotationUsage( Enumerated.class );
+		if ( enumerated != null ) {
+			validateEnumeratedType( source );
+			basicValue.setEnumerationStyle( enumerated.value() == null ? ORDINAL : enumerated.value() );
+		}
+	}
+
+	private static void validateEnumeratedType(BasicValueSource source) {
+		final Class<?> javaType = source.rawJavaType();
+		if ( javaType != null && ( javaType.isEnum() || javaType.isArray() && javaType.getComponentType().isEnum() ) ) {
+			return;
+		}
+		throw new AnnotationException(
+				String.format(
+						"Property '%s.%s' is annotated '@Enumerated' but its type '%s' is not an enum",
+						source.member().getDeclaringType().getName(),
+						source.member().getName(),
+						source.type() == null ? javaType : source.type().getName()
+				)
+		);
 	}
 
 	public static void bindTemporalPrecision(
@@ -643,23 +667,21 @@ public class BasicValueBinder {
 			return;
 		}
 
-		applyJavaType( member, basicValue, javaTypeAnn.value() );
+		applyJavaType( member, basicValue, javaTypeAnn.value(), bindingState );
 	}
 
 	private static void applyJavaType(
 			MemberDetails member,
 			BasicValue basicValue,
-			Class<? extends BasicJavaType<?>> javaTypeClass) {
+			Class<? extends BasicJavaType<?>> javaTypeClass,
+			BindingState bindingState) {
 		basicValue.setExplicitJavaTypeAccess( (typeConfiguration) -> {
 			final Class<BasicJavaType<?>> javaClass = (Class<BasicJavaType<?>>) javaTypeClass;
-			try {
-				return javaClass.getConstructor().newInstance();
-			}
-			catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-				final ModelsException modelsException = new ModelsException( "Error instantiating local @JavaType - " + member.getName() );
-				modelsException.addSuppressed( e );
-				throw modelsException;
-			}
+			return bindingState.getMetadataBuildingContext()
+					.getBootstrapContext()
+					.getManagedBeanRegistry()
+					.getBean( javaClass )
+					.getBeanInstance();
 		} );
 	}
 
@@ -791,6 +813,7 @@ public class BasicValueBinder {
 					final var registeredUserType = bindingState.findRegisteredUserType( rawJavaType );
 					if ( registeredUserType != null ) {
 						basicValue.setExplicitTypeParams( Map.of() );
+						bindDynamicParameterizedTypeParameters( source, property, basicValue, registeredUserType, Map.of() );
 						basicValue.setExplicitCustomType( registeredUserType );
 					}
 				}
@@ -800,17 +823,54 @@ public class BasicValueBinder {
 
 		basicValue.setTypeAnnotation( typeAnn );
 		if ( typeAnn instanceof CollectionIdType collectionIdType ) {
-			basicValue.setExplicitTypeParams( extractParameterMap( collectionIdType.parameters() ) );
+			final Map<String, String> parameters = extractParameterMap( collectionIdType.parameters() );
+			basicValue.setExplicitTypeParams( parameters );
+			bindDynamicParameterizedTypeParameters( source, property, basicValue, collectionIdType.value(), parameters );
 			basicValue.setExplicitCustomType( collectionIdType.value() );
 		}
 		else if ( typeAnn instanceof MapKeyType mapKeyType ) {
-			basicValue.setExplicitTypeParams( extractParameterMap( mapKeyType.parameters() ) );
+			final Map<String, String> parameters = extractParameterMap( mapKeyType.parameters() );
+			basicValue.setExplicitTypeParams( parameters );
+			bindDynamicParameterizedTypeParameters( source, property, basicValue, mapKeyType.value(), parameters );
 			basicValue.setExplicitCustomType( mapKeyType.value() );
 		}
 		else if ( typeAnn instanceof Type type ) {
-			basicValue.setExplicitTypeParams( extractParameterMap( type.parameters() ) );
+			final Map<String, String> parameters = extractParameterMap( type.parameters() );
+			basicValue.setExplicitTypeParams( parameters );
+			bindDynamicParameterizedTypeParameters( source, property, basicValue, type.value(), parameters );
 			basicValue.setExplicitCustomType( type.value() );
 		}
+	}
+
+	@SuppressWarnings("removal")
+	private static void bindDynamicParameterizedTypeParameters(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			Class<? extends UserType<?>> customType,
+			Map<String, String> explicitParameters) {
+		if ( !DynamicParameterizedType.class.isAssignableFrom( customType ) ) {
+			return;
+		}
+
+		final Class<?> returnedClass = source.rawJavaType();
+		if ( returnedClass == null ) {
+			throw new MappingException( "Returned class name not specified for basic mapping: " + source.member().getName() );
+		}
+
+		final Map<String, Object> parameters = new HashMap<>();
+		parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClass.getName() );
+		parameters.put( DynamicParameterizedType.XPROPERTY, source.member() );
+		parameters.put( DynamicParameterizedType.PROPERTY, source.member().getName() );
+		parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
+		parameters.put(
+				DynamicParameterizedType.IS_PRIMARY_KEY,
+				Boolean.toString( source.kind() == BasicValueSource.Kind.MAP_KEY )
+		);
+		parameters.put( DynamicParameterizedType.ENTITY, source.member().getDeclaringType().getName() );
+		parameters.put( DynamicParameterizedType.ACCESS_TYPE, property.getPropertyAccessorName() );
+		parameters.putAll( explicitParameters );
+		basicValue.setTypeParameters( parameters );
 	}
 
 	private static Map<String, String> extractParameterMap(org.hibernate.annotations.Parameter[] parameters) {

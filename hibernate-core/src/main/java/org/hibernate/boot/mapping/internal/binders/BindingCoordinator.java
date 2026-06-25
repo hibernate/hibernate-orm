@@ -236,7 +236,9 @@ public class BindingCoordinator {
 		categorizedDomainModel.forEachEntityHierarchy( (index, hierarchy) -> {
 			hierarchy.forEachType( (type, superType, entityHierarchy, relation) -> {
 				if ( type.getManagedTypeKind() != ManagedTypeMetadata.Kind.ENTITY
-						|| boundTypeNames.add( type.getClassDetails().getClassName() ) ) {
+						|| boundTypeNames.add( type.getClassDetails().getClassName() != null
+								? type.getClassDetails().getClassName()
+								: type.getClassDetails().getName() ) ) {
 					binders.add( createIdentifiableTypeBinder( type, superType, entityHierarchy, relation ) );
 				}
 			} );

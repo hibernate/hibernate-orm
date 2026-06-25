@@ -183,11 +183,11 @@ class StateManagementBindingPhase {
 		if ( collection.isInverse() || collection.getCollectionTable() == null ) {
 			return;
 		}
-		if ( source.nature() == CollectionSource.Nature.ONE_TO_MANY
-				&& source.joinTable() == null
-				&& !source.oneToManyJoinColumns().isEmpty() ) {
-			return;
-		}
+			if ( source.nature() == CollectionSource.Nature.ONE_TO_MANY
+					&& source.joinTable() == null
+					&& !source.oneToManyJoinColumnsOrFormulas().isEmpty() ) {
+				return;
+			}
 
 		final MemberDetails member = source.member();
 		final var context = bindingState.getMetadataBuildingContext();

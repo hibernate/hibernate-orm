@@ -4,13 +4,6 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -501,11 +494,14 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			AttributeMetadata attributeMetadata,
 			Property property) {
 		final TypeDetails declaredType = attributeMetadata.getMember().getType();
-		if ( !memberTypeUsesTypeVariable( attributeMetadata.getMember().toJavaMember() ) ) {
+		if ( !memberTypeUsesTypeVariable( attributeMetadata ) ) {
 			return;
 		}
 
 		if ( sourceType.getClassDetails().getName().equals( ownerType.getClassDetails().getName() ) ) {
+			if ( ownerType instanceof EntityTypeMetadata && !ownerType.hasSubTypes() ) {
+				return;
+			}
 			property.setGeneric( true );
 			property.setReturnedClassName( declaredType.getName() );
 		}
@@ -517,35 +513,28 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		}
 	}
 
-	private boolean memberTypeUsesTypeVariable(Member member) {
-		final Type type;
-		if ( member instanceof Field field ) {
-			type = field.getGenericType();
+	protected boolean typeUsesTypeVariable(TypeDetails type) {
+		if ( type == null ) {
+			return false;
 		}
-		else if ( member instanceof Method method ) {
-			type = method.getGenericReturnType();
-		}
-		else {
-			type = null;
-		}
-		return typeUsesTypeVariable( type );
+		return switch ( type.getTypeKind() ) {
+			case TYPE_VARIABLE, TYPE_VARIABLE_REFERENCE -> true;
+			case ARRAY -> typeUsesTypeVariable( type.asArrayType().getConstituentType() );
+			case PARAMETERIZED_TYPE -> {
+				for ( TypeDetails argument : type.asParameterizedType().getArguments() ) {
+					if ( typeUsesTypeVariable( argument ) ) {
+						yield true;
+					}
+				}
+				yield false;
+			}
+			case WILDCARD_TYPE -> typeUsesTypeVariable( type.asWildcardType().getBound() );
+			case CLASS, PRIMITIVE, VOID -> false;
+		};
 	}
 
-	private boolean typeUsesTypeVariable(Type type) {
-		if ( type instanceof TypeVariable<?> ) {
-			return true;
-		}
-		if ( type instanceof ParameterizedType parameterizedType ) {
-			for ( Type argument : parameterizedType.getActualTypeArguments() ) {
-				if ( typeUsesTypeVariable( argument ) ) {
-					return true;
-				}
-			}
-		}
-		else if ( type instanceof GenericArrayType genericArrayType ) {
-			return typeUsesTypeVariable( genericArrayType.getGenericComponentType() );
-		}
-		return false;
+	protected boolean memberTypeUsesTypeVariable(AttributeMetadata attributeMetadata) {
+		return typeUsesTypeVariable( attributeMetadata.getMember().getType() );
 	}
 
 	private boolean overridesSuperAttribute(

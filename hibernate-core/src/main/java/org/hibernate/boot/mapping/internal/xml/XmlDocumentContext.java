@@ -56,10 +56,27 @@ public interface XmlDocumentContext {
 	default String resolveTargetEntityName(String specifiedName) {
 		final var classDetailsRegistry = getModelBuildingContext().getClassDetailsRegistry();
 		final var classDetails = classDetailsRegistry.findClassDetails( specifiedName );
-		if ( classDetails != null && !classDetails.isRealClass() ) {
+		if ( ( classDetails != null && !classDetails.isRealClass() )
+				|| isDynamicManagedTypeName( specifiedName ) ) {
 			return specifiedName;
 		}
 		return resolveClassName( specifiedName );
+	}
+
+	default boolean isDynamicManagedTypeName(String specifiedName) {
+		for ( var entityMapping : getXmlDocument().getEntityMappings() ) {
+			if ( StringHelper.isEmpty( entityMapping.getClazz() )
+					&& specifiedName.equals( entityMapping.getName() ) ) {
+				return true;
+			}
+		}
+		for ( var embeddableMapping : getXmlDocument().getEmbeddableMappings() ) {
+			if ( StringHelper.isEmpty( embeddableMapping.getClazz() )
+					&& specifiedName.equals( embeddableMapping.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	default String resolveClassName(String specifiedName) {

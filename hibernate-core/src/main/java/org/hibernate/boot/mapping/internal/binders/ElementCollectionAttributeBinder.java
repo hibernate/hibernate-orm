@@ -176,7 +176,7 @@ class ElementCollectionAttributeBinder {
 		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
-		collection.setMutable( true );
+		collection.setMutable( source.isMutable() );
 		collection.setOptimisticLocked( true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),

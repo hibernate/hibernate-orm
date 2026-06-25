@@ -312,7 +312,11 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 	private boolean supportsGenericDeclaredProperty(AttributeMetadata attribute) {
 		return attribute.getNature() == org.hibernate.boot.models.AttributeNature.TO_ONE
-			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.BASIC;
+			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.BASIC
+			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.ELEMENT_COLLECTION
+			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.MANY_TO_MANY
+			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.ONE_TO_MANY
+			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;
 	}
 
 	private BasicValue genericBasicValue(BasicValue source) {

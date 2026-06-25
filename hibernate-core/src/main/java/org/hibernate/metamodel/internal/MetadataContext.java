@@ -381,7 +381,8 @@ public class MetadataContext {
 						// in #applyIdMetadata && #buildIdClassAttributes
 						if ( !isIdentifierProperty( property, mappedSuperclass )
 							// skip the version property, it was already handled previously.
-							&& !isVersion( mappedSuperclass, property ) ) {
+							&& !isVersion( mappedSuperclass, property )
+							&& !isGenericPluralDeclaration( property ) ) {
 							buildAttribute( property, jpaType );
 						}
 					}
@@ -439,6 +440,11 @@ public class MetadataContext {
 				}
 			}
 		}
+	}
+
+	private static boolean isGenericPluralDeclaration(Property property) {
+		return property.isGeneric()
+			&& property.getValue() instanceof org.hibernate.mapping.Collection;
 	}
 
 	private static boolean isVersion(IdentifiableTypeClass persistentClass, Property property) {

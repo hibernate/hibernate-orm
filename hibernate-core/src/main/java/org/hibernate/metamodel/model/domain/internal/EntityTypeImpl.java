@@ -211,6 +211,10 @@ public class EntityTypeImpl<J>
 			return (SqmPathSource<?>) attribute;
 		}
 		else {
+			final var concreteGeneric = findConcreteGenericAttribute( name );
+			if ( concreteGeneric != null ) {
+				return (SqmPathSource<?>) concreteGeneric;
+			}
 			if ( includeSubtypes ) {
 				final var subtypeAttribute = findSubtypeAttribute( name );
 				if ( subtypeAttribute != null ) {

@@ -214,6 +214,15 @@ public record CollectionSource(
 			ClassDetails ownerType,
 			ClassDetails hierarchyRootType,
 			ModelsContext modelsContext) {
+		return elementCollection( member, collectionType( member, ownerType, modelsContext ), ownerType, hierarchyRootType, modelsContext );
+	}
+
+	private static CollectionSource elementCollection(
+			MemberDetails member,
+			TypeDetails collectionType,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			ModelsContext modelsContext) {
 		final CollectionTable collectionTable = member.getDirectAnnotationUsage( CollectionTable.class );
 		final CollectionClassification classification = determineClassification( member );
 		final AssociationOverride associationOverride = locateAssociationOverride(
@@ -222,7 +231,6 @@ public record CollectionSource(
 				hierarchyRootType,
 				modelsContext
 		);
-		final TypeDetails collectionType = collectionType( member, ownerType, modelsContext );
 		TypeDetails elementType = elementCollectionElementType( member, collectionType, modelsContext );
 		if ( ownerType != null && modelsContext != null && Object.class.getName().equals( elementType.getName() ) ) {
 			final TypeDetails reflectedElementType = reflectedCollectionElementType( member, ownerType, modelsContext );
@@ -412,7 +420,26 @@ public record CollectionSource(
 			ClassDetails hierarchyRootType,
 			ModelsContext modelsContext,
 			AssociationOverride associationOverride) {
-		final CollectionSource source = elementCollection( member, ownerType, hierarchyRootType, modelsContext );
+		return association(
+				nature,
+				member,
+				collectionType( member, ownerType, modelsContext ),
+				ownerType,
+				hierarchyRootType,
+				modelsContext,
+				associationOverride
+		);
+	}
+
+	private static CollectionSource association(
+			Nature nature,
+			MemberDetails member,
+			TypeDetails collectionType,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			ModelsContext modelsContext,
+			AssociationOverride associationOverride) {
+		final CollectionSource source = elementCollection( member, collectionType, ownerType, hierarchyRootType, modelsContext );
 		final TypeDetails elementType = associationElementType( member, source.elementType, modelsContext );
 		return new CollectionSource(
 				nature,

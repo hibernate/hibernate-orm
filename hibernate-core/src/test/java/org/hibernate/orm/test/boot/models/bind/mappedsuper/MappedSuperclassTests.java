@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.boot.models.bind.mappedsuper;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
@@ -32,6 +33,8 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -274,6 +277,30 @@ public class MappedSuperclassTests {
 		);
 	}
 
+	@Test
+	@ServiceRegistry
+	void genericMappedSuperclassPluralAttributeIsStoredAsGenericDeclaration(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final MappedSuperclass superBinding =
+							metadataCollector.getMappedSuperclass( GenericCollectionMappedSuper.class );
+					final PersistentClass entityBinding =
+							metadataCollector.getEntityBinding( GenericCollectionEntity.class.getName() );
+
+					assertThat( superBinding.getDeclaredProperties() )
+							.filteredOn( (property) -> property.getName().equals( "genericChildren" ) )
+							.singleElement()
+							.satisfies( (property) -> assertThat( property.isGeneric() ).isTrue() );
+					assertThat( entityBinding.getProperty( "genericChildren" ).isGeneric() ).isFalse();
+				},
+				scope.getRegistry(),
+				GenericCollectionMappedSuper.class,
+				GenericCollectionEntity.class,
+				GenericCollectionChild.class
+		);
+	}
+
 	private static long countLocalProperties(PersistentClass binding, String propertyName) {
 		return binding.getProperties().stream()
 				.filter( (property) -> propertyName.equals( property.getName() ) )
@@ -370,5 +397,27 @@ public class MappedSuperclassTests {
 
 	@Entity
 	public static class GenericStringEntity extends GenericMappedSuper<String> {
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class GenericCollectionMappedSuper<C extends GenericCollectionChild> {
+		@Id
+		private Integer id;
+
+		@OneToMany(mappedBy = "parent")
+		private Set<C> genericChildren = new HashSet<>();
+	}
+
+	@Entity
+	public static class GenericCollectionEntity extends GenericCollectionMappedSuper<GenericCollectionChild> {
+	}
+
+	@Entity
+	public static class GenericCollectionChild {
+		@Id
+		private Integer id;
+
+		@ManyToOne
+		private GenericCollectionEntity parent;
 	}
 }

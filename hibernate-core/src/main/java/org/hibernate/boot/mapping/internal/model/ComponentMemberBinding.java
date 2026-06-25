@@ -266,14 +266,23 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 			BindingContext bindingContext) {
 		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
 		return switch ( nature ) {
-			case ELEMENT_COLLECTION -> CollectionSource.elementCollection( member.member(), modelsContext );
+			case ELEMENT_COLLECTION -> CollectionSource.elementCollection(
+					member.member(),
+					source.componentType(),
+					source.componentType(),
+					modelsContext
+			);
 			case ONE_TO_MANY -> CollectionSource.oneToMany(
 					member.member(),
+					source.componentType(),
+					source.componentType(),
 					source.associationOverride( member.path() ),
 					modelsContext
 			);
 			case MANY_TO_MANY -> CollectionSource.manyToMany(
 					member.member(),
+					source.componentType(),
+					source.componentType(),
 					source.associationOverride( member.path() ),
 					modelsContext
 			);

@@ -174,6 +174,7 @@ public class AttributeBinder {
 					registerCollectionBindings
 			);
 			binding.setValue( collectionValue );
+			binding.setLazy( collectionValue.isLazy() );
 			binding.setOptional( true );
 			attributeTable = collectionValue.getCollectionTable();
 		}

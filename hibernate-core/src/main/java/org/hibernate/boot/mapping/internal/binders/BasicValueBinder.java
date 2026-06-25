@@ -113,7 +113,7 @@ public class BasicValueBinder {
 		bindJavaType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJdbcType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindMutability( source, property, basicValue, bindingOptions, bindingState, bindingContext );
-		bindLob( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindLob( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindNationalized( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindPartitionKey( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindEnumerated( source, property, basicValue, bindingOptions, bindingState, bindingContext );
@@ -843,6 +843,20 @@ public class BasicValueBinder {
 		if ( member.hasDirectAnnotationUsage( PartitionKey.class ) ) {
 			basicValue.setPartitionKey( true );
 		}
+	}
+
+	public static void bindLob(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( source.kind() == BasicValueSource.Kind.MAP_KEY ) {
+			return;
+		}
+
+		bindLob( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 	}
 
 	public static void bindLob(

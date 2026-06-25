@@ -147,10 +147,6 @@ test {
             "user.dir"                                      : userdir,
             "log.file.location"                             : tcklogdir,
 
-            "hibernate.show_sql"                            : true,
-            "hibernate.format_sql"                          : true,
-            "hibernate.highlight_sql"                       : true,
-
             "jakarta.persistence.jdbc.driver"               : dbBundle[db]['jdbc.driver'],
             "jakarta.persistence.jdbc.url"                  : dbBundle[db]['jdbc.url'].replace('_$worker', ''),
             "jakarta.persistence.jdbc.user"                 : dbBundle[db]['jdbc.user'].replace('_$worker', ''),

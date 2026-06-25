@@ -1650,8 +1650,9 @@ public class EntityBinder {
 	}
 
 	private String toPhysicalName(String logicalName) {
-		final var jdbcEnvironment = getDatabase().getJdbcEnvironment();
-		final var identifier = jdbcEnvironment.getIdentifierHelper().toIdentifier( logicalName );
+		final var database = getDatabase();
+		final var jdbcEnvironment = database.getJdbcEnvironment();
+		final var identifier = database.toIdentifier( logicalName );
 		return getPhysicalNamingStrategy()
 				.toPhysicalTableName( identifier, jdbcEnvironment )
 				.render( jdbcEnvironment.getDialect() );
@@ -2268,7 +2269,7 @@ public class EntityBinder {
 		return new QualifiedTableName(
 				toIdentifier( catalog ),
 				toIdentifier( schema ),
-				getDatabase().getJdbcEnvironment().getIdentifierHelper().toIdentifier( name )
+				getDatabase().toIdentifier( name )
 		);
 	}
 

@@ -36,6 +36,7 @@ public class Database {
 	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new LinkedHashMap<>();
 	private final ServiceRegistry serviceRegistry;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
+	private final MetadataBuildingOptions buildingOptions;
 
 	private Namespace.Name physicalImplicitNamespaceName;
 	private List<InitCommand> initCommands;
@@ -45,6 +46,7 @@ public class Database {
 	}
 
 	public Database(MetadataBuildingOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
+		this.buildingOptions = buildingOptions;
 		this.jdbcEnvironment = jdbcEnvironment;
 		serviceRegistry = buildingOptions.getServiceRegistry();
 		typeConfiguration = buildingOptions.getTypeConfiguration();
@@ -107,6 +109,18 @@ public class Database {
 	}
 
 	/**
+	 * Returns the IdentifierHelper, but callers should prefer using
+	 * {@link #toIdentifier(String)} or {@link #toIdentifier(String, boolean)}
+	 * to ensure proper handling of global quoting settings from both
+	 * programmatic configuration and XML mappings.
+	 *
+	 * @return the IdentifierHelper
+	 */
+	public org.hibernate.engine.jdbc.env.spi.IdentifierHelper getIdentifierHelper() {
+		return jdbcEnvironment.getIdentifierHelper();
+	}
+
+	/**
 	 * Wrap the raw name of a database object in its Identifier form accounting
 	 * for quoting from any of:
 	 * <ul>
@@ -120,7 +134,21 @@ public class Database {
 	 * @implNote Quoting from database keywords happens only when building physical identifiers.
 	 */
 	public Identifier toIdentifier(String text, boolean isExplicit) {
-		return text == null ? null : jdbcEnvironment.getIdentifierHelper().toIdentifier( text, false, isExplicit );
+		if ( text == null ) {
+			return null;
+		}
+		// Check if global quoting is enabled either programmatically (via JdbcEnvironment)
+		// or via XML mappings (via MappingDefaults, e.g., <delimited-identifiers/>)
+		final boolean shouldQuote = buildingOptions.getMappingDefaults().shouldImplicitlyQuoteIdentifiers();
+		if ( shouldQuote ) {
+			// If global quoting is enabled in mapping defaults (e.g., from orm.xml),
+			// create a quoted identifier, but let normalizeQuoting handle the final decision
+			return jdbcEnvironment.getIdentifierHelper().toIdentifier( text, true, isExplicit );
+		}
+		else {
+			// Otherwise, delegate to the identifier helper which will check its own global setting
+			return jdbcEnvironment.getIdentifierHelper().toIdentifier( text, false, isExplicit );
+		}
 	}
 
 	public PhysicalNamingStrategy getPhysicalNamingStrategy() {

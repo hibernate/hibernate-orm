@@ -46,12 +46,20 @@ fi
 DB_COUNT=1
 if [[ "$(uname -s)" == "Darwin" ]]; then
   IS_OSX=true
-  DB_COUNT=$(($(sysctl -n hw.physicalcpu)/2))
+  DB_COUNT=$(sysctl -n hw.physicalcpu)
   # PostGIS images only support amd64, so we force emulation on macOS
   export POSTGRESQL_PLATFORM="linux/amd64"
 else
   IS_OSX=false
-  DB_COUNT=$(($(nproc)/2))
+  DB_COUNT=$(nproc)
+fi
+
+if [[ $DB_COUNT -ge 16 ]]; then
+  DB_COUNT=$(($(DB_COUNT)/2))
+#elif [[ $DB_COUNT -le 4 ]]; then
+  # Only start halving the
+#else
+#  DB_COUNT=$(($(DB_COUNT)/2))
 fi
 
 ###############################################################################
@@ -706,7 +714,6 @@ EOF\""
 oracle_free_setup() {
     sleep 2;
     users=()
-    DB_COUNT=$(( DB_COUNT * 2 ))
     for n in $(seq 1 $DB_COUNT)
     do
       users+=("hibernate_orm_test_${n}")

@@ -59,13 +59,12 @@ tasks.withType( Test.class ).configureEach { test ->
     if ( project.db == "h2" || project.db == "hsqldb" || project.db == "pgsql_ci" || project.db == "edb_ci"
             || project.db == "oracle_ci" || project.db == "oracle_xe_ci" || project.db == "mysql_ci" || project.db == "mariadb_ci"
             || project.db == "db2_ci" || project.db == "mssql_ci" || project.db == "cockroachdb" || project.db == "hana_ci"
-            || project.db == "tidb" ) {
-        // Most systems have multi-threading and maxing out a core on both threads will hurt performance
-        // Also, as soon as we hit 16+ threads, the returns are diminishing, so divide by 4
+            || project.db == "tidb" || project.db == "spanner" || project.db == "hana_cloud" || project.db == "oracle" ) {
+        // As soon as we hit 16+ threads, the returns are diminishing, so divide by 2
         def threadCount = Runtime.runtime.availableProcessors()
         def testThreads = project.findProperty( "test.threads" )
         if ( testThreads == null ) {
-            testThreads = threadCount >= 16 ? threadCount.intdiv( 4 ) : (threadCount.intdiv( 2 ) ?: 1)
+            testThreads = threadCount >= 16 ? threadCount.intdiv( 2 ) : threadCount
         }
         else {
             testThreads = Integer.parseInt( testThreads.toString() )
@@ -78,21 +77,17 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = Runtime.runtime.availableProcessors() * 2
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
-    else if ( project.db == "hana_cloud" ) {
-        // Since HANA Cloud databases run on separate machines, use all threads for testing
-        test.maxParallelForks = Runtime.runtime.availableProcessors()
-        test.systemProperty 'maxParallelForks', test.maxParallelForks
-    }
-    else if ( project.db == "spannerpgsql" || project.db == "spanner" ) {
+    else if ( project.db == "spannerpgsql" ) {
+        // Some databases can't handle too many threads/instances, so divide by 2 by default
         def threadCount = Runtime.runtime.availableProcessors()
         def testThreads = project.findProperty( "test.threads" )
         if ( testThreads == null ) {
-            testThreads = Math.min( threadCount, 4 )
+            testThreads = threadCount.intdiv( 2 ) ?: 1
         }
         else {
             testThreads = Integer.parseInt( testThreads.toString() )
         }
-        test.maxParallelForks = Math.min( testThreads, 4 )
+        test.maxParallelForks = testThreads
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
 }

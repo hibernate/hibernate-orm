@@ -159,6 +159,7 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
@@ -1801,7 +1802,7 @@ public class HbmXmlTransformer {
 			PluralAttributeInfo source,
 			PropertyInfo propertyInfo) {
 		final var target = new JaxbElementCollectionImpl();
-		transferCollectionCommonInfo( source, target );
+		transferCollectionCommonInfo( source, target, propertyInfo );
 		transferCollectionTable( source, target );
 
 		if ( source.getElement() != null ) {
@@ -1891,7 +1892,7 @@ public class HbmXmlTransformer {
 	}
 
 
-	private void transferCollectionCommonInfo(PluralAttributeInfo source, JaxbPluralAttribute target) {
+	private void transferCollectionCommonInfo(PluralAttributeInfo source, JaxbPluralAttribute target, PropertyInfo propertyInfo) {
 		target.setName( source.getName() );
 		transferAccess(
 				source.getAccess(),
@@ -1918,7 +1919,7 @@ public class HbmXmlTransformer {
 			transferSort( map.getSort(), target );
 			target.setOrderBy( map.getOrderBy() );
 
-			transferMapKey( map, target );
+			transferMapKey( map, target, propertyInfo );
 			target.setClassification( LimitedCollectionClassification.MAP );
 		}
 		else if ( source instanceof JaxbHbmIdBagCollectionType ) {
@@ -2004,7 +2005,7 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	private void transferMapKey(JaxbHbmMapType source, JaxbPluralAttribute target) {
+	private void transferMapKey(JaxbHbmMapType source, JaxbPluralAttribute target, PropertyInfo propertyInfo) {
 		if ( source.getIndex() != null ) {
 			final var mapKey = new JaxbMapKeyColumnImpl();
 			// TODO: multiple columns?
@@ -2062,11 +2063,18 @@ public class HbmXmlTransformer {
 				return;
 			}
 
-			final String mapKeyType = resolveMapKeyType( source.getMapKey() );
-			if ( mapKeyType != null ) {
-				final JaxbUserTypeImpl jaxbMapKeyType = new JaxbUserTypeImpl();
-				target.setMapKeyType( jaxbMapKeyType );
-				jaxbMapKeyType.setValue( mapKeyType );
+			final String rawMapKeyType = resolveRawMapKeyType( source.getMapKey() );
+			if ( rawMapKeyType != null ) {
+				if ( propertyInfo != null ) {
+					applyMapKeyBasicTypeMapping( source.getMapKey(), rawMapKeyType, propertyInfo, target );
+				}
+				else if ( transformationState.getTypeDefMap().containsKey( rawMapKeyType ) ) {
+					target.setMapKeyType( interpretBasicType(
+							rawMapKeyType,
+							source.getMapKey().getType(),
+							transformationState.getTypeDefMap().get( rawMapKeyType )
+					) );
+				}
 			}
 
 			if ( isNotEmpty( source.getMapKey().getColumnAttribute() ) ) {
@@ -2077,27 +2085,35 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	private String resolveMapKeyType(JaxbHbmMapKeyBasicType mapKey) {
-		final String typeName;
+	private String resolveRawMapKeyType(JaxbHbmMapKeyBasicType mapKey) {
 		if ( isNotEmpty( mapKey.getTypeAttribute() ) ) {
-			typeName = mapKey.getTypeAttribute();
+			return mapKey.getTypeAttribute();
 		}
 		else if ( mapKey.getType() != null ) {
-			typeName = nullIfEmpty( mapKey.getType().getName() );
+			return nullIfEmpty( mapKey.getType().getName() );
 		}
-		else {
-			return null;
-		}
-		return typeName != null ? normalizeTypeName( typeName ) : null;
+		return null;
 	}
 
-	private static String normalizeTypeName(String typeName) {
-		return switch ( typeName.toLowerCase( Locale.ROOT ) ) {
-			case "integer" -> Integer.class.getSimpleName();
-			case "character" -> Character.class.getSimpleName();
-			case "string" -> String.class.getSimpleName();
-			default -> typeName;
-		};
+	private void applyMapKeyBasicTypeMapping(
+			JaxbHbmMapKeyBasicType mapKey,
+			String rawMapKeyType,
+			PropertyInfo propertyInfo,
+			JaxbPluralAttribute target) {
+		final var collectionValue = (Collection) propertyInfo.bootModelProperty().getValue();
+		final var indexValue = (BasicValue) ((IndexedCollection) collectionValue).getIndex();
+		final var basicType = (BasicType<?>) indexValue.getType();
+		if ( basicType instanceof BasicTypeImpl<?> standardBasicType ) {
+			target.setMapKeyJavaType( standardBasicType.getMappedJavaType().getClass().getName() );
+			target.setMapKeyJdbcType( standardBasicType.getJdbcType().getClass().getName() );
+		}
+		else if ( basicType instanceof CustomType<?> ) {
+			target.setMapKeyType( interpretBasicType(
+					rawMapKeyType,
+					mapKey.getType(),
+					transformationState.getTypeDefMap().get( rawMapKeyType )
+			) );
+		}
 	}
 
 	private Boolean invert(Boolean value) {
@@ -2126,7 +2142,7 @@ public class HbmXmlTransformer {
 			JaxbHbmBasicCollectionElementType element,
 			PropertyInfo propertyInfo,
 			JaxbElementCollectionImpl target) {
-		transferCollectionCommonInfo( hbmCollection, target );
+		transferCollectionCommonInfo( hbmCollection, target, propertyInfo );
 		transferCollectionTable( hbmCollection, target );
 
 		transferElementTypeInfo( hbmCollection, element, propertyInfo, target );
@@ -2208,7 +2224,7 @@ public class HbmXmlTransformer {
 			PluralAttributeInfo hbmCollection,
 			JaxbHbmCompositeCollectionElementType compositeElement,
 			JaxbElementCollectionImpl target) {
-		transferCollectionCommonInfo( hbmCollection, target );
+		transferCollectionCommonInfo( hbmCollection, target, null );
 		transferCollectionTable( hbmCollection, target );
 
 		final String embeddableClassName = compositeElement.getClazz();
@@ -2261,7 +2277,7 @@ public class HbmXmlTransformer {
 			handleUnsupported( "`node` not supported" );
 		}
 
-		transferCollectionCommonInfo( hbmAttributeInfo, target );
+		transferCollectionCommonInfo( hbmAttributeInfo, target, propertyInfo );
 		target.setTargetEntity( isNotEmpty( hbmOneToMany.getClazz() ) ? hbmOneToMany.getClazz() : hbmOneToMany.getEntityName() );
 
 		final var bootModelProperty = propertyInfo.bootModelProperty();
@@ -2570,7 +2586,7 @@ public class HbmXmlTransformer {
 				joinTable.getName()
 		);
 
-		transferCollectionCommonInfo( hbmCollection, target );
+		transferCollectionCommonInfo( hbmCollection, target, propertyInfo );
 		target.setTargetEntity( isNotEmpty( manyToMany.getClazz() )
 				? manyToMany.getClazz()
 				: manyToMany.getEntityName() );

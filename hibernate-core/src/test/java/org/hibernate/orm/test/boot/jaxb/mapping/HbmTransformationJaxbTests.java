@@ -39,6 +39,7 @@ import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.InheritanceType;
@@ -145,8 +146,9 @@ public class HbmTransformationJaxbTests {
 
 			assertThat( oneToMany.isOrphanRemoval() ).isTrue();
 
-			assertThat( oneToMany.getMapKeyType() ).isNotNull();
-			assertThat( oneToMany.getMapKeyType().getValue() ).isEqualTo( "Integer" );
+			final var mapKeyJavaType = oneToMany.getMapKeyJavaType();
+			assertThat( mapKeyJavaType ).isNotNull();
+			assertThat( mapKeyJavaType ).isEqualTo( IntegerJavaType.class.getName() );
 		} );
 	}
 

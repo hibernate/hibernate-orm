@@ -224,13 +224,6 @@ public abstract class AbstractDeleteCoordinator
 			final var jdbcMutation = operationGroup.getOperation( position );
 			final var tableDetails = (EntityTableMapping) jdbcMutation.getTableDetails();
 			breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, tableDetails );
-			final var statementDetails =
-					mutationExecutor.getPreparedStatementDetails( tableDetails.getTableName() );
-			if ( statementDetails != null ) {
-				// force creation of the PreparedStatement
-				//noinspection resource
-				statementDetails.resolveStatement();
-			}
 		}
 	}
 

@@ -26,6 +26,7 @@ public class DeleteCacheHandling {
 		}
 
 		final var cache = persister.getCacheAccessStrategy();
+		assert cache != null;
 		final Object cacheKey = cache.generateCacheKey(
 				action.getId(),
 				persister,
@@ -42,6 +43,7 @@ public class DeleteCacheHandling {
 		final var persister = action.getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			cache.unlockItem( session, cacheLock.cacheKey(), cacheLock.lock() );
 		}
 	}

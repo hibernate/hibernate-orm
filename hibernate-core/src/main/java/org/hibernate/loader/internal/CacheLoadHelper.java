@@ -145,9 +145,10 @@ public class CacheLoadHelper {
 			final EntityPersister persister,
 			final SharedSessionContractImplementor source) {
 		final var cache = persister.getCacheAccessStrategy();
+		assert cache != null;
 		final var factory = source.getFactory();
 		final Object cacheKey = cache.generateCacheKey( entityId, persister, factory, source.getTenantIdentifier() );
-		final Object cacheEntry = fromSharedCache( source, cacheKey, persister, persister.getCacheAccessStrategy() );
+		final Object cacheEntry = fromSharedCache( source, cacheKey, persister, cache );
 		final var statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			final var rootEntityRole = getRootEntityRole( persister );

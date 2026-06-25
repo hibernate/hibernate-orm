@@ -21,7 +21,6 @@ import jakarta.annotation.Nullable;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedSetOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -295,7 +294,8 @@ public class BatchFetchQueue {
 		// TODO we rely on loadedPersister being non-null, which is not always true for some reason.
 		//   We should either make sure it's always non-null,
 		//   or make sure this method is only called when it is non-null.
-		final var persister = castNonNull( ce.getLoadedPersister() );
+		final var persister = ce.getLoadedPersister();
+		assert persister != null;
 		if ( batchLoadableCollections == null ) {
 			batchLoadableCollections = mapOfSize( 12 );
 		}
@@ -312,7 +312,8 @@ public class BatchFetchQueue {
 		// TODO we rely on loadedPersister being non-null, which is not always true for some reason.
 		//   We should either make sure it's always non-null,
 		//   or make sure this method is only called when it is non-null.
-		final var persister = castNonNull( collectionEntry.getLoadedPersister() );
+		final var persister = collectionEntry.getLoadedPersister();
+		assert persister != null;
 		if ( batchLoadableCollections != null ) {
 			final var map = batchLoadableCollections.get( persister.getRole() );
 			if ( map != null ) {
@@ -463,7 +464,8 @@ public class BatchFetchQueue {
 	private boolean isCached(Object collectionKey, CollectionPersister persister) {
 		final var session = getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
-			final var cache = castNonNull( persister.getCacheAccessStrategy() );
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			final Object cacheKey =
 					cache.generateCacheKey( collectionKey, persister,
 							session.getFactory(), session.getTenantIdentifier() );
@@ -477,7 +479,8 @@ public class BatchFetchQueue {
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
 		final var session = getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.canReadFromCache() ) {
-			final var cache = castNonNull( persister.getCacheAccessStrategy() );
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			final Object key =
 					cache.generateCacheKey( entityKey.getIdentifier(), persister,
 							session.getFactory(), session.getTenantIdentifier() );

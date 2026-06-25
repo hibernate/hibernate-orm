@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
@@ -26,18 +28,25 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 public abstract class CollectionAction implements ComparableExecutable {
 
+	@Nonnull
 	private transient CollectionPersister persister;
+	@Nonnull
 	private transient EventSource session;
+	@Nullable
 	private final PersistentCollection<?> collection;
 
+	@Nullable
 	private final Object key;
+	@Nonnull
 	private final String collectionRole;
 
 	protected CollectionAction(
-			final CollectionPersister persister,
-			final PersistentCollection<?> collection,
-			final Object key,
-			final EventSource session) {
+			final @Nonnull CollectionPersister persister,
+			final @Nullable PersistentCollection<?> collection,
+			final @Nullable Object key,
+			final @Nonnull EventSource session) {
+		assert persister != null;
+		assert session != null;
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
@@ -50,6 +59,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 	 *
 	 * @return The collection
 	 */
+	@Nullable
 	public PersistentCollection<?> getCollection() {
 		return collection;
 	}
@@ -59,10 +69,13 @@ public abstract class CollectionAction implements ComparableExecutable {
 	 *
 	 * @return The collection key
 	 */
+	@Nullable
 	public Object getKey() {
-		return key instanceof DelayedPostInsertIdentifier
-				? session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId()
-				: key;
+		if ( key instanceof DelayedPostInsertIdentifier ) {
+			assert collection != null;
+			return getSession().getPersistenceContextInternal().getEntry( collection.getOwner() ).getId();
+		}
+		return key;
 	}
 
 	/**
@@ -70,10 +83,10 @@ public abstract class CollectionAction implements ComparableExecutable {
 	 *
 	 * @param session The session being deserialized
 	 */
-	public void afterDeserialize(EventSource session) {
-		if ( this.session != null || this.persister != null ) {
-			throw new IllegalStateException( "already attached to a session." );
-		}
+	public void afterDeserialize(@Nullable EventSource session) {
+//		if ( this.session != null || this.persister != null ) {
+//			throw new IllegalStateException( "already attached to a session." );
+//		}
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
 		if ( session != null ) {
@@ -87,8 +100,12 @@ public abstract class CollectionAction implements ComparableExecutable {
 		// We need to obtain the lock before any actions are executed, since this may be an inverse="true"
 		// bidirectional association, and it is one of the earlier entity actions which actually updates
 		// the database. This action is responsible for second-level cache invalidation only.
+		final var persister = getPersister();
 		if ( persister.hasCache() ) {
+			final var session = getSession();
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			assert key != null;
 			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
@@ -102,43 +119,55 @@ public abstract class CollectionAction implements ComparableExecutable {
 	}
 
 	@Override
+	@Nullable
 	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
 		return null;
 	}
 
+	@Nullable
 	private AfterTransactionCompletionProcess afterTransactionProcess;
 
 	@Override
+	@Nullable
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
 		return afterTransactionProcess;
 	}
 
 	@Override
+	@Nonnull
 	public String[] getPropertySpaces() {
-		return persister.getCollectionSpaces();
+		return getPersister().getCollectionSpaces();
 	}
 
+	@Nonnull
 	public final CollectionPersister getPersister() {
 		return persister;
 	}
 
 	@Override
+	@Nonnull
 	public String getPrimarySortClassifier() {
 		return collectionRole;
 	}
 
 	@Override
+	@Nullable
 	public Object getSecondarySortIndex() {
 		return key;
 	}
 
+	@Nonnull
 	protected final EventSource getSession() {
 		return session;
 	}
 
 	public final void evict() throws CacheException {
+		final var persister = getPersister();
 		if ( persister.hasCache() ) {
+			final var session = getSession();
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			assert key != null;
 			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
@@ -150,41 +179,40 @@ public abstract class CollectionAction implements ComparableExecutable {
 	}
 
 	@Override
-	public String toString() {
+	public @Nonnull String toString() {
 		return unqualify( getClass().getName() )
 				+ infoString( collectionRole, key );
 	}
 
 	@Override
-	public int compareTo(ComparableExecutable executable) {
+	public int compareTo(@Nonnull ComparableExecutable executable) {
 		// sort first by role name
 		final int roleComparison = collectionRole.compareTo( executable.getPrimarySortClassifier() );
 		return roleComparison != 0
 				? roleComparison
 				//then by fk
-				: persister.getAttributeMapping().getKeyDescriptor()
+				: getPersister().getAttributeMapping().getKeyDescriptor()
 						.compare( key, executable.getSecondarySortIndex() );
 	}
 
-	public String getLoggableDetails() {
-		// for now...
-		return getClass().getSimpleName() + "(" + collectionRole + ")";
-	}
-
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
-		private final Object key;
-		private final CollectionPersister persister;
-		private final SoftLock lock;
+		@Nonnull private final Object key;
+		@Nonnull private final CollectionPersister persister;
+		@Nullable private final SoftLock lock;
 
-		private CacheCleanupProcess(Object key, CollectionPersister persister, SoftLock lock) {
+		private CacheCleanupProcess(
+				@Nonnull Object key,
+				@Nonnull CollectionPersister persister,
+				@Nullable SoftLock lock) {
 			this.key = key;
 			this.persister = persister;
 			this.lock = lock;
 		}
 
 		@Override
-		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
+		public void doAfterTransactionCompletion(boolean success, @Nonnull SharedSessionContractImplementor session) {
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
@@ -195,6 +223,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		}
 	}
 
+	@Nonnull
 	protected EventSource eventSource() {
 		return getSession();
 	}
@@ -203,6 +232,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 	 * Convenience method for all subclasses.
 	 * @return the {@link EventListenerGroups} instance from the {@code SessionFactory}.
 	 */
+	@Nonnull
 	protected EventListenerGroups getEventListenerGroups() {
 		return session.getFactory().getEventListenerGroups();
 	}

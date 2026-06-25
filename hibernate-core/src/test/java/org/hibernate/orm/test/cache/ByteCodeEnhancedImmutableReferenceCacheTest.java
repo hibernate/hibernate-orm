@@ -55,7 +55,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest {
 		EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
 				.getEntityDescriptor( MyEnhancedReferenceData.class );
 		assertFalse( persister.isMutable() );
-		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
+		assertTrue( persister.buildCacheEntry( new Object(), new Object[0], null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );
 
 		final MyEnhancedReferenceData myReferenceData = new MyEnhancedReferenceData( 1, "first item", "abc" );

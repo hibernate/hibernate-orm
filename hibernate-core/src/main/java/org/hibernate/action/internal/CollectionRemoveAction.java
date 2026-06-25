@@ -4,8 +4,9 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
@@ -19,7 +20,9 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public final class CollectionRemoveAction extends CollectionAction {
 
+	@Nullable
 	private final Object affectedOwner;
+	@Nullable
 	private final Object affectedOwnerId;
 	private final boolean emptySnapshot;
 
@@ -37,21 +40,20 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 * @throws AssertionFailure if collection is null.
 	 */
 	public CollectionRemoveAction(
-				final PersistentCollection<?> collection,
-				final CollectionPersister persister,
-				final Object id,
+				final @Nonnull PersistentCollection<?> collection,
+				final @Nonnull CollectionPersister persister,
+				final @Nullable Object id, // only null in certain deserialization tests
 				final boolean emptySnapshot,
-				final EventSource session) {
+				final @Nonnull EventSource session) {
 		super( persister, collection, id, session );
-		if ( collection == null ) {
-			throw new AssertionFailure("collection == null");
-		}
+		assert collection != null;
 		this.emptySnapshot = emptySnapshot;
 		// the loaded owner will be set to null after the collection is removed,
 		// so capture its value as the affected owner so it is accessible to
 		// both pre- and post- events
-		this.affectedOwner = session.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
-		this.affectedOwnerId = session.getPersistenceContextInternal().getLoadedCollectionOwnerIdOrNull( collection );
+		final var persistenceContext = session.getPersistenceContextInternal();
+		affectedOwner = persistenceContext.getLoadedCollectionOwnerOrNull( collection );
+		affectedOwnerId = persistenceContext.getLoadedCollectionOwnerIdOrNull( collection );
 	}
 
 	/**
@@ -68,15 +70,14 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 * @throws AssertionFailure if affectedOwner is null.
 	 */
 	public CollectionRemoveAction(
-				final Object affectedOwner,
-				final CollectionPersister persister,
-				final Object id,
+				final @Nonnull Object affectedOwner,
+				final @Nonnull CollectionPersister persister,
+				final @Nonnull Object id,
 				final boolean emptySnapshot,
-				final EventSource session) {
+				final @Nonnull EventSource session) {
 		super( persister, null, id, session );
-		if ( affectedOwner == null ) {
-			throw new AssertionFailure("affectedOwner == null");
-		}
+		assert affectedOwner != null;
+		assert id != null;
 		this.emptySnapshot = emptySnapshot;
 		this.affectedOwner = affectedOwner;
 		// Get the owner ID from the entity entry at action creation time
@@ -94,10 +95,11 @@ public final class CollectionRemoveAction extends CollectionAction {
 	 * @param session The session
 	 */
 	public CollectionRemoveAction(
-			final CollectionPersister persister,
-			final Object id,
-			final EventSource session) {
+			final @Nonnull CollectionPersister persister,
+			final @Nonnull Object id,
+			final @Nonnull EventSource session) {
 		super( persister, null, id, session );
+		assert id != null;
 		emptySnapshot = false;
 		affectedOwner = null;
 		affectedOwnerId = null;
@@ -108,7 +110,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	public void execute() {
 		preRemove();
 		final var session = getSession();
 		if ( !emptySnapshot ) {
@@ -118,6 +120,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			// knowing if the collection is actually empty without querying the db)
 			final var persister = getPersister();
 			final Object key = getKey();
+			assert key != null;
 			final var eventMonitor = session.getEventMonitor();
 			final var event = eventMonitor.beginCollectionRemoveEvent();
 			boolean success = false;
@@ -130,7 +133,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 			}
 		}
 
-		final PersistentCollection<?> collection = getCollection();
+		final var collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		}
@@ -149,8 +152,11 @@ public final class CollectionRemoveAction extends CollectionAction {
 						PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
+	@Nonnull
 	private PreCollectionRemoveEvent newPreCollectionRemoveEvent() {
-		return new PreCollectionRemoveEvent( getPersister(), getCollection(), eventSource(), affectedOwner );
+		final var collection = getCollection();
+		assert collection != null;
+		return new PreCollectionRemoveEvent( getPersister(), collection, eventSource(), affectedOwner );
 	}
 
 	private void postRemove() {
@@ -159,14 +165,19 @@ public final class CollectionRemoveAction extends CollectionAction {
 						PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 
+	@Nonnull
 	private PostCollectionRemoveEvent newPostCollectionRemoveEvent() {
-		return new PostCollectionRemoveEvent( getPersister(), getCollection(), eventSource(), affectedOwner );
+		final var collection = getCollection();
+		assert collection != null;
+		return new PostCollectionRemoveEvent( getPersister(), collection, eventSource(), affectedOwner );
 	}
 
+	@Nullable
 	public Object getAffectedOwner() {
 		return affectedOwner;
 	}
 
+	@Nullable
 	public Object getAffectedOwnerId() {
 		return affectedOwnerId;
 	}

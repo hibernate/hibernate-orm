@@ -29,6 +29,7 @@ public final class OptimisticLockHelper {
 		final Object cacheKey;
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			cacheKey = cache.generateCacheKey(
 					entry.getId(),
 					persister,
@@ -72,8 +73,10 @@ public final class OptimisticLockHelper {
 			EntityEntry entry,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
+		final var cache = persister.getCacheAccessStrategy();
+		assert cache != null;
 		if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
-			persister.getCacheAccessStrategy().remove( session, cacheKey );
+			cache.remove( session, cacheKey );
 		}
 		else if ( session.getCacheMode().isPutEnabled() ) {
 			//TODO: inefficient if that cache is just going to ignore the updated state!
@@ -84,7 +87,7 @@ public final class OptimisticLockHelper {
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
 						getRootEntityRole( persister ),
-						persister.getCacheAccessStrategy().getRegion().getName()
+						cache.getRegion().getName()
 				);
 			}
 			return cacheEntry;
@@ -101,19 +104,20 @@ public final class OptimisticLockHelper {
 			SharedSessionContractImplementor session) {
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
+		final var cache = persister.getCacheAccessStrategy();
+		assert cache != null;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
 			eventListenerManager.cachePutStart();
-			update = cacheAccessStrategy.update( session, cacheKey, cacheEntry, nextVersion, previousVersion );
+			update = cache.update( session, cacheKey, cacheEntry, nextVersion, previousVersion );
 			return update;
 		}
 		finally {
 			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
-					cacheAccessStrategy,
+					cache,
 					persister,
 					update,
 					EventMonitor.CacheActionDescription.ENTITY_UPDATE
@@ -156,6 +160,7 @@ public final class OptimisticLockHelper {
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			if ( cacheUpdateRequired( success, persister, session ) ) {
 				cacheAfterUpdate( cache, cacheKey, session );
 			}

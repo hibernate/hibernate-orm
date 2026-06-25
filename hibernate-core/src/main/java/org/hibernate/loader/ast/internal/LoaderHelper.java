@@ -82,11 +82,12 @@ public class LoaderHelper {
 			}
 
 			final boolean cachingEnabled = persister.canWriteToCache();
+			final var cache = persister.getCacheAccessStrategy();
 			SoftLock lock = null;
 			Object cacheKey = null;
 			try {
 				if ( cachingEnabled ) {
-					final var cache = persister.getCacheAccessStrategy();
+					assert cache != null;
 					cacheKey = cache.generateCacheKey( entry.getId(), persister, session.getFactory(), session.getTenantIdentifier() );
 					lock = cache.lockItem( session, cacheKey, entry.getVersion() );
 				}
@@ -135,7 +136,8 @@ public class LoaderHelper {
 				// the database now holds a lock + the object is flushed from the cache,
 				// so release the soft lock
 				if ( cachingEnabled ) {
-					persister.getCacheAccessStrategy().unlockItem( session, cacheKey, lock );
+					assert cacheKey != null;
+					cache.unlockItem( session, cacheKey, lock );
 				}
 			}
 		}

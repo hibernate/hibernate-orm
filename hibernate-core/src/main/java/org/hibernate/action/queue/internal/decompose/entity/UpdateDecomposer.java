@@ -535,7 +535,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			return false;
 		}
 		else {
-			final PreUpdateEvent event = new PreUpdateEvent(
+			final var event = new PreUpdateEvent(
 					action.getInstance(),
 					action.getId(),
 					action.getState(),

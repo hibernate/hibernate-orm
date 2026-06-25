@@ -58,6 +58,7 @@ public class InsertCacheHandling {
 
 			final var factory = session.getFactory();
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheInsert( action, cacheInsert, persister, cacheKey, session );
 
@@ -79,6 +80,7 @@ public class InsertCacheHandling {
 		final var persister = action.getPersister();
 		if ( success && isCachePutEnabled( persister, session ) && cacheInsert.cacheEntry() != null ) {
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			final var factory = session.getFactory();
 			final Object cacheKey = cache.generateCacheKey(
 					cacheInsert.id(),
@@ -115,6 +117,7 @@ public class InsertCacheHandling {
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
 		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
+		assert cacheAccessStrategy != null;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean insert = false;
 		try {

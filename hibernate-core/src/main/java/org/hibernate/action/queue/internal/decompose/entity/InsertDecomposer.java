@@ -287,7 +287,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		}
 		else {
 			boolean veto = false;
-			final PreInsertEvent event = new PreInsertEvent(
+			final var event = new PreInsertEvent(
 					action.getInstance(),
 					action.getId(),
 					action.getState(),

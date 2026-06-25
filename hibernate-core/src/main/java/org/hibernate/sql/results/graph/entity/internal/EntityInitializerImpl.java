@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.EntityFilterException;
@@ -1801,10 +1802,9 @@ public class EntityInitializerImpl
 				&& isCachePutEnabled( session )
 				// Don't cache temporal snapshots in the 2LC
 				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {
-			final var cacheAccess = data.concreteDescriptor.getCacheAccessStrategy();
-			if ( cacheAccess != null  ) {
-				putInCache( data, session, persistenceContext, resolvedEntityState, version, cacheAccess );
-			}
+			final var cache = data.concreteDescriptor.getCacheAccessStrategy();
+			assert cache != null;
+			putInCache( data, session, persistenceContext, resolvedEntityState, version, cache );
 		}
 	}
 
@@ -1867,12 +1867,12 @@ public class EntityInitializerImpl
 	}
 
 	private void putInCache(
-			EntityInitializerData data,
-			SharedSessionContractImplementor session,
-			PersistenceContext persistenceContext,
-			Object[] resolvedEntityState,
-			Object version,
-			EntityDataAccess cacheAccess) {
+			@Nonnull EntityInitializerData data,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull PersistenceContext persistenceContext,
+			@Nonnull Object[] resolvedEntityState,
+			@Nullable Object version,
+			@Nonnull EntityDataAccess cacheAccess) {
 		final var cacheEntry =
 				data.concreteDescriptor.buildCacheEntry(
 						data.entityInstanceForNotify,

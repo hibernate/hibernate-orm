@@ -125,6 +125,7 @@ public class PostDeleteHandling implements PostExecutionCallback {
 		final var persister = action.getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
 			cache.remove( session, cacheKey );
 
 			final var statistics = session.getFactory().getStatistics();

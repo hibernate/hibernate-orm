@@ -4,6 +4,9 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,7 +48,7 @@ public class DelayedPostInsertIdentifier
 	}
 
 	@Override
-	public boolean equals(Object object) {
+	public boolean equals(@Nullable Object object) {
 		if ( this == object ) {
 			return true;
 		}
@@ -63,13 +66,13 @@ public class DelayedPostInsertIdentifier
 	}
 
 	@Override
-	public String toString() {
+	public @Nonnull String toString() {
 		return "<delayed:" + identifier + ">";
 
 	}
 
 	@Override
-	public int compareTo(DelayedPostInsertIdentifier that) {
+	public int compareTo(@Nonnull DelayedPostInsertIdentifier that) {
 		return Long.compare( this.identifier, that.identifier );
 	}
 }

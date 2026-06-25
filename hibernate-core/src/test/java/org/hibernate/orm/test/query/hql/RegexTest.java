@@ -4,11 +4,13 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +41,7 @@ class RegexTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "regexp_like does not support flags")
 	void testInSelectCaseInsensitive(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			assertTrue( em.createQuery( "select regexp_like('ABCDEF', 'ab.*', 'i')", Boolean.class ).getSingleResult() );

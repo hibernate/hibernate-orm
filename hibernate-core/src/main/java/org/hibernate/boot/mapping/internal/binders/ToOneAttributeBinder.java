@@ -369,6 +369,7 @@ class ToOneAttributeBinder {
 			if ( referenceToPrimaryKey ) {
 				value.setSorted( true );
 			}
+			property.setOptional( optional && value.isNullable() );
 		}
 		else {
 			bindingState.addDerivedIdentifierBinding( new DerivedIdentifierBinding(

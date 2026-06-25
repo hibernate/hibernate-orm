@@ -3330,7 +3330,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),
-						hasAnnotation( method, NULLABLE )
+						hasNullableAnnotation( method )
 				)
 		);
 	}
@@ -3727,7 +3727,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							context.addNonnullAnnotation(),
 							jakartaDataRepository,
 							fullReturnType( method ),
-							hasAnnotation( method, NULLABLE )
+							hasNullableAnnotation( method )
 					)
 			);
 		}
@@ -3751,7 +3751,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							context.addNonnullAnnotation(),
 							jakartaDataRepository,
 							fullReturnType( method ),
-							hasAnnotation( method, NULLABLE )
+							hasNullableAnnotation( method )
 					)
 			);
 		}
@@ -3810,7 +3810,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
 									fullReturnType( method ),
-									hasAnnotation( method, NULLABLE )
+									hasNullableAnnotation( method )
 							)
 					);
 					break;
@@ -3831,7 +3831,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
 									fullReturnType( method ),
-									hasAnnotation( method, NULLABLE )
+									hasNullableAnnotation( method )
 							)
 					);
 					break;
@@ -3856,7 +3856,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
 									fullReturnType( method ),
-									hasAnnotation( method, NULLABLE )
+									hasNullableAnnotation( method )
 							)
 					);
 					break;
@@ -4491,7 +4491,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),
-						hasAnnotation( method, NULLABLE )
+						hasNullableAnnotation( method )
 					);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
 	}
@@ -5548,6 +5548,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		return true;
+	}
+
+	private static boolean hasNullableAnnotation(ExecutableElement method) {
+		return hasAnnotation( method, NULLABLE ) || hasAnnotation( method, JETBRAINS_NULLABLE );
 	}
 
 	private void checkParameters(

@@ -17,6 +17,7 @@ import ee.jakarta.tck.data.standalone.entity._Boxes;
 import ee.jakarta.tck.data.standalone.entity._MultipleEntityRepo;
 
 import org.hibernate.orm.jakarta.data.tck.runner.DataTck;
+import org.junit.jupiter.api.Disabled;
 
 @DataTck(
 		domainClasses = {Box.class, Coordinate.class, AsciiCharacter.class, NaturalNumber.class},
@@ -24,4 +25,16 @@ import org.hibernate.orm.jakarta.data.tck.runner.DataTck;
 				_AsciiCharacters.class, _NaturalNumbers.class, _PositiveIntegers.class}
 )
 public class StandaloneEntityTests extends EntityTests {
+
+	@Disabled("https://github.com/jakartaee/data/pull/1498")
+	@Override
+	public void testStaticMetamodelAscendingSorts() {
+		super.testStaticMetamodelAscendingSorts();
+	}
+
+	@Disabled("https://github.com/jakartaee/data/pull/1498")
+	@Override
+	public void testStaticMetamodelDescendingSorts() {
+		super.testStaticMetamodelDescendingSorts();
+	}
 }

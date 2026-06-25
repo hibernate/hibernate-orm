@@ -5,6 +5,8 @@
 package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.pagination.AltibaseLimitHandler;
@@ -17,10 +19,15 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.function.TrimFunction;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.internal.LockingSupportParameterized;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -29,6 +36,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -36,9 +44,11 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -46,9 +56,15 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -58,6 +74,8 @@ import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -67,6 +85,7 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.LONGVARBINARY;
 import static org.hibernate.type.SqlTypes.LONGVARCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -85,6 +104,20 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class AltibaseDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
+	// Altibase's IN-list limit is around 1,020 elements; use 1,000 to stay below
+	// that limit and avoid "Calculation stack overflow" during prepare.
+	private static final int IN_LIST_SIZE_LIMIT = 1000;
+	private static final Pattern CHECK_CONSTRAINT_NAME_PATTERN = Pattern.compile( "Check constraint (.+) violated" );
+	private static final Pattern FOR_CONSTRAINT_NAME_PATTERN = Pattern.compile( ".*\\sfor\\s+([^.]+)\\.?" );
+	private static final Pattern COLON_CONSTRAINT_NAME_PATTERN = Pattern.compile( ".*:\\s*(.+)" );
+	private static final LockingSupport LOCKING_SUPPORT = new LockingSupportParameterized(
+			PessimisticLockStyle.CLAUSE,
+			RowLockStrategy.NONE,
+			true,
+			true,
+			false,
+			OuterJoinLockingType.UNSUPPORTED
+	);
 
 	@SuppressWarnings("unused")
 	public AltibaseDialect() {
@@ -131,6 +164,34 @@ public class AltibaseDialect extends Dialect {
 						.withTypeCapacity( 64000, columnType( BIT ) )
 						.build()
 		);
+		if ( supportsNativeJsonType() ) {
+			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		}
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		if ( supportsNativeJsonType() ) {
+			typeContributions.contributeJdbcType( JsonJdbcType.INSTANCE );
+		}
+	}
+
+	private boolean supportsNativeJsonType() {
+		return getVersion().isSameOrAfter( 8, 1 );
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		if ( supportsNativeJsonType() && "json".equalsIgnoreCase( columnTypeName ) ) {
+			return jdbcTypeRegistry.getDescriptor( JSON );
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
 
 	@Override
@@ -179,16 +240,14 @@ public class AltibaseDialect extends Dialect {
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.ceiling_ceil();
 		functionFactory.trim2();
+		functionContributions.getFunctionRegistry().register(
+				"trim",
+				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+		);
 		functionFactory.stddev();
 		functionFactory.variance();
 		functionFactory.char_chr();
-		functionFactory.concat_pipeOperator();
-		functionFactory.coalesce();
 		functionFactory.initcap();
-		functionFactory.repeat_rpad();
-
-		functionFactory.radians_acos();
-		functionFactory.degrees_acos();
 
 		functionFactory.ascii();
 		functionFactory.toCharNumberDateTimestamp();
@@ -200,10 +259,7 @@ public class AltibaseDialect extends Dialect {
 		functionFactory.cosh();
 		functionFactory.sinh();
 		functionFactory.tanh();
-		functionFactory.log();
 		functionFactory.log10_log();
-		functionFactory.substring_substr();
-		functionFactory.leftRight_substr();
 		functionFactory.translate();
 		functionFactory.addMonths();
 		functionFactory.listagg( null );
@@ -229,6 +285,176 @@ public class AltibaseDialect extends Dialect {
 							.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 							.register();
 		functionFactory.regexpLike_predicateFunction();
+		registerNoPlainParameterFunctions( functionContributions, typeConfiguration );
+	}
+
+	private static void registerNoPlainParameterFunctions(
+			FunctionContributions functionContributions,
+			TypeConfiguration typeConfiguration) {
+		// Keep Altibase's host-variable workaround local to the dialect for the 7.4 backport.
+		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
+
+		functionRegistry.patternDescriptorBuilder( "concat", "(?1||?2...)" )
+				.setInvariantType( stringType )
+				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.impliedOrInvariant(
+								typeConfiguration,
+								FunctionParameterType.STRING
+						)
+				)
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "coalesce" )
+				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "nullif" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "character_length" )
+				.setInvariantType( integerType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( FunctionParameterType.STRING_OR_CLOB )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.registerAlternateKey( "length", "character_length" );
+
+		functionRegistry.namedDescriptorBuilder( "substring", "substr" )
+				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
+				.setInvariantType( stringType )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes(
+						FunctionParameterType.STRING,
+						FunctionParameterType.INTEGER,
+						FunctionParameterType.INTEGER
+				)
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*length(?1),?1)" )
+				.setInvariantType( stringType )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( FunctionParameterType.STRING, FunctionParameterType.INTEGER )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentListSignature( "(STRING string, INTEGER times)" )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "lpad" )
+				.setInvariantType( stringType )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes(
+						FunctionParameterType.STRING,
+						FunctionParameterType.INTEGER,
+						FunctionParameterType.STRING
+				)
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentListSignature( "(STRING string, INTEGER length[, STRING padding])" )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "rpad" )
+				.setInvariantType( stringType )
+				.setArgumentCountBetween( 2, 3 )
+				.setParameterTypes(
+						FunctionParameterType.STRING,
+						FunctionParameterType.INTEGER,
+						FunctionParameterType.STRING
+				)
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentListSignature( "(STRING string, INTEGER length[, STRING padding])" )
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
+				.setInvariantType( stringType )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( FunctionParameterType.STRING, FunctionParameterType.INTEGER )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "right", "substr(?1,-?2)" )
+				.setInvariantType( stringType )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( FunctionParameterType.STRING, FunctionParameterType.INTEGER )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentListSignature( "(STRING string, INTEGER length)" )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "replace" )
+				.setInvariantType( stringType )
+				.setExactArgumentCount( 3 )
+				.setParameterTypes(
+						FunctionParameterType.STRING,
+						FunctionParameterType.STRING,
+						FunctionParameterType.STRING
+				)
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.setArgumentListSignature( "(STRING string, STRING pattern, STRING replacement)" )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "log" )
+				.setArgumentCountBetween( 1, 2 )
+				.setParameterTypes( FunctionParameterType.NUMERIC, FunctionParameterType.NUMERIC )
+				.setInvariantType( doubleType )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.namedDescriptorBuilder( "power" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( FunctionParameterType.NUMERIC, FunctionParameterType.NUMERIC )
+				.setInvariantType( doubleType )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "hex", "to_char(?1)" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( FunctionParameterType.BINARY )
+				.setInvariantType( stringType )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "radians", "(?1*acos(-1)/180)" )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( FunctionParameterType.NUMERIC )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "degrees", "(?1/acos(-1)*180)" )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( FunctionParameterType.NUMERIC )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
+		for ( String functionName : new String[] { "sin", "cos", "tan", "asin", "acos", "atan" } ) {
+			functionRegistry.namedDescriptorBuilder( functionName )
+					.setInvariantType( doubleType )
+					.setExactArgumentCount( 1 )
+					.setParameterTypes( FunctionParameterType.NUMERIC )
+					.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+					.register();
+		}
+
+		functionRegistry.namedDescriptorBuilder( "atan2" )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( FunctionParameterType.NUMERIC, FunctionParameterType.NUMERIC )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
+				.register();
+
 	}
 
 	@Override
@@ -328,7 +554,6 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
-
 		appender.appendSql( "VARBYTE'" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
@@ -544,7 +769,52 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return LockingSupportSimple.NO_OUTER_JOIN;
+		return LOCKING_SUPPORT;
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return getForUpdateString() + " nowait";
+	}
+
+	@Override
+	public String getForUpdateNowaitString(String aliases) {
+		return getForUpdateString( aliases ) + " nowait";
+	}
+
+	@Override
+	public String getForUpdateString(Timeout timeout) {
+		return withLockTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withLockTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withLockTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
+	private String withLockTimeout(String lockString, Timeout timeout) {
+		return switch ( timeout.milliseconds() ) {
+			case Timeouts.NO_WAIT_MILLI -> LOCKING_SUPPORT.getMetadata().getLockTimeoutType( timeout ) == LockTimeoutType.QUERY
+					? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> LOCKING_SUPPORT.getMetadata().getLockTimeoutType( timeout ) == LockTimeoutType.QUERY
+					? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -608,6 +878,11 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	public int getInExpressionCountLimit() {
+		return IN_LIST_SIZE_LIMIT;
+	}
+
+	@Override
 	public boolean supportsWindowFunctions() {
 		return true;
 	}
@@ -649,25 +924,75 @@ public class AltibaseDialect extends Dialect {
 			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
 				case 334393:       // response timeout
 				case 4164:         // query timeout
+				case 69749:        // lock timeout
 					return new LockTimeoutException(message, sqlException, sql );
+				case 334421:       // row already exists in a unique index
 				case 69720:        // unique constraint violated
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					constraintName = extractConstraintName( sqlException );
 					return new ConstraintViolationException(
 							message,
 							sqlException,
 							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
+							ConstraintKind.UNIQUE,
 							constraintName
 					);
 				case 200820:        // Cannot insert NULL or update to NULL
+					constraintName = extractConstraintName( sqlException );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintKind.NOT_NULL,
+							constraintName
+					);
 				case 200823:        // foreign key constraint violation
 				case 200822: 	    // failed on update or delete by foreign key constraint violation
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					constraintName = extractConstraintName( sqlException );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintKind.FOREIGN_KEY,
+							constraintName
+					);
+				case 201618:        // check constraint violation
+					constraintName = extractConstraintName( sqlException );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintKind.CHECK,
+							constraintName
+					);
 				default:
 					return null;
 			}
 		};
+	}
+
+	private static String extractConstraintName(SQLException sqlException) {
+		final String sqlExceptionMessage = sqlException.getMessage();
+		if ( sqlExceptionMessage == null ) {
+			return null;
+		}
+		final String checkConstraintName = extractConstraintName( sqlExceptionMessage, CHECK_CONSTRAINT_NAME_PATTERN );
+		if ( checkConstraintName != null ) {
+			return checkConstraintName;
+		}
+		final String forConstraintName = extractConstraintName( sqlExceptionMessage, FOR_CONSTRAINT_NAME_PATTERN );
+		if ( forConstraintName != null ) {
+			return forConstraintName;
+		}
+		return extractConstraintName( sqlExceptionMessage, COLON_CONSTRAINT_NAME_PATTERN );
+	}
+
+	private static String extractConstraintName(String sqlExceptionMessage, Pattern pattern) {
+		final Matcher matcher = pattern.matcher( sqlExceptionMessage );
+		if ( !matcher.matches() ) {
+			return null;
+		}
+		final String constraintName = matcher.group( 1 ).trim();
+		return constraintName.isEmpty() ? null : constraintName;
 	}
 
 	@Override

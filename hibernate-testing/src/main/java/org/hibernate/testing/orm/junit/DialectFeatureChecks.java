@@ -45,6 +45,7 @@ import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
@@ -650,7 +651,8 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsDateTimeTruncation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			if (dialect instanceof DerbyDialect
+			if (dialect instanceof AltibaseDialect
+				|| dialect instanceof DerbyDialect
 				|| dialect instanceof FirebirdDialect
 				|| dialect instanceof InformixDialect) {
 				return false;

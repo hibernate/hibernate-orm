@@ -642,6 +642,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datetime truncation is not supported")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "date and timestamp are not compatible")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Datetime truncation is not supported")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <timestamptz> - <date>")
@@ -2269,6 +2270,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "local datetime is evaluated in the database local time zone")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The clock in the container likes to get skewed, so to avoid false negatives, skip the test")
 	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

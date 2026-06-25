@@ -13,10 +13,8 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SortNatural;
-import org.hibernate.community.dialect.AltibaseDialect;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -37,7 +35,6 @@ import jakarta.persistence.OneToMany;
  * @author Nathan Xu
  */
 @JiraKey(value = "HHH-14227")
-@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 	@Override
@@ -79,13 +76,13 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 		verifyContainsBatches(
 				new Batch( "insert into Placeholder (name,id) values (?,?)", 2 ),
 				new Batch( List.of(
-						"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
-						"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
-						"insert into `Parameter` (name,`parent_id`,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ) ),
+						"insert into Parameter (name,parent_id,PARAMETER_TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
+						"insert into \"Parameter\" (name,\"parent_id\",PARAMETER_TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
+						"insert into `Parameter` (name,`parent_id`,PARAMETER_TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ) ),
 				new Batch( List.of(
-						"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
-						"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
-						"insert into `Parameter` (name,`parent_id`,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)" ),
+						"insert into Parameter (name,parent_id,PARAMETER_TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
+						"insert into \"Parameter\" (name,\"parent_id\",PARAMETER_TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
+						"insert into `Parameter` (name,`parent_id`,PARAMETER_TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)" ),
 						3 )
 		);
 	}
@@ -104,7 +101,9 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 	}
 
 	@Entity(name = "Parameter")
-	@DiscriminatorColumn(name = "TYPE")
+	// This test is about insert ordering, not identifier quoting. Keep the discriminator
+	// column non-reserved because @SQLRestriction repeats it as raw SQL.
+	@DiscriminatorColumn(name = "PARAMETER_TYPE")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	static abstract class Parameter extends AbstractEntity {
 		String name;
@@ -119,7 +118,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 		@SortNatural
-		@SQLRestriction("TYPE = 'INPUT'")
+		@SQLRestriction("PARAMETER_TYPE = 'INPUT'")
 		@Fetch(FetchMode.SUBSELECT)
 		List<InputParameter> children = new ArrayList<>();
 	}
@@ -133,7 +132,7 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 		@SortNatural
-		@SQLRestriction("TYPE = 'OUTPUT'")
+		@SQLRestriction("PARAMETER_TYPE = 'OUTPUT'")
 		@Fetch(FetchMode.SUBSELECT)
 		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 		List<OutputParameter> children = new ArrayList<>();

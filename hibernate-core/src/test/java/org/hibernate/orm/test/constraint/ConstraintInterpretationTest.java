@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -82,8 +83,8 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.UNIQUE, cve.getKind() );
-				// DB2 error message doesn't contain unique constraint name
-				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof SpannerPostgreSQLDialect) ) {
+				// DB2 and Altibase error messages don't contain unique constraint name
+				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof SpannerPostgreSQLDialect) && !(scope.getDialect() instanceof AltibaseDialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().contains( "ssnuk" ) );
 				}
 			}

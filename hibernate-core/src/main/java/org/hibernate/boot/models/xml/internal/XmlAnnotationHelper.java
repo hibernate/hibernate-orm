@@ -1217,6 +1217,17 @@ public class XmlAnnotationHelper {
 		jdbcTypeAnn.value( descriptorClassDetails.toJavaClass() );
 	}
 
+	public static void applyMapKeyJdbcTypeName(
+			String jdbcTypeName,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		applyMapKeyJdbcTypeCode(
+				resolveJdbcTypeName( jdbcTypeName ),
+				memberDetails,
+				xmlDocumentContext
+		);
+	}
+
 	public static void applyMapKeyJdbcTypeCode(
 			Integer jdbcTypeCode,
 			MutableMemberDetails memberDetails,

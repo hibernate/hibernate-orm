@@ -331,6 +331,34 @@ rechecked with a forced focused run and is green:
   --console=plain --rerun-tasks
 ----
 
+The latest temporal configuration bucket is green:
+
+* `StandardBasicTypes.ZONED_DATE_TIME`, `OFFSET_DATE_TIME`, and `OFFSET_TIME`
+  now resolve through the active recommended JDBC type when used as
+  configuration-sensitive basic type references.  This preserves the explicit
+  `WITH_TIMEZONE` / `WITHOUT_TIMEZONE` variants while allowing the generic
+  references to honor `hibernate.timezone.default_storage`.
+* The basic type registry detects when a cached configuration-sensitive
+  temporal type no longer matches the active configuration level and recreates
+  it for the current scope.  This fixes explicit query parameter binding
+  mismatches where mapped temporal attributes used normalized storage but
+  `setParameter(..., StandardBasicTypes.ZONED_DATE_TIME/OFFSET_DATE_TIME)`
+  still used timestamp-with-time-zone binding.
+* Annotation-processor/mock bootstrap resolution keeps the declared static
+  reference as a fallback when the mock service registry cannot answer the
+  runtime preference services.
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.type.temporal.ZonedDateTimeTest' \
+  --tests 'org.hibernate.orm.test.type.temporal.OffsetDateTimeTest' \
+  --console=plain
+----
+
+The generics guardrail set is still green after the temporal type-registry
+change.
+
 == Full-Suite Census Note
 
 A controlled single-worker `hibernate-core` census was run on 2026-06-26:
@@ -374,13 +402,14 @@ Top exception classes:
 
 Highest-signal next buckets from this census:
 
-* JPA/settings normalization parity:
-  `ConfigurationObjectSettingTest`, `InterceptorTest`, `FlushModeConfigTest`,
-  `FlushModeTest`, shared-cache-mode tests, lock-timeout hints, and related
-  configuration-object probes.
-* Temporal/time-zone parity:
-  `OffsetDateTimeTest`, `ZonedDateTimeTest`, `ColumnZonedTest`, and related
-  storage/materialization checks.
+* The previous largest raw temporal cluster,
+  `OffsetDateTimeTest` / `ZonedDateTimeTest`, is now green in focused
+  verification.  Do not use the old full-suite count as proof of remaining
+  temporal failures without rerunning the census.
+* JPA/query parameter parity:
+  `MaxInExpressionParameterPaddingTest`, `LegacyParameterTests`, and nearby
+  explicit-parameter binding tests are now the highest raw-count follow-up from
+  the same census data.
 * JPA metamodel static/runtime metadata `ClassCastException` cluster:
   `MetadataTest`, `EmbeddableMetaModelTest`, generic embedded-id metamodel
   tests.
@@ -540,20 +569,20 @@ Focused validation is green:
 == Completed Single-Worker Census
 
 After the settings-normalization and `SessionFactoryOptionsAdapter` parity
-fixes, the controlled single-worker suite run completed instead of hanging:
+fixes, the controlled single-worker suite run completed instead of hanging.
+The latest refresh after the JPA/settings normalization parity bucket used:
 
 [source,bash]
 ----
 ./gradlew :hibernate-core:test -x :hibernate-testing:test \
-  -Ptest.threads=1 \
-  --continue \
-  --console=plain
+  --console=plain --max-workers=1
 ----
 
-Result on 2026-06-26: `BUILD FAILED` because of test failures, but the test task
-completed in 3m24s and did not produce a new OOM dump.  The XML census contains
-4,247 test-class result files, 15,494 executed tests, 1,554 skipped tests, 333
-failing classes, 772 failures, and 0 XML `error` entries.
+Latest result on 2026-06-26: `BUILD FAILED` because of test failures, but the
+test task completed in 3m26s and did not hang.  Gradle reported 15,493 tests
+completed, 741 failed, and 1,553 skipped.  The XML census contains 4,247
+test-class result files, 324 failing classes, 741 failures, and 0 XML `error`
+entries.
 
 The old broad `UnsupportedOperationException` sample is mostly stale.  The
 previous SessionFactoryOptions/JTA-style UOE list rechecked green in focused
@@ -584,10 +613,15 @@ The largest completed-census failure buckets are no longer UOE-dominated:
 * soft-delete NPEs at `JavaTypeRegistry` and converter/verification failures;
 * generator/identifier/schema/naming assertion clusters.
 
-Recommended next focused slice from this census: target
-`FinalEmbeddableFieldTest` if the goal is to keep removing boot/source binding
-UOEs, or target `AnnotationCoverageBindingTests` / `JsonWithArrayEmbeddableTest`
-if the goal is higher-signal aggregate/materialization parity.  Leave
+Recommended next focused slice from the latest census: the temporal
+`ZonedDateTimeTest` / `OffsetDateTimeTest` bucket was largest by raw count and
+is now green in focused verification.  The next raw-count follow-up is
+JPA/query parameter parity (`MaxInExpressionParameterPaddingTest`,
+`LegacyParameterTests`, and related explicit-parameter probes).  For a more
+boot/model-centered slice, prefer `AnnotationCoverageBindingTests` plus
+`JsonWithArrayEmbeddableTest` for aggregate/materialization parity, or the
+mapped-by/join-table association clusters if the goal is
+collection/association key handoff.  Leave
 `NaturalIdDereferenceTest` for later unless we are ready to work in runtime
 model foreign-key support.
 

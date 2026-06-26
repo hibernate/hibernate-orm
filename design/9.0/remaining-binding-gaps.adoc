@@ -543,16 +543,35 @@ Source-confirmed refresh:
 
 Recommended next parity bucket:
 
-* Fresh full-suite census note: the 2026-06-26 controlled single-worker
-  `hibernate-core` run completed the test task with 15493 tests, 756 failures,
-  and 1553 skipped tests.  The old sampled UOE list is green; choose from the
-  fresh census clusters instead.
-* Highest-signal source/config bucket from the census: JPA/settings
-  normalization parity.  Start with `ConfigurationObjectSettingTest`,
-  `InterceptorTest`, `FlushModeConfigTest`, `FlushModeTest`, shared-cache-mode
-  tests, and lock-timeout/configuration-object probes.  This is more likely to
-  be a focused recovered-legacy-builder handoff than the broad runtime SQL
-  clusters.
+* Fresh full-suite census note: after the JPA/settings normalization parity
+  bucket, the 2026-06-26 controlled single-worker `hibernate-core` run completed
+  the test task with 15,493 tests and more than seven hundred failures.  The
+  old sampled UOE list is green; choose from the fresh census clusters instead.
+* The largest raw-count bucket from that census was temporal type parity:
+  `ZonedDateTimeTest` and `OffsetDateTimeTest`.  That focused bucket is now
+  green.  The fix stayed in type-configuration/bootstrap handoff rather than
+  SQL-AST/runtime code: generic configuration-sensitive standard temporal
+  references now honor the active recommended JDBC type, while explicit
+  with/without-time-zone variants remain fixed.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.type.temporal.ZonedDateTimeTest' \
+  --tests 'org.hibernate.orm.test.type.temporal.OffsetDateTimeTest' \
+  --console=plain
+----
+* The generics guardrail set is still green after the temporal type-registry
+  change.
+* Next highest raw-count follow-up from the same census is query parameter /
+  SQL rendering parity, led by `MaxInExpressionParameterPaddingTest`,
+  `LegacyParameterTests`, and nearby explicit-parameter binding tests.  Recheck
+  focused reproduction before assuming it is a boot/model defect.
+* Highest-signal boot/model bucket from the latest census:
+  `AnnotationCoverageBindingTests` plus `JsonWithArrayEmbeddableTest` for
+  aggregate/materialization parity, followed by mapped-by/join-table association
+  key handoff if the aggregate bucket proves runtime-only.
 * Highest-signal bucket: collections/plural association keys, with map-key and
   collection-table owner-key parity first.  This bucket is still
   source-confirmed, appeared repeatedly in broad-run failure streams, and is
@@ -1150,19 +1169,21 @@ Refresh command:
 
 Status:
 
-* The controlled single-worker run completed in 3m24s and failed normally due
+* The controlled single-worker run completed in 3m26s and failed normally due
   to test failures; it did not hang and did not produce a new OOM dump.
-* XML census: 4,247 test-class result files, 15,494 executed tests, 1,554
-  skipped tests, 333 failing classes, 772 failures, and 0 XML `error` entries.
+* Latest XML census: 4,247 test-class result files, 324 failing classes, 741
+  failures, and 0 XML `error` entries.  Gradle reported 15,493 tests completed
+  and 1,553 skipped.
 * Highest-count failures were temporal type assertions
   (`ZonedDateTimeTest`, `OffsetDateTimeTest`), runtime SQL/query fallout,
   annotation coverage/materialization parity, JPA metamodel, soft-delete NPEs,
   generator/identifier/schema/naming assertions, and mapped-by/generic
   embeddable association clusters.
 * Recommended next binding/materialization buckets from this census:
-  `FinalEmbeddableFieldTest` for the remaining boot-side UOE, or
   `AnnotationCoverageBindingTests` / `JsonWithArrayEmbeddableTest` for
-  higher-signal aggregate materialization parity.
+  higher-signal aggregate materialization parity, or mapped-by/join-table
+  association clusters for collection/association key handoff.  The temporal
+  bucket is larger by count but probably less source/binding-focused.
 
 === Core Guardrail Refresh: 2026-06-18
 

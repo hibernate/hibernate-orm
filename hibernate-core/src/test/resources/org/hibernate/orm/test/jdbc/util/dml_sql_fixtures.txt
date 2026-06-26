@@ -2,11 +2,27 @@
 
 @@@@ FIXTURE @@@@
 === ID ===
+simple_select
+
+=== SQL ===
+select id,name,dept,salary from empl e where e.salary >= 50000;
+
+=== EXPECTED ===
+select
+    id,
+    name,
+    dept,
+    salary
+from empl e
+where e.salary >= 50000;
+
+@@@@ FIXTURE @@@@
+=== ID ===
 complexselect
 
 === SQL ===
 -- Non-indented single line comment
-with recent_customer_activity as (select "O".`CUSTOMER_ID`,COUNT(*) AS order_count,MAX(o.created_at)
+with recursive recent_customer_activity as (select "O".`CUSTOMER_ID`,COUNT(*) AS order_count,MAX(o.created_at)
 as last_order_date,SUM(o.total_amount) as total_spent FROM orders o WHERE o.created_at >=
 CURRENT_DATE - INTERVAL '12 months' GROUP BY o.customer_id HAVING sum(o.total_amount) > 1000),/* Non-indented multi-line
 comment */
@@ -38,7 +54,7 @@ first 5 rows with ties;
 
 === EXPECTED ===
 -- Non-indented single line comment
-with recent_customer_activity as (
+with recursive recent_customer_activity as (
     select
         "O".`CUSTOMER_ID`,
         count(*) as order_count,

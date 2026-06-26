@@ -34,6 +34,9 @@ public interface CategorizedDomainModel {
 	/// All entity hierarchies defined in the persistence unit
 	Set<EntityHierarchy> getEntityHierarchies();
 
+	/// All source classes considered while categorizing the persistence unit.
+	Map<String,ClassDetails> getSourceClasses();
+
 	/// Iteration over the {@linkplain #getEntityHierarchies() entity hierarchies}
 	default void forEachEntityHierarchy(IndexedConsumer<EntityHierarchy> hierarchyConsumer) {
 		final Set<EntityHierarchy> entityHierarchies = getEntityHierarchies();

@@ -22,6 +22,7 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -148,7 +149,7 @@ public class BasicValueMappingMaterializer {
 		property.setValue( basicValue );
 
 		if ( basicValueIntent.isFormula() ) {
-			basicValue.addFormula( new org.hibernate.mapping.Formula( basicValueIntent.formulaExpression() ) );
+			basicValue.addFormula( formula( basicValueIntent ) );
 			property.setOptional( true );
 			property.setInsertable( false );
 			property.setUpdatable( false );
@@ -260,6 +261,12 @@ public class BasicValueMappingMaterializer {
 			}
 		}
 		return result;
+	}
+
+	private static Formula formula(BasicValueIntent basicValueIntent) {
+		final Formula formula = new Formula( basicValueIntent.formulaExpression() );
+		formula.setSelectableName( basicValueIntent.formulaSelectableName() );
+		return formula;
 	}
 
 	private static void applyBasicOptionality(MemberDetails member, Property property, Column column) {

@@ -2005,13 +2005,19 @@ collection Java members would otherwise infer `Object`, and standalone component
 map-key columns on unidirectional one-to-many FK mappings are writable so the
 map key is persisted and orphan/delete behavior matches legacy runtime behavior.
 
-Remaining collection-valued clusters in the refreshed sample are:
-
-* `PersistentBagContainsTest` still generates invalid SQL for `contains`;
-* `MultipleSessionCollectionTest` still hits a runtime collection-role
-  transfer edge; and
-* `CollectionTest.testCollectionInheritance` still fails during delete with an
-  FK constraint violation.
+The next refreshed collection-valued sample is now green across 348 tests for
+the sampled collection packages.  `PersistentBagContainsTest`,
+`MultipleSessionCollectionTest`, and `CollectionTest.testCollectionInheritance`
+are no longer failing in the current worktree.  The refresh exposed one real
+remaining collection-table issue in `ListAndSetProxyTest`: an owning
+`@OneToMany @JoinTable` list targeting an entity with an embedded id created an
+element-side foreign key using primary-key shorthand even though the resolved
+referenced-column order did not match the physical target primary-key order.
+`ForeignKeyMappingMaterializer` now only collapses a resolved FK to primary-key
+shorthand when the referenced-column order matches the target table primary key;
+otherwise the resolved correspondence remains explicit.  The refresh also
+removed the stale `@FailureExpected` marker from
+`StaleOneToManyListTest.test3`, which now passes.
 
 The earlier `OrderByColumnNameTest` / `OrderByTest` cluster is green after
 restoring legacy boot metadata behavior for `@SQLOrder` and expanding blank JPA

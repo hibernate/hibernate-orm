@@ -338,6 +338,7 @@ public class BindingCoordinator {
 		processImports( globalRegistrations );
 		processConverters( globalRegistrations );
 		processNamedQueries( globalRegistrations );
+		processStaticQueries();
 		processSqlResultSetMappings( globalRegistrations );
 		processNamedEntityGraphs( globalRegistrations );
 		processFetchProfileDeclarations( globalRegistrations );
@@ -511,11 +512,21 @@ public class BindingCoordinator {
 		);
 	}
 
+	private void processStaticQueries() {
+		categorizedDomainModel.getSourceClasses().values().forEach(
+				(classDetails) -> QueryBinder.bindStaticQueries(
+						classDetails,
+						bindingState.getMetadataBuildingContext()
+				)
+		);
+	}
+
 	private void processSqlResultSetMappings(GlobalRegistrations globalRegistrations) {
 		globalRegistrations.getSqlResultSetMappingRegistrations().values().forEach( (registration) ->
 				QueryBinder.bindSqlResultSetMapping(
 						registration.configuration(),
 						bindingState.getMetadataBuildingContext(),
+						registration.location(),
 						false
 				)
 		);

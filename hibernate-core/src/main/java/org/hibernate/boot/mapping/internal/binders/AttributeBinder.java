@@ -29,6 +29,7 @@ import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -333,7 +334,7 @@ public class AttributeBinder {
 			BindingContext bindingContext) {
 		if ( selectableIntent.isFormula() ) {
 			basicValue.setTable( primaryTable );
-			basicValue.addFormula( new org.hibernate.mapping.Formula( selectableIntent.formulaExpression() ) );
+			basicValue.addFormula( formula( selectableIntent ) );
 			return ProcessedSelectable.formula();
 		}
 
@@ -387,6 +388,12 @@ public class AttributeBinder {
 		final String readExpression = selectableIntent.customReadExpression();
 		column.setResolvedCustomRead( readExpression == null || readExpression.isBlank() ? null : readExpression );
 		column.setCustomWrite( writeExpression == null || writeExpression.isBlank() ? null : writeExpression );
+	}
+
+	private static Formula formula(BasicValueIntent selectableIntent) {
+		final Formula formula = new Formula( selectableIntent.formulaExpression() );
+		formula.setSelectableName( selectableIntent.formulaSelectableName() );
+		return formula;
 	}
 
 	/// The selectable materialized for a basic value intent.

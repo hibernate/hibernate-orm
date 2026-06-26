@@ -415,7 +415,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			annotation.classes( QueryProcessing.extractConstructorResults( jaxbMapping.getConstructorResult(), xmlDocumentContext ) );
 			annotation.entities( QueryProcessing.extractEntityResults( jaxbMapping.getEntityResult(), xmlDocumentContext ) );
 
-			sqlResultSetMappingRegistrations.put( name, new SqlResultSetMappingRegistration( name, annotation ) );
+			sqlResultSetMappingRegistrations.put( name, new SqlResultSetMappingRegistration( name, annotation, null ) );
 		} );
 	}
 
@@ -665,9 +665,9 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			if ( sqlResultSetMappingRegistrations == null ) {
 				sqlResultSetMappingRegistrations = new HashMap<>();
 			}
-			sqlResultSetMappingRegistrations.put(
+			sqlResultSetMappingRegistrations.putIfAbsent(
 					usage.name(),
-					new SqlResultSetMappingRegistration( usage.name(), usage )
+					new SqlResultSetMappingRegistration( usage.name(), usage, annotationTarget )
 			);
 		}
 	}

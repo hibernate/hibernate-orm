@@ -15,12 +15,18 @@ import org.hibernate.models.spi.ClassDetails;
 /// @author Steve Ebersole
 public record CategorizedDomainModelImpl(
 		Set<EntityHierarchy> entityHierarchies,
+		Map<String, ClassDetails> sourceClasses,
 		Map<String, ClassDetails> mappedSuperclasses,
 		Map<String, ClassDetails> embeddables,
 		GlobalRegistrations globalRegistrations) implements CategorizedDomainModel {
 	@Override
 	public Set<EntityHierarchy> getEntityHierarchies() {
 		return entityHierarchies;
+	}
+
+	@Override
+	public Map<String, ClassDetails> getSourceClasses() {
+		return sourceClasses;
 	}
 
 	public Map<String, ClassDetails> getMappedSuperclasses() {

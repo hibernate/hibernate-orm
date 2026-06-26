@@ -154,7 +154,8 @@ public class ForeignKeyMappingMaterializer {
 	private boolean referencesPrimaryKey(
 			SelectableOrderResolution selectableOrder,
 			PersistentClass referencedEntity) {
-		return referencedEntity.getIdentifier().getColumns().equals( selectableOrder.referencedColumns() );
+		final var primaryKey = referencedEntity.getTable().getPrimaryKey();
+		return primaryKey != null && primaryKey.getColumns().equals( selectableOrder.referencedColumns() );
 	}
 
 	public ForeignKey materializeForeignKey(ToOne value, PersistentClass referencedEntity, String sourceRole) {

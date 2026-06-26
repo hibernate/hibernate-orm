@@ -30,6 +30,7 @@ import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper
 /// @author Steve Ebersole
 public record BasicValueIntent(
 		String formulaExpression,
+		String formulaSelectableName,
 		ColumnSource columnSource,
 		String tableName,
 		boolean insertable,
@@ -60,13 +61,13 @@ public record BasicValueIntent(
 			jakarta.persistence.AttributeOverride attributeOverride,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final var formulaAnn = formula( member, bindingState, bindingContext );
-		if ( formulaAnn != null ) {
-			return formulaIntent( formulaAnn.value(), directConversion( member ) );
-		}
-
 		final Column columnAnn = member.getDirectAnnotationUsage( Column.class );
 		final Column effectiveColumn = attributeOverride == null ? columnAnn : attributeOverride.column();
+		final var formulaAnn = formula( member, bindingState, bindingContext );
+		if ( formulaAnn != null ) {
+			return formulaIntent( formulaAnn.value(), formulaSelectableName( ColumnSource.from( effectiveColumn ) ), directConversion( member ) );
+		}
+
 		return columnIntent(
 				ColumnSource.from( effectiveColumn ),
 				effectiveColumn == null ? null : effectiveColumn.table(),
@@ -82,12 +83,16 @@ public record BasicValueIntent(
 			ComponentSource.ComponentMember member,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		final ColumnSource columnSource = source.columnSource( member.path(), member.member() );
 		final var formulaAnn = formula( member.member(), bindingState, bindingContext );
 		if ( formulaAnn != null ) {
-			return formulaIntent( formulaAnn.value(), source.conversion( member.path(), member.member() ) );
+			return formulaIntent(
+					formulaAnn.value(),
+					formulaSelectableName( columnSource ),
+					source.conversion( member.path(), member.member() )
+			);
 		}
 
-		final ColumnSource columnSource = source.columnSource( member.path(), member.member() );
 		return columnIntent(
 				columnSource,
 				null,
@@ -148,9 +153,10 @@ public record BasicValueIntent(
 		);
 	}
 
-	private static BasicValueIntent formulaIntent(String formula, Convert conversion) {
+	private static BasicValueIntent formulaIntent(String formula, String selectableName, Convert conversion) {
 		return new BasicValueIntent(
 				formula,
+				selectableName,
 				null,
 				null,
 				true,
@@ -161,6 +167,10 @@ public record BasicValueIntent(
 				null,
 				conversion
 		);
+	}
+
+	private static String formulaSelectableName(ColumnSource columnSource) {
+		return columnSource == null ? null : columnSource.nonEmptyName();
 	}
 
 	private static BasicValueIntent columnIntent(
@@ -191,6 +201,7 @@ public record BasicValueIntent(
 			Convert conversion) {
 		final Array arrayAnn = member.getDirectAnnotationUsage( Array.class );
 		return new BasicValueIntent(
+				null,
 				null,
 				columnSource,
 				tableName,

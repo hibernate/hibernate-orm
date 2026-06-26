@@ -124,6 +124,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
@@ -5997,6 +5998,7 @@ public abstract class AbstractEntityPersister
 			final boolean isAttrColumnExpressionFormula;
 			final String customReadExpr;
 			final String customWriteExpr;
+			final SelectablePath selectablePath;
 			final Long length;
 			final Integer arrayLength;
 			final Integer precision;
@@ -6008,6 +6010,7 @@ public abstract class AbstractEntityPersister
 			if ( value instanceof DependantValue ) {
 				attrColumnExpression = attrColumnNames[0];
 				isAttrColumnExpressionFormula = false;
+				selectablePath = null;
 				customReadExpr = null;
 				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
@@ -6025,6 +6028,7 @@ public abstract class AbstractEntityPersister
 				if ( !value.getSelectables().get( 0 ).isFormula() ) {
 					attrColumnExpression = attrColumnNames[ 0 ];
 					isAttrColumnExpressionFormula = false;
+					selectablePath = null;
 
 					final var selectables = basicBootValue.getSelectables();
 					assert !selectables.isEmpty();
@@ -6054,8 +6058,12 @@ public abstract class AbstractEntityPersister
 					resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
+					final Formula formula = (Formula) value.getSelectables().get( 0 );
 					attrColumnExpression = attrColumnNames[ 0 ];
 					isAttrColumnExpressionFormula = true;
+					selectablePath = formula.getSelectableName() == null
+							? null
+							: new SelectablePath( formula.getSelectableName() );
 					customReadExpr = null;
 					customWriteExpr = null;
 					length = null;
@@ -6078,7 +6086,7 @@ public abstract class AbstractEntityPersister
 					(BasicType<?>) value.getType(),
 					tableExpression,
 					attrColumnExpression,
-					null,
+					selectablePath,
 					isAttrColumnExpressionFormula,
 					customReadExpr,
 					customWriteExpr,

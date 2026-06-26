@@ -5,6 +5,7 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import jakarta.persistence.MappedSuperclass;
 /// @author Steve Ebersole
 public class DomainModelCategorizationCollector {
 	private final boolean areIdGeneratorsGlobal;
+	private final Map<String,ClassDetails> sourceClasses = new LinkedHashMap<>();
 	private final Set<ClassDetails> sourcePersistentTypes = new HashSet<>();
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
@@ -50,6 +52,10 @@ public class DomainModelCategorizationCollector {
 
 	public Set<ClassDetails> getSourcePersistentTypes() {
 		return sourcePersistentTypes;
+	}
+
+	public Map<String, ClassDetails> getSourceClasses() {
+		return sourceClasses;
 	}
 
 	public Map<String, ClassDetails> getMappedSuperclasses() {
@@ -98,6 +104,7 @@ public class DomainModelCategorizationCollector {
 	}
 
 	public void apply(ClassDetails classDetails) {
+		sourceClasses.putIfAbsent( classDetails.getName(), classDetails );
 		getGlobalRegistrations().collectJavaTypeRegistrations( classDetails );
 		getGlobalRegistrations().collectJdbcTypeRegistrations( classDetails );
 		getGlobalRegistrations().collectConverterRegistrations( classDetails );
@@ -146,6 +153,7 @@ public class DomainModelCategorizationCollector {
 	public CategorizedDomainModel createResult(Set<EntityHierarchy> entityHierarchies) {
 		return new CategorizedDomainModelImpl(
 				entityHierarchies,
+				sourceClasses,
 				mappedSuperclasses,
 				embeddables,
 				getGlobalRegistrations()

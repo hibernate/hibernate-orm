@@ -316,7 +316,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 									predicate,
 									new QueryLiteral<>(
 											tableDiscriminatorDetails.getDiscriminatorValue(),
-											getUnderlyingJdbcMapping()
+											(BasicType<?>) getJdbcMapping()
 									)
 							);
 						}

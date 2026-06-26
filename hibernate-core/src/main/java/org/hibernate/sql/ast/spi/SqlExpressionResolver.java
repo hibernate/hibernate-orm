@@ -98,7 +98,7 @@ public interface SqlExpressionResolver {
 	static ColumnReferenceKey createDiscriminatorColumnReferenceKey(TableReference tableReference, EntityDiscriminatorMapping discriminatorMapping) {
 		assert tableReference.containsAffectedTableName( discriminatorMapping.getContainingTableExpression() )
 				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), discriminatorMapping.getContainingTableExpression() );
-		return createColumnReferenceKey( tableReference, discriminatorMapping.getSelectablePath(), discriminatorMapping.getUnderlyingJdbcMapping() );
+		return createColumnReferenceKey( tableReference, discriminatorMapping.getSelectablePath(), discriminatorMapping.getJdbcMapping() );
 	}
 
 	default Expression resolveSqlExpression(TableReference tableReference, SelectableMapping selectableMapping) {

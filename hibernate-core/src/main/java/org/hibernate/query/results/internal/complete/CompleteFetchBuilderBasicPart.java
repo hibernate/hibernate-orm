@@ -90,9 +90,10 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 						: referencedModelPart.getJdbcMapping();
 
 		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
+
 		// we just care about the registration here.  The ModelPart will find it later
 		creationStateImpl.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, referencedModelPart.getSelectablePath(), jdbcMapping ),
+				createColumnReferenceKey( tableReference, referencedModelPart ),
 				processingState -> new ResultSetMappingSqlSelection( valuesArrayPosition, referencedModelPart )
 		);
 

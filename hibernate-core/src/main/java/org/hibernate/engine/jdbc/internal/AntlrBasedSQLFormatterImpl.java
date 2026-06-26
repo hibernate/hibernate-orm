@@ -53,17 +53,25 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 		private int baseIndent = 0; // Base indent level for current context
 		private boolean atLineStart = true;
 		private final Deque<Context> contextStack = new ArrayDeque<>();
-		private boolean inMergeWhenThenBlock = false; // Tracks if we're in a MERGE WHEN THEN block
 
 		// Context types
 		private enum ContextType {
 			MAIN,           // Main query
+			SELECT,			// Top-level Select
+			MERGE,			// Merge statement
+			DELETE,			// Delete statement
+			INSERT,			// Insert statement
+			UPDATE,			// Update statement
 			CTE,            // Common Table Expression
 			SUBQUERY,       // Subquery (in FROM/JOIN/WHERE/assignment/etc.)
 			FUNCTION,       // Function call
 			BETWEEN_EXPR,	// Between expression
 			CASE_EXPR,      // CASE expression
-			OPERATOR_LIST   // Operator list (IN, ALL, etc.)
+			OPERATOR_LIST;   // Operator list (IN, ALL, etc.)
+
+			public boolean isCurrent(Context currentContext) {
+				return currentContext != null && this.equals( currentContext.type );
+			}
 		}
 
 		private static class Context {
@@ -125,14 +133,20 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					SqlFormatterLexer.UNION,
 					SqlFormatterLexer.INTERSECT,
 					SqlFormatterLexer.EXCEPT,
-					SqlFormatterLexer.INSERT,
-					SqlFormatterLexer.DELETE,
-					SqlFormatterLexer.MERGE,
 					SqlFormatterLexer.USING,	// USING in MERGE statement - newline at MERGE context level
 					SqlFormatterLexer.RETURNING:
 					newLine(true);
 					baseIndent = currentContext().indent;
 					writeToken(token);
+					break;
+				case SqlFormatterLexer.MERGE:
+					processMerge(token);
+					break;
+				case SqlFormatterLexer.DELETE:
+					processDelete(token);
+					break;
+				case SqlFormatterLexer.INSERT:
+					processInsert(token);
 					break;
 				case SqlFormatterLexer.UPDATE:
 					processUpdate(token);
@@ -258,10 +272,13 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 		}
 
 		private void processSemiColon(Token token) {
-			// If we're ending a MERGE WHEN THEN block, pop the temporary context
-			if (inMergeWhenThenBlock) {
+			final Context ctx = currentContext();
+			if (ContextType.SELECT.isCurrent(ctx) ||
+				ContextType.MERGE.isCurrent(ctx) ||
+				ContextType.DELETE.isCurrent(ctx) ||
+				ContextType.INSERT.isCurrent(ctx) ||
+				ContextType.UPDATE.isCurrent(ctx)) {
 				contextStack.pop();
-				inMergeWhenThenBlock = false;
 			}
 			writeToken( token );
 		}
@@ -291,7 +308,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			// But NOT in UPDATE SET: VALUES(col), col = ...
 			// Check if we're in UPDATE SET by looking for SET keyword before this
 			else if (prevToken != null && prevToken.getType() == SqlFormatterLexer.RPAREN && currentContext().type == ContextType.MAIN &&
-					!isAfterKeyword(SqlFormatterLexer.SET, 10) && !isAfterKeyword(SqlFormatterLexer.UPDATE, 15)) {
+					!ContextType.UPDATE.isCurrent(currentContext())) {
 				newLine(false);
 			}
 		}
@@ -326,7 +343,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 
 		private void processFrom(Token token) {
 			// Check if we're following a DELETE statement or if we're inside a function (like TRIM)
-			if (isAfterKeyword(SqlFormatterLexer.DELETE, 1) || currentContext().type == ContextType.FUNCTION) {
+			if (ContextType.DELETE.isCurrent(currentContext()) || ContextType.FUNCTION.isCurrent(currentContext())) {
 				space();
 				writeToken( token );
 			}
@@ -342,12 +359,38 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			newLine(true);
 			baseIndent = currentContext().indent;
 			writeToken( token );
+			// if this is a main select, push new top-level context
+			pushTopLevelContext( ContextType.SELECT );
 			// Check if multi-line SELECT list
 			if (shouldListBeMultiline(SqlFormatterLexer.FROM, SqlFormatterLexer.RPAREN)) {
 				newLine(false);
 				baseIndent = currentContext().indent + 1;
 				currentContext().firstClauseElement = true;
 			}
+		}
+
+		private void processMerge(Token token) {
+			newLine(true);
+			baseIndent = currentContext().indent;
+			writeToken( token );
+			// push new top-level context
+			pushTopLevelContext(ContextType.MERGE);
+		}
+
+		private void processDelete(Token token) {
+			newLine(true);
+			baseIndent = currentContext().indent;
+			writeToken( token );
+			// push new top-level context
+			pushTopLevelContext(ContextType.DELETE);
+		}
+
+		private void processInsert(Token token) {
+			newLine(true);
+			baseIndent = currentContext().indent;
+			writeToken( token );
+			// push new top-level context
+			pushTopLevelContext(ContextType.INSERT);
 		}
 
 		private void processAs(Token token) {
@@ -390,10 +433,14 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				writeToken( token );
 			}
 			else {
-				// Regular UPDATE statement or MERGE UPDATE
+				// MERGE UPDATE
 				newLine(true);
 				baseIndent = currentContext().indent;
 				writeToken( token );
+				if ( !(ContextType.INSERT.isCurrent(currentContext()) || ContextType.MERGE.isCurrent(currentContext())) ) {
+					// Regular UPDATE statement, push new top-level context
+					pushTopLevelContext(ContextType.UPDATE);
+				}
 			}
 		}
 
@@ -478,11 +525,11 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					Token beforeValues = peekBack(2);
 					isParenthesizedList = (beforeValues == null || beforeValues.getType() != SqlFormatterLexer.EQ);
 				}
-				else if (prevType == SqlFormatterLexer.IDENTIFIER && isAfterKeyword(SqlFormatterLexer.INTO, 3)) {
+				else if (prevType == SqlFormatterLexer.IDENTIFIER && ContextType.INSERT.isCurrent(currentContext())) {
 					// INSERT INTO table (columns) - newline and indent, but keep content inline
 					isParenthesizedList = true;
 				}
-				else if (prevType == SqlFormatterLexer.ON && isAfterKeyword(SqlFormatterLexer.MERGE, 10)) {
+				else if (prevType == SqlFormatterLexer.ON && ContextType.MERGE.isCurrent(currentContext())) {
 					// MERGE ... ON (condition) - newline and indent, but keep content inline
 					isParenthesizedList = true;
 				}
@@ -631,11 +678,11 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			}
 			else if (
 					// ON CONFLICT or ON DUPLICATE KEY - major clause
-					(next != null && (next.getType() == SqlFormatterLexer.CONFLICT || next.getType() == SqlFormatterLexer.DUPLICATE)) ||
+					(next != null && (next.getType() == SqlFormatterLexer.CONFLICT ||
+									next.getType() == SqlFormatterLexer.DUPLICATE)) ||
 					// MERGE ... ON - at MERGE level (not indented)
-					(isAfterKeyword(SqlFormatterLexer.USING, 5) || isAfterKeyword(SqlFormatterLexer.MERGE, 10))
+									ContextType.MERGE.isCurrent(currentContext())
 			) {
-				// ON CONFLICT or ON DUPLICATE KEY - major clause
 				newLine(true);
 				baseIndent = currentContext().indent;
 				writeToken(token);
@@ -663,10 +710,9 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			// 1. CASE ... WHEN ... (CASE expression)
 			// 2. MERGE ... WHEN MATCHED/NOT MATCHED (MERGE statement)
 
-			// If we were in a MERGE WHEN THEN block, pop the temporary context
-			if (inMergeWhenThenBlock) {
+			// If inside a MERGE WHEN THEN block, AND a temporary context was created for the THEN-following statement (stack size > 2), pop that
+			if (contextStack.size() > 2 && inContext(ContextType.MERGE)) {
 				contextStack.pop();
-				inMergeWhenThenBlock = false;
 			}
 
 			newLine(true);
@@ -679,7 +725,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			// 1. CASE expressions (needs newline)
 			// 2. Other contexts (just space)
 
-			if (inContext(ContextType.CASE_EXPR)) {
+			if (ContextType.CASE_EXPR.isCurrent(currentContext())) {
 				// CASE expression: ELSE at CASE indent level (same as WHEN)
 				newLine(true);
 				baseIndent = currentContext().indent;
@@ -707,7 +753,6 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				newLine(false);
 				// Push a new context with +1 indent for statements inside THEN block (UPDATE, INSERT, etc.)
 				contextStack.push(new Context(ContextType.MAIN, currentContext().indent + 1));
-				inMergeWhenThenBlock = true;
 			}
 			else {
 				// CASE WHEN ... THEN or other contexts
@@ -848,16 +893,6 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			return type >= SqlFormatterLexer.SELECT && type <= SqlFormatterLexer.INTERVAL;
 		}
 
-		private boolean isAfterKeyword(int keywordType, int lookback) {
-			for (int i = position - 1; i >= 0 && i >= position - lookback; i--) {
-				Token t = tokens.get(i);
-				if (t.getType() == keywordType) {
-					return true;
-				}
-			}
-			return false;
-		}
-
 		private boolean isLogical(int type) {
 			return type == SqlFormatterLexer.AND || type == SqlFormatterLexer.OR;
 		}
@@ -876,11 +911,24 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 		}
 
 		private boolean inContext(ContextType type) {
-			return findContext( type ) != null;
+			return findContext(type) != null;
 		}
 
 		private Context currentContext() {
 			return contextStack.peek();
+		}
+
+		private void pushTopLevelContext(ContextType type) {
+			// push a new top-level context
+			if (ContextType.MAIN.isCurrent(currentContext()) && contextStack.size() == 1) {
+				if (type == ContextType.SELECT ||
+					type == ContextType.MERGE ||
+					type == ContextType.DELETE ||
+					type == ContextType.INSERT ||
+					type == ContextType.UPDATE) {
+					contextStack.push( new Context( type, 0 ) );
+				}
+			}
 		}
 
 		private boolean shouldListBeMultiline(int... terminators) {
@@ -967,6 +1015,26 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 		private Token peekAhead(int offset) {
 			int pos = position + offset;
 			return pos < tokens.size() ? tokens.get(pos) : null;
+		}
+
+		/**
+		 * NOTE: currently unused, but leaving it in for now, might come in handy in the future?
+		 * Iterate ahead (excluding the current position being processed) through the token stream until reaching the
+		 * delimiter, while looking for an occurrence of the Token that we want to find. If the delimiter itself is not
+		 * found we return 'not found'.
+		*/
+		private boolean findBeforeDelimiter(int typeToBeFound, int typeDelimiter) {
+			boolean tokenFound = false;
+			for ( int i = position + 1; i < tokens.size(); i++ ) {
+				int nextTokenType = tokens.get(i).getType();
+				if (nextTokenType == typeDelimiter) {
+					return tokenFound;
+				}
+				if (nextTokenType == typeToBeFound) {
+					tokenFound = true;
+				}
+			}
+			return false;
 		}
 
 		private Token peekBack(int offset) {

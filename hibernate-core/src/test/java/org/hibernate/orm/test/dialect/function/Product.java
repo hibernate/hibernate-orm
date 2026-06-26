@@ -3,23 +3,15 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.function;
-
 import java.math.BigDecimal;
 import java.util.Date;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 /**
+ *
  * @author Strong Liu
+ *
  */
-@Entity
-@Table(name = "t_product")
 public class Product {
-	@Id
-	@GeneratedValue
 	private Long id;
 	private int length;
 	private long weight;

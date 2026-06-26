@@ -9,16 +9,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import jakarta.persistence.AccessType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Property;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -53,6 +58,7 @@ public class HbmXmlTransformerComponentHandler {
 
 	// todo (7.0) : use transformation-state instead
 	private final Map<String, JaxbEmbeddableImpl> jaxbEmbeddableByClassName = new HashMap<>();
+	private final Map<String, ComponentTypeInfo> referenceComponentByClassName = new HashMap<>();
 	private int counter = 1;
 
 	/**
@@ -123,6 +129,9 @@ public class HbmXmlTransformerComponentHandler {
 
 		if ( isNotEmpty( embeddableClassName ) ) {
 			jaxbEmbeddableByClassName.put( embeddableClassName, jaxbEmbeddable );
+			if ( componentTypeInfo != null ) {
+				referenceComponentByClassName.put( embeddableClassName, componentTypeInfo );
+			}
 		}
 
 		return jaxbEmbeddable;
@@ -130,11 +139,73 @@ public class HbmXmlTransformerComponentHandler {
 
 	public JaxbEmbeddedImpl transformEmbedded(
 			JaxbEmbeddableImpl jaxbEmbeddable,
-			JaxbHbmCompositeAttributeType hbmComponent) {
+			JaxbHbmCompositeAttributeType hbmComponent,
+			ComponentTypeInfo componentTypeInfo) {
 		final var embedded = new JaxbEmbeddedImpl();
 		embedded.setName( hbmComponent.getName() );
 		embedded.setTarget( jaxbEmbeddable.getName() );
+
+		if ( componentTypeInfo != null ) {
+			final String embeddableClassName = jaxbEmbeddable.getClazz();
+			final var referenceInfo = embeddableClassName != null
+					? referenceComponentByClassName.get( embeddableClassName )
+					: null;
+			if ( referenceInfo != null && referenceInfo != componentTypeInfo ) {
+				applyAttributeOverrides( embedded, referenceInfo, componentTypeInfo );
+			}
+		}
+
 		return embedded;
+	}
+
+	private void applyAttributeOverrides(
+			JaxbEmbeddedImpl embedded,
+			ComponentTypeInfo referenceInfo,
+			ComponentTypeInfo currentInfo) {
+		for ( Property currentProp : currentInfo.getComponent().getProperties() ) {
+			final Property referenceProp = findProperty( referenceInfo, currentProp.getName() );
+			if ( referenceProp == null ) {
+				continue;
+			}
+
+			final var currentColumns = currentProp.getValue().getColumns();
+			final var referenceColumns = referenceProp.getValue().getColumns();
+			if ( currentColumns.size() != 1 || referenceColumns.size() != 1 ) {
+				continue;
+			}
+
+			final Column currentCol = currentColumns.get( 0 );
+			final Column referenceCol = referenceColumns.get( 0 );
+			if ( columnsMatch( currentCol, referenceCol ) ) {
+				continue;
+			}
+
+			final var override = new JaxbAttributeOverrideImpl();
+			override.setName( currentProp.getName() );
+			final var column = new JaxbColumnImpl();
+			column.setName( currentCol.getQuotedName() );
+			column.setNullable( currentCol.isNullable() );
+			column.setUnique( currentCol.isUnique() );
+			column.setRead( currentCol.getCustomReadExpression() );
+			column.setWrite( currentCol.getCustomWriteExpression() );
+			override.setColumn( column );
+			embedded.getAttributeOverrides().add( override );
+		}
+	}
+
+	private static Property findProperty(ComponentTypeInfo info, String name) {
+		for ( Property p : info.getComponent().getProperties() ) {
+			if ( name.equals( p.getName() ) ) {
+				return p;
+			}
+		}
+		return null;
+	}
+
+	private static boolean columnsMatch(Column a, Column b) {
+		return Objects.equals( a.getQuotedName(), b.getQuotedName() )
+				&& Objects.equals( a.getCustomReadExpression(), b.getCustomReadExpression() )
+				&& Objects.equals( a.getCustomWriteExpression(), b.getCustomWriteExpression() );
 	}
 
 	private JaxbEmbeddableImpl convertEmbeddable(

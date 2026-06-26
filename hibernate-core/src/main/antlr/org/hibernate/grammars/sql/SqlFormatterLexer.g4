@@ -48,6 +48,7 @@ ROWS        : [rR][oO][wW][sS];
 ROW         : [rR][oO][wW];
 ONLY        : [oO][nN][lL][yY];
 WITH        : [wW][iI][tT][hH];
+RECURSIVE   : [rR][eE][cC][uU][rR][sS][iI][vV][eE];
 TIES        : [tT][iI][eE][sS];
 INSERT      : [iI][nN][sS][eE][rR][tT];
 UPDATE      : [uU][pP][dD][aA][tT][eE];

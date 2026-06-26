@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
@@ -143,7 +144,8 @@ public class ComponentBinder {
 				uniqueByDefault,
 				nullableByDefault,
 				updatable,
-				registerCollectionBindings
+				registerCollectionBindings,
+				List.of( source.componentType() )
 		);
 		AggregateComponentBinder.processAggregate( ownerBinding, source, component, table, state );
 		return columns;
@@ -161,7 +163,8 @@ public class ComponentBinder {
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
 			boolean updatable,
-			boolean registerCollectionBindings) {
+			boolean registerCollectionBindings,
+			List<ClassDetails> componentTypeStack) {
 		final List<Column> columns = new ArrayList<>();
 		final List<Column> associationIdentifierColumns =
 				source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
@@ -252,6 +255,7 @@ public class ComponentBinder {
 				final EmbeddedValueIntent embeddedValueIntent = componentMember.embeddedValueIntent() != null
 						? componentMember.embeddedValueIntent()
 						: EmbeddedValueIntent.fromAttribute( componentMember.type(), memberPath, componentMember.fullPath() );
+				validateNestedEmbeddableRecursion( componentTypeStack, componentMember, embeddedValueIntent.memberType() );
 				final ComponentSource nestedSource = source.nested(
 						member,
 						embeddedValueIntent.memberType(),
@@ -284,7 +288,8 @@ public class ComponentBinder {
 						uniqueByDefault,
 						nullableByDefault,
 						updatable,
-						registerCollectionBindings
+						registerCollectionBindings,
+						extendComponentTypeStack( componentTypeStack, nestedSource.componentType() )
 				);
 				AggregateComponentBinder.processAggregate( ownerBinding, nestedSource, nestedComponent, table, state );
 				columns.addAll( nestedColumns );
@@ -615,6 +620,44 @@ public class ComponentBinder {
 	private boolean isEmbeddedMember(MemberDetails member, TypeDetails memberType) {
 		return member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
 				|| memberType.determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class );
+	}
+
+	private static void validateNestedEmbeddableRecursion(
+			List<ClassDetails> componentTypeStack,
+			ComponentMemberBinding componentMember,
+			TypeDetails memberType) {
+		final ClassDetails nestedComponentType = memberType.determineRawClass();
+		for ( ClassDetails componentType : componentTypeStack ) {
+			if ( isSameHierarchy( componentType, nestedComponentType ) ) {
+				throw new MappingException(
+						"Recursive embeddable mapping detected for property '"
+								+ componentMember.path()
+								+ "' of class '" + componentType.getName() + "'"
+				);
+			}
+		}
+	}
+
+	private static List<ClassDetails> extendComponentTypeStack(
+			List<ClassDetails> componentTypeStack,
+			ClassDetails componentType) {
+		final List<ClassDetails> result = new ArrayList<>( componentTypeStack.size() + 1 );
+		result.addAll( componentTypeStack );
+		result.add( componentType );
+		return result;
+	}
+
+	private static boolean isSameHierarchy(ClassDetails first, ClassDetails second) {
+		return isSameOrSuperclass( first, second ) || isSameOrSuperclass( second, first );
+	}
+
+	private static boolean isSameOrSuperclass(ClassDetails superclass, ClassDetails subclass) {
+		for ( ClassDetails classDetails = subclass; classDetails != null; classDetails = classDetails.getSuperClass() ) {
+			if ( superclass.getName().equals( classDetails.getName() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isImplicitEmbeddedIdentifierMember(ComponentSource source, TypeDetails memberType) {

@@ -101,7 +101,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "getJdbcTimeZone" -> settings.jdbcTimeZone();
 				case "isFlushBeforeCompletionEnabled" -> settings.flushBeforeCompletionEnabled();
 				case "isAutoCloseSessionEnabled" -> settings.autoCloseSessionEnabled();
-				case "isJtaTransactionAccessEnabled" -> true;
+				case "isJtaTransactionAccessEnabled" -> settings.jtaTransactionAccessEnabled();
 				case "isPreferUserTransaction" -> false;
 				case "isAllowOutOfTransactionUpdateOperations" -> false;
 				case "isJtaTrackByThread" -> true;
@@ -162,7 +162,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "getDefaultBatchFetchSize" -> settings.defaultBatchFetchSize();
 				case "getMaximumFetchDepth" -> settings.maximumFetchDepth();
 				case "isSubselectFetchEnabled" -> settings.subselectFetchEnabled();
-				case "getJdbcBatchSize" -> 0;
+				case "getJdbcBatchSize" -> settings.jdbcBatchSize();
 				case "getJdbcFetchSize" -> null;
 				case "isScrollableResultSetsEnabled" -> true;
 				case "isGetGeneratedKeysEnabled" -> true;

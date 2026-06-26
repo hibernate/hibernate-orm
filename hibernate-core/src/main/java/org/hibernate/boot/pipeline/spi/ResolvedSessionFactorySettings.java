@@ -102,6 +102,9 @@ public record ResolvedSessionFactorySettings(
 		/// Whether sessions should auto-close after transaction completion.
 		boolean autoCloseSessionEnabled,
 
+		/// Whether JPA bootstrapped JTA entity managers may expose the transaction facade.
+		boolean jtaTransactionAccessEnabled,
+
 		/// Whether identifiers should be reset on delete.
 		boolean identifierRollbackEnabled,
 
@@ -153,6 +156,9 @@ public record ResolvedSessionFactorySettings(
 
 		/// Whether collection caches are auto-evicted for bidirectional association changes.
 		boolean autoEvictCollectionCache,
+
+		/// Default JDBC statement batch size for newly opened sessions.
+		int jdbcBatchSize,
 
 		/// Custom SQL-function registrations applied before contributor and dialect functions.
 		Map<String, SqmFunctionDescriptor> customSqlFunctionMap,
@@ -309,6 +315,7 @@ public record ResolvedSessionFactorySettings(
 				jdbcTimeZone,
 				flushBeforeCompletionEnabled,
 				autoCloseSessionEnabled,
+				jtaTransactionAccessEnabled,
 				identifierRollbackEnabled,
 				initializeLazyStateOutsideTransactionsEnabled,
 				unownedAssociationTransientCheck,
@@ -326,6 +333,7 @@ public record ResolvedSessionFactorySettings(
 				structuredCacheEntriesEnabled,
 				directReferenceCacheEntriesEnabled,
 				autoEvictCollectionCache,
+				jdbcBatchSize,
 				customSqlFunctionMap,
 				customSqmFunctionRegistry,
 				customHqlTranslator,

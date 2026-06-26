@@ -27,6 +27,7 @@ import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.cfg.BytecodeSettings;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
@@ -124,6 +125,10 @@ public class SessionFactorySettingsResolver {
 				resolveJdbcTimeZone( configurationValues ),
 				asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
 				asBoolean( configurationValues.get( TransactionSettings.AUTO_CLOSE_SESSION ), false ),
+				asBoolean(
+						configurationValues.get( TransactionSettings.ALLOW_JTA_TRANSACTION_ACCESS ),
+						!bootstrapSettings.jpaBootstrap()
+				),
 				asBoolean( configurationValues.get( org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK ), false ),
 				asBoolean( configurationValues.get( TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS ), false ),
 				asBoolean(
@@ -144,6 +149,7 @@ public class SessionFactorySettingsResolver {
 					cacheSettings.structuredCacheEntriesEnabled(),
 					cacheSettings.directReferenceCacheEntriesEnabled(),
 					cacheSettings.autoEvictCollectionCache(),
+					asInteger( configurationValues.get( BatchSettings.STATEMENT_BATCH_SIZE ), 1 ),
 					Collections.emptyMap(),
 					null,
 					resolveHqlTranslator( configurationValues, standardServiceRegistry ),

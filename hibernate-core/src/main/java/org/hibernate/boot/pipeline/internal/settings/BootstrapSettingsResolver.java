@@ -13,7 +13,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
+import jakarta.persistence.PersistenceUnitTransactionType;
 
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
@@ -38,6 +40,7 @@ import static org.hibernate.cfg.PersistenceSettings.JAKARTA_TRANSACTION_TYPE;
 import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
 import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_MODE;
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
+import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper.interpretTransactionType;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -88,6 +91,7 @@ public class BootstrapSettingsResolver {
 			boolean jpaBootstrap) {
 		final var resolvedConfigurationValues = copyEnvironmentProperties();
 		overlay( configurationValues, resolvedConfigurationValues );
+		normalizeConfiguredTransactionType( resolvedConfigurationValues );
 		return createResolvedSettings(
 				resolvedConfigurationValues,
 				jpaBootstrap
@@ -110,6 +114,8 @@ public class BootstrapSettingsResolver {
 	public static ResolvedBootstrapSettings resolve(HibernatePersistenceConfiguration persistenceConfiguration) {
 		final var resolvedConfigurationValues = copyEnvironmentProperties();
 		overlay( persistenceConfiguration.properties(), resolvedConfigurationValues );
+		overlayPersistenceConfiguration( persistenceConfiguration, resolvedConfigurationValues );
+		normalizeConfiguredTransactionType( resolvedConfigurationValues );
 		return createResolvedSettings(
 				resolvedConfigurationValues,
 				true
@@ -132,7 +138,9 @@ public class BootstrapSettingsResolver {
 			Map<?, ?> integrationSettings) {
 		final var resolvedConfigurationValues = copyEnvironmentProperties();
 		overlay( persistenceConfiguration.properties(), resolvedConfigurationValues );
+		overlayPersistenceConfiguration( persistenceConfiguration, resolvedConfigurationValues );
 		overlay( integrationSettings, resolvedConfigurationValues );
+		normalizeConfiguredTransactionType( resolvedConfigurationValues );
 		return createResolvedSettings(
 				resolvedConfigurationValues,
 				true
@@ -243,8 +251,31 @@ public class BootstrapSettingsResolver {
 				() -> configurationValues.get( JPA_TRANSACTION_TYPE )
 		);
 		if ( transactionType != null ) {
-			configurationValues.put( JAKARTA_TRANSACTION_TYPE, transactionType );
+			applyTransactionType( configurationValues, transactionType );
 		}
+	}
+
+	private static void normalizeConfiguredTransactionType(Map<String, Object> configurationValues) {
+		final var transactionType = coalesce(
+				() -> configurationValues.get( JAKARTA_TRANSACTION_TYPE ),
+				() -> configurationValues.get( JPA_TRANSACTION_TYPE )
+		);
+		if ( transactionType != null ) {
+			applyTransactionType( configurationValues, transactionType );
+		}
+	}
+
+	private static void applyTransactionType(Map<String, Object> configurationValues, Object transactionType) {
+		final PersistenceUnitTransactionType resolvedTransactionType = interpretTransactionType( transactionType );
+		if ( resolvedTransactionType == null ) {
+			return;
+		}
+		configurationValues.put( JAKARTA_TRANSACTION_TYPE, resolvedTransactionType );
+		configurationValues.put( JPA_TRANSACTION_TYPE, resolvedTransactionType );
+		configurationValues.putIfAbsent(
+				TRANSACTION_COORDINATOR_STRATEGY,
+				resolvedTransactionType == PersistenceUnitTransactionType.JTA ? "jta" : "jdbc"
+		);
 	}
 
 	private static void normalizeDataAccess(
@@ -511,6 +542,17 @@ public class BootstrapSettingsResolver {
 				target.put( key.toString(), value );
 			}
 		} );
+	}
+
+	private static void overlayPersistenceConfiguration(
+			HibernatePersistenceConfiguration persistenceConfiguration,
+			Map<String, Object> target) {
+		putIfNonNull( target, PERSISTENCE_UNIT_NAME, persistenceConfiguration.name() );
+		putIfNonNull( target, JAKARTA_TRANSACTION_TYPE, persistenceConfiguration.transactionType() );
+		putIfNonNull( target, JAKARTA_JTA_DATASOURCE, persistenceConfiguration.jtaDataSource() );
+		putIfNonNull( target, JAKARTA_NON_JTA_DATASOURCE, persistenceConfiguration.nonJtaDataSource() );
+		putIfNonNull( target, JAKARTA_VALIDATION_MODE, persistenceConfiguration.validationMode() );
+		putIfNonNull( target, JAKARTA_SHARED_CACHE_MODE, persistenceConfiguration.sharedCacheMode() );
 	}
 
 	private static void putIfNonNull(Map<String, Object> target, String key, Object value) {

@@ -14,6 +14,7 @@ import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.internal.settings.SessionFactorySettingsResolver;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
@@ -193,6 +194,8 @@ public class SessionFactorySettingsResolverTests {
 		final var configurationValues = new LinkedHashMap<String, Object>();
 		configurationValues.put( TransactionSettings.FLUSH_BEFORE_COMPLETION, "false" );
 		configurationValues.put( TransactionSettings.AUTO_CLOSE_SESSION, "true" );
+		configurationValues.put( TransactionSettings.ALLOW_JTA_TRANSACTION_ACCESS, "true" );
+		configurationValues.put( BatchSettings.STATEMENT_BATCH_SIZE, "37" );
 		configurationValues.put( PersistenceSettings.JPA_CALLBACKS_ENABLED, "false" );
 		configurationValues.put( QuerySettings.QUERY_STARTUP_CHECKING, "false" );
 		configurationValues.put( QuerySettings.SAFE_MODE_ENABLED, "true" );
@@ -207,9 +210,25 @@ public class SessionFactorySettingsResolverTests {
 
 		assertThat( settings.flushBeforeCompletionEnabled() ).isFalse();
 		assertThat( settings.autoCloseSessionEnabled() ).isTrue();
+		assertThat( settings.jtaTransactionAccessEnabled() ).isTrue();
+		assertThat( settings.jdbcBatchSize() ).isEqualTo( 37 );
 		assertThat( settings.jpaCallbacksEnabled() ).isFalse();
 		assertThat( settings.namedQueryStartupCheckingEnabled() ).isFalse();
 		assertThat( settings.safeModeEnabled() ).isTrue();
+	}
+
+	@Test
+	void jpaBootstrapDisablesJtaTransactionAccessByDefault(ServiceRegistryScope registryScope) {
+		final var settings = SessionFactorySettingsResolver.resolve(
+				new ResolvedBootstrapSettings(
+						new LinkedHashMap<>(),
+						true
+				),
+				registryScope.getRegistry()
+		);
+
+		assertThat( settings.jtaTransactionAccessEnabled() ).isFalse();
+		assertThat( SessionFactoryOptionsAdapter.create( settings ).isJtaTransactionAccessEnabled() ).isFalse();
 	}
 
 	@Test
@@ -240,6 +259,7 @@ public class SessionFactorySettingsResolverTests {
 		assertThat( options.getQueryCacheLayout() ).isEqualTo( CacheLayout.FULL );
 		assertThat( options.getTimestampsCacheFactory() ).isSameAs( StandardTimestampsCacheFactory.INSTANCE );
 		assertThat( options.getCacheRegionPrefix() ).isNull();
+		assertThat( options.getJdbcBatchSize() ).isEqualTo( settings.jdbcBatchSize() );
 		assertThat( options.isSafeModeEnabled() ).isFalse();
 		assertThat( options.isMultiTenancyEnabled() ).isFalse();
 		assertThat( options.getDefaultTenantIdentifierJavaType() )

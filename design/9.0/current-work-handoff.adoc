@@ -297,6 +297,199 @@ The remaining non-instantiation UOE sample also passed:
   --console=plain
 ----
 
+== Full-Suite Census Note
+
+A controlled single-fork `hibernate-core` census was attempted on 2026-06-26:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  -Ptest.threads=1 \
+  --continue \
+  --console=plain
+----
+
+This did not run to completion.  It made substantially more progress than the
+parallel broad runs, but the single test worker still failed with
+`java.lang.OutOfMemoryError: Java heap space` after reporting:
+
+* 6130 tests completed in the Gradle console;
+* 204 failed;
+* 300 skipped.
+
+The XML reports captured before the OOM contain 1854 suite files, 6132 test
+cases, 204 failures, 302 skipped tests, and 124 failing suites.  The run wrote a
+fresh heap dump:
+
+[source,text]
+----
+hibernate-core/target/OOM-dump/java_pid4812.hprof
+----
+
+The dump is about 3.6 GiB and was created at 2026-06-26 10:22 MDT.  This is the
+strongest current evidence that the broad/full-suite blocker is memory pressure
+or retention in the long-lived test worker, not a simple deterministic test
+deadlock.  The module test JVM max heap is configured as `3G` in
+`local.java-module.gradle`.
+
+Top captured failure clusters by failing test cases:
+
+* `boot.models` / annotation coverage: 18 cases.
+* `NaturalIdDereferenceTest`: 15 cases.
+* identifier/generator annotations: 12 cases.
+* named entity graphs: 11 cases.
+* annotation generics: 9 cases.
+* secondary-table inheritance/property access: 8 cases.
+* association boot-model tests: 7 cases.
+* formula, naming strategy, final-field, inheritance, `@Any`, bulk-id
+  composite-id, UUID/generator, and foreign-key-disablement clusters follow.
+
+Recommended next infrastructure step before trusting another full-suite count:
+run the broad suite with test-worker recycling, for example by temporarily
+setting `forkEvery` for the `hibernate-core:test` task or adding an equivalent
+local Gradle init script.  If recycling avoids the OOM, the remaining failure
+count becomes reliable.  If it still OOMs in a short worker window, inspect the
+fresh heap dump for the dominant retained types.
+
+Follow-up recycling probes:
+
+* `forkEvery = 250` still OOMed, writing
+  `hibernate-core/target/OOM-dump/java_pid15504.hprof` at 2026-06-26 10:25 MDT.
+  Gradle recovered and moved farther, but later went quiet with in-progress
+  binary result state and was interrupted.
+* `forkEvery = 50` made more reliable progress and passed the earlier
+  transaction/lifecycle stall region, but still OOMed once, writing
+  `hibernate-core/target/OOM-dump/java_pid37437.hprof` at 2026-06-26 10:47 MDT.
+  It recovered and continued into later JPA/query/metamodel sections, then
+  stopped advancing binary result files and was interrupted.
+
+Conclusion: worker recycling helps, but `forkEvery` values of 250 and 50 are
+not enough to produce a complete full-suite census with the current 3G test
+heap.  The next useful infrastructure probe is either a much smaller
+`forkEvery` value, such as 10, or direct heap-dump inspection of the newest
+recycled-worker dump to identify the retained objects before spending more time
+on full-suite counting.
+
+Heap-dump follow-up: the newest inspected dump,
+`hibernate-core/target/OOM-dump/java_pid37437.hprof`, was dominated by String
+backing storage, not JUnit/Gradle failure objects.  A streaming HPROF histogram
+showed roughly 3.1 GiB in `byte[]`, 2.5 million `String` instances, and 1.2
+million `AttributePath` instances.  A String-value probe showed the dominant
+values were repeated recursive embeddable paths such as
+`root3.nested3.nested3...` from
+`EmbeddableInheritanceRecursiveTest`.  So the memory pressure was principally a
+boot/model path-expansion bug, not simply the number of failing tests.
+
+The focused recursive embeddable bucket is now green.  `ComponentBinder` carries
+a nested embeddable type stack while binding component members and rejects a
+nested component whose type is in the same hierarchy as, or otherwise recurs
+back to, an ancestor component type.  This covers both inheritance-recursive
+embeddables (`Root3 -> Child3`, `Root4 -> Mid4`) and unrelated cycles
+(`EmbA -> EmbB -> EmbA`) before source paths can expand until OOM.
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceRecursiveTest' \
+  --console=plain
+----
+
+A follow-up controlled single-worker census was attempted after the recursive
+embeddable fix:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  -Ptest.threads=1 \
+  --continue \
+  --console=plain
+----
+
+This pass did not produce a new OOM dump and progressed past the previous
+recursive embeddable heap signature into later JPA/transaction tests.  It then
+stopped advancing Gradle binary result files at 2026-06-26 11:46:50 MDT and was
+interrupted at 11:49 MDT to preserve the partial census.  The binary event
+stream points at `TransactionJoiningTest.testMultiThreadTransactionTimeout`:
+the helper thread threw a `ClassCastException` trying to cast
+`JdbcResourceLocalTransactionCoordinatorImpl` to `JtaTransactionCoordinatorImpl`
+at `TransactionJoiningTest.java:288`, while the test worker was waiting on a
+`CountDownLatch` at line 294.  Arjuna's transaction reaper then canceled the
+transaction with the test thread still active.
+
+Recommended next infrastructure/focused step: reproduce
+`org.hibernate.orm.test.jpa.transaction.TransactionJoiningTest.testMultiThreadTransactionTimeout`
+alone.  If it hangs standalone, fix or quarantine that focused transaction
+setup so future broad census runs can complete far enough to produce normal XML
+failure counts.  This appears to be a separate JTA/transaction-coordinator
+configuration problem, not the recursive embeddable memory issue.
+
+Standalone reproduction confirmed the same hang:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.transaction.TransactionJoiningTest.testMultiThreadTransactionTimeout' \
+  --console=plain
+----
+
+The focused run entered `:hibernate-core:test`, emitted the same helper-thread
+`ClassCastException` at `TransactionJoiningTest.java:288`, and then stopped
+advancing after Arjuna's transaction reaper output.  The test's latch is counted
+down only after the cast-dependent callback succeeds, so the helper-thread
+exception strands the main test worker at `CountDownLatch.await()` on line 294.
+The run was interrupted after reproducing the hang.
+
+== Recovered EMFBuilder Settings Normalization
+
+The transaction hang was traced to a lost `EntityManagerFactoryBuilderImpl`
+normalization responsibility.  Legacy `javax.persistence.transactionType=JTA`
+was still present in the settings bag, but the new resolver did not derive the
+transaction coordinator from it.  As a result, JPA/JTA tests booted with a JDBC
+transaction coordinator and `TransactionJoiningTest.testMultiThreadTransactionTimeout`
+parked after a helper-thread `ClassCastException`.
+
+The recovered bootstrap settings behavior now:
+
+* normalizes both `jakarta.persistence.transactionType` and legacy
+  `javax.persistence.transactionType` values through
+  `PersistenceUnitTransactionTypeHelper`;
+* stores the normalized transaction type under both keys;
+* derives `hibernate.transaction.coordinator_class` as `jta` or `jdbc` when no
+  explicit coordinator strategy was supplied;
+* overlays direct `HibernatePersistenceConfiguration` settings such as
+  transaction type, JTA/non-JTA data sources, validation mode, shared cache
+  mode, and persistence-unit name into the same resolver path as raw
+  properties.
+
+The follow-on JTA failures exposed two `SessionFactoryOptionsAdapter` parity
+gaps from the deleted EMFBuilder/SessionFactoryOptionsBuilder path:
+
+* JPA bootstrap must default `hibernate.jta.allowTransactionAccess` to false
+  unless explicitly set true.  The adapter had hardcoded
+  `isJtaTransactionAccessEnabled()` to true, allowing `EntityManager#getTransaction()`
+  for compliant JTA entity managers.
+* `getJdbcBatchSize()` must reflect `hibernate.jdbc.batch_size` and the legacy
+  default of `1`; the adapter had hardcoded `0`, disabling the JTA batching
+  tests.
+
+Focused validation is green:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.settings.BootstrapSettingsResolverTests' \
+  --tests 'org.hibernate.orm.test.boot.settings.SessionFactorySettingsResolverTests' \
+  --console=plain
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.transaction.TransactionJoiningTest.testMultiThreadTransactionTimeout' \
+  --console=plain
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.transaction.*' \
+  --console=plain
+----
+
 == Recommended Next Slices
 
 The schema/exportables bucket described above is green in the focused slice.

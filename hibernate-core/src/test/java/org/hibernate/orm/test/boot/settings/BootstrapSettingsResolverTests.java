@@ -14,6 +14,7 @@ import org.hibernate.boot.pipeline.internal.settings.BootstrapSettingsResolver;
 import org.hibernate.boot.pipeline.internal.settings.MappingSettingsResolver;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.COLLECTION_CACHE_PREFIX;
+import static org.hibernate.cfg.PersistenceSettings.JAKARTA_TRANSACTION_TYPE;
+import static org.hibernate.cfg.PersistenceSettings.JPA_TRANSACTION_TYPE;
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 
 /**
  * @author Steve Ebersole
@@ -81,6 +85,46 @@ public class BootstrapSettingsResolverTests {
 
 		assertThat( settings.configurationValues() )
 				.containsEntry( "java.version", "explicit" );
+	}
+
+	@Test
+	void legacyTransactionTypeSelectsTransactionCoordinator() {
+		final var settings = BootstrapSettingsResolver.resolve(
+				Map.of( JPA_TRANSACTION_TYPE, "JTA" ),
+				true
+		);
+
+		assertThat( settings.configurationValues() )
+				.containsEntry( JAKARTA_TRANSACTION_TYPE, PersistenceUnitTransactionType.JTA )
+				.containsEntry( JPA_TRANSACTION_TYPE, PersistenceUnitTransactionType.JTA )
+				.containsEntry( TRANSACTION_COORDINATOR_STRATEGY, "jta" );
+	}
+
+	@Test
+	void explicitTransactionCoordinatorOverridesTransactionTypeDefault() {
+		final var settings = BootstrapSettingsResolver.resolve(
+				Map.of(
+						JAKARTA_TRANSACTION_TYPE, PersistenceUnitTransactionType.JTA,
+						TRANSACTION_COORDINATOR_STRATEGY, "explicit"
+				),
+				true
+		);
+
+		assertThat( settings.configurationValues() )
+				.containsEntry( JAKARTA_TRANSACTION_TYPE, PersistenceUnitTransactionType.JTA )
+				.containsEntry( TRANSACTION_COORDINATOR_STRATEGY, "explicit" );
+	}
+
+	@Test
+	void programmaticTransactionTypeSelectsTransactionCoordinator() {
+		final var settings = BootstrapSettingsResolver.resolve(
+				new HibernatePersistenceConfiguration( "programmatic-test" )
+						.transactionType( PersistenceUnitTransactionType.JTA )
+		);
+
+		assertThat( settings.configurationValues() )
+				.containsEntry( JAKARTA_TRANSACTION_TYPE, PersistenceUnitTransactionType.JTA )
+				.containsEntry( TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 	}
 
 	@Test

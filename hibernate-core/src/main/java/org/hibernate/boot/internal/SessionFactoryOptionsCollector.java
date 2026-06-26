@@ -132,6 +132,7 @@ public class SessionFactoryOptionsCollector {
 				settings.jdbcTimeZone(),
 				autoFlushing != null ? autoFlushing : settings.flushBeforeCompletionEnabled(),
 				autoClosing != null ? autoClosing : settings.autoCloseSessionEnabled(),
+				jtaTransactionAccessDisabled ? false : settings.jtaTransactionAccessEnabled(),
 				identifierRollbackSupport != null ? identifierRollbackSupport : settings.identifierRollbackEnabled(),
 				lazyInitializationOutsideTransaction != null
 						? lazyInitializationOutsideTransaction
@@ -153,6 +154,7 @@ public class SessionFactoryOptionsCollector {
 				automaticEvictionOfCollectionCaches != null
 						? automaticEvictionOfCollectionCaches
 						: settings.autoEvictCollectionCache(),
+				jdbcBatchSize != null ? jdbcBatchSize : settings.jdbcBatchSize(),
 				collectSqlFunctions( settings ),
 				settings.customSqmFunctionRegistry(),
 				settings.customHqlTranslator(),

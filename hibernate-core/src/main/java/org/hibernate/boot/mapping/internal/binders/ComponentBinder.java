@@ -606,7 +606,8 @@ public class ComponentBinder {
 	private boolean isPluralMember(ComponentSource source, ComponentMemberBinding componentMember) {
 		final MemberDetails member = componentMember.member();
 		if ( componentMember.nature() == AttributeNature.BASIC
-				&& ( source.aggregateMappingIntent().isAggregate()
+				&& ( member.isArray()
+					|| source.aggregateMappingIntent().isAggregate()
 					|| AggregateMappingIntent.hasExplicitPluralBasicJdbcType( member ) ) ) {
 			return false;
 		}

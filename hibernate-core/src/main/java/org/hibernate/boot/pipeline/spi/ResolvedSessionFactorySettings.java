@@ -9,10 +9,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
@@ -81,6 +84,15 @@ public record ResolvedSessionFactorySettings(
 		/// Initial cache mode for newly opened sessions.
 		CacheMode initialSessionCacheMode,
 
+		/// Initial flush mode for newly opened sessions.
+		FlushMode initialSessionFlushMode,
+
+		/// Default lock options for newly opened sessions.
+		LockOptions defaultLockOptions,
+
+		/// Default session properties exposed to newly opened sessions.
+		Map<String, Object> defaultSessionProperties,
+
 		/// Default JPA cache retrieve mode for newly opened sessions and find operations.
 		CacheRetrieveMode defaultCacheRetrieveMode,
 
@@ -122,6 +134,9 @@ public record ResolvedSessionFactorySettings(
 
 		/// Factory-wide interceptor applied to Sessions unless overridden.
 		Interceptor interceptor,
+
+		/// Per-session interceptor supplier applied to newly opened Sessions.
+		Supplier<? extends Interceptor> statelessInterceptorSupplier,
 
 		/// Observers notified about SessionFactory lifecycle events.
 		SessionFactoryObserver[] sessionFactoryObservers,
@@ -251,17 +266,17 @@ public record ResolvedSessionFactorySettings(
 		/// Whether a multi-tenant connection provider is available.
 		boolean multiTenancyEnabled,
 
-			/// Current tenant identifier resolver, if one is configured.
-			CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver,
+		/// Current tenant identifier resolver, if one is configured.
+		CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver,
 
-			/// Maps tenant identifiers to database schemas for schema-based tenancy.
-			TenantSchemaMapper<Object> tenantSchemaMapper,
+		/// Maps tenant identifiers to database schemas for schema-based tenancy.
+		TenantSchemaMapper<Object> tenantSchemaMapper,
 
-			/// Maps tenant identifiers to database credentials for credentials-based tenancy.
-			TenantCredentialsMapper<Object> tenantCredentialsMapper,
+		/// Maps tenant identifiers to database credentials for credentials-based tenancy.
+		TenantCredentialsMapper<Object> tenantCredentialsMapper,
 
-			/// Fallback Java type for tenant identifiers when no tenant-id mapping is present.
-			JavaType<Object> defaultTenantIdentifierJavaType,
+		/// Fallback Java type for tenant identifiers when no tenant-id mapping is present.
+		JavaType<Object> defaultTenantIdentifierJavaType,
 
 		/// Default catalog used when generating SQL for unqualified mapping names.
 		String defaultCatalog,
@@ -273,24 +288,30 @@ public record ResolvedSessionFactorySettings(
 	public ResolvedSessionFactorySettings {
 		configurationValues = Collections.unmodifiableMap( new LinkedHashMap<>(
 				Objects.requireNonNull( configurationValues )
-			) );
-			Objects.requireNonNull( serviceRegistry );
-			customSqlFunctionMap = Collections.unmodifiableMap( new LinkedHashMap<>(
-					Objects.requireNonNull( customSqlFunctionMap )
-			) );
-			sessionFactoryObservers = sessionFactoryObservers == null
-					? new SessionFactoryObserver[0]
-					: sessionFactoryObservers.clone();
-			Objects.requireNonNull( queryCacheLayout );
-			Objects.requireNonNull( jpaCompliance );
-			Objects.requireNonNull( criteriaValueHandlingMode );
-			Objects.requireNonNull( immutableEntityUpdateQueryHandlingMode );
-			Objects.requireNonNull( defaultTimeZoneStorageStrategy );
-			Objects.requireNonNull( defaultCacheRetrieveMode );
-			Objects.requireNonNull( defaultCacheStoreMode );
-			Objects.requireNonNull( graphParserMode );
-			Objects.requireNonNull( defaultTenantIdentifierJavaType );
-		}
+		) );
+		defaultSessionProperties = Collections.unmodifiableMap( new LinkedHashMap<>(
+				Objects.requireNonNull( defaultSessionProperties )
+		) );
+		Objects.requireNonNull( serviceRegistry );
+		Objects.requireNonNull( initialSessionCacheMode );
+		Objects.requireNonNull( initialSessionFlushMode );
+		Objects.requireNonNull( defaultLockOptions );
+		customSqlFunctionMap = Collections.unmodifiableMap( new LinkedHashMap<>(
+				Objects.requireNonNull( customSqlFunctionMap )
+		) );
+		sessionFactoryObservers = sessionFactoryObservers == null
+				? new SessionFactoryObserver[0]
+				: sessionFactoryObservers.clone();
+		Objects.requireNonNull( queryCacheLayout );
+		Objects.requireNonNull( jpaCompliance );
+		Objects.requireNonNull( criteriaValueHandlingMode );
+		Objects.requireNonNull( immutableEntityUpdateQueryHandlingMode );
+		Objects.requireNonNull( defaultTimeZoneStorageStrategy );
+		Objects.requireNonNull( defaultCacheRetrieveMode );
+		Objects.requireNonNull( defaultCacheStoreMode );
+		Objects.requireNonNull( graphParserMode );
+		Objects.requireNonNull( defaultTenantIdentifierJavaType );
+	}
 
 	@Override
 	public SessionFactoryObserver[] sessionFactoryObservers() {
@@ -308,6 +329,9 @@ public record ResolvedSessionFactorySettings(
 				statementObserver,
 				statementInspector,
 				initialSessionCacheMode,
+				initialSessionFlushMode,
+				defaultLockOptions,
+				defaultSessionProperties,
 				defaultCacheRetrieveMode,
 				defaultCacheStoreMode,
 				graphParserMode,
@@ -322,6 +346,7 @@ public record ResolvedSessionFactorySettings(
 				bidirectionalAssociationManagementEnabled,
 				statisticsEnabled,
 				interceptor,
+				statelessInterceptorSupplier,
 				sessionFactoryObservers,
 				validatorFactoryReference,
 				secondLevelCacheEnabled,
@@ -363,12 +388,12 @@ public record ResolvedSessionFactorySettings(
 				commentsEnabled,
 				temporalTableStrategy,
 				auditStrategy,
-					multiTenancyEnabled,
-					currentTenantIdentifierResolver,
-					tenantSchemaMapper,
-					tenantCredentialsMapper,
-					defaultTenantIdentifierJavaType,
-					defaultCatalog,
+				multiTenancyEnabled,
+				currentTenantIdentifierResolver,
+				tenantSchemaMapper,
+				tenantCredentialsMapper,
+				defaultTenantIdentifierJavaType,
+				defaultCatalog,
 				defaultSchema
 		);
 	}

@@ -8,14 +8,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
 import org.hibernate.annotations.TimeZoneStorageType;
@@ -48,6 +52,9 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.spi.HqlTranslator;
@@ -66,16 +73,24 @@ import org.hibernate.type.descriptor.java.ObjectJavaType;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.PessimisticLockScope;
 
+import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
+import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForBoolean;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode;
 
 /// Projects resolved bootstrap settings into settings needed for SessionFactory
 /// construction.
@@ -108,6 +123,7 @@ public class SessionFactorySettingsResolver {
 
 		final var configurationValues = bootstrapSettings.configurationValues();
 		final var cacheSettings = resolveCacheSettings( configurationValues, standardServiceRegistry );
+		final var defaultSessionProperties = resolveDefaultSessionProperties( configurationValues );
 		return new ResolvedSessionFactorySettings(
 				configurationValues,
 				bootstrapSettings.jpaBootstrap(),
@@ -118,6 +134,9 @@ public class SessionFactorySettingsResolver {
 				resolveStatementObserver( configurationValues ),
 				resolveStatementInspector( configurationValues, standardServiceRegistry ),
 				CacheMode.NORMAL,
+				resolveDefaultFlushMode( defaultSessionProperties ),
+				resolveDefaultLockOptions( defaultSessionProperties ),
+				defaultSessionProperties,
 				resolveDefaultCacheRetrieveMode( configurationValues ),
 				resolveDefaultCacheStoreMode( configurationValues ),
 				GraphParserMode.interpret( configurationValues.get( GraphParserSettings.GRAPH_PARSER_MODE ) ),
@@ -138,6 +157,7 @@ public class SessionFactorySettingsResolver {
 				resolveBidirectionalAssociationManagementEnabled( configurationValues ),
 				asBoolean( configurationValues.get( AvailableSettings.GENERATE_STATISTICS ), false ),
 				resolveInterceptor( configurationValues, standardServiceRegistry ),
+				resolveStatelessInterceptorSupplier( configurationValues, standardServiceRegistry ),
 				resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),
 				resolveValidatorFactoryReference( configurationValues ),
 				cacheSettings.secondLevelCacheEnabled(),
@@ -222,6 +242,84 @@ public class SessionFactorySettingsResolver {
 			StandardServiceRegistry serviceRegistry) {
 		return serviceRegistry.requireService( StrategySelector.class )
 				.resolveStrategy( Interceptor.class, configurationValues.get( SessionEventSettings.INTERCEPTOR ) );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Supplier<? extends Interceptor> resolveStatelessInterceptorSupplier(
+			Map<String, Object> configurationValues,
+			StandardServiceRegistry serviceRegistry) {
+		final Object setting = configurationValues.get( SessionEventSettings.SESSION_SCOPED_INTERCEPTOR );
+		if ( setting == null ) {
+			return null;
+		}
+		if ( setting instanceof Supplier ) {
+			return (Supplier<? extends Interceptor>) setting;
+		}
+		if ( setting instanceof Class ) {
+			return interceptorSupplier( (Class<? extends Interceptor>) setting );
+		}
+		return interceptorSupplier(
+				serviceRegistry.requireService( StrategySelector.class )
+						.selectStrategyImplementor( Interceptor.class, setting.toString() )
+		);
+	}
+
+	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> interceptorClass) {
+		return () -> {
+			try {
+				return interceptorClass.getConstructor().newInstance();
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+				throw new HibernateException( "Could not instantiate session-scoped Interceptor", e );
+			}
+		};
+	}
+
+	private static FlushMode resolveDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
+		return getFlushMode( defaultSessionProperties.get( HibernateHints.HINT_FLUSH_MODE ), FlushMode.AUTO );
+	}
+
+	private static LockOptions resolveDefaultLockOptions(Map<String, Object> defaultSessionProperties) {
+		final var lockOptions = new LockOptions();
+		applyPropertiesToLockOptions( defaultSessionProperties, () -> lockOptions );
+		return lockOptions;
+	}
+
+	private static Map<String, Object> resolveDefaultSessionProperties(Map<String, Object> configurationValues) {
+		final HashMap<String, Object> settings = new HashMap<>();
+
+		settings.putIfAbsent( HibernateHints.HINT_FLUSH_MODE, FlushMode.AUTO );
+		settings.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
+		settings.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
+		settings.putIfAbsent( JPA_LOCK_TIMEOUT, WAIT_FOREVER_MILLI );
+		settings.putIfAbsent( JAKARTA_LOCK_TIMEOUT, WAIT_FOREVER_MILLI );
+		settings.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		settings.putIfAbsent( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		settings.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+		settings.putIfAbsent( JAKARTA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+
+		final String[] entityManagerSpecificProperties = {
+				SpecHints.HINT_SPEC_LOCK_SCOPE,
+				SpecHints.HINT_SPEC_LOCK_TIMEOUT,
+				SpecHints.HINT_SPEC_QUERY_TIMEOUT,
+				SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE,
+				SpecHints.HINT_SPEC_CACHE_STORE_MODE,
+
+				HibernateHints.HINT_FLUSH_MODE,
+
+				LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE,
+				LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT,
+				LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE,
+				LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE,
+				LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT
+		};
+
+		for ( String key : entityManagerSpecificProperties ) {
+			if ( configurationValues.containsKey( key ) ) {
+				settings.put( key, configurationValues.get( key ) );
+			}
+		}
+		return settings;
 	}
 
 	private static StatementInspector resolveStatementInspector(

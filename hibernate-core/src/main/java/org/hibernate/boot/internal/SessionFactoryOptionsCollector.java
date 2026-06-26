@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
@@ -125,6 +126,9 @@ public class SessionFactoryOptionsCollector {
 				statementObserver != null ? statementObserver : settings.statementObserver(),
 				statementInspector != null ? statementInspector : settings.statementInspector(),
 				settings.initialSessionCacheMode(),
+				settings.initialSessionFlushMode(),
+				settings.defaultLockOptions().makeCopy(),
+				settings.defaultSessionProperties(),
 				settings.defaultCacheRetrieveMode(),
 				settings.defaultCacheStoreMode(),
 				settings.graphParserMode(),
@@ -141,6 +145,7 @@ public class SessionFactoryOptionsCollector {
 				settings.bidirectionalAssociationManagementEnabled(),
 				statisticsSupport != null ? statisticsSupport : settings.statisticsEnabled(),
 				interceptor != null ? interceptor : settings.interceptor(),
+				collectStatelessInterceptorSupplier( settings ),
 				collectSessionFactoryObservers( settings ),
 				validatorFactory != null ? validatorFactory : settings.validatorFactoryReference(),
 				secondLevelCacheSupport != null ? secondLevelCacheSupport : settings.secondLevelCacheEnabled(),
@@ -392,6 +397,23 @@ public class SessionFactoryOptionsCollector {
 			combined[observers.length + i] = sessionFactoryObservers.get( i );
 		}
 		return combined;
+	}
+
+	private Supplier<? extends Interceptor> collectStatelessInterceptorSupplier(ResolvedSessionFactorySettings settings) {
+		if ( statelessInterceptorSupplier != null ) {
+			return statelessInterceptorSupplier;
+		}
+		if ( statelessInterceptorClass != null ) {
+			return () -> {
+				try {
+					return statelessInterceptorClass.getConstructor().newInstance();
+				}
+				catch (Exception e) {
+					throw new HibernateException( "Could not instantiate session-scoped Interceptor", e );
+				}
+			};
+		}
+		return settings.statelessInterceptorSupplier();
 	}
 
 	private Map<String, SqmFunctionDescriptor> collectSqlFunctions(ResolvedSessionFactorySettings settings) {

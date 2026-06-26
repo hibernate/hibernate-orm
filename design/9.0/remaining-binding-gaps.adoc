@@ -329,6 +329,14 @@ Embeddable instantiator follow-up:
 * Next recommendation: re-sample the remaining broad UOE list or copied
   reports for another direct boot/model handoff failure before considering
   runtime SQL behavior.
+* The criteria/query-model plus embeddable-instantiation sampled bucket was
+  rechecked with a forced focused run and is green:
+  `CriteriaLiteralInSelectExpressionTest`,
+  `org.hibernate.orm.test.jpa.criteria.basic.ExpressionsTest`,
+  `org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline.ExpressionsTest`,
+  `Jpa4CriteriaApiTest`, and all five
+  `org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.*.InstantiationTests`
+  variants.
 * Focused adapter verification passed for:
 +
 [source,bash]
@@ -343,12 +351,14 @@ Embeddable instantiator follow-up:
   --tests 'org.hibernate.orm.test.sql.SQLTest.test_sql_jpa_all_columns_scalar_query_example' \
   --console=plain
 ----
-* The same probe separated non-adapter failures that should become later
-  source buckets: `ContributedUserTypeTest` still hits unsupported
-  `CompositeUserType` TypeContributor handoff, `JsonArrayUnnestTest` still hits
-  unsupported plural embeddable-member binding, and
-  `JpaMetamodelIgnoreUnsupportedPopulationTest` still exposes a null Java type
-  in embeddable representation resolution.
+* The original broad UOE sample was rechecked with a forced focused run and is
+  green in the current worktree: `ContributedUserTypeTest`,
+  `H2StoreProcedureTest`, `ProcedureParameterTests`,
+  `NativeQueryResultTypeAutoDiscoveryTest`,
+  `NativeQueryWithDatetimesTest`, `SQLTest`,
+  `TimeZoneColumnDurationTest`,
+  `JpaMetamodelIgnoreUnsupportedPopulationTest`, and
+  `DiscriminatorMultiTenancyTest`.
 
 Time-zone column storage materialization follow-up:
 
@@ -373,9 +383,9 @@ Time-zone column storage materialization follow-up:
   --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnTest' \
   --console=plain
 ----
-* The next highest-signal bucket from the sampled UOE list is still
-  `ContributedUserTypeTest`, which points at unsupported
-  `CompositeUserType` TypeContributor handoff rather than an adapter method.
+* The broad sampled UOE list no longer points at a live focused failure in the
+  current worktree.  Choose the next bucket from a fresh full-suite/census
+  failure report.
 
 TypeContributor user-type handoff follow-up:
 
@@ -414,11 +424,11 @@ TypeContributor user-type handoff follow-up:
 ----
 * The generics guardrail set is still green after the TypeContributor handoff
   fix.
-* The next highest-signal sampled bucket is `JsonArrayUnnestTest`, because it
-  still points at plural embeddable-member binding/materialization rather than
-  adapter state.  `JpaMetamodelIgnoreUnsupportedPopulationTest` is the next
-  good fallback if the JSON unnest path turns out to depend on runtime SQL-AST
-  behavior rather than a legacy mapping handoff fact.
+* The JSON aggregate/materialization bucket is green in the current worktree
+  after a forced focused run.  Do not keep treating `JsonArrayUnnestTest` as the
+  next open sampled bucket unless a fresh full-suite run reports a new failure.
+  `JpaMetamodelIgnoreUnsupportedPopulationTest` is already green; choose the
+  next bucket from fresh sampled failures rather than the older JSON notes.
 
 JSON aggregate binding/materialization follow-up:
 
@@ -428,26 +438,14 @@ JSON aggregate binding/materialization follow-up:
   basic binding path instead of being routed through embeddable plural
   association/element-collection handling.  This covers nested aggregate basic
   members such as `Publisher.genres`.
-* The remaining focused `JsonArrayUnnestTest` failure is now the
-  collection-valued aggregate-basic case
-  `List<Label> @JdbcTypeCode(JSON_ARRAY)`: boot reaches
-  `BasicCollectionJavaType`, which reports that the embeddable `Label` element
-  is not a known basic type.  A broader experiment that treated `List<Label>`
-  as an aggregate component changed the failure into runtime property-access
-  against the list value itself, so that path needs a deliberate mapping-model
-  handoff for collection-valued aggregate components rather than a local
-  categorization tweak.
-* The adjacent `JsonEmbeddableArrayTest` array-aggregate probe also no longer
-  fails with `Unsupported plural embeddable member - getTheBinary`.  It now
-  reaches later aggregate materialization/runtime parity failures: a
-  `ClassCastException` during setup and invalid generated H2 JSON check DDL
-  that still contains the aggregate placeholder token.
-* Recommended next bucket: move to
-  `JpaMetamodelIgnoreUnsupportedPopulationTest` for a source/model binding
-  issue that is still likely fixable in boot metadata.  Reopen JSON aggregate
-  arrays after defining the legacy handoff for collection-valued aggregate
-  component property shape and aggregate placeholder replacement; otherwise the
-  next changes are likely runtime or SQL-AST behavior.
+* The earlier remaining focused `JsonArrayUnnestTest` and
+  `JsonEmbeddableArrayTest` boundaries are no longer reproducible in the
+  current worktree.  A forced focused run is green for:
+  `JsonArrayUnnestTest`, `JsonEmbeddableTest`, `NestedJsonEmbeddableTest`,
+  `JsonEmbeddableArrayTest`, and `H2JsonArrayAggregateWideExtractionTest`.
+* Reopen JSON aggregate arrays only if a fresh focused or full-suite run reports
+  a new failure.  Runtime aggregate descriptors and SQL-AST aggregate access
+  strategy work remain deferred.
 
 Dynamic XML JPA metamodel population follow-up:
 
@@ -508,16 +506,13 @@ Aggregate intent consolidation follow-up:
   --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelIgnoreUnsupportedPopulationTest' \
   --console=plain
 ----
-* JSON aggregate boundary probes were rechecked and stayed at their documented
-  non-UOE boundaries: `JsonArrayUnnestTest` still fails at
-  `BasicCollectionJavaType` for `List<Label> @JdbcTypeCode(JSON_ARRAY)`, and
-  the focused `JsonEmbeddableArrayTest` array probe still fails later with the
-  existing setup-time `ClassCastException`.
-* Next aggregate-design slice, when we choose to continue here: teach the intent
-  to describe collection-valued aggregate component property shape explicitly
-  before categorization/materialization tries to project that shape into the
-  legacy bridge.  Runtime aggregate descriptors and SQL-AST aggregate access
-  strategy work remain deferred.
+* JSON aggregate boundary probes were rechecked with a forced focused run and
+  are green in the current worktree:
+  `JsonArrayUnnestTest`, `JsonEmbeddableTest`, `NestedJsonEmbeddableTest`,
+  `JsonEmbeddableArrayTest`, and `H2JsonArrayAggregateWideExtractionTest`.
+* Next aggregate-design slice should be selected from a fresh failure report.
+  Runtime aggregate descriptors and SQL-AST aggregate access strategy work
+  remain deferred.
 
 == Focused Gap Refresh: 2026-06-20
 
@@ -548,6 +543,16 @@ Source-confirmed refresh:
 
 Recommended next parity bucket:
 
+* Fresh full-suite census note: the 2026-06-26 controlled single-worker
+  `hibernate-core` run completed the test task with 15493 tests, 756 failures,
+  and 1553 skipped tests.  The old sampled UOE list is green; choose from the
+  fresh census clusters instead.
+* Highest-signal source/config bucket from the census: JPA/settings
+  normalization parity.  Start with `ConfigurationObjectSettingTest`,
+  `InterceptorTest`, `FlushModeConfigTest`, `FlushModeTest`, shared-cache-mode
+  tests, and lock-timeout/configuration-object probes.  This is more likely to
+  be a focused recovered-legacy-builder handoff than the broad runtime SQL
+  clusters.
 * Highest-signal bucket: collections/plural association keys, with map-key and
   collection-table owner-key parity first.  This bucket is still
   source-confirmed, appeared repeatedly in broad-run failure streams, and is
@@ -1122,11 +1127,42 @@ tests fail.  This looks more like settings/runtime behavior than source
 categorization.
 
 | Runtime `UnsupportedOperationException`
-| Criteria literals, entity graphs, lock hints, native datetime discovery, JSON
-collection Java types, and non-where/query paths still hit unsupported runtime
-branches.  Keep this separate from boot-model gaps unless a focused test shows
-SessionFactory construction failure.
+| The old broad UOE list is mostly stale after the settings-normalization and
+`SessionFactoryOptionsAdapter` parity fixes.  The completed 2026-06-26
+single-worker census leaves one source/binding UOE worth isolating
+(`FinalEmbeddableFieldTest`, unsupported plural embeddable member) and one
+runtime/model foreign-key UOE in `NaturalIdDereferenceTest`.  Keep the
+natural-id case out of boot-binding work unless we intentionally move into
+runtime model foreign-key support.
 |===
+
+=== Controlled Single-Worker Refresh: 2026-06-26
+
+Refresh command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  -Ptest.threads=1 \
+  --continue \
+  --console=plain
+----
+
+Status:
+
+* The controlled single-worker run completed in 3m24s and failed normally due
+  to test failures; it did not hang and did not produce a new OOM dump.
+* XML census: 4,247 test-class result files, 15,494 executed tests, 1,554
+  skipped tests, 333 failing classes, 772 failures, and 0 XML `error` entries.
+* Highest-count failures were temporal type assertions
+  (`ZonedDateTimeTest`, `OffsetDateTimeTest`), runtime SQL/query fallout,
+  annotation coverage/materialization parity, JPA metamodel, soft-delete NPEs,
+  generator/identifier/schema/naming assertions, and mapped-by/generic
+  embeddable association clusters.
+* Recommended next binding/materialization buckets from this census:
+  `FinalEmbeddableFieldTest` for the remaining boot-side UOE, or
+  `AnnotationCoverageBindingTests` / `JsonWithArrayEmbeddableTest` for
+  higher-signal aggregate materialization parity.
 
 === Core Guardrail Refresh: 2026-06-18
 
@@ -2630,3 +2666,24 @@ Use these as burn-down buckets instead of waiting for broad suite failures.
    secondary table keys, collection table keys, joined-subclass keys, auxiliary
    database objects, unique/index/check/comment/options, schema-generation
    tests.
+
+9. JPA/settings normalization:
+   the focused parity bucket is green after moving legacy EMF-builder
+   normalization into the new bootstrap/settings handoff.  Covered behaviors
+   include validation/shared-cache alias hydration, JDBC property precedence over
+   the environment baseline during JPA descriptor bootstrap, default session
+   flush/lock/cache properties, lock timeout propagation, and session-scoped
+   interceptor suppliers.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.ejb3configuration.ConfigurationObjectSettingTest' \
+  --tests 'org.hibernate.orm.test.jpa.ejb3configuration.InterceptorTest' \
+  --tests 'org.hibernate.orm.test.jpa.emops.FlushModeTest' \
+  --tests 'org.hibernate.orm.test.jpa.lock.LockTimeoutPropertyTest' \
+  --tests 'org.hibernate.orm.test.jpa.cacheable.annotation.ConfigurationTest' \
+  --tests 'org.hibernate.orm.test.jpa.cacheable.cachemodes.SharedCacheModesTest' \
+  --tests 'org.hibernate.orm.test.internal.util.FlushModeConfigTest' \
+  --console=plain
+----

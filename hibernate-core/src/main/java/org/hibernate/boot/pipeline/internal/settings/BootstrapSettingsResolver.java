@@ -351,16 +351,16 @@ public class BootstrapSettingsResolver {
 			applyDataSource( configurationValues, integrationSettingsCopy, persistenceUnitDescriptor.getNonJtaDataSource(), false );
 			return;
 		}
-		if ( hasValue( configurationValues, URL ) ) {
-			applyJdbcSettings( configurationValues, integrationSettingsCopy, configurationValues.get( URL ), stringValue( configurationValues.get( DRIVER ) ) );
-			return;
-		}
 		if ( hasValue( configurationValues, JAKARTA_JDBC_URL ) ) {
 			applyJdbcSettings( configurationValues, integrationSettingsCopy, configurationValues.get( JAKARTA_JDBC_URL ), stringValue( configurationValues.get( JAKARTA_JDBC_DRIVER ) ) );
 			return;
 		}
 		if ( hasValue( configurationValues, JPA_JDBC_URL ) ) {
 			applyJdbcSettings( configurationValues, integrationSettingsCopy, configurationValues.get( JPA_JDBC_URL ), stringValue( configurationValues.get( JPA_JDBC_DRIVER ) ) );
+			return;
+		}
+		if ( hasValue( configurationValues, URL ) ) {
+			applyJdbcSettings( configurationValues, integrationSettingsCopy, configurationValues.get( URL ), stringValue( configurationValues.get( DRIVER ) ) );
 		}
 	}
 
@@ -458,15 +458,27 @@ public class BootstrapSettingsResolver {
 			Map<String, Object> configurationValues,
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map<?, ?> integrationSettingsCopy) {
-		final var validationMode = coalesce(
+		final var integrationMode = coalesce(
 				() -> remove( integrationSettingsCopy, JAKARTA_VALIDATION_MODE ),
-				() -> remove( integrationSettingsCopy, JPA_VALIDATION_MODE ),
-				persistenceUnitDescriptor::getValidationMode,
+				() -> remove( integrationSettingsCopy, JPA_VALIDATION_MODE )
+		);
+		if ( integrationMode != null ) {
+			configurationValues.put( JAKARTA_VALIDATION_MODE, integrationMode );
+			configurationValues.put( JPA_VALIDATION_MODE, integrationMode );
+			return;
+		}
+		final var descriptorMode = persistenceUnitDescriptor.getValidationMode();
+		if ( descriptorMode != null ) {
+			configurationValues.put( JAKARTA_VALIDATION_MODE, descriptorMode );
+			return;
+		}
+		final var configuredMode = coalesce(
 				() -> configurationValues.get( JAKARTA_VALIDATION_MODE ),
 				() -> configurationValues.get( JPA_VALIDATION_MODE )
 		);
-		if ( validationMode != null ) {
-			configurationValues.put( JAKARTA_VALIDATION_MODE, validationMode );
+		if ( configuredMode != null ) {
+			configurationValues.put( JAKARTA_VALIDATION_MODE, configuredMode );
+			configurationValues.put( JPA_VALIDATION_MODE, configuredMode );
 		}
 	}
 
@@ -474,15 +486,27 @@ public class BootstrapSettingsResolver {
 			Map<String, Object> configurationValues,
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map<?, ?> integrationSettingsCopy) {
-		final var sharedCacheMode = coalesce(
+		final var integrationMode = coalesce(
 				() -> remove( integrationSettingsCopy, JAKARTA_SHARED_CACHE_MODE ),
-				() -> remove( integrationSettingsCopy, JPA_SHARED_CACHE_MODE ),
-				persistenceUnitDescriptor::getSharedCacheMode,
+				() -> remove( integrationSettingsCopy, JPA_SHARED_CACHE_MODE )
+		);
+		if ( integrationMode != null ) {
+			configurationValues.put( JAKARTA_SHARED_CACHE_MODE, integrationMode );
+			configurationValues.put( JPA_SHARED_CACHE_MODE, integrationMode );
+			return;
+		}
+		final var descriptorMode = persistenceUnitDescriptor.getSharedCacheMode();
+		if ( descriptorMode != null ) {
+			configurationValues.put( JAKARTA_SHARED_CACHE_MODE, descriptorMode );
+			return;
+		}
+		final var configuredMode = coalesce(
 				() -> configurationValues.get( JAKARTA_SHARED_CACHE_MODE ),
 				() -> configurationValues.get( JPA_SHARED_CACHE_MODE )
 		);
-		if ( sharedCacheMode != null ) {
-			configurationValues.put( JAKARTA_SHARED_CACHE_MODE, sharedCacheMode );
+		if ( configuredMode != null ) {
+			configurationValues.put( JAKARTA_SHARED_CACHE_MODE, configuredMode );
+			configurationValues.put( JPA_SHARED_CACHE_MODE, configuredMode );
 		}
 	}
 

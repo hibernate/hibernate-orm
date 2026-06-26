@@ -982,11 +982,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		final Cacheable cacheableAnn = managedType.getClassDetails().getDirectAnnotationUsage( Cacheable.class );
 		final SharedCacheMode sharedCacheMode = bindingContext.getSharedCacheMode();
 		final CacheRegion cacheRegion = managedType.getHierarchy().getCacheRegion();
-		typeBinding.setCached(
-				cacheableAnn != null && !cacheableAnn.value()
-						? false
-						: cacheRegion.isExplicit() || isCacheable( sharedCacheMode, cacheableAnn )
-		);
+		typeBinding.setCached( cacheRegion.isExplicit() || isCacheable( sharedCacheMode, cacheableAnn ) );
 	}
 
 	private static boolean isCacheable(SharedCacheMode sharedCacheMode, Cacheable explicitCacheableAnn) {

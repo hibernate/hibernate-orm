@@ -93,10 +93,10 @@ public final class SessionFactoryOptionsAdapter {
 				case "getInitialSessionCacheMode" -> settings.initialSessionCacheMode();
 				case "getCacheRetrieveMode" -> settings.defaultCacheRetrieveMode();
 				case "getCacheStoreMode" -> settings.defaultCacheStoreMode();
-				case "getInitialSessionFlushMode" -> org.hibernate.FlushMode.AUTO;
-				case "getDefaultLockOptions" -> org.hibernate.LockOptions.NONE;
+				case "getInitialSessionFlushMode" -> settings.initialSessionFlushMode();
+				case "getDefaultLockOptions" -> settings.defaultLockOptions().makeCopy();
 				case "getDefaultNullPrecedence" -> jakarta.persistence.criteria.Nulls.NONE;
-				case "getDefaultSessionProperties" -> java.util.Collections.emptyMap();
+				case "getDefaultSessionProperties" -> settings.defaultSessionProperties();
 				case "getPhysicalConnectionHandlingMode" -> settings.physicalConnectionHandlingMode();
 				case "getJdbcTimeZone" -> settings.jdbcTimeZone();
 				case "isFlushBeforeCompletionEnabled" -> settings.flushBeforeCompletionEnabled();
@@ -111,7 +111,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "isUnownedAssociationTransientCheck" -> settings.unownedAssociationTransientCheck();
 				case "isBidirectionalAssociationManagementEnabled" -> settings.bidirectionalAssociationManagementEnabled();
 				case "getInterceptor" -> settings.interceptor();
-				case "getStatelessInterceptorImplementorSupplier" -> null;
+				case "getStatelessInterceptorImplementorSupplier" -> settings.statelessInterceptorSupplier();
 				case "buildSessionEventListeners" -> new org.hibernate.SessionEventListener[0];
 				case "getSessionFactoryObservers" -> sessionFactoryObservers();
 				case "getValidatorFactoryReference" -> settings.validatorFactoryReference();

@@ -247,6 +247,22 @@ members inside JSON aggregate documents.
   --console=plain
 ----
 
+The JSON aggregate/materialization bucket was rechecked against the current
+worktree with a forced run and is green, including the JSON array unnest probe,
+singular/nested JSON embeddables, the Java-array JSON aggregate probe, and the
+H2 wide extraction boundary:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.function.json.JsonArrayUnnestTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.JsonEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.NestedJsonEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.JsonEmbeddableArrayTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.H2JsonArrayAggregateWideExtractionTest' \
+  --console=plain --rerun-tasks
+----
+
 The XML aggregate twin bucket also passed without additional code changes:
 
 [source,bash]
@@ -297,52 +313,83 @@ The remaining non-instantiation UOE sample also passed:
   --console=plain
 ----
 
-== Full-Suite Census Note
-
-A controlled single-fork `hibernate-core` census was attempted on 2026-06-26:
+The criteria/query-model plus embeddable-instantiation sampled bucket was
+rechecked with a forced focused run and is green:
 
 [source,bash]
 ----
 ./gradlew :hibernate-core:test -x :hibernate-testing:test \
-  -Ptest.threads=1 \
-  --continue \
-  --console=plain
+  --tests 'org.hibernate.orm.test.jpa.criteria.nulliteral.CriteriaLiteralInSelectExpressionTest' \
+  --tests 'org.hibernate.orm.test.jpa.criteria.basic.ExpressionsTest' \
+  --tests 'org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline.ExpressionsTest' \
+  --tests 'org.hibernate.orm.test.query.criteria.Jpa4CriteriaApiTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embeddable.InstantiationTests' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embedded.InstantiationTests' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.registered.InstantiationTests' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf.InstantiationTests' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2.InstantiationTests' \
+  --console=plain --rerun-tasks
 ----
 
-This did not run to completion.  It made substantially more progress than the
-parallel broad runs, but the single test worker still failed with
-`java.lang.OutOfMemoryError: Java heap space` after reporting:
+== Full-Suite Census Note
 
-* 6130 tests completed in the Gradle console;
-* 204 failed;
-* 300 skipped.
+A controlled single-worker `hibernate-core` census was run on 2026-06-26:
 
-The XML reports captured before the OOM contain 1854 suite files, 6132 test
-cases, 204 failures, 302 skipped tests, and 124 failing suites.  The run wrote a
-fresh heap dump:
-
-[source,text]
+[source,bash]
 ----
-hibernate-core/target/OOM-dump/java_pid4812.hprof
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --console=plain --max-workers=1
 ----
 
-The dump is about 3.6 GiB and was created at 2026-06-26 10:22 MDT.  This is the
-strongest current evidence that the broad/full-suite blocker is memory pressure
-or retention in the long-lived test worker, not a simple deterministic test
-deadlock.  The module test JVM max heap is configured as `3G` in
-`local.java-module.gradle`.
+This run completed the test task and failed normally, not by OOM or hang:
 
-Top captured failure clusters by failing test cases:
+* 15493 tests completed;
+* 756 failed;
+* 1553 skipped;
+* the Gradle task finished in about 3m25s.
 
-* `boot.models` / annotation coverage: 18 cases.
-* `NaturalIdDereferenceTest`: 15 cases.
-* identifier/generator annotations: 12 cases.
-* named entity graphs: 11 cases.
-* annotation generics: 9 cases.
-* secondary-table inheritance/property access: 8 cases.
-* association boot-model tests: 7 cases.
-* formula, naming strategy, final-field, inheritance, `@Any`, bulk-id
-  composite-id, UUID/generator, and foreign-key-disablement clusters follow.
+Top failing classes by failing test cases:
+
+* `ZonedDateTimeTest`: 57.
+* `OffsetDateTimeTest`: 45.
+* `MaxInExpressionParameterPaddingTest`: 18.
+* `OuterJoinTest`: 17.
+* `NaturalIdDereferenceTest`: 15.
+* `EntityUseSingleTableOptimizationTest`: 12.
+* `MetadataTest`: 12.
+* `EntityUseUnionSubclassOptimizationTest`: 12.
+* `LegacyParameterTests`: 11.
+* `JsonWithArrayEmbeddableTest`, `AnnotationCoverageBindingTests`, and
+  `HHH13670Test`: 10 each.
+
+Top exception classes:
+
+* `java.lang.AssertionError`: 198.
+* `org.opentest4j.AssertionFailedError`: 184.
+* `org.hibernate.exception.ConstraintViolationException`: 53.
+* `org.hibernate.exception.SQLGrammarException`: 50.
+* `java.lang.RuntimeException`: 38.
+* `java.lang.NullPointerException`: 37.
+* `jakarta.persistence.PersistenceException`: 34.
+
+Highest-signal next buckets from this census:
+
+* JPA/settings normalization parity:
+  `ConfigurationObjectSettingTest`, `InterceptorTest`, `FlushModeConfigTest`,
+  `FlushModeTest`, shared-cache-mode tests, lock-timeout hints, and related
+  configuration-object probes.
+* Temporal/time-zone parity:
+  `OffsetDateTimeTest`, `ZonedDateTimeTest`, `ColumnZonedTest`, and related
+  storage/materialization checks.
+* JPA metamodel static/runtime metadata `ClassCastException` cluster:
+  `MetadataTest`, `EmbeddableMetaModelTest`, generic embedded-id metamodel
+  tests.
+* Aggregate array/runtime casts:
+  `JsonWithArrayEmbeddableTest`, `AnnotationCoverageBindingTests`, and
+  composite-user-type aggregate probes.
+* Association/join-table/nullability parity:
+  `ToOneAssociationTests`, join-table one-to-one/many-to-one runtime tests,
+  `NotFound*`, and mapped-by-type validation tests.
 
 Recommended next infrastructure step before trusting another full-suite count:
 run the broad suite with test-worker recycling, for example by temporarily
@@ -490,6 +537,60 @@ Focused validation is green:
   --console=plain
 ----
 
+== Completed Single-Worker Census
+
+After the settings-normalization and `SessionFactoryOptionsAdapter` parity
+fixes, the controlled single-worker suite run completed instead of hanging:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  -Ptest.threads=1 \
+  --continue \
+  --console=plain
+----
+
+Result on 2026-06-26: `BUILD FAILED` because of test failures, but the test task
+completed in 3m24s and did not produce a new OOM dump.  The XML census contains
+4,247 test-class result files, 15,494 executed tests, 1,554 skipped tests, 333
+failing classes, 772 failures, and 0 XML `error` entries.
+
+The old broad `UnsupportedOperationException` sample is mostly stale.  The
+previous SessionFactoryOptions/JTA-style UOE list rechecked green in focused
+slices.  The completed census still contains a small number of UOE traces, but
+they are either non-failing warning output from `DataSourceStub` metadata access
+(`PersistenceUnitInfoTests`, `PersistenceUnitOverridesTests`) or nested runtime
+handoff gaps:
+
+* `NaturalIdDereferenceTest`: suppressed
+  `UnsupportedOperationException` for `ToOneAttributeMapping` foreign-key
+  support while dereferencing a natural-id to-one path.  This is runtime/model
+  foreign-key parity, not a boot-binding blocker.
+* `FinalEmbeddableFieldTest`: suppressed
+  `UnsupportedOperationException: Unsupported plural embeddable member -
+  mutable` from `ComponentBinder.bindPluralMember`.  This is the remaining
+  source/binding-side UOE worth isolating if we want a small boot bucket.
+
+The largest completed-census failure buckets are no longer UOE-dominated:
+
+* temporal type assertions: `ZonedDateTimeTest` (57 failures) and
+  `OffsetDateTimeTest` (45 failures);
+* query/runtime SQL fallout: `MaxInExpressionParameterPaddingTest`,
+  `OuterJoinTest`, `NaturalIdDereferenceTest`, query-cache and criteria
+  optimization tests;
+* binding/materialization parity: `AnnotationCoverageBindingTests`,
+  `MetadataTest`, `JsonWithArrayEmbeddableTest`, generic embedded-id and
+  mapped-by association tests;
+* soft-delete NPEs at `JavaTypeRegistry` and converter/verification failures;
+* generator/identifier/schema/naming assertion clusters.
+
+Recommended next focused slice from this census: target
+`FinalEmbeddableFieldTest` if the goal is to keep removing boot/source binding
+UOEs, or target `AnnotationCoverageBindingTests` / `JsonWithArrayEmbeddableTest`
+if the goal is higher-signal aggregate/materialization parity.  Leave
+`NaturalIdDereferenceTest` for later unless we are ready to work in runtime
+model foreign-key support.
+
 == Recommended Next Slices
 
 The schema/exportables bucket described above is green in the focused slice.
@@ -544,9 +645,56 @@ the instantiator bridge against dynamic component sources:
   --console=plain
 ----
 
-Next, re-sample the remaining broad UOE list or move to another focused
-materialization bucket surfaced by copied reports.  Prefer direct boot/model
-handoff failures over runtime SQL behavior.
+The original broad UOE sample was rechecked with a forced focused run and is
+green in the current worktree:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.type.contributor.usertype.ContributedUserTypeTest' \
+  --tests 'org.hibernate.orm.test.jpa.procedure.H2StoreProcedureTest' \
+  --tests 'org.hibernate.orm.test.procedure.ProcedureParameterTests' \
+  --tests 'org.hibernate.orm.test.jpa.query.NativeQueryResultTypeAutoDiscoveryTest' \
+  --tests 'org.hibernate.orm.test.jpa.query.NativeQueryWithDatetimesTest' \
+  --tests 'org.hibernate.orm.test.sql.SQLTest' \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnDurationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelIgnoreUnsupportedPopulationTest' \
+  --tests 'org.hibernate.orm.test.multitenancy.discriminator.DiscriminatorMultiTenancyTest' \
+  --console=plain --rerun-tasks
+----
+
+The JPA/settings normalization parity bucket is now green after recovering the
+deleted `EntityManagerFactoryBuilderImpl` behavior into explicit bootstrap and
+SessionFactory handoff products:
+
+* descriptor accessors for validation/shared-cache modes populate the Jakarta
+  setting, while integration and persistence-unit property aliases hydrate both
+  Jakarta and legacy keys;
+* Jakarta/JPA JDBC URL properties now win over the environment baseline during
+  JPA descriptor normalization;
+* `ResolvedSessionFactorySettings` carries initial flush mode, default lock
+  options, default session properties, and the session-scoped interceptor
+  supplier, and `SessionFactoryOptionsAdapter` delegates those values instead
+  of hard-coding placeholders;
+* `SharedCacheMode.ALL` now remains dominant over `@Cacheable(false)` in the
+  new entity binding path, matching the categorization decision.
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.ejb3configuration.ConfigurationObjectSettingTest' \
+  --tests 'org.hibernate.orm.test.jpa.ejb3configuration.InterceptorTest' \
+  --tests 'org.hibernate.orm.test.jpa.emops.FlushModeTest' \
+  --tests 'org.hibernate.orm.test.jpa.lock.LockTimeoutPropertyTest' \
+  --tests 'org.hibernate.orm.test.jpa.cacheable.annotation.ConfigurationTest' \
+  --tests 'org.hibernate.orm.test.jpa.cacheable.cachemodes.SharedCacheModesTest' \
+  --tests 'org.hibernate.orm.test.internal.util.FlushModeConfigTest' \
+  --console=plain
+----
+
+Next, choose from a fresh full-suite/census failure report rather than the older
+sampled UOE notes.  Prefer direct boot/model handoff failures over runtime SQL
+behavior.
 * remaining JSON/XML collection/list variants only if fresh focused failures
   still point at boot mapping handoff rather than SQL-AST/runtime behavior;
 * remaining XML overlay / metadata-complete parity, especially annotation + XML

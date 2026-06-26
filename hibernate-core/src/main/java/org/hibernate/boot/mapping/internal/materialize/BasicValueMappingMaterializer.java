@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -20,6 +23,7 @@ import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.engine.spi.Managed;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -83,6 +87,7 @@ public class BasicValueMappingMaterializer {
 		);
 
 		new AttributeOptionsMappingMaterializer().materializeOptions( attributeBinding, property, basicValue );
+		applyFinalFieldMutability( member, property, basicValue );
 
 		return basicValue;
 	}
@@ -165,11 +170,11 @@ public class BasicValueMappingMaterializer {
 			return new MaterializedBasicValue( basicValue, null );
 		}
 
-			final Column column = bindComponentMemberColumn(
-					() -> implicitBasicColumnName( source, componentMember, bindingState, bindingContext ),
-					property,
-					basicValue,
-					basicValueIntent,
+		final Column column = bindComponentMemberColumn(
+				() -> implicitBasicColumnName( source, componentMember, bindingState, bindingContext ),
+				property,
+				basicValue,
+				basicValueIntent,
 				columnNamingPatterns,
 				uniqueByDefault,
 				nullableByDefault,
@@ -185,7 +190,114 @@ public class BasicValueMappingMaterializer {
 				bindingState,
 				bindingContext
 		);
-			return new MaterializedBasicValue( basicValue, column );
+		applyFinalFieldMutability( member, property, basicValue );
+		return new MaterializedBasicValue( basicValue, column );
+	}
+
+	private static void applyFinalFieldMutability(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue) {
+		if ( !isFinalField( member ) ) {
+			return;
+		}
+		final var type = basicValue.getType();
+		if ( type != null && !type.isMutable() ) {
+			property.setUpdatable( false );
+		}
+		property.setMutable( false );
+	}
+
+	private static boolean isFinalField(MemberDetails member) {
+		if ( !member.isField() ) {
+			return false;
+		}
+		if ( member.isFinal() ) {
+			return true;
+		}
+		if ( !member.getDeclaringType().isImplementor( Managed.class ) ) {
+			return false;
+		}
+		return originalClassFileDeclaresFinalField( member );
+	}
+
+	private static boolean originalClassFileDeclaresFinalField(MemberDetails member) {
+		final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		if ( originalClassFileDeclaresFinalField( member, contextClassLoader ) ) {
+			return true;
+		}
+		return originalClassFileDeclaresFinalField( member, BasicValueMappingMaterializer.class.getClassLoader() );
+	}
+
+	private static boolean originalClassFileDeclaresFinalField(MemberDetails member, ClassLoader classLoader) {
+		if ( classLoader == null ) {
+			return false;
+		}
+		final String resourceName = member.getDeclaringType().getName().replace( '.', '/' ) + ".class";
+		try ( InputStream inputStream = classLoader.getResourceAsStream( resourceName ) ) {
+			return inputStream != null && classFileDeclaresFinalField( inputStream, member.getName() );
+		}
+		catch (IOException ignored) {
+			return false;
+		}
+	}
+
+	private static boolean classFileDeclaresFinalField(InputStream inputStream, String fieldName) throws IOException {
+		final DataInputStream data = new DataInputStream( inputStream );
+		if ( data.readInt() != 0xCAFEBABE ) {
+			return false;
+		}
+		data.readUnsignedShort();
+		data.readUnsignedShort();
+		final String[] utf8Constants = readUtf8Constants( data );
+		data.readUnsignedShort();
+		data.readUnsignedShort();
+		data.readUnsignedShort();
+		final int interfacesCount = data.readUnsignedShort();
+		for ( int i = 0; i < interfacesCount; i++ ) {
+			data.readUnsignedShort();
+		}
+		final int fieldsCount = data.readUnsignedShort();
+		for ( int i = 0; i < fieldsCount; i++ ) {
+			final int accessFlags = data.readUnsignedShort();
+			final String name = utf8Constants[data.readUnsignedShort()];
+			data.readUnsignedShort();
+			skipAttributes( data );
+			if ( fieldName.equals( name ) ) {
+				return ( accessFlags & 0x0010 ) != 0;
+			}
+		}
+		return false;
+	}
+
+	private static String[] readUtf8Constants(DataInputStream data) throws IOException {
+		final int constantPoolCount = data.readUnsignedShort();
+		final String[] utf8Constants = new String[constantPoolCount];
+		for ( int i = 1; i < constantPoolCount; i++ ) {
+			final int tag = data.readUnsignedByte();
+			switch ( tag ) {
+				case 1 -> utf8Constants[i] = data.readUTF();
+				case 3, 4 -> data.skipBytes( 4 );
+				case 5, 6 -> {
+					data.skipBytes( 8 );
+					i++;
+				}
+				case 7, 8, 16, 19, 20 -> data.skipBytes( 2 );
+				case 9, 10, 11, 12, 17, 18 -> data.skipBytes( 4 );
+				case 15 -> data.skipBytes( 3 );
+				default -> throw new IOException( "Unsupported class-file constant-pool tag " + tag );
+			}
+		}
+		return utf8Constants;
+	}
+
+	private static void skipAttributes(DataInputStream data) throws IOException {
+		final int attributesCount = data.readUnsignedShort();
+		for ( int i = 0; i < attributesCount; i++ ) {
+			data.readUnsignedShort();
+			final int length = data.readInt();
+			data.skipBytes( length );
+		}
 	}
 
 	private static Table resolveTable(

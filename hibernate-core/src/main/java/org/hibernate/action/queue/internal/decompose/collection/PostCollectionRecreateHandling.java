@@ -6,10 +6,11 @@ package org.hibernate.action.queue.internal.decompose.collection;
 
 
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
 
 /// Post-execution callback for collection recreate actions.
 ///
@@ -74,9 +75,8 @@ public class PostCollectionRecreateHandling implements PostExecutionCallback {
 	}
 
 	private void evict(SessionImplementor session, Object cacheKey) {
-		if (persister.hasCache() && cacheKey != null) {
-			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
-			cache.remove(session, cacheKey);
+		if ( cacheKey != null ) {
+			usingCache( persister, cache -> cache.remove( session, cacheKey ) );
 		}
 	}
 }

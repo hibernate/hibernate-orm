@@ -22,8 +22,11 @@ import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.TableMapping.MutationDetails;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+
+import java.util.function.Consumer;
 
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
@@ -36,41 +39,38 @@ public class HistoryCollectionMutationPlanContributor implements CollectionMutat
 	@Override
 	public void contributeAdditionalInsert(
 			RowInsertContext context,
-			java.util.function.Consumer<FlushOperation> operationConsumer) {
-		if ( !( context.tableDescriptor() instanceof CollectionTableDescriptor collectionTableDescriptor ) ) {
-			return;
-		}
-		final TemporalMapping temporalMapping = resolveTemporalMapping( context );
-		if ( temporalMapping == null ) {
-			return;
-		}
-
-		final CollectionTableDescriptor historyTableDescriptor = createHistoryTableDescriptor(
-				collectionTableDescriptor,
-				temporalMapping
-		);
-		final MutationOperation historyInsert = buildHistoryInsertOperation(
-				context.persister(),
-				historyTableDescriptor,
-				temporalMapping,
-				context.factory()
-		);
-
-		operationConsumer.accept( new FlushOperation(
-				historyTableDescriptor,
-				MutationKind.INSERT,
-				historyInsert,
-				new HistoryInsertBindPlan(
-						context.persister(),
-						context.collection(),
-						context.key(),
-						context.rowValue(),
-						context.rowPosition(),
+			Consumer<FlushOperation> operationConsumer) {
+		if ( context.tableDescriptor() instanceof CollectionTableDescriptor collectionTableDescriptor ) {
+			final var temporalMapping = resolveTemporalMapping( context );
+			if ( temporalMapping != null ) {
+				final var historyTableDescriptor = createHistoryTableDescriptor(
+						collectionTableDescriptor,
 						temporalMapping
-				),
-				calculateOrdinal( context.ordinalBase(), Slot.INSERT ) + 500,
-				"InsertRow(" + context.persister().getRole() + "#history)"
-		) );
+				);
+				final var historyInsert = buildHistoryInsertOperation(
+						context.persister(),
+						historyTableDescriptor,
+						temporalMapping,
+						context.factory()
+				);
+
+				operationConsumer.accept( new FlushOperation(
+						historyTableDescriptor,
+						MutationKind.INSERT,
+						historyInsert,
+						new HistoryInsertBindPlan(
+								context.persister(),
+								context.collection(),
+								context.key(),
+								context.rowValue(),
+								context.rowPosition(),
+								temporalMapping
+						),
+						calculateOrdinal( context.ordinalBase(), Slot.INSERT ) + 500,
+						"InsertRow(" + context.persister().getRole() + "#history)"
+				) );
+			}
+		}
 	}
 
 	private static MutationOperation buildHistoryInsertOperation(
@@ -124,7 +124,7 @@ public class HistoryCollectionMutationPlanContributor implements CollectionMutat
 				tableDescriptor.isSelfReferential(),
 				tableDescriptor.hasUniqueConstraints(),
 				tableDescriptor.cascadeDeleteEnabled(),
-				new org.hibernate.sql.model.TableMapping.MutationDetails(
+				new MutationDetails(
 						MutationType.INSERT,
 						tableDescriptor.insertDetails().getExpectation(),
 						null,

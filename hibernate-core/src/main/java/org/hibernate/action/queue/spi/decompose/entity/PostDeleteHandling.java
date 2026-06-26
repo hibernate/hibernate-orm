@@ -12,13 +12,15 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.internal.StatsHelper;
 
 import static org.hibernate.action.queue.spi.decompose.entity.CancelledInsertPostDeleteHandling.basicPersistenceContextCleanup;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 
 /// Post-execution callback for entity delete actions.
 ///
 /// This handles all the finalization work that needs to happen after all table `DELETE`s
-/// (or soft-delete `UPDATE`s)  for the entity  have been executed, including:
+/// (or soft-delete `UPDATE`s) for the entity have been executed, including:
 ///
 /// 	- Removing entity entry from persistence context
 /// 	- Updating EntityEntry state (postDelete)
@@ -123,18 +125,16 @@ public class PostDeleteHandling implements PostExecutionCallback {
 
 	private void removeCacheItem(SessionImplementor session, Object cacheKey) {
 		final var persister = action.getPersister();
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		writingToCache( persister, cache -> {
 			cache.remove( session, cacheKey );
 
 			final var statistics = session.getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.entityCacheRemove(
-						org.hibernate.stat.internal.StatsHelper.getRootEntityRole( persister ),
+						StatsHelper.getRootEntityRole( persister ),
 						cache.getRegion().getName()
 				);
 			}
-		}
+		} );
 	}
 }

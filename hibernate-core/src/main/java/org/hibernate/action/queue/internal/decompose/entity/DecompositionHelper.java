@@ -9,8 +9,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
 
 /// @author Steve Ebersole
 public class DecompositionHelper {
@@ -24,7 +22,7 @@ public class DecompositionHelper {
 				? generator.generatedOnExecution()
 				: generator.generatedOnExecution( entity, session );
 		return generatedOnExecution
-				&& hasValueGenerationOnExecution( generator, eventType, dialect );
+			&& hasValueGenerationOnExecution( generator, eventType, dialect );
 	}
 
 	private static boolean hasValueGenerationOnExecution(
@@ -62,31 +60,5 @@ public class DecompositionHelper {
 		else {
 			return false;
 		}
-	}
-
-	public static boolean shouldBindJdbcValue(
-			EventType eventType,
-			AttributeMapping attribute,
-			int selectableIndex,
-			Object entity, EntityPersister entityPersister, SharedSessionContractImplementor session) {
-		final var generator = attribute.getGenerator();
-		if ( !( generator instanceof OnExecutionGenerator onExecutionGenerator )
-			|| !generator.getEventTypes().contains( eventType )
-			|| !generator.generatedOnExecution( entity, session ) ) {
-			return true;
-		}
-
-		final var dialect = entityPersister.getFactory().getJdbcServices().getDialect();
-		final boolean[] columnInclusions = onExecutionGenerator.getColumnInclusions( dialect, eventType );
-		if ( columnInclusions != null
-				&& selectableIndex < columnInclusions.length
-				&& !columnInclusions[selectableIndex] ) {
-			return false;
-		}
-
-		final String[] columnValues = onExecutionGenerator.getReferencedColumnValues( dialect, eventType );
-		return columnValues == null
-				|| selectableIndex >= columnValues.length
-				|| "?".equals( columnValues[selectableIndex] );
 	}
 }

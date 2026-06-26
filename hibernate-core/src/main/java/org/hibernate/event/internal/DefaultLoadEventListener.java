@@ -12,7 +12,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -25,6 +25,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
@@ -504,39 +505,29 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			@Nonnull EntityKey keyToLoad,
 			@Nonnull LoadType options) {
 		final var source = event.getSession();
-		final var cache = persister.getCacheAccessStrategy();
-
-		final SoftLock lock;
-		final Object cacheKey;
-		final boolean canWriteToCache = persister.canWriteToCache();
-		if ( canWriteToCache ) {
-			assert cache != null;
-			cacheKey = cache.generateCacheKey(
+		final var cacheLock = writingToCache( persister, cache -> {
+			final Object cacheKey = cache.generateCacheKey(
 					event.getEntityId(),
 					persister,
 					event.getFactory(),
 					source.getTenantIdentifier()
 			);
-			lock = cache.lockItem( source, cacheKey, null );
-		}
-		else {
-			lock = null;
-			cacheKey = null;
-		}
+			final var lock = cache.lockItem( source, cacheKey, null );
+			return new CacheLock( cache, cacheKey, lock );
+		}, null );
 
 		final Object entity;
 		try {
 			entity = load( event, persister, keyToLoad, options );
 		}
 		finally {
-			if ( canWriteToCache ) {
-				cache.unlockItem( source, cacheKey, lock );
+			if ( cacheLock != null ) {
+				cacheLock.cache().unlockItem( source, cacheLock.cacheKey(), cacheLock.lock() );
 			}
 		}
 
 		return source.getPersistenceContextInternal().proxyFor( persister, keyToLoad, entity );
 	}
-
 
 	/**
 	 * Coordinates the efforts to load a given entity.  First, an attempt is

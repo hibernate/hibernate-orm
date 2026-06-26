@@ -27,6 +27,8 @@ import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 
 import static java.util.Collections.addAll;
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
@@ -66,12 +68,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		for ( var persister : affectedQueryables ) {
 			addAll( spacesList, (String[]) persister.getQuerySpaces() );
 
-			if ( persister.canWriteToCache() ) {
-				final var entityDataAccess = persister.getCacheAccessStrategy();
-				if ( entityDataAccess != null ) {
-					entityCleanups.add( new EntityCleanup( entityDataAccess, session ) );
-				}
-			}
+			writingToCache( persister,
+					entityDataAccess -> entityCleanups.add( new EntityCleanup( entityDataAccess, session ) ) );
 
 			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
 				naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session ) );
@@ -82,11 +80,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			if ( roles != null ) {
 				for ( String role : roles ) {
 					final var collectionPersister = mappingMetamodel.getCollectionDescriptor( role );
-					if ( collectionPersister.hasCache() ) {
-						final var cache = collectionPersister.getCacheAccessStrategy();
-						assert cache != null;
-						collectionCleanups.add( new CollectionCleanup( cache, session ) );
-					}
+					usingCache( collectionPersister,
+							cache -> collectionCleanups.add( new CollectionCleanup( cache, session ) ) );
 				}
 			}
 		}
@@ -118,11 +113,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				addAll( spacesList, entitySpaces );
 
-				if ( entityDescriptor.canWriteToCache() ) {
-					final var cache = entityDescriptor.getCacheAccessStrategy();
-					assert cache != null;
-					entityCleanups.add( new EntityCleanup( cache, session ) );
-				}
+				writingToCache( entityDescriptor, cache -> entityCleanups.add( new EntityCleanup( cache, session ) ) );
 				if ( entityDescriptor.hasNaturalIdentifier() && entityDescriptor.hasNaturalIdCache() ) {
 					naturalIdCleanups.add( new NaturalIdCleanup( entityDescriptor.getNaturalIdCacheAccessStrategy(), session ) );
 				}
@@ -130,12 +121,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				final var roles = metamodel.getCollectionRolesByEntityParticipant( entityDescriptor.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final var collectionDescriptor = metamodel.getCollectionDescriptor( role );
-						if ( collectionDescriptor.hasCache() ) {
-							final var cache = collectionDescriptor.getCacheAccessStrategy();
-							assert cache != null;
-							collectionCleanups.add( new CollectionCleanup( cache, session ) );
-						}
+						usingCache( metamodel.getCollectionDescriptor( role ),
+								cache -> collectionCleanups.add( new CollectionCleanup( cache, session ) ) );
 					}
 				}
 			}

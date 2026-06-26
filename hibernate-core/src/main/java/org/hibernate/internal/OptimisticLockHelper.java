@@ -7,6 +7,7 @@ package org.hibernate.internal;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
@@ -14,6 +15,7 @@ import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.stat.internal.StatsHelper.getRootEntityRole;
 
 public final class OptimisticLockHelper {
@@ -25,41 +27,37 @@ public final class OptimisticLockHelper {
 	public static void forceVersionIncrement(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
 		final var persister = entry.getPersister();
 		final Object previousVersion = entry.getVersion();
-		SoftLock lock = null;
-		final Object cacheKey;
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			cacheKey = cache.generateCacheKey(
+		final var cacheLock = writingToCache( persister, cache -> {
+			final Object cacheKey = cache.generateCacheKey(
 					entry.getId(),
 					persister,
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			lock = cache.lockItem( session, cacheKey, previousVersion );
-		}
-		else {
-			cacheKey = null;
-		}
+			final var lock = cache.lockItem( session, cacheKey, previousVersion );
+			return new CacheLock( cache, cacheKey, lock );
+		}, null );
 		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, session );
 		entry.forceLocked( object, nextVersion );
-		if ( persister.canWriteToCache() ) {
+		if ( cacheLock != null ) {
 			final Object cacheEntry = updateCacheItem(
 					object,
 					previousVersion,
 					nextVersion,
-					cacheKey,
+					cacheLock.cacheKey(),
 					entry,
 					persister,
+					cacheLock.cache(),
 					session
 			);
 			session.getTransactionCompletionCallbacks()
 					.registerCallback( new CacheCleanupProcess(
-							cacheKey,
+							cacheLock.cache(),
+							cacheLock.cacheKey(),
 							persister,
 							previousVersion,
 							nextVersion,
-							lock,
+							cacheLock.lock(),
 							cacheEntry
 					) );
 		}
@@ -72,9 +70,8 @@ public final class OptimisticLockHelper {
 			Object cacheKey,
 			EntityEntry entry,
 			EntityPersister persister,
+			EntityDataAccess cache,
 			SharedSessionContractImplementor session) {
-		final var cache = persister.getCacheAccessStrategy();
-		assert cache != null;
 		if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
 			cache.remove( session, cacheKey );
 		}
@@ -82,7 +79,7 @@ public final class OptimisticLockHelper {
 			//TODO: inefficient if that cache is just going to ignore the updated state!
 			final Object cacheEntry =
 					buildStructuredCacheEntry( entity, nextVersion, entry.getLoadedState(), persister, session );
-			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, cacheKey, session );
+			final boolean put = updateCache( persister, cache, cacheEntry, previousVersion, nextVersion, cacheKey, session );
 			final var statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
@@ -97,6 +94,7 @@ public final class OptimisticLockHelper {
 
 	private static boolean updateCache(
 			EntityPersister persister,
+			EntityDataAccess cache,
 			Object cacheEntry,
 			Object previousVersion,
 			Object nextVersion,
@@ -104,8 +102,6 @@ public final class OptimisticLockHelper {
 			SharedSessionContractImplementor session) {
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cache = persister.getCacheAccessStrategy();
-		assert cache != null;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
@@ -135,6 +131,7 @@ public final class OptimisticLockHelper {
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
+		private final EntityDataAccess cache;
 		private final Object cacheKey;
 		private final EntityPersister persister;
 		private final Object previousVersion;
@@ -143,12 +140,14 @@ public final class OptimisticLockHelper {
 		private final Object cacheEntry;
 
 		private CacheCleanupProcess(
+				EntityDataAccess cache,
 				Object cacheKey,
 				EntityPersister persister,
 				Object previousVersion,
 				Object nextVersion,
 				SoftLock lock,
 				Object cacheEntry) {
+			this.cache = cache;
 			this.cacheKey = cacheKey;
 			this.persister = persister;
 			this.previousVersion = previousVersion;
@@ -159,8 +158,6 @@ public final class OptimisticLockHelper {
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
 			if ( cacheUpdateRequired( success, persister, session ) ) {
 				cacheAfterUpdate( cache, cacheKey, session );
 			}

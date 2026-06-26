@@ -20,6 +20,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
@@ -190,53 +191,54 @@ public class ResultsHelper {
 			collection.setCurrentSession( session );
 		}
 		final var entry = new CollectionCacheEntry( collection, collectionDescriptor );
-		final var cacheAccess = collectionDescriptor.getCacheAccessStrategy();
-		final Object cacheKey = cacheAccess.generateCacheKey(
-				key,
-				collectionDescriptor,
-				session.getFactory(),
-				session.getTenantIdentifier()
-		);
+		usingCache( collectionDescriptor, cache -> {
+			final Object cacheKey = cache.generateCacheKey(
+					key,
+					collectionDescriptor,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
 
-		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
-		if ( isPutFromLoad( context, collectionDescriptor, entry ) ) {
-			final boolean minimalPutsEnabled =
-					factory.getSessionFactoryOptions().isMinimalPutsEnabled()
-							&& !isCacheRefreshEnabled( session, cacheStoreMode );
-			final var eventListenerManager = session.getEventListenerManager();
-			final var eventMonitor = session.getEventMonitor();
-			final var cachePutEvent = eventMonitor.beginCachePutEvent();
-			boolean put = false;
-			try {
-				eventListenerManager.cachePutStart();
-				put = cacheAccess.putFromLoad(
-						session,
-						cacheKey,
-						collectionDescriptor.getCacheEntryStructure().structure( entry ),
-						version,
-						minimalPutsEnabled
-				);
-			}
-			finally {
-				eventMonitor.completeCachePutEvent(
-						cachePutEvent,
-						session,
-						cacheAccess,
-						collectionDescriptor,
-						put,
-						EventMonitor.CacheActionDescription.COLLECTION_INSERT
-				);
-				eventListenerManager.cachePutEnd();
-
-				final var statistics = factory.getStatistics();
-				if ( put && statistics.isStatisticsEnabled() ) {
-					statistics.collectionCachePut(
-							collectionDescriptor.getNavigableRole(),
-							cacheAccess.getRegion().getName()
+			// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
+			if ( isPutFromLoad( context, collectionDescriptor, entry ) ) {
+				final boolean minimalPutsEnabled =
+						factory.getSessionFactoryOptions().isMinimalPutsEnabled()
+								&& !isCacheRefreshEnabled( session, cacheStoreMode );
+				final var eventListenerManager = session.getEventListenerManager();
+				final var eventMonitor = session.getEventMonitor();
+				final var cachePutEvent = eventMonitor.beginCachePutEvent();
+				boolean put = false;
+				try {
+					eventListenerManager.cachePutStart();
+					put = cache.putFromLoad(
+							session,
+							cacheKey,
+							collectionDescriptor.getCacheEntryStructure().structure( entry ),
+							version,
+							minimalPutsEnabled
 					);
 				}
+				finally {
+					eventMonitor.completeCachePutEvent(
+							cachePutEvent,
+							session,
+							cache,
+							collectionDescriptor,
+							put,
+							EventMonitor.CacheActionDescription.COLLECTION_INSERT
+					);
+					eventListenerManager.cachePutEnd();
+
+					final var statistics = factory.getStatistics();
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.collectionCachePut(
+								collectionDescriptor.getNavigableRole(),
+								cache.getRegion().getName()
+						);
+					}
+				}
 			}
-		}
+		} );
 	}
 
 	private static boolean isCachePutEnabled(SharedSessionContract session, CacheStoreMode cacheStoreMode) {

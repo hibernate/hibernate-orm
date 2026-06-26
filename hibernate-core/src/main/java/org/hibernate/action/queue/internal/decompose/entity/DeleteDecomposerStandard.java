@@ -25,6 +25,7 @@ import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -110,17 +111,17 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 
 		final Object naturalIdValues = DeleteNaturalIdHandling.removeLocalResolution( action, session );
 
-		final DeleteCacheHandling.CacheLock cacheLock = DeleteCacheHandling.lockItem( action, session );
+		final var cacheLock = DeleteCacheHandling.lockItem( action, session );
 		registerAfterTransactionCompletion( action, cacheLock, session );
-		final PreDeleteHandling preDeleteHandling = new PreDeleteHandling( action );
-		final PostDeleteHandling postDeleteHandling = new PostDeleteHandling(
+		final var preDeleteHandling = new PreDeleteHandling( action );
+		final var postDeleteHandling = new PostDeleteHandling(
 				action,
-				cacheLock.cacheKey(),
+				cacheLock == null ? null : cacheLock.cacheKey(),
 				naturalIdValues,
 				preDeleteHandling
 		);
 
-		final EntityMutationPlanContributor.DeleteContext context = new EntityMutationPlanContributor.DeleteContext(
+		final var context = new EntityMutationPlanContributor.DeleteContext(
 				entityPersister,
 				action,
 				ordinalBase,
@@ -163,7 +164,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 		if ( (isImpliedOptimisticLocking && loadedState != null)
 				|| ((entityEntry == null || entityEntry.getLoadedState() == null) && entityPersister.hasPartitionedSelectionMapping())
 				|| (rowId == null && entityPersister.hasRowId()) ) {
-			final FlushOperation previousOperation = decomposeDynamicDelete(
+			final var previousOperation = decomposeDynamicDelete(
 					ordinalBase,
 					action.getInstance(),
 					identifier,
@@ -180,7 +181,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			emitTailOperations( previousOperation, context, postDeleteHandling, operationConsumer );
 		}
 		else {
-			final FlushOperation previousOperation = decomposeStaticDelete(
+			final var previousOperation = decomposeStaticDelete(
 					ordinalBase,
 					action.getInstance(),
 					identifier,
@@ -210,23 +211,23 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 				previousOperation.setPostExecutionCallback( postExecutionCallback );
 				operationConsumer.accept( previousOperation );
 			}
-			return;
 		}
-
-		if ( previousOperation != null ) {
-			operationConsumer.accept( previousOperation );
+		else {
+			if ( previousOperation != null ) {
+				operationConsumer.accept( previousOperation );
+			}
+			for ( int i = 0; i < additionalOperations.size() - 1; i++ ) {
+				operationConsumer.accept( additionalOperations.get( i ) );
+			}
+			final var lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
+			lastOperation.setPostExecutionCallback( postExecutionCallback );
+			operationConsumer.accept( lastOperation );
 		}
-		for ( int i = 0; i < additionalOperations.size() - 1; i++ ) {
-			operationConsumer.accept( additionalOperations.get( i ) );
-		}
-		final FlushOperation lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
-		lastOperation.setPostExecutionCallback( postExecutionCallback );
-		operationConsumer.accept( lastOperation );
 	}
 
 	private void registerAfterTransactionCompletion(
 			EntityDeleteAction action,
-			DeleteCacheHandling.CacheLock cacheLock,
+			CacheLock cacheLock,
 			SharedSessionContractImplementor session) {
 		final var callback = new DeleteAfterTransactionCompletionHandling( action, cacheLock );
 		if ( callback.isNeeded( session ) ) {
@@ -247,7 +248,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			int ordinalBase,
 			PreDeleteHandling preDeleteHandling,
 			PostDeleteHandling postDeleteHandling) {
-		final FlushOperation operation = DecompositionSupport.createNoOpCallbackCarrier(
+		final var operation = DecompositionSupport.createNoOpCallbackCarrier(
 				entityPersister.getIdentifierTableDescriptor(),
 				ordinalBase * 1_000,
 				postDeleteHandling
@@ -287,32 +288,30 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			PostDeleteHandling postDeleteHandling,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
-		final var dynamicMutations = generateMutations( rowId, loadedState, sameFlushUpdatedAttributeIndexes, true, session );
+		final var dynamicMutations =
+				generateMutations( rowId, loadedState, sameFlushUpdatedAttributeIndexes, true, session );
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
-		for ( Map.Entry<String, TableDelete> entry : dynamicMutations.entrySet() ) {
-			var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
-			var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
-			var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-
-			final EntityDeleteBindPlan bindPlan = new EntityDeleteBindPlan(
-					tableDescriptor,
-					entityPersister,
-					identifier,
-					rowId,
-					version,
-					state,
-					loadedState,
-					sameFlushUpdatedAttributeIndexes,
-					optimisticLockStyle
-			);
-
-			final FlushOperation op = new FlushOperation(
+		for ( var entry : dynamicMutations.entrySet() ) {
+			final var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
+			final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
+			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
+			final var op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
 					mutation,
-					bindPlan,
+					new EntityDeleteBindPlan(
+							tableDescriptor,
+							entityPersister,
+							identifier,
+							rowId,
+							version,
+							state,
+							loadedState,
+							sameFlushUpdatedAttributeIndexes,
+							optimisticLockStyle
+					),
 					ordinalBase * 1_000 + (localOrd++),
 					origin,
 					null
@@ -359,29 +358,26 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
-		for ( Map.Entry<String, TableDelete> entry : tableDeletesToUse.entrySet() ) {
-			var mutation = resolveJdbcDeleteOperation( entry.getKey(), entry.getValue(), applyVersion );
+		for ( var entry : tableDeletesToUse.entrySet() ) {
+			final var mutation = resolveJdbcDeleteOperation( entry.getKey(), entry.getValue(), applyVersion );
 			final var shapeKey = resolveStatementShapeKey( entry.getKey(), entry.getValue(), applyVersion );
-			var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
-			var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-
-			final EntityDeleteBindPlan bindPlan = new EntityDeleteBindPlan(
-					tableDescriptor,
-					entityPersister,
-					identifier,
-					rowId,
-					applyVersion ? version : null,
-					applyVersion ? state : null,
-					applyVersion ? loadedState : null,
-					applyVersion ? sameFlushUpdatedAttributeIndexes : null,
-					applyVersion ? optimisticLockStyle : OptimisticLockStyle.NONE
-			);
-
-			final FlushOperation op = new FlushOperation(
+			final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
+			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
+			final var op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
 					mutation,
-					bindPlan,
+					new EntityDeleteBindPlan(
+							tableDescriptor,
+							entityPersister,
+							identifier,
+							rowId,
+							applyVersion ? version : null,
+							applyVersion ? state : null,
+							applyVersion ? loadedState : null,
+							applyVersion ? sameFlushUpdatedAttributeIndexes : null,
+							applyVersion ? optimisticLockStyle : OptimisticLockStyle.NONE
+					),
 					ordinalBase * 1_000 + (localOrd++),
 					origin,
 					shapeKey
@@ -423,61 +419,59 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			String tableName,
 			TableDelete tableDelete,
 			boolean applyVersion) {
-		var staticDeletes = applyVersion
+		final var staticDeletes = applyVersion
 				? staticDeleteMutations
 				: staticNoVersionDeleteMutations;
-		var staticJdbcDeletes = applyVersion
+		final var staticJdbcDeletes = applyVersion
 				? staticJdbcDeleteMutations
 				: staticNoVersionJdbcDeleteMutations;
-		if ( staticJdbcDeletes != null && tableDelete == staticDeletes.get( tableName ) ) {
-			return staticJdbcDeletes.get( tableName );
-		}
-		return tableDelete.createMutationOperation( null, sessionFactory );
+		return staticJdbcDeletes != null
+			&& tableDelete == staticDeletes.get( tableName )
+				? staticJdbcDeletes.get( tableName )
+				: tableDelete.createMutationOperation( null, sessionFactory );
 	}
 
 	private StatementShapeKey resolveStatementShapeKey(
 			String tableName,
 			TableDelete tableDelete,
 			boolean applyVersion) {
-		var staticDeletes = applyVersion
+		final var staticDeletes = applyVersion
 				? staticDeleteMutations
 				: staticNoVersionDeleteMutations;
-		var staticShapeKeys = applyVersion
+		final var staticShapeKeys = applyVersion
 				? staticStatementShapeKeys
 				: staticNoVersionStatementShapeKeys;
-		if ( staticShapeKeys != null && tableDelete == staticDeletes.get( tableName ) ) {
-			return staticShapeKeys.get( tableName );
-		}
-		return null;
+		return staticShapeKeys != null
+			&& tableDelete == staticDeletes.get( tableName )
+				? staticShapeKeys.get( tableName )
+				: null;
 	}
 
 	private OptimisticLockStyle definedOptimisticLockStyle() {
-		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
+		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
+		return optimisticLockStyle.isVersion()
+			&& entityPersister.getVersionMapping() == null
+				? OptimisticLockStyle.NONE
+				: optimisticLockStyle;
 
-		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() == null ) {
-			return OptimisticLockStyle.NONE;
-		}
-
-		return optimisticLockStyle;
 	}
 
-	private OptimisticLockStyle effectiveOptimisticLockStyle(
-			OptimisticLockStyle optimisticLockStyle,
-			Object loadedVersion,
-			Object[] loadedState) {
-		if ( optimisticLockStyle.isVersion()  ) {
-			if ( loadedVersion == null ) {
-				return OptimisticLockStyle.NONE;
-			}
-		}
-		else if ( optimisticLockStyle.isAllOrDirty() ) {
-			if ( loadedState == null ) {
-				return OptimisticLockStyle.NONE;
-			}
-		}
-
-		return optimisticLockStyle;
-	}
+//	private OptimisticLockStyle effectiveOptimisticLockStyle(
+//			OptimisticLockStyle optimisticLockStyle,
+//			Object loadedVersion,
+//			Object[] loadedState) {
+//		if ( optimisticLockStyle.isVersion()  ) {
+//			if ( loadedVersion == null ) {
+//				return OptimisticLockStyle.NONE;
+//			}
+//		}
+//		else if ( optimisticLockStyle.isAllOrDirty() ) {
+//			if ( loadedState == null ) {
+//				return OptimisticLockStyle.NONE;
+//			}
+//		}
+//		return optimisticLockStyle;
+//	}
 
 	protected Map<String, TableDelete> generateMutations(
 			Object rowId,
@@ -485,7 +479,8 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			int[] sameFlushUpdatedAttributeIndexes,
 			boolean applyVersion,
 			SharedSessionContractImplementor session) {
-		final Map<String, TableDeleteBuilder> deleteBuilders = linkedMapOfSize( entityPersister.getTableDescriptors().length );
+		final Map<String, TableDeleteBuilder> deleteBuilders =
+				linkedMapOfSize( entityPersister.getTableDescriptors().length );
 
 		// Process tables in reverse order (child tables before parent)
 		entityPersister.forEachMutableTableDescriptorReverse( (tableDescriptor) -> {
@@ -513,15 +508,15 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 
 	private TableDeleteBuilder createTableDeleteBuilder(TableDescriptor tableDescriptor) {
 		// Create adapter to convert TableDescriptor to TableMapping
-		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor etd
-				&& etd.isIdentifierTable();
-		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
+		final boolean isIdentifierTable =
+				tableDescriptor instanceof EntityTableDescriptor etd
+						&& etd.isIdentifierTable();
+		final var tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
 				tableDescriptor.getRelativePosition(),
 				isIdentifierTable,
 				false // isInverse
 		);
-
 		return new TableDeleteBuilderStandard(
 				entityPersister,
 				tableMapping,
@@ -539,7 +534,6 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 		tableDeleteBuilders.forEach( (name, builder) -> {
 			// Apply key restrictions for all tables
 			applyKeyRestriction( builder, rowId );
-
 			if ( builder.getMutatingTable().getTableMapping().isIdentifierTable() ) {
 				entityPersister.addDiscriminatorToDelete( builder );
 			}
@@ -559,8 +553,8 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 	}
 
 	private void applyKeyRestriction(TableDeleteBuilder builder, Object rowId) {
-		var tableMapping = builder.getMutatingTable().getTableMapping();
-		var tableDescriptor = ( (TableDescriptorAsTableMapping) tableMapping ).descriptor();
+		final var tableMapping = builder.getMutatingTable().getTableMapping();
+		final var tableDescriptor = ( (TableDescriptorAsTableMapping) tableMapping ).descriptor();
 		if ( rowId != null && needsRowId( entityPersister, tableMapping ) ) {
 			builder.addKeyRestrictionLeniently( entityPersister.getRowIdMapping() );
 		}
@@ -663,7 +657,6 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 
 	private void applyPartitionRestrictions(Map<String, TableDeleteBuilder> builders) {
 		final var attributeMappings = entityPersister.getAttributeMappings();
-
 		for ( int m = 0; m < attributeMappings.size(); m++ ) {
 			final var attributeMapping = attributeMappings.get( m );
 			final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();

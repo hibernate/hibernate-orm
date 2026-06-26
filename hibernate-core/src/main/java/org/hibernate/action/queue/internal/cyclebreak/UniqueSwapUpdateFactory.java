@@ -44,10 +44,11 @@ public final class UniqueSwapUpdateFactory {
 			throw new IllegalStateException("FK fixup requires non-null entityId (identity prereq must have executed)");
 		}
 
-		var mutationTarget = cycleBrokenOp.getJdbcOperation().getMutationTarget();
-		var persister = ( mutationTarget instanceof EntityMutationTarget emt )
-				? emt.getTargetPart().getEntityPersister()
-				: null;
+		final var mutationTarget = cycleBrokenOp.getJdbcOperation().getMutationTarget();
+		final var persister =
+				mutationTarget instanceof EntityMutationTarget emt
+						? emt.getTargetPart().getEntityPersister()
+						: null;
 		if ( persister == null ) {
 			throw new IllegalStateException("Unique swap fixup only valid for entities, but found - " + mutationTarget);
 		}
@@ -55,26 +56,23 @@ public final class UniqueSwapUpdateFactory {
 		var tableDescriptor = (EntityTableDescriptor) cycleBrokenOp.getMutatingTableDescriptor();
 		assert tableDescriptor != null;
 
-		var tableUpdate = new FixupTableUpdate(
+		final var tableUpdate = new FixupTableUpdate(
 				tableDescriptor,
 				persister,
 				tableDescriptor.findColumns( cycleBrokenOp.getIntendedUniqueValues().keySet() ),
 				tableDescriptor.keyDescriptor().columns()
 		);
 
-		var jdbcUpdate = tableUpdate.buildJdbcUpdate();
-
-		final FixupBindPlan bindPlan = new FixupBindPlan(
-				persister,
-				entityId,
-				cycleBrokenOp.getIntendedUniqueValues()
-		);
-
+		final var jdbcUpdate = tableUpdate.buildJdbcUpdate();
 		return new FlushOperation(
 				cycleBrokenOp.getMutatingTableDescriptor(),
 				MutationKind.UPDATE,
 				jdbcUpdate,
-				bindPlan,
+				new FixupBindPlan(
+						persister,
+						entityId,
+						cycleBrokenOp.getIntendedUniqueValues()
+				),
 				cycleBrokenOp.getOrdinal() + 10_000,
 				cycleBrokenOp.getOrigin() + " [cycle-break unique swap fixup update]"
 		);

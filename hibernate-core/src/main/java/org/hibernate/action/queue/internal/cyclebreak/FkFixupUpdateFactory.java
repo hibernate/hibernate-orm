@@ -63,9 +63,9 @@ public final class FkFixupUpdateFactory {
 				tableDescriptor.keyDescriptor().columns()
 		);
 
-		var jdbcUpdate = tableUpdate.buildJdbcUpdate();
+		final var jdbcUpdate = tableUpdate.buildJdbcUpdate();
 
-		final FixupBindPlan bindPlan = new FixupBindPlan(
+		final var bindPlan = new FixupBindPlan(
 				persister,
 				entityId,
 				cycleBrokenOp.getIntendedFkValues()

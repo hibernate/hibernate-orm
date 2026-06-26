@@ -7,15 +7,8 @@ package org.hibernate.action.queue.internal.decompose.entity;
 import org.hibernate.action.internal.EntityAction;
 import org.hibernate.action.queue.spi.decompose.entity.EntityActionDecomposer;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.generator.EventType;
-import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
-
-;
 
 /// Base support for [EntityAction]-based [EntityActionDecomposer] implementations.
 ///
@@ -35,7 +28,7 @@ public abstract class AbstractDecomposer<T extends EntityAction> implements Enti
 	}
 
 	protected EntityTableDescriptor findTableDescriptor(String tableName) {
-		for ( EntityTableDescriptor tableDescriptor : entityPersister.getTableDescriptors() ) {
+		for ( var tableDescriptor : entityPersister.getTableDescriptors() ) {
 			if ( tableDescriptor.name().equals( tableName ) ) {
 				return tableDescriptor;
 			}
@@ -43,45 +36,45 @@ public abstract class AbstractDecomposer<T extends EntityAction> implements Enti
 		throw new IllegalArgumentException( "Unknown entity table `" + tableName + "`" );
 	}
 
-	protected void handleValueGeneration(
-			AttributeMapping attributeMapping,
-			AssigningTableMutationBuilder<?> builder,
-			OnExecutionGenerator generator) {
-		handleValueGeneration( attributeMapping, builder, generator, null );
-	}
-
-	protected void handleValueGeneration(
-			AttributeMapping attributeMapping,
-			AssigningTableMutationBuilder<?> builder,
-			OnExecutionGenerator generator,
-			EventType eventType) {
-		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-		if ( eventType != null ) {
-			final String[] columnValues = generator.getReferencedColumnValues( dialect, eventType );
-			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, eventType );
-			attributeMapping.forEachSelectable( (j, mapping) -> {
-				if ( columnInclusions == null || columnInclusions[j] ) {
-					final String columnValue = columnValues != null && columnValues[j] != null
-							? columnValues[j]
-							: "?";
-					builder.addColumnAssignment( mapping, columnValue );
-				}
-			} );
-			return;
-		}
-
-		final boolean writePropertyValue = generator.writePropertyValue();
-		final String[] columnValues = writePropertyValue
-				? null
-				: generator.getReferencedColumnValues( dialect );
-		final boolean[] columnInclusions = null;
-		attributeMapping.forEachSelectable( (j, mapping) -> {
-			if ( writePropertyValue ) {
-				builder.addColumnAssignment( mapping );
-			}
-			else {
-				builder.addColumnAssignment( mapping, columnValues[j] );
-			}
-		} );
-	}
+//	protected void handleValueGeneration(
+//			AttributeMapping attributeMapping,
+//			AssigningTableMutationBuilder<?> builder,
+//			OnExecutionGenerator generator) {
+//		handleValueGeneration( attributeMapping, builder, generator, null );
+//	}
+//
+//	protected void handleValueGeneration(
+//			AttributeMapping attributeMapping,
+//			AssigningTableMutationBuilder<?> builder,
+//			OnExecutionGenerator generator,
+//			EventType eventType) {
+//		final var dialect = sessionFactory.getJdbcServices().getDialect();
+//		if ( eventType != null ) {
+//			final String[] columnValues = generator.getReferencedColumnValues( dialect, eventType );
+//			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, eventType );
+//			attributeMapping.forEachSelectable( (j, mapping) -> {
+//				if ( columnInclusions == null || columnInclusions[j] ) {
+//					final String columnValue = columnValues != null && columnValues[j] != null
+//							? columnValues[j]
+//							: "?";
+//					builder.addColumnAssignment( mapping, columnValue );
+//				}
+//			} );
+//		}
+//		else {
+//			final boolean writePropertyValue = generator.writePropertyValue();
+//			final String[] columnValues =
+//					writePropertyValue
+//							? null
+//							: generator.getReferencedColumnValues( dialect );
+//			attributeMapping.forEachSelectable( (j, mapping) -> {
+//				if ( writePropertyValue ) {
+//					builder.addColumnAssignment( mapping );
+//				}
+//				else {
+//					builder.addColumnAssignment( mapping, columnValues[j] );
+//				}
+//			} );
+//		}
+//	}
 }

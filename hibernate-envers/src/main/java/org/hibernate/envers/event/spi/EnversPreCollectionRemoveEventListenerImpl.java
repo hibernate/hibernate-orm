@@ -7,7 +7,6 @@ package org.hibernate.envers.event.spi;
 import java.io.Serializable;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;

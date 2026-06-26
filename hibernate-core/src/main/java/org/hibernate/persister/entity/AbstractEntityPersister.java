@@ -255,6 +255,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.engine.internal.CacheHelper.readingFromCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
@@ -1577,10 +1578,27 @@ public abstract class AbstractEntityPersister
 
 		// attempt to read it from second-level cache
 		if ( session.getCacheMode().isGetEnabled()
-				&& canReadFromCache()
 				&& isLazyPropertiesCacheable() ) {
-			final var cache = getCacheAccessStrategy();
-			assert cache != null;
+			final Object cachedValue = initializeLazyFieldFromCache( fieldName, entity, session, id, entry );
+			if ( cachedValue != UNFETCHED_PROPERTY ) {
+				// The following should be redundant, since the setter should have set this already.
+				// interceptor.attributeInitialized(fieldName);
+
+				// NOTE EARLY EXIT!!!
+				return cachedValue;
+			}
+		}
+
+		return initializeLazyPropertiesFromDatastore( entity, id, entry, fieldName, session );
+	}
+
+	private Object initializeLazyFieldFromCache(
+			String fieldName,
+			Object entity,
+			SharedSessionContractImplementor session,
+			Object id,
+			EntityEntry entry) {
+		return readingFromCache( this, cache -> {
 			final Object cacheKey =
 					cache.generateCacheKey(
 							id,
@@ -1589,20 +1607,11 @@ public abstract class AbstractEntityPersister
 							session.getTenantIdentifier()
 					);
 			final Object structuredEntry = fromSharedCache( session, cacheKey, this, cache );
-			if ( structuredEntry != null ) {
-				final var cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( structuredEntry, factory );
-				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
-				if ( initializedValue != LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-					// The following should be redundant, since the setter should have set this already.
-					// interceptor.attributeInitialized(fieldName);
-
-					// NOTE EARLY EXIT!!!
-					return initializedValue;
-				}
-			}
-		}
-
-		return initializeLazyPropertiesFromDatastore( entity, id, entry, fieldName, session );
+			return structuredEntry == null
+					? UNFETCHED_PROPERTY
+					: initializeLazyPropertiesFromCache( fieldName, entity, session, entry,
+							(CacheEntry) getCacheEntryStructure().destructure( structuredEntry, factory ) );
+		}, UNFETCHED_PROPERTY );
 	}
 
 	private PersistentCollection<?> initializedLazyCollection(
@@ -1822,9 +1831,9 @@ public abstract class AbstractEntityPersister
 		final var disassembledValues = cacheEntry.getDisassembledState();
 		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
 			final var cachedValue = disassembledValues[lazyPropertyNumbers[j]];
-			if ( cachedValue == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			if ( cachedValue == UNFETCHED_PROPERTY ) {
 				if ( fieldName.equals( lazyPropertyNames[j] ) ) {
-					result = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					result = UNFETCHED_PROPERTY;
 				}
 				// don't try to initialize the unfetched property
 			}
@@ -2597,10 +2606,10 @@ public abstract class AbstractEntityPersister
 			boolean[] propertyCheckability,
 			int i,
 			SessionImplementor session) {
-		return currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+		return currentState[i] != UNFETCHED_PROPERTY
 				// Consider mutable properties as dirty if we don't have a previous state
 				&& ( previousState == null
-						|| previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+						|| previousState[i] == UNFETCHED_PROPERTY
 						|| propertyCheckability[i]
 								&& propertyTypes[i].isDirty(
 										previousState[i],
@@ -4432,7 +4441,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public CacheEntryStructure getCacheEntryStructure() {
 		return cacheEntryHelper.getCacheEntryStructure();
 	}
@@ -4577,13 +4586,13 @@ public abstract class AbstractEntityPersister
 		}
 
 		// check to see if it is in the second-level cache
-		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() ) {
-			final var cache = getCacheAccessStrategy();
-			assert cache != null;
-			final Object cacheKey =
-					cache.generateCacheKey( id, this,
-							session.getFactory(), session.getTenantIdentifier() );
-			final Object cacheEntry = fromSharedCache( session, cacheKey, this, cache );
+		if ( session.getCacheMode().isGetEnabled() ) {
+			final var cacheEntry = readingFromCache( this, cache -> {
+				final Object cacheKey =
+						cache.generateCacheKey( id, this,
+								session.getFactory(), session.getTenantIdentifier() );
+				return fromSharedCache( session, cacheKey, this, cache );
+			}, null );
 			if ( cacheEntry != null ) {
 				return false;
 			}
@@ -4821,7 +4830,7 @@ public abstract class AbstractEntityPersister
 						values[i] = getterCache[i].get( object );
 					}
 					else {
-						values[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+						values[i] = UNFETCHED_PROPERTY;
 					}
 				}
 			}

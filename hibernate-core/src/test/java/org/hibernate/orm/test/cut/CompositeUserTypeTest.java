@@ -25,9 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cut/Transaction.hbm.xml"
-		}
+		xmlMappings = "org/hibernate/orm/test/cut/Transaction.orm.xml"
 )
 @SessionFactory
 public class CompositeUserTypeTest {

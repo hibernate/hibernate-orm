@@ -65,8 +65,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -276,18 +274,10 @@ public class IngresDialect extends Dialect {
 		functionFactory.position();
 		functionFactory.format_dateFormat();
 		functionFactory.bitLength_pattern( "octet_length(hex(?1))*4" );
+		functionFactory.locate_positionSubstring();
 
 		final BasicType<Integer> integerType = functionContributions.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
-		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
-				integerType,
-				"position(?1 in ?2)",
-				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
-				STRING, STRING, INTEGER,
-				functionContributions.getTypeConfiguration()
-		).setArgumentListSignature("(pattern, string[, start])");
-
 		functionContributions.getFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );
 
 		functionFactory.bitandorxornot_bitAndOrXorNot();

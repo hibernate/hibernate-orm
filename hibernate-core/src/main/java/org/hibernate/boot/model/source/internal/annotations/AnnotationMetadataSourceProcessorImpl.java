@@ -123,6 +123,13 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processTypeDefinitions() {
+		final var collector = rootMetadataBuildingContext.getMetadataCollector();
+		for ( var registration : domainModelSource.getGlobalRegistrations().getCompositeUserTypeRegistrations() ) {
+			collector.registerCompositeUserType(
+					registration.getEmbeddableClass().toJavaClass(),
+					registration.getUserTypeClass().toJavaClass()
+			);
+		}
 	}
 
 	@Override

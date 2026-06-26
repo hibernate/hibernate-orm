@@ -410,6 +410,12 @@ class StatefulPersistenceContext implements PersistenceContext {
 			}
 			if ( entity != null ) {
 				assert oldHolder.entity == null || oldHolder.entity == entity;
+				if ( oldHolder.proxy != null && oldHolder.entity == null ) {
+					// When there was a proxy before, we have to set the implementation of the proxy to the new entity
+					final LazyInitializer lazyInitializer = extractLazyInitializer( oldHolder.proxy );
+					assert lazyInitializer != null;
+					lazyInitializer.setImplementation( entity );
+				}
 				oldHolder.entity = entity;
 			}
 			holder = oldHolder;
@@ -495,6 +501,12 @@ class StatefulPersistenceContext implements PersistenceContext {
 		EntityHolderImpl holder = getOrInitializeNewHolder().withEntity( key, key.getPersister(), entity );
 		final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, holder );
 		if ( oldHolder != null ) {
+			if ( oldHolder.proxy != null && oldHolder.entity == null ) {
+				// When there was a proxy before, we have to set the implementation of the proxy to the new entity
+				final LazyInitializer lazyInitializer = extractLazyInitializer( oldHolder.proxy );
+				assert lazyInitializer != null;
+				lazyInitializer.setImplementation( entity );
+			}
 			oldHolder.entity = entity;
 			holder = oldHolder;
 		}

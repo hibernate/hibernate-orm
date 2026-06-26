@@ -21,6 +21,7 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.GenerationTiming;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
@@ -487,6 +488,44 @@ public class HbmTransformationJaxbTests {
 			assertThat( children.getMappedBy() )
 					.as( "mapped-by should resolve to 'id.parent' for key-many-to-one inside composite-id" )
 					.isEqualTo( "id.parent" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-19424" )
+	public void testCompositeUserTypeComponentTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			assertThat( transformed.getCompositeUserTypeRegistrations() )
+					.as( "CompositeUserType component should generate a <composite-user-type> registration" )
+					.hasSize( 1 );
+
+			final JaxbCompositeUserTypeRegistrationImpl registration =
+					transformed.getCompositeUserTypeRegistrations().get( 0 );
+			assertThat( registration.getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.cut.MonetoryAmount" );
+			assertThat( registration.getDescriptor() )
+					.isEqualTo( "org.hibernate.orm.test.cut.MonetoryAmountUserType" );
+
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			assertThat( embeddable.getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.cut.MonetoryAmount" );
+
+			final JaxbBasicImpl amountAttr = embeddable.getAttributes().getBasicAttributes().stream()
+					.filter( b -> "amount".equals( b.getName() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEntityImpl mutualFundEntity = transformed.getEntities().stream()
+					.filter( e -> "MutualFund".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( mutualFundEntity.getAttributes().getEmbeddedAttributes() ).hasSize( 1 );
+			assertThat( mutualFundEntity.getAttributes().getEmbeddedAttributes().get( 0 ).getName() )
+					.isEqualTo( "holdings" );
 		} );
 	}
 

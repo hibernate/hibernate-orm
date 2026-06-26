@@ -8,8 +8,8 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -149,8 +149,8 @@ public abstract class AbstractJPAIndexTest {
 	public void testJoinTableIndex(SessionFactoryScope scope) {
 		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Importer.class.getName() );
 		Property property = entity.getProperty( "cars" );
-		Bag set = (Bag) property.getValue();
-		Table collectionTable = set.getCollectionTable();
+		Collection collection = (Collection) property.getValue();
+		Table collectionTable = collection.getCollectionTable();
 
 		Iterator<Index> itr = collectionTable.getIndexes().values().iterator();
 		assertThat( itr.hasNext() ).isTrue();

@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.model.naming.Identifier;
@@ -343,6 +344,7 @@ public class AttributeBinder {
 			column.setArrayLength( selectableIntent.arrayLength() );
 		}
 		applyColumnTransformer( selectableIntent, property, column );
+		applyChecks( selectableIntent, column );
 
 		final String tableName = selectableIntent.tableName();
 		if ( tableName == null || tableName.isEmpty() ) {
@@ -362,6 +364,17 @@ public class AttributeBinder {
 		basicValue.getTable().addColumn( column );
 
 		return ProcessedSelectable.column( column );
+	}
+
+	public static void applyChecks(BasicValueIntent basicValueIntent, org.hibernate.mapping.Column column) {
+		for ( Check check : basicValueIntent.checks() ) {
+			if ( org.hibernate.internal.util.StringHelper.isNotEmpty( check.constraints() ) ) {
+				column.addCheckConstraint( new org.hibernate.mapping.CheckConstraint(
+						org.hibernate.internal.util.StringHelper.nullIfEmpty( check.name() ),
+						check.constraints()
+				) );
+			}
+		}
 	}
 
 	public static void applyColumnTransformer(

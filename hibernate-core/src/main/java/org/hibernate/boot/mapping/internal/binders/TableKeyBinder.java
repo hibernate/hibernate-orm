@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
@@ -269,11 +270,8 @@ public class TableKeyBinder {
 
 	private void applyUniqueConstraints(CollectionTableBinding collectionTableBinding) {
 		for ( jakarta.persistence.UniqueConstraint uniqueConstraint : collectionTableBinding.uniqueConstraints() ) {
-			if ( uniqueConstraint.columnNames().length == 0 ) {
-				continue;
-			}
-
 			final Table table = collectionTableBinding.collection().getCollectionTable();
+			validateUniqueConstraintColumns( uniqueConstraint.columnNames(), table.getName() );
 			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( uniqueConstraint.columnNames().length );
 			for ( String columnName : uniqueConstraint.columnNames() ) {
 				uniqueKeyColumns.add( resolveColumn( table, columnName ) );
@@ -312,6 +310,19 @@ public class TableKeyBinder {
 			uniqueKeyMappingMaterializer.materializeUniqueKey(
 					ResolvedUniqueKey.from( column, table, metadataBuildingContext() )
 			);
+		}
+	}
+
+	private void validateUniqueConstraintColumns(String[] columnNames, String tableName) {
+		if ( columnNames.length == 0 ) {
+			throw new AnnotationException( "Unique constraint on table '" + tableName + "' did not specify columns" );
+		}
+		for ( String columnName : columnNames ) {
+			if ( StringHelper.isEmpty( columnName ) ) {
+				throw new AnnotationException(
+						"Unique constraint on table '" + tableName + "' specified an empty column name"
+				);
+			}
 		}
 	}
 

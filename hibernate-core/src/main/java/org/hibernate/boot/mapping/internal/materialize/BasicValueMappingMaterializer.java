@@ -35,6 +35,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
 
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.bindImplicitJavaType;
+import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.applyChecks;
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.applyColumnTransformer;
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.processSelectable;
 import static org.hibernate.boot.mapping.internal.binders.BasicValueBinder.bindJavaType;
@@ -218,6 +219,7 @@ public class BasicValueMappingMaterializer {
 			);
 			column.setName( applyColumnNamingPatterns( column.getName(), columnNamingPatterns ) );
 			applyColumnTransformer( basicValueIntent, property, column );
+			applyChecks( basicValueIntent, column );
 			basicValue.addColumn( column, insertable, updatable );
 		basicValue.getTable().addColumn( column );
 		return column;

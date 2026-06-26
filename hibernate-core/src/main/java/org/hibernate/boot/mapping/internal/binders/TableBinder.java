@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
-import org.hibernate.annotations.Check;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.View;
+import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
@@ -62,8 +62,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
-
-import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotationUsages;
 
 /// Creates and registers table references used by mapping-model binders.
 ///
@@ -324,7 +322,6 @@ public class TableBinder {
 		registerLegacyLogicalTableName( logicalName, binding );
 
 		applyComment( binding, null );
-		applyHibernateChecks( binding, type );
 		applyView( binding, viewAnn );
 
 		return createPhysicalTableReference(
@@ -395,7 +392,6 @@ public class TableBinder {
 		applyCheckConstraints( binding, tableSource );
 		applyUniqueConstraints( binding, tableSource );
 		applyIndexes( binding, tableSource );
-		applyHibernateChecks( binding, type );
 		applyView( binding, viewAnn );
 
 		return createPhysicalTableReference(
@@ -812,9 +808,7 @@ public class TableBinder {
 		}
 
 		for ( jakarta.persistence.UniqueConstraint uniqueConstraint : tableSource.uniqueConstraints() ) {
-			if ( uniqueConstraint.columnNames().length == 0 ) {
-				continue;
-			}
+			validateUniqueConstraintColumns( uniqueConstraint.columnNames(), table.getName() );
 			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( uniqueConstraint.columnNames().length );
 			for ( String columnName : uniqueConstraint.columnNames() ) {
 				uniqueKeyColumns.add( createColumn( columnName ) );
@@ -831,6 +825,19 @@ public class TableBinder {
 							"table-unique-constraint"
 					)
 			);
+		}
+	}
+
+	private void validateUniqueConstraintColumns(String[] columnNames, String tableName) {
+		if ( columnNames.length == 0 ) {
+			throw new AnnotationException( "Unique constraint on table '" + tableName + "' did not specify columns" );
+		}
+		for ( String columnName : columnNames ) {
+			if ( StringHelper.isEmpty( columnName ) ) {
+				throw new AnnotationException(
+						"Unique constraint on table '" + tableName + "' specified an empty column name"
+				);
+			}
 		}
 	}
 
@@ -953,25 +960,6 @@ public class TableBinder {
 				)
 				.render( jdbcEnvironment.getDialect() );
 		return new Column( physicalName );
-	}
-
-	@SuppressWarnings("removal")
-	private void applyHibernateChecks(Table table, EntityTypeMetadata type) {
-		final Check[] checks = getOverridableAnnotationUsages(
-				type.getClassDetails(),
-				Check.class,
-				bindingState.getDatabase().getDialect(),
-				bindingContext.getBootstrapContext().getModelsContext()
-		);
-		for ( Check check : checks ) {
-			if ( StringHelper.isNotEmpty( check.constraints() ) ) {
-				table.addCheck( new org.hibernate.mapping.CheckConstraint(
-						StringHelper.nullIfEmpty( check.name() ),
-						check.constraints(),
-						null
-				) );
-			}
-		}
 	}
 
 	private void applyRowId(Table table, EntityTypeMetadata type) {

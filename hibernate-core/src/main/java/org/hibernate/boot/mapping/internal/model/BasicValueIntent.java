@@ -5,6 +5,7 @@
 package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.annotations.Array;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.boot.models.AttributeNature;
@@ -19,6 +20,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotationUsages;
 
 /// Source-level intent for a basic-valued attribute or component member.
 ///
@@ -39,6 +41,7 @@ public record BasicValueIntent(
 		String columnTransformerName,
 		String customReadExpression,
 		String customWriteExpression,
+		Check[] checks,
 		Convert conversion) implements ValueIntent {
 	@Override
 	public AttributeNature nature() {
@@ -65,7 +68,11 @@ public record BasicValueIntent(
 		final Column effectiveColumn = attributeOverride == null ? columnAnn : attributeOverride.column();
 		final var formulaAnn = formula( member, bindingState, bindingContext );
 		if ( formulaAnn != null ) {
-			return formulaIntent( formulaAnn.value(), formulaSelectableName( ColumnSource.from( effectiveColumn ) ), directConversion( member ) );
+			return formulaIntent(
+					formulaAnn.value(),
+					formulaSelectableName( ColumnSource.from( effectiveColumn ) ),
+					directConversion( member )
+			);
 		}
 
 		return columnIntent(
@@ -74,6 +81,7 @@ public record BasicValueIntent(
 				effectiveColumn == null || effectiveColumn.insertable(),
 				effectiveColumn == null || effectiveColumn.updatable(),
 				member,
+				checks( member, bindingState, bindingContext ),
 				directConversion( member )
 		);
 	}
@@ -100,6 +108,7 @@ public record BasicValueIntent(
 				columnSource == null || columnSource.updatable( true ),
 				member.member(),
 				source.columnTransformer( member.path(), member.member(), bindingContext ),
+				checks( member.member(), bindingState, bindingContext ),
 				source.conversion( member.path(), member.member() )
 		);
 	}
@@ -112,6 +121,7 @@ public record BasicValueIntent(
 				true,
 				true,
 				source.member(),
+				new Check[0],
 				directConversion( source.member() )
 		);
 	}
@@ -124,6 +134,7 @@ public record BasicValueIntent(
 				source.orderColumn() == null || source.orderColumn().insertable(),
 				source.orderColumn() == null || source.orderColumn().updatable(),
 				source.member(),
+				new Check[0],
 				null
 		);
 	}
@@ -136,6 +147,7 @@ public record BasicValueIntent(
 				true,
 				true,
 				source.member(),
+				new Check[0],
 				directConversion( source.member() )
 		);
 	}
@@ -149,6 +161,7 @@ public record BasicValueIntent(
 				true,
 				true,
 				source.member(),
+				new Check[0],
 				null
 		);
 	}
@@ -165,6 +178,7 @@ public record BasicValueIntent(
 				null,
 				null,
 				null,
+				new Check[0],
 				conversion
 		);
 	}
@@ -179,6 +193,7 @@ public record BasicValueIntent(
 			boolean insertable,
 			boolean updatable,
 			MemberDetails member,
+			Check[] checks,
 			Convert conversion) {
 		return columnIntent(
 				columnSource,
@@ -187,6 +202,7 @@ public record BasicValueIntent(
 				updatable,
 				member,
 				member.getDirectAnnotationUsage( ColumnTransformer.class ),
+				checks,
 				conversion
 		);
 	}
@@ -198,6 +214,7 @@ public record BasicValueIntent(
 			boolean updatable,
 			MemberDetails member,
 			ColumnTransformer transformerAnn,
+			Check[] checks,
 			Convert conversion) {
 		final Array arrayAnn = member.getDirectAnnotationUsage( Array.class );
 		return new BasicValueIntent(
@@ -211,6 +228,7 @@ public record BasicValueIntent(
 				transformerAnn == null ? null : transformerAnn.forColumn(),
 				transformerAnn == null ? null : transformerAnn.read(),
 				transformerAnn == null ? null : transformerAnn.write(),
+				checks,
 				conversion
 		);
 	}
@@ -222,6 +240,18 @@ public record BasicValueIntent(
 		return getOverridableAnnotation(
 				member,
 				org.hibernate.annotations.Formula.class,
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
+	}
+
+	private static Check[] checks(
+			MemberDetails member,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		return getOverridableAnnotationUsages(
+				member,
+				Check.class,
 				bindingState.getDatabase().getDialect(),
 				bindingContext.getBootstrapContext().getModelsContext()
 		);

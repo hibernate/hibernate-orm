@@ -16,6 +16,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.SharedCacheMode;
 import org.hibernate.MappingException;
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.HQLSelect;
@@ -58,6 +60,7 @@ import org.hibernate.jpa.boot.spi.EntityCallbackDefinition;
 import org.hibernate.jpa.boot.spi.ListenerCallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.IdentifiableTypeClass;
 import org.hibernate.mapping.Join;
@@ -187,6 +190,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 
 		if ( StringHelper.isNotEmpty( jpaEntityName ) ) {
+			validateJpaEntityName( jpaEntityName, classDetails );
 			importName = jpaEntityName;
 		}
 		else {
@@ -201,12 +205,23 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		getBindingState().addImport( importName, entityName );
 	}
 
+	private static void validateJpaEntityName(String jpaEntityName, ClassDetails classDetails) {
+		if ( StringHelper.isQuoted( jpaEntityName ) ) {
+			throw new AnnotationException(
+					"Entity name '" + jpaEntityName + "' for " + classDetails.getName()
+							+ " is quoted; quoted database identifiers must be declared using table and column annotations"
+			);
+		}
+	}
+
 	/// Bind table shells owned directly by this entity.
 	///
 	/// This phase attaches the primary table for roots, joined subclasses, and
 	/// table-per-class subclasses, and creates secondary table joins.  It deliberately
 	/// does not bind identifier columns or table foreign keys.
 	public void bindTables() {
+		validateSingleTableSubclassTable();
+
 		if ( binding instanceof TableOwner ) {
 			final var primaryTable = modelBinders.getTableBinder().bindPrimaryTable( this );
 			if ( primaryTable != null ) {
@@ -217,6 +232,17 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 		final var secondaryTables = modelBinders.getTableBinder().bindSecondaryTables( this );
 		secondaryTables.forEach( this::processSecondaryTable );
+	}
+
+	private void validateSingleTableSubclassTable() {
+		if ( getHierarchyRelation() != EntityHierarchy.HierarchyRelation.ROOT
+				&& getManagedType().getHierarchy().getInheritanceType() == InheritanceType.SINGLE_TABLE
+				&& getManagedType().getClassDetails().hasDirectAnnotationUsage( jakarta.persistence.Table.class ) ) {
+			throw new AnnotationException(
+					"Entity '" + getManagedType().getEntityName()
+							+ "' is a subclass in a 'SINGLE_TABLE' hierarchy and may not be annotated '@Table'"
+			);
+		}
 	}
 
 	/// Wire the Hibernate mapping type to its resolved entity or mapped-superclass super type.
@@ -281,8 +307,41 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		processQueryCacheLayout( classDetails );
 		processCustomSql( classDetails );
 		processSqlRestriction( classDetails );
+		processCheckConstraints( classDetails, typeBinding );
 		processFilters( getManagedType(), getBindingState(), getBindingContext() );
 		processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
+	}
+
+	@SuppressWarnings("removal")
+	private void processCheckConstraints(ClassDetails classDetails, PersistentClass typeBinding) {
+		if ( classDetails.hasAnnotationUsage( Checks.class, getBindingContext().getBootstrapContext().getModelsContext() ) ) {
+			for ( Check check : classDetails.getAnnotationUsage(
+					Checks.class,
+					getBindingContext().getBootstrapContext().getModelsContext()
+			).value() ) {
+				addCheckConstraint( check, typeBinding );
+			}
+		}
+		else {
+			final Check check = getOverridableAnnotation(
+					classDetails,
+					Check.class,
+					getBindingState().getDatabase().getDialect(),
+					getBindingContext().getBootstrapContext().getModelsContext()
+			);
+			if ( check != null ) {
+				addCheckConstraint( check, typeBinding );
+			}
+		}
+	}
+
+	private static void addCheckConstraint(Check check, PersistentClass typeBinding) {
+		if ( StringHelper.isNotEmpty( check.constraints() ) ) {
+			final String name = check.name();
+			typeBinding.addCheckConstraint( StringHelper.isEmpty( name )
+					? new CheckConstraint( check.constraints() )
+					: new CheckConstraint( name, check.constraints() ) );
+		}
 	}
 
 	/// Bind the root identifier and retain its local binding state.
@@ -1035,7 +1094,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 
 		if ( inheritanceType == InheritanceType.SINGLE_TABLE ) {
-			if ( !managedType.hasSubTypes() ) {
+			if ( !managedType.hasSubTypes() && columnAnn == null && formulaAnn == null ) {
 				return;
 			}
 		}

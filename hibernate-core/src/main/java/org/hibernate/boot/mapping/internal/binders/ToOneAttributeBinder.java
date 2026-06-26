@@ -625,6 +625,11 @@ class ToOneAttributeBinder {
 					uniqueByDefault,
 					optional
 			);
+			if ( joinColumnAnn == null || joinColumnAnn.column() == null ) {
+				final boolean nullable = column.isNullable();
+				column.copy( targetColumns.get( i ) );
+				column.setNullable( nullable );
+			}
 			if ( uniqueByDefault ) {
 				column.setUnique( true );
 			}

@@ -119,7 +119,7 @@ class DerivedIdentifierBinder {
 				resolveTargetRuntimeColumns( derivedIdentifierBinding, targetColumns )
 		);
 		applyDerivedIdentifierGenerator( derivedIdentifierBinding, identifierValue );
-		reorderPrimaryKeyColumns( entityIdentifierBinding.value() );
+		reorderPrimaryKeyColumns( entityIdentifierBinding.value(), orderedIdentifierColumns );
 		for ( Column identifierColumn : runtimeIdentifierColumns ) {
 			derivedIdentifierBinding.value().addColumn( identifierColumn, false, false );
 		}
@@ -145,11 +145,18 @@ class DerivedIdentifierBinder {
 		) );
 	}
 
-	private void reorderPrimaryKeyColumns(Value identifierValue) {
+	private void reorderPrimaryKeyColumns(Value identifierValue, List<Column> derivedIdentifierColumns) {
 		if ( identifierValue instanceof Component identifierComponent ) {
 			final var primaryKey = identifierComponent.getTable().getPrimaryKey();
 			if ( primaryKey != null && primaryKey.getColumns().equals( identifierComponent.getColumns() ) ) {
-				primaryKey.reorderColumns( identifierComponent.getColumns() );
+				final var reorderedColumns = new java.util.ArrayList<Column>( identifierComponent.getColumnSpan() );
+				reorderedColumns.addAll( derivedIdentifierColumns );
+				for ( Column column : identifierComponent.getColumns() ) {
+					if ( !reorderedColumns.contains( column ) ) {
+						reorderedColumns.add( column );
+					}
+				}
+				primaryKey.reorderColumns( reorderedColumns );
 			}
 		}
 	}
@@ -260,6 +267,7 @@ class DerivedIdentifierBinder {
 		);
 		for ( int i = 0; i < orderedJoinColumns.size(); i++ ) {
 			final JoinColumn joinColumn = orderedJoinColumns.get( i );
+			copyReferencedColumnMetadata( identifierColumns.get( i ), targetColumns.get( i ) );
 			renameIdentifierColumn(
 					identifierColumns.get( i ),
 					StringHelper.isNotEmpty( joinColumn.name() )
@@ -267,6 +275,12 @@ class DerivedIdentifierBinder {
 							: derivedIdentifierBinding.property().getName() + "_" + targetColumns.get( i ).getName()
 			);
 		}
+	}
+
+	private static void copyReferencedColumnMetadata(Column identifierColumn, Column targetColumn) {
+		final boolean nullable = identifierColumn.isNullable();
+		identifierColumn.copy( targetColumn );
+		identifierColumn.setNullable( nullable );
 	}
 
 	private void applyImplicitIdentifierColumnNames(

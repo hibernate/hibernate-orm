@@ -214,7 +214,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 
 	@Override
 	public void orderColumns(boolean forceOrdering) {
-		delegate.orderColumns( false );
+		delegate.orderColumns( forceOrdering );
 	}
 
 	@Override

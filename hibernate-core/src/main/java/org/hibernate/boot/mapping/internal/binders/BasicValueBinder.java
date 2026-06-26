@@ -990,6 +990,8 @@ public class BasicValueBinder {
 			final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) basicValue.getColumn();
 			column.setName( columnAnn.name().isEmpty() ? property.getName() + "_tz" : columnAnn.name() );
 			column.setSqlType( columnAnn.columnDefinition().isEmpty() ? null : columnAnn.columnDefinition() );
+			column.setOptions( columnAnn.options().isEmpty() ? null : columnAnn.options() );
+			column.setComment( columnAnn.comment().isEmpty() ? null : columnAnn.comment() );
 
 			final var tableName = columnAnn.table().isEmpty() ? null : columnAnn.table();
 			TableReference tableByName = null;

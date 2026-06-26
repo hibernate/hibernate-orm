@@ -147,7 +147,7 @@ public class ColumnBinder {
 			// JPA specifies DTYPE as the implicit discriminator column name;
 			// see HHH-20613 before routing this through ImplicitNamingStrategy.
 			column.setName( columnName( columnSource, () -> "dtype" ) );
-			column.setLength( columnSource == null ? 31 : columnSource.length( 31 ) );
+			column.setLength( discriminatorType == DiscriminatorType.CHAR ? 1 : columnSource == null ? 31 : columnSource.length( 31 ) );
 			final String columnDefinition = columnSource == null ? null : columnSource.columnDefinition();
 			column.setSqlType( StringHelper.isEmpty( columnDefinition )
 					? null

@@ -13,7 +13,9 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -50,6 +52,7 @@ public class DiscriminatedEntityInitializer
 	private final boolean resultInitializer;
 	private final boolean keyIsEager;
 	private final boolean hasLazySubInitializer;
+	protected final boolean isReadOnly;
 
 	public static class DiscriminatedEntityInitializerData extends InitializerData {
 		protected EntityPersister concreteDescriptor;
@@ -87,6 +90,16 @@ public class DiscriminatedEntityInitializer
 			this.keyIsEager = initializer.isEager();
 			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
 		}
+		this.isReadOnly = isReadOnly( fetchedPart );
+	}
+
+	private static boolean isReadOnly(DiscriminatedAssociationModelPart fetchedPart) {
+		final BasicValuedModelPart keyPart = fetchedPart.getKeyPart();
+		final DiscriminatorMapping discriminatorMapping = fetchedPart.getDiscriminatorMapping();
+		return !keyPart.isInsertable()
+				&& !keyPart.isUpdateable()
+				&& !discriminatorMapping.isInsertable()
+				&& !discriminatorMapping.isUpdateable();
 	}
 
 	@Override
@@ -198,13 +211,16 @@ public class DiscriminatedEntityInitializer
 		) );
 	}
 
-	@Override
-	public void resolveInstance(Object instance, DiscriminatedEntityInitializerData data) {
-		if ( instance == null ) {
-			data.setState( State.MISSING );
+	protected boolean resolveIdentifier(Object instance, DiscriminatedEntityInitializerData data) {
+		final boolean identifierResolved;
+		if ( instance == null && !isReadOnly ) {
 			data.entityIdentifier = null;
-			data.concreteDescriptor = null;
-			data.setInstance( null );
+			identifierResolved = true;
+		}
+		else if ( isReadOnly ) {
+			// When the mapping is read-only, we can't trust the state of the persistence context
+			resolveKey( data );
+			identifierResolved = true;
 		}
 		else {
 			final var rowProcessingState = data.getRowProcessingState();
@@ -214,6 +230,7 @@ public class DiscriminatedEntityInitializer
 				data.setState( State.INITIALIZED );
 				data.concreteDescriptor = session.getEntityPersister( null, instance );
 				data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
+				identifierResolved = false;
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( eager ? State.RESOLVED : State.INITIALIZED );
@@ -221,20 +238,35 @@ public class DiscriminatedEntityInitializer
 				final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
 				data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
 				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+				identifierResolved = true;
 			}
 			else {
 				data.setState( State.INITIALIZED );
 				data.concreteDescriptor = session.getEntityPersister( null, lazyInitializer.getImplementation() );
 				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+				identifierResolved = false;
 			}
+			assert data.entityIdentifier != null;
+		}
+		return identifierResolved;
+	}
 
-
+	@Override
+	public void resolveInstance(Object instance, DiscriminatedEntityInitializerData data) {
+		final boolean identifierResolved = resolveIdentifier( instance, data );
+		if ( data.entityIdentifier == null ) {
+			data.setState( State.MISSING );
+			data.concreteDescriptor = null;
+			data.setInstance( null );
+		}
+		else {
+			final var rowProcessingState = data.getRowProcessingState();
+			final var session = rowProcessingState.getSession();
 			final var entityKey = new EntityKey( data.entityIdentifier, data.concreteDescriptor );
-			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
-					entityKey
-			);
+			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder( entityKey );
 
-			if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+			if ( entityHolder == null || instance == null
+					|| entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
 				// the existing entity instance is detached or transient
 				if ( entityHolder != null ) {
 					final var managed = entityHolder.getManagedObject();
@@ -251,15 +283,18 @@ public class DiscriminatedEntityInitializer
 				data.setInstance( instance );
 			}
 
-			if ( keyIsEager ) {
+			if ( keyIsEager && !identifierResolved ) {
 				final Initializer<?> initializer = keyValueAssembler.getInitializer();
 				assert initializer != null;
 				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
+				if ( rowProcessingState.needsResolveState() ) {
+					discriminatorValueAssembler.resolveState( rowProcessingState );
+				}
 			}
-			else if ( rowProcessingState.needsResolveState() ) {
+			else if ( rowProcessingState.needsResolveState() && !identifierResolved ) {
 				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
-				discriminatorValueAssembler.resolveState( rowProcessingState );
 				keyValueAssembler.resolveState( rowProcessingState );
+				discriminatorValueAssembler.resolveState( rowProcessingState );
 			}
 		}
 	}

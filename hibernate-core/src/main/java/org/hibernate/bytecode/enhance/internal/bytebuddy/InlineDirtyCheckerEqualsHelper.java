@@ -24,6 +24,19 @@ public final class InlineDirtyCheckerEqualsHelper {
 		return Objects.deepEquals( a, b );
 	}
 
+	public static boolean areSame(
+			PersistentAttributeInterceptable persistentAttributeInterceptable,
+			String fieldName,
+			Object a,
+			Object b) {
+		final PersistentAttributeInterceptor persistentAttributeInterceptor = persistentAttributeInterceptable.$$_hibernate_getInterceptor();
+		if ( persistentAttributeInterceptor != null
+				&& !persistentAttributeInterceptor.isAttributeLoaded( fieldName ) ) {
+			return false;
+		}
+		return a == b;
+	}
+
 	public static boolean areEquals(
 			PersistentAttributeInterceptable persistentAttributeInterceptable,
 			String fieldName,

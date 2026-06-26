@@ -190,16 +190,18 @@ class CodeTemplates {
 				@Advice.Return(readOnly = false) boolean returned,
 				@FieldName String fieldName,
 				@FieldValue Collection<?> collection,
-				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
-			if ( !returned && $$_hibernate_collectionTracker != null ) {
-				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
-				if ( collection == null && size != -1 ) {
+				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker,
+				@AttributeInterceptor PersistentAttributeInterceptor $$_hibernate_attributeInterceptor) {
+			// Only look at initialized attributes, since value sameness is tracked via InlineDirtyCheckingHandler
+			if ( !returned && $$_hibernate_collectionTracker != null && ( $$_hibernate_attributeInterceptor == null
+					|| $$_hibernate_attributeInterceptor.isAttributeLoaded( fieldName ) ) ) {
+				if ( collection == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
 					returned = true;
 				}
 				else if ( collection != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
 					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection<?>) collection ).wasInitialized() )
-							&& size != collection.size() ) {
+							&& $$_hibernate_collectionTracker.getSize( fieldName ) != collection.size() ) {
 						returned = true;
 					}
 				}
@@ -213,16 +215,18 @@ class CodeTemplates {
 				@Advice.Return(readOnly = false) boolean returned,
 				@FieldName String fieldName,
 				@FieldValue Map<?, ?> map,
-				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
-			if ( !returned && $$_hibernate_collectionTracker != null ) {
-				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
-				if ( map == null && size != -1 ) {
+				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker,
+				@AttributeInterceptor PersistentAttributeInterceptor $$_hibernate_attributeInterceptor) {
+			// Only look at initialized attributes, since value sameness is tracked via InlineDirtyCheckingHandler
+			if ( !returned && $$_hibernate_collectionTracker != null && ( $$_hibernate_attributeInterceptor == null
+					|| $$_hibernate_attributeInterceptor.isAttributeLoaded( fieldName ) ) ) {
+				if ( map == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
 					returned = true;
 				}
 				else if ( map != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
 					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection) map ).wasInitialized() )
-							&& size != map.size() ) {
+							&& $$_hibernate_collectionTracker.getSize( fieldName ) != map.size() ) {
 						returned = true;
 					}
 				}
@@ -232,20 +236,22 @@ class CodeTemplates {
 
 	static class CollectionGetCollectionFieldDirtyNames {
 		@Advice.OnMethodExit
-		static void $$_hibernate_areCollectionFieldsDirty(
+		static void $$_hibernate_getCollectionFieldDirtyNames(
 				@FieldName String fieldName,
 				@FieldValue Collection<?> collection,
 				@Advice.Argument(0) DirtyTracker tracker,
-				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
-			if ( $$_hibernate_collectionTracker != null ) {
-				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
-				if ( collection == null && size != -1 ) {
+				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker,
+				@AttributeInterceptor PersistentAttributeInterceptor $$_hibernate_attributeInterceptor) {
+			// Only look at initialized attributes, since value sameness is tracked via InlineDirtyCheckingHandler
+			if ( $$_hibernate_collectionTracker != null && ( $$_hibernate_attributeInterceptor == null
+					|| $$_hibernate_attributeInterceptor.isAttributeLoaded( fieldName ) ) ) {
+				if ( collection == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
 					tracker.add( fieldName );
 				}
 				else if ( collection != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
 					if ( ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection<?>) collection ).wasInitialized() )
-							&& size != collection.size() ) {
+							&& $$_hibernate_collectionTracker.getSize( fieldName ) != collection.size() ) {
 						tracker.add( fieldName );
 					}
 				}
@@ -255,20 +261,22 @@ class CodeTemplates {
 
 	static class MapGetCollectionFieldDirtyNames {
 		@Advice.OnMethodExit
-		static void $$_hibernate_areCollectionFieldsDirty(
+		static void $$_hibernate_getCollectionFieldDirtyNames(
 				@FieldName String fieldName,
 				@FieldValue Map<?, ?> map,
 				@Advice.Argument(0) DirtyTracker tracker,
-				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
-			if ( $$_hibernate_collectionTracker != null ) {
-				final int size = $$_hibernate_collectionTracker.getSize( fieldName );
-				if ( map == null && size != -1 ) {
+				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker,
+				@AttributeInterceptor PersistentAttributeInterceptor $$_hibernate_attributeInterceptor) {
+			// Only look at initialized attributes, since value sameness is tracked via InlineDirtyCheckingHandler
+			if ( $$_hibernate_collectionTracker != null && ( $$_hibernate_attributeInterceptor == null
+					|| $$_hibernate_attributeInterceptor.isAttributeLoaded( fieldName ) ) ) {
+				if ( map == null && $$_hibernate_collectionTracker.getSize( fieldName ) != -1 ) {
 					tracker.add( fieldName );
 				}
 				else if ( map != null ) {
 					// We only check sizes of non-persistent or initialized persistent collections
 					if ( ( !( map instanceof PersistentCollection ) || ( (PersistentCollection<?>) map ).wasInitialized() )
-							&& size != map.size() ) {
+							&& $$_hibernate_collectionTracker.getSize( fieldName ) != map.size() ) {
 						tracker.add( fieldName );
 					}
 				}
@@ -278,16 +286,14 @@ class CodeTemplates {
 
 	static class CollectionGetCollectionClearDirtyNames {
 		@Advice.OnMethodExit
-		static void $$_hibernate_clearDirtyCollectionNames(
+		static void $$_hibernate_removeDirtyFields(
 				@FieldName String fieldName,
 				@FieldValue Collection<?> collection,
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
-			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( collection == null || collection instanceof PersistentCollection && !( (PersistentCollection<?>) collection ).wasInitialized() ) {
-					$$_hibernate_collectionTracker.add( fieldName, -1 );
-				}
-				else {
+			// Only look at initialized attributes, since value sameness is tracked via InlineDirtyCheckingHandler
+			if ( ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) && collection != null ) {
+				if ( !( collection instanceof PersistentCollection ) || ( (PersistentCollection<?>) collection ).wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, collection.size() );
 				}
 			}
@@ -296,16 +302,14 @@ class CodeTemplates {
 
 	static class MapGetCollectionClearDirtyNames {
 		@Advice.OnMethodExit
-		static void $$_hibernate_clearDirtyCollectionNames(
+		static void $$_hibernate_removeDirtyFields(
 				@FieldName String fieldName,
 				@FieldValue Map<?, ?> map,
 				@Advice.Argument(value = 0, readOnly = false) LazyAttributeLoadingInterceptor lazyInterceptor,
 				@Advice.FieldValue(EnhancerConstants.TRACKER_COLLECTION_NAME) CollectionTracker $$_hibernate_collectionTracker) {
-			if ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) {
-				if ( map == null || map instanceof PersistentCollection && !( (PersistentCollection<?>) map ).wasInitialized() ) {
-					$$_hibernate_collectionTracker.add( fieldName, -1 );
-				}
-				else {
+			// Only look at initialized attributes, since value sameness is tracked via InlineDirtyCheckingHandler
+			if ( ( lazyInterceptor == null || lazyInterceptor.isAttributeLoaded( fieldName ) ) && map != null ) {
+				if ( !( map instanceof PersistentCollection ) || ( (PersistentCollection<?>) map ).wasInitialized() ) {
 					$$_hibernate_collectionTracker.add( fieldName, map.size() );
 				}
 			}
@@ -591,6 +595,11 @@ class CodeTemplates {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@interface BidirectionalAttribute {
+
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@interface AttributeInterceptor {
 
 	}
 

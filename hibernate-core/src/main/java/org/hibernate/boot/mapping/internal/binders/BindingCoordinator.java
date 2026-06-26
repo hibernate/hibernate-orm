@@ -38,6 +38,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.internal.GeneratorParameters;
 import org.hibernate.boot.model.internal.QueryBinder;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.mapping.ModelBindingLogging;
 import org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding;
@@ -76,6 +77,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.ModelsException;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -156,11 +158,32 @@ public class BindingCoordinator {
 	private void coordinateBinding() {
 		// todo : to really work on these, need to changes to MetadataBuildingContext/InFlightMetadataCollector
 
+		registerConfiguredUserTypes();
+		registerConfiguredCompositeUserTypes();
 		processTypeContributors();
 		applyFallbackJdbcTypeContributions();
 		coordinateGlobalBindings();
 		coordinateModelBindings();
 		coordinateGlobalBindingsRequiringModel();
+	}
+
+	private void registerConfiguredUserTypes() {
+		bindingState.getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getBasicTypeRegistrations()
+				.stream()
+				.map( BasicTypeRegistration::getBasicType )
+				.filter( CustomType.class::isInstance )
+				.map( CustomType.class::cast )
+				.map( CustomType::getUserType )
+				.forEach( this::registerUserType );
+	}
+
+	private void registerConfiguredCompositeUserTypes() {
+		bindingState.getMetadataBuildingContext()
+				.getBuildingOptions()
+				.getCompositeUserTypes()
+				.forEach( this::registerCompositeUserType );
 	}
 
 	private void processTypeContributors() {
@@ -177,14 +200,41 @@ public class BindingCoordinator {
 			}
 
 			@Override
+			public void contributeType(UserType<?> type) {
+				registerUserType( type );
+				TypeContributions.super.contributeType( type );
+			}
+
+			@Override
+			@Deprecated
+			public void contributeType(UserType<?> type, String... keys) {
+				registerUserType( type );
+				TypeContributions.super.contributeType( type, keys );
+			}
+
+			@Override
 			public void contributeType(CompositeUserType<?> type) {
-				throw new UnsupportedOperationException(
-						"CompositeUserType contributions from TypeContributor are not supported by the new boot pipeline"
-				);
+				registerCompositeUserType( type );
 			}
 		};
 		sortedTypeContributors().forEach( (typeContributor) ->
 				typeContributor.contribute( typeContributions, bindingContext.getServiceRegistry() ) );
+	}
+
+	@SuppressWarnings("unchecked")
+	private void registerUserType(UserType<?> type) {
+		bindingState.registerUserType(
+				type.returnedClass(),
+				(Class<? extends UserType<?>>) type.getClass()
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void registerCompositeUserType(CompositeUserType<?> type) {
+		bindingState.registerCompositeUserType(
+				type.returnedClass(),
+				(Class<? extends CompositeUserType<?>>) type.getClass()
+		);
 	}
 
 	private void applyFallbackJdbcTypeContributions() {

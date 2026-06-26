@@ -163,7 +163,7 @@ public class IdentifierMappingMaterializer {
 		final Component idValue = new Component( state.getMetadataBuildingContext(), typeBinding );
 		idValue.setKey( true );
 		idValue.setFlattened( false );
-		idValue.setComponentClassName( keyType.getClassName() );
+		EmbeddableMappingMaterializer.applyComponentType( idValue, keyType );
 		idValue.setTable( table );
 		idValue.setTypeUsingReflection( type.getClassDetails().getClassName(), aggregatedKeyMapping.getAttributeName() );
 		applyIdGeneratorType( idValue, aggregatedKeyMapping.getAttribute().getMember() );
@@ -223,7 +223,7 @@ public class IdentifierMappingMaterializer {
 		idValue.setKey( true );
 		idValue.setFlattened( true );
 		idValue.setPreservePropertyOrder( true );
-		idValue.setComponentClassName( idMapping.getIdClassType().getClassName() );
+		EmbeddableMappingMaterializer.applyComponentType( idValue, idMapping.getIdClassType() );
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
 		typeBinding.setEmbeddedIdentifier( false );
@@ -441,7 +441,7 @@ public class IdentifierMappingMaterializer {
 		idValue.setPreservePropertyOrder( true );
 		final boolean separateIdentifierMapper = hasIdClass && !wholeDerivedIdClass || noIdClassMapsId;
 		if ( hasIdClass && !wholeDerivedIdClass ) {
-			idValue.setComponentClassName( idMapping.getIdClassType().getClassName() );
+			EmbeddableMappingMaterializer.applyComponentType( idValue, idMapping.getIdClassType() );
 		}
 		else {
 			idValue.setComponentClassName( typeBinding.getClassName() );
@@ -666,7 +666,7 @@ public class IdentifierMappingMaterializer {
 		idValue.setKey( true );
 		idValue.setFlattened( true );
 		idValue.setPreservePropertyOrder( true );
-		idValue.setComponentClassName( idMapping.getIdClassType().getClassName() );
+		EmbeddableMappingMaterializer.applyComponentType( idValue, idMapping.getIdClassType() );
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
 		typeBinding.setEmbeddedIdentifier( false );
@@ -820,7 +820,7 @@ public class IdentifierMappingMaterializer {
 		final Component component = new Component( state.getMetadataBuildingContext(), typeBinding );
 		component.setKey( true );
 		component.setFlattened( true );
-		component.setComponentClassName( componentType.getClassName() );
+		EmbeddableMappingMaterializer.applyComponentType( component, componentType );
 		component.setTable( table );
 		component.setTypeUsingReflection( type.getClassDetails().getClassName(), idAttribute.getName() );
 		bindComponentIdentifierProperties(
@@ -861,7 +861,7 @@ public class IdentifierMappingMaterializer {
 			final Component component = new Component( state.getMetadataBuildingContext(), typeBinding );
 			component.setKey( true );
 			component.setFlattened( true );
-			component.setComponentClassName( idClassMemberType.getClassName() );
+			EmbeddableMappingMaterializer.applyComponentType( component, idClassMemberType );
 			component.setTable( table );
 			final ComponentSource sourceComponent = ComponentSource.embeddedIdentifier(
 					idClassMember,

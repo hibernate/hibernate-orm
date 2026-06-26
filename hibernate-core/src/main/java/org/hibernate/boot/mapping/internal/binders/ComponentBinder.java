@@ -16,6 +16,7 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterial
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
+import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
@@ -183,7 +184,7 @@ public class ComponentBinder {
 				continue;
 			}
 
-			if ( isPluralMember( member ) ) {
+			if ( isPluralMember( source, componentMember ) ) {
 				validatePluralMemberAllowed( source, componentMember );
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
 				final Collection collection = bindPluralMember(
@@ -267,28 +268,31 @@ public class ComponentBinder {
 				);
 				embeddableMappingMaterializer.prepareComponentForBinding( nestedComponent, nestedSource );
 
-					final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
-					final List<Column> nestedColumns = bindProperties(
-							ownerType,
-							ownerBinding,
+				final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
+				if ( source.kind() != ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
+					property.setOptional( true );
+				}
+				final List<Column> nestedColumns = bindProperties(
+						ownerType,
+						ownerBinding,
 						nestedSource,
 						nestedComponent,
 						table,
 						associationIdentifierColumns,
 						extendColumnNamingPatterns( columnNamingPatterns, nestedComponent ),
 						columnConsumer,
-							uniqueByDefault,
-							nullableByDefault,
-							updatable,
-							registerCollectionBindings
-					);
-					AggregateComponentBinder.processAggregate( ownerBinding, nestedSource, nestedComponent, table, state );
-					columns.addAll( nestedColumns );
-					alignComponentTable( component, property );
-					component.addProperty( property, componentMember.declaringType() );
-					applyCollation( ownerType, componentMember, property );
-					CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
-					continue;
+						uniqueByDefault,
+						nullableByDefault,
+						updatable,
+						registerCollectionBindings
+				);
+				AggregateComponentBinder.processAggregate( ownerBinding, nestedSource, nestedComponent, table, state );
+				columns.addAll( nestedColumns );
+				alignComponentTable( component, property );
+				component.addProperty( property, componentMember.declaringType() );
+				applyCollation( ownerType, componentMember, property );
+				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				continue;
 				}
 
 				final Property property = propertyMappingMaterializer.createProperty( attributeName, null, member );
@@ -594,7 +598,13 @@ public class ComponentBinder {
 		throw new UnsupportedOperationException( "Unsupported plural embeddable member - " + member.getName() );
 	}
 
-	private boolean isPluralMember(MemberDetails member) {
+	private boolean isPluralMember(ComponentSource source, ComponentMemberBinding componentMember) {
+		final MemberDetails member = componentMember.member();
+		if ( componentMember.nature() == AttributeNature.BASIC
+				&& ( source.aggregateMappingIntent().isAggregate()
+					|| AggregateMappingIntent.hasExplicitPluralBasicJdbcType( member ) ) ) {
+			return false;
+		}
 		return member.isPlural()
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class )
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class )

@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
@@ -24,6 +26,7 @@ import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -32,11 +35,17 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.MappedSuperclass;
+
+import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 
 /// Binds component-valued singular attributes.
 ///
@@ -111,13 +120,35 @@ class EmbeddableAttributeBinder {
 
 	Component bind(Property property) {
 		final MemberDetails member = attributeBinding.member();
-		componentSource = ComponentSource.embeddedAttribute(
-				member,
-				ownerType.getClassDetails(),
-				ownerType.getHierarchy().getRoot().getClassDetails(),
-				ownerType.getAccessType(),
-				bindingContext
-		);
+		final Class<? extends CompositeUserType<?>> compositeUserTypeClass = resolveCompositeUserType( member );
+		if ( compositeUserTypeClass != null ) {
+			componentSource = ComponentSource.syntheticEmbeddedAttribute(
+					member,
+					resolveCompositeUserTypeEmbeddable( compositeUserTypeClass ),
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
+					ownerType.getAccessType(),
+					bindingContext
+			);
+		}
+		else if ( isPluralAggregateBasic( member ) ) {
+			componentSource = ComponentSource.pluralAggregateAttribute(
+					member,
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
+					ownerType.getAccessType(),
+					bindingContext
+			);
+		}
+		else {
+			componentSource = ComponentSource.embeddedAttribute(
+					member,
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
+					ownerType.getAccessType(),
+					bindingContext
+			);
+		}
 		final Table componentTable = resolveComponentTable( member );
 		final Component component = new EmbeddableMappingMaterializer( bindingState ).createEmbeddedAttributeComponent(
 				componentSource,
@@ -126,6 +157,12 @@ class EmbeddableAttributeBinder {
 				ownerType.getClassDetails().getClassName(),
 				attributeBinding.attributeName()
 		);
+		final CompositeUserType<?> compositeUserType = compositeUserTypeClass == null
+				? null
+				: instantiateCompositeUserType( compositeUserTypeClass );
+		if ( compositeUserType != null ) {
+			component.setTypeName( compositeUserTypeClass.getName() );
+		}
 		bindDiscriminator( component, componentTable );
 
 		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
@@ -141,8 +178,83 @@ class EmbeddableAttributeBinder {
 				true,
 				registerCollectionBindings
 		);
+		if ( compositeUserType != null ) {
+			processCompositeUserType( component, compositeUserType );
+		}
 		property.setOptional( true );
 		return component;
+	}
+
+	private static boolean isPluralAggregateBasic(MemberDetails member) {
+		if ( !member.isPlural() || member.getElementType() == null ) {
+			return false;
+		}
+
+		final JdbcTypeCode jdbcTypeCode = member.getDirectAnnotationUsage( JdbcTypeCode.class );
+		return jdbcTypeCode != null
+				&& ( jdbcTypeCode.value() == SqlTypes.JSON_ARRAY
+					|| jdbcTypeCode.value() == SqlTypes.XML_ARRAY
+					|| jdbcTypeCode.value() == SqlTypes.STRUCT_ARRAY
+					|| jdbcTypeCode.value() == SqlTypes.STRUCT_TABLE )
+				&& member.getElementType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class );
+	}
+
+	private Class<? extends CompositeUserType<?>> resolveCompositeUserType(MemberDetails member) {
+		final var returnedClass = attributeBinding.resolvedType().determineRawClass();
+		final Class<? extends CompositeUserType<?>> timeZoneStorageCompositeUserType =
+				resolveTimeZoneStorageCompositeUserType(
+						member,
+						returnedClass,
+						bindingState.getMetadataBuildingContext()
+				);
+		if ( timeZoneStorageCompositeUserType != null ) {
+			return timeZoneStorageCompositeUserType;
+		}
+		if ( returnedClass == null || !returnedClass.isRealClass() ) {
+			return null;
+		}
+		final Class<?> javaClass = returnedClass.toJavaClass();
+		return javaClass == null ? null : bindingState.findRegisteredCompositeUserType( javaClass );
+	}
+
+	private ClassDetails resolveCompositeUserTypeEmbeddable(
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+		final CompositeUserType<?> compositeUserType = instantiateCompositeUserType( compositeUserTypeClass );
+		return bindingContext.getClassDetailsRegistry()
+				.resolveClassDetails( compositeUserType.embeddable().getName() );
+	}
+
+	private CompositeUserType<?> instantiateCompositeUserType(
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+		return bindingContext.getBootstrapContext().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+				? bindingContext.getBootstrapContext()
+						.getManagedBeanRegistry()
+						.getBean( compositeUserTypeClass )
+						.getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
+	}
+
+	private static void processCompositeUserType(Component component, CompositeUserType<?> compositeUserType) {
+		component.sortProperties();
+		final List<String> sortedPropertyNames = new ArrayList<>( component.getPropertySpan() );
+		final List<Type> sortedPropertyTypes = new ArrayList<>( component.getPropertySpan() );
+		final var strategy = new PropertyAccessStrategyCompositeUserTypeImpl(
+				compositeUserType,
+				sortedPropertyNames,
+				sortedPropertyTypes
+		);
+		for ( var property : component.getProperties() ) {
+			final String propertyName = property.getName();
+			sortedPropertyNames.add( propertyName );
+			sortedPropertyTypes.add(
+					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
+							compositeUserType.embeddable(),
+							propertyName,
+							false
+					).getGetter().getReturnType()
+			);
+			property.setPropertyAccessStrategy( strategy );
+		}
 	}
 
 	private void bindDiscriminator(Component component, Table componentTable) {

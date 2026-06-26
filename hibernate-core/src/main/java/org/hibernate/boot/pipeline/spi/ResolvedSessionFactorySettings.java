@@ -20,6 +20,8 @@ import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -33,6 +35,7 @@ import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -178,6 +181,24 @@ public record ResolvedSessionFactorySettings(
 		/// Handling mode for bulk updates against immutable entities.
 		ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode,
 
+		/// Preferred JDBC type code for boolean values in runtime query/type resolution.
+		int preferredSqlTypeCodeForBoolean,
+
+		/// Preferred JDBC type code for duration values in runtime query/type resolution.
+		int preferredSqlTypeCodeForDuration,
+
+		/// Default storage strategy for time-zone-aware temporal values.
+		TimeZoneStorageStrategy defaultTimeZoneStorageStrategy,
+
+		/// Whether stored procedure parameter names should be passed through JDBC calls.
+		boolean passProcedureParameterNames,
+
+		/// Whether Java time values should prefer direct JDBC 4.2 mappings.
+		boolean preferJavaTimeJdbcTypesEnabled,
+
+		/// Whether native query result discovery should prefer JDBC datetime types.
+		boolean preferJdbcDatetimeTypesInNativeQueriesEnabled,
+
 		/// Whether HQL JSON functions are enabled.
 		boolean jsonFunctionsEnabled,
 
@@ -224,11 +245,17 @@ public record ResolvedSessionFactorySettings(
 		/// Whether a multi-tenant connection provider is available.
 		boolean multiTenancyEnabled,
 
-		/// Current tenant identifier resolver, if one is configured.
-		CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver,
+			/// Current tenant identifier resolver, if one is configured.
+			CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver,
 
-		/// Fallback Java type for tenant identifiers when no tenant-id mapping is present.
-		JavaType<Object> defaultTenantIdentifierJavaType,
+			/// Maps tenant identifiers to database schemas for schema-based tenancy.
+			TenantSchemaMapper<Object> tenantSchemaMapper,
+
+			/// Maps tenant identifiers to database credentials for credentials-based tenancy.
+			TenantCredentialsMapper<Object> tenantCredentialsMapper,
+
+			/// Fallback Java type for tenant identifiers when no tenant-id mapping is present.
+			JavaType<Object> defaultTenantIdentifierJavaType,
 
 		/// Default catalog used when generating SQL for unqualified mapping names.
 		String defaultCatalog,
@@ -252,6 +279,7 @@ public record ResolvedSessionFactorySettings(
 			Objects.requireNonNull( jpaCompliance );
 			Objects.requireNonNull( criteriaValueHandlingMode );
 			Objects.requireNonNull( immutableEntityUpdateQueryHandlingMode );
+			Objects.requireNonNull( defaultTimeZoneStorageStrategy );
 			Objects.requireNonNull( defaultCacheRetrieveMode );
 			Objects.requireNonNull( defaultCacheStoreMode );
 			Objects.requireNonNull( graphParserMode );
@@ -307,6 +335,12 @@ public record ResolvedSessionFactorySettings(
 				jpaCompliance,
 				criteriaValueHandlingMode,
 				immutableEntityUpdateQueryHandlingMode,
+				preferredSqlTypeCodeForBoolean,
+				preferredSqlTypeCodeForDuration,
+				defaultTimeZoneStorageStrategy,
+				passProcedureParameterNames,
+				preferJavaTimeJdbcTypesEnabled,
+				preferJdbcDatetimeTypesInNativeQueriesEnabled,
 				jsonFunctionsEnabled,
 				xmlFunctionsEnabled,
 				portableIntegerDivisionEnabled,
@@ -321,10 +355,12 @@ public record ResolvedSessionFactorySettings(
 				commentsEnabled,
 				temporalTableStrategy,
 				auditStrategy,
-				multiTenancyEnabled,
-				currentTenantIdentifierResolver,
-				defaultTenantIdentifierJavaType,
-				defaultCatalog,
+					multiTenancyEnabled,
+					currentTenantIdentifierResolver,
+					tenantSchemaMapper,
+					tenantCredentialsMapper,
+					defaultTenantIdentifierJavaType,
+					defaultCatalog,
 				defaultSchema
 		);
 	}

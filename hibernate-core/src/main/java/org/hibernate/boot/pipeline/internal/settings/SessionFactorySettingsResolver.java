@@ -14,15 +14,18 @@ import java.util.TimeZone;
 
 import org.hibernate.CacheMode;
 import org.hibernate.GraphParserMode;
+import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BytecodeSettings;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
@@ -40,6 +43,7 @@ import org.hibernate.cfg.SessionEventSettings;
 import org.hibernate.cfg.TransactionSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.context.spi.MultiTenancy;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
@@ -52,9 +56,11 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -66,6 +72,8 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MOD
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForBoolean;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /// Projects resolved bootstrap settings into settings needed for SessionFactory
@@ -147,6 +155,12 @@ public class SessionFactorySettingsResolver {
 					ImmutableEntityUpdateQueryHandlingMode.interpret(
 							configurationValues.get( QuerySettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 					),
+					getPreferredSqlTypeCodeForBoolean( standardServiceRegistry ),
+					getPreferredSqlTypeCodeForDuration( standardServiceRegistry ),
+					resolveDefaultTimeZoneStorageStrategy( configurationValues, standardServiceRegistry ),
+					asBoolean( configurationValues.get( QuerySettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES ), false ),
+					MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( standardServiceRegistry ),
+					asBoolean( configurationValues.get( QuerySettings.NATIVE_PREFER_JDBC_DATETIME_TYPES ), false ),
 					asBoolean( configurationValues.get( QuerySettings.JSON_FUNCTIONS_ENABLED ), false ),
 					asBoolean( configurationValues.get( QuerySettings.XML_FUNCTIONS_ENABLED ), false ),
 					asBoolean( configurationValues.get( QuerySettings.PORTABLE_INTEGER_DIVISION ), false ),
@@ -160,12 +174,14 @@ public class SessionFactorySettingsResolver {
 					asBoolean( configurationValues.get( FetchSettings.USE_SUBSELECT_FETCH ), false ),
 					asBoolean( configurationValues.get( JdbcSettings.USE_SQL_COMMENTS ), false ),
 					resolveTemporalTableStrategy( configurationValues, standardServiceRegistry ),
-					resolveAuditStrategy( configurationValues ),
-					MultiTenancy.isMultiTenancyEnabled( serviceRegistry ),
-					MultiTenancy.getTenantIdentifierResolver( configurationValues, standardServiceRegistry ),
-					ObjectJavaType.INSTANCE,
-				asString( configurationValues.get( MappingSettings.DEFAULT_CATALOG ) ),
-				asString( configurationValues.get( MappingSettings.DEFAULT_SCHEMA ) )
+						resolveAuditStrategy( configurationValues ),
+						MultiTenancy.isMultiTenancyEnabled( serviceRegistry ),
+						MultiTenancy.getTenantIdentifierResolver( configurationValues, standardServiceRegistry ),
+						MultiTenancy.getTenantSchemaMapper( configurationValues, standardServiceRegistry ),
+						MultiTenancy.getTenantCredentialsMapper( configurationValues, standardServiceRegistry ),
+						ObjectJavaType.INSTANCE,
+					asString( configurationValues.get( MappingSettings.DEFAULT_CATALOG ) ),
+					asString( configurationValues.get( MappingSettings.DEFAULT_SCHEMA ) )
 		);
 	}
 
@@ -233,6 +249,48 @@ public class SessionFactorySettingsResolver {
 			return TimeZone.getTimeZone( zoneId );
 		}
 		return TimeZone.getTimeZone( setting.toString() );
+	}
+
+	private static TimeZoneStorageStrategy resolveDefaultTimeZoneStorageStrategy(
+			Map<String, Object> configurationValues,
+			StandardServiceRegistry serviceRegistry) {
+		final var storageType = resolveTimeZoneStorageType( configurationValues );
+		final var timeZoneSupport = resolveTimeZoneSupport( serviceRegistry );
+		return switch ( storageType ) {
+			case NATIVE -> {
+				if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
+					throw new HibernateException(
+							"The configured time zone storage type NATIVE is not supported with the configured dialect"
+					);
+				}
+				yield TimeZoneStorageStrategy.NATIVE;
+			}
+			case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+			case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+			case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+			case AUTO -> switch ( timeZoneSupport ) {
+				case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+				case NORMALIZE, NONE -> TimeZoneStorageStrategy.COLUMN;
+			};
+			case DEFAULT -> switch ( timeZoneSupport ) {
+				case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+				case NORMALIZE, NONE -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+			};
+		};
+	}
+
+	private static TimeZoneStorageType resolveTimeZoneStorageType(Map<String, Object> configurationValues) {
+		final var setting = configurationValues.get( MappingSettings.TIMEZONE_DEFAULT_STORAGE );
+		return setting == null ? TimeZoneStorageType.DEFAULT : TimeZoneStorageType.valueOf( setting.toString() );
+	}
+
+	private static TimeZoneSupport resolveTimeZoneSupport(StandardServiceRegistry serviceRegistry) {
+		try {
+			return serviceRegistry.requireService( JdbcServices.class ).getDialect().getTimeZoneSupport();
+		}
+		catch (ServiceException se) {
+			return TimeZoneSupport.NONE;
+		}
 	}
 
 	private static ResolvedCacheSettings resolveCacheSettings(

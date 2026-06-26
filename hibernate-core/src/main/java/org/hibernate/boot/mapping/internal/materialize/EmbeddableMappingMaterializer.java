@@ -17,6 +17,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -54,7 +55,7 @@ public class EmbeddableMappingMaterializer {
 			String ownerClassName,
 			String attributeName) {
 		final Component component = new Component( state.getMetadataBuildingContext(), table, ownerBinding );
-		component.setComponentClassName( source.componentType().getClassName() );
+		applyComponentType( component, source.componentType() );
 		component.setTable( table );
 		component.setTypeUsingReflection( ownerClassName, attributeName );
 		return component;
@@ -67,7 +68,7 @@ public class EmbeddableMappingMaterializer {
 			String ownerClassName,
 			String attributeName) {
 		final Component component = new Component( state.getMetadataBuildingContext(), parent );
-		component.setComponentClassName( source.componentType().getClassName() );
+		applyComponentType( component, source.componentType() );
 		component.setTable( table );
 		component.setTypeUsingReflection( ownerClassName, attributeName );
 		return component;
@@ -76,7 +77,7 @@ public class EmbeddableMappingMaterializer {
 	public Component createCollectionElementComponent(ComponentSource source, Collection collection, Table table) {
 		final Component component = new Component( state.getMetadataBuildingContext(), collection );
 		component.setFlattened( true );
-		component.setComponentClassName( source.componentType().getClassName() );
+		applyComponentType( component, source.componentType() );
 		component.setTable( table );
 		component.setRoleName( collection.getRole() );
 		return component;
@@ -85,10 +86,20 @@ public class EmbeddableMappingMaterializer {
 	public Component createMapKeyComponent(ComponentSource source, Collection collection, Table table) {
 		final Component component = new Component( state.getMetadataBuildingContext(), collection );
 		component.setFlattened( true );
-		component.setComponentClassName( source.componentType().getClassName() );
+		applyComponentType( component, source.componentType() );
 		component.setTable( table );
 		component.setRoleName( collection.getRole() + ".key" );
 		return component;
+	}
+
+	public static void applyComponentType(Component component, ClassDetails componentType) {
+		if ( componentType.isRealClass() ) {
+			component.setComponentClassName( componentType.getClassName() );
+		}
+		else {
+			component.setDynamic( true );
+			component.setRoleName( componentType.getName() );
+		}
 	}
 
 	public void prepareComponentForBinding(Component component, ComponentSource source) {
@@ -116,6 +127,18 @@ public class EmbeddableMappingMaterializer {
 				memberInstantiator == null ? typeInstantiator : memberInstantiator;
 		if ( instantiator != null ) {
 			component.setCustomInstantiator( instantiator.value() );
+			return;
+		}
+
+		if ( !componentType.isRealClass() ) {
+			return;
+		}
+
+		final Class<? extends EmbeddableInstantiator> registeredInstantiator =
+				component.getBuildingContext().getMetadataCollector()
+						.findRegisteredEmbeddableInstantiator( componentType.toJavaClass() );
+		if ( registeredInstantiator != null ) {
+			component.setCustomInstantiator( registeredInstantiator );
 		}
 	}
 

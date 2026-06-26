@@ -13,19 +13,22 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.Struct;
 import org.hibernate.annotations.TargetEmbeddable;
+import org.hibernate.annotations.TimeZoneColumn;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.categorize.StandardPersistentAttributeMemberResolver;
+import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -97,10 +100,13 @@ public record ComponentSource(
 		/// component type.
 		MemberDetails sourceMember,
 
-		/// The embeddable/component class whose persistable members are being bound.
+		/// The component class exposed by the boot mapping value.
 		ClassDetails componentType,
 
-		/// Type-variable resolution scope for members of [#componentType()].
+		/// The class whose members are walked while binding this component.
+		ClassDetails memberSourceType,
+
+		/// Type-variable resolution scope for members of [#memberSourceType()].
 		///
 		/// This is the scope in which generic member types should be interpreted for this
 		/// particular component use.  It may differ from the raw component class when an
@@ -141,18 +147,25 @@ public record ComponentSource(
 		MAP_KEY
 	}
 
+	public AggregateMappingIntent aggregateMappingIntent() {
+		return AggregateMappingIntent.from( this );
+	}
+
 	/// Creates a source for a normal embedded attribute.
 	///
 	/// The owning member supplies both the component type and the path-based override
 	/// annotations.
 	public static ComponentSource embeddedAttribute(MemberDetails member, BindingContext bindingContext) {
+		final ClassDetails componentType = resolveEmbeddableType( member, bindingContext, false );
+		final ClassDetails memberSourceType = resolveMemberSourceType( componentType, bindingContext );
 		return new ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
-				resolveEmbeddableType( member, bindingContext, false ),
+				componentType,
+				memberSourceType,
 				embeddedAttributeTypeVariableScope( member ),
 				new PathAdjustmentCollector( member, bindingContext ),
-				fallbackAccessType( member ),
+				effectiveAccessType( member, fallbackAccessType( member ) ),
 				"",
 				member.resolveAttributeName() + "."
 		);
@@ -164,13 +177,65 @@ public record ComponentSource(
 			MemberDetails member,
 			ClassDetails ownerType,
 			ClassDetails hierarchyRootType,
+				AccessType defaultAccessType,
+				BindingContext bindingContext) {
+		final ClassDetails componentType = resolveEmbeddableType( member, ownerType, bindingContext );
+		final ClassDetails memberSourceType = resolveMemberSourceType( componentType, bindingContext );
+		return new ComponentSource(
+				Kind.EMBEDDED_ATTRIBUTE,
+				member,
+				componentType,
+				memberSourceType,
+				embeddedAttributeTypeVariableScope( member, ownerType ),
+				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
+				effectiveAccessType( member, defaultAccessType ),
+				"",
+				member.resolveAttributeName() + "."
+		);
+	}
+
+	/// Creates a component source for a plural basic aggregate attribute.
+	///
+	/// The source member remains the plural attribute so column and path-based
+	/// adjustments are read from the attribute, while the component type is the
+	/// aggregate element embeddable.
+	public static ComponentSource pluralAggregateAttribute(
+			MemberDetails member,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
+		final TypeDetails elementType = member.getElementType();
+		return new ComponentSource(
+				Kind.EMBEDDED_ATTRIBUTE,
+				member,
+				elementType.determineRawClass(),
+				elementType.determineRawClass(),
+				elementType,
+				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
+				defaultAccessType,
+				"",
+				member.resolveAttributeName() + "."
+		);
+	}
+
+	/// Creates a component source for a composite-user-type-backed basic value.
+	///
+	/// The boot component keeps the domain member's Java type, while binding
+	/// walks the synthetic embeddable exposed by the composite user type.
+	public static ComponentSource syntheticEmbeddedAttribute(
+			MemberDetails member,
+			ClassDetails memberSourceType,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
 			AccessType defaultAccessType,
 			BindingContext bindingContext) {
 		return new ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
-				resolveEmbeddableType( member, ownerType, bindingContext ),
-				embeddedAttributeTypeVariableScope( member, ownerType ),
+				member.getType().determineRawClass(),
+				memberSourceType,
+				memberSourceType,
 				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
 				defaultAccessType,
 				"",
@@ -184,7 +249,7 @@ public record ComponentSource(
 	/// facts directly on mapping objects, identifier component sources should likely retain
 	/// the identifier member or key-mapping metadata as well.
 	public static ComponentSource embeddedIdentifier(ClassDetails componentType, AccessType defaultAccessType) {
-		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, componentType, null,
+		return new ComponentSource( Kind.EMBEDDED_IDENTIFIER, null, componentType, componentType, componentType, null,
 				defaultAccessType, "", "" );
 	}
 
@@ -206,6 +271,7 @@ public record ComponentSource(
 				Kind.EMBEDDED_IDENTIFIER,
 				member,
 				componentType,
+				componentType,
 				typeVariableScope,
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
@@ -220,16 +286,19 @@ public record ComponentSource(
 	/// collection element type.
 	public static ComponentSource collectionElement(
 			MemberDetails member,
-			AccessType defaultAccessType,
-			BindingContext bindingContext) {
+				AccessType defaultAccessType,
+				BindingContext bindingContext) {
 		final TypeDetails elementType = elementCollectionElementType( member, bindingContext );
+		final ClassDetails componentType = elementType.determineRawClass();
+		final ClassDetails memberSourceType = resolveMemberSourceType( componentType, bindingContext );
 		return new ComponentSource(
 				Kind.COLLECTION_ELEMENT,
 				member,
-				elementType.determineRawClass(),
+				componentType,
+				memberSourceType,
 				elementType,
 				new PathAdjustmentCollector( member, bindingContext ),
-				defaultAccessType,
+				effectiveAccessType( member, defaultAccessType ),
 				"",
 				member.resolveAttributeName() + "."
 		);
@@ -257,6 +326,7 @@ public record ComponentSource(
 				Kind.MAP_KEY,
 				member,
 				componentType,
+				componentType,
 				member.getMapKeyType(),
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
@@ -267,9 +337,9 @@ public record ComponentSource(
 
 	public List<ComponentMember> members() {
 		final Map<String, ComponentMember> members = new LinkedHashMap<>();
-		collectMembers( componentType, members );
+		collectMembers( memberSourceType, members );
 		if ( members.isEmpty() && kind == Kind.EMBEDDED_IDENTIFIER ) {
-			collectPlainIdentifierClassMembers( componentType, members );
+			collectPlainIdentifierClassMembers( memberSourceType, members );
 		}
 		return new ArrayList<>( members.values() );
 	}
@@ -277,7 +347,7 @@ public record ComponentSource(
 	public List<ComponentMember> subclassMembers(BindingContext bindingContext) {
 		final List<ComponentMember> members = new ArrayList<>();
 		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
-			if ( isSubtypeOf( embeddableType, componentType ) ) {
+			if ( isSubtypeOf( embeddableType, memberSourceType ) ) {
 				collectLocalMembers( embeddableType, embeddableType, members );
 			}
 		} );
@@ -289,6 +359,7 @@ public record ComponentSource(
 		return new ComponentSource(
 				kind,
 				member.member(),
+				nestedComponentType,
 				nestedComponentType,
 				member.member().resolveRelativeType( typeVariableScope ),
 				new PathAdjustmentCollector( pathAdjustments, member.member(), bindingContext ),
@@ -308,6 +379,7 @@ public record ComponentSource(
 		return new ComponentSource(
 				kind,
 				member,
+				nestedComponentType,
 				nestedComponentType,
 				member.resolveRelativeType( typeVariableScope ),
 				new PathAdjustmentCollector( pathAdjustments, member, bindingContext ),
@@ -460,6 +532,11 @@ public record ComponentSource(
 		return access == null ? AccessType.FIELD : access.value();
 	}
 
+	private static AccessType effectiveAccessType(MemberDetails member, AccessType defaultAccessType) {
+		final Access access = member.getDirectAnnotationUsage( Access.class );
+		return access == null ? defaultAccessType : access.value();
+	}
+
 	public static ClassDetails resolveEmbeddableType(
 			MemberDetails member,
 			BindingContext bindingContext,
@@ -489,40 +566,32 @@ public record ComponentSource(
 	}
 
 	private static TypeDetails embeddedAttributeTypeVariableScope(MemberDetails member) {
-		return isAggregateArray( member ) ? member.getElementType() : member.getType();
+		return AggregateMappingIntent.isAggregateArray( member, member.getType() ) ? member.getElementType() : member.getType();
 	}
 
 	private static TypeDetails embeddedAttributeTypeVariableScope(MemberDetails member, TypeVariableScope ownerType) {
 		return embeddedAttributeTypeVariableScope( member ).determineRelativeType( ownerType );
 	}
 
-	private static boolean isAggregateArray(MemberDetails member) {
-		return member.isArray()
-				&& member.getElementType() != null
-				&& ( member.hasDirectAnnotationUsage( Struct.class )
-					|| isAggregateJdbcTypeCode( member )
-					|| member.getElementType().determineRawClass().hasDirectAnnotationUsage( Struct.class ) );
-	}
-
-	private static boolean isAggregateJdbcTypeCode(MemberDetails member) {
-		final JdbcTypeCode jdbcTypeCode = member.getDirectAnnotationUsage( JdbcTypeCode.class );
-		if ( jdbcTypeCode == null ) {
-			return false;
+	private static ClassDetails resolveMemberSourceType(ClassDetails componentType, BindingContext bindingContext) {
+		if ( !componentType.isInterface() ) {
+			return componentType;
 		}
-		return isAggregateJdbcTypeCode( jdbcTypeCode.value() );
-	}
 
-	private static boolean isAggregateJdbcTypeCode(int jdbcTypeCode) {
-		return switch ( jdbcTypeCode ) {
-			case SqlTypes.STRUCT,
-					SqlTypes.JSON,
-					SqlTypes.SQLXML,
-					SqlTypes.STRUCT_ARRAY,
-					SqlTypes.STRUCT_TABLE,
-					SqlTypes.JSON_ARRAY,
-					SqlTypes.XML_ARRAY -> true;
-			default -> false;
-		};
+		final Class<?> componentJavaType = componentType.toJavaClass();
+		final ClassDetails[] match = new ClassDetails[1];
+		final boolean[] multipleMatches = new boolean[1];
+		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
+			if ( componentJavaType.isAssignableFrom( embeddableType.toJavaClass() ) ) {
+				if ( match[0] == null ) {
+					match[0] = embeddableType;
+				}
+				else {
+					multipleMatches[0] = true;
+				}
+			}
+		} );
+		return !multipleMatches[0] && match[0] != null ? match[0] : componentType;
 	}
 
 	private static TargetEmbeddable resolveTargetEmbeddable(MemberDetails member, boolean collectionElement) {
@@ -559,9 +628,32 @@ public record ComponentSource(
 		if ( override != null ) {
 			return ColumnSource.from( override.column() );
 		}
+		final var timeZoneStorageColumn = timeZoneStorageColumnSource( path );
+		if ( timeZoneStorageColumn != null ) {
+			return timeZoneStorageColumn;
+		}
 
 		final Column column = member.getDirectAnnotationUsage( Column.class );
 		return ColumnSource.from( column );
+	}
+
+	private ColumnSource timeZoneStorageColumnSource(String path) {
+		if ( sourceMember == null || !usesExplicitTimeZoneColumnStorage() ) {
+			return null;
+		}
+		return switch ( path ) {
+			case AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME,
+					OffsetTimeCompositeUserType.LOCAL_TIME_NAME ->
+					ColumnSource.from( sourceMember.getDirectAnnotationUsage( Column.class ) );
+			case AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ->
+					ColumnSource.from( sourceMember.getDirectAnnotationUsage( TimeZoneColumn.class ) );
+			default -> null;
+		};
+	}
+
+	private boolean usesExplicitTimeZoneColumnStorage() {
+		final TimeZoneStorage timeZoneStorage = sourceMember.getDirectAnnotationUsage( TimeZoneStorage.class );
+		return timeZoneStorage != null && timeZoneStorage.value() == TimeZoneStorageType.COLUMN;
 	}
 
 	public ColumnTransformer columnTransformer(String path, MemberDetails member, BindingContext bindingContext) {

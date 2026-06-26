@@ -160,6 +160,365 @@ options from unified column sources, including map-key join columns.
 
 |===
 
+== Focused Gap Refresh: 2026-06-26
+
+This refresh was taken after the schema/exportables parity bucket described in
+`current-work-handoff.adoc`.
+
+Current green guardrails:
+
+* The focused schema/exportables tail is green:
+  `SubclassIndexTest`, `TimeZoneColumnTest`, and
+  `SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameTest`.
+* The broad schema/exportables slice is green across the schema,
+  schemaupdate/validation/tooling, JPA schemagen, index, comment, check, and
+  unique-constraint packages listed in `current-work-handoff.adoc`.
+* The generics guardrail set is green after the schema/exportables work,
+  including `GenericsInheritanceTest`.
+* The dynamic XML identity/class-details slice is green:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.dynamic.*' \
+  --console=plain
+----
+* The XML overlay / XML attribute slice is green:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.override.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.attr.*' \
+  --console=plain
+----
+
+Report interpretation:
+
+* The current `hibernate-core/target/test-results/test` XML reports before this
+  refresh only covered a recent green generics tail, so they were not useful for
+  selecting the next bucket.
+* The available HTML report tree is older broad-runtime data dominated by
+  bytecode/enhancement/lazy runtime failures.  It is still useful as a symptom
+  corpus, but it is not a good next selector for boot/model binding work.
+* Because dynamic XML and XML overlay focused slices are green, they should stay
+  as watch/test-only buckets rather than becoming the next implementation area.
+
+Recommended next bucket:
+
+* Highest-signal materialization bucket for this refresh was auxiliary database
+  object / table-initialization metadata, especially row-level-security DDL
+  that consumes materialized `@TenantId` column metadata.  This is adjacent to
+  global-registration handoff and schema/exportable materialization without
+  reopening SQL-AST/runtime behavior.
+
+Focused reproduction and fix:
+
+* The first focused auxiliary/RLS sample reproduced a failure in
+  `RowLevelSecurityTest#db2UuidTenantIdUsesBitFormatting`: DB2 row-level
+  security asked the materialized UUID tenant-id column for a concrete SQL type
+  name even though the selected UUID predicate does not use a `$TYPE$`
+  replacement.
+* `DB2RowLevelSecurity` now treats UUID tenant-id columns like binary tenant-id
+  columns for its DB2 bit-format predicate selection, and only resolves a column
+  SQL type name for predicate templates that actually contain `$TYPE$`.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.multitenancy.rowsecurity.RowLevelSecurityTest' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.GlobalRegistrationBindingTests.testAuxiliaryDatabaseObjectUsesMetadataHandoffCarrier' \
+  --console=plain
+----
+
+Follow-up recommendation:
+
+* Continue with a nearby metadata/materialization bucket rather than broad
+  runtime fallout.  The next useful sample is state-management/audit auxiliary
+  table materialization, led by the focused boot binding tests and DDL metadata
+  assertions under `org.hibernate.boot.models.bind.state`,
+  `org.hibernate.temporal`, and `org.hibernate.temporal.audit`.
+* Keep the existing schema/exportables and generics guardrails in the
+  verification tail for any follow-up fix.
+
+Adapter UOE refresh:
+
+* A focused sample from the broad UOE list showed several direct temporary
+  `SessionFactoryOptionsAdapter` misses rather than SQL-AST/runtime defects.
+  The adapter and `ResolvedSessionFactorySettings` handoff now carry the legacy
+  boot decisions for:
++
+[source]
+----
+getPreferredSqlTypeCodeForBoolean
+isPassProcedureParameterNames
+isPreferJavaTimeJdbcTypesEnabled
+isPreferJdbcDatetimeTypesInNativeQueriesEnabled
+getPreferredSqlTypeCodeForDuration
+getDefaultTimeZoneStorageStrategy
+----
+
+Aggregate/materialization refresh:
+
+* `JsonArrayUnnestTest` is now green after the fuller aggregate
+  materialization handoff for plural aggregate embeddables.
+* `JsonEmbeddableArrayTest` is also green as a nearby boundary.
+* The nested JSON nullability probe is green:
+  `JsonEmbeddableTest`, `NestedJsonEmbeddableTest`,
+  `JsonEmbeddableAndSchemaNameTest`, and
+  `H2JsonArrayAggregateWideExtractionTest`.
+* The XML aggregate twin bucket is also green:
+  `XmlEmbeddableTest`, `NestedXmlEmbeddableTest`,
+  `XmlWithArrayEmbeddableTest`, and `XmlArrayUnnestTest`.
+* The nested JSON fix stayed in component binding/materialization metadata:
+  nested embeddable properties inside non-identifier components are marked
+  optional, matching the top-level embedded-attribute handoff and allowing null
+  nested aggregate/embeddable members inside JSON documents without changing
+  runtime `ComponentType` behavior.
+* The fix stayed in source/binding/materialization handoff:
+  `AggregateMappingIntent` now represents plural collection aggregates,
+  `ComponentSource` can describe plural aggregate attributes using the element
+  embeddable as the component source, `AttributeBinder` routes plural aggregate
+  basic embeddables through the component handoff while assigning the aggregate
+  `BasicValue` to the property, and entity basic-attribute materialization
+  honors the aggregate-column `BasicType` returned by
+  `resolveAggregateColumnBasicType(...)`.
+* The earlier runtime `ComponentType` direction remains rejected.  Arrays and
+  collections of aggregate embeddables must not be made component-valued runtime
+  properties; the legacy mapping handoff must preserve plural basic property
+  shape and carry element component metadata through `AggregateColumn`.
+
+Follow-up recommendation:
+
+* Re-sample the remaining UOE list now that adapter, composite-user-type,
+  dynamic metamodel, JSON, and XML aggregate probes are green.  Prefer direct
+  boot/model misses such as multitenancy, procedure, criteria, and
+  instantiation tests before broad runtime fallout.
+
+Multitenancy adapter follow-up:
+
+* `SchemaBasedMultitenancyTest`, `CredentialsBasedMultitenancyTest`, and
+  `DatabaseTimeZoneMultiTenancyTest` no longer fail with
+  `SessionFactoryOptionsAdapter` UOE.
+* The new pipeline now carries `TenantSchemaMapper` and
+  `TenantCredentialsMapper` through `ResolvedSessionFactorySettings`, resolving
+  configured values through `MultiTenancy` and preserving programmatic
+  `SessionFactoryOptionsCollector` overrides.
+* `DiscriminatorMultiTenancyTest`, `ProcedureParameterTests`, and
+  `Jpa4CriteriaApiTest` also pass in the refreshed UOE sample.
+* The next focused bucket is embeddable instantiation:
+  `org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.*.InstantiationTests`
+  now exposes boot-model assertion failures, array-index runtime-model failures,
+  and one custom-instantiator UOE.
+
+Embeddable instantiator follow-up:
+
+* `org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.*.InstantiationTests`
+  is now green.
+* The fix stayed in source/materialization metadata:
+  globally registered embeddable instantiators are applied during component
+  materialization, member-level `@Access` drives component member discovery and
+  property access, and interface-valued embedded members can walk the single
+  categorized embeddable implementation while preserving the declared interface
+  as the component type.
+* A follow-up dynamic XML regression check found that the registered-instantiator
+  lookup must not call `ClassDetails#toJavaClass()` for dynamic/map component
+  sources.  The bridge now applies registered instantiators only to real
+  class-backed component types, preserving the dynamic `Component` handoff.
+* Next recommendation: re-sample the remaining broad UOE list or copied
+  reports for another direct boot/model handoff failure before considering
+  runtime SQL behavior.
+* Focused adapter verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.criteria.nulliteral.CriteriaLiteralInSelectExpressionTest' \
+  --tests 'org.hibernate.orm.test.jpa.procedure.H2StoreProcedureTest' \
+  --tests 'org.hibernate.orm.test.jpa.criteria.basic.ExpressionsTest' \
+  --tests 'org.hibernate.orm.test.jpa.query.NativeQueryResultTypeAutoDiscoveryTest' \
+  --tests 'org.hibernate.orm.test.jpa.query.NativeQueryWithDatetimesTest' \
+  --tests 'org.hibernate.orm.test.sql.SQLTest.test_sql_hibernate_query_scalar_example' \
+  --tests 'org.hibernate.orm.test.sql.SQLTest.test_sql_jpa_all_columns_scalar_query_example' \
+  --console=plain
+----
+* The same probe separated non-adapter failures that should become later
+  source buckets: `ContributedUserTypeTest` still hits unsupported
+  `CompositeUserType` TypeContributor handoff, `JsonArrayUnnestTest` still hits
+  unsupported plural embeddable-member binding, and
+  `JpaMetamodelIgnoreUnsupportedPopulationTest` still exposes a null Java type
+  in embeddable representation resolution.
+
+Time-zone column storage materialization follow-up:
+
+* `TimeZoneColumnDurationTest` no longer fails with a
+  `SessionFactoryOptionsAdapter` UOE.  The follow-up materialization failure
+  was that explicit `@TimeZoneStorage(COLUMN)` created only the timezone side
+  columns (`offset1`, `offset2`) rather than both the base datetime columns
+  declared by `@Column(name = "datetime1")` / `@Column(name = "datetime2")`
+  and the side columns declared by `@TimeZoneColumn`.
+* The new pipeline now materializes explicit time-zone-column storage through
+  the same composite-user-type shape used by the legacy binder.  The synthetic
+  component keeps the temporal domain member type for the boot component while
+  walking the composite user type embeddable members for the physical
+  `instant` / `zoneOffset` columns.  This keeps HQL temporal arithmetic typed
+  as `OffsetDateTime` while binding both physical columns.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnDurationTest' \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnTest' \
+  --console=plain
+----
+* The next highest-signal bucket from the sampled UOE list is still
+  `ContributedUserTypeTest`, which points at unsupported
+  `CompositeUserType` TypeContributor handoff rather than an adapter method.
+
+TypeContributor user-type handoff follow-up:
+
+* `ContributedUserTypeTest` no longer fails with the explicit
+  `CompositeUserType` TypeContributor UOE, no longer materializes the
+  contributed composite value as an unknown basic type, and now preserves the
+  contributed plain `UserType` as a `CustomType`.
+* The new pipeline now registers user-type facts from both configured
+  `MetadataBuildingOptions#getBasicTypeRegistrations()` and live
+  `TypeContributor` callbacks into `BindingState`.  It also registers
+  configured composite user types from
+  `MetadataBuildingOptions#getCompositeUserTypes()` before entity binding,
+  matching the legacy handoff point that ran before final metadata
+  resolution.
+* Registered composite user type attributes that are categorized as basic
+  values are rebound through the synthetic component path shared with explicit
+  time-zone-column storage.  The mapping component keeps the domain Java type
+  while walking the composite user type embeddable class for physical columns
+  and property access metadata.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.type.contributor.usertype.ContributedUserTypeTest' \
+  --console=plain
+----
+* Regression verification passed for the adjacent synthetic composite path:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnDurationTest' \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnTest' \
+  --console=plain
+----
+* The generics guardrail set is still green after the TypeContributor handoff
+  fix.
+* The next highest-signal sampled bucket is `JsonArrayUnnestTest`, because it
+  still points at plural embeddable-member binding/materialization rather than
+  adapter state.  `JpaMetamodelIgnoreUnsupportedPopulationTest` is the next
+  good fallback if the JSON unnest path turns out to depend on runtime SQL-AST
+  behavior rather than a legacy mapping handoff fact.
+
+JSON aggregate binding/materialization follow-up:
+
+* `JsonArrayUnnestTest` no longer fails with
+  `Unsupported plural embeddable member - genres`.  Plural Java members that
+  are categorized as basic values inside aggregate components now remain on the
+  basic binding path instead of being routed through embeddable plural
+  association/element-collection handling.  This covers nested aggregate basic
+  members such as `Publisher.genres`.
+* The remaining focused `JsonArrayUnnestTest` failure is now the
+  collection-valued aggregate-basic case
+  `List<Label> @JdbcTypeCode(JSON_ARRAY)`: boot reaches
+  `BasicCollectionJavaType`, which reports that the embeddable `Label` element
+  is not a known basic type.  A broader experiment that treated `List<Label>`
+  as an aggregate component changed the failure into runtime property-access
+  against the list value itself, so that path needs a deliberate mapping-model
+  handoff for collection-valued aggregate components rather than a local
+  categorization tweak.
+* The adjacent `JsonEmbeddableArrayTest` array-aggregate probe also no longer
+  fails with `Unsupported plural embeddable member - getTheBinary`.  It now
+  reaches later aggregate materialization/runtime parity failures: a
+  `ClassCastException` during setup and invalid generated H2 JSON check DDL
+  that still contains the aggregate placeholder token.
+* Recommended next bucket: move to
+  `JpaMetamodelIgnoreUnsupportedPopulationTest` for a source/model binding
+  issue that is still likely fixable in boot metadata.  Reopen JSON aggregate
+  arrays after defining the legacy handoff for collection-valued aggregate
+  component property shape and aggregate placeholder replacement; otherwise the
+  next changes are likely runtime or SQL-AST behavior.
+
+Dynamic XML JPA metamodel population follow-up:
+
+* `JpaMetamodelIgnoreUnsupportedPopulationTest` no longer fails during
+  bootstrap with a null Java type in embeddable representation resolution.
+  Dynamic XML embeddables now preserve the legacy `Component` dynamic-map facts
+  during materialization: dynamic source types are marked dynamic instead of
+  receiving a synthetic component class name, and their model name is retained
+  as the dynamic-map role name.
+* The view-backed JPA static metamodel injection source now skips non-real
+  dynamic managed types before resolving Java classes.  Static metamodel
+  injection only has Java fields for real managed classes, and this preserves
+  the `ignoreUnsupported` expectation that dynamic-map types are not surfaced
+  through the JPA metamodel.
+* Focused verification passed for the full population trio:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelEnabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelDisabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelIgnoreUnsupportedPopulationTest' \
+  --console=plain
+----
+* Next highest-signal sampled bucket: continue with a nearby dynamic
+  XML/metamodel/static-metamodel slice if more broad failures point there;
+  otherwise return to the sampled multitenancy/procedure/runtime-list and pick
+  the next direct boot adapter or materialization miss with a focused
+  reproduction.
+
+Aggregate intent consolidation follow-up:
+
+* The new pipeline now has an internal `AggregateMappingIntent` source/model
+  object.  This is the near-term design slice from
+  `aggregate-mapping-design.adoc`: it centralizes aggregate storage decisions
+  without adding a runtime aggregate descriptor or changing SQL-AST/runtime
+  behavior.
+* `ComponentSource`, attribute categorization, `ComponentBinder`, and
+  `AggregateComponentBinder` now share the same aggregate intent for:
+  aggregate JDBC type-code recognition, `@Struct` recognition, aggregate array
+  source detection, plural aggregate detection, map-key aggregate column/JDBC
+  annotations, and plural-basic members inside aggregate components.
+* The legacy bridge remains authoritative for materialization.  The intent is
+  projected into the existing `Component` / `AggregateColumn` /
+  `AggregateComponentSecondPass` shape, preserving the current compatibility
+  policy while reducing the repeated local checks that were accumulating in
+  struct/UDT/JSON/XML/synthetic-component paths.
+* Focused verification passed for the main source/materialization surface:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnDurationTest' \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnTest' \
+  --tests 'org.hibernate.orm.test.type.contributor.usertype.ContributedUserTypeTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelEnabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelDisabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelIgnoreUnsupportedPopulationTest' \
+  --console=plain
+----
+* JSON aggregate boundary probes were rechecked and stayed at their documented
+  non-UOE boundaries: `JsonArrayUnnestTest` still fails at
+  `BasicCollectionJavaType` for `List<Label> @JdbcTypeCode(JSON_ARRAY)`, and
+  the focused `JsonEmbeddableArrayTest` array probe still fails later with the
+  existing setup-time `ClassCastException`.
+* Next aggregate-design slice, when we choose to continue here: teach the intent
+  to describe collection-valued aggregate component property shape explicitly
+  before categorization/materialization tries to project that shape into the
+  legacy bridge.  Runtime aggregate descriptors and SQL-AST aggregate access
+  strategy work remain deferred.
+
 == Focused Gap Refresh: 2026-06-20
 
 This refresh was taken after the explicit key/materialization slice described

@@ -6,6 +6,8 @@ package org.hibernate.boot.mapping.internal.sources;
 
 import org.hibernate.internal.util.StringHelper;
 
+import org.hibernate.annotations.TimeZoneColumn;
+
 import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.JoinColumn;
@@ -45,6 +47,10 @@ public interface ColumnSource {
 
 	static ColumnSource from(DiscriminatorColumn discriminatorColumn) {
 		return discriminatorColumn == null ? null : new DiscriminatorColumnSource( discriminatorColumn );
+	}
+
+	static ColumnSource from(TimeZoneColumn timeZoneColumn) {
+		return timeZoneColumn == null ? null : new TimeZoneColumnSource( timeZoneColumn );
 	}
 
 	String name();
@@ -212,6 +218,68 @@ public interface ColumnSource {
 		@Override
 		public CheckConstraint[] checkConstraints() {
 			return joinColumn.check();
+		}
+	}
+
+	record TimeZoneColumnSource(TimeZoneColumn timeZoneColumn) implements ColumnSource {
+		@Override
+		public String name() {
+			return timeZoneColumn.name();
+		}
+
+		@Override
+		public boolean unique(boolean defaultValue) {
+			return defaultValue;
+		}
+
+		@Override
+		public boolean nullable(boolean defaultValue) {
+			return defaultValue;
+		}
+
+		@Override
+		public boolean insertable(boolean defaultValue) {
+			return timeZoneColumn.insertable();
+		}
+
+		@Override
+		public boolean updatable(boolean defaultValue) {
+			return timeZoneColumn.updatable();
+		}
+
+		@Override
+		public String columnDefinition() {
+			return timeZoneColumn.columnDefinition();
+		}
+
+		@Override
+		public int length(int defaultValue) {
+			return defaultValue;
+		}
+
+		@Override
+		public int precision(int defaultValue) {
+			return defaultValue;
+		}
+
+		@Override
+		public int scale(int defaultValue) {
+			return defaultValue;
+		}
+
+		@Override
+		public String options() {
+			return timeZoneColumn.options();
+		}
+
+		@Override
+		public String comment() {
+			return timeZoneColumn.comment();
+		}
+
+		@Override
+		public String table() {
+			return timeZoneColumn.table();
 		}
 	}
 

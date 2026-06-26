@@ -39,11 +39,11 @@ import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.annotations.Struct;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.Type;
+import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -51,7 +51,6 @@ import org.hibernate.boot.models.MultipleAttributeNaturesException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.type.SqlTypes;
 
 import java.util.EnumSet;
 
@@ -126,7 +125,7 @@ public class CategorizationHelper {
 
 		if ( embeddedId != null
 				|| ( embedded != null && elementCollection == null )
-				|| isAggregateArray( backingMember, memberType )
+				|| AggregateMappingIntent.isAggregateArray( backingMember, memberType )
 				|| ( memberType != null
 						&& !backingMember.isPlural()
 						&& memberType.determineRawClass().hasDirectAnnotationUsage( Embeddable.class ) ) ) {
@@ -173,8 +172,8 @@ public class CategorizationHelper {
 
 		if ( !plural && any == null ) {
 			final boolean explicitlyEmbedded = embedded != null || embeddedId != null;
-			final boolean aggregateJdbcTypeCode = isAggregateJdbcTypeCode( backingMember );
-			final boolean aggregateArray = isAggregateArray( backingMember, memberType );
+			final boolean aggregateJdbcTypeCode = AggregateMappingIntent.hasAggregateJdbcTypeCode( backingMember );
+			final boolean aggregateArray = AggregateMappingIntent.isAggregateArray( backingMember, memberType );
 
 			// first implicit basic nature
 			if ( backingMember.hasDirectAnnotationUsage( Temporal.class )
@@ -229,16 +228,6 @@ public class CategorizationHelper {
 		};
 	}
 
-	private static boolean isAggregateArray(MemberDetails backingMember, TypeDetails memberType) {
-		return memberType != null
-				&& backingMember.isArray()
-				&& backingMember.getElementType() != null
-				&& backingMember.getElementType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class )
-				&& ( backingMember.hasDirectAnnotationUsage( Struct.class )
-					|| isAggregateJdbcTypeCode( backingMember )
-					|| backingMember.getElementType().determineRawClass().hasDirectAnnotationUsage( Struct.class ) );
-	}
-
 	private static boolean isAggregateEmbeddableJdbcType(
 			MemberDetails backingMember,
 			TypeDetails memberType,
@@ -247,23 +236,6 @@ public class CategorizationHelper {
 				&& memberType != null
 				&& !backingMember.isPlural()
 				&& memberType.determineRawClass().hasDirectAnnotationUsage( Embeddable.class );
-	}
-
-	private static boolean isAggregateJdbcTypeCode(MemberDetails backingMember) {
-		final JdbcTypeCode jdbcTypeCode = backingMember.getDirectAnnotationUsage( JdbcTypeCode.class );
-		if ( jdbcTypeCode == null ) {
-			return false;
-		}
-		return switch ( jdbcTypeCode.value() ) {
-			case SqlTypes.STRUCT,
-					SqlTypes.JSON,
-					SqlTypes.SQLXML,
-					SqlTypes.STRUCT_ARRAY,
-					SqlTypes.STRUCT_TABLE,
-					SqlTypes.JSON_ARRAY,
-					SqlTypes.XML_ARRAY -> true;
-			default -> false;
-		};
 	}
 
 	private static boolean hasBasicConversion(MemberDetails backingMember) {

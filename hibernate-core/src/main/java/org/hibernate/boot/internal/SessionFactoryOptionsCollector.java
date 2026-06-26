@@ -162,6 +162,12 @@ public class SessionFactoryOptionsCollector {
 				collectJpaCompliance( settings ),
 				settings.criteriaValueHandlingMode(),
 				settings.immutableEntityUpdateQueryHandlingMode(),
+				settings.preferredSqlTypeCodeForBoolean(),
+				settings.preferredSqlTypeCodeForDuration(),
+				settings.defaultTimeZoneStorageStrategy(),
+				settings.passProcedureParameterNames(),
+				settings.preferJavaTimeJdbcTypesEnabled(),
+				settings.preferJdbcDatetimeTypesInNativeQueriesEnabled(),
 				settings.jsonFunctionsEnabled(),
 				settings.xmlFunctionsEnabled(),
 				settings.portableIntegerDivisionEnabled(),
@@ -179,12 +185,14 @@ public class SessionFactoryOptionsCollector {
 				subselectFetchEnabled != null ? subselectFetchEnabled : settings.subselectFetchEnabled(),
 				sqlComments != null ? sqlComments : settings.commentsEnabled(),
 				temporalTableStrategy != null ? temporalTableStrategy : settings.temporalTableStrategy(),
-				auditStrategy != null ? auditStrategy : settings.auditStrategy(),
-				multiTenancy != null ? multiTenancy : settings.multiTenancyEnabled(),
-				collectCurrentTenantIdentifierResolver( settings ),
-				settings.defaultTenantIdentifierJavaType(),
-				settings.defaultCatalog(),
-				settings.defaultSchema()
+					auditStrategy != null ? auditStrategy : settings.auditStrategy(),
+					multiTenancy != null ? multiTenancy : settings.multiTenancyEnabled(),
+					collectCurrentTenantIdentifierResolver( settings ),
+					collectTenantSchemaMapper( settings ),
+					collectTenantCredentialsMapper( settings ),
+					settings.defaultTenantIdentifierJavaType(),
+					settings.defaultCatalog(),
+					settings.defaultSchema()
 		);
 	}
 
@@ -427,6 +435,20 @@ public class SessionFactoryOptionsCollector {
 		return currentTenantIdentifierResolver != null
 				? (CurrentTenantIdentifierResolver<Object>) currentTenantIdentifierResolver
 				: settings.currentTenantIdentifierResolver();
+	}
+
+	@SuppressWarnings("unchecked")
+	private TenantSchemaMapper<Object> collectTenantSchemaMapper(ResolvedSessionFactorySettings settings) {
+		return tenantSchemaMapper != null
+				? (TenantSchemaMapper<Object>) tenantSchemaMapper
+				: settings.tenantSchemaMapper();
+	}
+
+	@SuppressWarnings("unchecked")
+	private TenantCredentialsMapper<Object> collectTenantCredentialsMapper(ResolvedSessionFactorySettings settings) {
+		return tenantCredentialsMapper != null
+				? (TenantCredentialsMapper<Object>) tenantCredentialsMapper
+				: settings.tenantCredentialsMapper();
 	}
 
 	public void applyBeanManager(Object beanManager) {

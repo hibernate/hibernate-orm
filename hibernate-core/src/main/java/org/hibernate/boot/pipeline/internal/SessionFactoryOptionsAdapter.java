@@ -141,6 +141,13 @@ public final class SessionFactoryOptionsAdapter {
 				case "getGraphParserMode" -> settings.graphParserMode();
 				case "getCriteriaValueHandlingMode" -> settings.criteriaValueHandlingMode();
 				case "getImmutableEntityUpdateQueryHandlingMode" -> settings.immutableEntityUpdateQueryHandlingMode();
+				case "getPreferredSqlTypeCodeForBoolean" -> settings.preferredSqlTypeCodeForBoolean();
+				case "getPreferredSqlTypeCodeForDuration" -> settings.preferredSqlTypeCodeForDuration();
+				case "getDefaultTimeZoneStorageStrategy" -> settings.defaultTimeZoneStorageStrategy();
+				case "isPassProcedureParameterNames" -> settings.passProcedureParameterNames();
+				case "isPreferJavaTimeJdbcTypesEnabled" -> settings.preferJavaTimeJdbcTypesEnabled();
+				case "isPreferJdbcDatetimeTypesInNativeQueriesEnabled" ->
+						settings.preferJdbcDatetimeTypesInNativeQueriesEnabled();
 				case "allowImmutableEntityUpdate" -> settings.immutableEntityUpdateQueryHandlingMode()
 						!= org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
 				case "isJsonFunctionsEnabled" -> settings.jsonFunctionsEnabled();
@@ -165,10 +172,12 @@ public final class SessionFactoryOptionsAdapter {
 				case "doesConnectionProviderDisableAutoCommit" -> false;
 				case "getTemporalTableStrategy" -> settings.temporalTableStrategy();
 				case "getAuditStrategy" -> settings.auditStrategy();
-				case "isMultiTenancyEnabled" -> settings.multiTenancyEnabled();
-				case "getCurrentTenantIdentifierResolver" -> settings.currentTenantIdentifierResolver();
-				case "getDefaultTenantIdentifierJavaType" -> settings.defaultTenantIdentifierJavaType();
-				case "getDefaultCatalog" -> settings.defaultCatalog();
+					case "isMultiTenancyEnabled" -> settings.multiTenancyEnabled();
+					case "getCurrentTenantIdentifierResolver" -> settings.currentTenantIdentifierResolver();
+					case "getTenantSchemaMapper" -> settings.tenantSchemaMapper();
+					case "getTenantCredentialsMapper" -> settings.tenantCredentialsMapper();
+					case "getDefaultTenantIdentifierJavaType" -> settings.defaultTenantIdentifierJavaType();
+					case "getDefaultCatalog" -> settings.defaultCatalog();
 				case "getDefaultSchema" -> settings.defaultSchema();
 					default -> {
 						if ( method.isDefault() ) {

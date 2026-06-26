@@ -6006,6 +6006,7 @@ public abstract class AbstractEntityPersister
 			final Integer temporalPrecision;
 			final boolean isLob;
 			final boolean nullable;
+			BasicType<?> basicAttrType = (BasicType<?>) value.getType();
 
 			if ( value instanceof DependantValue ) {
 				attrColumnExpression = attrColumnNames[0];
@@ -6043,7 +6044,7 @@ public abstract class AbstractEntityPersister
 							creationContext.getTypeConfiguration()
 					);
 					customWriteExpr = selectable.getWriteExpr(
-							(JdbcMapping) attrType,
+							basicAttrType,
 							dialect,
 							creationContext.getBootModel()
 					);
@@ -6055,7 +6056,10 @@ public abstract class AbstractEntityPersister
 					scale = column.getScale();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
-					resolveAggregateColumnBasicType( creationProcess, role, column );
+					final var aggregateColumnBasicType = resolveAggregateColumnBasicType( creationProcess, role, column );
+					if ( aggregateColumnBasicType != null ) {
+						basicAttrType = aggregateColumnBasicType;
+					}
 				}
 				else {
 					final Formula formula = (Formula) value.getSelectables().get( 0 );
@@ -6083,7 +6087,7 @@ public abstract class AbstractEntityPersister
 					fetchableIndex,
 					bootProperty,
 					this,
-					(BasicType<?>) value.getType(),
+					basicAttrType,
 					tableExpression,
 					attrColumnExpression,
 					selectablePath,

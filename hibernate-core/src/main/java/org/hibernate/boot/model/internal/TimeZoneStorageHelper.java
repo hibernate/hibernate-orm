@@ -27,7 +27,7 @@ public class TimeZoneStorageHelper {
 	private static final String OFFSET_DATETIME_CLASS = OffsetDateTime.class.getName();
 	private static final String ZONED_DATETIME_CLASS = ZonedDateTime.class.getName();
 
-	static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
+	public static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
 			MemberDetails attributeMember,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {

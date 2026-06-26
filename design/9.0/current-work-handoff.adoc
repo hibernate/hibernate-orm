@@ -66,68 +66,73 @@ Binding/model work has also moved forward:
 
 == Current Uncommitted Slice
 
-The active uncommitted slice is generic inheritance parity in the new boot
-pipeline, especially generic attributes inherited from mapped superclasses and
-entity superclasses.
+The active uncommitted slice has moved from the original generic-inheritance
+bucket into binding/materialization parity buckets found by broader suite
+sampling.  The most recent completed bucket is schema/exportables parity:
+secondary-table and collection-table key details, joined-subclass/table
+validation, check/unique/index/comment/options metadata, derived-id column
+metadata, and quoted-name behavior.
 
-The core problem is documented in
-link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]:
-generic attributes have declaration facts, such as `T`, `List<T>`, and bounds,
-and usage facts, such as `Integer`, `String`, or `List<Foo>` after inheritance
-or embedding.  The boot binding model can represent this distinction with
-declaration and usage bindings, but the legacy `org.hibernate.mapping`
-handoff collapses it back into `Property` flags and copied `Value` objects.
+Important recent code changes in this slice:
 
-Current code changes in this slice:
+* Entity-level Hibernate `@Check` handling moved out of direct table binding and
+  into `EntityTypeBinder` / `PersistentClass` check metadata, so check
+  constraints can be routed later by referenced columns.  This fixes secondary
+  table check placement.
+* Column-level/member-level `@Check` metadata is carried through
+  `BasicValueIntent` and applied during basic value materialization.
+* JPA unique constraints with missing or empty column names now fail during table
+  binding instead of being silently ignored.  The same validation exists for
+  collection/association table keys.
+* Explicit single-table discriminators are materialized even when the hierarchy
+  has no subclasses, and `DiscriminatorType.CHAR` normalizes length to `1`.
+* Implicit to-one join columns and derived-id `@MapsId` join columns copy
+  relevant referenced-column metadata such as length/sql type while preserving
+  local nullability.
+* Derived-id primary-key column ordering now places derived association columns
+  before remaining id columns, matching legacy DDL/PK ordering expectations.
+* `AbstractDelegatingMetadata#orderColumns(boolean)` now passes the caller's
+  `forceOrdering` flag to the delegate instead of always passing `false`.
+* `@TimeZoneColumn` now carries `options` and `comment` into the materialized
+  column metadata.
+* Quoted JPA entity names are now rejected during entity skeleton binding.
+  Backtick-quoted and escaped double-quoted `@Entity(name=...)` values are
+  illegal; quoted database identifiers must be expressed through table/column
+  annotations.
+* `SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameTest` now
+  uses explicit `@Table(name = "`Another_Test_Entity`")` for the quoted table
+  scenario and has explicit negative coverage for quoted entity names.
+* SINGLE_TABLE subclasses with direct `@Table` now fail during
+  `EntityTypeBinder#bindTables()`, before subclass table metadata can be
+  silently ignored.
 
-* `BasicValueSource` has a factory that accepts a resolved `TypeDetails` plus an
-  optional explicit Java type for inherited type-variable cases.
-* `BasicValueMappingMaterializer` uses that factory for inherited generic
-  basic attributes so enum/converter/basic type resolution can use the concrete
-  usage type while still coming from the inherited member.
-* `MappedSuperTypeBinder` skips unresolved generic basic/to-one declarations
-  during the initial mapped-superclass declaration pass, then creates explicit
-  generic declaration views for the mapped-superclass side.
-* For mapped-superclass generic basic declarations, `MappedSuperTypeBinder`
-  creates a fresh `Object`-typed `BasicValue` with cloned selectables rather
-  than copying an already-resolved concrete `BasicValue`.  This preserves the
-  public generic JPA-domain model without re-owning DDL columns.
-* `IdentifiableTypeBinder#applyGenericPropertyMarkers(...)` now detects Java
-  type-variable usage from the source member signature rather than relying on
-  `TypeDetails#isResolved()`.
-* `EntityTypeBinder` adds concrete generic specializations for generic
-  properties inherited from entity superclasses and copies the basic-value
-  details needed by concrete runtime mapping.
+The generic-inheritance bridge work is still present and still transitional:
 
-Behavior verified in this slice:
+* `BasicValueSource` / `BasicValueMappingMaterializer` can carry resolved
+  generic usage types for inherited basic attributes.
+* `MappedSuperTypeBinder` and `EntityTypeBinder` still bridge legacy generic
+  declaration/specialization behavior through compatibility mapping objects.
+* link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+  remains the design boundary: avoid more ad hoc generic runtime behavior until
+  a proper declaration/usage/contribution model or shared runtime adapter is
+  available.
 
-* `GenericBasicValuedPathTest` now passes: public criteria paths for generic
-  mapped-superclass id/basic attributes report `Object`, while
-  `SqmPath#getResolvedModel()` resolves to `Integer` / `String`.
-* The nearby generics regression set still passes:
-  `SingleTableAndGenericsTest`, `EnumeratedAndGenericsTest`,
-  `EmbeddableWithGenericAndMappedSuperClassTest`,
-  `MappedSuperclassAndGenericsTest`, `GenericAbstractSubtypeSerializableTest`,
-  and `GenericBasicValuedPathTest`.
+The latest focused aggregate/materialization bucket is green:
 
-Design/doc changes in this slice:
-
-* Added link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`].
-* Linked it from link:index.adoc[`index.adoc`].
-* The design note explicitly says that generic declaration/usage facts should
-  be carried toward runtime as metadata or adapter input, with
-  `MetadataContext` / JPA-domain model creation as the first runtime-adjacent
-  consumer.
-* It also says not to make entity persisters, SQL AST, schema export, dirty
-  checking, or runtime mapping types depend directly on a new generic model
-  until `MetadataBuildingProcess` is gone or both boot paths populate the same
-  adapter metadata.
-
-This is still bridge work, not the final generic inheritance model.  The final
-model should be part of the mapped-superclass / embeddable contribution model
-once the legacy boot handoff no longer forces generic behavior through
-`Property#isGeneric()`, `Property#isGenericSpecialization()`, copied values, and
-`MetadataContext#addConcreteGenericAttribute(...)`.
+* plural JSON/XML/STRUCT aggregate embeddable attributes now hand off both facts
+  needed by legacy runtime model creation: the owning property remains backed by
+  the aggregate `BasicValue`, while the aggregate `AggregateColumn` retains the
+  element `Component` used to build embeddable mapping metadata;
+* plural basic aggregate attributes such as `List<Embeddable>` with
+  `@JdbcTypeCode(JSON_ARRAY)` now create element component metadata instead of
+  relying only on an `EmbeddableAggregateJavaType`;
+* plural aggregate `BasicValue` resolution no longer forces the element Java
+  type onto the owning plural property, allowing arrays/collections to resolve
+  from the reflected member type and explicit aggregate JDBC code;
+* entity basic-attribute materialization now uses the aggregate-column
+  `BasicType` returned by `resolveAggregateColumnBasicType(...)` when available;
+* the JPA metamodel aggregate-element path now checks that the owning selectable
+  is an `AggregateColumn` before using its component metadata.
 
 == Deliberate Transitional Bridges
 
@@ -150,25 +155,52 @@ Do not treat these as accidental leftovers:
 
 == Useful Guardrails
 
-The most recent focused guardrails for the active generic-inheritance slice
-passed:
+The most recent schema/exportables focused tail passed:
 
 [source,bash]
 ----
-./gradlew :hibernate-core:test \
-  --tests org.hibernate.orm.test.annotations.generics.GenericBasicValuedPathTest \
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.schema.SubclassIndexTest' \
+  --tests 'org.hibernate.orm.test.schemaupdate.TimeZoneColumnTest' \
+  --tests 'org.hibernate.orm.test.schemaupdate.SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameTest' \
   --console=plain
 ----
 
+The broad schema/exportables slice also passed:
+
 [source,bash]
 ----
-./gradlew :hibernate-core:test \
-  --tests org.hibernate.orm.test.inheritance.discriminator.SingleTableAndGenericsTest \
-  --tests org.hibernate.orm.test.annotations.enumerated.EnumeratedAndGenericsTest \
-  --tests org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest \
-  --tests org.hibernate.orm.test.annotations.generics.MappedSuperclassAndGenericsTest \
-  --tests org.hibernate.orm.test.annotations.generics.GenericAbstractSubtypeSerializableTest \
-  --tests org.hibernate.orm.test.annotations.generics.GenericBasicValuedPathTest \
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.schema.*' \
+  --tests 'org.hibernate.orm.test.schemafilter.*' \
+  --tests 'org.hibernate.orm.test.schemamanager.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.*' \
+  --tests 'org.hibernate.orm.test.schemavalidation.*' \
+  --tests 'org.hibernate.orm.test.schematools.*' \
+  --tests 'org.hibernate.orm.test.tool.schema.*' \
+  --tests 'org.hibernate.orm.test.bootstrap.schema.*' \
+  --tests 'org.hibernate.orm.test.jpa.schemagen.*' \
+  --tests 'org.hibernate.orm.test.annotations.indexcoll.*' \
+  --tests 'org.hibernate.orm.test.annotations.index.*' \
+  --tests 'org.hibernate.orm.test.annotations.comment.*' \
+  --tests 'org.hibernate.orm.test.annotations.check.*' \
+  --tests 'org.hibernate.orm.test.annotations.uniqueconstraint.*' \
+  --console=plain
+----
+
+The generics guardrail set still passed after the schema/exportables work:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.generics.SingleTableAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.EnumeratedAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.EmbeddableWithGenericAndMappedSuperClassTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.MappedSuperclassAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericAbstractSubtypeSerializableTest' \
+  --tests 'org.hibernate.orm.test.jpa.criteria.paths.GenericBasicValuedPathTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericsInheritanceTest' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.EmbeddableBindingTests' \
   --console=plain
 ----
 
@@ -181,41 +213,158 @@ git diff --check
 
 Expect Java deprecation warnings during Gradle runs.
 
+The focused aggregate/materialization bucket passed:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.function.json.JsonArrayUnnestTest' \
+  --console=plain
+----
+
+The nearby JSON embeddable-array boundary also passed:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.JsonEmbeddableArrayTest' \
+  --console=plain
+----
+
+The nested JSON nullability boundary is now green too.  The fix is a
+binding/materialization handoff correction: nested embeddable properties inside
+non-identifier components are marked optional, matching the top-level embedded
+attribute handoff and avoiding pre-insert `Nullability` failures for null
+members inside JSON aggregate documents.
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.JsonEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.NestedJsonEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.JsonEmbeddableAndSchemaNameTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.H2JsonArrayAggregateWideExtractionTest' \
+  --console=plain
+----
+
+The XML aggregate twin bucket also passed without additional code changes:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.XmlEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.NestedXmlEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.XmlWithArrayEmbeddableTest' \
+  --console=plain
+----
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.function.xml.XmlArrayUnnestTest' \
+  --console=plain
+----
+
+The latest adapter/multitenancy bucket is green:
+
+* `ResolvedSessionFactorySettings` now carries the configured
+  `TenantSchemaMapper` and `TenantCredentialsMapper`.
+* `SessionFactorySettingsResolver` resolves those mappers through the same
+  `MultiTenancy` helpers used by the legacy options builder.
+* `SessionFactoryOptionsCollector` preserves explicit programmatic mapper
+  overrides when applying collected options to resolved settings.
+* `SessionFactoryOptionsAdapter` exposes `getTenantSchemaMapper()` and
+  `getTenantCredentialsMapper()`, removing the remaining direct adapter UOE in
+  schema/credentials/database-time-zone multitenancy probes.
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.multitenancy.SchemaBasedMultitenancyTest' \
+  --tests 'org.hibernate.orm.test.multitenancy.CredentialsBasedMultitenancyTest' \
+  --tests 'org.hibernate.orm.test.multitenancy.DatabaseTimeZoneMultiTenancyTest' \
+  --console=plain
+----
+
+The remaining non-instantiation UOE sample also passed:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.multitenancy.discriminator.DiscriminatorMultiTenancyTest' \
+  --tests 'org.hibernate.orm.test.procedure.ProcedureParameterTests' \
+  --tests 'org.hibernate.orm.test.query.criteria.Jpa4CriteriaApiTest' \
+  --console=plain
+----
+
 == Recommended Next Slices
 
-The best next step depends on the desired risk profile.
+The schema/exportables bucket described above is green in the focused slice.
+The next fresh-context step should not assume the old recommended generics
+failure still exists.  Instead:
 
-Recommended next slice:
-
-* Continue the generic inheritance bucket with
-  `org.hibernate.orm.test.annotations.generics.GenericsInheritanceTest`.
-  Earlier focused triage showed an initialization failure with a
-  `ClassCastException` in `PluralAssociationAttributeBinder`, which likely
-  represents the next generic inherited plural-association shape after the
-  basic/id path work.
+* Refresh link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`] against
+  the current worktree and the latest test reports before choosing another
+  bucket.
+* Prefer the next highest-signal boot/model binding or materialization parity
+  bucket exposed by focused tests, not broad runtime fallout.
 * Keep fixes in the boot pipeline: source/categorization, binding,
   materialization, and handoff metadata.  Avoid SQL-AST/runtime behavior
-  changes unless the failure proves the legacy mapping handoff cannot express
-  the needed fact.
-* Use link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
-  as the local design guide.  Near-term fixes are bridges; the authoritative
-  generic declaration/usage/contribution model should wait until
-  `MetadataBuildingProcess` is removed or a runtime adapter is populated by
-  both boot paths.
-* Re-run the generics guardrail set above after each concrete fix.
+  changes unless the legacy mapping handoff cannot express the needed fact.
+* Keep `GenericsInheritanceTest` in the guardrail set, but do not restart the
+  generic inheritance design work unless a fresh failure points there.
 
-Secondary next slices:
+Likely next areas to sample:
 
-* If `GenericsInheritanceTest` turns out to be a different plural-association
-  bucket, document the failure shape and decide whether to continue generic
-  plural inheritance or return to the broader binding-gap list.
-* If returning to model-shape work, continue mapped-superclass
-  declaration/application modeling from
-  link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
-  and link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].
-* If returning to binding parity, refresh
-  link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`] against the
-  current worktree before selecting the next bucket.
+The embeddable instantiation bucket is now green:
+
+* component materialization now applies globally registered
+  `@EmbeddableInstantiatorRegistration` entries when no direct member/type
+  `@EmbeddableInstantiator` is present;
+* component sources now honor member-level `@Access` as the default access type
+  for embedded component members and collection elements, fixing getter-only
+  embeddable property access metadata;
+* interface-valued embedded members with a single categorized embeddable
+  implementation now keep the declared interface as the component type while
+  walking the implementation type for component members.
+* the registered-instantiator bridge is intentionally limited to real
+  class-backed component sources, so dynamic XML/map components keep their
+  legacy dynamic `Component` shape instead of asking the class-details model for
+  a Java class that does not exist.
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.*.InstantiationTests' \
+  --console=plain
+----
+
+The dynamic XML / JPA metamodel population trio is also green after rechecking
+the instantiator bridge against dynamic component sources:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelEnabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelDisabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelIgnoreUnsupportedPopulationTest' \
+  --console=plain
+----
+
+Next, re-sample the remaining broad UOE list or move to another focused
+materialization bucket surfaced by copied reports.  Prefer direct boot/model
+handoff failures over runtime SQL behavior.
+* remaining JSON/XML collection/list variants only if fresh focused failures
+  still point at boot mapping handoff rather than SQL-AST/runtime behavior;
+* remaining XML overlay / metadata-complete parity, especially annotation + XML
+  overlay interaction;
+* dynamic model XML identity/class-details behavior;
+* collection/list/bag edge cases only if focused tests still fail after the
+  recent LIST/BAG clarifications;
+* auxiliary database object or schema-generation variants not included in the
+  green schema/exportables slice;
+* any fresh focused buckets surfaced by the manually copied reports/tests
+  directory or a new partial suite run.
 
 If looking for correctness failures:
 
@@ -229,12 +378,17 @@ Use this prompt to resume in a new conversation:
 
 [source,text]
 ----
-Please read design/9.0/current-work-handoff.adoc first, then switch focus back
-to design/9.0/remaining-binding-gaps.adoc.  Start by refreshing the gap list
-against the current worktree, taking the new bootstrap phase contract and
-materialization/key-creation work into account.  Recommend the highest-signal
-binding parity bucket to attack next, then begin with a focused verification
-run and small, bucketed fixes.
+Please read design/9.0/current-work-handoff.adoc first.  Then refresh
+design/9.0/remaining-binding-gaps.adoc against the current worktree and any
+available copied reports/tests output.  The most recent schema/exportables
+bucket is green, including SubclassIndexTest, TimeZoneColumnTest, the quoted
+schema-update test, the broad schema/exportables slice, and the generics
+guardrail set.  Recommend the next highest-signal boot/model binding or
+materialization parity bucket, then start with a focused reproduction and small
+bucketed fixes.  Keep fixes in source/categorization, binding, materialization,
+or handoff metadata; avoid SQL-AST/runtime changes unless the legacy mapping
+handoff cannot express the needed fact.  Finish any fix by rerunning the
+relevant focused bucket, the generics guardrail set, and git diff --check.
 ----
 
 == Fresh-Context Cautions
@@ -245,6 +399,8 @@ run and small, bucketed fixes.
 * Be careful with quoted identifiers.  Use `Identifier#matches(...)` semantics
   where identifier-aware comparison is needed; do not introduce broad
   case-insensitive string matching.
+* Quoted JPA entity names are illegal in this branch.  Use `@Table`, `@Column`,
+  and other database-identifier annotations for quoted database names.
 * Avoid reintroducing builder surfaces.  The design direction is explicit
   pipeline products, construction requests, producers, views, and
   materializers.

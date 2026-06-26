@@ -8,7 +8,10 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Collate;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
@@ -30,13 +33,17 @@ import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Embeddable;
 
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.models.AttributeNature.ELEMENT_COLLECTION;
@@ -115,9 +122,32 @@ public class AttributeBinder {
 
 		final ValueIntent valueIntent = attributeBinding.valueIntent();
 		if ( valueIntent instanceof BasicValueIntent ) {
-			final var basicValue = createBasicValue( primaryTable );
-			binding.setValue( basicValue );
-			attributeTable = basicValue.getTable();
+			if ( usesComponentBindingForBasicValue() ) {
+				final var componentValue = new EmbeddableAttributeBinder(
+						ownerType,
+						attributeBinding,
+						ownerBinding,
+						attributeMetadata,
+						primaryTable,
+						modelBinders,
+						bindingState,
+						bindingOptions,
+						bindingContext,
+						registerCollectionBindings
+				).bind( binding );
+				binding.setValue( valueForEmbeddedAttribute( componentValue ) );
+				handleGenericComponentProperty(
+						binding,
+						attributeMetadata.getMember(),
+						bindingState.getMetadataBuildingContext()
+				);
+				attributeTable = componentValue.getTable();
+			}
+			else {
+				final var basicValue = createBasicValue( primaryTable );
+				binding.setValue( basicValue );
+				attributeTable = basicValue.getTable();
+			}
 		}
 		else if ( valueIntent instanceof ToOneValueIntent ) {
 			final var toOneValue = new ToOneAttributeBinder(
@@ -126,11 +156,11 @@ public class AttributeBinder {
 					ownerBinding,
 					attributeMetadata,
 					primaryTable,
-						modelBinders,
-						bindingOptions,
-						bindingState,
-						bindingContext
-				).bind( binding );
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			).bind( binding );
 			binding.setValue( toOneValue );
 			attributeTable = toOneValue.getTable();
 		}
@@ -147,7 +177,7 @@ public class AttributeBinder {
 					bindingContext,
 					registerCollectionBindings
 			).bind( binding );
-			binding.setValue( componentValue );
+			binding.setValue( valueForEmbeddedAttribute( componentValue ) );
 			handleGenericComponentProperty(
 					binding,
 					attributeMetadata.getMember(),
@@ -196,6 +226,46 @@ public class AttributeBinder {
 
 	public Table getTable() {
 		return attributeTable;
+	}
+
+	private boolean usesExplicitTimeZoneColumnStorage() {
+		final TimeZoneStorage timeZoneStorage = attributeBinding.member()
+				.getDirectAnnotationUsage( TimeZoneStorage.class );
+		return timeZoneStorage != null && timeZoneStorage.value() == TimeZoneStorageType.COLUMN;
+	}
+
+	private boolean usesComponentBindingForBasicValue() {
+		return usesCompositeUserTypeComponentBinding()
+				|| usesPluralAggregateEmbeddableBinding();
+	}
+
+	private boolean usesCompositeUserTypeComponentBinding() {
+		if ( usesExplicitTimeZoneColumnStorage() ) {
+			return true;
+		}
+
+		final var rawClass = attributeBinding.resolvedType().determineRawClass();
+		if ( rawClass == null || !rawClass.isRealClass() ) {
+			return false;
+		}
+
+		final Class<?> javaClass = rawClass.toJavaClass();
+		return javaClass != null && bindingState.findRegisteredCompositeUserType( javaClass ) != null;
+	}
+
+	private boolean usesPluralAggregateEmbeddableBinding() {
+		final MemberDetails member = attributeBinding.member();
+		if ( !member.isPlural() || member.getElementType() == null ) {
+			return false;
+		}
+
+		final JdbcTypeCode jdbcTypeCode = member.getDirectAnnotationUsage( JdbcTypeCode.class );
+		return jdbcTypeCode != null
+				&& ( jdbcTypeCode.value() == SqlTypes.JSON_ARRAY
+					|| jdbcTypeCode.value() == SqlTypes.XML_ARRAY
+					|| jdbcTypeCode.value() == SqlTypes.STRUCT_ARRAY
+					|| jdbcTypeCode.value() == SqlTypes.STRUCT_TABLE )
+				&& member.getElementType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class );
 	}
 
 	private org.hibernate.mapping.Collection bindCollectionValue(
@@ -301,6 +371,20 @@ public class AttributeBinder {
 				bindingState,
 				bindingContext
 		);
+	}
+
+	private static Value valueForEmbeddedAttribute(Component component) {
+		final var aggregateColumn = component.getAggregateColumn();
+		if ( aggregateColumn != null ) {
+			return switch ( aggregateColumn.getTypeCode() ) {
+				case SqlTypes.JSON_ARRAY,
+						SqlTypes.XML_ARRAY,
+						SqlTypes.STRUCT_ARRAY,
+						SqlTypes.STRUCT_TABLE -> aggregateColumn.getValue();
+				default -> component;
+			};
+		}
+		return component;
 	}
 
 	public static void bindImplicitJavaType(

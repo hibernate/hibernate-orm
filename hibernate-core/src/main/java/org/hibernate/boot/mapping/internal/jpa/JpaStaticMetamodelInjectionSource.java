@@ -43,6 +43,9 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 		final Set<ClassDetails> includedTypes = new LinkedHashSet<>();
 		for ( EntityHierarchyView hierarchyView : bootBindingModel.entityHierarchyViews() ) {
 			for ( ManagedTypeView typeView : hierarchyView.managedTypeViews() ) {
+				if ( !typeView.classDetails().isRealClass() ) {
+					continue;
+				}
 				managedTypes.add( managedTypeReference(
 						typeView,
 						entityIdentifierBindings.get( hierarchyView.root().classDetails() ),
@@ -57,6 +60,9 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 			}
 			if ( binding.kind() == ManagedTypeBinding.Kind.ENTITY
 					|| binding.kind() == ManagedTypeBinding.Kind.MAPPED_SUPERCLASS ) {
+				if ( !binding.classDetails().isRealClass() ) {
+					continue;
+				}
 				managedTypes.add( managedTypeReference(
 						new StandardManagedTypeView( binding ),
 						entityIdentifierBindings.get( binding.classDetails() ),

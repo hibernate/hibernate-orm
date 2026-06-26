@@ -68,11 +68,14 @@ import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MapKeyEnumerated;
@@ -111,6 +114,7 @@ public class BasicValueBinder {
 		BindingContext bindingContext) {
 		basicValue.setMemberDetails( source.member() );
 		basicValue.setImplicitSourceJavaType( source.sourceJavaType() );
+		registerPluralAggregateElementJavaType( source, bindingState );
 		bindConversion( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJavaType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJdbcType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
@@ -127,6 +131,35 @@ public class BasicValueBinder {
 		bindFractionalSeconds( source, basicValue );
 		bindGeneratedColumn( source, basicValue );
 		bindValueGeneration( source, property, basicValue, bindingContext );
+	}
+
+	private static void registerPluralAggregateElementJavaType(
+			BasicValueSource source,
+			BindingState bindingState) {
+		if ( source.kind() != BasicValueSource.Kind.ATTRIBUTE || !source.member().isPlural() ) {
+			return;
+		}
+
+		final JdbcTypeCode jdbcTypeCode = source.member().getDirectAnnotationUsage( JdbcTypeCode.class );
+		if ( jdbcTypeCode == null
+				|| jdbcTypeCode.value() != SqlTypes.JSON_ARRAY && jdbcTypeCode.value() != SqlTypes.XML_ARRAY ) {
+			return;
+		}
+
+		final var elementType = source.member().getElementType();
+		if ( elementType == null ) {
+			return;
+		}
+
+		final var elementClass = elementType.determineRawClass();
+		if ( !elementClass.hasDirectAnnotationUsage( Embeddable.class ) ) {
+			return;
+		}
+
+		bindingState.addJavaTypeRegistration(
+				elementClass.toJavaClass(),
+				new EmbeddableAggregateJavaType<>( elementClass.toJavaClass(), null )
+		);
 	}
 
 	public static void bindConversion(

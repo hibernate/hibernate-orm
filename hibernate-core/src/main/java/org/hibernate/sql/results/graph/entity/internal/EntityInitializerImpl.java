@@ -1032,9 +1032,6 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				assert data.entityHolder.getProxy() != instance;
 				instance = resolveEntityInstance( data );
 				data.entityKey = data.entityHolder.getEntityKey();
-				if ( data.entityHolder.getProxy() != null ) {
-					castNonNull( extractLazyInitializer( data.entityHolder.getProxy() ) ).setImplementation( instance );
-				}
 			}
 			else if ( data.entityHolder.getEntity() != instance ) {
 				// The instance contained in the parent entity is different from the managed persistent instance
@@ -1085,13 +1082,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			// Resolve and potentially create the entity instance
 			if ( data.entityHolder.getProxy() == instance ) {
 				data.entityInstanceForNotify = resolveEntityInstance( data );
-				lazyInitializer.setImplementation( data.entityInstanceForNotify );
 			}
 			else if ( data.entityHolder.getEntity() == null ) {
 				data.entityInstanceForNotify = resolveEntityInstance( data );
-				if ( data.entityHolder.getProxy() != null ) {
-					castNonNull( extractLazyInitializer( data.entityHolder.getProxy() ) ).setImplementation( data.entityInstanceForNotify );
-				}
 			}
 			else {
 				data.entityInstanceForNotify = data.entityHolder.getEntity();
@@ -1112,9 +1105,6 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			else if ( data.entityHolder.getEntity() == null ) {
 				data.entityInstanceForNotify = resolveEntityInstance( data );
 				data.entityKey = data.entityHolder.getEntityKey();
-				if ( data.entityHolder.getProxy() != null ) {
-					castNonNull( extractLazyInitializer( data.entityHolder.getProxy() ) ).setImplementation( data.entityInstanceForNotify );
-				}
 				data.setState( State.RESOLVED );
 			}
 			else {
@@ -1231,7 +1221,6 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 					final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
 					assert lazyInitializer != null;
 					data.entityInstanceForNotify = resolveEntityInstance2( data );
-					lazyInitializer.setImplementation( data.entityInstanceForNotify );
 				}
 			}
 		}

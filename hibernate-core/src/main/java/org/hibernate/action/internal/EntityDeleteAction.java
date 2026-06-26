@@ -18,6 +18,8 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
+
 /**
  * The action for performing an entity deletion.
  */
@@ -311,9 +313,7 @@ public class EntityDeleteAction extends EntityAction {
 	@Nullable
 	private Object lockCacheItem() {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		return writingToCache( persister, cache -> {
 			final var session = getSession();
 			final Object cacheKey = cache.generateCacheKey(
 					getId(),
@@ -323,17 +323,12 @@ public class EntityDeleteAction extends EntityAction {
 			);
 			lock = cache.lockItem( session, cacheKey, getCurrentVersion() );
 			return cacheKey;
-		}
-		else {
-			return null;
-		}
+		}, null );
 	}
 
 	protected void unlockCacheItem() {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		writingToCache( persister, cache -> {
 			final var session = getSession();
 			final Object cacheKey = cache.generateCacheKey(
 					getId(),
@@ -342,14 +337,12 @@ public class EntityDeleteAction extends EntityAction {
 					session.getTenantIdentifier()
 			);
 			cache.unlockItem( session, cacheKey, lock );
-		}
+		} );
 	}
 
 	protected void removeCacheItem(@Nullable Object cacheKey) {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		writingToCache( persister, cache -> {
 			assert cacheKey != null;
 			cache.remove( getSession(), cacheKey );
 
@@ -360,6 +353,6 @@ public class EntityDeleteAction extends EntityAction {
 						cache.getRegion().getName()
 				);
 			}
-		}
+		} );
 	}
 }

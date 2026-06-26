@@ -210,7 +210,8 @@ public interface CollectionPersister extends Restrictable {
 	CollectionDataAccess getCacheAccessStrategy();
 
 	/**
-	 * Get the structure used to store data into the collection's {@linkplain #getCacheAccessStrategy() cache region}
+	 * Get the structure used to store data into the collection's
+	 * {@linkplain #getCacheAccessStrategy() cache region}.
 	 */
 	@Nonnull
 	CacheEntryStructure getCacheEntryStructure();

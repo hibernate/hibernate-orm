@@ -8,6 +8,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -24,6 +26,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.engine.internal.CacheHelper.readingFromCache;
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -127,12 +131,17 @@ public class CacheLoadHelper {
 			final EntityPersister persister,
 			final EntityKey entityKey) {
 		final boolean useCache =
-				persister.canReadFromCache()
-						&& source.getCacheMode().isGetEnabled()
+				source.getCacheMode().isGetEnabled()
 						&& lockMode.lessThan( LockMode.READ );
 		if ( useCache ) {
-			final Object cacheEntry = getFromSharedCache( entityKey.getIdentifier(), persister, source );
-			return cacheEntry == null ? null : processCachedEntry( entity, persister, cacheEntry, source, entityKey );
+			final Object cacheEntry = readingFromCache(
+					persister,
+					cache -> getFromSharedCache( entityKey.getIdentifier(), persister, source, cache ),
+					null
+			);
+			return cacheEntry == null
+					? null
+					: processCachedEntry( entity, persister, cacheEntry, source, entityKey );
 		}
 		else {
 			// we can't use cache here
@@ -143,9 +152,8 @@ public class CacheLoadHelper {
 	private static Object getFromSharedCache(
 			final Object entityId,
 			final EntityPersister persister,
-			final SharedSessionContractImplementor source) {
-		final var cache = persister.getCacheAccessStrategy();
-		assert cache != null;
+			final SharedSessionContractImplementor source,
+			final EntityDataAccess cache) {
 		final var factory = source.getFactory();
 		final Object cacheKey = cache.generateCacheKey( entityId, persister, factory, source.getTenantIdentifier() );
 		final Object cacheEntry = fromSharedCache( source, cacheKey, persister, cache );
@@ -361,15 +369,17 @@ public class CacheLoadHelper {
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
 			SharedSessionContractImplementor source) {
-		if ( persister.hasCache() && source.getCacheMode().isGetEnabled() ) {
-			final Object cachedEntry = getFromSharedCache( key, persister, source );
-			if ( cachedEntry == null ) {
-				return false;
-			}
-			else {
-				processCachedEntry( key, persister, cachedEntry, collection, source );
-				return true;
-			}
+		if ( source.getCacheMode().isGetEnabled() ) {
+			return usingCache( persister, cache -> {
+				final Object cachedEntry = getFromSharedCache( key, persister, source, cache );
+				if ( cachedEntry == null ) {
+					return false;
+				}
+				else {
+					processCachedEntry( key, persister, cachedEntry, collection, source );
+					return true;
+				}
+			}, false );
 		}
 		else {
 			// we can't use cache here
@@ -400,9 +410,9 @@ public class CacheLoadHelper {
 	private static Object getFromSharedCache(
 			Object key,
 			CollectionPersister persister,
-			SharedSessionContractImplementor source) {
+			SharedSessionContractImplementor source,
+			CollectionDataAccess cache) {
 		final var factory = source.getFactory();
-		final var cache = persister.getCacheAccessStrategy();
 		final Object cacheKey = cache.generateCacheKey( key, persister, factory, source.getTenantIdentifier() );
 		final Object cachedEntry = fromSharedCache( source, cacheKey, persister, cache );
 		final var statistics = factory.getStatistics();

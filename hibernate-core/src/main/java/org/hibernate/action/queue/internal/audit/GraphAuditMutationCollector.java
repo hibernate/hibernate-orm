@@ -174,7 +174,7 @@ public class GraphAuditMutationCollector {
 			List<FlushOperation> operations) {
 		int ordinal = 0;
 		for ( var change : changes ) {
-			final EntityAuditSupport mutationSupport = change.entityAuditHandler();
+			final var mutationSupport = change.entityAuditHandler();
 			for ( var plan : mutationSupport.resolveTransactionEndUpdatePlans() ) {
 				final var graphPlan = new EntityTransactionEndPlan( mutationSupport, plan );
 				final var operation = plan.operation();

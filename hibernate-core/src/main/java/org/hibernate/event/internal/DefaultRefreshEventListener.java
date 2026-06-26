@@ -9,7 +9,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
@@ -26,6 +25,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.ProxyUtil.forceInitialize;
 import static org.hibernate.engine.internal.ProxyUtil.isUninitialized;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
@@ -198,7 +199,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			@Nonnull EntityPersister persister,
 			@Nonnull Object id,
 			@Nonnull EventSource source) {
-		if ( persister.canWriteToCache() ) {
+		writingToCache( persister, cache -> {
 			Object previousVersion = null;
 			if ( persister.isVersionPropertyGenerated() ) {
 				// we need to grab the version value from the entity, otherwise
@@ -206,18 +207,16 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// multiple actions queued during the same flush
 				previousVersion = persister.getVersion( object );
 			}
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
 			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
 					source.getFactory(),
 					source.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( source, cacheKey, previousVersion );
+			final var lock = cache.lockItem( source, cacheKey, previousVersion );
 			cache.remove( source, cacheKey );
 			source.getActionQueue().registerCallback( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
-		}
+		} );
 	}
 
 	private static @Nullable Object doRefresh(
@@ -322,18 +321,17 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( type instanceof CollectionType collectionType ) {
 				final var collectionPersister =
 						metamodel.getCollectionDescriptor( collectionType.getRole() );
-				if ( collectionPersister.hasCache() ) {
-					final var cache = collectionPersister.getCacheAccessStrategy();
+				usingCache( collectionPersister, cache -> {
 					final Object cacheKey = cache.generateCacheKey(
-						id,
-						collectionPersister,
-						factory,
-						source.getTenantIdentifier()
+							id,
+							collectionPersister,
+							factory,
+							source.getTenantIdentifier()
 					);
 					final var lock = cache.lockItem( source, cacheKey, null );
 					cache.remove( source, cacheKey );
 					actionQueue.registerCallback( (success, session) -> cache.unlockItem( session, cacheKey, lock ) );
-				}
+				} );
 			}
 			else if ( type instanceof ComponentType compositeType ) {
 				// Only components can contain collections

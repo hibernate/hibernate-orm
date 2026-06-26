@@ -27,7 +27,7 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 			SessionFactoryImplementor factory,
 			CollectionMutationPlanContributor mutationPlanContributor) {
 		super( persister, factory, mutationPlanContributor );
-		this.jdbcOperations = buildJdbcOperations( persister.getCollectionTableDescriptor(), factory );
+		this.jdbcOperations = buildJdbcOperations( persister.getCollectionTableDescriptor() );
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
 
 		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
-		var postRemoveHandling = new PostCollectionRemoveHandling(
+		final var postRemoveHandling = new PostCollectionRemoveHandling(
 				persister,
 				action.getCollection(),
 				action.getAffectedOwner(),
@@ -62,22 +62,20 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 					ordinalBase * 1_000,
 					postRemoveHandling
 			) );
-			return;
 		}
-
-		final FlushOperation plannedOp = new FlushOperation(
-				persister.getCollectionTableDescriptor(),
+		else {
+			final var plannedOp = new FlushOperation(
+					persister.getCollectionTableDescriptor(),
 					// technically an UPDATE
 					MutationKind.UPDATE,
 					jdbcOperation,
 					new RemoveBindPlan( action.getKey(), persister, mutationPlanContributor ),
 					ordinalBase * 1_000,
-				"RemoveAllRows(" + persister.getRolePath() + ")"
-		);
-
-		// and attach to the operation
-		plannedOp.setPostExecutionCallback( postRemoveHandling );
-
-		operationConsumer.accept( plannedOp );
+					"RemoveAllRows(" + persister.getRolePath() + ")"
+			);
+			// and attach to the operation
+			plannedOp.setPostExecutionCallback( postRemoveHandling );
+			operationConsumer.accept( plannedOp );
+		}
 	}
 }

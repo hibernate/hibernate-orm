@@ -100,6 +100,8 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.QuerySettings.CRITERIA_COPY_TREE;
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
@@ -1278,9 +1280,7 @@ public class StatelessSessionImpl
 			SESSION_LOGGER.refreshingTransient( infoString( persister, id, getFactory() ) );
 		}
 
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		writingToCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
@@ -1288,7 +1288,7 @@ public class StatelessSessionImpl
 					getTenantIdentifier()
 			);
 			cache.evict( cacheKey );
-		}
+		} );
 
 		final Object result =
 				getLoadQueryInfluencers()
@@ -1797,9 +1797,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		return writingToCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
@@ -1810,24 +1808,15 @@ public class StatelessSessionImpl
 			transactionCompletionCallbacks.registerCallback(
 					(success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 			return cacheKey;
-		}
-		else {
-			return null;
-		}
+		}, null );
 	}
 
 	protected void removeCacheItem(Object cacheKey, EntityPersister persister) {
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			cache.remove( this, cacheKey );
-		}
+		writingToCache( persister, cache -> cache.remove( this, cacheKey ) );
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
-		if ( persister.hasCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		return usingCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
@@ -1838,18 +1827,11 @@ public class StatelessSessionImpl
 			transactionCompletionCallbacks.registerCallback(
 					(success, session) -> cache.unlockItem( this, cacheKey, lock ) );
 			return cacheKey;
-		}
-		else {
-			return null;
-		}
+		}, null );
 	}
 
 	protected void removeCacheItem(Object cacheKey, CollectionPersister persister) {
-		if ( persister.hasCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			cache.remove( this, cacheKey );
-		}
+		usingCache( persister, cache -> cache.remove( this, cacheKey ) );
 	}
 
 	@Override

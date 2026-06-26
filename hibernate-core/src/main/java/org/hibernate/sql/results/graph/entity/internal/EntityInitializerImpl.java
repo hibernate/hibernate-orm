@@ -79,6 +79,7 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
@@ -1806,15 +1807,13 @@ public class EntityInitializerImpl
 			PersistenceContext persistenceContext,
 			Object[] resolvedEntityState,
 			Object version) {
-		if ( data.concreteDescriptor.canWriteToCache()
-				// No need to put into the entity cache if this is coming from the query cache already
-				&& !data.getRowProcessingState().isQueryCacheHit()
+		// No need to put into the entity cache if this is coming from the query cache already.
+		// Don't cache temporal snapshots in the 2LC.
+		if ( !data.getRowProcessingState().isQueryCacheHit()
 				&& isCachePutEnabled( session )
-				// Don't cache temporal snapshots in the 2LC
 				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {
-			final var cache = data.concreteDescriptor.getCacheAccessStrategy();
-			assert cache != null;
-			putInCache( data, session, persistenceContext, resolvedEntityState, version, cache );
+			writingToCache( data.concreteDescriptor,
+					cache -> putInCache( data, session, persistenceContext, resolvedEntityState, version, cache ) );
 		}
 	}
 

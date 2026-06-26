@@ -13,6 +13,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 
 /// Second-level cache bookkeeping for graph-based entity inserts.
 ///
@@ -46,29 +47,29 @@ public class InsertCacheHandling {
 			SharedSessionContractImplementor session) {
 		final var persister = action.getPersister();
 		if ( isCachePutEnabled( persister, session ) ) {
-			cacheInsert.id = id;
-			cacheInsert.version = version;
-			cacheInsert.cacheEntry = buildStructuredCacheEntry(
-					action.getInstance(),
-					version,
-					action.getState(),
-					persister,
-					session
-			);
-
-			final var factory = session.getFactory();
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
-			final boolean put = cacheInsert( action, cacheInsert, persister, cacheKey, session );
-
-			final var statistics = factory.getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
+			writingToCache( persister, cache -> {
+				cacheInsert.id = id;
+				cacheInsert.version = version;
+				cacheInsert.cacheEntry = buildStructuredCacheEntry(
+						action.getInstance(),
+						version,
+						action.getState(),
+						persister,
+						session
 				);
-			}
+
+				final var factory = session.getFactory();
+				final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+				final boolean put = cacheInsert( action, cacheInsert, persister, cache, cacheKey, session );
+
+				final var statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							cache.getRegion().getName()
+					);
+				}
+			} );
 		}
 	}
 
@@ -79,24 +80,24 @@ public class InsertCacheHandling {
 			SharedSessionContractImplementor session) {
 		final var persister = action.getPersister();
 		if ( success && isCachePutEnabled( persister, session ) && cacheInsert.cacheEntry() != null ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			final var factory = session.getFactory();
-			final Object cacheKey = cache.generateCacheKey(
-					cacheInsert.id(),
-					persister,
-					factory,
-					session.getTenantIdentifier()
-			);
-			final boolean put = cacheAfterInsert( action, cacheInsert, cache, cacheKey, session );
-
-			final var statistics = factory.getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
+			writingToCache( persister, cache -> {
+				final var factory = session.getFactory();
+				final Object cacheKey = cache.generateCacheKey(
+						cacheInsert.id(),
+						persister,
+						factory,
+						session.getTenantIdentifier()
 				);
-			}
+				final boolean put = cacheAfterInsert( action, cacheInsert, cache, cacheKey, session );
+
+				final var statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							cache.getRegion().getName()
+					);
+				}
+			} );
 		}
 	}
 
@@ -112,17 +113,16 @@ public class InsertCacheHandling {
 			AbstractEntityInsertAction action,
 			CacheInsert cacheInsert,
 			EntityPersister persister,
+			EntityDataAccess cache,
 			Object cacheKey,
 			SharedSessionContractImplementor session) {
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
-		assert cacheAccessStrategy != null;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean insert = false;
 		try {
 			eventListenerManager.cachePutStart();
-			insert = cacheAccessStrategy.insert(
+			insert = cache.insert(
 					session,
 					cacheKey,
 					cacheInsert.cacheEntry(),
@@ -134,8 +134,8 @@ public class InsertCacheHandling {
 			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
-					cacheAccessStrategy,
-					action.getPersister(),
+					cache,
+					persister,
 					insert,
 					EventMonitor.CacheActionDescription.ENTITY_INSERT
 			);

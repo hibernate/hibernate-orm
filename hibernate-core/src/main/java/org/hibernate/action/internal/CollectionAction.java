@@ -18,6 +18,7 @@ import org.hibernate.event.service.spi.EventListenerGroups;
 
 import org.hibernate.persister.collection.CollectionPersister;
 
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -101,10 +102,8 @@ public abstract class CollectionAction implements ComparableExecutable {
 		// bidirectional association, and it is one of the earlier entity actions which actually updates
 		// the database. This action is responsible for second-level cache invalidation only.
 		final var persister = getPersister();
-		if ( persister.hasCache() ) {
+		usingCache( persister, cache -> {
 			final var session = getSession();
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
 			assert key != null;
 			final Object cacheKey = cache.generateCacheKey(
 					key,
@@ -112,10 +111,9 @@ public abstract class CollectionAction implements ComparableExecutable {
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( session, cacheKey, null );
-			// the old behavior used key as opposed to getKey()
+			final var lock = cache.lockItem( session, cacheKey, null );
 			afterTransactionProcess = new CacheCleanupProcess( key, persister, lock );
-		}
+		} );
 	}
 
 	@Override
@@ -163,10 +161,8 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	public final void evict() throws CacheException {
 		final var persister = getPersister();
-		if ( persister.hasCache() ) {
+		usingCache( persister, cache -> {
 			final var session = getSession();
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
 			assert key != null;
 			final Object cacheKey = cache.generateCacheKey(
 					key,
@@ -174,8 +170,8 @@ public abstract class CollectionAction implements ComparableExecutable {
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			cache.remove( session, cacheKey);
-		}
+			cache.remove( session, cacheKey );
+		} );
 	}
 
 	@Override
@@ -211,15 +207,15 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, @Nonnull SharedSessionContractImplementor session) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			final Object cacheKey = cache.generateCacheKey(
-					key,
-					persister,
-					session.getFactory(),
-					session.getTenantIdentifier()
-			);
-			cache.unlockItem( session, cacheKey, lock );
+			usingCache( persister, cache -> {
+				final Object cacheKey = cache.generateCacheKey(
+						key,
+						persister,
+						session.getFactory(),
+						session.getTenantIdentifier()
+				);
+				cache.unlockItem( session, cacheKey, lock );
+			} );
 		}
 	}
 

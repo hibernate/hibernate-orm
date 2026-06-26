@@ -29,6 +29,7 @@ import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
@@ -263,10 +264,8 @@ public class EntityUpdateAction extends EntityAction {
 			@Nullable Object cacheKey,
 			@Nonnull EntityEntry entry) {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
+		writingToCache( persister, cache -> {
 			final var session = getSession();
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
 			assert cacheKey != null;
 			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
 				cache.remove( session, cacheKey );
@@ -274,7 +273,7 @@ public class EntityUpdateAction extends EntityAction {
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
 				cacheEntry = buildStructuredCacheEntry( getInstance(), nextVersion, state, persister, session );
-				final boolean put = updateCache( persister, previousVersion, cacheKey );
+				final boolean put = updateCache( cache, persister, previousVersion, cacheKey );
 
 				final var statistics = session.getFactory().getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
@@ -284,7 +283,7 @@ public class EntityUpdateAction extends EntityAction {
 					);
 				}
 			}
-		}
+		} );
 	}
 
 	private static boolean isCacheInvalidationRequired(
@@ -360,10 +359,8 @@ public class EntityUpdateAction extends EntityAction {
 	@Nullable
 	public Object lockCacheItem(@Nullable Object previousVersion) {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
+		return writingToCache( persister, cache -> {
 			final var session = getSession();
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
 			final Object cacheKey = cache.generateCacheKey(
 					getId(),
 					persister,
@@ -372,21 +369,17 @@ public class EntityUpdateAction extends EntityAction {
 			);
 			lock = cache.lockItem( session, cacheKey, previousVersion );
 			return cacheKey;
-		}
-		else {
-			return null;
-		}
+		}, null );
 	}
 
 	protected boolean updateCache(
+			@Nonnull EntityDataAccess cache,
 			@Nonnull EntityPersister persister,
 			@Nullable Object previousVersion,
 			@Nonnull Object cacheKey) {
 		final var session = getSession();
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cache = persister.getCacheAccessStrategy();
-		assert cache != null;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
@@ -400,7 +393,7 @@ public class EntityUpdateAction extends EntityAction {
 					cachePutEvent,
 					session,
 					cache,
-					getPersister(),
+					persister,
 					update,
 					EventMonitor.CacheActionDescription.ENTITY_UPDATE
 			);
@@ -469,9 +462,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	private void updateCacheIfNecessary(boolean success, @Nonnull SharedSessionContractImplementor session) {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
+		writingToCache( persister, cache -> {
 			final var factory = session.getFactory();
 			final Object cacheKey = cache.generateCacheKey(
 					getId(),
@@ -481,12 +472,12 @@ public class EntityUpdateAction extends EntityAction {
 
 			);
 			if ( cacheUpdateRequired( success, persister, session ) ) {
-				cacheAfterUpdate( cache, cacheKey, session);
+				cacheAfterUpdate( cache, cacheKey, session );
 			}
 			else {
 				cache.unlockItem( session, cacheKey, lock );
 			}
-		}
+		} );
 	}
 
 	private boolean cacheUpdateRequired(

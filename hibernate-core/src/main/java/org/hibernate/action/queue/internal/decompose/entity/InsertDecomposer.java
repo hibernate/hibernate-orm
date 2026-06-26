@@ -9,7 +9,6 @@ import org.hibernate.action.queue.spi.decompose.entity.InsertCacheHandling;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.spi.MutationKind;
-import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
@@ -66,25 +65,6 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		return insertMutationPlanner.getStaticInsertOperations();
 	}
 
-	public boolean[] resolveInsertability(Object[] state) {
-		return insertMutationPlanner.resolveInsertability( state );
-	}
-
-	public Map<String, TableInsert> resolveInsertOperations(
-			boolean[] effectiveInsertability,
-			Object entity,
-			Object identifier,
-			boolean hasStateDependentGenerator,
-			SharedSessionContractImplementor session) {
-		return insertMutationPlanner.resolveInsertOperations(
-				effectiveInsertability,
-				entity,
-				identifier,
-				hasStateDependentGenerator,
-				session
-		);
-	}
-
 	@Override
 	public void decompose(
 			AbstractEntityInsertAction action,
@@ -110,20 +90,19 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		final Object[] state = action.getState();
 
 		// apply any pre-insert in-memory value generation
-		final boolean hasStateDependentGenerator = insertMutationPlanner.preInsertInMemoryValueGeneration(
-				state,
-				entity,
-				session
-		);
+		final boolean hasStateDependentGenerator =
+				insertMutationPlanner.preInsertInMemoryValueGeneration( state, entity, session );
 
-		var insertable = entityPersister.getPropertyInsertability();
-		var valuesAnalysis = insertMutationPlanner.needsInsertValuesAnalysis()
-				? new InsertValuesAnalysis( entityPersister, state )
-				: null;
-		final boolean[] effectiveInsertability = entityPersister.isDynamicInsert()
-				? insertMutationPlanner.resolveInsertability( state )
-				: insertable;
-		var effectiveGroup = insertMutationPlanner.resolveInsertOperations(
+		final var insertable = entityPersister.getPropertyInsertability();
+		final var valuesAnalysis =
+				insertMutationPlanner.needsInsertValuesAnalysis()
+						? new InsertValuesAnalysis( entityPersister, state )
+						: null;
+		final boolean[] effectiveInsertability =
+				entityPersister.isDynamicInsert()
+						? insertMutationPlanner.resolveInsertability( state )
+						: insertable;
+		final var effectiveGroup = insertMutationPlanner.resolveInsertOperations(
 				effectiveInsertability,
 				entity,
 				identifier,
@@ -135,13 +114,9 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		if ( generatedValuesCollector != null && decompositionContext != null ) {
 			generatedValuesCollector.setIdentifierHandle( decompositionContext.getGeneratedIdentifierHandle( entity ) );
 		}
-		final InsertCacheHandling.CacheInsert cacheInsert = new InsertCacheHandling.CacheInsert();
+		final var cacheInsert = new InsertCacheHandling.CacheInsert();
 		registerAfterTransactionCompletion( action, cacheInsert, session );
-		final PostInsertHandling postInsertHandling = new PostInsertHandling(
-				action,
-				generatedValuesCollector,
-				cacheInsert
-		);
+		final var postInsertHandling = new PostInsertHandling( action, generatedValuesCollector, cacheInsert );
 
 		// Compute whether this entity insert needs identity pre-phase
 		final boolean needsIdPrePhase = Helper.needsIdentityPrePhase(entityPersister, identifier);
@@ -167,22 +142,20 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					tableInsert
 			);
 
-			final BindPlan bindPlan = insertMutationPlanner.createInsertBindPlan(
-					tableDescriptor,
-					entity,
-					identifier,
-					state,
-					effectiveInsertability,
-					action,
-					generatedValuesCollector,
-					decompositionContext
-			);
-
-			final FlushOperation op = new FlushOperation(
+			final var op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.INSERT,
 					operation,
-					bindPlan,
+					insertMutationPlanner.createInsertBindPlan(
+							tableDescriptor,
+							entity,
+							identifier,
+							state,
+							effectiveInsertability,
+							action,
+							generatedValuesCollector,
+							decompositionContext
+					),
 					ordinalBase * 1_000 + (localOrd++),
 					origin,
 					shapeKey,
@@ -248,7 +221,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		for ( int i = 0; i < additionalOperations.size() - 1; i++ ) {
 			operationConsumer.accept( additionalOperations.get( i ) );
 		}
-		final FlushOperation lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
+		final var lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
 		lastOperation.setPostExecutionCallback( postExecutionCallback );
 		operationConsumer.accept( lastOperation );
 	}
@@ -299,10 +272,6 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			}
 			return veto;
 		}
-	}
-
-	public boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
-		return insertMutationPlanner.preInsertInMemoryValueGeneration( values, entity, session );
 	}
 
 }

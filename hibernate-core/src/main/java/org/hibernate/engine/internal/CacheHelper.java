@@ -4,14 +4,21 @@
  */
 package org.hibernate.engine.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author Steve Ebersole
@@ -20,6 +27,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 public final class CacheHelper {
 
 	private CacheHelper() {
+	}
+
+	public record CacheLock(@Nonnull EntityDataAccess cache, Object cacheKey, SoftLock lock) {
 	}
 
 	public static Object fromSharedCache(
@@ -83,6 +93,79 @@ public final class CacheHelper {
 		}
 		return cachedValue;
 	}
+
+	public static void writingToCache(
+			@Nonnull EntityPersister persister,
+			@Nonnull Consumer<EntityDataAccess> action) {
+		if ( persister.canWriteToCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			action.accept( cache );
+		}
+	}
+
+	public static void readingFromCache(
+			@Nonnull EntityPersister persister,
+			@Nonnull Consumer<EntityDataAccess> action) {
+		if ( persister.canReadFromCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			action.accept( cache );
+		}
+	}
+
+	public static <T> T readingFromCache(
+			@Nonnull EntityPersister persister,
+			@Nonnull Function<EntityDataAccess, T> action,
+			T defaultValue) {
+		if ( persister.canReadFromCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			return action.apply( cache );
+		}
+		else {
+			return defaultValue;
+		}
+	}
+
+	public static <T> T writingToCache(
+			@Nonnull EntityPersister persister,
+			@Nonnull Function<EntityDataAccess, T> action,
+			T defaultValue) {
+		if ( persister.canWriteToCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			return action.apply( cache );
+		}
+		else {
+			return defaultValue;
+		}
+	}
+
+	public static void usingCache(
+			@Nonnull CollectionPersister persister,
+			@Nonnull Consumer<CollectionDataAccess> action) {
+		if ( persister.hasCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			action.accept( cache );
+		}
+	}
+
+	public static <T> T usingCache(
+			@Nonnull CollectionPersister persister,
+			@Nonnull Function<CollectionDataAccess, T> action,
+			T defaultValue) {
+		if ( persister.hasCache() ) {
+			final var cache = persister.getCacheAccessStrategy();
+			assert cache != null;
+			return action.apply( cache );
+		}
+		else {
+			return defaultValue;
+		}
+	}
+
 	public static void addBasicValueToCacheKey(
 			MutableCacheKeyBuilder cacheKey,
 			Object value,

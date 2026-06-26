@@ -10,7 +10,7 @@ import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.bind.ChainedPostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
@@ -29,6 +29,8 @@ import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.collection.CollectionPersister;
+
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
 
 /// Manages listener/callack events for collection actions when decomposed and performed
 /// through the graph-based action queue.
@@ -152,13 +154,13 @@ public class DecompositionSupport {
 	/// Creates a no-op FlushOperation to carry a post-execution callback.
 	/// Used when decomposition produces no SQL operations but needs to defer
 	/// the POST event callback until after all decompositions complete.
-	public static org.hibernate.action.queue.spi.plan.FlushOperation createNoOpCallbackCarrier(
+	public static FlushOperation createNoOpCallbackCarrier(
 			TableDescriptor tableDescriptor,
 			int ordinal,
 			PostExecutionCallback callback) {
 		// Create FlushOperation with NO_OP kind
 		// Executor will skip SQL execution but still run the callback
-		var noOp = new org.hibernate.action.queue.spi.plan.FlushOperation(
+		final var noOp = new FlushOperation(
 				tableDescriptor,
 				org.hibernate.action.queue.spi.MutationKind.NO_OP,
 				null,  // jdbcOperation - not needed for no-op
@@ -183,46 +185,48 @@ public class DecompositionSupport {
 	// Caching
 
 	public static Object generateCacheKey(CollectionAction action, SharedSessionContractImplementor session) {
-		if (!action.getPersister().hasCache()) {
-			return null;
-		}
-
-		final CollectionDataAccess cache = action.getPersister().getCacheAccessStrategy();
-		return cache.generateCacheKey(
-				action.getKey(),
-				action.getPersister(),
-				session.getFactory(),
-				session.getTenantIdentifier()
-		);
+		return usingCache( action.getPersister(),
+				cache -> {
+					final Object key = action.getKey();
+					//TODO: Highly suspicious assertion.
+					//      This method does sometimes
+					//      get called with an action
+					//      with a null key!
+					assert key != null;
+					return cache.generateCacheKey(
+							key,
+							action.getPersister(),
+							session.getFactory(),
+							session.getTenantIdentifier()
+					);
+				},
+				null );
 	}
 
 	public static void syncOwnerCollectionLoadedState(
 			CollectionPersister persister,
 			Object affectedOwner,
 			SharedSessionContractImplementor session) {
-		if ( affectedOwner == null ) {
-			return;
-		}
-
-		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
-		if ( ownerEntry == null || ownerEntry.getLoadedState() == null ) {
-			return;
-		}
-
-		final String role = persister.getRole();
-		final String ownerEntityName = persister.getOwnerEntityPersister().getEntityName();
-		if ( !role.startsWith( ownerEntityName + "." ) ) {
-			return;
-		}
-
-		final String propertyName = role.substring( ownerEntityName.length() + 1 );
-		if ( propertyName.indexOf( '.' ) >= 0 ) {
-			return;
-		}
-
-		final Object currentValue = persister.getOwnerEntityPersister().getPropertyValue( affectedOwner, propertyName );
-		if ( currentValue == null || currentValue instanceof PersistentCollection<?> ) {
-			ownerEntry.overwriteLoadedStateCollectionValue( propertyName, (PersistentCollection<?>) currentValue );
+		if ( affectedOwner != null ) {
+			final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
+			if ( ownerEntry != null && ownerEntry.getLoadedState() != null ) {
+				final String role = persister.getRole();
+				final String ownerEntityName = persister.getOwnerEntityPersister().getEntityName();
+				if ( role.startsWith( ownerEntityName + "." ) ) {
+					final String propertyName = role.substring( ownerEntityName.length() + 1 );
+					if ( propertyName.indexOf( '.' ) < 0 ) {
+						final Object currentValue =
+								persister.getOwnerEntityPersister()
+										.getPropertyValue( affectedOwner, propertyName );
+						if ( currentValue == null ) {
+							ownerEntry.overwriteLoadedStateCollectionValue( propertyName, null );
+						}
+						else if ( currentValue instanceof PersistentCollection<?> collection ) {
+							ownerEntry.overwriteLoadedStateCollectionValue( propertyName, collection );
+						}
+					}
+				}
+			}
 		}
 	}
 }

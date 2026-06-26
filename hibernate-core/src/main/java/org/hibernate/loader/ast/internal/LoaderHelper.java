@@ -10,7 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
-import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,6 +36,7 @@ import java.util.List;
 
 import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.newInstance;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -81,16 +82,16 @@ public class LoaderHelper {
 				);
 			}
 
-			final boolean cachingEnabled = persister.canWriteToCache();
-			final var cache = persister.getCacheAccessStrategy();
-			SoftLock lock = null;
-			Object cacheKey = null;
+			CacheLock cacheLock = null;
 			try {
-				if ( cachingEnabled ) {
-					assert cache != null;
-					cacheKey = cache.generateCacheKey( entry.getId(), persister, session.getFactory(), session.getTenantIdentifier() );
-					lock = cache.lockItem( session, cacheKey, entry.getVersion() );
-				}
+				final EntityEntry entryToLock = entry;
+				cacheLock = writingToCache( persister, cache -> {
+					final Object cacheKey =
+							cache.generateCacheKey( entryToLock.getId(), persister,
+									session.getFactory(), session.getTenantIdentifier() );
+					final var lock = cache.lockItem( session, cacheKey, entryToLock.getVersion() );
+					return new CacheLock( cache, cacheKey, lock );
+				}, null );
 
 				if ( persister.isVersioned() && entry.getVersion() == null ) {
 					// This should be an empty entry created for an uninitialized bytecode proxy
@@ -135,9 +136,8 @@ public class LoaderHelper {
 			finally {
 				// the database now holds a lock + the object is flushed from the cache,
 				// so release the soft lock
-				if ( cachingEnabled ) {
-					assert cacheKey != null;
-					cache.unlockItem( session, cacheKey, lock );
+				if ( cacheLock != null ) {
+					cacheLock.cache().unlockItem( session, cacheLock.cacheKey(), cacheLock.lock() );
 				}
 			}
 		}

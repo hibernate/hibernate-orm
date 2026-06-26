@@ -6,7 +6,6 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -290,10 +289,9 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final Object previousCacheKey =
 				cacheAccess.generateCacheKey( previousNaturalIdValues, rootEntityPersister, session );
 		if ( !cacheKey.equals( previousCacheKey ) ) {  // prevent identical re-caching, solves HHH-7309
-			final SoftLock removalLock = cacheAccess.lockItem( session, previousCacheKey, null );
+			final var removalLock = cacheAccess.lockItem( session, previousCacheKey, null );
 			cacheAccess.remove( session, previousCacheKey );
-			final SoftLock lock = cacheAccess.lockItem( session, cacheKey, null );
-
+			final var lock = cacheAccess.lockItem( session, cacheKey, null );
 			final var statistics = session.getFactory().getStatistics();
 			final var eventMonitor = session.getEventMonitor();
 			boolean put = false;

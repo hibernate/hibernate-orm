@@ -7,7 +7,7 @@ package org.hibernate.action.queue.internal.decompose.collection;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 
-import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -38,7 +38,7 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 	public CollectionJdbcOperations.DeleteRowPlan buildDeleteRowPlan(
 			DeleteRowPlanContext context,
 			Supplier<CollectionJdbcOperations.DeleteRowPlan> standardPlanSupplier) {
-		final TemporalMapping temporalMapping = resolveTemporalMapping( context );
+		final var temporalMapping = resolveTemporalMapping( context );
 		if ( temporalMapping == null ) {
 			return standardPlanSupplier.get();
 		}
@@ -74,7 +74,7 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 	public MutationOperation buildRemoveOperation(
 			RemoveOperationContext context,
 			Supplier<MutationOperation> standardOperationSupplier) {
-		final TemporalMapping temporalMapping = resolveTemporalMapping( context );
+		final var temporalMapping = resolveTemporalMapping( context );
 		if ( temporalMapping == null ) {
 			return standardOperationSupplier.get();
 		}
@@ -107,7 +107,8 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 		if ( !isSingleTableTemporalCollection( context ) ) {
 			return false;
 		}
-		if ( context.jdbcOperations().deleteRowPlan() == null || context.jdbcOperations().insertRowPlan() == null ) {
+		if ( context.jdbcOperations().deleteRowPlan() == null
+			|| context.jdbcOperations().insertRowPlan() == null ) {
 			return false;
 		}
 
@@ -131,11 +132,10 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 				"DeleteValue[" + valueChange.index() + "](" + context.persister().getRole() + ")"
 		) );
 
-		final boolean isMap = context.persister().getCollectionSemantics().getCollectionClassification().isMap();
 		final Object insertRowValue;
 		final int entryIndex;
-		if ( isMap ) {
-			insertRowValue = new AbstractMap.SimpleImmutableEntry<>( valueChange.index(), valueChange.newValue() );
+		if ( context.persister().getCollectionSemantics().getCollectionClassification().isMap() ) {
+			insertRowValue = new SimpleImmutableEntry<>( valueChange.index(), valueChange.newValue() );
 			entryIndex = -1;
 		}
 		else {

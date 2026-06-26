@@ -471,20 +471,15 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public CollectionChangeSet getChangeSet(CollectionPersister persister) {
 		final List<?> sn = (List<?>) getSnapshot();
 		if (sn == null) {
 			return CollectionChangeSet.EMPTY;
 		}
-
-		final boolean isEntityCollection = persister.getElementType().isEntityType();
-
-		if (isEntityCollection) {
-			return computeEntityListChangeSet(sn, persister);
-		}
 		else {
-			return computeElementListChangeSet(sn, persister);
+			return persister.getElementType().isEntityType()
+					? computeEntityListChangeSet( sn, persister )
+					: computeElementListChangeSet( sn, persister );
 		}
 	}
 

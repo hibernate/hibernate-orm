@@ -470,27 +470,29 @@ class EntityInsertMutationPlanner {
 			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, eventType );
 			attributeMapping.forEachSelectable( (j, mapping) -> {
 				if ( columnInclusions == null || columnInclusions[j] ) {
-					final String columnValue = columnValues != null && columnValues[j] != null
-							? columnValues[j]
-							: "?";
+					final String columnValue =
+							columnValues != null && columnValues[j] != null
+									? columnValues[j]
+									: "?";
 					builder.addColumnAssignment( mapping, columnValue );
 				}
 			} );
-			return;
 		}
-
-		final boolean writePropertyValue = generator.writePropertyValue();
-		final String[] columnValues = writePropertyValue
-				? null
-				: generator.getReferencedColumnValues( dialect );
-		attributeMapping.forEachSelectable( (j, mapping) -> {
-			if ( writePropertyValue ) {
-				builder.addColumnAssignment( mapping );
-			}
-			else {
-				builder.addColumnAssignment( mapping, columnValues[j] );
-			}
-		} );
+		else {
+			final boolean writePropertyValue = generator.writePropertyValue();
+			final String[] columnValues =
+					writePropertyValue
+							? null
+							: generator.getReferencedColumnValues( dialect );
+			attributeMapping.forEachSelectable( (j, mapping) -> {
+				if ( writePropertyValue ) {
+					builder.addColumnAssignment( mapping );
+				}
+				else {
+					builder.addColumnAssignment( mapping, columnValues[j] );
+				}
+			} );
+		}
 	}
 
 	private static boolean isValueGenerated(Generator generator) {

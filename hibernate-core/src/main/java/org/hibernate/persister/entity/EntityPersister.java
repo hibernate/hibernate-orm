@@ -881,7 +881,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Get the cache structure
 	 */
-	@Nullable
+	@Nonnull
 	CacheEntryStructure getCacheEntryStructure();
 
 	@Nonnull

@@ -6,11 +6,9 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 
-import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.action.queue.spi.MutationKind;
-import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
@@ -19,13 +17,12 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.generator.Generator;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.generator.EventType.UPDATE;
@@ -160,7 +157,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				context.session()
 		);
 		final boolean[] effectiveInsertability = insertMutationPlanner.resolveInsertability( context.state() );
-		final Map<String, TableInsert> insertGroup = insertMutationPlanner.resolveInsertOperations(
+		final var insertGroup = insertMutationPlanner.resolveInsertOperations(
 				effectiveInsertability,
 				context.entity(),
 				context.identifier(),
@@ -168,12 +165,12 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				context.session()
 		);
 
-		final InsertValuesAnalysis insertValuesAnalysis = new InsertValuesAnalysis( entityPersister, context.state() );
-		final GeneratedValuesCollector generatedValuesCollector = GeneratedValuesCollector.forInsert(
+		final var insertValuesAnalysis = new InsertValuesAnalysis( entityPersister, context.state() );
+		final var generatedValuesCollector = GeneratedValuesCollector.forInsert(
 				entityPersister,
 				sessionFactory
 		);
-		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling(
+		final var postUpdateHandling = new PostUpdateHandling(
 				context.action(),
 				context.cacheUpdate(),
 				context.previousVersion(),
@@ -183,39 +180,34 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 
 		int localOrd = 1;
 		FlushOperation previousOperation = null;
-		for ( Map.Entry<String, TableInsert> entry : insertGroup.entrySet() ) {
+		for ( var entry : insertGroup.entrySet() ) {
 			final var operation = entry.getValue().createMutationOperation( insertValuesAnalysis, sessionFactory );
 			final var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
 			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
+			if ( insertValuesAnalysis.include( tableDescriptor ) ) {
+				final var op = new FlushOperation(
+						tableDescriptor,
+						MutationKind.INSERT,
+						operation,
+						insertMutationPlanner.createInsertBindPlan(
+								tableDescriptor,
+								context.entity(),
+								context.identifier(),
+								context.state(),
+								effectiveInsertability,
+								null,
+								generatedValuesCollector,
+								context.decompositionContext()
+						),
+						context.ordinalBase() * 1_000 + (localOrd++),
+						"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
+				);
 
-			if ( !insertValuesAnalysis.include( tableDescriptor ) ) {
-				continue;
+				if ( previousOperation != null ) {
+					operationConsumer.accept( previousOperation );
+				}
+				previousOperation = op;
 			}
-
-			final BindPlan bindPlan = insertMutationPlanner.createInsertBindPlan(
-					tableDescriptor,
-					context.entity(),
-					context.identifier(),
-					context.state(),
-					effectiveInsertability,
-					null,
-					generatedValuesCollector,
-					context.decompositionContext()
-			);
-
-			final FlushOperation op = new FlushOperation(
-					tableDescriptor,
-					MutationKind.INSERT,
-					operation,
-					bindPlan,
-					context.ordinalBase() * 1_000 + (localOrd++),
-					"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
-			);
-
-			if ( previousOperation != null ) {
-				operationConsumer.accept( previousOperation );
-			}
-			previousOperation = op;
 		}
 
 		if ( previousOperation != null ) {
@@ -229,7 +221,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			Object[] newValues,
 			SharedSessionContractImplementor session) {
 		if ( !entityPersister.hasPreUpdateGeneratedProperties() ) {
-			return org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+			return ArrayHelper.EMPTY_INT_ARRAY;
 		}
 
 		final var generators = entityPersister.getGenerators();
@@ -237,7 +229,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			final int[] fieldsPreUpdateNeeded = new int[generators.length];
 			int count = 0;
 			for ( int i = 0; i < generators.length; i++ ) {
-				final Generator generator = generators[i];
+				final var generator = generators[i];
 				if ( generator != null
 						&& generator.generatesOnUpdate()
 						&& generator.generatedBeforeExecution( object, session ) ) {
@@ -248,11 +240,11 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			}
 
 			if ( count > 0 ) {
-				return org.hibernate.internal.util.collections.ArrayHelper.trim( fieldsPreUpdateNeeded, count );
+				return ArrayHelper.trim( fieldsPreUpdateNeeded, count );
 			}
 		}
 
-		return org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	private boolean needsDynamicEndOperation(
@@ -265,7 +257,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	}
 
 	private OptimisticLockStyle effectiveOptimisticLockStyle(Object version, Object[] loadedState) {
-		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
+		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
 		if ( optimisticLockStyle.isVersion() ) {
 			return version == null || entityPersister.getVersionMapping() == null
 					? OptimisticLockStyle.NONE
@@ -281,7 +273,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			Object[] loadedState,
 			OptimisticLockStyle effectiveOptLockStyle,
 			SharedSessionContractImplementor session) {
-		final EntityTableDescriptor tableDescriptor = entityPersister.getIdentifierTableDescriptor();
+		final var tableDescriptor = entityPersister.getIdentifierTableDescriptor();
 		final var tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
 				tableDescriptor.getRelativePosition(),
@@ -339,16 +331,15 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			TableUpdateBuilderStandard<MutationOperation> updateBuilder,
 			EntityTableDescriptor tableDescriptor,
 			Object[] loadedState) {
-		if ( loadedState == null || !entityPersister.hasPartitionedSelectionMapping() ) {
-			return;
-		}
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			final var attribute = tableDescriptor.attributes().get( i );
-			attribute.forEachSelectable( (selectionIndex, selectableMapping) -> {
-				if ( selectableMapping.isPartitioned() ) {
-					updateBuilder.addKeyRestrictionLeniently( selectableMapping );
-				}
-			} );
+		if ( loadedState != null && entityPersister.hasPartitionedSelectionMapping() ) {
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				final var attribute = tableDescriptor.attributes().get( i );
+				attribute.forEachSelectable( (selectionIndex, selectableMapping) -> {
+					if ( selectableMapping.isPartitioned() ) {
+						updateBuilder.addKeyRestrictionLeniently( selectableMapping );
+					}
+				} );
+			}
 		}
 	}
 
@@ -358,30 +349,28 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			Object[] loadedState,
 			OptimisticLockStyle effectiveOptLockStyle,
 			SharedSessionContractImplementor session) {
-		if ( loadedState == null || !effectiveOptLockStyle.isAllOrDirty() ) {
-			return;
-		}
-
-		final boolean[] versionability = entityPersister.getPropertyVersionability();
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			final var attribute = tableDescriptor.attributes().get( i );
-			if ( attribute.isPluralAttributeMapping() || !versionability[attribute.getStateArrayPosition()] ) {
-				continue;
+		if ( loadedState != null && effectiveOptLockStyle.isAllOrDirty() ) {
+			final boolean[] versionability = entityPersister.getPropertyVersionability();
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				final var attribute = tableDescriptor.attributes().get( i );
+				if ( !attribute.isPluralAttributeMapping()
+					&& versionability[attribute.getStateArrayPosition()] ) {
+					attribute.breakDownJdbcValues(
+							loadedState[attribute.getStateArrayPosition()],
+							(valueIndex, jdbcValue, jdbcValueMapping) -> {
+								if ( !jdbcValueMapping.isFormula() ) {
+									if ( jdbcValue == null ) {
+										updateBuilder.addNullOptimisticLockRestriction( jdbcValueMapping );
+									}
+									else {
+										updateBuilder.addOptimisticLockRestriction( jdbcValueMapping );
+									}
+								}
+							},
+							session
+					);
+				}
 			}
-			attribute.breakDownJdbcValues(
-					loadedState[attribute.getStateArrayPosition()],
-					(valueIndex, jdbcValue, jdbcValueMapping) -> {
-						if ( !jdbcValueMapping.isFormula() ) {
-							if ( jdbcValue == null ) {
-								updateBuilder.addNullOptimisticLockRestriction( jdbcValueMapping );
-							}
-							else {
-								updateBuilder.addOptimisticLockRestriction( jdbcValueMapping );
-							}
-						}
-					},
-					session
-			);
 		}
 	}
 }

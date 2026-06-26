@@ -26,6 +26,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
@@ -119,7 +120,7 @@ public class CollectionCacheInvalidator
 			Object[] oldState,
 			CollectionPersister collectionPersister,
 			EventSource session) {
-		if ( collectionPersister.hasCache() ) { // ignore collection if no caching is used
+		usingCache( collectionPersister, cache -> {
 			if ( isInverseOneToMany( collectionPersister ) ) {
 				handleInverseOneToMany( entity, persister, oldState, collectionPersister, session );
 			}
@@ -127,12 +128,11 @@ public class CollectionCacheInvalidator
 				if ( L2CACHE_LOGGER.isTraceEnabled() ) {
 					L2CACHE_LOGGER.autoEvictingCollectionCacheByRole( collectionPersister.getRole() );
 				}
-				final var cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
-				final var softLock = cacheAccessStrategy.lockRegion();
+				final var softLock = cache.lockRegion();
 				session.getActionQueue()
-						.registerCallback( (success, s) -> cacheAccessStrategy.unlockRegion( softLock ) );
+						.registerCallback( (success, s) -> cache.unlockRegion( softLock ) );
 			}
-		}
+		} );
 	}
 
 	private void handleInverseOneToMany(

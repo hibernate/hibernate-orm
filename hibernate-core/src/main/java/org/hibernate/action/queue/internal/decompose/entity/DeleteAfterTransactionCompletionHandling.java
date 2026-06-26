@@ -6,6 +6,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 
 import org.hibernate.action.internal.EntityDeleteAction;
+import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
@@ -18,20 +19,20 @@ import org.hibernate.event.spi.PostDeleteEventListener;
 ///
 /// @author Steve Ebersole
 public class DeleteAfterTransactionCompletionHandling
-		implements TransactionCompletionCallbacks.AfterCompletionCallback {
+	implements TransactionCompletionCallbacks.AfterCompletionCallback {
 	private final EntityDeleteAction action;
-	private final DeleteCacheHandling.CacheLock cacheLock;
+	private final CacheLock cacheLock;
 
 	public DeleteAfterTransactionCompletionHandling(
 			EntityDeleteAction action,
-			DeleteCacheHandling.CacheLock cacheLock) {
+			CacheLock cacheLock) {
 		this.action = action;
 		this.cacheLock = cacheLock;
 	}
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-		DeleteCacheHandling.unlockItem( action, cacheLock, session );
+		DeleteCacheHandling.unlockItem( cacheLock, session );
 		postCommitDelete( success, session );
 	}
 

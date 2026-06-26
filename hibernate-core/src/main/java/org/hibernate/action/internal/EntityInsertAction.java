@@ -28,6 +28,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 
 /**
  * The action for performing an entity insertion, for entities not defined to use {@code IDENTITY} generation.
@@ -185,33 +186,35 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		final var persister = getPersister();
 		final var session = getSession();
 		if ( isCachePutEnabled( persister, session ) ) {
-			final var factory = session.getFactory();
-			final Object instance = getInstance();
-			final Object entry = buildStructuredCacheEntry( instance, version, getState(), persister, session );
-			cacheEntry = entry;
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			final Object id = getId();
-			assert id != null;
-			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
-			final boolean put = cacheInsert( persister, cacheKey, entry );
+			writingToCache( persister, cache -> {
+				final var factory = session.getFactory();
+				final Object instance = getInstance();
+				final Object entry = buildStructuredCacheEntry( instance, version, getState(), persister, session );
+				cacheEntry = entry;
+				final Object id = getId();
+				assert id != null;
+				final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+				final boolean put = cacheInsert( persister, cache, cacheKey, entry );
 
-			final var statistics = factory.getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
-				);
-			}
+				final var statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							cache.getRegion().getName()
+					);
+				}
+			} );
 		}
 	}
 
-	protected boolean cacheInsert(@Nonnull EntityPersister persister, @Nonnull Object cacheKey, Object entry) {
+	protected boolean cacheInsert(
+			@Nonnull EntityPersister persister,
+			@Nonnull EntityDataAccess cache,
+			@Nonnull Object cacheKey,
+			Object entry) {
 		final var session = getSession();
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cache = persister.getCacheAccessStrategy();
-		assert cache != null;
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean insert = false;
 		try {
@@ -224,7 +227,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 					cachePutEvent,
 					session,
 					cache,
-					getPersister(),
+					persister,
 					insert,
 					EventMonitor.CacheActionDescription.ENTITY_INSERT
 			);
@@ -282,21 +285,21 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	public void doAfterTransactionCompletion(boolean success, @Nonnull SharedSessionContractImplementor session) {
 		final var persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
-			final var cache = persister.getCacheAccessStrategy();
-			assert cache != null;
-			final var factory = session.getFactory();
-			final Object id = getId();
-			assert id != null;
-			final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
-			final boolean put = cacheAfterInsert( cache, cacheKey );
+			writingToCache( persister, cache -> {
+				final var factory = session.getFactory();
+				final Object id = getId();
+				assert id != null;
+				final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+				final boolean put = cacheAfterInsert( cache, cacheKey );
 
-			final var statistics = factory.getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
-				);
-			}
+				final var statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							cache.getRegion().getName()
+					);
+				}
+			} );
 		}
 		postCommitInsert( success );
 	}

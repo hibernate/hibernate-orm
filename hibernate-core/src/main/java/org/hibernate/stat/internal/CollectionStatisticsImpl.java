@@ -7,8 +7,11 @@ package org.hibernate.stat.internal;
 import java.io.Serializable;
 import java.util.concurrent.atomic.LongAdder;
 
+import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.stat.CollectionStatistics;
+
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
 
 /**
  * Collection related statistics
@@ -25,10 +28,7 @@ public class CollectionStatisticsImpl extends AbstractCacheableDataStatistics im
 	private final LongAdder recreateCount = new LongAdder();
 
 	CollectionStatisticsImpl(CollectionPersister persister) {
-		super( () -> {
-			final var cache = persister.getCacheAccessStrategy();
-			return cache == null ? null : cache.getRegion();
-		} );
+		super( () -> usingCache( persister, CachedDomainDataAccess::getRegion, null ) );
 		collectionRole = persister.getRole();
 	}
 

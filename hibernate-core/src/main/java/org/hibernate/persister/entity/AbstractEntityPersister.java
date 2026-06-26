@@ -203,8 +203,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -388,12 +386,11 @@ public abstract class AbstractEntityPersister
 	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
 	private String sqlVersionSelectString;
 
-	private EntityTableDescriptor[] tableDescriptors;
+	private EntityTableRuntime[] tableMappings;
 	private InsertDecomposer insertDecomposer;
 	private UpdateDecomposer updateDecomposer;
 	private DeleteDecomposer deleteDecomposer;
 
-	private EntityTableMapping[] tableMappings;
 	private InsertCoordinator insertCoordinator;
 	private UpdateCoordinator updateCoordinator;
 	private DeleteCoordinator deleteCoordinator;
@@ -2893,7 +2890,15 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public EntityTableDescriptor[] getTableDescriptors() {
-		return tableDescriptors;
+		if ( !hasTableDescriptorDetails() ) {
+			throw new AssertionFailure( "Entity table descriptors were not initialized" );
+		}
+		return tableMappings;
+	}
+
+	private boolean hasTableDescriptorDetails() {
+		return tableMappings.length == 0
+			|| tableMappings[0].hasDescriptorDetails();
 	}
 
 	@Override
@@ -2903,7 +2908,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachMutableTableDescriptor(Consumer<EntityTableDescriptor> consumer) {
-		for ( var tableMapping : tableDescriptors ) {
+		for ( var tableMapping : getTableDescriptors() ) {
 			// inverse tables are not mutable from this mapping
 			if ( !tableMapping.isInverse() ) {
 				consumer.accept( tableMapping );
@@ -2913,6 +2918,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachMutableTableDescriptorReverse(Consumer<EntityTableDescriptor> consumer) {
+		final var tableDescriptors = getTableDescriptors();
 		for ( int i = tableDescriptors.length - 1; i >= 0; i-- ) {
 			final var tableMapping = tableDescriptors[i];
 			// inverse tables are not mutable from this mapping
@@ -2928,8 +2934,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	/**
-	 * Unfortunately we cannot directly use `SelectableMapping#getContainingTableExpression()`
-	 * as that blows up for attributes declared on super-type for union-subclass mappings
+	 * Unfortunately, we cannot directly use
+	 * {@link SelectableMapping#getContainingTableExpression()} as it rejects
+	 * attributes declared by the supertype in a union-subclass mapping
 	 */
 	@Override
 	public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
@@ -2944,7 +2951,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachMutableTable(Consumer<EntityTableMapping> consumer) {
-		for ( var tableMapping : tableMappings ) {
+		for ( var tableMapping : getTableMappings() ) {
 			// inverse tables are not mutable from this mapping
 			if ( !tableMapping.isInverse() ) {
 				consumer.accept( tableMapping );
@@ -2954,6 +2961,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachMutableTableReverse(Consumer<EntityTableMapping> consumer) {
+		final var tableMappings = getTableMappings();
 		for ( int i = tableMappings.length - 1; i >= 0; i-- ) {
 			final var tableMapping = tableMappings[i];
 			// inverse tables are not mutable from this mapping
@@ -2970,7 +2978,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public EntityTableMapping getIdentifierTableMapping() {
-		return tableMappings[0];
+		return getTableMapping( 0 );
 	}
 
 	@Override
@@ -3287,17 +3295,19 @@ public abstract class AbstractEntityPersister
 		boolean containsNotNull = false;
 		for ( var entry : entityNameUses.entrySet() ) {
 			final var useKind = entry.getValue().getKind();
-			if ( useKind == EntityNameUse.UseKind.PROJECTION || useKind == EntityNameUse.UseKind.EXPRESSION ) {
-				// We only care about treat and filter uses which allow to reduce the amount of rows to select
-				continue;
-			}
-			final var persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
-			// Filtering for abstract entities makes no sense, so ignore that
-			// Also, it makes no sense to filter for any of the super types,
-			// as the query will contain a filter for that already anyway
-			if ( !persister.isAbstract() && ( this == persister || !isTypeOrSuperType( persister ) ) ) {
-				containsNotNull = containsNotNull || InFragment.NOT_NULL.equals( persister.getDiscriminatorSQLValue() );
-				fragment.addValue( persister.getDiscriminatorSQLValue() );
+			// We only care about treat and filter uses which allow us to reduce the amount of rows to select
+			if ( useKind != EntityNameUse.UseKind.PROJECTION && useKind != EntityNameUse.UseKind.EXPRESSION ) {
+				final var persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
+				// Filtering for abstract entities makes no sense, so ignore that
+				// Also, it makes no sense to filter for any of the super types,
+				// as the query will contain a filter for that already anyway
+				if ( !persister.isAbstract()
+						&& ( this == persister || !isTypeOrSuperType( persister ) ) ) {
+					final String discriminatorSQLValue = persister.getDiscriminatorSQLValue();
+					containsNotNull = containsNotNull
+									|| InFragment.NOT_NULL.equals( discriminatorSQLValue );
+					fragment.addValue( discriminatorSQLValue );
+				}
 			}
 		}
 		final var rootEntityDescriptor = (AbstractEntityPersister) getRootEntityDescriptor();
@@ -3307,15 +3317,12 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 		else if ( containsNotNull ) {
-			final String lhs = isDiscriminatorFormula()
-					? replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, alias )
-					: qualifyConditionally( alias, getDiscriminatorColumnName() );
-			final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.length );
-			for ( String value : discriminatorSQLValues ) {
-				if ( !fragment.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
-					actualDiscriminatorSQLValues.add( value );
-				}
-			}
+			final String lhs =
+					isDiscriminatorFormula()
+							? replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, alias )
+							: qualifyConditionally( alias, getDiscriminatorColumnName() );
+			final var actualDiscriminatorSQLValues =
+					actualDiscriminatorSQLValues( discriminatorSQLValues, fragment );
 			final var sql =
 					new StringBuilder( 70 + actualDiscriminatorSQLValues.size() * 10 )
 							.append( " or " );
@@ -3331,6 +3338,17 @@ public abstract class AbstractEntityPersister
 		else {
 			return fragment.toFragmentString();
 		}
+	}
+
+	@Nonnull
+	private static List<String> actualDiscriminatorSQLValues(String[] discriminatorSQLValues, InFragment fragment) {
+		final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.length );
+		for ( String value : discriminatorSQLValues ) {
+			if ( !fragment.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
+				actualDiscriminatorSQLValues.add( value );
+			}
+		}
+		return actualDiscriminatorSQLValues;
 	}
 
 	@Override
@@ -3398,10 +3416,16 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final var tableReference = tableGroup.resolveTableReference( sqlWhereStringTableExpression );
-			return tableReference == null ? null :
-					useQualifier && tableReference.getIdentificationVariable() != null
-							? tableReference.getIdentificationVariable()
-							: tableReference.getTableId();
+			if ( tableReference == null ) {
+				return null;
+			}
+			else if ( useQualifier ) {
+				final String identificationVariable = tableReference.getIdentificationVariable();
+				return identificationVariable != null ? identificationVariable : tableReference.getTableId();
+			}
+			else {
+				return tableReference.getTableId();
+			}
 		}
 	}
 
@@ -3430,7 +3454,10 @@ public abstract class AbstractEntityPersister
 		// Build tableDescriptors early so they're available to all persisters
 		// before prepareLoaders() is called. This is necessary because subclass
 		// persisters may reference their root persister's tableDescriptors.
-		tableDescriptors = buildTableDescriptors();
+		// The same persister may be registered under multiple entity names.
+		if ( !hasTableDescriptorDetails() ) {
+			buildTableDescriptors();
+		}
 	}
 
 	@Override
@@ -3484,14 +3511,8 @@ public abstract class AbstractEntityPersister
 
 		tableMappings = buildTableMappings( bootEntityDescriptor );
 
-		final List<AttributeMapping> insertGeneratedAttributes =
-				hasInsertGeneratedProperties()
-						? getGeneratedAttributes( this, INSERT )
-						: emptyList();
-		final List<AttributeMapping> updateGeneratedAttributes =
-				hasUpdateGeneratedProperties()
-						? getGeneratedAttributes( this, UPDATE )
-						: emptyList();
+		final var insertGeneratedAttributes = getInsertGeneratedAttributes();
+		final var updateGeneratedAttributes = getUpdateGeneratedAttributes();
 
 		insertGeneratedProperties = initInsertGeneratedProperties( insertGeneratedAttributes );
 		updateGeneratedProperties = initUpdateGeneratedProperties( updateGeneratedAttributes );
@@ -3522,6 +3543,20 @@ public abstract class AbstractEntityPersister
 		sqlVersionSelectString = generateSelectVersionString();
 	}
 
+	@Nonnull
+	private List<AttributeMapping> getUpdateGeneratedAttributes() {
+		return hasUpdateGeneratedProperties()
+				? getGeneratedAttributes( this, UPDATE )
+				: emptyList();
+	}
+
+	@Nonnull
+	private List<AttributeMapping> getInsertGeneratedAttributes() {
+		return hasInsertGeneratedProperties()
+				? getGeneratedAttributes( this, INSERT )
+				: emptyList();
+	}
+
 	protected GeneratedValuesMutationDelegate createInsertDelegate() {
 		if ( isIdentifierAssignedByInsert() ) {
 			final var generator = (OnExecutionGenerator) getGenerator();
@@ -3536,33 +3571,61 @@ public abstract class AbstractEntityPersister
 		return getGeneratedValuesDelegate( this, UPDATE );
 	}
 
-	protected EntityTableDescriptor[] buildTableDescriptors() {
-
-		var tableBuilderMap = new LinkedHashMap<String, TableDescriptorBuilder>();
-		visitMutabilityOrderedTables( (name, relativePosition, tableKeyColumnVisitationSupplier) -> {
-			final var tableMappingBuilder = getTableDescriptorBuilder(
-					name,
-					relativePosition,
-					tableKeyColumnVisitationSupplier,
-					tableBuilderMap
-			);
-			tableBuilderMap.put( name, tableMappingBuilder );
-		} );
-
-		applyAttributes( tableBuilderMap );
-
+	protected void buildTableDescriptors() {
+		final var tableBuilders = initializeTableBuilders();
+		applyAttributes( tableBuilders );
 		// Check if ANY table in this entity is self-referential
 		// If so, ALL tables should be grouped by ordinalBase to keep operations
 		// for the same entity instance together (e.g., primary + secondary tables)
-		final boolean entityHasSelfReferentialTable = tableBuilderMap.values().stream()
-				.anyMatch( builder -> builder.isSelfReferential );
-
-		final EntityTableDescriptor[] tableDescriptors = new EntityTableDescriptor[tableBuilderMap.size()];
-		int i = 0;
-		for ( var entry : tableBuilderMap.entrySet() ) {
-			tableDescriptors[i++] = entry.getValue().build( entityHasSelfReferentialTable );
+		final boolean entityHasSelfReferentialTable = entityHasSelfReferentialTable( tableBuilders );
+		for ( var entry : tableBuilders.entrySet() ) {
+			buildRuntimeTableDescriptor( entry.getValue(), entityHasSelfReferentialTable );
 		}
-		return tableDescriptors;
+	}
+
+	@Nonnull
+	private LinkedHashMap<String, TableDescriptorBuilder> initializeTableBuilders() {
+		final var tableBuilderMap = new LinkedHashMap<String, TableDescriptorBuilder>();
+		visitMutabilityOrderedTables( (name, relativePosition, tableKeyColumnVisitationSupplier)
+				-> tableBuilderMap.put(
+						name,
+						getTableDescriptorBuilder(
+								name,
+								relativePosition,
+								tableKeyColumnVisitationSupplier,
+								tableBuilderMap
+						)
+				) );
+		return tableBuilderMap;
+	}
+
+	private static boolean entityHasSelfReferentialTable(Map<String, TableDescriptorBuilder> tableBuilderMap) {
+		for ( var builder : tableBuilderMap.values() ) {
+			if ( builder.isSelfReferential ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected void buildRuntimeTableDescriptor(
+			TableDescriptorBuilder builder,
+			boolean entityHasSelfReferentialTable) {
+		builder.build( findTableRuntime( builder.tableName, builder.relativePosition ), entityHasSelfReferentialTable );
+	}
+
+	private EntityTableRuntime findTableRuntime(String tableName, int relativePosition) {
+		for ( var tableMapping : tableMappings ) {
+			if ( tableMapping.relativePosition() == relativePosition && tableMapping.containsTableName( tableName ) ) {
+				return tableMapping;
+			}
+		}
+		for ( var tableMapping : tableMappings ) {
+			if ( tableMapping.containsTableName( tableName ) ) {
+				return tableMapping;
+			}
+		}
+		throw new AssertionFailure( "Could not resolve table mapping for table " + tableName );
 	}
 
 	private void applyAttributes(LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap) {
@@ -3597,7 +3660,7 @@ public abstract class AbstractEntityPersister
 
 	protected boolean isIdentifierAttribute(AttributeMapping attribute) {
 		return attribute.isEntityIdentifierMapping() // @Id or @EmbeddedId
-				|| IDENTIFIER_MAPPER_PROPERTY.equals( attribute.getAttributeName() ); // @IdClass
+			|| IDENTIFIER_MAPPER_PROPERTY.equals( attribute.getAttributeName() ); // @IdClass
 	}
 
 	protected boolean isReadOnlyAttribute(AttributeMapping attribute) {
@@ -3607,7 +3670,6 @@ public abstract class AbstractEntityPersister
 				return false;
 			}
 		}
-
 		return true;
 	}
 
@@ -3694,56 +3756,21 @@ public abstract class AbstractEntityPersister
 		return tableMutationDetails.resolveCustomSql( this::substituteBrackets );
 	}
 
-	private TableMutationDetails resolveTableMutationDetails(String tableName, int relativePosition) {
-		final var tableMapping = findTableMapping( tableName, relativePosition );
-		return new TableMutationDetails(
-				CustomSqlMutationDetails.from( tableMapping.getInsertDetails() ),
-				CustomSqlMutationDetails.from( tableMapping.getUpdateDetails() ),
-				CustomSqlMutationDetails.from( tableMapping.getDeleteDetails() )
-		);
-	}
-
-	private EntityTableMapping findTableMapping(String tableName, int relativePosition) {
-		for ( var tableMapping : tableMappings ) {
-			if ( tableMapping.relativePosition() == relativePosition && tableMapping.containsTableName( tableName ) ) {
-				return tableMapping;
-			}
-		}
-		for ( var tableMapping : tableMappings ) {
-			if ( tableMapping.containsTableName( tableName ) ) {
-				return tableMapping;
-			}
-		}
-		throw new AssertionFailure( "Could not resolve table mapping for table " + tableName );
-	}
-
 	protected TableDescriptorBuilder createTableDescriptorBuilder(
 			String tableName,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
-		var constraintModel = factory.getMappingMetamodel().getConstraintModel();
+		final var constraintModel = factory.getMappingMetamodel().getConstraintModel();
 		// NOTE: if ActionQueue is not the graph-based one, isSelfReferential will have no impact
-		final boolean isSelfReferential = constraintModel.hasSelfReferentialTable( tableName );
-		final boolean hasUniqueKeys = isNotEmpty( constraintModel.getUniqueConstraintsForTable( tableName ) );
-		var keyColumns = new ArrayList<ColumnDescriptor>();
+		final var keyColumns = new ArrayList<ColumnDescriptor>();
 		tableKeyColumnVisitationSupplier.get().accept( (index, selectableMapping)
 				-> keyColumns.add( ColumnDescriptor.from( selectableMapping ) ) );
-
-		final boolean isIdentifierTable = isIdentifierTable( tableName );
-		final var mutationDetails = resolveTableMutationDetails( tableName, relativePosition );
-
 		return new TableDescriptorBuilder(
 				tableName,
 				relativePosition,
-				isIdentifierTable,
-				!isIdentifierTable && isNullableTable( relativePosition ),
 				isInverseTable( relativePosition ),
-				mutationDetails,
-				isTableCascadeDeleteEnabled( relativePosition ),
-				isDynamicUpdate(),
-				isDynamicInsert(),
-				isSelfReferential,
-				hasUniqueKeys,
+				constraintModel.hasSelfReferentialTable( tableName ),
+				isNotEmpty( constraintModel.getUniqueConstraintsForTable( tableName ) ),
 				new TableKeyDescriptor( keyColumns )
 			);
 	}
@@ -3765,24 +3792,8 @@ public abstract class AbstractEntityPersister
 			Expectation expectation,
 			String customSql,
 			boolean callable) {
-		static CustomSqlMutationDetails from(TableMapping.MutationDetails mutationDetails) {
-			return new CustomSqlMutationDetails(
-					mutationDetails.getExpectation(),
-					mutationDetails.getCustomSql(),
-					mutationDetails.isCallable()
-			);
-		}
-
 		CustomSqlMutationDetails resolveCustomSql(Function<String, String> sqlResolver) {
 			return new CustomSqlMutationDetails( expectation, sqlResolver.apply( customSql ), callable );
-		}
-
-		TableMapping.MutationDetails toMutationDetails(MutationType mutationType) {
-			return new TableMapping.MutationDetails( mutationType, expectation, customSql, callable );
-		}
-
-		TableMapping.MutationDetails toMutationDetails(MutationType mutationType, boolean dynamicMutation) {
-			return new TableMapping.MutationDetails( mutationType, expectation, customSql, callable, dynamicMutation );
 		}
 	}
 
@@ -3790,15 +3801,8 @@ public abstract class AbstractEntityPersister
 	protected static class TableDescriptorBuilder {
 		private final String tableName;
 		private final int relativePosition;
-		private final boolean isIdentifierTable;
-		private final boolean isOptional;
 		private final boolean isInverse;
 
-		private final TableMutationDetails mutationDetails;
-		private final boolean cascadeDeleteEnabled;
-
-		private final boolean dynamicInsert;
-		private final boolean dynamicUpdate;
 		final boolean isSelfReferential;  // package-private for entity-wide self-referential check
 		private final boolean hasUniqueKeys;
 
@@ -3810,48 +3814,30 @@ public abstract class AbstractEntityPersister
 		public TableDescriptorBuilder(
 				String tableName,
 				int relativePosition,
-				boolean isIdentifierTable,
-				boolean isOptional,
 				boolean isInverse,
-				TableMutationDetails mutationDetails,
-				boolean cascadeDeleteEnabled,
-				boolean dynamicInsert,
-				boolean dynamicUpdate,
 				boolean isSelfReferential,
 				boolean hasUniqueKeys,
 				TableKeyDescriptor keyDescriptor) {
 			this.tableName = tableName;
 			this.relativePosition = relativePosition;
-			this.isIdentifierTable = isIdentifierTable;
-			this.isOptional = isOptional;
 			this.isInverse = isInverse;
-			this.mutationDetails = mutationDetails;
-			this.cascadeDeleteEnabled = cascadeDeleteEnabled;
-			this.dynamicInsert = dynamicInsert;
-			this.dynamicUpdate = dynamicUpdate;
 			this.isSelfReferential = isSelfReferential;
 			this.hasUniqueKeys = hasUniqueKeys;
 			this.keyDescriptor = keyDescriptor;
 		}
 
-		protected EntityTableDescriptor build(boolean entityHasSelfReferentialTable) {
-			return new EntityTableDescriptor(
-					tableName,
-					relativePosition,
-					isIdentifierTable,
-					isOptional,
-					isInverse,
+		private EntityTableDescriptor build(
+				EntityTableRuntime tableRuntime,
+				boolean entityHasSelfReferentialTable) {
+			tableRuntime.initializeDescriptor(
 					entityHasSelfReferentialTable,
 					hasUniqueKeys,
-					cascadeDeleteEnabled,
-					mutationDetails.insertDetails().toMutationDetails( MutationType.INSERT, dynamicInsert ),
-					mutationDetails.updateDetails().toMutationDetails( MutationType.UPDATE, dynamicUpdate ),
-					mutationDetails.deleteDetails().toMutationDetails( MutationType.DELETE ),
 					columnDescriptors,
 					attributes,
 					attributeColumnIndexes,
 					keyDescriptor
 			);
+			return tableRuntime;
 		}
 
 		public int addAttribute(AttributeMapping attribute) {
@@ -3882,6 +3868,74 @@ public abstract class AbstractEntityPersister
 				}
 			}
 			return -1;
+		}
+	}
+
+	private static class EntityTableRuntime extends EntityTableMappingImpl {
+		private EntityTableRuntime(
+				String tableName,
+				int relativePosition,
+				KeyMapping keyMapping,
+				boolean isOptional,
+				boolean isInverse,
+				boolean isIdentifierTable,
+				boolean isSecondaryTable,
+				int[] attributeIndexes,
+				Expectation insertExpectation,
+				String insertCustomSql,
+				boolean insertCallable,
+				Expectation updateExpectation,
+				String updateCustomSql,
+				boolean updateCallable,
+				boolean cascadeDeleteEnabled,
+				Expectation deleteExpectation,
+				String deleteCustomSql,
+				boolean deleteCallable,
+				boolean dynamicUpdate,
+				boolean dynamicInsert) {
+			super(
+					tableName,
+					relativePosition,
+					keyMapping,
+					isOptional,
+					isInverse,
+					isIdentifierTable,
+					isSecondaryTable,
+					attributeIndexes,
+					insertExpectation,
+					insertCustomSql,
+					insertCallable,
+					updateExpectation,
+					updateCustomSql,
+					updateCallable,
+					cascadeDeleteEnabled,
+					deleteExpectation,
+					deleteCustomSql,
+					deleteCallable,
+					dynamicUpdate,
+					dynamicInsert
+			);
+		}
+
+		private void initializeDescriptor(
+				boolean isSelfReferential,
+				boolean hasUniqueConstraints,
+				List<ColumnDescriptor> columns,
+				List<AttributeMapping> attributes,
+				Map<AttributeMapping,List<Integer>> attributeColumnIndexes,
+				TableKeyDescriptor keyDescriptor) {
+			initializeGraphDetails(
+					isSelfReferential,
+					hasUniqueConstraints,
+					columns,
+					attributes,
+					attributeColumnIndexes,
+					keyDescriptor
+			);
+		}
+
+		private boolean hasDescriptorDetails() {
+			return hasGraphDetails();
 		}
 	}
 
@@ -3926,11 +3980,11 @@ public abstract class AbstractEntityPersister
 			this.dynamicInsert = dynamicInsert;
 		}
 
-		private EntityTableMapping build() {
+		private EntityTableRuntime build() {
 			final var insertDetails = mutationDetails.insertDetails();
 			final var updateDetails = mutationDetails.updateDetails();
 			final var deleteDetails = mutationDetails.deleteDetails();
-			return new EntityTableMappingImpl(
+			return new EntityTableRuntime(
 					tableName,
 					relativePosition,
 					keyMapping,
@@ -3960,7 +4014,7 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @see #visitMutabilityOrderedTables
 	 */
-	protected EntityTableMapping[] buildTableMappings(PersistentClass bootEntityDescriptor) {
+	private EntityTableRuntime[] buildTableMappings(PersistentClass bootEntityDescriptor) {
 		final LinkedHashMap<String, TableMappingBuilder> tableBuilderMap = new LinkedHashMap<>();
 		visitMutabilityOrderedTables( (tableExpression, relativePosition, tableKeyColumnSupplier) -> {
 			final var tableMappingBuilder =
@@ -3980,7 +4034,7 @@ public abstract class AbstractEntityPersister
 			}
 		} );
 
-		final var entityTableMappings = new EntityTableMapping[tableBuilderMap.size()];
+		final var entityTableMappings = new EntityTableRuntime[tableBuilderMap.size()];
 		int i = 0;
 		for ( var entry : tableBuilderMap.entrySet() ) {
 			entityTableMappings[i++] = entry.getValue().build();
@@ -4016,6 +4070,35 @@ public abstract class AbstractEntityPersister
 			String tableExpression,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
+		return new TableMappingBuilder(
+				tableExpression,
+				relativePosition,
+				createKeyMapping( tableExpression, tableKeyColumnVisitationSupplier ),
+				isOptionalTable( tableExpression, relativePosition ),
+				isInverseTable( relativePosition ),
+				isIdentifierTable( tableExpression ),
+				isSecondaryTable( tableExpression, relativePosition ),
+				resolveTableMutationDetails( bootEntityDescriptor, relativePosition ),
+				isTableCascadeDeleteEnabled( relativePosition ),
+				isDynamicUpdate(),
+				isDynamicInsert()
+		);
+	}
+
+	@Nonnull
+	private EntityTableMappingImpl.KeyMapping createKeyMapping(
+			String tableExpression,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
+		return EntityTableMapping.createKeyMapping(
+				keyColumns( tableExpression, tableKeyColumnVisitationSupplier ),
+				identifierMapping
+		);
+	}
+
+	@Nonnull
+	private static List<EntityTableMappingImpl.KeyColumn> keyColumns(
+			String tableExpression,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
 		final List<EntityTableMappingImpl.KeyColumn> keyColumns = new ArrayList<>();
 		tableKeyColumnVisitationSupplier.get()
 				.accept( (selectionIndex, selectableMapping) -> {
@@ -4024,24 +4107,12 @@ public abstract class AbstractEntityPersister
 							selectableMapping
 					) );
 				} );
+		return keyColumns;
+	}
 
-		final boolean isIdentifierTable = isIdentifierTable( tableExpression );
-		final boolean isSecondaryTable = isSecondaryTable( tableExpression, relativePosition );
-		final var mutationDetails = resolveTableMutationDetails( bootEntityDescriptor, relativePosition );
-
-		return new TableMappingBuilder(
-				tableExpression,
-				relativePosition,
-				EntityTableMapping.createKeyMapping( keyColumns, identifierMapping ),
-				!isIdentifierTable && isNullableTable( relativePosition ),
-				isInverseTable( relativePosition ),
-				isIdentifierTable,
-				isSecondaryTable,
-				mutationDetails,
-				isTableCascadeDeleteEnabled( relativePosition ),
-				isDynamicUpdate(),
-				isDynamicInsert()
-		);
+	private boolean isOptionalTable(String tableExpression, int relativePosition) {
+		return !isIdentifierTable( tableExpression )
+			&& isNullableTable( relativePosition );
 	}
 
 	/**
@@ -4222,17 +4293,18 @@ public abstract class AbstractEntityPersister
 		final var interceptor =
 				getBytecodeEnhancementMetadata()
 						.injectInterceptor( entity, id, session );
-		final Object value;
 		if ( nameOfAttributeBeingAccessed == null ) {
 			return null;
 		}
-		else if ( interceptor.isAttributeLoaded( nameOfAttributeBeingAccessed ) ) {
-			value = getPropertyValue( entity, nameOfAttributeBeingAccessed );
-		}
 		else {
-			value = initializeLazyProperty( nameOfAttributeBeingAccessed, entity, session );
+			return interceptor.readObject(
+					entity,
+					nameOfAttributeBeingAccessed,
+					interceptor.isAttributeLoaded( nameOfAttributeBeingAccessed )
+							? getPropertyValue( entity, nameOfAttributeBeingAccessed )
+							: initializeLazyProperty( nameOfAttributeBeingAccessed, entity, session )
+			);
 		}
-		return interceptor.readObject( entity, nameOfAttributeBeingAccessed, value );
 	}
 
 	@Override

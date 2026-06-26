@@ -5,7 +5,6 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -66,11 +65,6 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Override
 	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
 		return delegate.getReferencedPropertyType( className, propertyName );
-	}
-
-	@Override
-	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		return delegate.getSessionFactoryBuilder();
 	}
 
 	@Override
@@ -220,7 +214,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 
 	@Override
 	public void orderColumns(boolean forceOrdering) {
-		delegate.orderColumns( false );
+		delegate.orderColumns( forceOrdering );
 	}
 
 	@Override

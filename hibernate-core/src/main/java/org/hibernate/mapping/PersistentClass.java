@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,6 +69,7 @@ public abstract sealed class PersistentClass
 
 	private final MetadataBuildingContext metadataBuildingContext;
 	private final String contributor;
+	private final List<IdentifiableTypeClass> subTypes = new ArrayList<>();
 
 	private String entityName;
 
@@ -83,6 +85,8 @@ public abstract sealed class PersistentClass
 	private boolean lazy;
 	private final List<Property> properties = new ArrayList<>();
 	private final List<Property> declaredProperties = new ArrayList<>();
+	private final List<Property> mappedSuperclassProperties = new ArrayList<>();
+	private final Map<Property, MappedSuperclass> mappedSuperclassPropertyOrigins = new IdentityHashMap<>();
 	private final List<Subclass> subclasses = new ArrayList<>();
 	private final List<Property> subclassProperties = new ArrayList<>();
 	private final List<Table> subclassTables = new ArrayList<>();
@@ -106,21 +110,13 @@ public abstract sealed class PersistentClass
 
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
-	// Custom SQL
-	private String customSQLInsert;
-	private boolean customInsertCallable;
-	private String customSQLUpdate;
-	private boolean customUpdateCallable;
-	private String customSQLDelete;
-	private boolean customDeleteCallable;
+	private CustomSqlMapping customSqlInsert;
+	private CustomSqlMapping customSqlUpdate;
+	private CustomSqlMapping customSqlDelete;
 
 	private MappedSuperclass superMappedSuperclass;
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
-
-	private Supplier<? extends Expectation> insertExpectation;
-	private Supplier<? extends Expectation> updateExpectation;
-	private Supplier<? extends Expectation> deleteExpectation;
 
 	private boolean isCached;
 	private CacheLayout queryCacheLayout;
@@ -136,6 +132,11 @@ public abstract sealed class PersistentClass
 
 	public ServiceRegistry getServiceRegistry() {
 		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
+	}
+
+	@Internal
+	public MetadataBuildingContext getMetadataBuildingContext() {
+		return metadataBuildingContext;
 	}
 
 	public String getClassName() {
@@ -231,6 +232,20 @@ public abstract sealed class PersistentClass
 			superclass = superclass.getSuperclass();
 		}
 		subclasses.add( subclass );
+	}
+
+	/**
+	 * Registers a direct managed-type subtype.
+	 * <p>
+	 * This is separate from {@link #addSubclass(Subclass)} because
+	 * {@code addSubclass} preserves legacy entity-inheritance state while this
+	 * method records the direct managed-type graph, which may include mapped
+	 * superclasses.
+	 */
+	public void addSubType(IdentifiableTypeClass subType) {
+		if ( !subTypes.contains( subType ) ) {
+			subTypes.add( subType );
+		}
 	}
 
 	public boolean hasSubclasses() {
@@ -462,6 +477,14 @@ public abstract sealed class PersistentClass
 		this.entityName = entityName == null ? null : entityName.intern();
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer}
+	 * with an explicit resolved primary-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKey() {
 		final var table = getTable();
 		// Never overwrite the primary key if there already is an existing one,
@@ -848,46 +871,52 @@ public abstract sealed class PersistentClass
 		return properties;
 	}
 
-	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
-		this.customSQLInsert = customSQLInsert;
-		this.customInsertCallable = callable;
-		this.insertExpectation = Expectation.None::new;
+	public void setCustomSqlInsert(CustomSqlMapping customSqlInsert) {
+		this.customSqlInsert = customSqlInsert;
+	}
+
+	public CustomSqlMapping getCustomSqlInsert() {
+		return customSqlInsert;
 	}
 
 	public String getCustomSQLInsert() {
-		return customSQLInsert;
+		return customSqlInsert == null ? null : customSqlInsert.sql();
 	}
 
 	public boolean isCustomInsertCallable() {
-		return customInsertCallable;
+		return customSqlInsert != null && customSqlInsert.callable();
 	}
 
-	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
-		this.customSQLUpdate = customSQLUpdate;
-		this.customUpdateCallable = callable;
-		this.updateExpectation = Expectation.None::new;
+	public void setCustomSqlUpdate(CustomSqlMapping customSqlUpdate) {
+		this.customSqlUpdate = customSqlUpdate;
+	}
+
+	public CustomSqlMapping getCustomSqlUpdate() {
+		return customSqlUpdate;
 	}
 
 	public String getCustomSQLUpdate() {
-		return customSQLUpdate;
+		return customSqlUpdate == null ? null : customSqlUpdate.sql();
 	}
 
 	public boolean isCustomUpdateCallable() {
-		return customUpdateCallable;
+		return customSqlUpdate != null && customSqlUpdate.callable();
 	}
 
-	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
-		this.customSQLDelete = customSQLDelete;
-		this.customDeleteCallable = callable;
-		this.deleteExpectation = Expectation.None::new;
+	public void setCustomSqlDelete(CustomSqlMapping customSqlDelete) {
+		this.customSqlDelete = customSqlDelete;
+	}
+
+	public CustomSqlMapping getCustomSqlDelete() {
+		return customSqlDelete;
 	}
 
 	public String getCustomSQLDelete() {
-		return customSQLDelete;
+		return customSqlDelete == null ? null : customSqlDelete.sql();
 	}
 
 	public boolean isCustomDeleteCallable() {
-		return customDeleteCallable;
+		return customSqlDelete != null && customSqlDelete.callable();
 	}
 
 	public void addFilter(
@@ -1097,8 +1126,32 @@ public abstract sealed class PersistentClass
 	}
 
 	public void addMappedSuperclassProperty(Property property) {
+		addMappedSuperclassProperty( property, null );
+	}
+
+	public void addMappedSuperclassProperty(Property property, MappedSuperclass origin) {
 		properties.add( property );
+		mappedSuperclassProperties.add( property );
+		if ( origin != null ) {
+			mappedSuperclassPropertyOrigins.put( property, origin );
+		}
 		property.setPersistentClass( this );
+	}
+
+	/**
+	 * Properties locally applied to this entity from mapped-superclass
+	 * contributions.
+	 * <p>
+	 * These properties are also exposed through compatibility APIs such as
+	 * {@link #getProperties()}.  This method keeps their mapped-superclass origin
+	 * distinguishable from declared entity properties.
+	 */
+	public List<Property> getMappedSuperclassProperties() {
+		return unmodifiableList( mappedSuperclassProperties );
+	}
+
+	public MappedSuperclass getMappedSuperclassPropertyOrigin(Property property) {
+		return mappedSuperclassPropertyOrigins.get( property );
 	}
 
 	public MappedSuperclass getSuperMappedSuperclass() {
@@ -1230,16 +1283,19 @@ public abstract sealed class PersistentClass
 
 	@Override
 	public IdentifiableTypeClass getSuperType() {
+		if ( superMappedSuperclass != null ) {
+			return superMappedSuperclass;
+		}
 		final var superPersistentClass = getSuperclass();
 		if ( superPersistentClass != null ) {
 			return superPersistentClass;
 		}
-		return superMappedSuperclass;
+		return null;
 	}
 
 	@Override
 	public List<IdentifiableTypeClass> getSubTypes() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		return unmodifiableList( subTypes );
 	}
 
 	private boolean containsColumn(Column column) {
@@ -1286,27 +1342,39 @@ public abstract sealed class PersistentClass
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {
-		return insertExpectation;
+		return customSqlInsert == null ? null : customSqlInsert.expectation();
 	}
 
 	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
-		this.insertExpectation = insertExpectation;
+		this.customSqlInsert = new CustomSqlMapping(
+				getCustomSQLInsert(),
+				isCustomInsertCallable(),
+				insertExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getUpdateExpectation() {
-		return updateExpectation;
+		return customSqlUpdate == null ? null : customSqlUpdate.expectation();
 	}
 
 	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
-		this.updateExpectation = updateExpectation;
+		this.customSqlUpdate = new CustomSqlMapping(
+				getCustomSQLUpdate(),
+				isCustomUpdateCallable(),
+				updateExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteExpectation() {
-		return deleteExpectation;
+		return customSqlDelete == null ? null : customSqlDelete.expectation();
 	}
 
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
-		this.deleteExpectation = deleteExpectation;
+		this.customSqlDelete = new CustomSqlMapping(
+				getCustomSQLDelete(),
+				isCustomDeleteCallable(),
+				deleteExpectation
+		);
 	}
 
 	public void removeProperty(Property property) {

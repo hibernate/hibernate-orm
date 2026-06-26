@@ -25,7 +25,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -119,8 +119,8 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  * {@linkplain #setCurrentTenantIdentifierResolver tenant id resolver},
  * and more.
  * <p>
- * Finally, an instance of {@link SessionFactoryBuilder} is obtained by
- * calling {@link #buildSessionFactory()}.
+ * Finally, a {@link org.hibernate.SessionFactory} is obtained by calling
+ * {@link #buildSessionFactory()}.
  * <p>
  * Ultimately, this class simply delegates to {@link MetadataBuilder} and
  * {@link StandardServiceRegistryBuilder} to actually do the hard work of
@@ -1068,42 +1068,42 @@ public class Configuration {
 					.forEach( metadataBuilder::applyAttributeConverter );
 		}
 
-		final var metadata = metadataBuilder.build();
-		final var sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+			final var metadata = metadataBuilder.build();
+		final var optionsCollector = new SessionFactoryOptionsCollector();
 
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
-			sessionFactoryBuilder.applyInterceptor( interceptor );
+			optionsCollector.applyInterceptor( interceptor );
 		}
 
 		if ( entityNameResolvers != null ) {
-			sessionFactoryBuilder.addEntityNameResolver( entityNameResolvers.toArray(new EntityNameResolver[0]) );
+			optionsCollector.addEntityNameResolvers( entityNameResolvers.toArray(new EntityNameResolver[0]) );
 		}
 
 		if ( sessionFactoryObserver != null ) {
-			sessionFactoryBuilder.addSessionFactoryObservers( sessionFactoryObserver );
+			optionsCollector.addSessionFactoryObservers( sessionFactoryObserver );
 		}
 
 		if ( statementInspector != null ) {
-			sessionFactoryBuilder.applyStatementInspector( statementInspector );
+			optionsCollector.applyStatementInspector( statementInspector );
 		}
 
 		if ( entityNotFoundDelegate != null ) {
-			sessionFactoryBuilder.applyEntityNotFoundDelegate( entityNotFoundDelegate );
+			optionsCollector.applyEntityNotFoundDelegate( entityNotFoundDelegate );
 		}
 
 		if ( currentTenantIdentifierResolver != null ) {
-			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
+			optionsCollector.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
 		}
 
 		if ( tenantSchemaMapper != null ) {
-			sessionFactoryBuilder.applyTenantSchemaMapper( tenantSchemaMapper );
+			optionsCollector.applyTenantSchemaMapper( tenantSchemaMapper );
 		}
 
 		if ( customEntityDirtinessStrategy != null ) {
-			sessionFactoryBuilder.applyCustomEntityDirtinessStrategy( customEntityDirtinessStrategy );
+			optionsCollector.applyCustomEntityDirtinessStrategy( customEntityDirtinessStrategy );
 		}
 
-		return sessionFactoryBuilder.build();
+		return org.hibernate.boot.pipeline.internal.SessionFactoryPipeline.build( metadata, optionsCollector );
 	}
 
 

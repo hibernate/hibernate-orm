@@ -4,6 +4,7 @@
  */
 package org.hibernate.jpa;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceException;
@@ -19,10 +20,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.internal.TransformerTracker;
@@ -35,7 +33,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.HashMap;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
@@ -64,19 +61,23 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map<?,?> map) {
 		JPA_LOGGER.startingCreateEntityManagerFactory( persistenceUnitName );
-		final var builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
-		if ( builder == null ) {
-			JPA_LOGGER.couldNotObtainEmfBuilder("null");
+		final var persistenceUnitDescriptor = getPersistenceUnitDescriptorOrNull( persistenceUnitName, map );
+		if ( persistenceUnitDescriptor == null ) {
+			JPA_LOGGER.couldNotObtainPersistenceUnit("null");
 			return null;
 		}
 		else {
-			return builder.build();
+			return org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.build(
+					persistenceUnitDescriptor,
+					wrap( map )
+			);
 		}
 	}
 
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
-			String persistenceUnitName, Map<?,?> properties) {
-		return getEntityManagerFactoryBuilderOrNull(
+	private PersistenceUnitDescriptor getPersistenceUnitDescriptorOrNull(
+			String persistenceUnitName,
+			Map<?,?> properties) {
+		return getPersistenceUnitDescriptorOrNull(
 				persistenceUnitName,
 				properties,
 				null,
@@ -84,12 +85,12 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		);
 	}
 
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
+	private PersistenceUnitDescriptor getPersistenceUnitDescriptorOrNull(
 			String persistenceUnitName,
 			Map<?,?> properties,
 			@Nullable ClassLoader providedClassLoader,
 			@Nullable ClassLoaderService providedClassLoaderService) {
-		JPA_LOGGER.attemptingToObtainEmfBuilder( persistenceUnitName );
+		JPA_LOGGER.attemptingToLocatePersistenceUnit( persistenceUnitName );
 		final var integration = wrap( properties );
 		final var units = locatePersistenceUnits( integration, providedClassLoader, providedClassLoaderService );
 		JPA_LOGGER.locatedAndParsedPersistenceUnits( units.size() );
@@ -113,9 +114,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			if ( matches ) {
 				// See if we (Hibernate) are the persistence provider
 				if ( isProvider( persistenceUnit, properties ) ) {
-					return providedClassLoaderService == null
-							? getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader )
-							: getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoaderService );
+					return persistenceUnit;
 				}
 				else {
 					JPA_LOGGER.excludingDueToProviderMismatch();
@@ -170,7 +169,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingCreateContainerEntityManagerFactory( info.getPersistenceUnitName() );
-		return getEntityManagerFactoryBuilder( info, map ).build();
+		return org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.build(
+				new PersistenceUnitInfoDescriptor( info ),
+				wrap( map )
+		);
 	}
 
 	/**
@@ -183,7 +185,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingGenerateSchemaForPuiName( info.getPersistenceUnitName() );
-		getEntityManagerFactoryBuilder( info, map ).generateSchema();
+		org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.generateSchema(
+				new PersistenceUnitInfoDescriptor( info ),
+				wrap( map )
+		);
 	}
 
 	/**
@@ -195,73 +200,30 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public boolean generateSchema(String persistenceUnitName, Map<?,?> map) {
 		JPA_LOGGER.startingGenerateSchema( persistenceUnitName );
-		final var builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, map );
-		if ( builder == null ) {
-			JPA_LOGGER.couldNotObtainEmfBuilder("false");
+		final var persistenceUnitDescriptor = getPersistenceUnitDescriptorOrNull( persistenceUnitName, map );
+		if ( persistenceUnitDescriptor == null ) {
+			JPA_LOGGER.couldNotObtainPersistenceUnit("false");
 			return false;
 		}
 		else {
-			builder.generateSchema();
+			org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.generateSchema(
+					persistenceUnitDescriptor,
+					wrap( map )
+			);
 			return true;
 		}
 	}
 
 	@Override
-	public boolean generateSchema(PersistenceConfiguration persistenceConfiguration) {
+	public boolean generateSchema(@Nonnull PersistenceConfiguration persistenceConfiguration) {
 		JPA_LOGGER.startingGenerateSchema( persistenceConfiguration.name() );
-		final var builder = getEntityManagerFactoryBuilder(persistenceConfiguration);
-		builder.generateSchema();
+		org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.generateSchema( persistenceConfiguration );
 		return true;
 	}
 
-	private static Map<String, Object> settingsMap(Map<?, ?> integration) {
-		final Map<String, Object> result = new HashMap<>();
-		integration.forEach( (key, value) -> {
-			// ignore non-string keys
-			if (key instanceof String string) {
-				result.put( string, value );
-			}
-		} );
-		return result;
-	}
-
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
-			PersistenceUnitInfo info, Map<?,?> integration) {
-		return Bootstrap.getEntityManagerFactoryBuilder( info, settingsMap( integration ) );
-	}
-
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map<?,?> integration,
-			ClassLoader providedClassLoader) {
-		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor,
-				settingsMap( integration ), providedClassLoader );
-	}
-
-	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
-			PersistenceUnitDescriptor persistenceUnitDescriptor,
-			Map<?,?> integration,
-			ClassLoaderService providedClassLoaderService) {
-		return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnitDescriptor,
-				settingsMap( integration ), providedClassLoaderService );
-	}
-
-	@Override
-	public EntityManagerFactory createEntityManagerFactory(PersistenceConfiguration configuration) {
-		return getEntityManagerFactoryBuilder( configuration ).build();
-	}
-
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceConfiguration configuration) {
-		if ( configuration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
-			return new EntityManagerFactoryBuilderImpl( hibernatePersistenceConfiguration );
-		}
-		else {
-			return getEntityManagerFactoryBuilder(
-					new PersistenceConfigurationDescriptor( configuration ),
-					emptyMap(),
-					HibernatePersistenceProvider.class.getClassLoader()
-			);
-		}
+	@Override @Nonnull
+	public EntityManagerFactory createEntityManagerFactory(@Nonnull PersistenceConfiguration configuration) {
+		return org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.build( configuration );
 	}
 
 	@Override

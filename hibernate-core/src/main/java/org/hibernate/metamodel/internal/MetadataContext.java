@@ -9,6 +9,8 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjection;
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -48,6 +50,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
@@ -100,6 +104,7 @@ public class MetadataContext {
 	private final List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
 	private final MappingMetamodel metamodel;
 	private final ClassLoaderService classLoaderService;
+	private final JpaStaticMetamodelInjectionSource staticMetamodelInjectionSource;
 
 	public MetadataContext(
 			JpaMetamodelImplementor jpaMetamodel,
@@ -108,9 +113,11 @@ public class MetadataContext {
 			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
 			RuntimeModelCreationContext runtimeModelCreationContext,
-			ClassLoaderService classLoaderService) {
+			ClassLoaderService classLoaderService,
+			JpaStaticMetamodelInjectionSource staticMetamodelInjectionSource) {
 		this.jpaMetamodel = jpaMetamodel;
 		this.classLoaderService = classLoaderService;
+		this.staticMetamodelInjectionSource = staticMetamodelInjectionSource;
 		this.metamodel = mappingMetamodel;
 		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
@@ -172,6 +179,29 @@ public class MetadataContext {
 			mappedSuperClassTypeMap.put( mappedSuperclassType.getJavaType(), mappedSuperclassType );
 		}
 		return mappedSuperClassTypeMap;
+	}
+
+	public boolean isStaticMetamodelPopulationEnabled() {
+		return jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
+	}
+
+	public ManagedDomainType<?> locateManagedType(Class<?> javaType, ManagedTypeBinding.Kind kind) {
+		return switch ( kind ) {
+			case ENTITY -> locateEntityType( javaType );
+			case MAPPED_SUPERCLASS -> getMappedSuperclassTypeMap().get( javaType );
+			case EMBEDDABLE -> embeddables.get( javaType );
+		};
+	}
+
+	public void injectStaticMetamodelManagedType(
+			ManagedDomainType<?> managedType,
+			Class<?> metamodelClass) {
+		injectManagedType( managedType, metamodelClass );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void injectStaticMetamodelAttribute(Class<?> metamodelClass, Attribute attribute) {
+		registerAttribute( metamodelClass, attribute, true );
 	}
 
 	public void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
@@ -287,9 +317,10 @@ public class MetadataContext {
 	public void wrapUp() {
 		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.wrappingUpMetadataContext();
 
-		final boolean staticMetamodelScanEnabled =
-				jpaStaticMetaModelPopulationSetting != JpaStaticMetamodelPopulationSetting.DISABLED;
+		final boolean staticMetamodelScanEnabled = isStaticMetamodelPopulationEnabled();
 		final Set<String> processedMetamodelClasses = new HashSet<>();
+		final boolean viewBackedStaticMetamodelInjection =
+				staticMetamodelScanEnabled && staticMetamodelInjectionSource != null;
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
@@ -308,19 +339,20 @@ public class MetadataContext {
 					for ( var property : persistentClass.getDeclaredProperties() ) {
 						// property represents special handling for @IdClass mappings,
 						// but we have already accounted for the embedded property mappings
-						// in #applyIdMetadata && #buildIdClassAttributes
-						if ( property.getValue() != persistentClass.getIdentifierMapper()
-							// skip the version property, it was already handled previously.
-							&& !isVersion( persistentClass, property )
-							// Skip generic properties since they may only be declared on abstract classes
-							&& !property.isGenericSpecialization() ) {
+							// in #applyIdMetadata && #buildIdClassAttributes
+							if ( property.getValue() != persistentClass.getIdentifierMapper()
+								&& !isIdentifierProperty( property, persistentClass )
+								// skip the version property, it was already handled previously.
+								&& !isVersion( persistentClass, property )
+								// Skip generic properties since they may only be declared on abstract classes
+								&& !property.isGenericSpecialization() ) {
 							buildAttribute( property, jpaMapping );
 						}
 					}
 
 					( (AttributeContainer<?>) jpaMapping ).getInFlightAccess().finishUp();
 
-					if ( staticMetamodelScanEnabled ) {
+					if ( staticMetamodelScanEnabled && !viewBackedStaticMetamodelInjection ) {
 						populateStaticMetamodel( jpaMapping, processedMetamodelClasses );
 					}
 				}
@@ -349,14 +381,15 @@ public class MetadataContext {
 						// in #applyIdMetadata && #buildIdClassAttributes
 						if ( !isIdentifierProperty( property, mappedSuperclass )
 							// skip the version property, it was already handled previously.
-							&& !isVersion( mappedSuperclass, property ) ) {
+							&& !isVersion( mappedSuperclass, property )
+							&& !isGenericPluralDeclaration( property ) ) {
 							buildAttribute( property, jpaType );
 						}
 					}
 
 					( (AttributeContainer<?>) jpaType ).getInFlightAccess().finishUp();
 
-					if ( staticMetamodelScanEnabled ) {
+					if ( staticMetamodelScanEnabled && !viewBackedStaticMetamodelInjection ) {
 						populateStaticMetamodel( jpaType, processedMetamodelClasses );
 					}
 				}
@@ -372,6 +405,10 @@ public class MetadataContext {
 			}
 		}
 
+		if ( viewBackedStaticMetamodelInjection ) {
+			new JpaStaticMetamodelInjection( staticMetamodelInjectionSource )
+					.populate( this, processedMetamodelClasses );
+		}
 
 		while ( !embeddablesToProcess.isEmpty() ) {
 			final List<EmbeddableDomainType<?>> processingEmbeddables =
@@ -405,12 +442,23 @@ public class MetadataContext {
 		}
 	}
 
+	private static boolean isGenericPluralDeclaration(Property property) {
+		return property.isGeneric()
+			&& property.getValue() instanceof org.hibernate.mapping.Collection;
+	}
+
 	private static boolean isVersion(IdentifiableTypeClass persistentClass, Property property) {
 		return persistentClass.isVersioned() && property == persistentClass.getVersion();
 	}
 
 	private static boolean isIdentifierProperty(Property property, MappedSuperclass mappedSuperclass) {
 		final var identifierMapper = mappedSuperclass.getIdentifierMapper();
+		return identifierMapper != null
+			&& contains( identifierMapper.getPropertyNames(), property.getName() );
+	}
+
+	private static boolean isIdentifierProperty(Property property, PersistentClass persistentClass) {
+		final var identifierMapper = persistentClass.getIdentifierMapper();
 		return identifierMapper != null
 			&& contains( identifierMapper.getPropertyNames(), property.getName() );
 	}
@@ -497,7 +545,9 @@ public class MetadataContext {
 			final var managedType = (ManagedDomainType<T>) identifiableType;
 			final var attributeContainer = (AttributeContainer<T>) managedType;
 			final var declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
-			if ( declaredIdentifierProperty != null ) {
+			final var mappedSuperclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
+			if ( declaredIdentifierProperty != null
+					&& declaredIdentifierProperty != mappedSuperclassIdentifier ) {
 				final var idAttribute =
 						(SingularPersistentAttribute<T, ?>)
 								buildAttribute( declaredIdentifierProperty, identifiableType,
@@ -505,8 +555,7 @@ public class MetadataContext {
 				attributeContainer.getInFlightAccess().applyIdAttribute( idAttribute );
 			}
 			else {
-				final var superclassIdentifier = getMappedSuperclassIdentifier( persistentClass );
-				if ( superclassIdentifier != null && superclassIdentifier.isGeneric() ) {
+				if ( mappedSuperclassIdentifier != null && mappedSuperclassIdentifier.isGeneric() ) {
 					// If the superclass identifier is generic, we have to build the attribute to register the concrete type
 					final var concreteIdentifier =
 							buildIdAttribute( identifiableType, persistentClass.getIdentifierProperty() );
@@ -822,7 +871,7 @@ public class MetadataContext {
 				final var attributes = entityType.getIdClassAttributesSafely();
 				if ( attributes != null ) {
 					for ( var attribute : attributes ) {
-						registerAttribute( metamodelClass, attribute );
+						registerAttribute( metamodelClass, attribute, true );
 					}
 				}
 			}
@@ -830,6 +879,10 @@ public class MetadataContext {
 	}
 
 	private <X> void registerAttribute(Class<?> metamodelClass, Attribute<X, ?> attribute) {
+		registerAttribute( metamodelClass, attribute, false );
+	}
+
+	private <X> void registerAttribute(Class<?> metamodelClass, Attribute<X, ?> attribute, boolean allowInheritedField) {
 		final String name = attribute.getName();
 		try {
 			// there is a shortcoming in the existing Hibernate code in terms of the way MappedSuperclass
@@ -843,8 +896,9 @@ public class MetadataContext {
 			final var persistentAttribute = (PersistentAttribute<X, ?>) attribute;
 			final boolean allowNonDeclaredFieldReference =
 					persistentAttribute.getAttributeClassification() == AttributeClassification.EMBEDDED
-							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
-			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
+							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE
+							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.MAPPED_SUPERCLASS;
+			injectField( metamodelClass, name, attribute, true );
 		}
 		catch (NoSuchFieldException e) {
 			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );

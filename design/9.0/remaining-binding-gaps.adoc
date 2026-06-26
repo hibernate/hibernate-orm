@@ -1,0 +1,2723 @@
+= Remaining Model-Binding Gaps
+:toc:
+
+This document tracks remaining gaps in the ORM 9 boot-model path: source
+collection, XML processing, categorization, phased binding, and production of
+`org.hibernate.mapping` metadata.
+
+The baseline for this audit is the legacy
+`org.hibernate.boot.model.process.spi.MetadataBuildingProcess` pipeline:
+
+* `ManagedResources` preparation;
+* XML pre-processing;
+* metadata-complete XML application;
+* annotation categorization;
+* XML overlay application;
+* global registrations;
+* entity hierarchy binding;
+* second-pass processing for collections, associations, identifiers, queries,
+  secondary tables, table keys, and foreign keys;
+* additional mapping contributions;
+* final metadata validation/exportable processing.
+
+The new pipeline has clearer products and phases, but the remaining risks are
+not just missing single annotations.  Most test-fix cycles have exposed
+composition gaps: XML plus categorization, mapped-superclass plus table context,
+embeddables plus path overrides, collections plus map-key/list-index state, and
+association targets plus late foreign-key creation.
+
+See also:
+
+* `annotation-coverage.adoc` for annotation-level descriptor/source/binding
+  coverage.
+* `new-contributor-model-binding-guide.adoc` for the current source,
+  categorization, and binding flow.
+* `orm-integration-notes.adoc` for mapping-model changes suggested by the
+  phased binder.
+* `mapped-superclass-model-design.adoc` for the longer-term mapped-superclass
+  model.
+* `identifier-correspondence-model-design.adoc` for the follow-up model for
+  non-aggregated identifier correspondence across virtual id attributes,
+  IdClass/embedded-id representations, target id parts, and selectable order.
+* `aggregate-mapping-design.adoc` for aggregate/UDT work.
+
+== Status Definitions
+
+`source-confirmed gap`::
+The current source contains an explicit unsupported branch, or a known missing
+behavior is visible from the implementation.
+
+`composition parity gap`::
+Individual annotations or binders exist, but old-pipeline combinations are not
+yet proven or have recently failed in focused tests.
+
+`test-only gap`::
+Binding support appears present, but no focused mapping-state test proves the
+behavior.
+
+`intentional removal`::
+Legacy behavior is not expected to survive ORM 9.
+
+`deferred design area`::
+The behavior should not be completed as an isolated binder patch because it
+depends on a broader model or runtime design.
+
+== Source-Confirmed Gaps
+
+These are the highest-signal items because the current source still contains
+explicit unsupported branches or TODO-level behavior in the new pipeline.
+
+[cols="1,1,3", options="header"]
+|===
+| Area
+| Status
+| Notes
+
+| Inverse `@OneToOne` edge cases
+| test-only gap
+| Normal member-level inverse one-to-one binding has a dedicated path, including
+inverse `mappedBy` through primary tables, association tables, and secondary
+tables.  Component helper paths also accept inverse one-to-one association
+identifiers.  Keep focused runtime/schema coverage visible for composite and
+joined-inheritance variants.
+
+| Embedded-id association identifiers with `@JoinTable`
+| test-only gap
+| `ComponentBinder` now accepts embedded-id association identifiers that use a
+join table, and inverse one-to-one association identifiers.  Keep focused
+runtime/schema coverage visible for more complex composite join-table variants.
+
+| IdClass identifier attributes beyond basic/to-one/embedded-id bridge
+| test-only gap
+| `IdentifierBinder` now handles basic id attributes, association-valued id
+attributes, entity members whose IdClass member supplies `@ManyToOne`, and the
+`@EmbeddedId` plus IdClass bridge used by `@MapsId`.  Component-valued IdClass
+parts, including implicit embeddable id parts and component parts used by
+`@MapsId`, are now characterized as supported.  Plural and `@Any` mappings are
+not supported as identifier parts.  IdClass association identifiers with join
+tables are now characterized against both the new and legacy boot paths.
+
+| `@MapsId` over unsupported identifier value shapes
+| source-confirmed gap
+| `DerivedIdentifierBinder` supports basic, component, and to-one identifier
+parts, including IdClass component parts.  Other identifier value shapes still
+fail explicitly.
+
+| Plural members inside embeddables
+| test-only gap
+| `ComponentBinder` supports plural embeddable members only for the currently
+implemented element-collection / one-to-many / many-to-many / many-to-any
+paths when the embeddable is a value.  Embeddables used as entity identifiers
+now explicitly reject plural members, including unannotated collection members
+and nested plural members, with focused `EmbeddableBindingTests` coverage.
+Direct and nested plural members inside non-id value embeddables now have
+focused binding-model and materialization guardrails; remaining work is broader
+combination coverage.
+
+| Entity-valued map keys
+| test-only gap
+| `CollectionIndexBinder` now supports entity-valued map keys when explicit
+`@MapKeyJoinColumn` / `@MapKeyJoinColumns` metadata is present, including
+non-primary-key references through late association-target binding.  It also
+supports implicit primary-key references when no explicit map-key join columns
+are declared.  Keep focused coverage on composite implicit key shapes and
+runtime SQL behavior.
+
+| `@MapKey(name)` for non-basic target properties
+| test-only gap
+| `CollectionIndexBinder` implements property map keys for basic, to-one, and
+component-valued target properties.  Remaining exotic/non-standard target value
+shapes need explicit parity decisions if they are found in legacy behavior.
+
+| Implicit `@MapKey`
+| test-only gap
+| Implicit map-key binding is implemented for entity-valued map elements, where
+the associated entity identifier is borrowed as the map key.  Non-entity map
+element shapes now fail with an explicit `MappingException` because there is no
+associated entity identifier to borrow.
+
+| Inverse map-valued `@ManyToMany`
+| test-only gap
+| `InversePluralAssociationBinder` handles basic, to-one, and component-valued
+owning map keys, including implicit entity-valued map keys and to-one/component
+`@MapKey(name)` target properties.  Remaining complex owning map-key index
+shapes need explicit parity decisions if they are found in legacy behavior.
+
+| `@Any` key inference
+| test-only gap
+| `AnyValueBinder` accepts explicit key type metadata from `@AnyKeyJavaClass`,
+`@AnyKeyJavaType`, and XML named `@AnyKeyType`.  It can infer a key Java type
+from explicit discriminator target mappings when all target identifiers are
+basic values with matching Java types.  Non-basic target-id inference is
+covered as an explicit unsupported shape for singular `@Any` and plural
+`@ManyToAny`.
+
+| Column/table `options`
+| test-only gap
+| `TableBinder` applies `TableSource` options and the resolved unique-key/index
+materializers apply key/index options.  `ColumnBinder` now applies column
+options from unified column sources, including map-key join columns.
+
+|===
+
+== Focused Gap Refresh: 2026-06-26
+
+This refresh was taken after the schema/exportables parity bucket described in
+`current-work-handoff.adoc`.
+
+Current green guardrails:
+
+* The focused schema/exportables tail is green:
+  `SubclassIndexTest`, `TimeZoneColumnTest`, and
+  `SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameTest`.
+* The broad schema/exportables slice is green across the schema,
+  schemaupdate/validation/tooling, JPA schemagen, index, comment, check, and
+  unique-constraint packages listed in `current-work-handoff.adoc`.
+* The generics guardrail set is green after the schema/exportables work,
+  including `GenericsInheritanceTest`.
+* The dynamic XML identity/class-details slice is green:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.dynamic.*' \
+  --console=plain
+----
+* The XML overlay / XML attribute slice is green:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.override.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.attr.*' \
+  --console=plain
+----
+
+Report interpretation:
+
+* The current `hibernate-core/target/test-results/test` XML reports before this
+  refresh only covered a recent green generics tail, so they were not useful for
+  selecting the next bucket.
+* The available HTML report tree is older broad-runtime data dominated by
+  bytecode/enhancement/lazy runtime failures.  It is still useful as a symptom
+  corpus, but it is not a good next selector for boot/model binding work.
+* Because dynamic XML and XML overlay focused slices are green, they should stay
+  as watch/test-only buckets rather than becoming the next implementation area.
+
+Recommended next bucket:
+
+* Highest-signal materialization bucket for this refresh was auxiliary database
+  object / table-initialization metadata, especially row-level-security DDL
+  that consumes materialized `@TenantId` column metadata.  This is adjacent to
+  global-registration handoff and schema/exportable materialization without
+  reopening SQL-AST/runtime behavior.
+
+Focused reproduction and fix:
+
+* The first focused auxiliary/RLS sample reproduced a failure in
+  `RowLevelSecurityTest#db2UuidTenantIdUsesBitFormatting`: DB2 row-level
+  security asked the materialized UUID tenant-id column for a concrete SQL type
+  name even though the selected UUID predicate does not use a `$TYPE$`
+  replacement.
+* `DB2RowLevelSecurity` now treats UUID tenant-id columns like binary tenant-id
+  columns for its DB2 bit-format predicate selection, and only resolves a column
+  SQL type name for predicate templates that actually contain `$TYPE$`.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.multitenancy.rowsecurity.RowLevelSecurityTest' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.GlobalRegistrationBindingTests.testAuxiliaryDatabaseObjectUsesMetadataHandoffCarrier' \
+  --console=plain
+----
+
+Follow-up recommendation:
+
+* Continue with a nearby metadata/materialization bucket rather than broad
+  runtime fallout.  The next useful sample is state-management/audit auxiliary
+  table materialization, led by the focused boot binding tests and DDL metadata
+  assertions under `org.hibernate.boot.models.bind.state`,
+  `org.hibernate.temporal`, and `org.hibernate.temporal.audit`.
+* Keep the existing schema/exportables and generics guardrails in the
+  verification tail for any follow-up fix.
+
+Adapter UOE refresh:
+
+* A focused sample from the broad UOE list showed several direct temporary
+  `SessionFactoryOptionsAdapter` misses rather than SQL-AST/runtime defects.
+  The adapter and `ResolvedSessionFactorySettings` handoff now carry the legacy
+  boot decisions for:
++
+[source]
+----
+getPreferredSqlTypeCodeForBoolean
+isPassProcedureParameterNames
+isPreferJavaTimeJdbcTypesEnabled
+isPreferJdbcDatetimeTypesInNativeQueriesEnabled
+getPreferredSqlTypeCodeForDuration
+getDefaultTimeZoneStorageStrategy
+----
+
+Aggregate/materialization refresh:
+
+* `JsonArrayUnnestTest` is now green after the fuller aggregate
+  materialization handoff for plural aggregate embeddables.
+* `JsonEmbeddableArrayTest` is also green as a nearby boundary.
+* The nested JSON nullability probe is green:
+  `JsonEmbeddableTest`, `NestedJsonEmbeddableTest`,
+  `JsonEmbeddableAndSchemaNameTest`, and
+  `H2JsonArrayAggregateWideExtractionTest`.
+* The XML aggregate twin bucket is also green:
+  `XmlEmbeddableTest`, `NestedXmlEmbeddableTest`,
+  `XmlWithArrayEmbeddableTest`, and `XmlArrayUnnestTest`.
+* The nested JSON fix stayed in component binding/materialization metadata:
+  nested embeddable properties inside non-identifier components are marked
+  optional, matching the top-level embedded-attribute handoff and allowing null
+  nested aggregate/embeddable members inside JSON documents without changing
+  runtime `ComponentType` behavior.
+* The fix stayed in source/binding/materialization handoff:
+  `AggregateMappingIntent` now represents plural collection aggregates,
+  `ComponentSource` can describe plural aggregate attributes using the element
+  embeddable as the component source, `AttributeBinder` routes plural aggregate
+  basic embeddables through the component handoff while assigning the aggregate
+  `BasicValue` to the property, and entity basic-attribute materialization
+  honors the aggregate-column `BasicType` returned by
+  `resolveAggregateColumnBasicType(...)`.
+* The earlier runtime `ComponentType` direction remains rejected.  Arrays and
+  collections of aggregate embeddables must not be made component-valued runtime
+  properties; the legacy mapping handoff must preserve plural basic property
+  shape and carry element component metadata through `AggregateColumn`.
+
+Follow-up recommendation:
+
+* Re-sample the remaining UOE list now that adapter, composite-user-type,
+  dynamic metamodel, JSON, and XML aggregate probes are green.  Prefer direct
+  boot/model misses such as multitenancy, procedure, criteria, and
+  instantiation tests before broad runtime fallout.
+
+Multitenancy adapter follow-up:
+
+* `SchemaBasedMultitenancyTest`, `CredentialsBasedMultitenancyTest`, and
+  `DatabaseTimeZoneMultiTenancyTest` no longer fail with
+  `SessionFactoryOptionsAdapter` UOE.
+* The new pipeline now carries `TenantSchemaMapper` and
+  `TenantCredentialsMapper` through `ResolvedSessionFactorySettings`, resolving
+  configured values through `MultiTenancy` and preserving programmatic
+  `SessionFactoryOptionsCollector` overrides.
+* `DiscriminatorMultiTenancyTest`, `ProcedureParameterTests`, and
+  `Jpa4CriteriaApiTest` also pass in the refreshed UOE sample.
+* The next focused bucket is embeddable instantiation:
+  `org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.*.InstantiationTests`
+  now exposes boot-model assertion failures, array-index runtime-model failures,
+  and one custom-instantiator UOE.
+
+Embeddable instantiator follow-up:
+
+* `org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.*.InstantiationTests`
+  is now green.
+* The fix stayed in source/materialization metadata:
+  globally registered embeddable instantiators are applied during component
+  materialization, member-level `@Access` drives component member discovery and
+  property access, and interface-valued embedded members can walk the single
+  categorized embeddable implementation while preserving the declared interface
+  as the component type.
+* A follow-up dynamic XML regression check found that the registered-instantiator
+  lookup must not call `ClassDetails#toJavaClass()` for dynamic/map component
+  sources.  The bridge now applies registered instantiators only to real
+  class-backed component types, preserving the dynamic `Component` handoff.
+* Next recommendation: re-sample the remaining broad UOE list or copied
+  reports for another direct boot/model handoff failure before considering
+  runtime SQL behavior.
+* The criteria/query-model plus embeddable-instantiation sampled bucket was
+  rechecked with a forced focused run and is green:
+  `CriteriaLiteralInSelectExpressionTest`,
+  `org.hibernate.orm.test.jpa.criteria.basic.ExpressionsTest`,
+  `org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline.ExpressionsTest`,
+  `Jpa4CriteriaApiTest`, and all five
+  `org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.*.InstantiationTests`
+  variants.
+* Focused adapter verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.criteria.nulliteral.CriteriaLiteralInSelectExpressionTest' \
+  --tests 'org.hibernate.orm.test.jpa.procedure.H2StoreProcedureTest' \
+  --tests 'org.hibernate.orm.test.jpa.criteria.basic.ExpressionsTest' \
+  --tests 'org.hibernate.orm.test.jpa.query.NativeQueryResultTypeAutoDiscoveryTest' \
+  --tests 'org.hibernate.orm.test.jpa.query.NativeQueryWithDatetimesTest' \
+  --tests 'org.hibernate.orm.test.sql.SQLTest.test_sql_hibernate_query_scalar_example' \
+  --tests 'org.hibernate.orm.test.sql.SQLTest.test_sql_jpa_all_columns_scalar_query_example' \
+  --console=plain
+----
+* The original broad UOE sample was rechecked with a forced focused run and is
+  green in the current worktree: `ContributedUserTypeTest`,
+  `H2StoreProcedureTest`, `ProcedureParameterTests`,
+  `NativeQueryResultTypeAutoDiscoveryTest`,
+  `NativeQueryWithDatetimesTest`, `SQLTest`,
+  `TimeZoneColumnDurationTest`,
+  `JpaMetamodelIgnoreUnsupportedPopulationTest`, and
+  `DiscriminatorMultiTenancyTest`.
+
+Time-zone column storage materialization follow-up:
+
+* `TimeZoneColumnDurationTest` no longer fails with a
+  `SessionFactoryOptionsAdapter` UOE.  The follow-up materialization failure
+  was that explicit `@TimeZoneStorage(COLUMN)` created only the timezone side
+  columns (`offset1`, `offset2`) rather than both the base datetime columns
+  declared by `@Column(name = "datetime1")` / `@Column(name = "datetime2")`
+  and the side columns declared by `@TimeZoneColumn`.
+* The new pipeline now materializes explicit time-zone-column storage through
+  the same composite-user-type shape used by the legacy binder.  The synthetic
+  component keeps the temporal domain member type for the boot component while
+  walking the composite user type embeddable members for the physical
+  `instant` / `zoneOffset` columns.  This keeps HQL temporal arithmetic typed
+  as `OffsetDateTime` while binding both physical columns.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnDurationTest' \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnTest' \
+  --console=plain
+----
+* The broad sampled UOE list no longer points at a live focused failure in the
+  current worktree.  Choose the next bucket from a fresh full-suite/census
+  failure report.
+
+TypeContributor user-type handoff follow-up:
+
+* `ContributedUserTypeTest` no longer fails with the explicit
+  `CompositeUserType` TypeContributor UOE, no longer materializes the
+  contributed composite value as an unknown basic type, and now preserves the
+  contributed plain `UserType` as a `CustomType`.
+* The new pipeline now registers user-type facts from both configured
+  `MetadataBuildingOptions#getBasicTypeRegistrations()` and live
+  `TypeContributor` callbacks into `BindingState`.  It also registers
+  configured composite user types from
+  `MetadataBuildingOptions#getCompositeUserTypes()` before entity binding,
+  matching the legacy handoff point that ran before final metadata
+  resolution.
+* Registered composite user type attributes that are categorized as basic
+  values are rebound through the synthetic component path shared with explicit
+  time-zone-column storage.  The mapping component keeps the domain Java type
+  while walking the composite user type embeddable class for physical columns
+  and property access metadata.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.type.contributor.usertype.ContributedUserTypeTest' \
+  --console=plain
+----
+* Regression verification passed for the adjacent synthetic composite path:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnDurationTest' \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnTest' \
+  --console=plain
+----
+* The generics guardrail set is still green after the TypeContributor handoff
+  fix.
+* The JSON aggregate/materialization bucket is green in the current worktree
+  after a forced focused run.  Do not keep treating `JsonArrayUnnestTest` as the
+  next open sampled bucket unless a fresh full-suite run reports a new failure.
+  `JpaMetamodelIgnoreUnsupportedPopulationTest` is already green; choose the
+  next bucket from fresh sampled failures rather than the older JSON notes.
+
+JSON aggregate binding/materialization follow-up:
+
+* `JsonArrayUnnestTest` no longer fails with
+  `Unsupported plural embeddable member - genres`.  Plural Java members that
+  are categorized as basic values inside aggregate components now remain on the
+  basic binding path instead of being routed through embeddable plural
+  association/element-collection handling.  This covers nested aggregate basic
+  members such as `Publisher.genres`.
+* The earlier remaining focused `JsonArrayUnnestTest` and
+  `JsonEmbeddableArrayTest` boundaries are no longer reproducible in the
+  current worktree.  A forced focused run is green for:
+  `JsonArrayUnnestTest`, `JsonEmbeddableTest`, `NestedJsonEmbeddableTest`,
+  `JsonEmbeddableArrayTest`, and `H2JsonArrayAggregateWideExtractionTest`.
+* Reopen JSON aggregate arrays only if a fresh focused or full-suite run reports
+  a new failure.  Runtime aggregate descriptors and SQL-AST aggregate access
+  strategy work remain deferred.
+
+Dynamic XML JPA metamodel population follow-up:
+
+* `JpaMetamodelIgnoreUnsupportedPopulationTest` no longer fails during
+  bootstrap with a null Java type in embeddable representation resolution.
+  Dynamic XML embeddables now preserve the legacy `Component` dynamic-map facts
+  during materialization: dynamic source types are marked dynamic instead of
+  receiving a synthetic component class name, and their model name is retained
+  as the dynamic-map role name.
+* The view-backed JPA static metamodel injection source now skips non-real
+  dynamic managed types before resolving Java classes.  Static metamodel
+  injection only has Java fields for real managed classes, and this preserves
+  the `ignoreUnsupported` expectation that dynamic-map types are not surfaced
+  through the JPA metamodel.
+* Focused verification passed for the full population trio:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelEnabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelDisabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelIgnoreUnsupportedPopulationTest' \
+  --console=plain
+----
+* Next highest-signal sampled bucket: continue with a nearby dynamic
+  XML/metamodel/static-metamodel slice if more broad failures point there;
+  otherwise return to the sampled multitenancy/procedure/runtime-list and pick
+  the next direct boot adapter or materialization miss with a focused
+  reproduction.
+
+Aggregate intent consolidation follow-up:
+
+* The new pipeline now has an internal `AggregateMappingIntent` source/model
+  object.  This is the near-term design slice from
+  `aggregate-mapping-design.adoc`: it centralizes aggregate storage decisions
+  without adding a runtime aggregate descriptor or changing SQL-AST/runtime
+  behavior.
+* `ComponentSource`, attribute categorization, `ComponentBinder`, and
+  `AggregateComponentBinder` now share the same aggregate intent for:
+  aggregate JDBC type-code recognition, `@Struct` recognition, aggregate array
+  source detection, plural aggregate detection, map-key aggregate column/JDBC
+  annotations, and plural-basic members inside aggregate components.
+* The legacy bridge remains authoritative for materialization.  The intent is
+  projected into the existing `Component` / `AggregateColumn` /
+  `AggregateComponentSecondPass` shape, preserving the current compatibility
+  policy while reducing the repeated local checks that were accumulating in
+  struct/UDT/JSON/XML/synthetic-component paths.
+* Focused verification passed for the main source/materialization surface:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnDurationTest' \
+  --tests 'org.hibernate.orm.test.mapping.basic.TimeZoneColumnTest' \
+  --tests 'org.hibernate.orm.test.type.contributor.usertype.ContributedUserTypeTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelEnabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelDisabledPopulationTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.JpaMetamodelIgnoreUnsupportedPopulationTest' \
+  --console=plain
+----
+* JSON aggregate boundary probes were rechecked with a forced focused run and
+  are green in the current worktree:
+  `JsonArrayUnnestTest`, `JsonEmbeddableTest`, `NestedJsonEmbeddableTest`,
+  `JsonEmbeddableArrayTest`, and `H2JsonArrayAggregateWideExtractionTest`.
+* Next aggregate-design slice should be selected from a fresh failure report.
+  Runtime aggregate descriptors and SQL-AST aggregate access strategy work
+  remain deferred.
+
+== Focused Gap Refresh: 2026-06-20
+
+This refresh was taken after the explicit key/materialization slice described
+in `current-work-handoff.adoc`.
+
+Source-confirmed refresh:
+
+* Table-key, foreign-key, unique-key, and index creation are no longer good
+  top-level gap buckets by themselves.  Current source routes the important
+  new-pipeline and cheap legacy callers through resolved products such as
+  `ResolvedForeignKey`, `ResolvedUniqueKey`, `ResolvedIndex`, and
+  `ResolvedPrimaryTableKey`, then through materializers.
+* Collection-table unique constraints and indexes now have resolved
+  materialization coverage.  Collection-table owner keys still deserve focused
+  parity testing because they combine implicit naming, explicit join columns,
+  FK ordering, PK/UK finalization, and inverse collection handling.
+* Entity-valued map keys with explicit `@MapKeyJoinColumn` metadata and
+  implicit primary-key references are covered in boot-model tests.  The
+  previously source-confirmed component-valued `@MapKey(name)` and inverse
+  many-to-many component-index gaps are now covered by focused boot-model
+  tests; keep broader combination coverage as test-only follow-up.
+* Table options are applied at table binding time.  Column options now
+  propagate through unified column sources, including map-key join columns.
+* Identifier binding should stay narrowed to newly observed failing shapes.
+  The recent identifier/materializer work covers the main simple, embedded,
+  IdClass bridge, association-id, and derived-id guardrails.
+
+Recommended next parity bucket:
+
+* Fresh full-suite census note: after the JPA/settings normalization parity
+  bucket, the 2026-06-26 controlled single-worker `hibernate-core` run completed
+  the test task with 15,493 tests and more than seven hundred failures.  The
+  old sampled UOE list is green; choose from the fresh census clusters instead.
+* The largest raw-count bucket from that census was temporal type parity:
+  `ZonedDateTimeTest` and `OffsetDateTimeTest`.  That focused bucket is now
+  green.  The fix stayed in type-configuration/bootstrap handoff rather than
+  SQL-AST/runtime code: generic configuration-sensitive standard temporal
+  references now honor the active recommended JDBC type, while explicit
+  with/without-time-zone variants remain fixed.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.type.temporal.ZonedDateTimeTest' \
+  --tests 'org.hibernate.orm.test.type.temporal.OffsetDateTimeTest' \
+  --console=plain
+----
+* The generics guardrail set is still green after the temporal type-registry
+  change.
+* Next highest raw-count follow-up from the same census is query parameter /
+  SQL rendering parity, led by `MaxInExpressionParameterPaddingTest`,
+  `LegacyParameterTests`, and nearby explicit-parameter binding tests.  Recheck
+  focused reproduction before assuming it is a boot/model defect.
+* Highest-signal boot/model bucket from the latest census:
+  `AnnotationCoverageBindingTests` plus `JsonWithArrayEmbeddableTest` for
+  aggregate/materialization parity, followed by mapped-by/join-table association
+  key handoff if the aggregate bucket proves runtime-only.
+* Highest-signal bucket: collections/plural association keys, with map-key and
+  collection-table owner-key parity first.  This bucket is still
+  source-confirmed, appeared repeatedly in broad-run failure streams, and is
+  directly adjacent to the new materialization contract.
+* Start with boot-model mapping-state tests before broad runtime tests.  The
+  most useful first guardrail is:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests'
+----
+
+Focused verification result:
+
+* The focused collection boot-model guardrail is green after aligning implicit
+  collection-table owner key naming with the implicit join-column strategy and
+  preserving explicit join-column paths.
+* Additional runtime-adjacent probes are green for composite-owner element
+  collections, element collections referencing id columns, and unidirectional
+  `@OneToMany @JoinColumn` ordered-insert/update handling:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.annotations.collectionelement.ElementCollectionAndCompositeKeyTest \
+  --tests org.hibernate.orm.test.annotations.collectionelement.ElementCollectionReferencingIdColumnsTest \
+  --tests org.hibernate.orm.test.annotations.collectionelement.TestCollectionWithOrderInsertAndOrderUpdates
+----
+* Covered fixes: composite owner key column order is preserved without
+  destructive re-sorting, plain Java `List` without list-index metadata binds
+  with bag semantics, implicit basic element-collection columns use the
+  attribute path instead of hard-coded `elt`, and nullable unidirectional
+  one-to-many FK columns remain nullable until collection updates populate them.
+* The broader collection sample still fails, but the failure count is down to
+  78/295 in the sampled slice.  The next highest-signal collection bucket is
+  default/improved collection naming strategy parity, led by
+  `DefaultNamingCollectionElementTest`, `ImprovedNamingCollectionElementTest`,
+  and `CustomImprovedNamingCollectionElementTest`.
+
+Follow-up collection naming strategy slice:
+
+* Default, improved, and custom `ImplicitNamingStrategy` collection naming
+  parity is now covered for collection table names, owner key join columns,
+  direct basic element columns, nested embeddable element overrides, and
+  primitive array element collections.
+* The binder now preserves strategy-produced logical table text instead of
+  canonicalizing it during binding, passes collection owner-key sources without
+  an attribute path so legacy-HBM naming chooses the owner id column shape, and
+  routes basic element-column names through the implicit basic-column strategy
+  using the persistent attribute name.
+* Component-source path adjustment lookup now tries collection-element
+  `element.` paths alongside legacy `value.` paths and carries direct nested
+  member overrides into nested embeddable sources.
+* List-index columns and basic map-key columns now route unnamed
+  `@OrderColumn` and `@MapKeyColumn` defaults through the configured
+  `ImplicitNamingStrategy` (`determineListIndexColumnName` and
+  `determineMapKeyColumnName`) instead of hard-coding the JPA suffix in the new
+  collection-index binder.  Custom strategy coverage was added for both hooks.
+* Entity-valued map-key join columns were audited against the legacy binder.
+  Legacy builds unnamed `@MapKeyJoinColumn` defaults as an explicit logical
+  collection attribute name plus `_KEY` suffix, so the new binder intentionally
+  preserves `labels_KEY` / `parents_KEY` and composite
+  `<attribute>_KEY_<target-column>` defaults instead of routing this path
+  through `determineJoinColumnName`, which would change stock names such as
+  `labels_KEY` to `LabelKey_id`.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.annotations.collectionelement.DefaultNamingCollectionElementTest \
+  --tests org.hibernate.orm.test.annotations.collectionelement.ImprovedNamingCollectionElementTest \
+  --tests org.hibernate.orm.test.annotations.collectionelement.CustomImprovedNamingCollectionElementTest
+----
+* Adjacent collection binding smoke verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests \
+  --tests org.hibernate.orm.test.annotations.collectionelement.ElementCollectionAndCompositeKeyTest \
+  --tests org.hibernate.orm.test.annotations.collectionelement.ElementCollectionReferencingIdColumnsTest \
+  --tests org.hibernate.orm.test.annotations.collectionelement.PrimitiveArrayElementCollectionTempTest
+----
+* Focused collection-index implicit naming verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnListElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnUsesImplicitNamingStrategy' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyColumnElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyColumnUsesImplicitNamingStrategy'
+----
+
+Follow-up non-collection naming strategy slice:
+
+* Identifier columns and singular/plural `@Any` discriminator/key columns now
+  route unnamed defaults through the configured `ImplicitNamingStrategy` hooks
+  instead of relying on hard-coded default text in the new boot pipeline.
+* The covered hooks are `determineIdentifierColumnName`,
+  `determineAnyDiscriminatorColumnName`, and `determineAnyKeyColumnName`.
+  Custom strategy coverage was added for those hooks.
+* Root entity discriminator naming was audited but left unchanged for now:
+  routing that path through `determineDiscriminatorColumnName` changes the
+  stock annotation-style default expected by the existing boot-model tests, so
+  it needs a dedicated legacy comparison before changing the new binder.
+* Focused non-collection implicit naming verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.AnyAssociationTests.testAnyImplicitColumnsUseImplicitNamingStrategy' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests.testImplicitIdentifierColumnUsesImplicitNamingStrategy'
+----
+
+Follow-up association collection naming slice:
+
+* Association collection-table owner key names now use the implicit
+  join-column strategy with `ENTITY_COLLECTION` semantics.  Bidirectional
+  many-to-many owner keys also pass the inverse-side `mappedBy` attribute path
+  to the naming strategy, matching the legacy/runtime expectation for names
+  such as `employees_id` and `stores_sId`.
+* Boot-model expectations for implicit unidirectional association and
+  `@ManyToAny` collection tables now assert the strategy-produced owner key
+  names instead of the raw identifier column name.  Singular `@Any` owned-table
+  naming asserts the collection-table-style logical name produced for an empty
+  `@JoinTable`.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testUnidirectionalOneToManyImplicitJoinTable' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyImplicitJoinTable' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.AnyAssociationTests.testAnyImplicitJoinTable' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.AnyAssociationTests.testManyToAnyImplicitJoinTable' \
+  --tests 'org.hibernate.orm.test.annotations.manytomany.defaults.ManyToManyImplicitNamingTest' \
+  --tests 'org.hibernate.orm.test.annotations.manytomany.defaults.JpaCompliantManyToManyImplicitNamingTest'
+----
+
+Follow-up collection owner-key / property-ref slice:
+
+* Non-primary-key collection owner-key resolution now avoids selecting an
+  association property merely because the association join columns match all
+  referenced owner columns.  This keeps unidirectional collection owner keys
+  from pointing at an unrelated `ToOne` mapping when the owner also has an
+  association over the same physical columns.
+* Synthetic non-primary-key owner keys may still include a `ToOne` property as
+  one part of a larger composite key.  This covers join-table mappings whose
+  owner key spans an association column plus an identifier column, such as
+  self-referencing many-to-many nodes keyed by `(tree, id)`.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.cuk.JoinColumnOccursOutOfOrderTest \
+  --tests org.hibernate.orm.test.collection.NonPkJoinColumnCollectionTest \
+  --tests org.hibernate.orm.test.collection.NonPkCompositeJoinColumnCollectionTest \
+  --tests org.hibernate.orm.test.unidir.UnidirectionalOneToManyNonPkJoinColumnTest \
+  --tests org.hibernate.orm.test.collection.propertyref.ReferencedColumnNameTest
+
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyGenericTest \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyNonGenericTest \
+  --tests org.hibernate.orm.test.cuk.JoinColumnOccursOutOfOrderTest
+
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.orderupdates.OrderUpdateNestedEmbeddedIdTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyNestedEmbeddedIdTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyEmbeddedIdFKNotNullableTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyNestedEmbeddedIdOutOfOrderJoinColumnsTest \
+  --tests org.hibernate.orm.test.compositefk.OneToManyIdClassFKTest \
+  --tests org.hibernate.orm.test.idclass.NestedIdClassTest \
+  --tests org.hibernate.orm.test.idclass.IdClassWithEagerManyToOneAbstractParentTest \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyGenericTest \
+  --tests org.hibernate.orm.test.manytomany.generic.ManyToManyNonGenericTest \
+  --tests org.hibernate.orm.test.annotations.refcolnames.constraints.OneToManyRefColumnNameTest
+----
+* `OneToManyNonPrimaryKeyJoinTest` still fails in this sampled environment,
+  but it boots and executes SQL; the observed failure is the statistics counter
+  reporting zero prepared statements, not a collection owner-key binding
+  failure.
+
+Follow-up inheritance / joined-subclass association-table slice:
+
+* The mapped-superclass and table-per-class table-context guardrail is green,
+  so the earlier broad-run signal for mapped-superclass table references is no
+  longer a strong open bucket.
+* Plural association element keys now treat join-table inverse join columns
+  that reference a joined-subclass `@PrimaryKeyJoinColumn(name = ...)` as
+  primary-key references, matching the to-one path.  The binder also carries
+  those joined-subclass key columns into FK materialization so association-table
+  FKs target the subclass table key column rather than the root identifier
+  column name.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.constraint.NonRootTablePolymorphicTests.verifyRuntimeModel
+
+./gradlew :hibernate-core:test \
+  --tests org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest \
+  --tests 'org.hibernate.orm.test.annotations.tableperclass.*' \
+  --tests org.hibernate.orm.test.inheritance.TablePerClassTest \
+  --tests org.hibernate.orm.test.inheritance.OneToManyAbstractTablePerClassTest \
+  --tests org.hibernate.orm.test.inheritance.ManyToManyAbstractTablePerClassTest
+----
+* Full `NonRootTablePolymorphicTests` still has a boot-model assertion drift:
+  the runtime path passes, but the boot assertion expects primary-key FKs to
+  expose no explicit referenced columns while the current FK materializer carries
+  explicit referenced PK columns for some paths.  Treat that as a key
+  materializer boot-model shape question, not as unresolved joined-subclass
+  association-table binding.
+
+Follow-up inverse to-many list classification slice:
+
+* Plain Java `List` attributes still default to indexed `LIST` mappings with
+  default `@OrderColumn` values for owned collection shapes.
+* Inverse `@OneToMany(mappedBy = ...)` and inverse `@ManyToMany(mappedBy = ...)`
+  plain lists now preserve the legacy exception: without explicit list-index
+  metadata they classify as `BAG`.  Explicit `@OrderColumn` /
+  `@ListIndex*` metadata still classifies as `LIST`.
+* This avoids producing synthetic order columns for unowned to-many lists, which
+  caused duplicate `children_ORDER` update dependencies in table-per-class
+  discriminator association tests.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritancePersistTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.tableperclass.*' \
+  --tests 'org.hibernate.orm.test.inheritance.TablePerClassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.OneToManyAbstractTablePerClassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.ManyToManyAbstractTablePerClassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.TransientOverrideAsPersistentTablePerClassTests' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.TablePerClassInheritancePersistTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.embeddable.TablePerClassWithEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.inheritance.join.EntityJoinWithTablePerClassInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.join.AttributeJoinWithTablePerClassInheritanceTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnListElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitOrderColumnUsesImplicitNamingStrategy' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyColumnElementCollection' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.tableperclass.*' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest'
+----
+
+Follow-up map-key slice:
+
+* Implicit entity-valued map keys without `@MapKeyJoinColumn` now bind through
+  the same entity map-key path as explicit primary-key references.
+* `@MapKey(name)` now supports to-one target properties by copying the target
+  `ManyToOne` as the collection index value; a later focused slice added
+  component-valued target properties.
+* Inverse map-valued many-to-many binding was verified for implicit
+  entity-valued owning map keys and to-one property map keys.  The existing
+  inverse binder copies the owning `ManyToOne` index cleanly for both shapes.
+* Empty-name `@MapKey` remains supported for entity-valued map elements and now
+  explicitly rejects non-entity element collections because there is no
+  associated entity identifier to borrow as the map key.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitEntityMapKeyElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyEntityMapKeyWithoutMapKeyJoinColumn' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyToOnePropertyMapKey'
+----
+
+Additional implicit `@MapKey` verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitEntityMapKeyElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyRejectsBasicElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitMapKeyRejectsEmbeddableElementCollection'
+----
+
+Follow-up component property map-key slice:
+
+* `@MapKey(name)` now supports component-valued target properties by
+  recursively cloning the component index value, with focused element-collection
+  coverage for an embeddable element property used as the map key.
+* Inverse map-valued many-to-many binding now copies component-valued owning map
+  indexes, matching the already-supported basic and to-one index paths.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testComponentPropertyMapKeyEmbeddableElementCollection'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testPropertyMapKeyEmbeddableElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testComponentPropertyMapKeyEmbeddableElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testBasicMapElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testEmbeddableMapElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testEmbeddableMapValueElementCollectionAttributeOverride' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testMapKeyCompositeTypeElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testEntityMapKeyElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testImplicitEntityMapKeyElementCollection' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testEntityMapKeyElementCollectionNonPrimaryKeyReference' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testCompositeEntityMapKeyElementCollection'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyPropertyMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyToOnePropertyMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testOwningManyToManyComponentPropertyMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByPropertyMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByToOnePropertyMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByComponentPropertyMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByEntityMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByImplicitEntityMapKey'
+----
+
+Additional inverse verification passed for:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByImplicitEntityMapKey' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseManyToManyMapMappedByToOnePropertyMapKey'
+----
+
+Follow-up value-embeddable plural-member slice:
+
+* Direct plural members inside non-id value embeddables now have focused
+  binding-model and materialization assertions for element collections,
+  one-to-many associations, and many-to-many associations.
+* Nested non-id value embeddables with plural members now have focused
+  materialization coverage for component-path collection roles such as
+  `owner.facts.details.labels`.
+* Embedded identifiers still explicitly reject direct, unannotated, and nested
+  plural members.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.embeddable.EmbeddableBindingTests.testComponentPluralMemberValueIntents' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.embeddable.EmbeddableBindingTests.testNestedValueEmbeddablePluralMember'
+----
+
+Follow-up XML metadata-complete slice:
+
+* Metadata-complete XML embeddables now infer access from concrete class
+  annotations, id members, and XML-declared attribute names before falling back
+  to document/default accessor settings.  This covers field-only embeddables
+  declared in XML without an explicit `access="FIELD"`.
+* Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.DiscriminatorValueTest'
+----
+* The broader metadata-complete XML guardrail also passed:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.XmlPhaseBoundaryTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.SimpleCompleteXmlTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.CompletePartialTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.CompleteXmlWithEmbeddableTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.CompleteXmlInheritanceTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.DiscriminatorValueTest' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.XmlSourceParityTests'
+----
+
+== Core Guardrail Attempt: 2026-06-17
+
+Fresh guardrail command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test
+----
+
+Status:
+
+* The core-only run produced a large amount of failure output, then stopped
+  making progress during the final test tail/reporting phase.
+* The run was interrupted manually after the Gradle wrapper and active test
+  executor appeared stalled.
+* Normal XML report finalization did not complete; only a handful of JUnit XML
+  files were present under `hibernate-core/target/test-results/test`.
+* The Gradle HTML report tree was partially available and was mined for
+  failure pages.  Treat the counts below as directional guardrail data, not as a
+  complete suite census.
+
+Partial HTML-report observations:
+
+* 346 leaf-ish failure pages were parsed from
+  `hibernate-core/target/reports/tests/test`.
+* 42 report pages mention `SessionFactoryOptions method not resolved by the
+  minimal adapter`, all currently for
+  `isUnownedAssociationTransientCheck`.  This is construction/settings handoff
+  noise that should be burned down before over-interpreting broad runtime
+  buckets.
+  Progress note: `isUnownedAssociationTransientCheck` is now part of
+  `ResolvedSessionFactorySettings` and exposed through
+  `SessionFactoryOptionsAdapter`.
+* The earlier parser count for categorization/source availability was too broad.
+  It mixed true source-policy failures with much more common inheritance and
+  binding-state failures, such as missing table context after categorization
+  already succeeded.
+* Only a small number of pages in this partial run mention table-reference
+  lookup failures, which suggests the earlier inheritance registration work
+  reduced the most obvious `UnknownTableReferenceException` shape in this
+  sample.  This does not close the inheritance bucket.
+
+Directional bucket snapshot from the partial HTML report:
+
+[cols="1,1,3", options="header"]
+|===
+| Bucket
+| Parsed failures
+| Representative signals
+
+| Transitional settings adapter / unsupported runtime option
+| 42 direct hits
+| `DeleteCascadeTest`, `InsertWithAssociationsTest`,
+`JoinFormulaNativeQueryTest`; all mention missing
+`isUnownedAssociationTransientCheck` on the minimal
+`SessionFactoryOptionsAdapter`.  This direct adapter gap is addressed; rerun the
+guardrail to see the next failure shape for these tests.
+
+| Inheritance categorization/binding/table context
+| large, count requires clean rerun
+| The strongest current signal.  `EmbeddableWithGenericAndMappedSuperClassTest`
+is an example: categorization has enough type information to proceed, but
+table-per-class binding tries to use a mapped-superclass supertype as though it
+had a `TableReference`, leading to a null `superTypeTable`.
+
+| Composite-id / IdClass / derived-id binding
+| large, count requires clean rerun
+| The second strongest current signal.  Earlier reports and focused failures
+point at inherited id declarations, IdClass state from mapped superclasses,
+association-valued/composite ids, and late identifier/foreign-key resolution.
+The derived-identity cases where one association-valued id attribute consumes
+the whole target identifier should be tracked against
+`identifier-correspondence-model-design.adoc` rather than patched as isolated
+runtime identifier-conversion special cases.
+
+| Source-policy availability
+| unclear; likely smaller
+| True source-policy failures are the subset where `AvailableResources` rejects
+a needed persistent superclass or related source because it is not listed and
+the source policy does not allow automatic completion.  No large current bucket
+has been proven here; do not confuse this with missing binding state after
+categorization.
+
+| Collections/indexes/map keys
+| about 110 parsed pages
+| `ListOfStringTest`, `ListOfByteArrayTest`, `SetAsBasicTest`,
+collection validation/order tests, and plural association tests.  The exact
+count is heuristic because package/test names overlap with runtime tests.
+
+| Bytecode/enhancement/proxy/lazy runtime
+| about 198 parsed pages
+| Many pages are enhancement variants or lazy/proxy runtime tests, but this
+bucket also absorbs downstream construction failures in the partial parser.
+Use focused reruns before treating these as bytecode defects.
+
+| Identifiers/derived ids/generators
+| about 7 parsed pages
+| `CompositeIdTypeMismatchTest`, `NonNullableCircularDependencyCascadeTest`,
+natural-id fetch-profile/entity-graph assertions, and unnamed generator
+assertions.
+
+| Inheritance/discriminator/table-reference
+| about 5 parsed pages
+| History-table joined inheritance assertions, subclass insert-ordering, and
+`DiscriminatorOptionsTest`.  This sample has fewer table-reference lookup
+failures than the older full snapshot, but inheritance remains open.
+
+| Query/criteria/entity-graph runtime
+| about 4 parsed pages
+| Fetch-profile/entity-graph assertion failures.  These still need sampling to
+separate named-object binding gaps from runtime fetch behavior.
+
+| Component/embeddable/access/override
+| about 1 parsed page
+| `InvalidAnnotatedClassTypesTest`.  The focused component and embeddable
+guardrails are currently more informative than this partial broad-run bucket.
+|===
+
+Updated guardrail interpretation:
+
+* Keep the focused mapped-superclass and embeddable inheritance tests as commit
+  guardrails; they are now more reliable than the interrupted broad run for the
+  recent binding work.
+* The minimal `SessionFactoryOptionsAdapter` gap for
+  `isUnownedAssociationTransientCheck` has been burned down.  Rerun broad or
+  focused guardrails before assigning the previously hidden action-queue tests
+  to a binding/runtime bucket.
+* Treat inheritance categorization/binding/table context as the primary open
+  metadata bucket.  The recent composite-FK and derived-identity focused
+  guardrails are green, so the remaining identifier bucket should be narrowed to
+  IdClass/inheritance/property-ref combinations before more broad identifier
+  work is started.
+* Keep `AvailableResources` source-policy failures narrow: only failures caused
+  by `exclude-unlisted-classes=true` or equivalent source-policy rejection
+  belong there.  Failures such as a null supertype table reference belong in
+  inheritance/table-context handling.
+* Continue treating broad query/entity-graph and bytecode/lazy buckets as
+  symptom buckets until focused reruns show whether they fail during
+  SessionFactory construction, metadata export, or actual runtime execution.
+
+=== Interrupted Live Refresh: 2026-06-17
+
+Refresh command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test
+----
+
+Status:
+
+* The run reached test execution and produced a large live-console failure
+  stream, including a heap dump, then stopped making progress in a late test
+  tail.  It was stopped with `./gradlew --stop`.
+* Gradle did not finalize JUnit XML reports for this attempt, and the HTML
+  report tree was not reliable enough for counts.  Treat the notes below as a
+  qualitative refresh layered on top of the historical XML snapshot, not as a
+  replacement for the counted corpus.
+* The live stream confirmed that the previous broad "source availability"
+  framing was too loose.  Many visible failures have enough source/categorized
+  type information and fail later in table context, XML overlay/application,
+  runtime mapping-model creation, or JPA/runtime behavior.
+
+Live-console buckets worth sampling next:
+
+[cols="1,3", options="header"]
+|===
+| Bucket
+| Representative live-console signals
+
+| XML overlay / XML annotation injection
+| `XmlAttributeOverrideTest` fails with `ModelsException`; JSON/XML mapping
+tests and earlier HBM-not-found transformation failures suggest XML-created
+annotations and XML-disabled filtering still need focused guardrails.
+
+| Component plus mapped-superclass table ownership
+| `MappedSuperclassComponentWithCollectionTest` fails with
+`DuplicateMappingException`; earlier focused failures around embeddable
+inheritance and mapped-superclass generics still belong here.
+
+| Entity metadata defaults / lazy-to-one runtime shape
+| Several lazy-to-one and enhancement tests fail with SQL grammar or eager
+initialization assertions.  Some direct metadata defaults were recently fixed,
+so sample these before treating the whole bucket as bytecode/enhancement.
+
+| JPA settings and closed-EntityManager behavior
+| `ConfigurationObjectSettingTest`, `JpaComplianceTests`,
+`EntityManagerClosedTest`, and transaction-joining/close-with-active-transaction
+tests fail.  This looks more like settings/runtime behavior than source
+categorization.
+
+| Runtime `UnsupportedOperationException`
+| The old broad UOE list is mostly stale after the settings-normalization and
+`SessionFactoryOptionsAdapter` parity fixes.  The completed 2026-06-26
+single-worker census leaves one source/binding UOE worth isolating
+(`FinalEmbeddableFieldTest`, unsupported plural embeddable member) and one
+runtime/model foreign-key UOE in `NaturalIdDereferenceTest`.  Keep the
+natural-id case out of boot-binding work unless we intentionally move into
+runtime model foreign-key support.
+|===
+
+=== Controlled Single-Worker Refresh: 2026-06-26
+
+Refresh command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  -Ptest.threads=1 \
+  --continue \
+  --console=plain
+----
+
+Status:
+
+* The controlled single-worker run completed in 3m26s and failed normally due
+  to test failures; it did not hang and did not produce a new OOM dump.
+* Latest XML census: 4,247 test-class result files, 324 failing classes, 741
+  failures, and 0 XML `error` entries.  Gradle reported 15,493 tests completed
+  and 1,553 skipped.
+* Highest-count failures were temporal type assertions
+  (`ZonedDateTimeTest`, `OffsetDateTimeTest`), runtime SQL/query fallout,
+  annotation coverage/materialization parity, JPA metamodel, soft-delete NPEs,
+  generator/identifier/schema/naming assertions, and mapped-by/generic
+  embeddable association clusters.
+* Recommended next binding/materialization buckets from this census:
+  `AnnotationCoverageBindingTests` / `JsonWithArrayEmbeddableTest` for
+  higher-signal aggregate materialization parity, or mapped-by/join-table
+  association clusters for collection/association key handoff.  The temporal
+  bucket is larger by count but probably less source/binding-focused.
+
+=== Core Guardrail Refresh: 2026-06-18
+
+Refresh command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test
+----
+
+Status:
+
+* The run reached broad `hibernate-core` test execution and produced a large
+  live-console failure stream.
+* After the visible stream reached JPA transaction/closed-EntityManager tests,
+  the Gradle session stopped producing output for several minutes.  The run was
+  interrupted with `Ctrl-C` to avoid leaving a dangling test process.
+* JUnit XML finalization was incomplete: only 5 XML files were written under
+  `hibernate-core/target/test-results/test`.
+* The generated HTML report tree was partially useful.  It contained 1,236 HTML
+  files, but the finalized class-summary pages represented only the last
+  reliable segment of the run.
+
+Finalized HTML-report subset:
+
+[cols="1,1,1,3", options="header"]
+|===
+| Bucket
+| Failed classes
+| Failed tests
+| Representative classes
+
+| Bytecode enhancement / lazy proxy / lazy to-one
+| 49
+| 143
+| `FetchGraphTest`, `DetachedReferenceInitializationAnyFetchTest`,
+`EagerOneToManyPersistAndLoadTest`, `BidirectionalLazyTest`,
+`ManyToOneAllowProxyTests`.
+
+| Collections/index/map/plural behavior
+| 17
+| 52
+| Mostly overlapping enhancement collection tests:
+`EagerSubSelectOneToManyPersistAndLoad2Test`,
+`DirtyTrackingCollectionInDefaultFetchGroupTest`,
+`LazyProxyBytecodeEnhancementCollectionInitializationTest`.
+
+| Association/FK/join/property-ref behavior
+| 12
+| 24
+| `PolymorphicToOneImplicitOptionTests`, `ManyToOneAllowProxyTests`,
+`JoinFetchedManyToOneAllowProxyTests`,
+`ManyToOneWithEmbeddedAndNotOptionalFieldTest`.
+
+| Query/entity-graph/lazy graph behavior
+| 4
+| 26
+| `FetchGraphTest`, `LoadAndFetchGraphCollectionsNotExplicitlySpecifiedTest`,
+`QueryScrollingWithInheritanceProxyTest`.
+
+| `@Any`
+| 1
+| 12
+| `DetachedReferenceInitializationAnyFetchTest`.
+
+| Identifier/composite/idclass/derived-id
+| 0
+| 0
+| No identifier failures appeared in the finalized HTML subset.  This matches
+the focused guardrail after the recent `IdentifierBinder` fixes, but it does
+not prove the broader full suite is identifier-clean because the run was
+interrupted.
+|===
+
+Live-console buckets observed before interruption:
+
+[cols="1,3", options="header"]
+|===
+| Bucket
+| Representative live-console signals
+
+| Collections and plural association keys
+| Many `ConstraintViolationException`, join-table/list-index assertion, and
+`InversePluralAssociationBinder`/`CollectionIndexBinder` failures.  This is the
+strongest binding-relevant bucket visible in the live stream.
+
+| Association target / join-column / property-ref binding
+| `AssociationTargetBinder`, `ToOneAttributeBinder`, `JoinColumnOccursOutOfOrder`,
+`BatchFetchReferencedColumnName`, and non-primary-key join tests.  This bucket
+is closely related to late FK/key resolution and should be sampled before
+runtime fixes.
+
+| `@Any` / `@ManyToAny`
+| `AnyValueBinder`, `AnyValue`, discriminator/key inference, and lazy/join-fetch
+any tests appeared repeatedly in the interrupted broad stream.  Explicit
+any-key metadata and basic explicit-target key inference have focused boot-model
+coverage.  Non-basic target-id inference is covered as an explicit unsupported
+shape.  The focused runtime-adjacent `@Any` fetch slice is now green after
+binding property-level laziness for singular `@Any` attributes and preserving
+filter-definition `autoEnabled` / `applyToLoadByKey` metadata in the new global
+registration path.
+
+| Inheritance / mapped-superclass / discriminator
+| Console output still included inheritance, discriminator, mapped-superclass,
+and non-root table failures.  Some are likely downstream of association/table
+binding rather than pure categorization failures.  The implicit string
+discriminator value path was corrected to match legacy `EntityBinder#name`
+semantics: `@Entity(name)` when present, otherwise the unqualified class name,
+instead of the fully qualified `ClassDetails#getName()`.
+
+| Audit/changelog state management
+| A large audit tail failed with `IllegalArgumentException`,
+`AssertionFailedError`, and occasional nulls.  Treat this as runtime/state
+fallout until core mapping buckets shrink.
+
+| Temporal/timezone and native datetime discovery
+| Several temporal tests failed in the live stream.  These are not primary
+boot-model binding gaps unless a focused rerun shows metadata construction
+failure.
+
+| JPA transaction / closed EntityManager behavior
+| The run reached closed-EntityManager and transaction-joining failures shortly
+before the quiet period.  Keep this out of the binding-gap critical path.
+|===
+
+Actionable conclusion from this refresh:
+
+* The recent focused identifier fixes are holding for the targeted guardrails;
+  do not keep the identifier bucket open without a new focused failing example.
+* A full `hibernate-core` run is currently too noisy and too unstable to use as
+  the next work selector.
+* Before starting broad design implementation, the highest-signal optional
+  sampling target is collections/plural-association key binding plus
+  association target/property-ref binding.
+* It is reasonable to proceed with the resolved contribution design work after
+  recording this harvest; the remaining full-suite failures are not a reason to
+  delay the design indefinitely.
+
+== Historical Full-Suite Failure Snapshot: 2026-06-17
+
+This snapshot is retained as a broader failure corpus from an earlier run.  It
+contains complete core XML-report counts from that attempt, but it should not be
+confused with the newer interrupted core guardrail attempt above.
+
+Broad command:
+
+[source,bash]
+----
+./gradlew test
+----
+
+Core-only command:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test
+----
+
+Broad-run status:
+
+* The run was attempted as a broad full-suite pass.
+* Completed XML reports were available for several modules and are grouped
+  below.
+* The broad run stalled while `hibernate-core:test` was still active, so it was
+  stopped and replaced by a core-only run for exact core failure data.
+
+Core-only status:
+
+* `:hibernate-core:test` completed test execution enough to report
+  `12,795 tests completed, 3,689 failed, 1,460 skipped`.
+* The task then failed with `Java heap space` while completing the Gradle test
+  executor.
+* The `hibernate-core/target/test-results` XML reports contained all `3,689`
+  failures and are the source for the core bucket counts below.
+
+Completed XML report failure counts:
+
+[cols="1,1,3", options="header"]
+|===
+| Module/task
+| Failures
+| Dominant bucket
+
+| `hibernate-jcache:test`
+| 24
+| Cache/natural-id/region metadata and `SessionFactoryOptionsAdapter` gaps.
+
+| `hibernate-jfr:test`
+| 2
+| Cache-event fallout from missing/incorrect cache region metadata.
+
+| `hibernate-tck-runner:test`
+| 1
+| Harness shutdown fallout; not enough signal for a binding bucket.
+
+| `tooling/hibernate-ant:legacyTest`
+| 1
+| JPA persistence-unit/property override handling.
+
+| `tooling/hibernate-assistant:test`
+| 3
+| Mapped-superclass and joined-inheritance mapping-model export.
+
+| `tooling/hibernate-reveng:test`
+| 4
+| Reverse-engineering fallout: composite to-one binding, reserved identifier SQL,
+and cache/lazy lint expectations.
+
+| `tooling/metamodel-generator:dataIntegrationTest`
+| 39
+| Named-query registration/lookup for generated repository methods.
+|===
+
+Core failure counts by coarse bucket:
+
+[cols="1,1,3", options="header"]
+|===
+| Bucket
+| Failures
+| Representative tests
+
+| Inheritance/table-reference resolution
+| 686
+| `TablePerClassInheritanceWithAbstractRootTest`,
+`JoinedSubclassTest`, `UnionSubclassTest`, `JpaAliasTests`,
+`AttributeJoinWithJoinedInheritanceTest`.
+
+| Query/criteria/entity-graph runtime
+| 561
+| `LoadFetchGraphWithEagerSelfReferencingEagerToOneTest`,
+`QueryTest`, `ResultsShapeTests`, `QueryHintEntityGraphTest`,
+`EntityJoinWithJoinedInheritanceTest`.  This is mostly a symptom bucket, not a
+primary binding bucket; a follow-up sample of query/criteria/entity-graph
+failures showed many SessionFactory build failures, settings-adapter failures,
+and table-reference failures, with only a small named-query subset.
+
+| Collections/indexes/map keys
+| 512
+| `DefaultNamingCollectionElementTest`,
+`ImprovedNamingCollectionElementTest`, `ElementCollectionMapTest`,
+`MapIssueTest`, `IndexedCollectionTest`.
+
+| Transitional settings adapter / unsupported runtime option
+| 285
+| `DeleteCascadeTest`, `InsertWithAssociationsTest`,
+`SingleTableInheritanceWithShareCacheModeAllAndCacheConcurrencyStrategyTest`,
+`ProcedureParameterTests`, `ExplicitLockingTest`.
+
+| Type/converter/aggregate value mapping
+| 237
+| `MatchingDuplicateRegistrationTests`, `EnumeratedAndGenericsTest`,
+`JsonEmbeddableArrayTest`, `CompositeUserTypeTests`,
+`WrapperArrayHandlingLegacyTests`.
+
+| Action queue / temporal / audit state management
+| 223
+| `InsertDecomposerTest`, `UpdateDecomposerTest`, `HistoryTableDecomposerTest`,
+`AuditEntityTest`, `ChangelogAnnotationTest`.
+
+| Component/embeddable/access/override
+| 155
+| `GenericEmbeddedPropertyMappedSuperclassTest`,
+`EmbeddableInheritanceMappedSuperclassAndGenericsTest`,
+`EmbeddableWithOneToMany_HHH_11302_xml_Test`,
+`RecordNestedEmbeddedWithASecondaryTableTest`.
+
+| Schema/table/column/generator metadata
+| 141
+| `ManyToOneReferencedColumnNameTest`, `CommentTest`, `CommentsTest`,
+`SequenceGeneratorOptionsTest`, `Jpa4TableAndIndexDdlTest`.
+
+| Bytecode/enhancement fallout
+| 125
+| `DirtyTrackingCollectionNotInDefaultFetchGroupTest`,
+`DeepInheritanceWithNonEntitiesProxyTest`, `ManyToOnePropertyAccessByFieldTest`,
+`LazyGroupWithInheritanceAllowProxyTest`.
+
+| Identifiers and derived ids
+| 120
+| `IdClassWithOneAttributeTest`, `CompositeIdFkGeneratedValueTest`,
+`IdManyToOneTest`, `DefaultedMapsIdTest`, `MapsEmbeddedIdTest`.
+
+| Cache/natural-id/filter metadata
+| 56
+| `CachedMutableNaturalIdNonStrictReadWriteTest`, `CacheAnnotationTests`,
+`InheritedNaturalIdTest`, `BasicHibernateAnnotationsTest`.
+
+| JPA transaction/lock/settings runtime
+| 37
+| `BatchAndLockTest`, `LockTest`, `GetTransactionTest`,
+`EntityManagerSerializationTest`.
+
+| XML/source handling
+| 9
+| `AttributeOverrideColumnTransformTests`, `OrmXmlIndexTest`,
+`Ejb3XmlTest`, `SimpleXmlOverriddenTest`, `XmlDefinedNamespaceTests`.
+
+| Other/unclassified
+| 542
+| Mixed assertion failures and downstream runtime failures that should be
+reclassified after the large metadata/binding buckets shrink.
+|===
+
+=== Failure Bucket Mapping
+
+[cols="1,3,3", options="header"]
+|===
+| Bucket
+| Representative failures
+| Existing section to burn down
+
+| XML/source and persistence-unit settings
+| `tooling/hibernate-ant:legacyTest`
+`org.hibernate.tool.ant.JPAPropertyOverridesPUnit.TestCase#testJPAPUnit`
+| <<XML and Source Handling>>
+
+| Named-query registration and generated repository metadata
+| `tooling/metamodel-generator:dataIntegrationTest`
+`BookRepositoryTest`, `CatalogTest`, `RecordProjectionTest`,
+`SharedInterfaceTest`, `ThisQueryTest`; all fail with missing named queries such
+as `No query named '...#countAll()'`.  In core, the named-query subset is much
+smaller and represented by `Jpa4StaticQueryRegistrationTest`.
+| <<Global Metadata and Named Objects>>
+
+| Cache, natural-id, and region metadata
+| `hibernate-jcache:test` `CacheableNaturalIdTest`,
+`SecondLevelCacheTest`, `DomainDataRegionTest`, `HibernateCacheTest`,
+`MissingCacheStrategyTest`, `StorageAccessTest`; `hibernate-jfr:test`
+`EntityInsertCachePutEventTests`, `EntityUpdateCachePutEventTests`.
+| <<Global Metadata and Named Objects>>
+
+| Transitional `SessionFactoryOptionsAdapter` gaps
+| `hibernate-jcache:test` `NonStrictReadWriteCacheTest`,
+`HibernateCacheTest`, `RefreshUpdatedDataTest` fail on
+`SessionFactoryOptions method not resolved by the minimal adapter:
+isUnownedAssociationTransientCheck`.  Core reports also include adapter and
+unsupported-option failures in action-queue, lock, procedure, query, and
+criteria tests.
+| Legacy baseline: <<Legacy Baseline Responsibilities>> final metadata cleanup
+and constructor/settings handoff.
+
+| Mapped-superclass and inheritance mapping-model export
+| `tooling/hibernate-assistant:test`
+`MetamodelJsonSerializerTest#testMappedSuperclasses`,
+`MetamodelJsonSerializerTest#testStandardDomainModelInheritance`,
+`ResultsJsonSerializerTest#initializationError`.
+| <<Categorization and Inheritance>>
+
+| Composite to-one / association target binding
+| `tooling/hibernate-reveng:test`
+`org.hibernate.tool.reveng.jdbc2cfg.OneToOne.TestCase#testGenerateAnnotatedClassesAndReadable`
+fails with composite to-one join column count mismatch.
+| <<Associations and Foreign Keys>>
+
+| Inheritance table-reference resolution
+| Core reports contain the largest classified bucket here, including
+`TablePerClassInheritanceWithAbstractRootTest`, `JoinedSubclassTest`,
+`UnionSubclassTest`, `JoinedInheritanceEagerTest`, `JpaAliasTests`,
+`AttributeJoinWithJoinedInheritanceTest`, and many
+`UnknownTableReferenceException` failures.
++
+Progress note: the first burn-down slice restored new-binder registration of
+`Subclass` mappings with their entity supertype.  This removed the
+`UnknownTableReferenceException` shape from a focused inheritance rerun, while
+leaving other inheritance failures in separate buckets such as duplicate column
+mapping, embeddable inheritance, and unsupported association/index paths.
+| <<Categorization and Inheritance>> and <<Table, Column, and Schema Details>>
+
+| Component/embeddable inheritance and overrides
+| Core reports include `GenericEmbeddedPropertyMappedSuperclassTest`,
+`EmbeddableInheritanceMappedSuperclassAndGenericsTest`,
+`EmbeddableWithOneToMany_HHH_11302_xml_Test`,
+`DirtyCheckingWithEmbeddableNonVisibleGenericExtendsSerializableMappedSuperclassTest`,
+and `RecordNestedEmbeddedWithASecondaryTableTest`.
+| <<Component, Override, and Access Binding>>
+
+| Identifier and derived-id behavior
+| Core reports include `IdClassWithOneAttributeTest`,
+`CompositeIdFkGeneratedValueTest`, `IdManyToOneTest`,
+`DefaultedMapsIdTest`, `MapsEmbeddedIdTest`,
+`CompositeIdGenerationTypeTest`, and `RecordEmbeddedIdGeneratedValueTest`.
+| <<Identifiers and Derived Identifiers>>
+
+| Collections, list/index, and plural association behavior
+| Core reports include `DefaultNamingCollectionElementTest`,
+`ImprovedNamingCollectionElementTest`, `ElementCollectionMapTest`,
+`MapIssueTest`, `IndexedCollectionTest`, `TernaryTest`, and
+`OneToManyMapEntityKeyMappedByTest`.
+| <<Collections, Indexes, and Map Keys>>
+
+| Converter/custom type/value-source behavior
+| Core reports include `MatchingDuplicateRegistrationTests`,
+`EnumeratedAndGenericsTest`, `JsonEmbeddableArrayTest`,
+`JsonWithArrayEmbeddableTest`, `CompositeUserTypeTests`,
+and `WrapperArrayHandlingLegacyTests`.
+| <<Global Metadata and Named Objects>> and <<Aggregate and Advanced Value Mapping>>
+
+| JPA settings, lock, transaction, and EntityManager behavior
+| Core reports include `BatchAndLockTest`, `LockTest`,
+`ExplicitLockingTest`, `GetTransactionTest`, and
+`EntityManagerSerializationTest`.
+These are not automatically binding gaps; investigate after the adapter/settings
+and metadata buckets are reduced.
+| Not a primary binding bucket yet; likely construction/settings/runtime fallout.
+
+| Audit/changelog state-management fallout
+| Core reports include `AuditEntityTest`, `AuditManyToManyTest`,
+`ChangelogAnnotationTest`, `TemporalEntityTest`,
+`TemporalEntityHistoryTest`, and action-queue decomposer tests.
+| <<Intentional Removals and Deferred Areas>>
+|===
+
+== Legacy Baseline Responsibilities
+
+The old `MetadataBuildingProcess` provides a checklist for remaining pipeline
+parity.  A slice is not complete merely because a binder exists; it is complete
+when the equivalent old-pipeline responsibility has either moved into the new
+pipeline, been intentionally removed, or been documented as deferred.
+
+[cols="1,3,3", options="header"]
+|===
+| Legacy responsibility
+| New-pipeline location
+| Remaining audit question
+
+| Source inventory from `ManagedResources`
+| `AvailableResources` and `MappingSourceContributions`
+| Verify every supported entry point feeds the same normalized source facts:
+managed classes, package metadata, mapping files, converters, query imports, and
+additional contributions.  Removed cfg.xml/HBM/loaded-class setting support
+should stay removed.
+
+| XML pre-processing
+| `XmlPreProcessor` called from `DomainModelCategorizer`
+| Verify XML is fully ignored when XML mapping is disabled and that mapping-file
+classes discovered from XML participate in categorization before hierarchy
+building.
+
+| Metadata-complete XML
+| `XmlProcessor.processXml(...)`
+| Verify metadata-complete XML adds/replaces annotation usages before
+categorization sees managed type roles, ids, attributes, callbacks, and package
+defaults.
+
+| XML overlays
+| `XmlProcessingResult.apply()`
+| Verify overlay XML is applied before ordinary class categorization and before
+`ManagedTypeInheritanceState` is created.
+
+| Superclass discovery
+| `ManagedTypeInheritanceState`
+| Verify JPA `exclude-unlisted-classes` behavior for automatically pulled-in
+persistent superclasses: default should include undeclared persistent
+superclasses; excluded units should fail instead of silently using them.
+
+| Global registrations
+| `BindingCoordinator.coordinateGlobalBindings()`
+| Verify all old global side effects are represented: generators, converters,
+types, named queries, result-set mappings, entity graphs, fetch profiles,
+database objects, filters, imports, event listeners/callbacks.
+
+| Entity hierarchy binding
+| `EntityHierarchy`, `EntityTypeBinder`, `MappedSuperTypeBinder`
+| Verify inheritance strategy, root/absolute-root handling, mapped-superclass
+state, subclass tables, discriminator state, and secondary table state across
+mixed entity/mapped-superclass chains.
+
+| Second-pass queues
+| Typed binding phases in `BindingCoordinator`
+| Verify every old second-pass category has an equivalent typed phase or explicit
+removal: collection second pass, to-one FK second pass, secondary table second
+pass, joined-subclass FK, discriminator second pass, fetch override second pass,
+query/result-set mapping second pass, generator resolver second pass, aggregate
+component second pass, and exportable/key creation.
+
+| Additional mapping contributions
+| Metadata resolver / pipeline handoff
+| Verify `AdditionalMappingContributor` equivalents still contribute classes,
+class details, XML mappings, tables, sequences, and auxiliary database objects
+at the correct point.  This is especially important after removing old builder
+facades.
+
+| Final metadata cleanup
+| Metadata finalization path
+| Verify unique property refs, delayed property refs, natural-id unique keys,
+foreign keys, collection keys, imports, named objects, and exportable producers
+are complete before runtime construction.
+|===
+
+== Composition Parity Buckets
+
+These buckets are where the remaining failures are most likely to appear.  The
+presence of individual annotation coverage is useful, but not sufficient to
+close these.
+
+=== XML and Source Handling
+
+Open parity questions:
+
+* XML-disabled mode must not parse, class-load, or apply mapping XML.
+* Metadata-complete XML should create the persistent-type role before
+  categorization.
+* XML overlays should mutate the Hibernate Models annotation view before
+  categorization and member binding.
+* XML access defaults and class/member `@Access` overlays need parity with
+  annotation access resolution.
+* Package metadata from explicit packages and XML defaults should be visible to
+  categorization and binding.
+* Additional mapping contributions need an audited new-pipeline insertion point.
+
+Recent related failures around XML not adding `@Entity` and bad XML being read
+when XML mappings were disabled belong to this bucket.
+
+Audit note:
+
+* The intended ORM 9 XML/source process is:
+  first resolve all referenced, available `ClassDetails`; then, for
+  metadata-complete XML mappings, clear all existing annotations and apply the
+  complete XML mapping; then, for non-complete XML mappings, overlay XML mapping
+  annotations onto the resolved model; then categorize the final Hibernate
+  Models view; then bind.
+* The legacy `MetadataBuildingProcess` ordered XML work as pre-process XML,
+  process metadata-complete XML, categorize known annotation classes/names, then
+  apply overlay XML.  The new pipeline should not mechanically restore that
+  legacy order because categorization now depends on seeing XML-created
+  `@Entity`, `@MappedSuperclass`, or `@Embeddable` annotations.
+* Source-adapter behavior still needs focused guardrails.  In the main pipeline
+  path, XML mappings discovered as resources, files, or URLs are filtered by
+  `MappingSettings.XML_MAPPING_ENABLED` before binding.  The persistence-unit
+  adapter also collects visible `META-INF/orm.xml` URLs as source
+  contributions; no current failure has been tied to that broadening, but it
+  should be covered so persistence-unit mapping-file semantics stay explicit.
+* Focused XML tests should prove the full phase boundary:
+  XML-disabled resources are ignored before binding/parsing failures,
+  metadata-complete XML creates persistent roles before categorization,
+  overlay XML mutates annotations before categorization snapshots source roles,
+  and XML defaults/package metadata are visible to member/source binding.
++
+Progress note: focused source/categorization guardrails now cover disabled XML
+filtering for explicit resources and discovered URL-style resources, complete
+XML replacing existing annotations before categorization, and non-complete XML
+creating/overlaying a persistent role before categorization.
++
+Progress note: root default XML listeners with no explicitly named callback
+methods now use callback annotations declared on the listener class.  This
+restores the `XmlAttributeOverrideTest` bootstrap path and pins the implicit
+listener semantics with a focused phase-boundary guardrail.
++
+Progress note: the refreshed XML/component guardrail slice is green.  The
+sample covers new-pipeline XML override and metadata-complete tests, source
+contribution/available-resource tests, XML phase-boundary tests, XML access
+overlays, and the older JPA XML attribute-override runtime tests.  Keep this
+bucket visible for new focused failures, but it is no longer the preferred next
+implementation bucket.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.override.AttributeOverrideXmlTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.CompletePartialTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.mixed.XMLMappingDisabledTest' \
+  --tests 'org.hibernate.orm.test.jpa.xml.XmlAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.jpa.xml.XmlAndAnnotationAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.jpa.xml.sequences.XmlAttributeOverrideTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.xml.XmlPhaseBoundaryTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.XmlProcessingSmokeTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.SimpleCompleteXmlTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.CompleteXmlWithEmbeddableTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.CompleteXmlInheritanceTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.complete.XmlSourceParityTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.override.SimpleOverrideXmlTests' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.override.JoinColumnProcessingTests' \
+  --tests 'org.hibernate.orm.test.boot.models.source.AvailableResourcesTests' \
+  --tests 'org.hibernate.orm.test.boot.models.source.MappingSourceContributionsTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.access.xml.XmlAccessTest'
+----
+
+=== Categorization and Inheritance
+
+Open parity questions:
+
+* `ManagedTypeInheritanceState` should continue deduplicating equivalent
+  `ClassDetails` by class name, not object identity.
+* Persistent superclasses automatically pulled into categorization should obey
+  the source policy represented by `AvailableResources#includeUnlistedPersistentSuperclasses()`.
+* Entity/mapped-superclass relation enum determination should be correct before
+  binders decide root/subclass/mapped-superclass behavior.
+* Mapped-superclasses above a root entity may need hierarchy-specific mapping
+  contributions because their table context comes from the root entity.
+* Shared mapped-superclasses across multiple hierarchies need coverage for
+  table-specific columns, secondary-table routing, callbacks/listeners, and
+  property closure behavior.
++
+Progress note: the contribution-lite bridge applies mapped-superclass declared
+properties only to nearest consuming entity boundaries, using separate property
+copies for each consumer.  This addresses ownership/over-propagation symptoms
+without completing the full descriptor/contribution split.
++
+Progress note: the single-table sibling shared-column case represented by the
+`e_title` transient-override tests is addressed by applying basic `@Column`
+`insertable`/`updatable` flags to both the `Property` and its `BasicValue`
+selectable flags during binding.
++
+Progress note: `EmbeddableInheritanceMappedSuperclassAndGenericsTest` now
+passes after polymorphic embeddable discriminator metadata records persistent
+superclass links through mapped superclasses.  This lets runtime subtype
+attribute-declaration checks recognize inherited mapped-superclass attributes
+such as `AbstractSuperclass#name` when binding, reading, querying, and updating
+concrete embeddable subtype values.
++
+Progress note: the focused embeddable-inheritance subtype slice now passes for
+entity-embedded and element-collection embeddables.  The new binding path now
+registers default HQL imports for embeddables like legacy boot, orders
+polymorphic embeddable discriminator values parent-before-child, preserves
+explicit root `@DiscriminatorColumn` names, marks subclass-only component
+members optional for sibling discriminator variants, and applies the same
+polymorphic discriminator setup to embeddable collection elements.
++
+Focused verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.mappedsuper.MappedSuperclassTests' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceMappedSuperclassAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.jpa.criteria.components.MappedSuperclassComponentWithCollectionTest'
+----
++
+Additional embeddable-inheritance verification passed for:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.HierarchyOrderTest' \
+  --tests 'org.hibernate.orm.test.inheritance.EmbeddableInheritanceHierarchyOrderTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.InheritedPropertyTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableTypeAndTreatTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceDiscriminatorFormulaTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.ElementCollectionEmbeddableInheritanceTest'
+----
++
+The broader inheritance sweep still showed separate failures around component
+attribute overrides.  Those remain open sub-buckets rather than blockers for
+the focused entity/value/collection embeddable-inheritance subtype slice.
++
+Progress note: the embeddable-inheritance attribute-override slice now passes.
+`ComponentSource` exposes the special `{discriminator}` override path, and
+polymorphic embeddable discriminator binding now lets that path override the
+embeddable root `@DiscriminatorColumn` for both entity-embedded and
+element-collection embeddables.  Existing subtype member overrides continue to
+cover inherited subtype attributes such as `childTwoProp` and `childOneProp`.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableTypeAndTreatTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.ElementCollectionEmbeddableInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceDiscriminatorFormulaTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.InheritedPropertyTest'
+----
++
+Progress note: the embeddable-inheritance association slice now passes.  The
+new pipeline routes explicit-but-unnamed collection join columns through the
+collection-aware implicit join-column naming source, and treats unidirectional
+`@OneToMany` keys as entity-collection join columns.  This prevents polymorphic
+embeddable subtype `@OneToMany @JoinColumn` mappings from reusing the target
+identifier column as the dependent FK column.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceAssciationsTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceAssciationsTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableTypeAndTreatTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.ElementCollectionEmbeddableInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceDiscriminatorFormulaTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.InheritedPropertyTest'
+----
++
+Progress note: the JSON aggregate embeddable-inheritance categorization slice
+now passes.  Explicit embedded/embedded-id markers now win categorization when a
+member also carries `@JavaType`, `@JdbcTypeCode`, or `@JdbcType`; those
+annotations remain basic nature hints for non-embedded scalar attributes.  This
+allows `@Embedded @JdbcTypeCode(SqlTypes.JSON)` aggregate embeddables to bind as
+embedded components rather than failing with a BASIC/EMBEDDED nature conflict.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.JsonAggregateEmbeddableInheritanceTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.JsonAggregateEmbeddableInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.StructAggregateEmbeddableInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceAssciationsTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableTypeAndTreatTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.ElementCollectionEmbeddableInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceDiscriminatorFormulaTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.InheritedPropertyTest'
+----
++
+Progress note: the joined-inheritance discriminator/table slice now passes.
+Primary table binding for normal entities and joined subclasses now uses the
+entity-level `@Table` source instead of the association `@JoinTable` source.
+This lets joined subclasses honor explicit table names, including sibling
+subclasses that intentionally share a physical table while a forced
+discriminator restricts collection loads.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.JoinedInheritanceForceDiscriminatorTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.discriminator.JoinedInheritanceTest' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.discriminator.JoinedInheritanceEagerTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.JoinedInheritanceDiscriminatorSelectionTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.JoinedInheritanceForceDiscriminatorTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.JoinedDiscSameAttributeNameTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.joinedsubclass.JoinedNullNotNullDiscriminatorTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.join.AttributeJoinWithJoinedInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.join.AttributeJoinWithRestrictedJoinedInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.join.EntityJoinWithJoinedInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.JoinedInheritanceDiscriminatorRemovalByTypeTest' \
+  --tests 'org.hibernate.orm.test.inheritance.OneToManyJoinedInheritanceAndDiscriminatorTest' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.joined.JoinedDiscriminatorSameChildTableTest'
+----
++
+Adjacent generics and table-per-class guardrails also passed:
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.generics.GenericEmbeddedPropertyMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.generics.GenericEmbeddedIdentifierMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.component.EmbeddableAndGenericMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.component.EmbeddableAndGenericExtendingSerializableMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.TablePerClassTest' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.tableperclass.TablePerClassInheritanceWithAbstractRootTest' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.tableperclass.TablePerClassInheritanceWithConcreteRootTest'
+----
++
+Progress note: the inherited/entity-inheritance plural association table
+context slice now passes.  Legacy boot accepted `@CollectionTable` as an
+association-table override for owning association collections when no
+`@JoinTable` was present.  The new pipeline now preserves that source for
+association-valued collections and uses it for association table naming, owner
+key join columns, foreign-key metadata, unique constraints, and indexes.  This
+restores the expected map join tables for inherited embedded associations
+across single-table, joined, and table-per-class entity inheritance.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.embeddable.*'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.inheritance.joined.JoinedSubclassTest' \
+  --tests 'org.hibernate.orm.test.annotations.inheritance.TablePerClassColumnDuplicationCheckTest' \
+  --tests 'org.hibernate.orm.test.inheritance.repeatedtable.*' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceEmbeddedIdTest' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceSameAttributeNameTest' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.joined.MixedInheritanceTest' \
+  --tests 'org.hibernate.orm.test.mapping.inheritance.tableperclass.MixedInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.embeddable.*' \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.associations.*' \
+  --tests 'org.hibernate.orm.test.inheritance.MultipleInheritanceTest'
+----
+
+* Joined, single-table, and table-per-class inheritance need combination tests
+  with secondary tables, discriminators, mapped superclasses, and generated ids.
+
+The longer-term modeling problem is covered by
+`mapped-superclass-model-design.adoc`; until that design is implemented, this
+bucket should remain open even if focused tests pass.
+
+=== Component, Override, and Access Binding
+
+Progress note: the custom implicit-naming slice now passes for to-one
+associations nested in embeddables.  The new pipeline carries the component
+member naming path into `ToOneSource` and delegates implicit join-column naming
+to the configured `ImplicitNamingStrategy`, restoring component-path behavior
+for cases such as repeated embeddables with an implicit nested `@ManyToOne`.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.EmbeddableImplicitOverrideTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.EmbeddableOverrideTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.EmbeddableImplicitOverrideTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.NestedAssociationEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.NestedEmbeddedObjectWithASecondaryTableTest' \
+  --tests 'org.hibernate.orm.test.annotations.attributeoverride.MapAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.annotations.refcolnames.embeddedid.EmbeddedIdRefColNamesTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.generics.GenericEmbeddedIdentifierTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.generics.GenericEmbeddedPropertyTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testEmbeddableMapValueElementCollectionAttributeOverride' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testEmbeddableElementCollectionAttributeOverride' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testNestedEmbeddableElementCollectionAttributeOverride' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.collections.ElementCollectionBindingTests.testNestedEmbeddableElementCollectionConvert' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.embeddable.EmbeddableBindingTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.NestedEmbeddableAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.associationOverride.EmbeddedOverrideTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides.EmbeddedOverrideTests'
+----
++
+Progress note: the inherited/generic mapped-superclass component slice now
+passes.  Normal basic attributes inherited from generic mapped superclasses now
+bind using the concrete attribute usage type, so `Book<T>.code` materializes as
+`String` for `PopularBook` and `Integer` for `RareBook` instead of falling back
+to `JAVA_OBJECT`.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.EmbeddableAndMappedSuperClassWithGenericsTest'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.embeddable.EmbeddableBindingTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.associationOverride.MappedSuperclassOverrideTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.associationOverride.EmbeddedOverrideTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.attributeOverrides.EmbeddedOverrideTests' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.NestedEmbeddableAttributeOverrideTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.EmbeddableAndMappedSuperClassWithGenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.EmbeddableWithGenericAndMappedSuperClassTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.MappedSuperclassGenericEmbeddableQueryParamTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.generics.GenericEmbeddedPropertyMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.annotations.embeddables.generics.GenericEmbeddedIdentifierMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceMappedSuperclassAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.EmbeddableInheritanceAttributeOverrideTest'
+----
+
+Open parity questions:
+
+* Component member discovery must remain superclass-first and access-aware.
+* Owner-type path adjustments should be collected least-specific to
+  most-specific, with member-level overrides last.
+* Attribute overrides, association overrides, and conversion overrides must work
+  through nested embeddables, inherited embeddables, mapped-superclass
+  component members, collection elements, map keys, and embedded ids.
+* Implicit nested column names should always route through the configured
+  `ImplicitNamingStrategy`.
+* XML access handling and attribute-level `@Access` validation are still
+  follow-up areas.
+* `@Parent`, `@EmbeddedColumnNaming`, `@EmbeddedTable`, custom component types,
+  custom instantiators, and aggregate components need combination coverage.
+
+This is the bucket that has repeatedly exposed failures in embedded inheritance,
+mapped-superclass overrides, plural embeddables, and nested override tests.
+
+=== Identifiers and Derived Identifiers
+
+Open parity questions:
+
+* Basic id, embedded id, IdClass, association-valued id, and derived id paths
+  need combination coverage across inheritance, mapped-superclasses,
+  embeddables, quoted identifiers, property refs, and composite target ids.
+* `@MapsId` has focused coverage for the common whole-id, named-id-part,
+  nested-embeddable, IdClass scalar-part, and association-valued-id
+  combinations.  Keep this bucket narrowed to newly observed failing shapes.
+* Identifier generator resolution should be audited against the old
+  generator-resolver second passes.
+* Column-order-sensitive identifier failures should use the existing
+  correspondence-backed foreign-key/key creation path rather than adding new
+  local sorting patches.
+* Identifier odd-shape decisions should stay evidence-backed.  Component-valued
+  IdClass parts and IdClass association ids with join tables are supported;
+  plural and `@Any` identifier parts are deliberate non-support shapes.
++
+Identifier odd-shape decision matrix:
++
+[cols="2,2,2,2,2", options="header"]
+|===
+| Shape
+| Legacy evidence
+| ORM 9 decision
+| New-pipeline behavior
+| Test coverage
+
+| Component-valued IdClass part with `@Embedded`
+| Legacy/runtime derived-id suites and existing boot baseline support
+component-valued id parts.
+| Support.
+| Routes through component identifier materialization and produces component
+values in both the identifier and identifier mapper.
+| `SimpleIdTests.testEmbeddedIdClassBinding`.
+
+| Component-valued IdClass part without `@Embedded`
+| Legacy/runtime support is consistent with embeddable component handling; the
+focused new-pipeline characterization is green.
+| Support.
+| Implicit embeddable id part is categorized/materialized as a component and
+keeps direct identifier extraction.
+| `SimpleIdTests.testImplicitEmbeddedIdClassBinding`.
+
+| Component-valued IdClass part used by `@MapsId`
+| `org.hibernate.orm.test.annotations.mapsid.*`,
+`org.hibernate.orm.test.annotations.derivedidentities.*`, and
+`NestedKeyManyToOneTest` are green for the surrounding legacy/runtime
+derived-id shapes.
+| Support.
+| Named `@MapsId` resolves the component id-class attribute and reuses its
+component columns for the derived to-one.
+| `SimpleIdTests.testMapsIdWithIdClassComponentIdentifierAttribute`.
+
+| Plural id part
+| Identifiers do not support plural mappings.
+| Do not support.
+| Keep as an explicit rejection/unsupported identifier shape.
+| No parity support coverage needed.
+
+| `@Any` id part
+| Identifiers do not support `@Any` mappings.
+| Do not support.
+| Keep as an explicit rejection/unsupported identifier shape.
+| No parity support coverage needed.
+
+| Association id with join table
+| Legacy `MetadataSources` boot supports the IdClass association-id join-table
+shape.
+| Support.
+| New-pipeline binding matches the legacy shape: the entity identifier contains
+`parent_id, child_id`, the association table key uses `child_id`, and the
+association target column uses `parent_id`.
+| `SimpleIdTests.testAssociationIdWithJoinTable` and
+`SimpleIdTests.testLegacyAssociationIdWithJoinTable`; embedded-id join-table
+coverage remains tracked with the component binder bucket.
+|===
++
+Progress note: the focused IdClass/inheritance/property-ref slice now passes.
+Two mapped-superclass IdClass issues were fixed: IdClass type validation now
+resolves inherited generic id members against the concrete entity type, and
+mapped-superclass metamodel identifier mappers no longer inherit subclass id
+parts.  Entity-side basic id value binding also resolves inherited generic id
+member types against the concrete entity usage so `K`-typed mapped-superclass
+ids materialize as their concrete Java type.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.idclass.mappedsuperclass.MappedSuperclassIdClassAttributesTest' \
+  --tests 'org.hibernate.orm.test.annotations.idclass.IdClassMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.idclass.JoinedSubclassWithIdClassTest' \
+  --tests 'org.hibernate.orm.test.mapping.generics.compositeid.CompositeIdWithGenericPartInMappedSuperclassTest' \
+  --tests 'org.hibernate.orm.test.propertyref.inheritence.joined.JoinedSubclassPropertyRefTest'
+----
++
+Progress note: the component-valued IdClass decision slice now passes without
+requiring new boot-pipeline implementation.  The new pipeline supports
+component-valued IdClass parts with explicit `@Embedded`, implicit embeddable
+IdClass parts without `@Embedded`, and component-valued IdClass parts consumed
+by named `@MapsId`.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests.testEmbeddedIdClassBinding' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests.testImplicitEmbeddedIdClassBinding' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests.testMapsIdWithComponentIdentifierAttribute' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests.testMapsIdWithIdClass' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.id.SimpleIdTests.testMapsIdWithIdClassComponentIdentifierAttribute'
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.cid.keymanytoone.NestedKeyManyToOneTest' \
+  --tests 'org.hibernate.orm.test.annotations.mapsid.*' \
+  --tests 'org.hibernate.orm.test.annotations.derivedidentities.*'
+----
++
+Progress note: the derived-id / `@MapsId` expansion slice now passes.  Two
+additional parity issues were fixed: implicit nested key classes inside
+embedded ids now get synthesized embedded value intent and collect their
+association-id columns correctly, and inverse `@OneToMany(mappedBy=...) List`
+without a list-index source now classifies as a bag instead of an indexed list.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.derivedidentities.*' \
+  --tests 'org.hibernate.orm.test.mapping.identifier.derivedIdentity.*' \
+  --tests 'org.hibernate.orm.test.mapping.identifier.composite.*'
+----
+
+=== Associations and Foreign Keys
+
+Open parity questions:
+
+* Owning to-one, inverse one-to-one, to-one join tables, primary-key join
+  columns, join formulas, property refs, not-found, and optionality should be
+  tested in combinations rather than as isolated annotations.
+* Association targets that reference non-primary-key properties must remain a
+  typed late phase, not an eager member-binding lookup.
+* Unique property reference side effects are still a collector side channel and
+  should be audited after property-ref work.
+* Foreign-key metadata from `@JoinColumn`, `@JoinTable`,
+  `@CollectionTable`, `@MapKeyJoinColumn`, and secondary tables should survive
+  until the late FK phase.
+* Case/quoting-sensitive identifier matching should use `Identifier#matches(...)`
+  semantics wherever logical table/column matching is performed.
++
+Progress note: the first inverse one-to-one association slice now passes.
+Component to-one binding accepts inverse `@OneToOne` members, inverse
+resolution uses recursive `mappedBy` property paths such as
+`embeddableB.entityA`, and target validation accepts legitimate joined
+inheritance cases where the owning side references an owner supertype.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.onetoone.OneToOneInverseInEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.EmbeddableWithIdenticallyNamedAssociationTest' \
+  --tests 'org.hibernate.orm.test.notfound.OptionalEagerMappedByNotFoundTest'
+----
+
+Progress note: the to-one join-table FK slice now passes.  Inverse join-table
+one-to-one mappings now build the synthetic inverse association value against
+the owner entity primary key, so runtime FK descriptors use the association
+table owner columns instead of attempting to target the owning to-one property.
+`@NotFound(IGNORE)` join-table one-to-ones also suppress both deferred physical
+FKs, matching the legacy `Join#disableForeignKeyCreation` and
+`ManyToOne#isIgnoreNotFound` behavior.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.onetoone.EntityWithOneToOneJoinTableTest' \
+  --tests 'org.hibernate.orm.test.mapping.onetoone.OneToOneJoinTableOptionalTest' \
+  --tests 'org.hibernate.orm.test.mapping.onetoone.OneToOneJoinTableNonOptionalTest' \
+  --tests 'org.hibernate.orm.test.mapping.onetoone.OneToOneJoinTableSelfReferenceTest' \
+  --tests 'org.hibernate.orm.test.mapping.onetoone.EntityWithOneBidirectionalJoinTableAssociationTest' \
+  --tests 'org.hibernate.orm.test.notfound.OneToOneNotFoundTest'
+----
+
+Progress note: inverse one-to-one `mappedBy` through joined tables now covers
+secondary-table ownership in addition to association-table ownership.  The
+inverse binder locates the owning-side join that contains the owning property,
+builds the synthetic inverse join/value against that table, and records the
+same unique-property reference metadata as the primary-table path.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseOneToOneMappedBy' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseOneToOneMappedByJoinTable' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseOneToOneMappedBySecondaryTable' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testInverseOneToOneMappedByManyToOneFails'
+----
+
+Progress note: inverse one-to-many `mappedBy` validation now accepts owning
+to-one attributes that target a mapped superclass/root entity of the inverse
+collection owner.  This removes the boot-time rejection for inheritance cases
+where a subclass declares `@OneToMany(mappedBy=...)` and the child-side
+`@ManyToOne` targets the hierarchy root.  Follow-up runtime work remains for
+joined-subclass table-group rendering when the foreign key lives on the child
+root table but the collection element is a subclass.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.inheritance.discriminator.OneToManySubSelectFetchAndInheritanceTest'
+----
+
+Progress note: the primary-key-join-column and explicit-FK customization slice
+now passes.  FK source propagation now prefers explicitly specified
+join-column-level metadata before table-level fallback metadata for collection
+table keys, join-table owner keys, join-table element/value FKs, to-one
+association tables, association identifiers, and joined-subclass
+`@PrimaryKeyJoinColumn(s)`.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.schemaupdate.foreignkeys.ForeignKeyGenerationTest \
+  --tests org.hibernate.orm.test.schemaupdate.foreignkeys.JoinedInheritanceForeignKeyTest \
+  --tests 'org.hibernate.orm.test.schemaupdate.foreignkeys.definition.*' \
+  --tests org.hibernate.orm.test.quote.ForeignKeyNameQuotingTest \
+  --tests org.hibernate.orm.test.mapping.onetoone.OneToOneJoinTableOptionalTest \
+  --tests org.hibernate.orm.test.mapping.onetoone.OneToOneJoinTableNonOptionalTest \
+  --tests org.hibernate.orm.test.annotations.manytoone.ManyToOneJoinTableTest
+----
+
+Progress note: the first property-ref/non-PK owner-key slice now passes.
+Element collection tables, singular `@Any` join tables, and to-one join tables
+no longer reject an explicit owner join-column count solely because it differs
+from the owner identifier column count when the join columns name referenced
+columns.  Those mappings now reach the late table-key phase, where non-PK owner
+references are resolved and unique-key side effects are materialized.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.propertyref.*' \
+  --tests 'org.hibernate.orm.test.annotations.joincolumn.JoinColumnOccursOutOfOrderTest' \
+  --tests 'org.hibernate.orm.test.annotations.manytoonewithformula.*' \
+  --tests 'org.hibernate.orm.test.annotations.refcolnames.*'
+----
+
+Progress note: secondary-table primary-key join columns now participate in
+association target and table-key resolution.  A to-one reference to a subclass
+secondary-table primary-key join column, such as
+`referencedColumnName = "TYPE_ID"`, is classified as a target identifier
+reference rather than as a synthetic property-ref to `id`.  Secondary-table keys
+also honor `@SecondaryTable#pkJoinColumns` during the table-key phase, so the
+dependent table primary key uses the declared key column name.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testSelfReferentialManyToOneNonPrimaryKeyReference' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testManyToOneReferencesSecondaryTableKeyColumn' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.associations.ToOneAssociationTests.testManyToManyNonPrimaryKeyReference' \
+  --tests 'org.hibernate.orm.test.inheritance.repeatedtable.AlternativeToRepeatedTableTest'
+----
+
+Progress note: collection-table owner keys now keep identifier semantics when
+explicit `referencedColumnName` values name the same identifier columns in a
+different order.  This matches the legacy behavior where ordering is handled by
+join-column reordering, rather than by materializing a synthetic non-PK
+property-ref.  Joined-subclass collection owner keys also resolve explicit
+references to the subclass table key columns against the joined-subclass key
+columns while still using the owner identifier value.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.manytomany.ManyToManyTest'
+----
+
+Progress note: the embedded-id association-identifier join-table slice now
+passes at boot-model level.  `ComponentBinder` no longer rejects embedded-id
+to-one members solely because they are inverse one-to-ones or use `@JoinTable`;
+instead, it routes them through the pending association-identifier/table-key
+phases used by top-level association identifiers.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.boot.models.bind.embeddable.EmbeddableBindingTests
+----
+
+=== Collections, Indexes, and Map Keys
+
+Open parity questions:
+
+* `List` without list-index metadata should retain bag semantics; indexed list
+  semantics require `@OrderColumn`, `@ListIndexBase`, or related list-index
+  metadata.
+* Basic, embeddable, entity, any-valued, many-to-any, and plural-association
+  collection elements need coverage across bags, sets, lists, arrays, maps, and
+  id-bags.
+* Basic map keys, entity map keys, property map keys, embeddable map keys,
+  borrowed map keys, `@MapKeyClass`, `@MapKeyColumn`, `@MapKeyJoinColumn`,
+  `@MapKeyEnumerated`, `@MapKeyTemporal`, and Hibernate map-key type overrides
+  need combination coverage.
+* Inverse map-valued associations need more combination coverage across
+  explicit, implicit, borrowed, basic, to-one, and component owning map keys.
+* Sort, order-by, SQL-order, filters, join-table filters, where/restriction,
+  collection custom SQL, collection cache, collection type, and collection id
+  need cross-feature tests.
+
+Progress note: the first custom-collection semantics/type-registration slice is
+green.  Element and association collection creation now honors explicit
+`@CollectionType` and global `@CollectionTypeRegistration` classifications, and
+raw `@ElementCollection(targetClass = ...)` mappings carry the effective target
+class through source modeling into basic and embeddable element materialization.
+Focused coverage:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.mapping.collections.semantics.CustomSemanticsTest' \
+  --tests 'org.hibernate.orm.test.mapping.collections.custom.registration.CustomTypeRegistrationTests' \
+  --tests 'org.hibernate.orm.test.mapping.collections.custom.parameterized.ParameterizedUserCollectionTypeAnnotationsVariantTest'
+----
+Progress note: the default index/map-key naming, embeddable/entity map-key
+materialization, ordered/set semantics, read-only/custom behavior, and basic
+collection-valued attribute slice has burned down the collection/map/index
+sample from 18 failures to 2 failures out of 110 tests.  Covered fixes include:
+
+* default list index and basic/entity map-key column naming parity;
+* dotted `@MapKey` / `@MapKey.value()` resolution and to-one/component target
+  property map-key materialization;
+* embeddable map-key BigDecimal scale preservation and column `options`
+  propagation;
+* list index check constraints, blank element-collection `@OrderBy`, and
+  order/sort conflict validation;
+* read-only collection key insert/update propagation and read-only
+  collection-table implicit-list default indexed-list semantics;
+* `@MapKeyClass` source typing;
+* parameterized `BasicValueSource` type retention for unannotated
+  collection-valued basic attributes such as `List<String>`; and
+* precise rejection for non-collection members annotated as plural
+  associations.
+
+Design follow-up: `BasicValue` now has a small hibernate-models-aware
+`SourceJavaType` bridge.  The new binder path can attach `TypeDetails` and a
+raw Java class directly to `BasicValue`, while the legacy
+`MetadataBuildingProcess` path continues to use `setImplicitJavaTypeAccess`.
+For now, `BasicValue` converts the hibernate-models type to the same
+`java.lang.reflect.Type` shape consumed by existing type resolution.  When the
+legacy metadata-building path is removed, revisit this bridge and move
+`BasicValue` / `BasicValueBinder` further toward resolving from hibernate-models
+source types directly instead of converting through reflection.
+
+Focused verification passed for representative naming, map-key,
+materialization, ordering, read-only, implicit-list, `@MapKeyClass`, and custom
+collection cases, plus `CollectionTest`.  A refreshed broader
+collection-valued sample currently has 5 failures out of 396 tests.  Restoring
+logical implicit collection-table names in the new table binder burned down the
+collection-table naming cluster from the broader sample.  The follow-up
+indexed-list slice also made legacy external/entity-backed element collections
+that intentionally lack order columns opt into `@Bag`, and fixed association
+collection-table element column ordering for composite identifiers so the
+join-table FK column types match the target identifier value order.
+
+The mappedBy / borrowed map-key bucket is now mostly burned down.  Scalar
+`mappedBy` inverse one-to-many mappings are accepted when the mapped attribute is
+the owner key column, XML `target-entity` declarations are honored when raw
+collection Java members would otherwise infer `Object`, and standalone component
+map-key columns on unidirectional one-to-many FK mappings are writable so the
+map key is persisted and orphan/delete behavior matches legacy runtime behavior.
+
+The next refreshed collection-valued sample is now green across 348 tests for
+the sampled collection packages.  `PersistentBagContainsTest`,
+`MultipleSessionCollectionTest`, and `CollectionTest.testCollectionInheritance`
+are no longer failing in the current worktree.  The refresh exposed one real
+remaining collection-table issue in `ListAndSetProxyTest`: an owning
+`@OneToMany @JoinTable` list targeting an entity with an embedded id created an
+element-side foreign key using primary-key shorthand even though the resolved
+referenced-column order did not match the physical target primary-key order.
+`ForeignKeyMappingMaterializer` now only collapses a resolved FK to primary-key
+shorthand when the referenced-column order matches the target table primary key;
+otherwise the resolved correspondence remains explicit.  The refresh also
+removed the stale `@FailureExpected` marker from
+`StaleOneToManyListTest.test3`, which now passes.
+
+The earlier `OrderByColumnNameTest` / `OrderByTest` cluster is green after
+restoring legacy boot metadata behavior for `@SQLOrder` and expanding blank JPA
+entity `@OrderBy` fragments to target identifier selectables before runtime
+model construction.
+
+=== Global Metadata and Named Objects
+
+Open parity questions:
+
+* Named queries, native queries, named mutation statements, stored procedures,
+  SQL result-set mappings, query cache layout, imports, and named entity graphs
+  should be verified through metadata finalization and runtime use where
+  possible.
+  JPA 4 unnamed `@NamedEntityGraph` declarations are now covered in the new
+  global-registration path: unnamed graphs are accepted only when declared
+  directly on an entity type, and the generated graph name uses the effective
+  JPA entity name (`@Entity(name)` when present, otherwise the unqualified
+  class name).
+  Entity-graph runtime parity also now covers static metamodel injection by JPA
+  entity name, legacy duplicate graph-name handling across different entity
+  roots, graph parser mode resolution, and default JPA cache retrieve/store
+  option exposure through the temporary SessionFactory options adapter.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.graph.EntityGraphsTest' \
+  --tests 'org.hibernate.orm.test.entitygraph.mappedbyid.LoadGraphFindByIdTest' \
+  --tests 'org.hibernate.orm.test.entitygraph.JpaFetchAnnotationJpaApiTest'
+----
+* Fetch-profile registration parity is covered for annotation and XML sources:
+  XML-sourced profiles override annotation profiles, invalid global overrides
+  fail after entity binding like the legacy second pass, member-level
+  `@FetchProfileOverride` sees early profile declarations, and direct
+  to-one `@Fetch(SUBSELECT)` marks the owning entity as subselect-loadable.
+  The `@Fetch` audit removed HBM-shaped source APIs from the new pipeline:
+  direct `@Fetch` source access now exposes the resolved `FetchMode` rather
+  than the annotation instance, XML fetch-profile declarations use the generic
+  external-registration source instead of the old HBM tag, and collection
+  `@Fetch(SUBSELECT)` now matches legacy owner subselect-loadable flags.
+  Keep inherited-attribute combinations in the global metadata guardrail set.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.fetchprofile.FetchProfileTest' \
+  --tests 'org.hibernate.orm.test.annotations.fetchprofile.NewFetchTest' \
+  --tests 'org.hibernate.orm.test.fetchprofiles.join.JoinFetchProfileTest' \
+  --tests 'org.hibernate.orm.test.fetchmode.toone.ToOneWithSubselectFetchModeTests'
+----
+* Filter definitions, auto-enabled filters, parameter type inference, entity
+  filters, collection filters, and join-table filters now have runtime-adjacent
+  coverage.  The filter parity slice restored legacy collection association-table
+  semantics for implicit many-to-many join tables, so `@Filter` conditions apply
+  to the associated entity table and `@FilterJoinTable` / join-table restrictions
+  apply to the join table even when no explicit `@JoinTable` is declared.  It
+  also restored legacy mapped-superclass filter inheritance for entity bindings.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.filter.*'
+----
+* Global type registrations, converter registrations, Java/JDBC type
+  registrations, custom user types, composite user types, collection types, and
+  embeddable instantiators should be verified through both annotation and XML
+  source paths.  XML converter categorization now distinguishes Hibernate
+  `<conversion/>` declarations, which become explicit `ConversionRegistration`
+  entries, from JPA `<converter/>` declarations, which become
+  `JpaConverterRegistration` entries and are materialized as attribute
+  converter descriptors.
+
+=== Table, Column, and Schema Details
+
+Open parity questions:
+
+* Primary, secondary, joined-subclass, union-subclass, association, and
+  collection tables need identifier matching that respects quoted identifiers.
+* Column and table options have focused propagation coverage.  Keep them in
+  the schema-detail guardrail set for combination testing with quoted
+  identifiers, collection tables, association tables, and joined inheritance.
+  The current new-pipeline slice propagates column comments, collection-table
+  comments, local sequence/table generator definitions used by generated ids,
+  XML legacy generator strategy tokens such as `native`, dynamic XML entity
+  override lookup, and single-column unique flags on basic element-collection
+  values.  The unique-constraint create-table assertion now accepts first-column
+  inline `unique` DDL.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.schemaupdate.columnoptions.ColumnOptionsTest \
+  --tests org.hibernate.orm.test.schemaupdate.tableoptions.TableOptionsTest \
+  --tests org.hibernate.orm.test.schemaupdate.CommentGenerationTest \
+  --tests org.hibernate.orm.test.schemaupdate.TableCommentTest \
+  --tests org.hibernate.orm.test.schemaupdate.tablecomment.JpaTableCommentTest \
+  --tests 'org.hibernate.orm.test.annotations.comment.*' \
+  --tests 'org.hibernate.orm.test.annotations.comment.jpa.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.checkconstraint.column.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.checkconstraint.table.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.uniqueconstraint.*' \
+  --tests 'org.hibernate.orm.test.schemaupdate.index.*' \
+  --tests org.hibernate.orm.test.mapping.identifier.RowIdTest \
+  --tests org.hibernate.orm.test.mapping.identifier.SimplePartitionKeyTest
+----
+* Unique constraints, indexes, checks, comments, row ids, partition keys,
+  generated columns, column transformers, formulas, nationalized/time-zone
+  columns, temporal/enum/lob handling, and custom DDL fragments need
+  combination coverage.
+* Table-key creation and FK creation should remain split and ordered: table keys
+  first, physical FK customization later.  See
+  link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`] for
+  the planned explicit key-creation replacement for hidden `Value`,
+  `Collection`, and `Join` side effects.
+* Exportable database objects and auxiliary objects need coverage through schema
+  generation.
+
+=== Aggregate and Advanced Value Mapping
+
+Open parity questions:
+
+* `@Struct` and related aggregate/UDT parity should proceed through the
+  compatibility bridge described in `aggregate-mapping-design.adoc`.
+* Aggregate embeddables, arrays of aggregate values, JSON/XML aggregate storage,
+  nested aggregate components, and aggregate validation should be handled under
+  `aggregate-mapping-design.adoc`.
+* `@Any` and `@ManyToAny` support exists, and explicit any-key metadata now
+  covers `@AnyKeyJavaClass`, `@AnyKeyJavaType`, and XML named `@AnyKeyType`.
+  Basic explicit-target key inference is covered, and non-basic target-id
+  inference is covered as an explicit unsupported shape.  Runtime-adjacent
+  lazy, join-fetch, entity-graph, filter-enabled load-by-key, and detached
+  initialization behavior is covered by the focused fetch slice below.
+  Implicit discriminator value strategy is carried only when
+  `@AnyDiscriminatorImplicitValues` is present, matching legacy behavior for
+  explicit discriminator mappings while still allowing the runtime converter to
+  apply its no-explicit-mapping fallback.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.boot.models.bind.associations.AnyAssociationTests
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.boot.models.xml.attr.AnyTests \
+  --tests org.hibernate.orm.test.boot.models.xml.attr.ManyToAnyTests
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.any.fetch.*' \
+  --tests 'org.hibernate.orm.test.bytecode.enhancement.detached.reference.DetachedReferenceInitializationAnyFetchTest' \
+  --tests 'org.hibernate.orm.test.bytecode.enhancement.detached.initialization.DetachedNestedInitializationAnyFetchTest'
+----
+
+== Test-Only Gaps To Keep Visible
+
+These items appear implemented but should stay visible until focused
+mapping-state tests prove the behavior in the new pipeline:
+
+* `@TimeZoneStorage`
+* `@TimeZoneColumn`
+* `@View`
+* XML/dynamic `@Abstract`
+* XML/dynamic `@Extends`
+* hierarchical package metadata, especially whether metadata from `com.acme`
+  should apply to `com.acme.model`
+
+== Intentional Removals and Deferred Areas
+
+These should not be rediscovered as binder gaps unless the ORM 9 scope changes:
+
+* cfg.xml support;
+* HBM XML support;
+* `AvailableSettings.LOADED_CLASSES`;
+* `AvailableSettings.ORM_XML_FILES`;
+* `AvailableSettings.HBM_XML_FILES`;
+* `AvailableSettings.CFG_XML_FILE`;
+* public `EntityManagerFactoryBuilder`;
+* public `SessionFactoryBuilder`;
+* follow-up deprecation / `@Remove` marking for legacy staged bootstrap
+  contracts once replacement native bootstrap guidance is concrete, including
+  `MetadataBuilder`, `MetadataSources`, `Metadata`, staged `Configuration`
+  entry points, and any surviving builder API/SPI/service/implementation
+  friends;
+* `@SelectBeforeUpdate` as a Hibernate annotation;
+* dynamic XML mapped-superclass support, meaning `<mapped-superclass/>` without
+  a backing Java class;
+* constructor-level `@Instantiator` binding until Hibernate Models exposes the
+  needed constructor-target annotation metadata in a new release;
+* boot-model descriptor/contribution state on shared mapping contracts while
+  `MetadataBuildingProcess` remains active, including
+  `StateManagementDescriptor`, aggregate `ComponentStorage`, mapped-superclass
+  and embeddable contribution descriptors, and identifier correspondence.
+  Current support should continue to project through the compatibility bridges
+  described in the focused design docs until those products can become
+  authoritative for all supported boot paths.
+
+Remaining XML/runtime vestiges of removed features should be cleaned up in their
+own slices rather than silently reintroduced through the new pipeline.
+
+== Suggested Verification Slices
+
+Use these as burn-down buckets instead of waiting for broad suite failures.
+
+1. XML/component parity:
+   `XmlAttributeOverrideTest`, `XMLMappingDisabledTest`, XML annotation-creation
+   tests, metadata-complete entity tests, overlay XML tests, package-default
+   tests, and XML-sourced embedded/component override tests.  The focused XML
+   override, phase-boundary, source-contribution, metadata-complete, XML access,
+   and older JPA XML override slices are green.  Keep this as a watch/test-only
+   bucket unless a new focused XML failure appears.
+
+2. Categorization/inheritance:
+   mapped-superclass override tests, access hierarchy tests, joined-subclass
+   tests, table-per-class tests, shared mapped-superclass tests,
+   `exclude-unlisted-classes` tests.  Keep true source-policy failures separate
+   from later table-context failures.
+
+3. Components/overrides:
+   embedded inheritance tests, nested attribute/association override tests,
+   plural embeddable tests, collection-element embeddable tests, embedded-id
+   override tests, custom implicit naming strategy tests.  Embedded-id plural
+   rejection guardrails:
+   `EmbeddableBindingTests.testEmbeddedIdentifierRejectsPluralMember`,
+   `testEmbeddedIdentifierRejectsUnannotatedPluralMember`, and
+   `testEmbeddedIdentifierRejectsNestedPluralMember`.  Embedded-id
+   association-identifier join-table and inverse one-to-one boot-model
+   guardrails are green in `EmbeddableBindingTests`.
+
+4. Identifiers:
+   the first IdClass/inheritance/property-ref slice and the derived-id /
+   `@MapsId` expansion slice are green.  Do not reopen the whole identifier
+   bucket without a failing focused example.
+
+5. Associations:
+   inverse one-to-one embeddable/dotted-path/supertype guardrails are green.
+   To-one join-table and join-table `@NotFound` guardrails are green.  The
+   `org.hibernate.orm.test.annotations.refcolnames.*` property-ref /
+   join-formula package is green after the non-PK association target and
+   collection/association-table owner-key fixes.  Primary-key-join-column and
+   explicit FK customization tests are green.
+
+6. Collections:
+   list/index tests, map-key tests, inverse map-valued association tests,
+   id-bag tests, many-to-any tests, sort/order/filter/custom-SQL/cache tests.
+   `LegacyParameterTests` is green after making basic map-key columns nullable
+   when they are borrowed onto a target entity table for foreign-key
+   one-to-many maps, as with `Zoo#mammals` placing its `@MapKeyColumn` on
+   `Mammal`.
+
+7. Global metadata:
+   named query/result-set/entity-graph/fetch-profile/filter/type-registration
+   tests, including XML-sourced variants.
+
+8. Schema/exportables:
+   secondary table keys, collection table keys, joined-subclass keys, auxiliary
+   database objects, unique/index/check/comment/options, schema-generation
+   tests.
+
+9. JPA/settings normalization:
+   the focused parity bucket is green after moving legacy EMF-builder
+   normalization into the new bootstrap/settings handoff.  Covered behaviors
+   include validation/shared-cache alias hydration, JDBC property precedence over
+   the environment baseline during JPA descriptor bootstrap, default session
+   flush/lock/cache properties, lock timeout propagation, and session-scoped
+   interceptor suppliers.  `MaxInExpressionParameterPaddingTest` is also green
+   after carrying `QuerySettings.IN_CLAUSE_PARAMETER_PADDING` through resolved
+   SessionFactory settings and the options adapter.
++
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.jpa.ejb3configuration.ConfigurationObjectSettingTest' \
+  --tests 'org.hibernate.orm.test.jpa.ejb3configuration.InterceptorTest' \
+  --tests 'org.hibernate.orm.test.jpa.emops.FlushModeTest' \
+  --tests 'org.hibernate.orm.test.jpa.lock.LockTimeoutPropertyTest' \
+  --tests 'org.hibernate.orm.test.jpa.cacheable.annotation.ConfigurationTest' \
+  --tests 'org.hibernate.orm.test.jpa.cacheable.cachemodes.SharedCacheModesTest' \
+  --tests 'org.hibernate.orm.test.internal.util.FlushModeConfigTest' \
+  --console=plain
+----
+
+10. Fresh census / copied reports:
+    before choosing another UOE-derived bucket, prefer a controlled
+    single-worker `hibernate-core` census or freshly copied test reports.  The
+    older sampled UOE list has already produced both settings-normalization
+    fixes and the one-to-many map-key nullable binding fix, so stale names are
+    now lower signal than fresh clustered failures.

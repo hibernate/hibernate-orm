@@ -6,6 +6,8 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -47,6 +49,7 @@ import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -138,6 +141,7 @@ public class EntityInitializerImpl
 	private final MutabilityPlan<Object>[][] updatableAttributeMutabilityPlans;
 	private final ImmutableBitSet[] lazySets;
 	private final ImmutableBitSet[] maybeLazySets;
+	private final ImmutableBitSet identifierAttributePositions;
 	private final boolean hasLazySubInitializers;
 	private final boolean hasLazyInitializingSubAssemblers;
 
@@ -157,6 +161,7 @@ public class EntityInitializerImpl
 		protected @Nullable EntityKey entityKey;
 		protected @Nullable Object entityInstanceForNotify;
 		protected @Nullable EntityHolder entityHolder;
+		protected boolean usingEmbeddedIdentifierInstanceAsEntity;
 
 		public EntityInitializerData(EntityInitializerImpl initializer, RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
@@ -204,6 +209,7 @@ public class EntityInitializerImpl
 			this.entityKey = original.entityKey;
 			this.entityInstanceForNotify = original.entityInstanceForNotify;
 			this.entityHolder = original.entityHolder;
+			this.usingEmbeddedIdentifierInstanceAsEntity = original.usingEmbeddedIdentifierInstanceAsEntity;
 		}
 	}
 
@@ -249,6 +255,14 @@ public class EntityInitializerImpl
 		couldUseEmbeddedIdentifierInstanceAsEntity =
 				entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping composite
 						&& !composite.hasContainingClass();
+		final var identifierAttributePositions = new BitSet( entityDescriptor.getNumberOfAttributeMappings() );
+		final Set<String> identifierAttributeNames = new HashSet<>();
+		if ( couldUseEmbeddedIdentifierInstanceAsEntity
+				&& entityDescriptor.getIdentifierMapping() instanceof NonAggregatedIdentifierMapping nonAggregatedId ) {
+			nonAggregatedId.getVirtualIdEmbeddable().forEachAttributeMapping( (position, attributeMapping) -> {
+				identifierAttributeNames.add( attributeMapping.getAttributeName() );
+			} );
+		}
 
 		navigablePath = resultDescriptor.getNavigablePath();
 		fetchOptions = resultDescriptor.getFetchOptions();
@@ -349,6 +363,9 @@ public class EntityInitializerImpl
 			final int stateArrayPosition = attributeMapping.getStateArrayPosition();
 			final var declaringType = attributeMapping.getDeclaringType().asEntityMappingType();
 			final int subclassId = declaringType.getSubclassId();
+			if ( identifierAttributeNames.contains( attributeMapping.getAttributeName() ) ) {
+				identifierAttributePositions.set( stateArrayPosition );
+			}
 
 			final var subInitializer = stateAssembler.getInitializer();
 			if ( subInitializer != null ) {
@@ -481,6 +498,7 @@ public class EntityInitializerImpl
 		this.collectionContainingSubInitializers = collectionContainingSubInitializers;
 		this.lazySets = toBitSetArray( lazySets );
 		this.maybeLazySets = toBitSetArray( maybeLazySets );
+		this.identifierAttributePositions = ImmutableBitSet.valueOfOrEmpty( identifierAttributePositions );
 		this.hasLazySubInitializers = hasLazySubInitializers;
 		this.hasLazyInitializingSubAssemblers = hasLazyInitializingSubAssemblers;
 		this.updatableAttributeMutabilityPlans = updatableAttributeMutabilityPlans;
@@ -602,6 +620,13 @@ public class EntityInitializerImpl
 			data.entityHolder = null;
 
 			final var rowProcessingState = data.getRowProcessingState();
+			if ( !entityKeyOnly && useEmbeddedIdentifierInstanceAsEntity( data ) ) {
+				data.usingEmbeddedIdentifierInstanceAsEntity = true;
+				resolveEntityKey( data, rowProcessingState.getEntityId() );
+				resolveInstance( data );
+				return;
+			}
+
 			final Object id;
 			if ( identifierAssembler == null ) {
 				id = rowProcessingState.getEntityId();
@@ -1283,6 +1308,7 @@ public class EntityInitializerImpl
 			}
 
 			if ( useEmbeddedIdentifierInstanceAsEntity( data ) ) {
+				data.usingEmbeddedIdentifierInstanceAsEntity = true;
 				data.setInstance( data.entityInstanceForNotify = rowProcessingState.getEntityId() );
 			}
 			else {
@@ -2078,9 +2104,16 @@ public class EntityInitializerImpl
 		final var rowProcessingState = data.getRowProcessingState();
 		final var values = new Object[data.concreteDescriptor.getNumberOfAttributeMappings()];
 		final var concreteAssemblers = assemblers[data.concreteDescriptor.getSubclassId()];
+		final Object[] existingValues =
+				data.usingEmbeddedIdentifierInstanceAsEntity
+						? data.concreteDescriptor.getValues( data.entityInstanceForNotify )
+						: null;
 		for ( int i = 0; i < values.length; i++ ) {
 			final var assembler = concreteAssemblers[i];
-			values[i] = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
+			values[i] =
+					existingValues != null && identifierAttributePositions.get( i )
+							? existingValues[i]
+							: assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
 		}
 		return values;
 	}

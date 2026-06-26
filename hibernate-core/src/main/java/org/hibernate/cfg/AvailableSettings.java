@@ -75,15 +75,6 @@ public interface AvailableSettings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * @deprecated The legacy {@code hibernate.cfg.xml} format is no longer supported.
-	 */
-	@Deprecated(since="9.0", forRemoval = true)
-	String CFG_XML_FILE = "hibernate.cfg_xml_file";
-	String ORM_XML_FILES = "hibernate.orm_xml_files";
-	String HBM_XML_FILES = "hibernate.hbm_xml_files";
-	String LOADED_CLASSES = "hibernate.loaded_classes";
-
-	/**
 	 * Specifies a {@link org.hibernate.context.spi.CurrentSessionContext} for
 	 * scoping the {@linkplain org.hibernate.SessionFactory#getCurrentSession()
 	 * current session}, either:
@@ -145,16 +136,12 @@ public interface AvailableSettings
 	 * If the entity is versioned, the version is also reset to its default value.
 	 *
 	 * @settingDefault {@code false} - generated identifiers are not unset
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyIdentifierRollbackSupport(boolean)
 	 */
 	String USE_IDENTIFIER_ROLLBACK = "hibernate.use_identifier_rollback";
 
 	/**
 	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.
 	 * May specify either a class name or an instance.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy
 	 */
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 

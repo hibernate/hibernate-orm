@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -36,19 +35,12 @@ import org.hibernate.type.MappingContext;
  */
 public interface Metadata extends MappingContext {
 	/**
-	 * Get the builder for {@link SessionFactory} instances based on this metamodel.
-	 *
-	 * @return The builder for {@link SessionFactory} instances.
-	 */
-	SessionFactoryBuilder getSessionFactoryBuilder();
-
-	/**
-	 * Short-hand form of building a {@link SessionFactory} through the builder without any additional
-	 * option overrides.
+	 * Short-hand form of building a {@link org.hibernate.SessionFactory}
+	 * without any additional option overrides.
 	 *
 	 * @return THe built SessionFactory.
 	 */
-	SessionFactory buildSessionFactory();
+	org.hibernate.SessionFactory buildSessionFactory();
 
 	/**
 	 * Gets the {@link UUID} for this metamodel.

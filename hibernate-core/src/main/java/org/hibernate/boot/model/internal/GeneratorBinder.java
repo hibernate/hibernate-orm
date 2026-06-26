@@ -796,8 +796,26 @@ public class GeneratorBinder {
 			PropertyData inferredData,
 			SimpleValue idValue,
 			MetadataBuildingContext buildingContext) {
-		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final var idMemberDetails = inferredData.getAttributeMember();
+		if ( createIdGeneratorFromGeneratorAnnotation(
+				idValue,
+				idMemberDetails,
+				buildingContext,
+				getPath( propertyHolder, inferredData )
+		) ) {
+			return;
+		}
+		if ( idMemberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
+			createIdGenerator( idMemberDetails, idValue, propertyHolder.getPersistentClass(), buildingContext );
+		}
+	}
+
+	public static boolean createIdGeneratorFromGeneratorAnnotation(
+			SimpleValue idValue,
+			MemberDetails idMemberDetails,
+			MetadataBuildingContext buildingContext,
+			String attributePath) {
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final var idGeneratorAnnotations = idMemberDetails.getMetaAnnotated( IdGeneratorType.class, modelsContext );
 		final var generatorAnnotations = idMemberDetails.getMetaAnnotated( ValueGenerationType.class, modelsContext );
 		// Since these collections may contain proxies created by common-annotations module, we cannot reliably use
@@ -812,7 +830,7 @@ public class GeneratorBinder {
 			throw new AnnotationException( String.format(
 					Locale.ROOT,
 					"Identifier attribute '%s' has too many generator annotations: %s",
-					getPath( propertyHolder, inferredData ),
+					attributePath,
 					combineUntyped( idGeneratorAnnotations, generatorAnnotations )
 			) );
 		}
@@ -823,19 +841,18 @@ public class GeneratorBinder {
 					idValue,
 					beanContainer( buildingContext )
 			) );
+			return true;
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idMemberDetails, generatorAnnotation ) );
 			throw new AnnotationException( String.format(
 					Locale.ROOT,
 					"Identifier attribute '%s' is annotated '%s' which is not an '@IdGeneratorType'",
-					getPath( propertyHolder, inferredData ),
+					attributePath,
 					generatorAnnotations.get(0).annotationType().getName()
 			) );
 		}
-		else if ( idMemberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
-			createIdGenerator( idMemberDetails, idValue, propertyHolder.getPersistentClass(), buildingContext );
-		}
+		return false;
 	}
 
 	/**

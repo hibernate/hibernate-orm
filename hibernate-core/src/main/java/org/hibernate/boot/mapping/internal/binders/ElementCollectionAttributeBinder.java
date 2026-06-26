@@ -1,0 +1,404 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.mapping.internal.binders;
+
+import java.util.List;
+
+import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
+import org.hibernate.boot.mapping.internal.sources.ColumnSource;
+import org.hibernate.boot.mapping.internal.sources.CollectionSource;
+import org.hibernate.boot.mapping.internal.sources.ComponentSource;
+import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
+import org.hibernate.boot.mapping.internal.context.BindingContext;
+import org.hibernate.boot.mapping.internal.context.BindingOptions;
+import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.IdentifierCollection;
+import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.UniqueConstraint;
+
+/// Binds element-collection attributes.
+///
+/// This binder creates the collection mapping, collection table, element value,
+/// and any synthetic index value for list/map variants.  The owner key is
+/// intentionally deferred through [CollectionTableBinding] because it depends on
+/// the owner hierarchy's identifier binding and participates in later foreign-key
+/// creation.
+///
+/// Element values may be basic or embeddable.  For embeddable elements, the
+/// collection member remains the source for path-based overrides and converter
+/// declarations, even though the bound component members come from the embeddable
+/// element type.
+///
+/// @since 9.0
+/// @author Steve Ebersole
+class ElementCollectionAttributeBinder {
+	private final IdentifiableTypeMetadata ownerType;
+	private final PersistentClass ownerBinding;
+	private final AttributeMetadata attributeMetadata;
+	private final ModelBinders modelBinders;
+	private final BindingOptions bindingOptions;
+	private final BindingState bindingState;
+	private final BindingContext bindingContext;
+	private final String collectionRolePath;
+	private final CollectionValueIntent collectionValueIntent;
+	private final boolean registerCollectionBindings;
+	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
+
+	ElementCollectionAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				attributeMetadata.getName(),
+				null,
+				true
+		);
+	}
+
+	ElementCollectionAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				collectionRolePath,
+				null,
+				true
+		);
+	}
+
+	ElementCollectionAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath,
+			boolean registerCollectionBindings) {
+		this(
+				ownerType,
+				ownerBinding,
+				attributeMetadata,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				collectionRolePath,
+				null,
+				registerCollectionBindings
+		);
+	}
+
+	ElementCollectionAttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			String collectionRolePath,
+			CollectionValueIntent collectionValueIntent,
+			boolean registerCollectionBindings) {
+		this.ownerType = ownerType;
+		this.ownerBinding = ownerBinding;
+		this.attributeMetadata = attributeMetadata;
+		this.modelBinders = modelBinders;
+		this.bindingOptions = bindingOptions;
+		this.bindingState = bindingState;
+		this.bindingContext = bindingContext;
+		this.collectionRolePath = collectionRolePath;
+		this.collectionValueIntent = collectionValueIntent;
+		this.registerCollectionBindings = registerCollectionBindings;
+	}
+
+	Collection bind(Property property) {
+		final CollectionSource source = collectionValueIntent == null
+				? CollectionSource.elementCollection(
+						attributeMetadata.getMember(),
+						bindingContext.getClassDetailsRegistry().resolveClassDetails( ownerBinding.getClassName() ),
+						ownerType.getHierarchy().getRoot().getClassDetails(),
+						bindingContext.getBootstrapContext().getModelsContext()
+				)
+				: collectionValueIntent.source();
+		final CollectionTable collectionTable = source.collectionTable();
+		final Table table = registerCollectionBindings ? bindCollectionTable( source ) : createDeclarationOnlyTable();
+		final Collection collection = createCollection( source );
+		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setCollectionTable( table );
+		collection.setInverse( false );
+		collection.setMutable( source.isMutable() );
+		collection.setOptimisticLocked( true );
+		collection.setTypeUsingReflection(
+				attributeMetadata.getMember().getDeclaringType().getName(),
+				attributeMetadata.getName()
+		);
+		CollectionShapeBinder.apply( source, collection, bindingState );
+
+		final Value element = bindElementValue( source, collection, table );
+		collection.setElement( element );
+		if ( collection instanceof org.hibernate.mapping.Map map ) {
+			CollectionIndexBinder.bindMapKey(
+					ownerType,
+					ownerBinding,
+					source,
+					map,
+					table,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+		}
+		else if ( collection instanceof IndexedCollection indexedCollection ) {
+			CollectionIndexBinder.bindListIndex(
+					source,
+					indexedCollection,
+					table,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+		}
+		else if ( collection instanceof IdentifierCollection identifierCollection ) {
+			CollectionIdBinder.bindCollectionId(
+					source,
+					identifierCollection,
+					table,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+		}
+
+		final List<JoinColumn> joinColumns = source.joinColumns();
+		final IdentifierBinding ownerIdentifierBinding = bindingState.getIdentifierBinding( ownerType.getHierarchy().getRoot() );
+		if ( ownerIdentifierBinding == null ) {
+			throw new MappingException(
+					"Could not resolve identifier binding for element collection owner - "
+							+ ownerType.getClassDetails().getClassName()
+			);
+		}
+		if ( !joinColumns.isEmpty()
+				&& joinColumns.size() != ownerIdentifierBinding.columns().size()
+				&& !ToOneAttributeBinder.hasReferencedColumnName( joinColumns ) ) {
+			throw new MappingException(
+					"Collection table join column count did not match owner identifier column count - "
+							+ ownerType.getClassDetails().getClassName()
+			);
+		}
+		if ( registerCollectionBindings ) {
+			bindingState.addCollectionTableBinding( new CollectionTableBinding(
+					collection,
+					joinColumns,
+					ForeignKeySource.firstSpecified(
+							ForeignKeySource.fromFirstSpecifiedJoinColumn( joinColumns ),
+							source.joinTable() == null
+									? ForeignKeySource.from( collectionTable )
+									: ForeignKeySource.from( source.joinTable() )
+					),
+					resolveOnDeleteAction(),
+					uniqueConstraints( source ),
+					indexes( source )
+			) );
+			bindingState.addCollectionBinding( collection );
+		}
+		return collection;
+	}
+
+	private Table createDeclarationOnlyTable() {
+		return new Table( "orm", ownerBinding.getEntityName() + "." + collectionRolePath + "#mapped-superclass" );
+	}
+
+	private Collection createCollection(CollectionSource source) {
+		return CollectionMappingHelper.createCollection( source, ownerBinding, bindingState );
+	}
+
+		private UniqueConstraint[] uniqueConstraints(CollectionSource source) {
+			if ( source.collectionTable() != null ) {
+				return source.collectionTable().uniqueConstraints();
+			}
+			return source.joinTable() == null ? new UniqueConstraint[0] : source.joinTable().uniqueConstraints();
+		}
+
+		private Index[] indexes(CollectionSource source) {
+			if ( source.collectionTable() != null ) {
+				return source.collectionTable().indexes();
+			}
+			return source.joinTable() == null ? new Index[0] : source.joinTable().indexes();
+		}
+
+		private Table bindCollectionTable(CollectionSource source) {
+			if ( source.joinTable() != null ) {
+				return modelBinders.getTableBinder()
+						.bindOwnedTable(
+								resolveOwnerEntityType(),
+								ownerBinding.getTable(),
+								attributeMetadata.getName(),
+								source.joinTable()
+						)
+						.binding();
+			}
+			return modelBinders.getTableBinder()
+					.bindCollectionTable(
+							resolveOwnerEntityType(),
+							ownerBinding.getTable(),
+							attributeMetadata.getName(),
+							source.collectionTable()
+					)
+					.binding();
+		}
+
+	private Value bindElementValue(CollectionSource source, Collection collection, Table table) {
+		if ( source.hasEmbeddableElement() ) {
+			return bindEmbeddableElementValue( source, collection, table );
+		}
+			return bindBasicElementValue( source, table );
+		}
+
+	private Component bindEmbeddableElementValue(CollectionSource collectionSource, Collection collection, Table table) {
+		final ComponentSource source = ComponentSource.collectionElement(
+				collectionSource.member(),
+				ownerType.getAccessType(),
+				bindingContext
+		);
+		final Component component =
+				new EmbeddableMappingMaterializer( bindingState ).createCollectionElementComponent(
+						source,
+						collection,
+						table
+				);
+		EmbeddableAttributeBinder.bindDiscriminator(
+				component,
+				table,
+				source,
+				"element_DTYPE",
+				bindingState,
+				bindingOptions,
+				bindingContext
+		);
+
+		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
+				ownerType,
+				ownerBinding,
+				source,
+				component,
+				table,
+				(ignored, column) -> table.addColumn( column ),
+				false,
+				true,
+				true
+		);
+		return component;
+	}
+
+	private BasicValue bindBasicElementValue(CollectionSource source, Table table) {
+		final BasicValue element = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		element.setTable( table );
+		BasicValueBinder.bindBasicValue(
+				BasicValueSource.collectionElement( source.member(), source.elementType(), bindingContext ),
+				null,
+				element,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
+
+		final jakarta.persistence.Column column = source.elementColumn();
+		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(
+				ColumnSource.from( column ),
+				() -> implicitElementColumnName( source )
+		);
+		table.addColumn( elementColumn );
+		element.addColumn( elementColumn );
+		if ( elementColumn.isUnique() ) {
+			uniqueKeyMappingMaterializer.materializeUniqueKey(
+					ResolvedUniqueKey.from( elementColumn, table, bindingState.getMetadataBuildingContext() )
+			);
+		}
+		return element;
+	}
+
+		private String implicitElementColumnName(CollectionSource source) {
+			return bindingContext.getImplicitNamingStrategy()
+					.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
+						@Override
+						public AttributePath getAttributePath() {
+							return AttributePath.parse( source.member().resolveAttributeName() );
+						}
+
+						@Override
+						public boolean isCollectionElement() {
+							return false;
+						}
+
+						@Override
+						public MetadataBuildingContext getBuildingContext() {
+							return bindingState.getMetadataBuildingContext();
+						}
+					} )
+					.getText();
+		}
+
+	private EntityTypeMetadata resolveOwnerEntityType() {
+		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+			return entityType;
+		}
+		return ownerType.getHierarchy().getRoot();
+	}
+
+	private org.hibernate.annotations.OnDeleteAction resolveOnDeleteAction() {
+		final OnDelete onDelete = attributeMetadata.getMember().getDirectAnnotationUsage( OnDelete.class );
+		return onDelete == null ? null : onDelete.action();
+	}
+
+}

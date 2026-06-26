@@ -27,6 +27,7 @@ public final class Formula implements Selectable, Serializable {
 	private static final AtomicInteger formulaUniqueInteger = new AtomicInteger();
 
 	private String formula;
+	private String selectableName;
 	private final int uniqueInteger;
 
 	public Formula() {
@@ -80,6 +81,14 @@ public final class Formula implements Selectable, Serializable {
 
 	public void setFormula(String string) {
 		formula = string;
+	}
+
+	public String getSelectableName() {
+		return selectableName;
+	}
+
+	public void setSelectableName(String selectableName) {
+		this.selectableName = selectableName;
 	}
 
 	@Override

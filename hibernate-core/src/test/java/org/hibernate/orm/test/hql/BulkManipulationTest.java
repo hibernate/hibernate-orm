@@ -22,10 +22,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -40,7 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
 
-import static org.hibernate.cfg.MappingSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,7 +48,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@ServiceRegistry(settings = @Setting(name=DEFAULT_LIST_SEMANTICS, value = "bag"))
 @DomainModel(
 		annotatedClasses = { Farm.class, Crop.class, BulkManipulationTest.Queries.class },
 		xmlMappings = {

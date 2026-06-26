@@ -545,6 +545,17 @@ public class Property implements Serializable, MetaAttributable {
 				this instanceof SyntheticProperty
 						? new SyntheticProperty()
 						: new Property();
+		copyTo( property );
+		return property;
+	}
+
+	public SyntheticProperty syntheticCopy() {
+		final var property = new SyntheticProperty();
+		copyTo( property );
+		return property;
+	}
+
+	private void copyTo(Property property) {
 		property.setName( getName() );
 		property.setValue( getValue() );
 		property.setCascade( getCascade() );
@@ -568,7 +579,6 @@ public class Property implements Serializable, MetaAttributable {
 		property.setGenericSpecialization( isGenericSpecialization() );
 		property.setLob( isLob() );
 		property.setReturnedClassName( getReturnedClassName() );
-		return property;
 	}
 
 	public void setMutable(boolean mutable) {

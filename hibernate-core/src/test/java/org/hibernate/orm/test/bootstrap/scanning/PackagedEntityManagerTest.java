@@ -18,7 +18,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.orm.test.jpa.pack.cfgxmlpar.Morito;
@@ -69,6 +70,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
+
+	private static EntityManagerFactory buildEntityManagerFactory(ScannedPersistenceUnitInfo unitInfo, Map<?, ?> settings) {
+		return SessionFactoryBootstrap.build( new PersistenceUnitInfoDescriptor( unitInfo ), settings );
+	}
+
 	@AfterEach
 	public void tearDown(){
 		if(emf != null && emf.isOpen()) {
@@ -83,7 +89,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		// run the test
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "defaultpar" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer as = new ApplicationServer();
@@ -116,7 +122,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "defaultpar_1_0" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer1 as = new ApplicationServer1();
 			as.setName( "JBoss AS" );
@@ -154,7 +160,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 				testPackage.toURL(),
 				"defaultpar"
 		);
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer as = new ApplicationServer();
@@ -191,7 +197,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "explodedpar" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Carpet carpet = new Carpet();
@@ -213,7 +219,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		try {
 			final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "excludehbmpar" );
-			emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+			emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 		}
 		catch ( PersistenceException e ) {
 			if ( emf != null ) {
@@ -250,7 +256,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "cfgxmlpar" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 
 		assertTrue( emf.getProperties().containsKey( "hibernate.test-assertable-setting" ) );
 
@@ -277,7 +283,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURI().toURL(), "space par" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			org.hibernate.orm.test.jpa.pack.spacepar.Bug bug = new org.hibernate.orm.test.jpa.pack.spacepar.Bug();
@@ -306,7 +312,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 				testPackage.toURL(),
 				"overridenpar"
 		);
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, properties ).build();
+		emf = buildEntityManagerFactory( unitInfo, properties );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			org.hibernate.orm.test.jpa.pack.overridenpar.Bug bug = new org.hibernate.orm.test.jpa.pack.overridenpar.Bug();
 			bug.setSubject( "Allow DS overriding" );
@@ -327,7 +333,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 				testPackage.toURL(),
 				"manager1"
 		);
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 		EntityManager em = emf.createEntityManager();
 		try {
 			EventListenerRegistry listenerRegistry =
@@ -440,7 +446,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage, externalJar );
 
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "manager1" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 		Scooter scooter = TransactionUtil.doInJPA( () -> emf, em -> {
 			Scooter s = new Scooter();
 			s.setModel( "Abadah" );
@@ -481,7 +487,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		// if the jar cannot be resolved, this call should fail
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "manager1" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 
 		// but to make sure, also verify that the entity defined in the external jar was found
 		emf.getMetamodel().entity( Airplane.class );
@@ -509,7 +515,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage, externalJar );
 
 		final ScannedPersistenceUnitInfo unitInfo = ScannedPersistenceUnitInfo.create( testPackage.toURL(), "manager1" );
-		emf = Bootstrap.getEntityManagerFactoryBuilder( unitInfo, ServiceRegistryUtil.createBaseSettings() ).build();
+		emf = buildEntityManagerFactory( unitInfo, ServiceRegistryUtil.createBaseSettings() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Seat seat = new Seat();
 			seat.setNumber( "3B" );

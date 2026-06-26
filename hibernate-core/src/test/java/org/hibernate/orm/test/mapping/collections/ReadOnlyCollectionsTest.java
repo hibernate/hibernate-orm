@@ -50,14 +50,28 @@ public class ReadOnlyCollectionsTest {
 			session.persist( new CollectionsContainer( 2L, "container_2" ) );
 		} );
 		scope.inTransaction( session -> {
-			session.createNativeMutationQuery( "insert into otm_join_table(container_id, basic_id) values (2,1)" ).executeUpdate();
-			session.createNativeMutationQuery( "insert into otm_join_table(container_id, basic_id) values (2,2)" ).executeUpdate();
-			session.createNativeMutationQuery( "insert into mtm_join_table(container_id, basic_id) values (2,1)" ).executeUpdate();
-			session.createNativeMutationQuery( "insert into mtm_join_table(container_id, basic_id) values (2,2)" ).executeUpdate();
-			session.createNativeMutationQuery( "insert into el_col_table(container_id, long_value) values (2,1)" ).executeUpdate();
-			session.createNativeMutationQuery( "insert into el_col_table(container_id, long_value) values (2,2)" ).executeUpdate();
-			session.createNativeMutationQuery( "insert into TargetEntity(id, container_id) values (98,2)" ).executeUpdate();
-			session.createNativeMutationQuery( "insert into TargetEntity(id, container_id) values (99,2)" ).executeUpdate();
+			session.createNativeMutationQuery(
+					"insert into otm_join_table(container_id, basic_id, oneToManyJoinTable_ORDER) values (2,1,0)"
+			).executeUpdate();
+			session.createNativeMutationQuery(
+					"insert into otm_join_table(container_id, basic_id, oneToManyJoinTable_ORDER) values (2,2,1)"
+			).executeUpdate();
+			session.createNativeMutationQuery(
+					"insert into mtm_join_table(container_id, basic_id, manyToMany_ORDER) values (2,1,0)"
+			).executeUpdate();
+			session.createNativeMutationQuery(
+					"insert into mtm_join_table(container_id, basic_id, manyToMany_ORDER) values (2,2,1)"
+			).executeUpdate();
+			session.createNativeMutationQuery(
+					"insert into el_col_table(container_id, long_value, elementCollection_ORDER) values (2,1,0)"
+			).executeUpdate();
+			session.createNativeMutationQuery(
+					"insert into el_col_table(container_id, long_value, elementCollection_ORDER) values (2,2,1)"
+			).executeUpdate();
+			session.createNativeMutationQuery( "insert into TargetEntity(id, container_id, oneToMany_ORDER) values (98,2,0)" )
+					.executeUpdate();
+			session.createNativeMutationQuery( "insert into TargetEntity(id, container_id, oneToMany_ORDER) values (99,2,1)" )
+					.executeUpdate();
 		} );
 	}
 

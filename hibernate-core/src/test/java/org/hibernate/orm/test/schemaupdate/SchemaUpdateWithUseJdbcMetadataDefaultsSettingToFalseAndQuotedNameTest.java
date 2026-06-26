@@ -10,10 +10,13 @@ import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -30,11 +33,14 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey(value = "HHH-13788")
 @Exclude
@@ -69,10 +75,35 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 
 	@AfterEach
 	public void tearDown() {
-		new SchemaExport().setHaltOnError( true )
-				.setFormat( false )
-				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
-		StandardServiceRegistryBuilder.destroy( ssr );
+		if ( metadata != null ) {
+			new SchemaExport().setHaltOnError( true )
+					.setFormat( false )
+					.drop( EnumSet.of( TargetType.DATABASE ), metadata );
+		}
+		if ( ssr != null ) {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	@Test
+	public void testBacktickQuotedEntityNameIsRejected() {
+		assertQuotedEntityNameRejected( BacktickQuotedEntityName.class );
+	}
+
+	@Test
+	public void testDoubleQuotedEntityNameIsRejected() {
+		assertQuotedEntityNameRejected( DoubleQuotedEntityName.class );
+	}
+
+	private void assertQuotedEntityNameRejected(Class<?> entityClass) {
+		ssr = ServiceRegistryUtil.serviceRegistry();
+		final AnnotationException exception = assertThrows(
+				AnnotationException.class,
+				() -> new MetadataSources( ssr )
+						.addAnnotatedClass( entityClass )
+						.buildMetadata()
+		);
+		assertTrue( exception.getMessage().contains( "is quoted" ) );
 	}
 
 	@ParameterizedTest
@@ -127,12 +158,25 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 		);
 	}
 
-	@Entity(name = "`Another_Test_Entity`")
+	@Entity
+	@Table(name = "`Another_Test_Entity`")
 	public static class AnotherTestEntity {
 		@Id
 		private Long id;
 
 		@Column(name = "`another_NAME`")
 		private String name;
+	}
+
+	@Entity(name = "`BacktickQuotedEntityName`")
+	public static class BacktickQuotedEntityName {
+		@Id
+		private Long id;
+	}
+
+	@Entity(name = "\"DoubleQuotedEntityName\"")
+	public static class DoubleQuotedEntityName {
+		@Id
+		private Long id;
 	}
 }

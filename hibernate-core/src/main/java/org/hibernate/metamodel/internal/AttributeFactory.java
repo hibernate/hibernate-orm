@@ -354,8 +354,8 @@ public class AttributeFactory {
 			final var type = hibernateValue.getType();
 			if ( type instanceof BasicPluralType<?, ?> pluralType ) {
 				if ( pluralType.getElementType().getJavaTypeDescriptor()
-						instanceof EmbeddableAggregateJavaType<?> ) {
-					final var aggregateColumn = (AggregateColumn) hibernateValue.getColumns().get( 0 );
+						instanceof EmbeddableAggregateJavaType<?>
+						&& hibernateValue.getColumns().get( 0 ) instanceof AggregateColumn aggregateColumn ) {
 					classEmbeddableType( context, aggregateColumn.getComponent() );
 				}
 			}

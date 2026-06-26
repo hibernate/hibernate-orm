@@ -15,13 +15,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
  * @author Vlad Mihalcea
@@ -30,20 +27,9 @@ import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 		annotatedClasses = {
 				ManyToManyBidirectionalTest.Person.class,
 				ManyToManyBidirectionalTest.Address.class,
-		},
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ManyToManyBidirectionalTest.CollectionClassificationProvider.class
-		)
-)
+		})
 public class ManyToManyBidirectionalTest {
 
-	public static class CollectionClassificationProvider implements SettingProvider.Provider<CollectionClassification> {
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.BAG;
-		}
-	}
 
 	@Test
 	public void testLifecycle(EntityManagerFactoryScope scope) {

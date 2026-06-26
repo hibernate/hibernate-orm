@@ -4,16 +4,17 @@
  */
 package org.hibernate.orm.test.jpa.cacheable.annotation;
 
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
-import jakarta.persistence.EntityManagerFactory;
+
 import jakarta.persistence.SharedCacheMode;
 
+import org.hibernate.boot.pipeline.internal.MetadataBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.cache.CachingRegionFactory;
@@ -32,12 +33,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @BaseUnitTest
 public class ConfigurationTest {
 
-	private EntityManagerFactory emf;
+	private MetadataBootstrap metadataBootstrap;
 
 	@AfterEach
 	public void tearDown() {
-		if ( emf != null ) {
-			emf.close();
+		if ( metadataBootstrap != null ) {
+			metadataBootstrap.close();
+			metadataBootstrap = null;
 		}
 	}
 
@@ -116,24 +118,22 @@ public class ConfigurationTest {
 		Map settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, mode );
 		settings.put( AvailableSettings.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
-		settings.put(
-				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList(
-						ExplicitlyCacheableEntity.class,
-						ExplicitlyNonCacheableEntity.class,
-						NoCacheableAnnotationEntity.class
-				)
-		);
+		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter() {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of(
+						ExplicitlyCacheableEntity.class.getName(),
+						ExplicitlyNonCacheableEntity.class.getName(),
+						NoCacheableAnnotationEntity.class.getName()
+				);
+			}
+		};
 
-		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
-
-		final EntityManagerFactoryBuilderImpl emfb = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
-				adapter,
+		metadataBootstrap = SessionFactoryBootstrap.resolveMetadata(
+				new PersistenceUnitInfoDescriptor( adapter ),
 				settings
 		);
-
-		emf = emfb.build();
-		return emfb.getMetadata();
+		return metadataBootstrap.metadata();
 	}
 
 	public static class CustomRegionFactory extends CachingRegionFactory {

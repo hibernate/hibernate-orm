@@ -5,6 +5,7 @@
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.action.queue.spi.PlanningOptions;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -45,6 +46,10 @@ public interface RuntimeModelCreationContext {
 
 	default MetadataImplementor getMetadata() {
 		return getBootModel();
+	}
+
+	default BootBindingModel getBootBindingModel() {
+		return null;
 	}
 
 	SqmFunctionRegistry getFunctionRegistry();

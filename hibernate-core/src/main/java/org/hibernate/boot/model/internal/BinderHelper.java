@@ -18,6 +18,8 @@ import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -76,6 +78,9 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  * @author Emmanuel Bernard
  */
 public class BinderHelper {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
+
 
 	private BinderHelper() {
 	}
@@ -241,7 +246,7 @@ public class BinderHelper {
 			// no need to make a synthetic property
 			final var property = properties.get( 0 );
 			// mark it unique
-			property.getValue().createUniqueKey( context );
+			materializeUniqueKey( property.getValue(), context, property.getName() );
 			return property;
 		}
 		else {
@@ -334,8 +339,17 @@ public class BinderHelper {
 		else {
 			ownerEntity.addProperty( result );
 		}
-		embeddedComponent.createUniqueKey( context ); //make it unique
+		materializeUniqueKey( embeddedComponent, context, syntheticPropertyName ); //make it unique
 		return result;
+	}
+
+	private static void materializeUniqueKey(Value value, MetadataBuildingContext context, String sourceRole) {
+		if ( !(value instanceof SimpleValue simpleValue) ) {
+			throw new AssertionFailure( "Unique key on an unexpected Value type: " + value.getClass().getName() );
+		}
+		UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+				ResolvedUniqueKey.from( simpleValue, context, sourceRole )
+		);
 	}
 
 	private static Component embeddedComponent(
@@ -401,22 +415,7 @@ public class BinderHelper {
 	 * and other attributes.
 	 */
 	public static Property shallowCopy(Property property) {
-		final var clone = new SyntheticProperty();
-		clone.setCascade( property.getCascade() );
-		clone.setInsertable( property.isInsertable() );
-		clone.setLazy( property.isLazy() );
-		clone.setName( property.getName() );
-		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
-		clone.setOptimisticLocked( property.isOptimisticLocked() );
-		clone.setTemporalExcluded( property.isTemporalExcluded() );
-		clone.setAuditedExcluded( property.isAuditedExcluded() );
-		clone.setOptional( property.isOptional() );
-		clone.setPersistentClass( property.getPersistentClass() );
-		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
-		clone.setSelectable( property.isSelectable() );
-		clone.setUpdatable( property.isUpdatable() );
-		clone.setValue( property.getValue() );
-		return clone;
+		return property.syntheticCopy();
 	}
 
 	private static List<Property> findPropertiesByColumns(

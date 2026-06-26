@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -49,7 +49,7 @@ public class AttributeConverterMetadataBuilderContributorTest extends EntityMana
 	@Override
 	protected void addConfigOptions(Map options) {
 		options.put(
-				EntityManagerFactoryBuilderImpl.METADATA_BUILDER_CONTRIBUTOR,
+				JpaSettings.METADATA_BUILDER_CONTRIBUTOR,
 				(MetadataBuilderContributor) metadataBuilder ->
 						metadataBuilder.applyAttributeConverter( YearMonthAttributeConverter.class )
 		);

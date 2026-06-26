@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -194,6 +195,7 @@ public class ElementCollectionAndCompositeKeyTest {
 		private String name;
 
 		@ElementCollection
+		@Bag
 		private List<String> grantedScopes;
 
 		public OauthConnection() {

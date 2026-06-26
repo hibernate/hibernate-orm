@@ -20,7 +20,8 @@ import org.hibernate.StatelessSession;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -150,11 +151,11 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		afterMetadataBuilt( metadata );
 
-		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-		initialize( sfb, metadata );
-		configureSessionFactoryBuilder( sfb );
+		final var optionsCollector = new SessionFactoryOptionsCollector();
+		initialize( optionsCollector, metadata );
+		configureSessionFactoryOptions( optionsCollector );
 
-		sessionFactory = (SessionFactoryImplementor) sfb.build();
+		sessionFactory = SessionFactoryPipeline.build( metadata, optionsCollector );
 		afterSessionFactoryBuilt( sessionFactory );
 	}
 
@@ -370,17 +371,17 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterMetadataBuilt(Metadata metadata) {
 	}
 
-	private void initialize(SessionFactoryBuilder sessionFactoryBuilder, Metadata metadata) {
+	private void initialize(SessionFactoryOptionsCollector optionsCollector, Metadata metadata) {
 		// todo : this is where we need to apply cache settings to be like BaseCoreFunctionalTestCase
 		//		it reads the class/collection mappings and creates corresponding
 		//		CacheRegionDescription references.
 		//
 		//		Ultimately I want those to go on MetadataBuilder, and in fact MetadataBuilder
 		//		already defines the needed method.  But for the [pattern used by the
-		//		tests we need this as part of SessionFactoryBuilder
+		//		tests we need this as part of SessionFactory options
 	}
 
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
+	protected void configureSessionFactoryOptions(SessionFactoryOptionsCollector optionsCollector) {
 	}
 
 	protected void afterSessionFactoryBuilt(SessionFactoryImplementor sessionFactory) {

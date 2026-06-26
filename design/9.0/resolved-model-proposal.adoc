@@ -1,0 +1,1089 @@
+= Resolved Model Proposal
+:toc:
+
+This document sketches a possible boot-time binding/finalization model for ORM
+9 binding and how that model should evolve `org.hibernate.mapping`.
+It complements link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].
+
+The proposal is intentionally concrete, but still exploratory.  The goal is not
+to introduce a second complete ORM mapping model beside `org.hibernate.mapping`.
+The goal is to preserve source facts, contribution ownership, and
+correspondence until an improved `org.hibernate.mapping` model can represent
+the resolved boot mapping directly.
+
+In other words, the long-term target is:
+
+[source]
+----
+binding/source model
+        -> resolved org.hibernate.mapping model
+        -> runtime model
+----
+
+The binding model is still useful, but it is a construction and resolution
+model.  It should not become a permanent parallel mapping model with
+`org.hibernate.mapping` reduced to a stale copy.  Instead, ORM 9 should use the
+major-version window to reshape `org.hibernate.mapping` itself where there is a
+real semantic win.
+
+== Core Shape
+
+[source]
+----
+categorized source model
+        -> BootBindingModel
+        -> BindingModelFinalizer
+        -> ManagedTypeView hierarchy and ordering/correspondence views
+        -> resolved org.hibernate.mapping model
+        -> runtime/domain consumers
+----
+
+Said differently:
+
+[source]
+----
+binding model is finalized
+        -> views are the stable read API over finalized binding state
+        -> org.hibernate.mapping is populated as the resolved boot mapping model
+        -> compatibility APIs expose legacy flattened views where needed
+        -> runtime mapping model
+----
+
+The binding model is a semantic graph made from boot-time binding nodes:
+
+[source]
+----
+BootBindingModel
+    ManagedTypeBinding(s)
+    TableBinding(s)
+    IdentifierBinding(s)
+    AttributeBinding(s)
+    SelectableBinding(s)
+    ForeignKeyBinding(s)
+    Correspondence(s)
+----
+
+This graph should not be another mutable half-built mapping model.  It should
+make unresolved cross-type facts explicit and only expose stable views after
+the relevant deferred phases have run.
+
+== Original PoC Comparison
+
+The original https://github.com/sebersole/hibernate-annotation-source/tree/9d78eb96d16b86658d4f557a9df73a5d0332fb57[annotation-source PoC] already explored a closely related
+intermediate model in a historical PoC package.  It used a
+`Metadata` suffix in names such as managed type, identifiable type, entity,
+mapped superclass, attribute, column, relational value, override, conversion,
+and entity hierarchy metadata.
+
+This proposal intentionally does not adopt that naming, but the PoC structure is
+important evidence for the shape:
+
+* it already had a managed-type spine similar to `ManagedTypeBinding`,
+  `IdentifiableTypeBinding`, `EntityTypeBinding`, and
+  `MappedSuperclassTypeBinding`;
+* it modeled declared attributes separately from later
+  `org.hibernate.mapping.Property` creation;
+* it had an entity hierarchy product before `RootClass` / `Subclass`
+  materialization;
+* it had a first materialization phase in the historical PoC bind package that
+  created `PersistentClass`, `Property`, `BasicValue`, `Column`, `Table`, and
+  `Join` instances from the intermediate model.
+
+The current design should keep that useful separation, but strengthen the areas
+that the PoC had only started to expose:
+
+* distinguish declaration from hierarchy/path-specific application;
+* model mapped-superclass contributions explicitly instead of treating them as
+  a kludge during `PersistentClass` creation;
+* model embeddable/component application separately from the embeddable type
+  declaration;
+* preserve identifier and selectable correspondence instead of deriving it from
+  sorted `Component` or `Value` lists;
+* make unresolved cross-type dependencies explicit rather than representing them
+  as partially populated mapping objects.
+
+In short, the PoC validates the intermediate/binding-model direction, but the
+ORM 9 version should be contribution- and correspondence-aware from the start.
+
+== Binding Model And Views
+
+The proposal uses two different kinds of contracts:
+
+`*Binding`::
+Mutable, phase-built nodes created by binders.  These may contain explicit
+unresolved or deferred references.
+
+`*View`::
+Stable read contracts exposed after finalization.  Consumers should use views
+instead of traversing raw bindings.
+
+The mapping model materializer should consume views, not independently inspect
+and reinterpret the mutable binding model.  This keeps `org.hibernate.mapping`,
+runtime handoff, static metamodel population, diagnostics, and validation using
+the same resolved interpretation.
+
+The views are not the authoritative model.  They are the read boundary over the
+authoritative binding/finalization state used to populate the resolved mapping
+model.
+
+== Relationship To `org.hibernate.mapping`
+
+The preferred ORM 9 direction is to evolve `org.hibernate.mapping` into the
+resolved boot mapping model, not to build a permanent replacement model beside
+it.
+
+That has two consequences:
+
+* binding/source objects capture facts while cross-type decisions are still
+  deferred;
+* finalized views provide stable answers for materialization;
+* `PersistentClass`, `MappedSuperclass`, `Component`, `Property`, `Value`, and
+  related mapping objects should be adjusted when they can represent those
+  answers directly and remove timing ambiguity;
+* old closure/traversal methods remain as compatibility views where current
+  consumers need them;
+* new runtime/domain work should prefer APIs that expose resolved ownership,
+  contribution, correspondence, and ordering facts instead of inferring them
+  from copied properties or sorted lists.
+
+So the mapping model should become more honest, not merely wrapped:
+
+[source]
+----
+BootBindingModel
+        -> finalized views
+        -> improved org.hibernate.mapping objects
+             - direct managed-type supertype graph
+             - declaration/application origin
+             - identifier part correspondence
+             - selectable correspondence
+             - derived compatibility closures
+        -> runtime model
+----
+
+This does not mean every old mapping object must be redesigned immediately.
+The migration rule is to change `org.hibernate.mapping` when the change removes
+a real ambiguity, preserves source/application correspondence, or lets current
+consumers continue using compatibility views without forcing the old flattened
+shape to be the only source of truth.
+
+While `MetadataBuildingProcess` remains an active boot path, this rule has an
+extra guardrail: new descriptor/contribution state should not be attached to
+shared mapping contracts unless both boot paths populate it as authoritative
+state.  Until then, keep richer resolved intent inside the new pipeline and
+project it into the legacy-compatible `org.hibernate.mapping` shape.
+
+== Near-Term Implementation Rule
+
+The first implementation slices should build enough horizontal binding model to
+avoid losing source/application/correspondence facts before materialization.
+
+The rule for new binding-model contracts is strict:
+
+* binding objects are created from categorization/source facts;
+* views are derived from finalized binding objects;
+* `org.hibernate.mapping` objects are materialized or populated from views as
+  the resolved boot mapping model;
+* new binding objects must not hold `PersistentClass`, `MappedSuperclass`,
+  `Component`, `Property`, `Value`, or `Column` references.
+
+Existing binder-local products may temporarily continue to carry mapping objects
+as compatibility materialization state.  Those products are bridge state, not
+the semantic binding model.
+
+The identifier track is the proof slice.  Identifier contributions record source
+members, id-representation members, extraction kind, and selectable intent.
+The identifier materialization bridge then creates the legacy `RootClass`,
+identifier `Value`, identifier mapper, `Property`, primary-key columns, and
+association-identifier work items from the identifier view.
+
+General attribute binding is the next bridge from isolated annotation proofs to
+the broader binding/view/materialization model.  Ordinary identifiable-type
+attributes should first be represented as internal `AttributeBinding` nodes that
+own source facts, effective access, attribute kind, role/path, and simple
+option/selectable intent.  Existing binders may still materialize legacy
+`Property`, `Value`, and `Column` objects from these views, but common
+attribute semantics such as natural-id, lazy group, and collation should be
+recorded in the binding node before materialization.
+
+The current bridge records `ValueIntent` for ordinary identifiable basic,
+embedded, to-one, singular any-valued, and collection-valued attributes, plus
+embeddable component members.  Collection-valued intent is deliberately an
+aggregate: it records the collection source/classification and nests the value
+intents for the user-visible parts such as element, list index, map key, and
+id-bag identifier.  Owner-key, join-table, and foreign-key facts remain support
+facts on the collection source/table binding path rather than pretending to be
+attribute values.  Plural members inside component binding now expose the same
+`CollectionValueIntent` aggregate through their `AttributeUsageBinding`, while
+the existing collection binders remain the compatibility materialization path.
+
+== Extension Point Migration
+
+See link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
+for the focused SPI proposal.
+
+The existing `org.hibernate.binder.AttributeBinder` and
+`org.hibernate.binder.TypeBinder` contracts are real extension points, but they
+are shaped around direct mutation of `org.hibernate.mapping` objects.  That is
+the wrong semantic layer for the proposed binding/view/materialization model.
+
+ORM 9 should migrate the extension concept, not simply preserve the current
+mapping-object mutation contract as the long-term answer.
+
+The replacement must be a supported SPI, not an invitation for extensions to
+implement or depend on ORM's internal binding model.  Built-in annotations can
+prove the design using internal contribution/view/materialization types, but the
+public extension contract should be a stable facade over that machinery.  It
+must live in an SPI package, expose curated source and contribution targets, and
+avoid leaking internal classes such as `BootBindingModel`, binding
+contributions, contribution views, materializers, or the mutable
+`org.hibernate.mapping` compatibility objects.
+
+The target shape is:
+
+* old `AttributeBinder` / `TypeBinder` contracts remain only as compatibility
+  adapters while required;
+* compatibility adapters run late enough that they can mutate materialized
+  mapping objects without becoming the semantic owner of binding decisions;
+* new replacement contracts operate at the binding layer through supported SPI
+  types;
+* the replacement for `AttributeBinder` is attribute-level, not
+  `BasicValue`-level, and must be able to contribute semantics for basic,
+  association, embedded/component, plural, `ANY`, and other attribute shapes;
+* a new binding-model-focused extension should either mutate well-defined
+  SPI targets or return structured binding contributions;
+* those returned/applied contributions are finalized into views and then
+  materialized into `org.hibernate.mapping` like ORM-owned contributions;
+* new extension contracts must not require extension authors to directly create
+  or sort `PersistentClass`, `Component`, `Property`, `Value`, or `Column`
+  instances.
+
+This keeps extension behavior in the same resolution pipeline as built-in
+annotations.  It also avoids reintroducing timing problems where a custom binder
+creates partially-resolved mapping objects before identifiers, mapped
+superclasses, embeddable applications, table keys, or selectable correspondence
+have been finalized.
+
+In particular, `AttributeBinder` should not be reimagined as a custom
+basic-value hook.  The current extension can apply to any persistent attribute
+kind, so a binding-layer replacement needs an attribute contribution target with
+structured mutation/contribution points appropriate to the actual attribute
+shape.  A basic attribute may contribute value/type/column facts, a to-one may
+contribute association-target or foreign-key facts, an embedded attribute may
+contribute component/path/override facts, and a plural attribute may contribute
+collection-table, element, key, or ordering facts.
+
+Possible replacement concepts:
+
+[source]
+----
+AttributeBindingContributor
+ManagedTypeBindingContributor
+EmbeddableBindingContributor
+IdentifierBindingContributor
+----
+
+The exact names are provisional.  The important decision is the layer and the
+visibility boundary: new forms of `AttributeBinder` and `TypeBinder` should work
+against supported binding SPI abstractions, not the mapping model and not the
+internal binding model.  If mutation is allowed, it should be mutation of
+declared SPI targets or contribution collections with explicit phase rules.
+Where possible, returning a structured contribution is preferable because it
+preserves ordering, origin, diagnostics, and finalization control.
+
+Built-in annotations should prove the replacement shape before it is exposed as
+public SPI.  `@TenantId` is the first proof because it is an attribute-level
+contribution with coordinated property, filter, and row-level-security effects,
+but it must not define the replacement as basic-only.  `@NaturalId` is the
+second proof: it is much closer to simple property decoration, but still records
+attribute-level semantic state that should be owned before legacy `Property`
+mutation.  Together these two cases start the "rule of three" for a replacement
+extension contract.  `@Collate` is the third proof because it decorates the
+value/selectable side of an attribute, including nested embeddable attributes,
+and therefore tests a different SPI shape than property flags or entity-level
+side effects.  The old mapping-model extension contracts can then be deprecated
+or removed once the new binding-layer contracts cover the required use cases.
+
+Therefore, the near-term implementation should keep using internal proof
+contracts.  The public SPI should be designed in the proposal, but not frozen
+until the three proof shapes are reviewed together:
+
+* `@TenantId`: complex attribute-triggered contribution with entity/model-wide
+  side effects;
+* `@NaturalId`: simple attribute semantic flag contribution;
+* `@Collate`: value/selectable decoration, including nested component paths.
+
+The public SPI target should eventually wrap the internal attribute
+binding/view layer.  It should not expose the proof contribution records
+directly.
+
+== Runtime Consumer Direction
+
+The resolved view layer should serve runtime-domain consumers as well as
+`org.hibernate.mapping` materialization.  The first concrete example is JPA
+static metamodel injection: the resolved pipeline can derive identifiable
+managed-type field names from `BootBindingModel` views while still resolving
+the injected values from the runtime JPA metamodel.
+
+The longer-term target is stronger than a second view-backed traversal near
+runtime JPA metamodel creation.  The boot/mapping-model materializer should
+eventually produce a role-aware static metamodel injection plan while it already
+walks finalized binding views.  Runtime JPA metamodel creation then consumes
+that plan once the runtime `ManagedDomainType` and `Attribute` objects exist.
+
+See link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+for the focused design.
+
+Snapshotting is a related but distinct concern.  The current binding model and
+current `org.hibernate.mapping` objects should not be treated as durable
+serialization formats as-is.  See
+link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`] for the
+separate design around finalized binding snapshots, resolved mapping snapshots,
+stable keys, and restoration boundaries.
+
+The internal proof adapter is allowed to live below the public-SPI boundary.
+Its job is to answer concrete design questions before the supported contract is
+frozen:
+
+* Does a facet-oriented target work for simple attribute options, selectable
+  decoration, and entity-wide side effects?
+* Which contribution records are actually general extension outputs, and which
+  are core boot-model facts?
+* Where does materialization need to remain an ORM-owned step rather than a
+  user extension responsibility?
+
+In the current proof, `@NaturalId`, `@Collate`, and `@TenantId` are invoked
+through an internal `AttributeBindingContributor` shape.  The target facets then
+translate those calls into the existing contribution records and materializers.
+That translation layer is useful precisely because it prevents the temporary
+records from becoming the public API.
+
+== Managed Type Bindings
+
+[source]
+----
+ManagedTypeBinding
+    EntityTypeBinding
+    MappedSuperclassTypeBinding
+    EmbeddableTypeBinding
+----
+
+`ManagedTypeBinding` represents a managed Java type declaration or applied
+managed type in the boot binding model.
+
+=== EntityTypeBinding
+
+Represents an entity managed type.
+
+Expected state:
+
+* Java type and entity name;
+* identifiable supertype;
+* declared attributes;
+* applied mapped-superclass contributions;
+* identifier contribution;
+* version and natural-id contributions;
+* table and secondary-table context;
+* discriminator and inheritance state;
+* eventual `PersistentClass` materialization target.
+
+=== MappedSuperclassTypeBinding
+
+Represents a mapped-superclass managed type declaration.
+
+Expected state:
+
+* Java type;
+* identifiable supertype;
+* declared attributes;
+* declared identifier and version facts;
+* callback/listener facts;
+* no table ownership;
+* contribution applications into entity or embeddable consumers.
+
+=== EmbeddableTypeBinding
+
+Represents an embeddable managed type declaration.
+
+Expected state:
+
+* Java type;
+* super embeddable type;
+* declared attributes;
+* mapped-superclass declarations above the embeddable;
+* discriminator and subtype facts for polymorphic embeddables;
+* custom instantiator, mutability, and type-level customizations;
+* no global table or embedding-path ownership.
+
+== Contribution Bindings
+
+Contribution bindings model "this declaration applied here."
+
+[source]
+----
+ContributionBinding
+    MappedSuperclassContribution
+    EmbeddableContribution
+    IdentifierContribution
+----
+
+=== Declaration Versus Usage Site
+
+The binding model needs to distinguish declaration facts from usage-site facts.
+This is especially important for embeddables, mapped superclasses, and generic
+supertypes.
+
+The target terminology should be:
+
+`AttributeDeclarationBinding`::
+The source declaration of an attribute on a managed type.  It owns declaration
+facts such as the declaration container, source member, broad attribute kind,
+and declaration-level annotations.
+
+`IdentifiableAttributeDeclarationBinding`::
+An attribute declaration whose declaration container is an entity or mapped
+superclass.  These declarations are stable: the identifiable managed-type
+hierarchy determines the effective access strategy and selected persistent
+member independently of any embedded usage site.
+
+`EmbeddableAttributeDeclarationBinding`::
+An attribute declaration whose declaration container is an embeddable type.
+This records the embeddable-local source member, but does not pretend that the
+source member and access strategy are globally final for every usage.  Unless
+the embeddable declares explicit `@Access`, embeddable member selection can be
+affected by the embedded usage site.  The corresponding usage binding therefore
+owns the effective member, effective access, resolved type, override/conversion
+lookup, implicit naming input, table/storage context, and materialization
+target.
+
+`AttributeUsageBinding`::
+One use of an attribute declaration in a concrete mapping context.  It owns
+the source declaration, usage container, resolved member type, path, naming
+input, table/storage context, override/conversion lookup, and materialization
+target.
+
+For example:
+
+[source,java]
+----
+@MappedSuperclass
+class Base<T extends Number> {
+    T amount;
+}
+
+@Embeddable
+class MoneyAmount extends Base<BigDecimal> {
+}
+
+@Entity
+class Product {
+    @Embedded MoneyAmount listPrice;
+    @Embedded MoneyAmount salePrice;
+}
+----
+
+There is one source declaration for `Base#amount`, but there are several
+different facts ORM must preserve:
+
+* the declaration member `Base#amount`, whose declared type is the type variable
+  `T extends Number`;
+* the embeddable specialization `MoneyAmount.amount`, whose resolved member type
+  is `BigDecimal`;
+* the embedded usage sites `Product.listPrice.amount` and
+  `Product.salePrice.amount`, each with its own path, implicit-naming input,
+  override/conversion lookup, table context, and materialization target.
+
+The current implementation already models part of this distinction:
+
+* `IdentifiableAttributeDeclarationBinding` is the declaration binding for
+  categorized entity and mapped-superclass attributes;
+* `EmbeddableAttributeDeclarationBinding` is the declaration binding for
+  embeddable-local source members, but the usage binding owns effective
+  usage-site interpretation;
+* `StandardAttributeUsageBinding` represents a declaration used in an entity or
+  mapped-superclass managed-type context;
+* `ComponentMemberBinding` is an embedded-site-specific attribute usage
+  binding;
+* `ComponentMemberBinding#type()` is the resolved member type at that embedded
+  site, not necessarily the raw declaration type.
+
+Mapped-superclass attributes remain identifiable declarations even when they are
+consumed by entity or embeddable hierarchies.  Entity consumers use a usage
+binding that points back to the declaration.  Embeddable component members expose
+the declaration origin and a component-site usage container.  For local
+embeddable members that declaration origin is an
+`EmbeddableAttributeDeclarationBinding`; for mapped-superclass members inherited
+by an embeddable it is an `IdentifiableAttributeDeclarationBinding`.
+
+The key container distinction is:
+
+* declaration container: the managed type that declares the member;
+* usage container: the managed type or component site where the declaration is
+  used;
+* materialization container: the legacy mapping target such as `PersistentClass`,
+  `Component`, `Property`, `Value`, or table/column structures.
+
+This split intentionally keeps separate objects even in the common direct
+managed-type case.  The declaration container and usage container may be the
+same managed type, but declaration and usage remain different binding-model
+roles.
+
+=== MappedSuperclassContribution
+
+Applies one mapped-superclass declaration to one consuming hierarchy or
+embeddable path.
+
+Example:
+
+[source]
+----
+MappedSuperclassContribution
+    declaration = AuditedBase
+    consumer = Order
+    tableContext = Order primary table
+    appliedAttributes = [createdBy, createdAt]
+----
+
+Expected state:
+
+* declaration;
+* consumer hierarchy or embedding path;
+* super contribution or nearest super entity;
+* effective table and secondary-table context;
+* applied overrides and converters;
+* applied identifier, version, and ordinary attributes;
+* origin metadata for static metamodel and runtime handoff.
+
+=== EmbeddableContribution
+
+Applies one embeddable declaration to one consuming component path.
+
+Example:
+
+[source]
+----
+EmbeddableContribution
+    declaration = Address
+    consumerPath = Customer.billingAddress
+    typeVariableScope = ...
+    overrides = ...
+    appliedAttributes = [...]
+----
+
+Expected state:
+
+* declaration;
+* source role, such as embedded attribute, collection element, map key, or
+  embedded identifier;
+* source member;
+* owner-relative and full component paths;
+* resolved type-variable scope;
+* effective access strategy per participating declaration;
+* applied mapped-superclass and super-embeddable contributions;
+* override, converter, implicit naming, and storage context;
+* subtype/discriminator facts;
+* eventual `Component` materialization target.
+
+=== IdentifierContribution
+
+Applies identifier declarations, id representation parts, target identifier
+parts, and selectable correspondence to one entity identifier.
+
+Example:
+
+[source]
+----
+IdentifierContribution
+    entity = SystemUser
+    virtualParts = [subsystem, username]
+    idClassParts = [PK.subsystem, PK.username]
+    selectableCorrespondence = [...]
+----
+
+Expected state:
+
+* entity;
+* virtual id attributes;
+* embedded-id or IdClass representation parts;
+* target identifier parts for association-valued identifiers;
+* local selectable parts;
+* selectable correspondence;
+* extraction/conversion strategy for each semantic id contribution;
+* projections needed by identifier mapper, static metamodel, and runtime id
+  mapping.
+
+== Attribute Bindings
+
+Attributes are source/application aware.
+
+[source]
+----
+AttributeBinding
+    BasicAttributeBinding
+    ToOneAttributeBinding
+    EmbeddedAttributeBinding
+    PluralAttributeBinding
+    AnyAttributeBinding
+----
+
+Expected common state:
+
+* attribute name;
+* declaring managed type;
+* applied contribution, when inherited or path-specific;
+* source member;
+* source access strategy;
+* attribute kind;
+* value part;
+* origin metadata;
+* generated/value/conversion facts;
+* eventual `Property` materialization target.
+
+The important distinction is:
+
+[source]
+----
+declaringType = mapped superclass or embeddable declaration
+appliedContribution = concrete entity hierarchy or embedded path
+----
+
+That distinction is what a legacy `Property` currently blurs.
+
+== Value And Selectable Bindings
+
+`ValueBinding` represents the logical value.
+
+[source]
+----
+ValueBinding
+    BasicValueBinding
+    ToOneValueBinding
+    ComponentValueBinding
+    CollectionValueBinding
+----
+
+`SelectableBinding` represents physical storage.
+
+Expected selectable state:
+
+* table;
+* identifier/name including quotedness;
+* source position;
+* source role;
+* formula/custom read/write expression where applicable;
+* eventual `Column` or selectable materialization target.
+
+This separation avoids premature column sorting.  A `ToOneValueBinding` can say:
+
+[source]
+----
+local selectables = [systemuser.subsystem_id]
+referenced selectables = [Subsystem.id]
+----
+
+without requiring an already-final `ManyToOne` column list.
+
+== Correspondence
+
+Correspondence products are the main pressure valve for cases where positional
+lists currently lose meaning.
+
+=== SelectableCorrespondence
+
+Pairs a local selectable with a referenced selectable and tracks target runtime
+position.
+
+[source]
+----
+SelectableCorrespondence
+    localSelectable
+    referencedSelectable
+    localSourcePosition
+    targetPosition
+    sourceRole
+----
+
+=== IdentifierPartCorrespondence
+
+Pairs a virtual entity id part with its public id representation and optional
+target identifier parts.
+
+[source]
+----
+IdentifierPartCorrespondence
+    virtualPart
+    idRepresentationParts
+    targetIdentifierParts
+    selectableOrder
+    extractionKind
+    sourceRole
+----
+
+Example:
+
+[source]
+----
+SystemUser.subsystem
+    virtual id part
+    id-class part PK.subsystem
+    target id part Subsystem.id
+    local selectable systemuser.subsystem_id
+
+SystemUser.username
+    virtual id part
+    id-class part PK.username
+    local selectable systemuser.username
+----
+
+No sorting is required to preserve the meaning.
+
+== Materialization
+
+Only after finalization should legacy mapping objects be materialized or
+updated:
+
+* `PersistentClass`
+* `MappedSuperclass`
+* `Component`
+* `Property`
+* `Value`
+* `PrimaryKey`
+* `ForeignKey`
+* `UniqueKey`
+
+The `MappingModelMaterializer` should consume stable views over the finalized
+binding state.  It can produce multiple compatibility projections:
+
+* declaration order;
+* applied contribution order;
+* IdClass member order;
+* target identifier order;
+* physical primary-key order;
+* foreign-key order;
+* runtime JDBC order;
+* static metamodel view.
+
+These projections are derived from the finalized binding state through views.
+They are not the semantic model itself.
+
+== View Layer
+
+The view layer is the stable read API over finalized binding state.
+
+Expected first views:
+
+[source]
+----
+ManagedTypeView
+    IdentifiableTypeView
+        EntityView
+        MappedSuperclassView
+    EmbeddableView
+
+IdentifierContributionView
+SelectableOrderView
+PropertyClosureView
+----
+
+The mapping materializer should use these views, and so should other consumers
+such as static metamodel population and diagnostics.  The goal is one
+authoritative interpretation layer before materialization.
+
+== Unresolved State
+
+To avoid merely moving timing problems into a new layer, cross-type facts must
+be explicit about resolution state.
+
+Possible vocabulary:
+
+[source]
+----
+ResolvedReference<T>
+UnresolvedReference<T>
+DeferredResolution<T>
+----
+
+Example:
+
+[source]
+----
+ToOneValueBinding
+    targetEntity = unresolved until entity categorization/binding exists
+    targetIdentifier = unresolved until target id binding exists
+    selectableCorrespondence = unresolved until join columns are resolved
+----
+
+Resolvers should fail with role-specific diagnostics when required facts remain
+unresolved after their phase.
+
+== Phase Sketch
+
+[source]
+----
+1. declare managed types
+2. declare attributes
+3. resolve identifiers
+4. resolve association identifiers and derived identifiers
+5. resolve table keys and foreign keys
+6. resolve ordering projections
+7. materialize org.hibernate.mapping
+----
+
+The exact phase names can differ from the current binder phases.  The important
+rule is that a phase should either preserve unresolved state explicitly or
+produce a named finalized view/product.
+
+== Package Placement
+
+The source-to-mapping pipeline now lives under
+`org.hibernate.boot.mapping`.  This is the containing package for the
+phases that turn boot model resources into the resolved boot mapping model.
+
+The broader architecture is larger than "binding" as a single phase.
+`org.hibernate.boot.mapping.internal.xml`, `org.hibernate.boot.mapping.internal.categorize`,
+`org.hibernate.boot.mapping.internal.binders`, `org.hibernate.boot.mapping.internal.model`,
+`org.hibernate.boot.mapping.internal.view`, and
+`org.hibernate.boot.mapping.internal.materialize` are all phases in the same flow:
+
+[source]
+----
+AvailableResources
+    -> resource discovery
+    -> XML/annotation source normalization and overlay
+    -> categorization
+    -> binding model population/resolution
+    -> finalized views
+    -> org.hibernate.mapping materialization
+----
+
+That common purpose is "move available boot model resources through a sequence
+of source-processing phases into the mapping model".  Package names should
+eventually make that pipeline visible instead of making XML, categorization, and
+binding look like unrelated subsystems.
+
+=== Current Layout
+
+[source]
+----
+org.hibernate.boot.mapping
+    internal
+        xml
+        categorize
+        binders
+        model
+        view
+        materialize
+        sources
+        relational
+        context
+        extension
+----
+
+`mapping` is the chosen root because the pipeline turns boot model resources into
+`org.hibernate.mapping`, and because the long-term goal is for
+`org.hibernate.mapping` itself to become the resolved boot mapping model.
+
+Package names express both phase responsibility and Hibernate's package
+taxonomy.  Since these contracts are currently for Hibernate code only, they
+all live under `internal`:
+
+* `internal.xml`: XML transformation, annotation clearing, and overlay;
+* `internal.categorize`: managed-type and attribute categorization;
+* `internal.binders`: phase/action classes that populate binding state;
+* `internal.model`: mutable binding/finalization state;
+* `internal.view`: stable read contracts over finalized state;
+* `internal.materialize`: population of `org.hibernate.mapping`;
+* `internal.sources`: source-context objects consumed by binders/materializers;
+* `internal.relational`: binding-time table-reference vocabulary shared by
+  categorization, context, and binders;
+* `internal.context`: shared pipeline context contracts, state, and adapters;
+* `internal.extension`: internal proof contracts for a possible future
+  supported binding extension SPI.
+
+Internal proof packages such as `org.hibernate.boot.mapping.internal.extension`
+should not dictate the eventual public SPI placement.  They are rehearsal
+packages used to validate the shape before freezing a supported contract.
+
+[source]
+----
+org.hibernate.boot.mapping.internal.context
+    BindingStateImpl
+
+org.hibernate.boot.mapping.internal.context
+    BindingContext
+    BindingState
+    BindingOptions
+
+org.hibernate.boot.mapping.internal.binders
+    BindingCoordinator
+    EntityTypeBinder
+    IdentifierBinder
+    ComponentBinder
+    ToOneAttributeBinder
+    ...
+
+org.hibernate.boot.mapping.internal.model
+    BootBindingModel
+    ManagedTypeBinding
+    EntityTypeBinding
+    MappedSuperclassTypeBinding
+    EmbeddableTypeBinding
+    AttributeDeclarationBinding
+    AttributeUsageBinding
+    ValueIntent
+    CollectionValueIntent
+    EntityIdentifierBinding
+    VersionBinding
+    TenantIdBinding
+    EmbeddableContribution
+    MappedSuperclassContribution
+
+org.hibernate.boot.mapping.internal.view
+    ManagedTypeView
+    IdentifiableTypeView
+    EntityView
+    MappedSuperclassView
+    EmbeddableView
+
+org.hibernate.boot.mapping.internal.materialize
+    IdentifierMappingMaterializer
+    PropertyMappingMaterializer
+    EmbeddableMappingMaterializer
+    BasicValueMappingMaterializer
+
+org.hibernate.boot.mapping.internal.relational
+    TableReference
+    TableOwner
+    PhysicalTable
+    SecondaryTable
+
+org.hibernate.boot.mapping.internal.binders
+    SelectableCorrespondence
+    SelectableOrderResolution
+
+org.hibernate.boot.mapping.internal.extension
+    AttributeBindingContributor
+    AttributeBindingTarget
+    BindingContributionContext
+----
+
+The important separation is:
+
+* `binders` are phase/action classes;
+* `model` objects are mutable boot binding state;
+* `view` contracts are finalized read APIs over binding state;
+* `materialize` turns views into `org.hibernate.mapping` objects;
+* `relational` is shared relational vocabulary, not a phase worker package;
+* `context` contains shared pipeline context contracts and implementations;
+* `extension` is a proof package for the eventual public SPI shape, not a
+  supported extension package.
+
+=== API / SPI / Internal Audit
+
+The current audit result is:
+
+* There is no supported user API in `org.hibernate.boot.mapping`.
+* All currently implemented pipeline packages are under `mapping.internal`
+  because they are for Hibernate code only, even when classes are Java-`public`
+  for cross-package access.
+* Former phase-contract packages named `categorize.spi`, `context.spi`, and
+  `xml.spi` were moved under internal packages because they are not supported
+  integrator SPIs by Hibernate's package taxonomy.
+* `internal.extension` keeps the proof of the future binding-extension SPI away
+  from a future supported `mapping.spi`.
+* A future supported replacement for `org.hibernate.binder.AttributeBinder` and
+  `org.hibernate.binder.TypeBinder` should get a clean public/SPI package only
+  after the target/facet model is stable.
+
+`model` is used for now because `binding` was too easily confused with the
+overall `org.hibernate.boot.mapping` subsystem and the binder worker layer.
+These products are still boot binding products, not runtime model parts and not
+final mapping objects.
+
+=== Deferred SPI Package Inversion
+
+Do not flip package names merely because some contracts look SPI-shaped today.
+For now the whole pipeline is intentionally internal.  Once a contract becomes
+a supported user/integrator SPI, package names should be inverted to follow
+Hibernate's API/SPI/internal taxonomy:
+
+* `org.hibernate.thing` is user-facing API;
+* `org.hibernate.thing.spi` is supported integration SPI;
+* `org.hibernate.thing.internal` is Hibernate-only implementation detail.
+
+That means current rehearsal packages such as:
+
+[source]
+----
+org.hibernate.boot.mapping.internal.context
+org.hibernate.boot.mapping.internal.extension
+org.hibernate.boot.mapping.internal.view
+----
+
+may eventually split into supported SPI contracts plus internal implementations:
+
+[source]
+----
+org.hibernate.boot.mapping.context.spi
+org.hibernate.boot.mapping.context.internal
+
+org.hibernate.boot.mapping.extension.spi
+org.hibernate.boot.mapping.extension.internal
+
+org.hibernate.boot.mapping.view.spi
+org.hibernate.boot.mapping.view.internal
+----
+
+The same pattern applies to other phases only if they actually expose supported
+integration contracts.  For example, many context interfaces may become SPI
+because extension contributors need stable access to services, diagnostics,
+settings, and source facts.  Their current implementations and mutable working
+state would move to `context.internal`.
+
+This package inversion should happen as a deliberate SPI-freezing step, not as
+ongoing churn.  Until then, keeping the packages under
+`org.hibernate.boot.mapping.internal.*` avoids accidentally promising support
+for contracts that are still being shaped.
+
+=== Follow-Up Package Rule
+
+Avoid additional package churn unless it clarifies a real phase boundary or
+removes a misleading dependency direction.
+
+For now:
+
+* keep new horizontal binding contracts in `mapping.internal.model`;
+* keep finalized read contracts in `mapping.internal.view`;
+* keep mapping-object population in `mapping.internal.materialize`;
+* keep the internal SPI proof isolated in `mapping.internal.extension`;
+* move any future public replacement for `org.hibernate.binder.AttributeBinder`
+  or `org.hibernate.binder.TypeBinder` into a supported SPI package only after
+  the target/facet contract is stable, then apply the deferred SPI package
+  inversion above.
+
+== Minimal First Slice
+
+Do not build this whole graph at once.
+
+Start with the smallest products that preserve information currently destroyed,
+guessed, or encoded through sorting:
+
+* `IdentifierContribution`;
+* `IdentifierPartCorrespondence`;
+* mapped-superclass contribution origin metadata;
+* `EmbeddableContribution` / `ComponentMapping` bridge;
+* existing `SelectableCorrespondence`.
+
+Then use those products to materialize the existing `org.hibernate.mapping`
+objects more deliberately.
+
+== Admission Rule
+
+Do not add an intermediate object merely because it looks cleaner.
+
+Add a binding model node only when it preserves source, application, or
+correspondence information that `org.hibernate.mapping` currently destroys,
+guesses, or encodes through premature sorting/copying.
+
+If a fact can be represented cleanly and safely in `org.hibernate.mapping`
+without timing ambiguity, it probably does not need a separate binding node.

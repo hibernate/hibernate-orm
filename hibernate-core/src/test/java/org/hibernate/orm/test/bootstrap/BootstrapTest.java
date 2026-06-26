@@ -20,9 +20,9 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -39,7 +39,6 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetType;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetUserType;
@@ -195,17 +194,15 @@ public class BootstrapTest {
 	}
 
 	@Test
-	public void testBuildSessionFactoryUsingBuilder() {
+	public void testBuildSessionFactoryUsingSettings() {
 		ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
 		Metadata metadata = new MetadataSources(standardRegistry)
 				.addAnnotatedClass(MyEntity.class)
 				.buildMetadata();
 
-		//tag::example-bootstrap-native-SessionFactory-using-builder[]
-		final SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
-				.applyStatisticsSupport( true )
-				.build();
-		//end::example-bootstrap-native-SessionFactory-using-builder[]
+		//tag::example-bootstrap-native-SessionFactory-with-settings[]
+		final SessionFactory sessionFactory = metadata.buildSessionFactory();
+		//end::example-bootstrap-native-SessionFactory-with-settings[]
 
 		sessionFactory.close();
 	}
@@ -240,13 +237,7 @@ public class BootstrapTest {
 		// or Metadata metadata = sources.buildMetadata()
 		//end::example-bootstrap-native-Metadata[]
 
-		//tag::example-bootstrap-native-SessionFactoryBuilder[]
-		SessionFactoryBuilder sessionFactoryBuilder
-				= metadata.getSessionFactoryBuilder();
-
-		// collect statistics
-		sessionFactoryBuilder.applyStatisticsSupport( true );
-		//end::example-bootstrap-native-SessionFactoryBuilder[]
+		metadata.buildSessionFactory().close();
 	}
 
 	@Test
@@ -378,16 +369,16 @@ public class BootstrapTest {
 					.applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
 					.build();
 
-				SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
-					.applyBeanManager(getBeanManager())
-					.build();
+				SessionFactory sessionFactory = metadata.buildSessionFactory();
 				sessionFactory.close();
 				//end::bootstrap-native-SessionFactory-example[]
 			}
 			{
-				//tag::bootstrap-native-SessionFactoryBuilder-example[]
+				//tag::bootstrap-native-SessionFactory-settings-example[]
 				StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
 						.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+						.applySetting( AvailableSettings.INTERCEPTOR, new CustomSessionFactoryInterceptor() )
+						.applySetting( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, getBeanManager() )
 						.build();
 
 				Metadata metadata = new MetadataSources(standardRegistry)
@@ -399,19 +390,8 @@ public class BootstrapTest {
 					.applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
 					.build();
 
-				SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-
-				// Supply a SessionFactory-level Interceptor
-				sessionFactoryBuilder.applyInterceptor(new CustomSessionFactoryInterceptor());
-
-				// Add a custom observer
-				sessionFactoryBuilder.addSessionFactoryObservers(new CustomSessionFactoryObserver());
-
-				// Apply a CDI BeanManager (for JPA event listeners)
-				sessionFactoryBuilder.applyBeanManager(getBeanManager());
-
-				SessionFactory sessionFactory = sessionFactoryBuilder.build();
-				//end::bootstrap-native-SessionFactoryBuilder-example[]
+				SessionFactory sessionFactory = metadata.buildSessionFactory();
+				//end::bootstrap-native-SessionFactory-settings-example[]
 				sessionFactory.close();
 			}
 		}
@@ -451,14 +431,12 @@ public class BootstrapTest {
 				new CustomSessionFactoryInterceptor()
 		);
 
-			EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
-				new EntityManagerFactoryBuilderImpl(
-					new PersistenceUnitInfoDescriptor(persistenceUnitInfo),
-					integrationSettings
+			EntityManagerFactory emf = SessionFactoryBootstrap.build(
+				new PersistenceUnitInfoDescriptor(persistenceUnitInfo),
+				integrationSettings
 			);
-
-			EntityManagerFactory emf = entityManagerFactoryBuilder.build();
 			//end::bootstrap-native-EntityManagerFactory-example[]
+			emf.close();
 		}
 		catch (Exception ignore) {
 		}
@@ -467,7 +445,7 @@ public class BootstrapTest {
 	@Test
 	@JiraKey("HHH-17154")
 	public void build_EntityManagerFactory_with_NewTempClassLoader() {
-		new EntityManagerFactoryBuilderImpl(
+		try (var ignored = SessionFactoryBootstrap.resolveMetadata(
 				new PersistenceUnitInfoDescriptor(
 						new PersistenceUnitInfoImpl( "", new ArrayList<>(), new Properties() ) {
 							@Override
@@ -477,7 +455,8 @@ public class BootstrapTest {
 						}
 				),
 				ServiceRegistryUtil.createBaseSettings()
-		).cancel();
+		)) {
+		}
 	}
 
 	public Object getBeanManager() {

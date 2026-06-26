@@ -1,0 +1,292 @@
+= Generic Inheritance Model Design
+:toc:
+
+This note captures the ORM 9 design direction for generic persistent
+attributes inherited through entity, mapped-superclass, and embeddable type
+hierarchies.
+
+It is intentionally tied to
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`],
+link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`],
+and link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`].  The
+same declaration-versus-usage distinction that motivates mapped-superclass and
+embeddable contributions is also the right model for generic type-variable
+resolution.
+
+== Problem Statement
+
+Generic persistent attributes have two different type facts:
+
+* the declaration type, such as `T`, `List<T>`, or `T extends Number`, exposed
+  by the source member that declares the attribute; and
+* the usage type, such as `Integer`, `List<String>`, or `BigDecimal`, after the
+  declaration is consumed by a concrete entity hierarchy, mapped-superclass
+  application, or embedded path.
+
+Those facts are both semantically meaningful.
+
+For JPA-domain model and SQM path behavior, legacy boot exposes generic
+attributes as generic declarations while still allowing concrete resolution for
+query interpretation.  For example, a generic mapped-superclass attribute may
+report `Object` through the public path model while
+`SqmPath#getResolvedModel()` resolves to the concrete type of the consuming
+entity.
+
+The current mapping-model bridge does not model this distinction directly.
+Instead, generic behavior is encoded through a mixture of:
+
+* `Property#isGeneric()`;
+* `Property#isGenericSpecialization()`;
+* `Property#returnedClassName`;
+* copied `BasicValue`, `Component`, and association values;
+* cached `BasicValue` Java type resolution;
+* `MetadataContext#addConcreteGenericAttribute(...)`; and
+* ad hoc Java reflection checks for inherited type variables.
+
+This is fragile because copied legacy values can carry usage-site resolution
+state into declaration views, or declaration-state placeholders into runtime
+DDL and mapping creation.
+
+== Current Audit
+
+The new boot pipeline already has the right high-level vocabulary in the boot
+binding model:
+
+* `AttributeDeclarationBinding` records the source declaration;
+* `StandardAttributeUsageBinding` records a concrete usage and its
+  `resolvedType`;
+* `ComponentMemberBinding` records embedded-site usage state;
+* `MappedSuperclassContribution` records that a mapped-superclass declaration
+  is applied to a consuming hierarchy boundary.
+
+However, the legacy `org.hibernate.mapping` materialization still collapses
+generic declaration and generic usage state back into mutable mapping objects.
+
+Important current bridge points:
+
+* `IdentifiableTypeBinder#applyGenericPropertyMarkers(...)` marks legacy
+  `Property` objects as generic declarations or concrete specializations.
+* `MappedSuperTypeBinder` creates mapped-superclass generic declaration copies
+  and concrete entity-applied properties so `MetadataContext` can build both the
+  public generic attribute and the concrete resolved attribute.
+* `EntityTypeBinder#addGenericProperties(...)` adds concrete specializations
+  for generic properties inherited from entity superclasses.
+* `BasicValueMappingMaterializer` sometimes supplies an explicit inherited
+  type-variable Java type so basic value resolution keeps converter and enum
+  behavior aligned with the concrete usage.
+* `MetadataContext#applyGenericProperties(...)` and
+  `AbstractSqmPath#getResolvedModel()` use the generic/concrete split to expose
+  legacy-compatible path behavior.
+
+These fixes are useful compatibility bridges, but they are not a clean model.
+The core smell is that the same legacy `Property`/`Value` object shape is being
+asked to represent both declaration and usage roles.
+
+== Target Model
+
+The binding model should treat generic resolution as usage state.
+
+An attribute declaration should carry:
+
+* declaring managed type;
+* declared source member;
+* declared generic type shape;
+* declaration-level annotations and options; and
+* generic parameter metadata needed to interpret the declaration.
+
+An attribute usage should carry:
+
+* usage container;
+* resolved type in the usage container;
+* resolved generic argument correspondence;
+* materialization path and table/storage context;
+* override/conversion lookup after usage-site precedence; and
+* the materialized mapping object or compatibility view produced for this
+  usage.
+
+For example:
+
+[source,java]
+----
+@MappedSuperclass
+class Base<T> {
+    @Id T id;
+    T data;
+}
+
+@Entity
+class Book extends Base<Integer> {
+}
+----
+
+The model should preserve:
+
+* declaration `Base#id : T`;
+* declaration `Base#data : T`;
+* usage `Book.id : Integer`;
+* usage `Book.data : Integer`;
+* JPA-domain public generic attributes where legacy exposes them; and
+* concrete resolved attributes for SQM/runtime interpretation.
+
+The declaration object should not need to carry a concrete `BasicValue` that
+has already resolved to `Integer`.  The concrete usage object should not need
+to pretend it is the public generic declaration merely because a flattened
+`PersistentClass` property closure requires one object in a particular place.
+
+== Relationship To Mapped Superclasses
+
+Generic inherited attributes are one of the strongest reasons to keep
+mapped-superclass declarations separate from mapped-superclass contributions.
+
+A mapped-superclass declaration may be shared, while each consuming hierarchy
+can resolve its type variables differently:
+
+[source,java]
+----
+@MappedSuperclass
+class Base<T> {
+    T value;
+}
+
+@Entity
+class IntegerEntity extends Base<Integer> {
+}
+
+@Entity
+class StringEntity extends Base<String> {
+}
+----
+
+There is one declaration of `Base#value`, but there are two applied usages with
+different resolved types and table contexts.  A global
+`Class<?> -> MappedSuperclass` mapping node cannot represent this cleanly.
+
+The mapped-superclass contribution model should therefore own applied generic
+resolution facts.  Flattened `PersistentClass` properties should be derived
+compatibility views, not the authoritative representation.
+
+== What Can Be Improved Now
+
+Before removing `MetadataBuildingProcess`, improvements should stay within the
+new boot pipeline and its compatibility materialization:
+
+* centralize Java type-variable detection instead of repeating reflection
+  helpers in individual binders;
+* keep using `AttributeDeclarationBinding` and `AttributeUsageBinding` as the
+  semantic source for generic declaration versus resolved usage facts;
+* avoid copying already-resolved `BasicValue` instances when creating generic
+  declaration views;
+* ensure generic declaration compatibility values use cloned selectables so
+  they do not re-own real DDL columns;
+* keep all generic bridge properties marked precisely as declaration or
+  specialization, so `MetadataContext` can skip and register them correctly;
+* add focused characterization tests around mapped-superclass generic ids,
+  basic attributes, embeddable inherited generic attributes, and entity
+  superclass generic attributes.
+
+These are bridge improvements.  They should not make new
+`org.hibernate.mapping` generic descriptors authoritative unless legacy boot
+also populates them.
+
+== Runtime Model Handoff
+
+Generic inheritance facts should be carried toward runtime model creation, but
+only as handoff metadata or adapter input during the `MetadataBuildingProcess`
+transition.
+
+The near-term flow should be:
+
+[source]
+----
+boot binding model
+    -> generic declaration / usage metadata
+    -> compatibility materialization to Property / Value
+    -> MetadataContext adapter uses metadata when present
+    -> legacy fallback remains Property flags and flattened closures
+----
+
+The useful metadata to carry includes:
+
+* declaration generic shape, such as `T`, `List<T>`, and bounds;
+* concrete usage resolved type, such as `Integer`, `String`, or `List<Foo>`;
+* origin information: entity, mapped-superclass, embeddable, or contribution;
+* declaration-to-usage type-variable correspondence;
+* whether a legacy `Property` is a public generic declaration view or a
+  concrete specialization; and
+* the compatibility `Property`/`Value` objects generated for legacy consumers.
+
+The first runtime-adjacent consumer should be JPA-domain model creation through
+`MetadataContext` or a small adapter used by `MetadataContext`.  That boundary
+already contains the generic/concrete split through
+`addConcreteGenericAttribute(...)`, and it is where copied `Property` and
+`BasicValue` bridge state has caused the most visible parity issues.
+
+Do not yet make entity persisters, SQL AST, schema export, dirty checking, or
+runtime mapping types depend directly on a new generic inheritance model.  Those
+runtime consumers should continue to treat `PersistentClass`, `Property`,
+`Value`, and flattened closure behavior as the compatibility contract until all
+supported boot paths produce the same generic handoff metadata.
+
+This gives the new pipeline a place to preserve cleaner generic facts without
+creating a split-brain runtime model.  Legacy boot can continue to fall back to
+existing `Property#isGeneric()` / `Property#isGenericSpecialization()` behavior,
+while new pipeline boot can gradually reduce ad hoc copied-value interpretation
+inside `MetadataContext`.
+
+== What Should Wait
+
+The authoritative boot mapping model for generics should wait until either:
+
+* `MetadataBuildingProcess` has been removed; or
+* a contribution-aware runtime adapter exists and is populated equivalently for
+  both legacy boot and the new boot pipeline.
+
+Until then, `PersistentClass`, `MappedSuperclass`, `Property`, `Value`, and
+`Component` remain shared runtime handoff objects.  Adding new generic state to
+those contracts as the only source of truth would create a split-brain model:
+new pipeline boot would understand the state, while legacy boot and runtime
+consumers would still rely on flattened closure conventions.
+
+The post-legacy phase may introduce explicit generic binding products such as:
+
+* `GenericAttributeDeclaration`;
+* `GenericAttributeUsage`;
+* `TypeVariableResolution`;
+* declaration-to-usage generic argument correspondence; and
+* contribution-aware compatibility views for JPA-domain public generic
+  attributes and concrete resolved attributes.
+
+These names are placeholders.  The key requirement is that declaration generic
+shape and usage resolved type are first-class binding facts, not side effects
+of copied legacy mapping objects.
+
+== Trigger
+
+Move from bridge fixes to the proposed generic inheritance model when one of
+these conditions is true:
+
+* `MetadataBuildingProcess` is removed and the new pipeline is the only boot
+  path producing runtime mapping state; or
+* a runtime handoff adapter can consume declaration/usage/contribution facts
+  directly and can be populated from all supported boot paths.
+
+At that point, generic inheritance should be handled as part of the broader
+mapped-superclass and embeddable contribution model, not as isolated
+`Property` flag handling.
+
+== Open Questions
+
+* Should generic declaration state live on `AttributeDeclarationBinding`, a
+  sidecar descriptor, or a resolved-model product created after all managed
+  types are categorized?
+* Should generic argument correspondence be represented once per managed-type
+  supertype edge or once per attribute usage?
+* Should JPA-domain generic public attributes be generated directly from
+  declaration bindings, while concrete attributes are generated from usage
+  bindings?
+* Which runtime boundary should consume the contribution-aware generic model
+  first: JPA-domain type creation, entity persister construction, schema
+  export, or SQM path-source creation?
+* How much legacy-compatible `Object` exposure should be preserved for generic
+  public paths once the runtime model no longer depends on legacy
+  `Property#isGeneric()` conventions?

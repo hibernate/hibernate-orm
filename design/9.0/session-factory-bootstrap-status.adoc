@@ -1,0 +1,141 @@
+= SessionFactory Bootstrap Status
+:toc:
+
+This note tracks the current implementation status for the ORM 9
+SessionFactory bootstrap pipeline.
+
+The target architecture is described in
+link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`].
+The final factory-construction handoff is described in
+link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`].
+
+Keep this document short.  It should answer "where are we now?" and "what is
+next?", not preserve historical PoC reasoning.
+
+== Current Shape
+
+`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap` is the canonical
+internal facade for one-shot bootstrap.
+
+It supports:
+
+* `jakarta.persistence.PersistenceConfiguration`
+* `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor` plus integration
+  settings
+* schema generation for those source shapes
+* already-resolved `SessionFactoryBootstrapRequest`
+* metadata resolution through `SessionFactoryBootstrap.resolveMetadata(...)`
+
+The public JPA provider methods in `HibernatePersistenceProvider` delegate to
+this facade for EntityManagerFactory creation and schema generation.
+
+== Removed Surfaces
+
+The old JPA two-phase builder facade has been removed.  The surviving use cases
+are explicit pipeline operations:
+
+* EMF/SF creation uses `SessionFactoryBootstrap.build(...)`.
+* Schema generation uses `SessionFactoryBootstrap.generateSchema(...)`.
+* Metadata inspection uses `SessionFactoryBootstrap.resolveMetadata(...)`.
+* Resolved-setting assertions use `SettingsResolver` products.
+
+The public native staged factory-builder surface has also been removed:
+
+* `org.hibernate.boot.SessionFactoryBuilder`
+* `SessionFactoryBuilderImplementor`
+* `SessionFactoryBuilderFactory`
+* `SessionFactoryBuilderService`
+* the default builder implementation and service initiator
+
+There is intentionally no replacement fluent factory builder.  Custom factory
+implementations use the service-loaded `SessionFactoryProducer` hook, including
+named producer selection.
+
+Removed settings/source side channels are not part of the new pipeline:
+
+* legacy `cfg.xml`
+* legacy `hbm.xml`
+* `hibernate.loaded_classes`
+* `hibernate.orm_xml_files`
+* `hibernate.hbm_xml_files`
+* `hibernate.cfg_xml_file`
+
+Persistence-unit managed classes and mapping files should come from
+`persistence.xml` declarations, container descriptors, or equivalent
+descriptor-backed inputs rather than settings-backed side channels.
+
+== Native Compatibility
+
+`Configuration`, `MetadataSources`, `MetadataBuilder`, and `Metadata` still
+exist as compatibility surfaces.
+
+Current routing:
+
+* `Configuration#buildSessionFactory(...)` builds metadata, collects
+  factory-level customizations into `SessionFactoryOptionsCollector`, and calls
+  `SessionFactoryPipeline`.
+* `Metadata#buildSessionFactory()` is a temporary bridge into
+  `SessionFactoryPipeline`.
+* The default `MetadataBuilderImpl` path routes through `MetadataResolver` and
+  returns a `MetadataImplementor` view backed by `ResolvedMetadata`.
+
+Longer term, these native surfaces should converge on a smaller replacement
+native bootstrap API before deprecation.
+
+Cleanup reminder: once that replacement API is concrete, mark the remaining
+legacy staged bootstrap contracts as deprecated and `@Remove`.  Cover
+`MetadataBuilder`, `MetadataSources`, `Metadata`, staged `Configuration`
+entry points, and any surviving `SessionFactoryBuilder` /
+`EntityManagerFactoryBuilder` API, SPI, service, or implementation classes.
+
+== Construction Handoff
+
+The construction seam is implemented:
+
+* `SessionFactoryConstructionRequest`
+* `SessionFactoryProducer`
+* named producer selection through `hibernate.session_factory_producer`
+* `SessionFactoryConstructionCoordinator`
+* `SessionFactoryPipeline`
+* `ResolvedSessionFactorySettings`
+* `SessionFactoryConstructionIdentity`
+
+The ORM default construction path now prepares several internal products before
+calling `SessionFactoryImpl`:
+
+* `SessionFactoryRuntimePreparation`
+* `SessionFactoryConstructionPreparation`
+* `SessionFactoryServicePreparation`
+* `SessionFactoryIntegratorPreparation`
+
+`SessionFactoryImpl` is slimmer, but still owns the hard parts: runtime
+metamodel creation, query engine creation, SQL translation engine creation,
+cache priming, metadata validation/order finalization, session option templates,
+`TypeConfiguration.scope(this)`, observer firing, and failure cleanup.
+
+== Active Gaps
+
+The next useful bootstrap slices are:
+
+* descriptor-backed persistence-unit source contribution parity;
+* persistence-unit setting precedence parity;
+* schema-generation script parity;
+* continued `SessionFactoryImpl` constructor slimming, especially runtime
+  metamodel/query/cache extraction;
+* replacement or narrowing of remaining `SessionFactoryOptions` and
+  `BootstrapContext` handoffs;
+* a deliberate replacement story for native metadata inspection and
+  factory-level customization before deprecating `Metadata`.
+
+== Test Signal
+
+Useful control suites:
+
+* `org.hibernate.orm.test.boot.orchestration.*`
+* `org.hibernate.orm.test.bootstrap.*`
+* native `Configuration` / `Metadata#buildSessionFactory()` coverage
+* focused JPA provider and schema-generation suites while closing parity gaps
+
+The large historical constructor/context audits were intentionally dropped from
+the active docs.  Recreate focused audits only when a new migration slice needs
+them.

@@ -14,7 +14,6 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
@@ -65,7 +64,6 @@ public class StaleOneToManyListTest {
 			} );
 		} );
 	}
-	@FailureExpected(reason = "ConstraintViolationException")
 	@Test void test3(EntityManagerFactoryScope scope) {
 		var parent1 = new StaleListTestParent();
 		var parent2 = new StaleListTestParent();

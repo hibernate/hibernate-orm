@@ -21,10 +21,8 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -32,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @RequiresDialect(H2Dialect.class)
 @Jpa(
-		annotatedClasses = {OrderedBySQLTest.Person.class, OrderedBySQLTest.Article.class},
-		integrationSettings = {@Setting(name = DEFAULT_LIST_SEMANTICS, value = "BAG")}
+		annotatedClasses = {OrderedBySQLTest.Person.class, OrderedBySQLTest.Article.class}
 )
 public class OrderedBySQLTest {
 

@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
@@ -386,55 +385,6 @@ public class PersistenceUnitOverridesTests {
 					ConnectionProvider.class );
 			assertThat( connectionProvider ).isInstanceOf( DriverManagerConnectionProvider.class );
 		}
-	}
-
-	@Test
-	public void testCfgXmlBaseline() {
-		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
-			private final Properties props = new Properties();
-
-			{
-				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
-			}
-
-			@Override
-			public Properties getProperties() {
-				return props;
-			}
-		};
-
-		final PersistenceProvider provider = new HibernatePersistenceProvider();
-
-		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
-
-		assertThatThrownBy( () -> provider.createContainerEntityManagerFactory( info, integrationSettings ) )
-				.isInstanceOf( jakarta.persistence.PersistenceException.class )
-				.hasMessageContaining( "hibernate.cfg.xml" );
-	}
-
-	@Test
-	public void testIntegrationCannotOverrideCfgXml() {
-		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
-			private final Properties props = new Properties();
-
-			{
-				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
-			}
-
-			@Override
-			public Properties getProperties() {
-				return props;
-			}
-		};
-
-		final PersistenceProvider provider = new HibernatePersistenceProvider();
-
-		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
-		integrationSettings.put( AvailableSettings.DIALECT, IntegrationDialect.class.getName() );
-
-		assertThatThrownBy( () -> provider.createContainerEntityManagerFactory( info, integrationSettings ) )
-				.isInstanceOf( jakarta.persistence.PersistenceException.class )
-				.hasMessageContaining( "hibernate.cfg.xml" );
 	}
 
 	public static class PersistenceUnitDialect extends Dialect {

@@ -1,0 +1,472 @@
+= Aggregate Mapping Design
+:toc:
+
+This note describes a possible ORM 9 design direction for aggregate-valued
+embeddable mappings such as SQL `STRUCT` / UDT, JSON, XML, and aggregate arrays.
+
+The immediate trigger is `@Struct` parity in the boot-model pipeline, but the
+larger goal is broader: if ORM 9 replaces `MetamodelBuildingProcess` with the
+new pipeline, then mapping-model, runtime-model, binder, and extractor changes
+are valid design tools.  The goal should not be to reproduce every historical
+internal shape when a cleaner model would make aggregate mappings easier to bind,
+validate, and execute.
+
+== Problem Statement
+
+The current support works, but aggregate embeddables are not modeled as a
+first-class storage shape.
+
+Today an aggregate component is effectively represented as:
+
+* a `Component` with normal child properties;
+* aggregate-specific state on that component, such as struct name, struct
+  column ordering, and aggregate column;
+* an `AggregateColumn` standing in for the physical aggregate value;
+* a `UserDefinedObjectType` or equivalent database object for SQL `STRUCT` /
+  UDT metadata;
+* second-pass logic that validates the component, initializes aggregate child
+  columns, and removes flattened child columns from the owner table.
+
+That shape is compatible with existing mapping code, but it makes the aggregate
+storage mode implicit.  Binding first creates something close to a flattened
+component and then repairs the table/database-object model later.  Runtime code
+must infer aggregate behavior from a combination of component state, aggregate
+columns, dialect support, and SQL expression helpers.
+
+This is especially awkward for plural aggregate mappings, nested aggregate
+components, arrays, and non-STRUCT aggregate formats such as JSON or XML.
+
+== Design Goals
+
+Aggregate mappings should be explicit in the boot mapping model and runtime
+model.
+
+The design should:
+
+* distinguish flattened component storage from aggregate component storage early
+  in binding;
+* avoid binding child columns into a physical table only to remove or relocate
+  them later;
+* support singular and plural aggregate-valued embeddables through the same
+  conceptual model;
+* keep SQL `STRUCT`, JSON, XML, and aggregate arrays related, but not force them
+  into an abstraction that hides important differences;
+* centralize dialect-specific aggregate read, write, assignment, and extraction
+  behavior;
+* preserve compatibility where practical, while allowing ORM 9 mapping and
+  runtime model changes when they remove real complexity.
+
+== Current Short-Term Path
+
+The current boot-model pipeline can close parity gaps by adapting the existing
+mapping model:
+
+[source]
+----
+ComponentSource
+    -> Component
+    -> AggregateColumn
+    -> AggregateComponentSecondPass
+    -> UserDefinedObjectType / aggregate metadata
+----
+
+This is a useful bridge.  It lets the pipeline prove source discovery,
+categorization, binding, UDT metadata, and runtime compatibility without waiting
+for a larger model redesign.
+
+However, this should be treated as transitional.  The bridge is allowed to use
+existing `Component` and `AggregateComponentSecondPass` behavior, but new design
+work should not assume that second-pass table mutation is the desired final
+shape.
+
+The current compatibility policy is to keep materializing the mapping shape that
+legacy boot and runtime consumers already understand.  The new pipeline may
+collect richer aggregate intent internally, but it should project that intent
+into `Component`, `AggregateColumn`, `AggregateComponentSecondPass`, and existing
+database aggregate metadata for now.
+
+As with other transitional boot-model work, explicit storage descriptors should
+not be attached directly to shared `org.hibernate.mapping` contracts while
+`MetadataBuildingProcess` remains an active boot path, unless the legacy path is
+also changed to populate the same descriptor as authoritative state.
+
+Current bridge status:
+
+* singular embedded `@Struct` attributes materialize the legacy-compatible
+  `Component` / `AggregateColumn` / `AggregateComponentSecondPass` shape;
+* element-collection `@Struct` values use the same bridge, with the aggregate
+  column on the collection table and plural struct SQL type defaults derived
+  from the preferred array strategy;
+* element-collection map-value and map-key aggregate values use the same
+  bridge.  Map values reuse the collection-element source role and read
+  value-side `@JdbcTypeCode` for JSON/XML aggregates.  Map keys use the map-key
+  source role, read the aggregate column from `@MapKeyColumn`, and read
+  key-side `@MapKeyJdbcTypeCode` for JSON/XML aggregates;
+* nested `@Struct` values use the same bridge.  Nested component binding runs
+  aggregate processing after nested member binding so the outer aggregate can
+  treat the nested aggregate column as one ordered member;
+* Java array-valued `@Struct` attributes use the same bridge.  Categorization
+  treats the array attribute as an aggregate component source, the component
+  binds against the array element embeddable type, and the aggregate column uses
+  the plural struct SQL type/default dialect array type;
+* singular JSON/XML aggregate embeddables use the same bridge when an
+  embeddable-valued member declares `@JdbcTypeCode(SqlTypes.JSON)` or
+  `@JdbcTypeCode(SqlTypes.SQLXML)`.  The JDBC type code supplies the aggregate
+  column type instead of UDT metadata;
+* nested JSON/XML aggregate embeddables use the same bridge.  Nested component
+  binding applies aggregate processing to the inner JSON/XML component and
+  carries the outer aggregate column as the nested component's parent aggregate
+  column;
+* element-collection JSON/XML aggregate embeddables use the same bridge.  The
+  aggregate column is bound on the collection table and the member
+  `@JdbcTypeCode(SqlTypes.JSON)` / `@JdbcTypeCode(SqlTypes.SQLXML)` supplies the
+  aggregate column type;
+* Java array-valued JSON/XML aggregate embeddables use the same bridge when the
+  array member declares `@JdbcTypeCode(SqlTypes.JSON_ARRAY)` or
+  `@JdbcTypeCode(SqlTypes.XML_ARRAY)`.  Categorization treats the array as an
+  aggregate component source, the component binds against the array element
+  embeddable type, and the aggregate column carries the array aggregate SQL type.
+  Runtime-model smoke coverage verifies these mappings cross the
+  `buildSessionFactory()` boundary after the new pipeline registers the same
+  fallback JSON/XML array JDBC type constructors that legacy boot registers.
+  XML array annotation/runtime coverage uses an aggregate-support-capable test
+  dialect because H2's production aggregate support only handles JSON assignment
+  expressions in this path;
+* element-collection JSON/XML aggregate embeddables currently have boot-model
+  bridge coverage only.  A runtime-model smoke attempt reaches
+  `buildSessionFactory()` and exposes a `CollectionTableGroup` /
+  `StandardVirtualTableGroup` recursion for aggregate collection elements.
+  A legacy `MetadataSources` characterization using the same mapping shape
+  reaches the same recursion, so this is not tracked as a new-pipeline
+  binding/materialization parity gap.  Any follow-up belongs at the runtime
+  collection table-group/model boundary, not in source discovery or aggregate
+  column materialization;
+* the bridge still intentionally binds component members first and lets
+  `AggregateComponentSecondPass` validate, order, contribute UDT metadata, and
+  remove flattened member columns from the owner or collection table.
+
+== Proposed Mapping Model
+
+An embeddable/component should have an explicit storage descriptor.
+
+Conceptually:
+
+[source,java]
+----
+interface ComponentStorage {
+    ComponentStorageKind kind();
+}
+
+enum ComponentStorageKind {
+    FLATTENED,
+    AGGREGATE
+}
+
+interface AggregateComponentStorage extends ComponentStorage {
+    AggregateStorageKind aggregateKind();
+    Column aggregateColumn();
+    QualifiedName aggregateTypeName();
+    List<AggregateMember> members();
+}
+
+enum AggregateStorageKind {
+    STRUCT,
+    JSON,
+    XML,
+    ARRAY
+}
+----
+
+The exact type names are placeholders, but the split is important.  A `Component`
+should be able to answer directly:
+
+* whether its attributes are flattened into the owner table;
+* whether the component is represented by a single aggregate column;
+* which database aggregate type or format backs that column;
+* what ordered aggregate members exist inside the aggregate value;
+* where nested aggregate components appear.
+
+This could eventually be implemented as a descriptor attached to `Component`
+rather than a replacement for `Component`.  Replacing `Component` wholesale would
+be far more invasive and is not necessary to get a clearer model.
+
+That attachment should wait until the descriptor can be authoritative for all
+supported boot paths, or until `MetadataBuildingProcess` has been removed far
+enough that runtime and schema consumers no longer need to handle both
+descriptor-populated and legacy side-effect-populated aggregate mappings.
+Before that point, descriptor-like state should remain an internal new-pipeline
+contribution or resolved plan that is projected into the current mapping shape.
+
+=== Flattened Storage
+
+Flattened storage is the current normal embeddable shape:
+
+[source]
+----
+owner table
+    id
+    street
+    city
+    zip
+----
+
+The component's child selectables are physical selectables in the owner table or
+collection table.
+
+=== Aggregate Storage
+
+Aggregate storage is a different shape:
+
+[source]
+----
+owner table
+    id
+    address
+
+address aggregate metadata
+    street
+    city
+    zip
+----
+
+The owner table has the aggregate column.  The component's child selectables
+describe members of the aggregate value rather than independent columns in the
+owner table.
+
+For SQL `STRUCT`, those members may also define UDT metadata.  For JSON/XML,
+they may define path-based access metadata rather than a database UDT.  For
+arrays, the aggregate storage descriptor also needs element aggregate metadata.
+
+== Proposed Binder Shape
+
+The binder should determine component storage before binding the component's
+child attributes.
+
+Current transitional shape:
+
+[source]
+----
+bind component child columns into owner table
+    -> discover aggregate column
+    -> second pass initializes aggregate metadata
+    -> remove child columns from owner table
+----
+
+Desired shape:
+
+[source]
+----
+resolve component storage
+    -> bind aggregate column into owner table or collection table
+    -> bind aggregate members into aggregate-member container
+    -> validate aggregate storage
+    -> contribute database aggregate metadata when needed
+----
+
+The key idea is that child binding should target the right container from the
+start.
+
+For flattened components, the target is the physical owner table or collection
+table.
+
+For aggregate components, the target is an aggregate member container associated
+with the component storage descriptor.  That container may later contribute SQL
+`STRUCT` / UDT metadata, JSON path metadata, XML path metadata, or array element
+metadata.
+
+This avoids table-column cleanup and makes plural aggregate binding less
+special.  A collection element embeddable can still bind its aggregate column to
+the collection table while binding aggregate members to the aggregate member
+container.
+
+== Source Roles
+
+The source model should keep the declaration site and the component type
+separate.
+
+Aggregate support needs to work for at least:
+
+* singular embedded attributes;
+* element-collection embeddable values;
+* map-value embeddables;
+* map-key embeddables;
+* nested aggregate embeddables;
+* aggregate arrays.
+
+These are not all the same source role.  For example, a plural attribute may be
+the declaration site for overrides, conversions, collection-table details, and
+aggregate column details, while the component type supplies the embeddable member
+model.
+
+The binder should therefore receive a component source that can answer:
+
+* what kind of source role is being bound;
+* which member declared the aggregate mapping;
+* which class supplies the embeddable members;
+* which physical table receives the aggregate column;
+* which logical aggregate member container receives child selectables.
+
+== Runtime Model Direction
+
+The runtime model should expose aggregate-valued embeddables directly.
+
+Possible shape:
+
+[source,java]
+----
+interface AggregateEmbeddableValuedModelPart {
+    AggregateStorageKind aggregateKind();
+    SelectableMapping aggregateSelectable();
+    EmbeddableMappingType embeddableType();
+    AggregateValueAccessStrategy accessStrategy();
+}
+----
+
+The exact type names are placeholders.  The important bit is that SQL AST,
+result assembly, mutation generation, dirty checking, and query path resolution
+should be able to ask directly whether an embeddable value is aggregate-backed.
+
+Runtime should not have to reverse-engineer aggregate-ness from child column
+placement or special cases around `AggregateColumn`.
+
+== Aggregate Access Strategy
+
+Dialect-specific behavior should be centralized behind an aggregate access
+strategy produced from the mapping model and dialect support.
+
+The strategy should cover:
+
+* reading an aggregate member from the aggregate column;
+* assigning an aggregate member during mutation;
+* replacing the whole aggregate value;
+* constructing aggregate values when the database requires explicit
+  constructors;
+* extracting aggregate values as one JDBC value, when supported;
+* extracting aggregate members as separate projections, when required;
+* handling nested aggregates and arrays.
+
+Existing `AggregateSupport` methods are a good foundation, but call sites should
+ideally consume a runtime strategy rather than repeatedly combining component
+state, column state, and dialect hooks.
+
+== Format-Specific Concerns
+
+SQL `STRUCT`, JSON, XML, and arrays are related, but they should not be treated
+as identical.
+
+SQL `STRUCT` / UDT::
+Usually needs database aggregate type metadata, ordered members, dialect-specific
+member read and assignment expressions, and sometimes explicit constructors.
+
+JSON::
+Usually needs path expressions, serialization/deserialization decisions, and
+potentially whole-value replacement rather than member assignment.
+
+XML::
+Similar to JSON in being path-oriented, but with different dialect functions,
+typing, and mutation support.
+
+Aggregate arrays::
+Need element aggregate metadata and may require special handling for collection
+table values, array element access, and dialect array constructors.
+
+The common abstraction should be "aggregate-valued embeddable storage", not
+"everything is a STRUCT".
+
+== Migration Strategy
+
+This should be incremental.
+
+1. Keep closing parity gaps with the existing `Component` / `AggregateColumn` /
+   second-pass bridge.
+2. Add internal contribution/resolution state only when the bridge needs
+   whole-shape reasoning before projecting into the legacy mapping model.
+3. Use that internal state to characterize aggregate source roles, validation,
+   aggregate column placement, database-object contribution, and unsupported
+   combinations.
+4. Introduce a storage descriptor on `Component` or beside it only when it can
+   become authoritative for all supported boot paths, or when
+   `MetadataBuildingProcess` has been removed far enough to avoid a parallel
+   representation.
+5. Teach the new binder to resolve component storage before child attribute
+   binding.
+6. Add an aggregate member container so aggregate child selectables are never
+   temporarily bound as owner-table columns.
+7. Build runtime aggregate access strategies from the explicit storage
+   descriptor.
+8. Move SQL generation, extraction, and mutation code to consume the runtime
+   aggregate model directly.
+9. Retire second-pass table mutation once all aggregate paths bind into their
+   final containers.
+
+The trigger for steps 4 through 9 is not simply that the new pipeline has a
+working aggregate bridge.  The trigger is one of:
+
+* `MetadataBuildingProcess` is removed or no longer produces the same shared
+  `Component` mappings consumed by runtime and schema tooling;
+* legacy aggregate binding is intentionally updated to populate the same storage
+  descriptor so both boot paths share one source of truth;
+* a supported aggregate shape cannot be represented through the bridge without
+  excessive table mutation, duplicated runtime inference, or unmaintainable
+  side channels.
+
+== Open Questions
+
+Should aggregate storage be represented as a descriptor attached to `Component`,
+or as a distinct mapping value type?
+
+During the `MetadataBuildingProcess` transition, this should remain an internal
+new-pipeline design question rather than new state attached to shared mapping
+contracts.  The safe near-term answer is to project into the existing
+`Component` / `AggregateColumn` shape and keep descriptor-like state inside the
+new pipeline until it can become authoritative.
+
+Can `UserDefinedObjectType` remain the right database metadata object for SQL
+`STRUCT`, or should aggregate member metadata move behind a more general
+database aggregate metadata contract?
+
+How much of `AggregateComponentSecondPass` can become normal binder validation
+once source roles and aggregate member containers are explicit?
+
+Should JSON/XML aggregate mappings share the same component storage descriptor
+as SQL `STRUCT`, or should the common contract be narrower with
+format-specific subtypes?
+
+What is the runtime boundary between aggregate value assembly and embeddable
+value assembly?
+
+How should partial aggregate mutation interact with dynamic update, dirty
+tracking, generated columns, and optimistic locking?
+
+How should nested aggregate values be represented in SQL AST paths?
+
+== Near-Term Work
+
+Near-term parity work should continue to be explicit about what it proves:
+
+* singular embedded `@Struct` support: covered by the current bridge;
+* plural `@Struct` support for element-collection values: covered by the
+  current bridge for collection elements;
+* map-value and map-key `@Struct` aggregate embeddables: covered by the current
+  bridge for element-collection values and map keys;
+* map-value and map-key JSON/XML aggregate embeddables: covered by the current
+  bridge for element-collection values and map keys;
+* nested `@Struct` aggregate embeddables: covered by the current bridge;
+* Java array-valued `@Struct` aggregate embeddables: covered by the current
+  bridge;
+* singular JSON/XML aggregate embeddables: covered by the current bridge;
+* nested JSON/XML aggregate embeddables: covered by the current bridge;
+* plural JSON/XML aggregate embeddables: covered by the current bridge for
+  element-collection values at the boot-model boundary; runtime collection
+  element support still needs the table-group recursion follow-up described
+  above, but current evidence says that is not a new boot-pipeline parity gap;
+* Java array-valued JSON/XML aggregate embeddables: covered by the current
+  bridge and by focused runtime-model smoke coverage;
+* runtime mapping and SQL generation tests that assert observable behavior, not
+  just successful metadata creation.
+
+Each parity slice should also record whether it reinforces the current bridge or
+exposes a need for the proposed first-class aggregate storage model.  Exposing
+that need does not by itself mean attaching descriptors to `Component`; it may
+first mean adding internal resolved aggregate intent that still materializes the
+legacy-compatible mapping shape.

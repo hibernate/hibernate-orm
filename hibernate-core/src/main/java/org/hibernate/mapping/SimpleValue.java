@@ -20,6 +20,8 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -73,6 +75,8 @@ import static org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings.toNati
  * @author Yanming Zhou
  */
 public abstract class SimpleValue implements KeyValue {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
 
 	private final MetadataBuildingContext buildingContext;
 	private final MetadataImplementor metadata;
@@ -344,12 +348,36 @@ public abstract class SimpleValue implements KeyValue {
 		this.table = table;
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() throws MappingException {}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
 		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
@@ -367,7 +395,15 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
 		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
@@ -399,12 +435,19 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
-		if ( hasFormula() ) {
-			throw new MappingException( "Unique key constraint involves formulas" );
-		}
-		getTable().createUniqueKey( getConstraintColumns(), context );
+		UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+				ResolvedUniqueKey.from( this, context, null )
+		);
 	}
 
 	@Internal

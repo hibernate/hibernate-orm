@@ -1375,7 +1375,7 @@ public class HbmXmlTransformer {
 							hbmComponent,
 							componentTypeInfo
 					);
-					final var embedded = componentHandler.transformEmbedded( jaxbEmbeddable, hbmComponent );
+					final var embedded = componentHandler.transformEmbedded( jaxbEmbeddable, hbmComponent, componentTypeInfo );
 					transferAccess(
 							hbmComponent.getAccess(),
 							embedded::setAccess,
@@ -3320,7 +3320,7 @@ public class HbmXmlTransformer {
 							hbmComponent,
 							componentTypeInfo
 					);
-					final var embedded = componentHandler.transformEmbedded( jaxbEmbeddable, hbmComponent );
+					final var embedded = componentHandler.transformEmbedded( jaxbEmbeddable, hbmComponent, componentTypeInfo );
 					transferAccess(
 							hbmComponent.getAccess(),
 							embedded::setAccess,

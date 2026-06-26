@@ -20,9 +20,11 @@ import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.GenerationTiming;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
@@ -526,6 +528,41 @@ public class HbmTransformationJaxbTests {
 			assertThat( mutualFundEntity.getAttributes().getEmbeddedAttributes() ).hasSize( 1 );
 			assertThat( mutualFundEntity.getAttributes().getEmbeddedAttributes().get( 0 ).getName() )
 					.isEqualTo( "holdings" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20627" )
+	public void testSharedEmbeddableAttributeOverrideTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl mutualFundEntity = transformed.getEntities().stream()
+					.filter( e -> "MutualFund".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEmbeddedImpl holdings = mutualFundEntity.getAttributes().getEmbeddedAttributes().get( 0 );
+			assertThat( holdings.getName() ).isEqualTo( "holdings" );
+
+			assertThat( holdings.getAttributeOverrides() )
+					.as( "MutualFund.holdings should have an attribute-override for 'amount'" )
+					.hasSize( 1 );
+
+			final JaxbAttributeOverrideImpl override = holdings.getAttributeOverrides().get( 0 );
+			assertThat( override.getName() ).isEqualTo( "amount" );
+			assertThat( override.getColumn() ).isNotNull();
+			assertThat( override.getColumn().getName() ).isEqualTo( "amount_millions" );
+			assertThat( override.getColumn().getRead() ).isEqualTo( "amount_millions * 1000000.0" );
+			assertThat( override.getColumn().getWrite() ).isEqualTo( "? / 1000000.0" );
+
+			final JaxbEntityImpl transactionEntity = transformed.getEntities().stream()
+					.filter( e -> "Transaction".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEmbeddedImpl value = transactionEntity.getAttributes().getEmbeddedAttributes().get( 0 );
+			assertThat( value.getAttributeOverrides() )
+					.as( "Transaction.value should not have attribute overrides (it matches the embeddable)" )
+					.isEmpty();
 		} );
 	}
 

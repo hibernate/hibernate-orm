@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.results.internal;
 
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
@@ -14,7 +13,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createDiscriminatorColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -58,25 +56,6 @@ public class ResultsHelper {
 					final int jdbcPosition = jdbcValuesMetadata.resolveColumnPosition( columnAlias );
 					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 					return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
-				}
-		);
-	}
-
-	public static Expression resolveSqlExpression(
-			DomainResultCreationStateImpl resolver,
-			JdbcValuesMetadata jdbcValuesMetadata,
-			TableReference tableReference,
-			EntityDiscriminatorMapping discriminatorMapping,
-			String columnAlias) {
-		return resolver.resolveSqlExpression(
-				createDiscriminatorColumnReferenceKey(
-						tableReference,
-						discriminatorMapping
-				),
-				processingState -> {
-					final int jdbcPosition = jdbcValuesMetadata.resolveColumnPosition( columnAlias );
-					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-					return new ResultSetMappingSqlSelection( valuesArrayPosition, discriminatorMapping.getJdbcMapping() );
 				}
 		);
 	}

@@ -14,6 +14,7 @@ import java.util.Set;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import jakarta.persistence.AccessType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
@@ -100,6 +101,13 @@ public class HbmXmlTransformerComponentHandler {
 			final var existing = jaxbEmbeddableByClassName.get( embeddableClassName );
 			if ( existing != null ) {
 				return existing;
+			}
+		}
+
+		if ( componentTypeInfo != null ) {
+			final String compositeUserTypeName = componentTypeInfo.getComponent().getTypeName();
+			if ( isNotEmpty( compositeUserTypeName ) && isNotEmpty( embeddableClassName ) ) {
+				applyCompositeUserTypeRegistration( embeddableClassName, compositeUserTypeName );
 			}
 		}
 
@@ -199,6 +207,18 @@ public class HbmXmlTransformerComponentHandler {
 		catch (Exception e) {
 			// if we can't load the class, skip transient generation
 		}
+	}
+
+	private void applyCompositeUserTypeRegistration(String embeddableClassName, String compositeUserTypeName) {
+		for ( JaxbCompositeUserTypeRegistrationImpl existing : mappingRoot.getCompositeUserTypeRegistrations() ) {
+			if ( embeddableClassName.equals( existing.getClazz() ) ) {
+				return;
+			}
+		}
+		final var registration = new JaxbCompositeUserTypeRegistrationImpl();
+		registration.setClazz( embeddableClassName );
+		registration.setDescriptor( compositeUserTypeName );
+		mappingRoot.getCompositeUserTypeRegistrations().add( registration );
 	}
 
 	public String determineEmbeddableName(String componentClassName, String attributeName) {

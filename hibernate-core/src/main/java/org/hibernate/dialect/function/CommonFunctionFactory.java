@@ -1741,7 +1741,8 @@ public class CommonFunctionFactory {
 		functionRegistry.registerBinaryTernaryPattern(
 						"locate",
 						integerType,
-						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+(?3)-1)",
+						"position(?1 in ?2)",
+						"(position(?1 in substring(?2 from ?3))+case when position(?1 in substring(?2 from ?3))=0 then 0 else (?3)-1 end)",
 						STRING, STRING, INTEGER,
 						typeConfiguration
 				)

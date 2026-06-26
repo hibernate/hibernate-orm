@@ -1027,10 +1027,6 @@ public class EntityInitializerImpl
 						assert proxy != instance;
 						instance = resolveEntityInstance( data );
 						data.entityKey = entityKey;
-						if ( proxy != null ) {
-							castNonNull( extractLazyInitializer( proxy ) )
-									.setImplementation( instance );
-						}
 					}
 					else if ( entity != instance ) {
 						// The instance contained in the parent entity is different from the managed persistent instance
@@ -1084,7 +1080,6 @@ public class EntityInitializerImpl
 				final Object proxy = data.entityHolder.getProxy();
 				if ( proxy == instance ) {
 					data.entityInstanceForNotify = resolveEntityInstance( data );
-					lazyInitializer.setImplementation( data.entityInstanceForNotify );
 				}
 				else {
 					resolveEntity( data, proxy );
@@ -1138,10 +1133,6 @@ public class EntityInitializerImpl
 		final Object entity = data.entityHolder.getEntity();
 		if ( entity == null ) {
 			data.entityInstanceForNotify = resolveEntityInstance( data );
-			if ( proxy != null ) {
-				castNonNull( extractLazyInitializer( proxy ) )
-						.setImplementation( data.entityInstanceForNotify );
-			}
 			data.setState( State.RESOLVED );
 		}
 		else {
@@ -1234,7 +1225,6 @@ public class EntityInitializerImpl
 					final var lazyInitializer = extractLazyInitializer( proxy );
 					assert lazyInitializer != null;
 					data.entityInstanceForNotify = resolveEntityInstance2( data );
-					lazyInitializer.setImplementation( data.entityInstanceForNotify );
 				}
 			}
 		}

@@ -220,6 +220,9 @@ public record ResolvedSessionFactorySettings(
 		/// Whether native query result discovery should prefer JDBC datetime types.
 		boolean preferJdbcDatetimeTypesInNativeQueriesEnabled,
 
+		/// Whether IN-list query parameters should be padded to power-of-two sizes.
+		boolean inClauseParameterPaddingEnabled,
+
 		/// Whether HQL JSON functions are enabled.
 		boolean jsonFunctionsEnabled,
 
@@ -374,6 +377,7 @@ public record ResolvedSessionFactorySettings(
 				passProcedureParameterNames,
 				preferJavaTimeJdbcTypesEnabled,
 				preferJdbcDatetimeTypesInNativeQueriesEnabled,
+				inClauseParameterPaddingEnabled,
 				jsonFunctionsEnabled,
 				xmlFunctionsEnabled,
 				portableIntegerDivisionEnabled,

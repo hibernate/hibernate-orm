@@ -148,6 +148,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "isPreferJavaTimeJdbcTypesEnabled" -> settings.preferJavaTimeJdbcTypesEnabled();
 				case "isPreferJdbcDatetimeTypesInNativeQueriesEnabled" ->
 						settings.preferJdbcDatetimeTypesInNativeQueriesEnabled();
+				case "inClauseParameterPaddingEnabled" -> settings.inClauseParameterPaddingEnabled();
 				case "allowImmutableEntityUpdate" -> settings.immutableEntityUpdateQueryHandlingMode()
 						!= org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
 				case "isJsonFunctionsEnabled" -> settings.jsonFunctionsEnabled();

@@ -187,6 +187,7 @@ public class SessionFactorySettingsResolver {
 					asBoolean( configurationValues.get( QuerySettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES ), false ),
 					MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( standardServiceRegistry ),
 					asBoolean( configurationValues.get( QuerySettings.NATIVE_PREFER_JDBC_DATETIME_TYPES ), false ),
+					asBoolean( configurationValues.get( QuerySettings.IN_CLAUSE_PARAMETER_PADDING ), false ),
 					asBoolean( configurationValues.get( QuerySettings.JSON_FUNCTIONS_ENABLED ), false ),
 					asBoolean( configurationValues.get( QuerySettings.XML_FUNCTIONS_ENABLED ), false ),
 					asBoolean( configurationValues.get( QuerySettings.PORTABLE_INTEGER_DIVISION ), false ),

@@ -175,6 +175,7 @@ public class SessionFactoryOptionsCollector {
 				settings.passProcedureParameterNames(),
 				settings.preferJavaTimeJdbcTypesEnabled(),
 				settings.preferJdbcDatetimeTypesInNativeQueriesEnabled(),
+				settings.inClauseParameterPaddingEnabled(),
 				settings.jsonFunctionsEnabled(),
 				settings.xmlFunctionsEnabled(),
 				settings.portableIntegerDivisionEnabled(),

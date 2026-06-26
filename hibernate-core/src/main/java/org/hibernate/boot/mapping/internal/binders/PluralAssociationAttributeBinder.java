@@ -428,7 +428,8 @@ class PluralAssociationAttributeBinder {
 					modelBinders,
 					bindingOptions,
 					bindingState,
-					bindingContext
+					bindingContext,
+					true
 			);
 		}
 		else if ( collection instanceof IndexedCollection indexedCollection ) {

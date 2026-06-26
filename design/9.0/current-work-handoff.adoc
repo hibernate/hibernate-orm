@@ -726,9 +726,55 @@ SessionFactory handoff products:
   --console=plain
 ----
 
+The settings/binding follow-up for `MaxInExpressionParameterPaddingTest` and
+`LegacyParameterTests` is green.
+
+* `ResolvedSessionFactorySettings` now carries
+  `QuerySettings.IN_CLAUSE_PARAMETER_PADDING` through
+  `SessionFactorySettingsResolver`, `SessionFactoryOptionsCollector`, and
+  `SessionFactoryOptionsAdapter`.
+* `LegacyParameterTests` exposed a binding parity issue rather than a query
+  parameter problem: the standard animal model maps `Zoo#mammals` as a
+  foreign-key one-to-many `Map<String, Mammal>`, so the basic `@MapKeyColumn`
+  lives on the target `Mammal` table.  That borrowed target-table map-key
+  column must be nullable, otherwise unrelated `Mammal`/`Human` inserts fail on
+  `Mammal.name`.
+* `AnimalJoinedInheritanceBindingTest` now guards that `Human.name` remains the
+  joined-subclass embedded component on the `Human` table, while the
+  `Zoo#mammals` map-key column on `Mammal` is present and nullable.
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.query.MaxInExpressionParameterPaddingTest' \
+  --tests 'org.hibernate.orm.test.query.hql.LegacyParameterTests' \
+  --tests 'org.hibernate.orm.test.query.hql.AnimalJoinedInheritanceBindingTest' \
+  --console=plain
+----
+
+The generics guardrail set is still green after the settings and map-key
+binding fixes:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.generics.SingleTableAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.EnumeratedAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.EmbeddableWithGenericAndMappedSuperClassTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.MappedSuperclassAndGenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericAbstractSubtypeSerializableTest' \
+  --tests 'org.hibernate.orm.test.jpa.criteria.paths.GenericBasicValuedPathTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericsInheritanceTest' \
+  --tests 'org.hibernate.orm.test.bootstrap.binding.annotations.embedded.EmbeddableBindingTests' \
+  --console=plain
+----
+
 Next, choose from a fresh full-suite/census failure report rather than the older
 sampled UOE notes.  Prefer direct boot/model handoff failures over runtime SQL
 behavior.
+* rerun a controlled single-worker `hibernate-core` census, or mine freshly
+  copied reports, to identify the next common failure family now that the
+  settings UOE and `LegacyParameterTests` blockers are gone;
 * remaining JSON/XML collection/list variants only if fresh focused failures
   still point at boot mapping handoff rather than SQL-AST/runtime behavior;
 * remaining XML overlay / metadata-complete parity, especially annotation + XML

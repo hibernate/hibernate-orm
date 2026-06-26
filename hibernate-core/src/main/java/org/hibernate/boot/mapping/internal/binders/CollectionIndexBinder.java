@@ -120,6 +120,31 @@ class CollectionIndexBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		bindMapKey(
+				ownerType,
+				ownerBinding,
+				source,
+				collection,
+				table,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				false
+		);
+	}
+
+	static void bindMapKey(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			CollectionSource source,
+			org.hibernate.mapping.Map collection,
+			Table table,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			boolean nullableBasicMapKey) {
 		final MapKey mapKey = source.mapKey();
 		if ( mapKey != null ) {
 			bindPropertyMapKey( source, collection, source.mapKeyName(), bindingState );
@@ -149,7 +174,7 @@ class CollectionIndexBinder {
 			);
 			return;
 		}
-		bindBasicMapKey( source, collection, table, bindingOptions, bindingState, bindingContext );
+		bindBasicMapKey( source, collection, table, bindingOptions, bindingState, bindingContext, nullableBasicMapKey );
 	}
 
 	private record ComponentMapKey(
@@ -475,7 +500,8 @@ class CollectionIndexBinder {
 			Table table,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
-			BindingContext bindingContext) {
+			BindingContext bindingContext,
+			boolean nullableBasicMapKey) {
 		final BasicValue index = new BasicValue( bindingState.getMetadataBuildingContext(), table );
 		index.setTable( table );
 		BasicValueBinder.bindBasicValue(
@@ -493,6 +519,9 @@ class CollectionIndexBinder {
 				false,
 				false
 		);
+		if ( nullableBasicMapKey ) {
+			indexColumn.setNullable( true );
+		}
 		table.addColumn( indexColumn );
 		index.addColumn(
 				indexColumn,

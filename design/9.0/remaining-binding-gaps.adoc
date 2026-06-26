@@ -2678,6 +2678,10 @@ Use these as burn-down buckets instead of waiting for broad suite failures.
 6. Collections:
    list/index tests, map-key tests, inverse map-valued association tests,
    id-bag tests, many-to-any tests, sort/order/filter/custom-SQL/cache tests.
+   `LegacyParameterTests` is green after making basic map-key columns nullable
+   when they are borrowed onto a target entity table for foreign-key
+   one-to-many maps, as with `Zoo#mammals` placing its `@MapKeyColumn` on
+   `Mammal`.
 
 7. Global metadata:
    named query/result-set/entity-graph/fetch-profile/filter/type-registration
@@ -2694,7 +2698,9 @@ Use these as burn-down buckets instead of waiting for broad suite failures.
    include validation/shared-cache alias hydration, JDBC property precedence over
    the environment baseline during JPA descriptor bootstrap, default session
    flush/lock/cache properties, lock timeout propagation, and session-scoped
-   interceptor suppliers.
+   interceptor suppliers.  `MaxInExpressionParameterPaddingTest` is also green
+   after carrying `QuerySettings.IN_CLAUSE_PARAMETER_PADDING` through resolved
+   SessionFactory settings and the options adapter.
 +
 [source,bash]
 ----
@@ -2708,3 +2714,10 @@ Use these as burn-down buckets instead of waiting for broad suite failures.
   --tests 'org.hibernate.orm.test.internal.util.FlushModeConfigTest' \
   --console=plain
 ----
+
+10. Fresh census / copied reports:
+    before choosing another UOE-derived bucket, prefer a controlled
+    single-worker `hibernate-core` census or freshly copied test reports.  The
+    older sampled UOE list has already produced both settings-normalization
+    fixes and the one-to-many map-key nullable binding fix, so stale names are
+    now lower signal than fresh clustered failures.

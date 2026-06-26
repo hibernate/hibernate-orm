@@ -8,7 +8,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -262,7 +261,7 @@ public class DynamicResultBuilderEntityStandard
 		}
 
 		if ( discriminatorColumnName != null ) {
-			resolveDiscriminatorSqlSelection(
+			resolveSqlSelection(
 					discriminatorColumnName,
 					tableReference,
 					entityMapping.getDiscriminatorMapping(),
@@ -285,23 +284,6 @@ public class DynamicResultBuilderEntityStandard
 		finally {
 			creationState.popExplicitFetchMementoResolver();
 		}
-	}
-
-	private static void resolveDiscriminatorSqlSelection(String columnAlias, TableReference tableReference, EntityDiscriminatorMapping discriminatorMapping, JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationState domainResultCreationState) {
-		final var creationStateImpl = impl( domainResultCreationState );
-		creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
-						creationStateImpl,
-						jdbcResultsMetadata,
-						tableReference,
-						discriminatorMapping,
-						columnAlias
-				),
-				discriminatorMapping.getJdbcMapping().getJdbcJavaType(),
-				null,
-				domainResultCreationState.getSqlAstCreationState().getCreationContext()
-						.getTypeConfiguration()
-		);
 	}
 
 	private FetchBuilder findIdFetchBuilder() {

@@ -12,7 +12,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/noninverse/ContractVariation.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/noninverse/ContractVariation.xml"
 )
 public class EntityWithNonInverseManyToManyTest extends AbstractEntityWithManyToManyTest {
 }

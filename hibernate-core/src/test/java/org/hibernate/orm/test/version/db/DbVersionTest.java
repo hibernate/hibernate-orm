@@ -22,7 +22,7 @@ import java.sql.Timestamp;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/version/db/User.hbm.xml")
+@DomainModel(annotatedClasses = { User.class, Group.class, Permission.class })
 @SessionFactory
 public class DbVersionTest {
 	@AfterEach

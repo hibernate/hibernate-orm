@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/unconstrained/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/unconstrained/Person.orm.xml"
 )
 @SessionFactory
 public class UnconstrainedTest {

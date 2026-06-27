@@ -29,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ops/HoarderOrphanDelete.hbm.xml"
+		annotatedClasses = {Hoarder.class, Item.class, Category.class, SubItem.class, SubCategory.class},
+		xmlMappings = "org/hibernate/orm/test/ops/HoarderOrphanDelete.xml"
 )
 @SessionFactory
 @ServiceRegistry(

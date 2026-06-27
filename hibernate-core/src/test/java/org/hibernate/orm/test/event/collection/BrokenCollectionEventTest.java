@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/event/collection/association/unidirectional/onetomany/UnidirectionalOneToManySetMapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/event/collection/association/unidirectional/onetomany/UnidirectionalOneToManySetMapping.orm.xml"
 )
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)

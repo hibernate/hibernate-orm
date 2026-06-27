@@ -40,7 +40,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES;
 				value = "/org/hibernate/orm/test/tool/schema/scripts/multi-line-statements.sql"
 		)
 )
-@DomainModel(xmlMappings = "/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml")
+@DomainModel(annotatedClasses = Human.class)
 @SessionFactory
 public class CommandExtractorServiceTest {
 	@Test

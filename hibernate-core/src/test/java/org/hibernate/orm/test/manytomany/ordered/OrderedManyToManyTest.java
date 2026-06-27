@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/manytomany/ordered/UserGroup.hbm.xml"
+		annotatedClasses = {User.class, Group.class}
 )
 @SessionFactory
 @ServiceRegistry(

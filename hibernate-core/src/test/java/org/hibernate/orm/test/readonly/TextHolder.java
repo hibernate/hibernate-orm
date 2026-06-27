@@ -4,14 +4,27 @@
  */
 package org.hibernate.orm.test.readonly;
 
+import java.sql.Types;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+
+import org.hibernate.annotations.JdbcTypeCode;
 
 /**
  * TextHolder implementation
  *
  * @author Steve Ebersole
  */
+@Entity
 public class TextHolder {
+	@Id
+	@GeneratedValue
 	private Long id;
+	@JdbcTypeCode(Types.LONGVARCHAR)
+	@Column(name = "TXT")
 	private String theText;
 
 	public TextHolder() {

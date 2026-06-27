@@ -3,15 +3,29 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.readonly;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+
+import org.hibernate.annotations.DynamicUpdate;
 
 /**
  * @author Gavin King
  */
+@Entity
+@DynamicUpdate
 public class DataPoint implements Serializable {
+	@Id
+	@GeneratedValue
 	private long id;
+	@Column(name = "xval", nullable = false, precision = 25, scale = 19)
 	private BigDecimal x;
+	@Column(name = "yval", nullable = false, precision = 25, scale = 19)
 	private BigDecimal y;
 	private String description;
 

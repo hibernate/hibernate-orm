@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
-@DomainModel(annotatedClasses = {MyEntity.class, MySibling.class, MyChild.class})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/generatedkeys/identity/MyEntity.orm.xml")
 @SessionFactory(
 		generateStatistics = true
 )

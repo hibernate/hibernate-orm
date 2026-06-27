@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Emmanuel Bernard
  */
-@DomainModel(annotatedClasses = Product.class)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/id/Product.orm.xml")
 @ServiceRegistry(settings = @Setting(name = Environment.USE_IDENTIFIER_ROLLBACK, value = "true"))
 @SessionFactory
 public class UseIdentifierRollbackTest {

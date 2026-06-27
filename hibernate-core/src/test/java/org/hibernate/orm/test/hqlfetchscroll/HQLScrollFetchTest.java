@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@DomainModel(annotatedClasses = {Parent.class, Child.class})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/hqlfetchscroll/ParentChild.orm.xml")
 @SessionFactory
 public class HQLScrollFetchTest {
 	private static final String QUERY = "select p from Parent p join fetch p.children c";

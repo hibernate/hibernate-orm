@@ -4,16 +4,10 @@
  */
 package org.hibernate.orm.test.hqlfetchscroll;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "children")
 public class Child {
-	@Id
-	@GeneratedValue
+
+	// A numeric id must be the <id> field.  Some databases (Sybase, etc.)
+	// require identifier columns in order to support scrollable results.
 	private long id;
 	private String name;
 

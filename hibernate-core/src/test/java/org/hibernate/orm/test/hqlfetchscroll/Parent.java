@@ -7,25 +7,13 @@ package org.hibernate.orm.test.hqlfetchscroll;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "Parents")
 public class Parent {
-	@Id
-	@GeneratedValue
+
+	// A numeric id must be the <id> field.  Some databases (Sybase, etc.)
+	// require identifier columns in order to support scrollable results.
 	private long id;
 	private String name;
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-	@JoinColumn(name = "parent_id")
-	private Set<Child> children = new HashSet<>();
+	private Set children = new HashSet();
 
 	Parent() {
 	}

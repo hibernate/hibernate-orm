@@ -32,7 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Lukasz Antoniak
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(annotatedClasses = {User.class, Log.class, Image.class})
+@DomainModel(xmlMappings = {
+		"org/hibernate/orm/test/interceptor/User.orm.xml",
+		"org/hibernate/orm/test/interceptor/Image.orm.xml"
+})
 @SessionFactory
 public class InterceptorTest {
 	@AfterEach

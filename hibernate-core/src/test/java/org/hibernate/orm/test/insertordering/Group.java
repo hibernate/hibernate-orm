@@ -4,19 +4,13 @@
  */
 package org.hibernate.orm.test.insertordering;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 /**
+ * {@inheritDoc}
+ *
  * @author Steve Ebersole
  */
-@Entity
-@Table(name = "INS_ORD_GRP")
 public class Group {
-	@Id
-	@GeneratedValue
 	private Long id;
 	private String name;
 

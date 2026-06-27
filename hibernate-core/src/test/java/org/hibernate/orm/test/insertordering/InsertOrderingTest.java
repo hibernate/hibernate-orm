@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = {User.class, Group.class, Membership.class})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/insertordering/Mapping.orm.xml")
 @SessionFactory
 @ServiceRegistry(
 		settings = {@Setting( name = BatchSettings.ORDER_INSERTS, value = "true"),

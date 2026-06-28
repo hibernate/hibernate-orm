@@ -1,6 +1,16 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.10.Final (June 28, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39791
+
+
+** Bug
+    * HHH-20621 NullPointerException in CacheEntityLoaderHelper.loadFromSessionCache with JOINED inheritance, lazy ManyToOne proxy to parent type, and join fetch on subtype query
+    * HHH-20606 Single `@Id` from `@MappedSuperclass` is lost when an `@IdClass` entity shares the same superclass
+
 Changes in 7.3.9.Final (June 21, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

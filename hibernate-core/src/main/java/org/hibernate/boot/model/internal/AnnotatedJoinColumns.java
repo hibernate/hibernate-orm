@@ -443,7 +443,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			final Identifier columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new OwnedImplicitJoinColumnNameSource( referencedEntity, logicalTableName, logicalReferencedColumn )
 			);
-			return quoteIfNecessary( isRefColumnQuoted, logicalTableName, handleElement( columnIdentifier ) );
+			return quoteIfNecessary( isRefColumnQuoted, logicalTableName, columnIdentifier );
 		}
 		else {
 			final Identifier logicalTableName = database.toIdentifier(
@@ -469,20 +469,6 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 					}
 			);
 			return quoteIfNecessary( isRefColumnQuoted, logicalTableName, columnIdentifier );
-		}
-	}
-
-	private Identifier handleElement(Identifier columnIdentifier) {
-		// HHH-11826 magic. See AnnotatedColumn and the HHH-6005 comments
-		final String identifierText = columnIdentifier.getText();
-		if ( identifierText.contains( "_{element}_" ) ) {
-			return Identifier.toIdentifier(
-					identifierText.replace( "_{element}_", "_" ),
-					columnIdentifier.isQuoted()
-			);
-		}
-		else {
-			return columnIdentifier;
 		}
 	}
 

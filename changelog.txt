@@ -1,6 +1,17 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.21.Final (June 28, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39788
+
+
+** Bug
+    * HHH-20621 NullPointerException in CacheEntityLoaderHelper.loadFromSessionCache with JOINED inheritance, lazy ManyToOne proxy to parent type, and join fetch on subtype query
+    * HHH-20606 Single `@Id` from `@MappedSuperclass` is lost when an `@IdClass` entity shares the same superclass
+    * HHH-20524 Inline dirty checking + @DynamicUpdate: a dirty scalar sorting after a nested-embeddable path is omitted from the UPDATE (silent data loss)
+
 Changes in 7.2.20.Final (June 21, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -739,6 +739,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsWindowFrames implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsWindowFrames();
+		}
+	}
+
 	public static class SupportsFilterClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof PostgreSQLDialect;

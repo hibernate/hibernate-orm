@@ -198,6 +198,7 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFrames.class)
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "No support for nth_value function")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for nth_value function")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "No support for nth_value function")
@@ -360,6 +361,7 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFrames.class)
 	public void testFrame(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

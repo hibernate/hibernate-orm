@@ -383,6 +383,12 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsWindowFrames() {
+		// CUBRID has window functions but no 'over' frame clause (rows/range)
+		return false;
+	}
+
+	@Override
 	public boolean supportsWithClauseInSubquery() {
 		return true;
 	}

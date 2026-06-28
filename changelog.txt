@@ -1,6 +1,24 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.3.Final (June 28, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39790
+
+
+** Bug
+    * HHH-20621 NullPointerException in CacheEntityLoaderHelper.loadFromSessionCache with JOINED inheritance, lazy ManyToOne proxy to parent type, and join fetch on subtype query
+    * HHH-20606 Single `@Id` from `@MappedSuperclass` is lost when an `@IdClass` entity shares the same superclass
+    * HHH-20588 @Formula properties generate invalid SQL when used with paginated queries that include collection fetches
+    * HHH-20524 Inline dirty checking + @DynamicUpdate: a dirty scalar sorting after a nested-embeddable path is omitted from the UPDATE (silent data loss)
+
+** Improvement
+    * HHH-20538 Improve AltibaseDialect compatibility with Hibernate ORM 8.0/7.4
+
+** Task
+    * HHH-20609 Guard against connection leaks
+
 Changes in 7.4.2.Final (June 21, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

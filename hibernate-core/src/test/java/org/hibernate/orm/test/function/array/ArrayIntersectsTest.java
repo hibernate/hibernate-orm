@@ -174,4 +174,36 @@ public class ArrayIntersectsTest {
 		} );
 	}
 
+	@Test
+	public void testIntersectsArrayParameter(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery(
+							"from EntityWithArrays e where array_intersects(e.theArray, :array)", EntityWithArrays.class )
+					.setParameter( "array", new String[] {"abc", "xyz"} ).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testIntersectsArrayParameterNullFully(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery(
+					"from EntityWithArrays e where array_intersects_nullable(e.theArray, :array)",
+					EntityWithArrays.class ).setParameter( "array", new String[] {null} ).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testIntersectsArrayParameterNull(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery(
+					"from EntityWithArrays e where array_intersects_nullable(e.theArray, :array)",
+					EntityWithArrays.class ).setParameter( "array", new String[] {"abc", null} ).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
 }

@@ -1,6 +1,19 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.54.Final (June 28, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39556
+
+
+** Bug
+    * HHH-20621 NullPointerException in CacheEntityLoaderHelper.loadFromSessionCache with JOINED inheritance, lazy ManyToOne proxy to parent type, and join fetch on subtype query
+    * HHH-20524 Inline dirty checking + @DynamicUpdate: a dirty scalar sorting after a nested-embeddable path is omitted from the UPDATE (silent data loss)
+
+** Improvement
+    * HHH-19089 Lower collection pre-sizing limit to avoid excessive memory usage
+
 Changes in 6.6.53.Final (June 09, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

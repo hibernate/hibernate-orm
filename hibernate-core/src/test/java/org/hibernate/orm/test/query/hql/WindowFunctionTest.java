@@ -153,6 +153,7 @@ public class WindowFunctionTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFunctions.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFrames.class)
 	public void testFrame(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

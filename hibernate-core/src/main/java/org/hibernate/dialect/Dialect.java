@@ -4901,6 +4901,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support the {@code frame} clause of a window specification,
+	 * that is, {@code rows}/{@code range}/{@code groups} bounds such as
+	 * {@code rows between 2 preceding and current row}?
+	 *
+	 * @return {@code true} if the underlying database supports window frames,
+	 *         {@code false} otherwise. By default this matches
+	 *         {@link #supportsWindowFunctions()}, since most databases that
+	 *         support window functions also support frames.
+	 */
+	public boolean supportsWindowFrames() {
+		return supportsWindowFunctions();
+	}
+
+	/**
 	 * Does this dialect support the SQL {@code lateral} keyword or a
 	 * proprietary alternative?
 	 *

@@ -12,7 +12,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 import org.hibernate.audit.internal.AuditLogImpl;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -49,9 +48,8 @@ public final class AuditLogFactory {
 	 * @return a new audit log (must be closed by the caller)
 	 */
 	public static AuditLog create(SessionFactory sessionFactory) {
-		final var sf = (SessionFactoryImplementor) sessionFactory;
 		final var session = (SharedSessionContractImplementor)
-				sf.withOptions()
+				sessionFactory.withOptions()
 						.atChangeset( AuditLog.ALL_CHANGESETS )
 						.openSession();
 		return new AuditLogImpl( session );

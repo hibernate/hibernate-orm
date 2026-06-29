@@ -11,7 +11,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
@@ -26,6 +27,8 @@ import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 
 import static java.util.Collections.addAll;
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
@@ -58,17 +61,15 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param affectedQueryables The affected entity persisters.
 	 */
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, EntityPersister... affectedQueryables) {
+	public BulkOperationCleanupAction(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull EntityPersister... affectedQueryables) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>();
 		for ( var persister : affectedQueryables ) {
 			addAll( spacesList, (String[]) persister.getQuerySpaces() );
 
-			if ( persister.canWriteToCache() ) {
-				final var entityDataAccess = persister.getCacheAccessStrategy();
-				if ( entityDataAccess != null ) {
-					entityCleanups.add( new EntityCleanup( entityDataAccess, session ) );
-				}
-			}
+			writingToCache( persister,
+					entityDataAccess -> entityCleanups.add( new EntityCleanup( entityDataAccess, session ) ) );
 
 			if ( persister.hasNaturalIdentifier() && persister.hasNaturalIdCache() ) {
 				naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy(), session ) );
@@ -79,11 +80,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			if ( roles != null ) {
 				for ( String role : roles ) {
 					final var collectionPersister = mappingMetamodel.getCollectionDescriptor( role );
-					if ( collectionPersister.hasCache() ) {
-						collectionCleanups.add(
-								new CollectionCleanup( collectionPersister.getCacheAccessStrategy(), session )
-						);
-					}
+					usingCache( collectionPersister,
+							cache -> collectionCleanups.add( new CollectionCleanup( cache, session ) ) );
 				}
 			}
 		}
@@ -104,7 +102,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param tableSpaces The table spaces.
 	 */
-	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set<String> tableSpaces) {
+	public BulkOperationCleanupAction(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Set<String> tableSpaces) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
 		final var metamodel = session.getFactory().getMappingMetamodel();
@@ -113,9 +113,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				addAll( spacesList, entitySpaces );
 
-				if ( entityDescriptor.canWriteToCache() ) {
-					entityCleanups.add( new EntityCleanup( entityDescriptor.getCacheAccessStrategy(), session ) );
-				}
+				writingToCache( entityDescriptor, cache -> entityCleanups.add( new EntityCleanup( cache, session ) ) );
 				if ( entityDescriptor.hasNaturalIdentifier() && entityDescriptor.hasNaturalIdCache() ) {
 					naturalIdCleanups.add( new NaturalIdCleanup( entityDescriptor.getNaturalIdCacheAccessStrategy(), session ) );
 				}
@@ -123,12 +121,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				final var roles = metamodel.getCollectionRolesByEntityParticipant( entityDescriptor.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						final var collectionDescriptor = metamodel.getCollectionDescriptor( role );
-						if ( collectionDescriptor.hasCache() ) {
-							collectionCleanups.add(
-									new CollectionCleanup( collectionDescriptor.getCacheAccessStrategy(), session )
-							);
-						}
+						usingCache( metamodel.getCollectionDescriptor( role ),
+								cache -> collectionCleanups.add( new CollectionCleanup( cache, session ) ) );
 					}
 				}
 			}
@@ -137,7 +131,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		affectedTableSpaces = spacesList.toArray( EMPTY_STRING_ARRAY );
 	}
 
-	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {
+	public static void schedule(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull SqmDmlStatement<?> statement) {
 		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
 		final var metamodel = session.getFactory().getMappingMetamodel();
 		if ( !( statement instanceof InsertSelectStatement ) ) {
@@ -152,7 +148,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		schedule( session, entityPersisters.toArray( new EntityPersister[0] ) );
 	}
 
-	public static void schedule(SharedSessionContractImplementor session, EntityPersister... affectedQueryables) {
+	public static void schedule(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull EntityPersister... affectedQueryables) {
 		final var action = new BulkOperationCleanupAction( session, affectedQueryables );
 		if ( session.isEventSource() ) {
 			session.asEventSource().getActionQueue().addAction( action );
@@ -162,7 +160,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 	}
 
-	public static void schedule(SharedSessionContractImplementor session, Set<String> affectedQueryables) {
+	public static void schedule(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Set<String> affectedQueryables) {
 		final var action = new BulkOperationCleanupAction( session, affectedQueryables );
 		if ( session.isEventSource() ) {
 			session.asEventSource().getActionQueue().addAction( action );
@@ -188,7 +188,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * spaces are not known or (2) any of the incoming check table spaces occur
 	 * in that set.
 	 */
-	private boolean affectedEntity(Set<?> affectedTableSpaces, Serializable[] checkTableSpaces) {
+	private boolean affectedEntity(
+			@Nullable Set<?> affectedTableSpaces,
+			@Nonnull Serializable[] checkTableSpaces) {
 		if ( affectedTableSpaces == null || affectedTableSpaces.isEmpty() ) {
 			return true;
 		}
@@ -203,17 +205,17 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public String[] getPropertySpaces() {
+	public @Nonnull String[] getPropertySpaces() {
 		return affectedTableSpaces;
 	}
 
 	@Override
-	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
+	public @Nullable BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
 		return null;
 	}
 
 	@Override
-	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
+	public @Nonnull AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
 		return new BulkOperationCleanUpAfterTransactionCompletionProcess(
 				entityCleanups,
 				collectionCleanups,
@@ -227,17 +229,17 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		private final Set<CollectionCleanup> collectionCleanups;
 		private final Set<NaturalIdCleanup> naturalIdCleanups;
 
-		public BulkOperationCleanUpAfterTransactionCompletionProcess(
-				Set<EntityCleanup> entityCleanups,
-				Set<CollectionCleanup> collectionCleanups,
-				Set<NaturalIdCleanup> naturalIdCleanups) {
+		private BulkOperationCleanUpAfterTransactionCompletionProcess(
+				@Nonnull Set<EntityCleanup> entityCleanups,
+				@Nonnull Set<CollectionCleanup> collectionCleanups,
+				@Nonnull Set<NaturalIdCleanup> naturalIdCleanups) {
 			this.entityCleanups = entityCleanups;
 			this.collectionCleanups = collectionCleanups;
 			this.naturalIdCleanups = naturalIdCleanups;
 		}
 
 		@Override
-		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
+		public void doAfterTransactionCompletion(boolean success, @Nonnull SharedSessionContractImplementor session) {
 			for ( var cleanup : entityCleanups ) {
 				cleanup.release();
 			}
@@ -256,12 +258,12 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public void beforeExecutions() throws HibernateException {
+	public void beforeExecutions() {
 		// nothing to do
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	public void execute() {
 		// nothing to do
 	}
 
@@ -270,8 +272,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		private final SoftLock cacheLock;
 
 		private EntityCleanup(
-				EntityDataAccess cacheAccess,
-				SharedSessionContractImplementor session) {
+				@Nonnull EntityDataAccess cacheAccess,
+				@Nonnull SharedSessionContractImplementor session) {
 			this.cacheAccess = cacheAccess;
 			this.cacheLock = cacheAccess.lockRegion();
 			cacheAccess.removeAll( session );
@@ -287,8 +289,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		private final SoftLock cacheLock;
 
 		private CollectionCleanup(
-				CollectionDataAccess cacheAccess,
-				SharedSessionContractImplementor session) {
+				@Nonnull CollectionDataAccess cacheAccess,
+				@Nonnull SharedSessionContractImplementor session) {
 			this.cacheAccess = cacheAccess;
 			this.cacheLock = cacheAccess.lockRegion();
 			cacheAccess.removeAll( session );
@@ -304,8 +306,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		private final SoftLock cacheLock;
 
 		public NaturalIdCleanup(
-				NaturalIdDataAccess naturalIdCacheAccessStrategy,
-				SharedSessionContractImplementor session) {
+				@Nonnull NaturalIdDataAccess naturalIdCacheAccessStrategy,
+				@Nonnull SharedSessionContractImplementor session) {
 			this.naturalIdCacheAccessStrategy = naturalIdCacheAccessStrategy;
 			this.cacheLock = naturalIdCacheAccessStrategy.lockRegion();
 			naturalIdCacheAccessStrategy.removeAll( session );
@@ -317,7 +319,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	@Override
-	public void afterDeserialize(EventSource session) {
+	public void afterDeserialize(@Nonnull EventSource session) {
 		// nop
 	}
 }

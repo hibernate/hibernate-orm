@@ -4,8 +4,10 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Occurs after deleting an item from the datastore
@@ -16,15 +18,16 @@ public class PostDeleteEvent extends AbstractPostDatabaseOperationEvent {
 	private final Object[] deletedState;
 
 	public PostDeleteEvent(
-			Object entity,
-			Object id,
-			Object[] deletedState,
-			EntityPersister persister,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nullable Object[] deletedState,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.deletedState = deletedState;
 	}
 
+	@Nullable
 	public Object[] getDeletedState() {
 		return deletedState;
 	}

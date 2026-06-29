@@ -311,10 +311,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 			}
 		}
 		else {
-			throw new EntityActionVetoException(
-				"The EntityInsertAction was vetoed.",
-				insert
-			);
+			throw new EntityActionVetoException( insert );
 		}
 	}
 

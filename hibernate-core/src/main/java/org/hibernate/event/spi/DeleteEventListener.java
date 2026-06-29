@@ -6,6 +6,7 @@ package org.hibernate.event.spi;
 
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the contract for handling of deletion events generated from a session.
@@ -19,7 +20,7 @@ public interface DeleteEventListener {
 	 *
 	 * @param event The delete event to be handled.
 	 */
-	void onDelete(DeleteEvent event) throws HibernateException;
+	void onDelete(@Nonnull DeleteEvent event) throws HibernateException;
 
-	void onDelete(DeleteEvent event, DeleteContext transientEntities) throws HibernateException;
+	void onDelete(@Nonnull DeleteEvent event, @Nonnull DeleteContext transientEntities) throws HibernateException;
 }

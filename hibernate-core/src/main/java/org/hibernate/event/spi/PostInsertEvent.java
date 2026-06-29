@@ -4,8 +4,10 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Occurs after inserting an item in the datastore
@@ -16,15 +18,16 @@ public class PostInsertEvent extends AbstractPostDatabaseOperationEvent {
 	private final Object[] state;
 
 	public PostInsertEvent(
-			Object entity,
-			Object id,
-			Object[] state,
-			EntityPersister persister,
-			SharedSessionContractImplementor source) {
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor source) {
 		super( source, entity, id, persister );
 		this.state = state;
 	}
 
+	@Nonnull
 	public Object[] getState() {
 		return state;
 	}

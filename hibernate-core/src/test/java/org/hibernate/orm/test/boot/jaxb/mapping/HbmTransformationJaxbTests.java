@@ -20,8 +20,11 @@ import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.GenerationTiming;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
@@ -39,6 +42,7 @@ import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.InheritanceType;
@@ -145,8 +149,9 @@ public class HbmTransformationJaxbTests {
 
 			assertThat( oneToMany.isOrphanRemoval() ).isTrue();
 
-			assertThat( oneToMany.getMapKeyType() ).isNotNull();
-			assertThat( oneToMany.getMapKeyType().getValue() ).isEqualTo( "Integer" );
+			final var mapKeyJavaType = oneToMany.getMapKeyJavaType();
+			assertThat( mapKeyJavaType ).isNotNull();
+			assertThat( mapKeyJavaType ).isEqualTo( IntegerJavaType.class.getName() );
 		} );
 	}
 
@@ -334,6 +339,27 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20600" )
+	public void testComponentPropertyAccessTransientDetection(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/component-access-transient/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+
+			assertThat( embeddable.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactlyInAnyOrder( "street", "city" );
+
+			assertThat( embeddable.getAttributes().getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.as( "getFullAddress() is an unmapped getter — with property access it must be marked transient" )
+					.contains( "fullAddress" )
+					.as( "Mapped properties should not be marked transient" )
+					.doesNotContain( "street", "city" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20599" )
 	public void testCompositeElementColumnTableTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {
@@ -464,6 +490,79 @@ public class HbmTransformationJaxbTests {
 			assertThat( children.getMappedBy() )
 					.as( "mapped-by should resolve to 'id.parent' for key-many-to-one inside composite-id" )
 					.isEqualTo( "id.parent" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-19424" )
+	public void testCompositeUserTypeComponentTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			assertThat( transformed.getCompositeUserTypeRegistrations() )
+					.as( "CompositeUserType component should generate a <composite-user-type> registration" )
+					.hasSize( 1 );
+
+			final JaxbCompositeUserTypeRegistrationImpl registration =
+					transformed.getCompositeUserTypeRegistrations().get( 0 );
+			assertThat( registration.getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.cut.MonetoryAmount" );
+			assertThat( registration.getDescriptor() )
+					.isEqualTo( "org.hibernate.orm.test.cut.MonetoryAmountUserType" );
+
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			assertThat( embeddable.getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.cut.MonetoryAmount" );
+
+			final JaxbBasicImpl amountAttr = embeddable.getAttributes().getBasicAttributes().stream()
+					.filter( b -> "amount".equals( b.getName() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEntityImpl mutualFundEntity = transformed.getEntities().stream()
+					.filter( e -> "MutualFund".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( mutualFundEntity.getAttributes().getEmbeddedAttributes() ).hasSize( 1 );
+			assertThat( mutualFundEntity.getAttributes().getEmbeddedAttributes().get( 0 ).getName() )
+					.isEqualTo( "holdings" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20627" )
+	public void testSharedEmbeddableAttributeOverrideTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl mutualFundEntity = transformed.getEntities().stream()
+					.filter( e -> "MutualFund".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEmbeddedImpl holdings = mutualFundEntity.getAttributes().getEmbeddedAttributes().get( 0 );
+			assertThat( holdings.getName() ).isEqualTo( "holdings" );
+
+			assertThat( holdings.getAttributeOverrides() )
+					.as( "MutualFund.holdings should have an attribute-override for 'amount'" )
+					.hasSize( 1 );
+
+			final JaxbAttributeOverrideImpl override = holdings.getAttributeOverrides().get( 0 );
+			assertThat( override.getName() ).isEqualTo( "amount" );
+			assertThat( override.getColumn() ).isNotNull();
+			assertThat( override.getColumn().getName() ).isEqualTo( "amount_millions" );
+			assertThat( override.getColumn().getRead() ).isEqualTo( "amount_millions * 1000000.0" );
+			assertThat( override.getColumn().getWrite() ).isEqualTo( "? / 1000000.0" );
+
+			final JaxbEntityImpl transactionEntity = transformed.getEntities().stream()
+					.filter( e -> "Transaction".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEmbeddedImpl value = transactionEntity.getAttributes().getEmbeddedAttributes().get( 0 );
+			assertThat( value.getAttributeOverrides() )
+					.as( "Transaction.value should not have attribute overrides (it matches the embeddable)" )
+					.isEmpty();
 		} );
 	}
 

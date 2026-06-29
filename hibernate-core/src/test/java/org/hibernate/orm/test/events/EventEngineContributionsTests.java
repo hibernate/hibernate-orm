@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.events;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -109,7 +110,7 @@ public class EventEngineContributionsTests {
 	public static class ConfiguredContributor implements EventEngineContributor {
 
 		@Override
-		public void contribute(EventEngineContributions target) {
+		public void contribute(@Nonnull EventEngineContributions target) {
 			TheContributor.INSTANCE.contribute( target );
 		}
 	}
@@ -124,7 +125,7 @@ public class EventEngineContributionsTests {
 		private EventType<SexyRxyPersistListener> persistEventType;
 
 		@Override
-		public void contribute(EventEngineContributions target) {
+		public void contribute(@Nonnull EventEngineContributions target) {
 			saveEventType = target.contributeEventType(
 					SexyRxySaveListener.EVENT_NAME,
 					SexyRxySaveListener.class,

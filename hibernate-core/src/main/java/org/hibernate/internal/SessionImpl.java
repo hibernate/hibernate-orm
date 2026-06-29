@@ -74,6 +74,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -664,7 +665,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void persist(String entityName, Object object, PersistContext copiedAlready) {
+	public void persist(@Nonnull String entityName, @Nonnull Object object, @Nonnull PersistContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
@@ -737,7 +738,7 @@ public class SessionImpl
 	// persistOnFlush() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void persistOnFlush(String entityName, Object object, PersistContext copiedAlready) {
+	public void persistOnFlush(@Nonnull String entityName, @Nonnull Object object, @Nonnull PersistContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		final var persistEvent = new PersistEvent( entityName, object, this );
@@ -777,7 +778,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void merge(String entityName, Object object, MergeContext copiedAlready) {
+	public void merge(@Nonnull String entityName, @Nonnull Object object, @Nonnull MergeContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
@@ -832,7 +833,7 @@ public class SessionImpl
 	// delete() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
+	public void delete(@Nonnull String entityName, @Nonnull Object object, boolean isCascadeDeleteEnabled, @Nonnull DeleteContext transientEntities) {
 		checkOpenOrWaitingForAutoClose();
 		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpdates();
 		final boolean traceEnabled = SESSION_LOGGER.isTraceEnabled();
@@ -849,7 +850,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void removeOrphanBeforeUpdates(String entityName, Object child) {
+	public void removeOrphanBeforeUpdates(@Nonnull String entityName, @Nonnull Object child) {
 		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
 		//       This should be removed once action/task ordering is improved.
 		logRemoveOrphanBeforeUpdates( "begin", entityName, child );
@@ -1115,7 +1116,7 @@ public class SessionImpl
 			event.setEntityId( null );
 			event.setInstanceToLoad( null );
 			event.setResult( null );
-			event.setLockOptions( null );
+			event.setLockOptions( LockOptions.NONE );
 			event.setReadOnly( null );
 			loadEvent = event;
 		}
@@ -1283,7 +1284,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) {
+	public void refresh(@Nonnull String entityName, @Nonnull Object object, @Nonnull RefreshContext refreshedAlready) {
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
@@ -1537,7 +1538,7 @@ public class SessionImpl
 	 */
 	@Override
 	@Nonnull
-	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) {
+	public Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		Object result = callInterceptorCallback(
@@ -1761,6 +1762,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry) {
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
@@ -1796,13 +1798,14 @@ public class SessionImpl
 		return getEntityEntry( object ).getPersister().getEntityName();
 	}
 
-	private void checkOwnsProxy(LazyInitializer lazyInitializer) {
+	private void checkOwnsProxy(@Nonnull LazyInitializer lazyInitializer) {
 		if ( lazyInitializer.getSession() != this ) {
 			throw new DetachedObjectException( "Given proxy is not associated with the persistence context" );
 		}
 	}
 
-	private EntityEntry getEntityEntry(Object object) {
+	@Nonnull
+	private EntityEntry getEntityEntry(@Nonnull Object object) {
 		final var entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
 			throw new UnmanagedObjectException( "Given entity is not associated with the persistence context" );
@@ -1846,6 +1849,7 @@ public class SessionImpl
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public ActionQueue getActionQueue() {
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
@@ -2594,6 +2598,7 @@ public class SessionImpl
 	// After the "un seal" PR is applied, this should all be consolidated
 	// with the Session forms on SharedSessionContract
 
+	@Nonnull
 	protected Map<String, Object> getInitialProperties() {
 		final var map = new HashMap<>( getDefaultProperties() );
 		//The FLUSH_MODE is always set at Session creation time,
@@ -2604,62 +2609,71 @@ public class SessionImpl
 
 	@Override
 	@SuppressWarnings("deprecation")
-	protected void interpretProperty(String propertyName, Object value) {
+	protected void interpretProperty(
+			@Nonnull String propertyName,
+			@Nullable Object value,
+			@NotNull Map<String, Object> properties) {
 		switch ( propertyName ) {
 			case HINT_FLUSH_MODE:
 				setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 				break;
 			case JPA_LOCK_SCOPE:
 			case JAKARTA_LOCK_SCOPE:
-				properties().put( JPA_LOCK_SCOPE, value);
-				properties().put( JAKARTA_LOCK_SCOPE, value);
-				applyPropertiesToLockOptions( properties(), this::getLockOptionsForWrite );
+				properties.put( JPA_LOCK_SCOPE, value);
+				properties.put( JAKARTA_LOCK_SCOPE, value);
+				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 				break;
 			case JPA_LOCK_TIMEOUT:
 			case JAKARTA_LOCK_TIMEOUT:
-				properties().put( JPA_LOCK_TIMEOUT, value );
-				properties().put( JAKARTA_LOCK_TIMEOUT, value );
-				applyPropertiesToLockOptions( properties(), this::getLockOptionsForWrite );
+				properties.put( JPA_LOCK_TIMEOUT, value );
+				properties.put( JAKARTA_LOCK_TIMEOUT, value );
+				applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 				break;
 			case JPA_SHARED_CACHE_RETRIEVE_MODE:
 			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
-				properties().put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
-				properties().put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties.put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
-								determineCacheStoreMode( properties() ),
+								determineCacheStoreMode( properties ),
 								(CacheRetrieveMode) value
 						)
 				);
 				break;
 			case JPA_SHARED_CACHE_STORE_MODE:
 			case JAKARTA_SHARED_CACHE_STORE_MODE:
-				properties().put( JPA_SHARED_CACHE_STORE_MODE, value );
-				properties().put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
+				properties.put( JPA_SHARED_CACHE_STORE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
 								(CacheStoreMode) value,
-								determineCacheRetrieveMode( properties() )
+								determineCacheRetrieveMode( properties )
 						)
 				);
 				break;
 			case CRITERIA_COPY_TREE:
+				if ( value == null ) {
+					throw new IllegalArgumentException( CRITERIA_COPY_TREE + " cannot be null" );
+				}
 				setCriteriaCopyTreeEnabled( parseBoolean( value.toString() ) );
 				break;
 			case HINT_FETCH_PROFILE:
-				enableFetchProfile( (String) value );
+				if ( value == null ) {
+					throw new IllegalArgumentException( HINT_FETCH_PROFILE + " cannot be null" );
+				}
+				enableFetchProfile( value.toString() );
 				break;
 			case USE_SUBSELECT_FETCH:
 			case HINT_ENABLE_SUBSELECT_FETCH:
-				setSubselectFetchingEnabled( parseBoolean( value.toString() ) );
+				setSubselectFetchingEnabled( value != null && parseBoolean( value.toString() ) );
 				break;
 			case DEFAULT_BATCH_FETCH_SIZE:
 			case HINT_BATCH_FETCH_SIZE:
-				setFetchBatchSize( parseInt( value.toString() ) );
+				setFetchBatchSize( value == null ? -1 : parseInt( value.toString() ) );
 				break;
 			case STATEMENT_BATCH_SIZE:
 			case HINT_JDBC_BATCH_SIZE:
-				setJdbcBatchSize( parseInt( value.toString() ) );
+				setJdbcBatchSize( value == null ? null : parseInt( value.toString() ) );
 				break;
 			default:
 				SESSION_LOGGER.tracef( "Unsupported property : %s", propertyName  );

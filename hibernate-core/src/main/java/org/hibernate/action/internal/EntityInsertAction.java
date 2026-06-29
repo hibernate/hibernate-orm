@@ -4,10 +4,11 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -27,6 +28,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 
 /**
  * The action for performing an entity insertion, for entities not defined to use {@code IDENTITY} generation.
@@ -35,8 +37,8 @@ import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCach
  */
 public class EntityInsertAction extends AbstractEntityInsertAction {
 
-	private Object version;
-	private Object cacheEntry;
+	private @Nullable Object version;
+	private @Nullable Object cacheEntry;
 
 	/**
 	 * Constructs an EntityInsertAction.
@@ -48,29 +50,31 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	 * @param session The session
 	 */
 	public EntityInsertAction(
-			final Object id,
-			final Object[] state,
-			final Object instance,
-			final Object version,
-			final EntityPersister persister,
-			final EventSource session) {
+			final @Nonnull Object id,
+			final @Nonnull Object[] state,
+			final @Nonnull Object instance,
+			final @Nullable Object version,
+			final @Nonnull EntityPersister persister,
+			final @Nonnull EventSource session) {
 		super( id, state, instance, persister, session );
 		this.version = version;
 	}
 
+	@Nullable
 	public Object getVersion() {
 		return version;
 	}
 
-	public void setVersion(Object version) {
+	public void setVersion(@Nullable Object version) {
 		this.version = version;
 	}
 
+	@Nullable
 	protected Object getCacheEntry() {
 		return cacheEntry;
 	}
 
-	protected void setCacheEntry(Object cacheEntry) {
+	protected void setCacheEntry(@Nullable Object cacheEntry) {
 		this.cacheEntry = cacheEntry;
 	}
 
@@ -80,17 +84,21 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	@Override
+	@Nullable
 	protected Object getRowId() {
 		return null ;
 	}
 
 	@Override
+	@Nonnull
 	protected EntityKey getEntityKey() {
-		return getSession().generateEntityKey( getId(), getPersister() );
+		final Object id = getId();
+		assert id != null;
+		return getSession().generateEntityKey( id, getPersister() );
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	public void execute() {
 		nullifyTransientReferencesIfNotAlready();
 
 		// Don't need to lock the cache here, since if someone
@@ -138,7 +146,9 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		markExecuted();
 	}
 
-	private static PersistenceException convertException(ConstraintViolationException cve, EventSource session) {
+	private static @Nonnull PersistenceException convertException(
+			@Nonnull ConstraintViolationException cve,
+			@Nonnull EventSource session) {
 		return session.getFactory().getSessionFactoryOptions().isJpaBootstrap()
 			&& cve.getKind() == ConstraintKind.UNIQUE
 				? new EntityExistsException( cve )
@@ -146,9 +156,9 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	private void handleGeneratedProperties(
-			EntityEntry entry,
-			GeneratedValues generatedValues,
-			PersistenceContext persistenceContext) {
+			@Nonnull EntityEntry entry,
+			@Nullable GeneratedValues generatedValues,
+			@Nonnull PersistenceContext persistenceContext) {
 		final var persister = getPersister();
 		final Object[] state = getState();
 		if ( persister.hasInsertGeneratedProperties() ) {
@@ -176,40 +186,48 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		final var persister = getPersister();
 		final var session = getSession();
 		if ( isCachePutEnabled( persister, session ) ) {
-			final var factory = session.getFactory();
-			cacheEntry = buildStructuredCacheEntry( getInstance(), version, getState(), persister, session );
-			final var cache = persister.getCacheAccessStrategy();
-			final Object cacheKey = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
-			final boolean put = cacheInsert( persister, cacheKey );
+			writingToCache( persister, cache -> {
+				final var factory = session.getFactory();
+				final Object instance = getInstance();
+				final Object entry = buildStructuredCacheEntry( instance, version, getState(), persister, session );
+				cacheEntry = entry;
+				final Object id = getId();
+				assert id != null;
+				final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+				final boolean put = cacheInsert( persister, cache, cacheKey, entry );
 
-			final var statistics = factory.getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
-				);
-			}
+				final var statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							cache.getRegion().getName()
+					);
+				}
+			} );
 		}
 	}
 
-	protected boolean cacheInsert(EntityPersister persister, Object cacheKey) {
+	protected boolean cacheInsert(
+			@Nonnull EntityPersister persister,
+			@Nonnull EntityDataAccess cache,
+			@Nonnull Object cacheKey,
+			Object entry) {
 		final var session = getSession();
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean insert = false;
 		try {
 			eventListenerManager.cachePutStart();
-			insert = cacheAccessStrategy.insert( session, cacheKey, cacheEntry, version );
+			insert = cache.insert( session, cacheKey, entry, version );
 			return insert;
 		}
 		finally {
 			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
-					cacheAccessStrategy,
-					getPersister(),
+					cache,
+					persister,
 					insert,
 					EventMonitor.CacheActionDescription.ENTITY_INSERT
 			);
@@ -223,8 +241,11 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
 
+	@Nonnull
 	private PostInsertEvent newPostInsertEvent() {
-		return new PostInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
+		final Object id = getId();
+		assert id != null;
+		return new PostInsertEvent( getInstance(), id, getState(), getPersister(), eventSource() );
 	}
 
 	protected void postCommitInsert(boolean success) {
@@ -233,7 +254,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 						success ? PostInsertEventListener::onPostInsert : this::postCommitOnFailure );
 	}
 
-	private void postCommitOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
+	private void postCommitOnFailure(@Nonnull PostInsertEventListener listener, @Nonnull PostInsertEvent event) {
 		if ( listener instanceof PostCommitInsertEventListener postCommitInsertEventListener ) {
 			postCommitInsertEventListener.onPostInsertCommitFailed( event );
 		}
@@ -252,8 +273,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 		else {
 			boolean veto = false;
-			final PreInsertEvent event =
-					new PreInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
+			final var event = new PreInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
 			for ( var listener : listenerGroup.listeners() ) {
 				veto |= listener.onPreInsert( event );
 			}
@@ -262,27 +282,29 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	@Override
-	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session)
-			throws HibernateException {
+	public void doAfterTransactionCompletion(boolean success, @Nonnull SharedSessionContractImplementor session) {
 		final var persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
-			final var cache = persister.getCacheAccessStrategy();
-			final var factory = session.getFactory();
-			final Object cacheKey = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
-			final boolean put = cacheAfterInsert( cache, cacheKey );
+			writingToCache( persister, cache -> {
+				final var factory = session.getFactory();
+				final Object id = getId();
+				assert id != null;
+				final Object cacheKey = cache.generateCacheKey( id, persister, factory, session.getTenantIdentifier() );
+				final boolean put = cacheAfterInsert( cache, cacheKey );
 
-			final var statistics = factory.getStatistics();
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.entityCachePut(
-						StatsHelper.getRootEntityRole( persister ),
-						cache.getRegion().getName()
-				);
-			}
+				final var statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.entityCachePut(
+							StatsHelper.getRootEntityRole( persister ),
+							cache.getRegion().getName()
+					);
+				}
+			} );
 		}
 		postCommitInsert( success );
 	}
 
-	protected boolean cacheAfterInsert(EntityDataAccess cache, Object cacheKey) {
+	protected boolean cacheAfterInsert(@Nonnull EntityDataAccess cache, @Nonnull Object cacheKey) {
 		final var session = getSession();
 		final var eventListenerManager = session.getEventListenerManager();
 		final var eventMonitor = session.getEventMonitor();
@@ -290,6 +312,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		boolean afterInsert = false;
 		try {
 			eventListenerManager.cachePutStart();
+			assert cacheEntry != null;
 			afterInsert = cache.afterInsert( session, cacheKey, cacheEntry, version );
 			return afterInsert;
 		}
@@ -317,7 +340,9 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		return false;
 	}
 
-	protected boolean isCachePutEnabled(EntityPersister persister, SharedSessionContractImplementor session) {
+	protected boolean isCachePutEnabled(
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor session) {
 		return persister.canWriteToCache()
 			&& !persister.isCacheInvalidationRequired()
 			&& session.getCacheMode().isPutEnabled();

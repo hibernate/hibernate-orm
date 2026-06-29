@@ -56,13 +56,6 @@ public class TransformationHelper {
 			}
 		}
 		else {
-			final var setterNames = new HashSet<String>();
-			for ( var method : javaClass.getMethods() ) {
-				if ( method.getParameterCount() == 1
-						&& method.getName().startsWith( "set" ) && method.getName().length() > 3 ) {
-					setterNames.add( StringHelper.decapitalize( method.getName().substring( 3 ) ) );
-				}
-			}
 			for ( var method : javaClass.getMethods() ) {
 				if ( method.getParameterCount() != 0 ) {
 					continue;
@@ -77,7 +70,6 @@ public class TransformationHelper {
 					propertyName = StringHelper.decapitalize( methodName.substring( 2 ) );
 				}
 				if ( propertyName != null
-						&& setterNames.contains( propertyName )
 						&& !mappedPropertyNames.contains( propertyName )
 						&& !propertyName.equals( "class" ) ) {
 					transientNames.add( propertyName );

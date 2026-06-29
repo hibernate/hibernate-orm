@@ -4,9 +4,10 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -30,10 +31,10 @@ import org.hibernate.persister.entity.EntityPersister;
 public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	private final boolean isDelayed;
-	private final EntityKey delayedEntityKey;
-	private EntityKey entityKey;
-	private Object generatedId;
-	private Object rowId;
+	private final @Nullable EntityKey delayedEntityKey;
+	private @Nullable EntityKey entityKey;
+	private @Nullable Object generatedId;
+	private @Nullable Object rowId;
 
 	/**
 	 * Constructs an EntityIdentityInsertAction
@@ -43,23 +44,21 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 * @param persister The entity persister
 	 * @param session The session
 	 * @param isDelayed Are we in a situation which allows the insertion to be delayed?
-	 *
-	 * @throws HibernateException Indicates an illegal state
 	 */
 	public EntityIdentityInsertAction(
-			final Object[] state,
-			final Object instance,
-			final EntityPersister persister,
-			final EventSource session,
+			final @Nonnull Object[] state,
+			final @Nonnull Object instance,
+			final @Nonnull EntityPersister persister,
+			final @Nonnull EventSource session,
 			final boolean isDelayed) {
 		this( state, instance, persister, session, isDelayed, isDelayed );
 	}
 
 	private EntityIdentityInsertAction(
-			final Object[] state,
-			final Object instance,
-			final EntityPersister persister,
-			final EventSource session,
+			final @Nonnull Object[] state,
+			final @Nonnull Object instance,
+			final @Nonnull EntityPersister persister,
+			final @Nonnull EventSource session,
 			final boolean isDelayed,
 			final boolean useDelayedIdentifier) {
 		super(
@@ -73,7 +72,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		this.delayedEntityKey = useDelayedIdentifier ? generateDelayedEntityKey() : null;
 	}
 
-	public static EntityIdentityInsertAction delayedCopy(EntityIdentityInsertAction action) {
+	@Nonnull
+	public static EntityIdentityInsertAction delayedCopy(@Nonnull EntityIdentityInsertAction action) {
 		return new EntityIdentityInsertAction(
 				action.getState(),
 				action.getInstance(),
@@ -85,7 +85,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	public void execute() {
 		nullifyTransientReferencesIfNotAlready();
 
 		final var persister = getPersister();
@@ -137,6 +137,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			if ( generatedId == null ) {
 				generatedId = persister.getIdentifier( instance, session );
 			}
+			assert generatedId != null;
 			//need to do that here rather than in the save event listener to let
 			//the post insert events to have an id-filled entity when IDENTITY is used (EJB3)
 			persister.setIdentifier( instance, generatedId, session );
@@ -163,7 +164,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		markExecuted();
 	}
 
-	private static PersistenceException convertException(ConstraintViolationException cve, EventSource session) {
+	@Nonnull
+	private static PersistenceException convertException(
+			@Nonnull ConstraintViolationException cve,
+			@Nonnull EventSource session) {
 		return session.getFactory().getSessionFactoryOptions().isJpaBootstrap()
 			&& cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
 				? new EntityExistsException( cve )
@@ -188,8 +192,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	@Override
-	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-		//TODO: reenable if we also fix the above todo
+	public void doAfterTransactionCompletion(boolean success, @Nonnull SharedSessionContractImplementor session) {
+		//TODO: re-enable if we also fix the above todo
 		/*EntityPersister persister = getEntityPersister();
 		if ( success && persister.hasCache() && !persister.isCacheInvalidationRequired() ) {
 			persister.getCache().afterInsert( getGeneratedId(), cacheEntry );
@@ -206,11 +210,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
 
+	@Nullable
 	private static Object compositeGeneratedId(
-			EntityPersister persister,
-			Object entity,
-			GeneratedValues generatedValues,
-			SharedSessionContractImplementor session) {
+			@Nonnull EntityPersister persister,
+			@Nonnull Object entity,
+			@Nonnull GeneratedValues generatedValues,
+			@Nonnull SharedSessionContractImplementor session) {
 		if ( persister.getIdentifierMapping() instanceof CompositeIdentifierMapping compositeIdentifier ) {
 			final var idMapping = compositeIdentifier.getMappedIdEmbeddableTypeDescriptor();
 			final var generatedMapping = compositeIdentifier.getEmbeddableTypeDescriptor();
@@ -246,9 +251,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 * via an {@link EmbeddableInstantiator}, we need to assign
 	 * their Java default values.
 	 */
+	@Nonnull
 	public static Object[] defaultedPrimitiveIds(
-			EmbeddableMappingType generatedMapping,
-			EmbeddableMappingType idMapping) {
+			@Nonnull EmbeddableMappingType generatedMapping,
+			@Nonnull EmbeddableMappingType idMapping) {
 		final int attributeCount = generatedMapping.getNumberOfAttributeMappings();
 		final var values = new Object[attributeCount];
 		for ( int i = 0; i < attributeCount; i++ ) {
@@ -261,9 +267,9 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	private static boolean unpackGeneratedValues(
-			GeneratedValues generatedValues,
-			EmbeddableMappingType generatedMapping,
-			Object[] values) {
+			@Nonnull GeneratedValues generatedValues,
+			@Nonnull EmbeddableMappingType generatedMapping,
+			@Nonnull Object[] values) {
 		final int attributeCount =
 				generatedMapping.getNumberOfAttributeMappings();
 		boolean updated = false;
@@ -283,7 +289,9 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		return updated;
 	}
 
+	@Nonnull
 	PostInsertEvent newPostInsertEvent() {
+		// generatedId can be null if the insert was vetoed
 		return new PostInsertEvent( getInstance(), generatedId, getState(), getPersister(), eventSource() );
 	}
 
@@ -293,7 +301,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 					success ? PostInsertEventListener::onPostInsert : this::postCommitInsertOnFailure );
 	}
 
-	private void postCommitInsertOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
+	private void postCommitInsertOnFailure(@Nonnull PostInsertEventListener listener, @Nonnull PostInsertEvent event) {
 		if ( listener instanceof PostCommitInsertEventListener postCommitInsertEventListener ) {
 			postCommitInsertEventListener.onPostInsertCommitFailed( event );
 		}
@@ -312,8 +320,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			return false;
 		}
 		else {
-			final PreInsertEvent event =
-					new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
+			final var event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
 			boolean veto = false;
 			for ( var listener : listenerGroup.listeners() ) {
 				veto |= listener.onPreInsert( event );
@@ -327,11 +334,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 *
 	 * @return The generated identifier
 	 */
+	@Nullable
 	public final Object getGeneratedId() {
 		return generatedId;
 	}
 
-	public void setGeneratedId(Object generatedId) {
+	public void setGeneratedId(@Nullable Object generatedId) {
 		this.generatedId = generatedId;
 	}
 
@@ -341,27 +349,33 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	@Override
+	@Nonnull
 	protected EntityKey getEntityKey() {
-		return entityKey != null ? entityKey : delayedEntityKey;
+		final var entityKey = this.entityKey == null ? delayedEntityKey : this.entityKey;
+		assert entityKey != null;
+		return entityKey;
 	}
 
 	@Override
+	@Nullable
 	public Object getRowId() {
 		return rowId;
 	}
 
-	public void setRowId(Object rowId) {
+	public void setRowId(@Nullable Object rowId) {
 		this.rowId = rowId;
 	}
 
-	public void setEntityKey(EntityKey entityKey) {
+	public void setEntityKey(@Nonnull EntityKey entityKey) {
 		this.entityKey = entityKey;
 	}
 
+	@Nonnull
 	private static DelayedPostInsertIdentifier generateDelayedPostInsertIdentifier() {
 		return new DelayedPostInsertIdentifier();
 	}
 
+	@Nonnull
 	protected EntityKey generateDelayedEntityKey() {
 		return getSession().generateEntityKey( getDelayedId(), getPersister() );
 	}

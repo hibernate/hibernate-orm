@@ -6,6 +6,7 @@ package org.hibernate.event.spi;
 
 import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
+import jakarta.annotation.Nonnull;
 
 /**
  * An event that occurs when a collection wants to be
@@ -16,7 +17,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 public class InitializeCollectionEvent extends AbstractCollectionEvent {
 
 	@Internal
-	public InitializeCollectionEvent(PersistentCollection<?> collection, EventSource source ) {
+	public InitializeCollectionEvent(@Nonnull PersistentCollection<?> collection, @Nonnull EventSource source ) {
 		super(
 				getLoadedCollectionPersister( collection, source ),
 				collection,

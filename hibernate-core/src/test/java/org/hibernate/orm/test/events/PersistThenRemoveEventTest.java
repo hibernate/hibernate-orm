@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.events;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -100,7 +101,7 @@ class PersistThenRemoveEventTest {
 		int count;
 
 		@Override
-		public void onPostInsert(PostInsertEvent event) {
+		public void onPostInsert(@Nonnull PostInsertEvent event) {
 			count++;
 		}
 
@@ -110,7 +111,7 @@ class PersistThenRemoveEventTest {
 		int count;
 
 		@Override
-		public void onPostDelete(PostDeleteEvent event) {
+		public void onPostDelete(@Nonnull PostDeleteEvent event) {
 			count++;
 		}
 

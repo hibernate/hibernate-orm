@@ -7,6 +7,8 @@ package org.hibernate.event.spi;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.io.Serializable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Base class for events which are generated from a {@linkplain org.hibernate.Session Session}
@@ -22,7 +24,7 @@ public abstract class AbstractSessionEvent implements Serializable {
 	 *
 	 * @param source The session event source.
 	 */
-	public AbstractSessionEvent(EventSource source) {
+	public AbstractSessionEvent(@Nullable EventSource source) {
 		this.source = source;
 	}
 
@@ -32,15 +34,24 @@ public abstract class AbstractSessionEvent implements Serializable {
 	 *
 	 * @return The session event source.
 	 */
+	@Nonnull
 	public final EventSource getSession() {
 		return getEventSource();
 	}
 
+	@Nonnull
 	public final EventSource getEventSource() {
+		if ( source == null ) {
+			throw new IllegalStateException( "EventSource not available" );
+		}
 		return source.asEventSource();
 	}
 
+	@Nonnull
 	public SessionFactoryImplementor getFactory() {
+		if ( source == null ) {
+			throw new IllegalStateException( "EventSource not available" );
+		}
 		return source.getFactory();
 	}
 }

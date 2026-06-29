@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the contract for handling of session dirty-check events.
@@ -17,6 +18,6 @@ public interface DirtyCheckEventListener {
 	 *
 	 * @param event The dirty-check event to be handled.
 	 */
-	void onDirtyCheck(DirtyCheckEvent event) throws HibernateException;
+	void onDirtyCheck(@Nonnull DirtyCheckEvent event) throws HibernateException;
 
 }

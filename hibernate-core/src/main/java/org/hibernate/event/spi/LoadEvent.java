@@ -8,6 +8,8 @@ import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  *  Defines an event class for the loading of an entity.
@@ -24,30 +26,30 @@ public class LoadEvent extends AbstractSessionEvent {
 	private Object result;
 	private Boolean readOnly;
 
-	public LoadEvent(Object entityId, Object instanceToLoad, EventSource source, Boolean readOnly) {
+	public LoadEvent(@Nonnull Object entityId, @Nullable Object instanceToLoad, @Nonnull EventSource source, @Nullable Boolean readOnly) {
 		this( entityId, null, instanceToLoad, LockMode.NONE.toLockOptions(), false, source, readOnly );
 	}
 
-	public LoadEvent(Object entityId, String entityClassName, LockMode lockMode, EventSource source, Boolean readOnly) {
+	public LoadEvent(@Nonnull Object entityId, @Nullable String entityClassName, @Nonnull LockMode lockMode, @Nonnull EventSource source, @Nullable Boolean readOnly) {
 		this( entityId, entityClassName, null, lockMode, false, source, readOnly );
 	}
 
-	public LoadEvent(Object entityId, String entityClassName, LockOptions lockOptions, EventSource source, Boolean readOnly) {
+	public LoadEvent(@Nonnull Object entityId, @Nullable String entityClassName, @Nonnull LockOptions lockOptions, @Nonnull EventSource source, @Nullable Boolean readOnly) {
 		this( entityId, entityClassName, null, lockOptions, false, source, readOnly );
 	}
 
-	public LoadEvent(Object entityId, String entityClassName, boolean isAssociationFetch, EventSource source, Boolean readOnly) {
+	public LoadEvent(@Nonnull Object entityId, @Nullable String entityClassName, boolean isAssociationFetch, @Nonnull EventSource source, @Nullable Boolean readOnly) {
 		this( entityId, entityClassName, null, LockOptions.NONE, isAssociationFetch, source, readOnly );
 	}
 
 	private LoadEvent(
-			Object entityId,
-			String entityClassName,
-			Object instanceToLoad,
-			LockMode lockMode,
+			@Nonnull Object entityId,
+			@Nullable String entityClassName,
+			@Nullable Object instanceToLoad,
+			@Nonnull LockMode lockMode,
 			boolean isAssociationFetch,
-			EventSource source,
-			Boolean readOnly) {
+			@Nonnull EventSource source,
+			@Nullable Boolean readOnly) {
 		this(
 				entityId,
 				entityClassName,
@@ -60,13 +62,13 @@ public class LoadEvent extends AbstractSessionEvent {
 	}
 
 	private LoadEvent(
-			Object entityId,
-			String entityClassName,
-			Object instanceToLoad,
-			LockOptions lockOptions,
+			@Nonnull Object entityId,
+			@Nullable String entityClassName,
+			@Nullable Object instanceToLoad,
+			@Nonnull LockOptions lockOptions,
 			boolean isAssociationFetch,
-			EventSource source,
-			Boolean readOnly) {
+			@Nonnull EventSource source,
+			@Nullable Boolean readOnly) {
 		super( source );
 		this.entityId = entityId;
 		this.entityClassName = entityClassName;
@@ -92,21 +94,23 @@ public class LoadEvent extends AbstractSessionEvent {
 		}
 	}
 
+	@Nonnull
 	public Object getEntityId() {
 		return entityId;
 	}
 
 	@Internal
-	public void setEntityId(Object entityId) {
+	public void setEntityId(@Nonnull Object entityId) {
 		this.entityId = entityId;
 	}
 
+	@Nullable
 	public String getEntityClassName() {
 		return entityClassName;
 	}
 
 	@Internal
-	public void setEntityClassName(String entityClassName) {
+	public void setEntityClassName(@Nullable String entityClassName) {
 		this.entityClassName = entityClassName;
 	}
 
@@ -119,38 +123,41 @@ public class LoadEvent extends AbstractSessionEvent {
 		isAssociationFetch = associationFetch;
 	}
 
+	@Nullable
 	public Object getInstanceToLoad() {
 		return instanceToLoad;
 	}
 
 	@Internal
-	public void setInstanceToLoad(Object instanceToLoad) {
+	public void setInstanceToLoad(@Nullable Object instanceToLoad) {
 		this.instanceToLoad = instanceToLoad;
 	}
 
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
 	@Internal
-	public void setLockOptions(LockOptions lockOptions) {
+	public void setLockOptions(@Nonnull LockOptions lockOptions) {
 		this.lockOptions = lockOptions;
 	}
 
+	@Nullable
 	public Object getResult() {
 		return result;
 	}
 
-	public void setResult(Object result) {
+	public void setResult(@Nullable Object result) {
 		this.result = result;
 	}
 
-	public Boolean getReadOnly() {
+	public @Nullable Boolean getReadOnly() {
 		return readOnly;
 	}
 
 	@Internal
-	public void setReadOnly(Boolean readOnly) {
+	public void setReadOnly(@Nullable Boolean readOnly) {
 		this.readOnly = readOnly;
 	}
 
@@ -158,7 +165,7 @@ public class LoadEvent extends AbstractSessionEvent {
 	 * @deprecated Use {@linkplain #getLockOptions()} instead.
 	 */
 	@Deprecated(since = "7.1")
-	public LockMode getLockMode() {
+	public @Nonnull LockMode getLockMode() {
 		return lockOptions.getLockMode();
 	}
 

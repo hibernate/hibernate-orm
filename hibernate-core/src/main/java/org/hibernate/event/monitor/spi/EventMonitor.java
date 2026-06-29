@@ -14,6 +14,8 @@ import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.JavaServiceLoadable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Contract implemented by services which collect, report, or monitor
@@ -35,171 +37,171 @@ import org.hibernate.service.JavaServiceLoadable;
 @JavaServiceLoadable
 @Incubating
 public interface EventMonitor {
-	DiagnosticEvent beginSessionOpenEvent();
+	@Nullable DiagnosticEvent beginSessionOpenEvent();
 
 	void completeSessionOpenEvent(
-			DiagnosticEvent sessionOpenEvent,
-			SharedSessionContractImplementor session);
+			@Nullable DiagnosticEvent sessionOpenEvent,
+			@Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginSessionClosedEvent();
+	@Nullable DiagnosticEvent beginSessionClosedEvent();
 
 	void completeSessionClosedEvent(
-			DiagnosticEvent sessionClosedEvent,
-			SharedSessionContractImplementor session);
+			@Nullable DiagnosticEvent sessionClosedEvent,
+			@Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginJdbcConnectionAcquisitionEvent();
+	@Nullable DiagnosticEvent beginJdbcConnectionAcquisitionEvent();
 
 	void completeJdbcConnectionAcquisitionEvent(
-			DiagnosticEvent jdbcConnectionAcquisitionEvent,
-			SharedSessionContractImplementor session,
-			Object tenantId);
+			@Nullable DiagnosticEvent jdbcConnectionAcquisitionEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object tenantId);
 
-	DiagnosticEvent beginJdbcConnectionReleaseEvent();
+	@Nullable DiagnosticEvent beginJdbcConnectionReleaseEvent();
 
 	void completeJdbcConnectionReleaseEvent(
-			DiagnosticEvent jdbcConnectionReleaseEvent,
-			SharedSessionContractImplementor session,
-			Object tenantId);
+			@Nullable DiagnosticEvent jdbcConnectionReleaseEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object tenantId);
 
-	DiagnosticEvent beginJdbcPreparedStatementCreationEvent();
+	@Nullable DiagnosticEvent beginJdbcPreparedStatementCreationEvent();
 
 	void completeJdbcPreparedStatementCreationEvent(
-			DiagnosticEvent jdbcPreparedStatementCreation,
-			String preparedStatementSql);
+			@Nullable DiagnosticEvent jdbcPreparedStatementCreation,
+			@Nonnull String preparedStatementSql);
 
-	DiagnosticEvent beginJdbcPreparedStatementExecutionEvent();
+	@Nullable DiagnosticEvent beginJdbcPreparedStatementExecutionEvent();
 
 	void completeJdbcPreparedStatementExecutionEvent(
-			DiagnosticEvent jdbcPreparedStatementExecutionEvent,
-			String preparedStatementSql);
+			@Nullable DiagnosticEvent jdbcPreparedStatementExecutionEvent,
+			@Nonnull String preparedStatementSql);
 
-	DiagnosticEvent beginJdbcBatchExecutionEvent();
+	@Nullable DiagnosticEvent beginJdbcBatchExecutionEvent();
 
 	void completeJdbcBatchExecutionEvent(
-			DiagnosticEvent jdbcBatchExecutionEvent,
-			String statementSql);
+			@Nullable DiagnosticEvent jdbcBatchExecutionEvent,
+			@Nonnull String statementSql);
 
-	DiagnosticEvent beginCachePutEvent();
+	@Nullable DiagnosticEvent beginCachePutEvent();
 
 	void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			Region region,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
 			boolean cacheContentChanged,
-			CacheActionDescription description);
+			@Nonnull CacheActionDescription description);
 
 	void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			CachedDomainDataAccess cachedDomainDataAccess,
-			EntityPersister persister,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
+			@Nonnull EntityPersister persister,
 			boolean cacheContentChanged,
-			CacheActionDescription description);
+			@Nonnull CacheActionDescription description);
 
 	void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			CachedDomainDataAccess cachedDomainDataAccess,
-			EntityPersister persister,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
+			@Nonnull EntityPersister persister,
 			boolean cacheContentChanged,
 			boolean isNatualId,
-			CacheActionDescription description);
+			@Nonnull CacheActionDescription description);
 
 	void completeCachePutEvent(
-			DiagnosticEvent cachePutEvent,
-			SharedSessionContractImplementor session,
-			CachedDomainDataAccess cachedDomainDataAccess,
-			CollectionPersister persister,
+			@Nullable DiagnosticEvent cachePutEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CachedDomainDataAccess cachedDomainDataAccess,
+			@Nonnull CollectionPersister persister,
 			boolean cacheContentChanged,
-			CacheActionDescription description);
+			@Nonnull CacheActionDescription description);
 
-	DiagnosticEvent beginCacheGetEvent();
+	@Nullable DiagnosticEvent beginCacheGetEvent();
 
 	void completeCacheGetEvent(
-			DiagnosticEvent cacheGetEvent,
-			SharedSessionContractImplementor session,
-			Region region,
+			@Nullable DiagnosticEvent cacheGetEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
 			boolean hit);
 
 	void completeCacheGetEvent(
-			DiagnosticEvent cacheGetEvent,
-			SharedSessionContractImplementor session,
-			Region region,
-			EntityPersister persister,
+			@Nullable DiagnosticEvent cacheGetEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
+			@Nonnull EntityPersister persister,
 			boolean isNaturalKey,
 			boolean hit);
 
 	void completeCacheGetEvent(
-			DiagnosticEvent cacheGetEvent,
-			SharedSessionContractImplementor session,
-			Region region,
-			CollectionPersister persister,
+			@Nullable DiagnosticEvent cacheGetEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Region region,
+			@Nonnull CollectionPersister persister,
 			boolean hit);
 
-	DiagnosticEvent beginFlushEvent();
+	@Nullable DiagnosticEvent beginFlushEvent();
 
 	void completeFlushEvent(
-			DiagnosticEvent flushEvent,
-			org.hibernate.event.spi.FlushEvent event);
+			@Nullable DiagnosticEvent flushEvent,
+			@Nonnull org.hibernate.event.spi.FlushEvent event);
 
 	void completeFlushEvent(
-			DiagnosticEvent flushEvent,
-			org.hibernate.event.spi.FlushEvent event,
+			@Nullable DiagnosticEvent flushEvent,
+			@Nonnull org.hibernate.event.spi.FlushEvent event,
 			boolean autoFlush);
 
-	DiagnosticEvent beginPartialFlushEvent();
+	@Nullable DiagnosticEvent beginPartialFlushEvent();
 
 	void completePartialFlushEvent(
-			DiagnosticEvent flushEvent,
-			AutoFlushEvent event);
+			@Nullable DiagnosticEvent flushEvent,
+			@Nonnull AutoFlushEvent event);
 
-	DiagnosticEvent beginDirtyCalculationEvent();
+	@Nullable DiagnosticEvent beginDirtyCalculationEvent();
 
 	void completeDirtyCalculationEvent(
-			DiagnosticEvent dirtyCalculationEvent,
-			SharedSessionContractImplementor session,
-			EntityPersister persister,
-			EntityEntry entry,
-			int[] dirtyProperties);
+			@Nullable DiagnosticEvent dirtyCalculationEvent,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull EntityPersister persister,
+			@Nonnull EntityEntry entry,
+			@Nullable int[] dirtyProperties);
 
-	DiagnosticEvent beginPrePartialFlush();
+	@Nullable DiagnosticEvent beginPrePartialFlush();
 
 	void completePrePartialFlush(
-			DiagnosticEvent prePartialFlush,
-			SharedSessionContractImplementor session
+			@Nullable DiagnosticEvent prePartialFlush,
+			@Nonnull SharedSessionContractImplementor session
 	);
 
-	DiagnosticEvent beginEntityInsertEvent();
+	@Nullable DiagnosticEvent beginEntityInsertEvent();
 
-	void completeEntityInsertEvent(DiagnosticEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
+	void completeEntityInsertEvent(@Nullable DiagnosticEvent event, @Nullable Object id, @Nonnull String entityName, boolean success, @Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginEntityUpdateEvent();
+	@Nullable DiagnosticEvent beginEntityUpdateEvent();
 
-	void completeEntityUpdateEvent(DiagnosticEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
+	void completeEntityUpdateEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String entityName, boolean success, @Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginEntityUpsertEvent();
+	@Nullable DiagnosticEvent beginEntityUpsertEvent();
 
-	void completeEntityUpsertEvent(DiagnosticEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
+	void completeEntityUpsertEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String entityName, boolean success, @Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginEntityDeleteEvent();
+	@Nullable DiagnosticEvent beginEntityDeleteEvent();
 
-	void completeEntityDeleteEvent(DiagnosticEvent event, Object id, String entityName, boolean success, SharedSessionContractImplementor session);
+	void completeEntityDeleteEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String entityName, boolean success, @Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginEntityLockEvent();
+	@Nullable DiagnosticEvent beginEntityLockEvent();
 
-	void completeEntityLockEvent(DiagnosticEvent event, Object id, String entityName, LockMode lockMode, boolean success, SharedSessionContractImplementor session);
+	void completeEntityLockEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String entityName, @Nonnull LockMode lockMode, boolean success, @Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginCollectionRecreateEvent();
+	@Nullable DiagnosticEvent beginCollectionRecreateEvent();
 
-	void completeCollectionRecreateEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session);
+	void completeCollectionRecreateEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String role, boolean success, @Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginCollectionUpdateEvent();
+	@Nullable DiagnosticEvent beginCollectionUpdateEvent();
 
-	void completeCollectionUpdateEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session);
+	void completeCollectionUpdateEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String role, boolean success, @Nonnull SharedSessionContractImplementor session);
 
-	DiagnosticEvent beginCollectionRemoveEvent();
+	@Nullable DiagnosticEvent beginCollectionRemoveEvent();
 
-	void completeCollectionRemoveEvent(DiagnosticEvent event, Object id, String role, boolean success, SharedSessionContractImplementor session);
+	void completeCollectionRemoveEvent(@Nullable DiagnosticEvent event, @Nonnull Object id, @Nonnull String role, boolean success, @Nonnull SharedSessionContractImplementor session);
 
 	enum CacheActionDescription {
 		ENTITY_INSERT( "Entity Insert" ),
@@ -215,16 +217,16 @@ public interface EventMonitor {
 
 		private final String text;
 
-		CacheActionDescription(String text) {
+		CacheActionDescription(@Nonnull String text) {
 			this.text = text;
 		}
 
 		@Override
-		public String toString() {
+		public @Nonnull String toString() {
 			return text;
 		}
 
-		public String getText() {
+		public @Nonnull String getText() {
 			return text;
 		}
 	}

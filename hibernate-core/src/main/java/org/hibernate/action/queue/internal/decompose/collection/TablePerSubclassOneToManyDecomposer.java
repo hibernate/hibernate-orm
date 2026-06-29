@@ -42,18 +42,17 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 		operationsBySubclass = IdentityMap.instantiateSequenced( count );
 
 		final var associatedEntityPersister = associatedType.getEntityPersister();
-		operationsBySubclass.put( associatedEntityPersister, buildJdbcOperations( associatedEntityPersister, factory ) );
+		operationsBySubclass.put( associatedEntityPersister, buildJdbcOperations( associatedEntityPersister ) );
 
 		associatedType.getSubMappingTypes().forEach( subclassMapping -> {
 			final var subclassPersister = subclassMapping.getEntityPersister();
-			operationsBySubclass.put( subclassPersister, buildJdbcOperations( subclassPersister, factory ) );
+			operationsBySubclass.put( subclassPersister, buildJdbcOperations( subclassPersister ) );
 		} );
 	}
 
 	private CollectionJdbcOperations buildJdbcOperations(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor factory) {
-		return buildJdbcOperations( concreteTableDescriptor( entityPersister ), factory );
+			EntityPersister entityPersister) {
+		return buildJdbcOperations( concreteTableDescriptor( entityPersister ) );
 	}
 
 	private TableDescriptor concreteTableDescriptor(EntityPersister subclassPersister) {
@@ -123,8 +122,10 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 		if ( jdbcOperations != null ) {
 			return jdbcOperations;
 		}
-		final var entityEntry = session.getPersistenceContextInternal().getEntry( element );
-		return operationsBySubclass.get( entityEntry.getPersister() );
+		else {
+			final var entityEntry = session.getPersistenceContextInternal().getEntry( element );
+			return operationsBySubclass.get( entityEntry.getPersister() );
+		}
 	}
 
 	@Override
@@ -138,7 +139,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		var postRemoveHandling = new PostCollectionRemoveHandling(
+		final var postRemoveHandling = new PostCollectionRemoveHandling(
 				persister,
 				action.getCollection(),
 				action.getAffectedOwner(),
@@ -153,34 +154,34 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 					ordinalBase * 1_000,
 					postRemoveHandling
 			) );
-			return;
 		}
-
-		var operations = new ArrayList<FlushOperation>();
-		operationsBySubclass.forEach( (entityPersister, jdbcOperations) -> {
-			operations.add( new FlushOperation(
-					jdbcOperations.tableDescriptor(),
+		else {
+			final var operations = new ArrayList<FlushOperation>();
+			operationsBySubclass.forEach( (entityPersister, jdbcOperations) -> {
+				operations.add( new FlushOperation(
+						jdbcOperations.tableDescriptor(),
 						// technically an UPDATE
 						MutationKind.UPDATE,
 						jdbcOperations.removeOperation(),
 						new RemoveBindPlan( action.getKey(), persister, mutationPlanContributor ),
 						ordinalBase * 1_000,
-					"RemoveAllRows(" + persister.getRolePath() + ")"
-			) );
-		} );
+						"RemoveAllRows(" + persister.getRolePath() + ")"
+				) );
+			} );
 
-		if ( !operations.isEmpty() ) {
-			// Attach post-execution callback to the last operation
-			operations.get( operations.size() - 1 ).setPostExecutionCallback( postRemoveHandling );
-			operations.forEach( operationConsumer );
-		}
-		else {
-			// Operations unexpectedly empty - create no-op to defer POST callback
-			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
-					persister.getCollectionTableDescriptor(),
-					ordinalBase * 1_000,
-					postRemoveHandling
-			) );
+			if ( !operations.isEmpty() ) {
+				// Attach post-execution callback to the last operation
+				operations.get( operations.size() - 1 ).setPostExecutionCallback( postRemoveHandling );
+				operations.forEach( operationConsumer );
+			}
+			else {
+				// Operations unexpectedly empty - create no-op to defer POST callback
+				operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
+						persister.getCollectionTableDescriptor(),
+						ordinalBase * 1_000,
+						postRemoveHandling
+				) );
+			}
 		}
 	}
 }

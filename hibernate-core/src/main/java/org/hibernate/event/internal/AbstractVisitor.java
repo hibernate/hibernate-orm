@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
@@ -14,6 +13,8 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Abstract superclass of algorithms that walk
@@ -27,7 +28,7 @@ public abstract class AbstractVisitor {
 
 	private final EventSource session;
 
-	AbstractVisitor(EventSource session) {
+	AbstractVisitor(@Nonnull EventSource session) {
 		this.session = session;
 	}
 
@@ -35,7 +36,7 @@ public abstract class AbstractVisitor {
 	 * Dispatch each property value to processValue().
 	 *
 	 */
-	void processValues(Object[] values, Type[] types) throws HibernateException {
+	void processValues(@Nonnull Object[] values, @Nonnull Type[] types) {
 		for ( int i=0; i<types.length; i++ ) {
 			if ( includeProperty(values, i) ) {
 				processValue( i, values, types );
@@ -47,7 +48,7 @@ public abstract class AbstractVisitor {
 	 * Dispatch each property value to processValue().
 	 *
 	 */
-	public void processEntityPropertyValues(Object[] values, Type[] types) throws HibernateException {
+	public void processEntityPropertyValues(@Nonnull Object[] values, @Nonnull Type[] types) {
 		for ( int i=0; i<types.length; i++ ) {
 			if ( includeEntityProperty(values, i) ) {
 				processValue( i, values, types );
@@ -55,15 +56,15 @@ public abstract class AbstractVisitor {
 		}
 	}
 
-	void processValue(int i, Object[] values, Type[] types) {
+	void processValue(int i, @Nonnull Object[] values, @Nonnull Type[] types) {
 		processValue( values[i], types[i] );
 	}
 
-	boolean includeEntityProperty(Object[] values, int i) {
+	boolean includeEntityProperty(@Nonnull Object[] values, int i) {
 		return includeProperty( values, i );
 	}
 
-	boolean includeProperty(Object[] values, int i) {
+	boolean includeProperty(@Nonnull Object[] values, int i) {
 		return values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY;
 	}
 
@@ -71,7 +72,8 @@ public abstract class AbstractVisitor {
 	 * Visit a component. Dispatch each property
 	 * to processValue().
 	 */
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	@Nullable
+	Object processComponent(@Nullable Object component, @Nonnull CompositeType componentType) {
 		if ( component != null ) {
 			processValues( componentType.getPropertyValues(component, session), componentType.getSubtypes() );
 		}
@@ -82,7 +84,8 @@ public abstract class AbstractVisitor {
 	 * Visit a property value. Dispatch to the
 	 * correct handler for the property type.
 	 */
-	final Object processValue(Object value, Type type) throws HibernateException {
+	@Nullable
+	final Object processValue(@Nullable Object value, @Nonnull Type type) {
 		if ( type instanceof CollectionType collectionType ) {
 			//even process null collections
 			return processCollection( value, collectionType );
@@ -105,7 +108,7 @@ public abstract class AbstractVisitor {
 	 * Walk the tree starting from the given entity.
 	 *
 	 */
-	public void process(Object object, EntityPersister persister) throws HibernateException {
+	public void process(@Nonnull Object object, @Nonnull EntityPersister persister) {
 		processEntityPropertyValues( persister.getValues( object ), persister.getPropertyTypes() );
 	}
 
@@ -113,7 +116,7 @@ public abstract class AbstractVisitor {
 	 * Visit a collection. Default superclass
 	 * implementation is a no-op.
 	 */
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	@Nullable Object processCollection(@Nullable Object collection, @Nonnull CollectionType type) {
 		return null;
 	}
 
@@ -122,11 +125,11 @@ public abstract class AbstractVisitor {
 	 * entity. Default superclass implementation is
 	 * a no-op.
 	 */
-	Object processEntity(Object value, EntityType entityType) throws HibernateException {
+	@Nullable Object processEntity(@Nullable Object value, @Nonnull EntityType entityType) {
 		return null;
 	}
 
-	protected final EventSource getSession() {
+	protected final @Nonnull EventSource getSession() {
 		return session;
 	}
 }

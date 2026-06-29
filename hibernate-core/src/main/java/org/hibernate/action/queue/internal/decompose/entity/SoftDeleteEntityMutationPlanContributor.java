@@ -54,25 +54,21 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 			Consumer<FlushOperation> operationConsumer) {
 		final Object identifier = context.identifier();
 		final Object version = context.version();
-
 		final var mutation = softDeleteOperation.createMutationOperation( null, sessionFactory );
 		final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
 		final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-
-		final EntitySoftDeleteBindPlan bindPlan = new EntitySoftDeleteBindPlan(
-				tableDescriptor,
-				entityPersister,
-				identifier,
-				version,
-				null,
-				OptimisticLockStyle.NONE
-		);
-
-		final FlushOperation operation = new FlushOperation(
+		final var operation = new FlushOperation(
 				tableDescriptor,
 				MutationKind.UPDATE,
 				mutation,
-				bindPlan,
+				new EntitySoftDeleteBindPlan(
+						tableDescriptor,
+						entityPersister,
+						identifier,
+						version,
+						null,
+						OptimisticLockStyle.NONE
+				),
 				context.ordinalBase() * 1_000,
 				"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
 		);
@@ -83,11 +79,11 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 	}
 
 	private TableUpdate<?> generateSoftDeleteOperation() {
-		final SoftDeleteMapping softDeleteMapping = entityPersister.getSoftDeleteMapping();
+		final var softDeleteMapping = entityPersister.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
 
-		final EntityTableDescriptor rootTableDescriptor = entityPersister.getIdentifierTableDescriptor();
-		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
+		final var rootTableDescriptor = entityPersister.getIdentifierTableDescriptor();
+		final var tableMapping = new TableDescriptorAsTableMapping(
 				rootTableDescriptor,
 				0,
 				true,

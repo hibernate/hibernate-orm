@@ -9,6 +9,8 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Event class for {@link org.hibernate.Session#refresh}.
@@ -29,7 +31,7 @@ public class RefreshEvent extends AbstractSessionEvent {
 			Locking.FollowOn.ALLOW
 	);
 
-	public RefreshEvent(Object object, EventSource source) {
+	public RefreshEvent(@Nonnull Object object, @Nonnull EventSource source) {
 		super(source);
 		if (object == null) {
 			throw new IllegalArgumentException("Entity may not be null");
@@ -37,12 +39,12 @@ public class RefreshEvent extends AbstractSessionEvent {
 		this.object = object;
 	}
 
-	public RefreshEvent(String entityName, Object object, EventSource source){
+	public RefreshEvent(@Nullable String entityName, @Nonnull Object object, @Nonnull EventSource source){
 		this(object, source);
 		this.entityName = entityName;
 	}
 
-	public RefreshEvent(Object object, LockMode lockMode, EventSource source) {
+	public RefreshEvent(@Nonnull Object object, @Nonnull LockMode lockMode, @Nonnull EventSource source) {
 		this(object, source);
 		if (lockMode == null) {
 			throw new IllegalArgumentException("LockMode may not be null");
@@ -50,7 +52,7 @@ public class RefreshEvent extends AbstractSessionEvent {
 		this.lockOptions.setLockMode(lockMode);
 	}
 
-	public RefreshEvent(Object object, LockOptions lockOptions, EventSource source) {
+	public RefreshEvent(@Nonnull Object object, @Nonnull LockOptions lockOptions, @Nonnull EventSource source) {
 		this(object, source);
 		if (lockOptions == null) {
 			throw new IllegalArgumentException("LockMode may not be null");
@@ -62,24 +64,27 @@ public class RefreshEvent extends AbstractSessionEvent {
 	 * @deprecated use {@link #RefreshEvent(Object, LockOptions, EventSource)} instead.
 	 */
 	@Deprecated(since = "7.0")
-	public RefreshEvent(String entityName, Object object, LockOptions lockOptions, EventSource source){
+	public RefreshEvent(@Nullable String entityName, @Nonnull Object object, @Nonnull LockOptions lockOptions, @Nonnull EventSource source){
 		this(object,lockOptions,source);
 		this.entityName = entityName;
 	}
 
+	@Nonnull
 	public Object getObject() {
 		return object;
 	}
 
+	@Nonnull
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 
+	@Nullable
 	public String getEntityName() {
 		return entityName;
 	}
 
-	public void setEntityName(String entityName) {
+	public void setEntityName(@Nullable String entityName) {
 		this.entityName = entityName;
 	}
 
@@ -87,6 +92,7 @@ public class RefreshEvent extends AbstractSessionEvent {
 	 * @deprecated Use {@linkplain #getLockOptions()} instead.
 	 */
 	@Deprecated(since = "7.1")
+	@Nonnull
 	public LockMode getLockMode() {
 		return lockOptions.getLockMode();
 	}

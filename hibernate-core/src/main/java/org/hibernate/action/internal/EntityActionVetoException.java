@@ -3,6 +3,9 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
+
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.HibernateException;
 
 /**
@@ -15,16 +18,22 @@ public class EntityActionVetoException extends HibernateException {
 	private final EntityAction entityAction;
 
 	/**
-	 * Constructs a EntityActionVetoException
+	 * Constructs an {@code EntityActionVetoException}
 	 *
 	 * @param message Message explaining the exception condition
-	 * @param entityAction The {@link EntityAction} was vetoed that was vetoed.
+	 * @param entityAction The {@link EntityAction} was vetoed that was vetoed
 	 */
-	public EntityActionVetoException(String message, EntityAction entityAction) {
+	public EntityActionVetoException(@Nonnull String message, @Nonnull EntityAction entityAction) {
 		super( message );
 		this.entityAction = entityAction;
 	}
 
+	public EntityActionVetoException(@Nonnull EntityAction entityAction) {
+		super( "Action was vetoed: " + entityAction );
+		this.entityAction = entityAction;
+	}
+
+	@Nonnull
 	public EntityAction getEntityAction() {
 		return entityAction;
 	}

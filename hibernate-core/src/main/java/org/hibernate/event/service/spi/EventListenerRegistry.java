@@ -6,6 +6,7 @@ package org.hibernate.event.service.spi;
 
 import org.hibernate.event.spi.EventType;
 import org.hibernate.service.Service;
+import jakarta.annotation.Nonnull;
 
 /**
  * Service for accessing each {@link EventListenerGroup} by {@link EventType},
@@ -17,16 +18,17 @@ import org.hibernate.service.Service;
 @SuppressWarnings("unchecked") // heap pollution due to varargs
 public interface EventListenerRegistry extends Service {
 
-	<T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType);
+	@Nonnull
+	<T> EventListenerGroup<T> getEventListenerGroup(@Nonnull EventType<T> eventType);
 
-	void addDuplicationStrategy(DuplicationStrategy strategy);
+	void addDuplicationStrategy(@Nonnull DuplicationStrategy strategy);
 
-	<T> void setListeners(EventType<T> type, Class<? extends T>... listeners);
-	<T> void setListeners(EventType<T> type, T... listeners);
+	<T> void setListeners(@Nonnull EventType<T> type, @Nonnull Class<? extends T>... listeners);
+	<T> void setListeners(@Nonnull EventType<T> type, @Nonnull T... listeners);
 
-	<T> void appendListeners(EventType<T> type, Class<? extends T>... listeners);
-	<T> void appendListeners(EventType<T> type, T... listeners);
+	<T> void appendListeners(@Nonnull EventType<T> type, @Nonnull Class<? extends T>... listeners);
+	<T> void appendListeners(@Nonnull EventType<T> type, @Nonnull T... listeners);
 
-	<T> void prependListeners(EventType<T> type, Class<? extends T>... listeners);
-	<T> void prependListeners(EventType<T> type, T... listeners);
+	<T> void prependListeners(@Nonnull EventType<T> type, @Nonnull Class<? extends T>... listeners);
+	<T> void prependListeners(@Nonnull EventType<T> type, @Nonnull T... listeners);
 }

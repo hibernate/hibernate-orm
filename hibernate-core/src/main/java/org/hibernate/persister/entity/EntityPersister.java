@@ -864,7 +864,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean canWriteToCache();
 
 	/**
-	 * Does this class have a cache.
+	 * Does this class have a cache?
 	 *
 	 * @deprecated Use {@link #canReadFromCache()} and/or {@link #canWriteToCache()}
 	 *             depending on need
@@ -881,7 +881,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * Get the cache structure
 	 */
-	@Nullable
+	@Nonnull
 	CacheEntryStructure getCacheEntryStructure();
 
 	@Nonnull
@@ -1196,7 +1196,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @return The instantiated entity.
 	 */
-	Object instantiate(Object id, SharedSessionContractImplementor session);
+	@Nonnull
+	Object instantiate(@Nullable Object id, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Is the given object an instance of this entity?

@@ -8,6 +8,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.io.Serializable;
+import jakarta.annotation.Nonnull;
 
 /**
  * Base class for events which are generated from a {@link org.hibernate.Session}
@@ -18,14 +19,16 @@ import java.io.Serializable;
 public abstract class AbstractEvent implements Serializable {
 	protected final SharedSessionContractImplementor source;
 
-	public AbstractEvent(SharedSessionContractImplementor source) {
+	public AbstractEvent(@Nonnull SharedSessionContractImplementor source) {
 		this.source = source;
 	}
 
+	@Nonnull
 	public SharedSessionContractImplementor getSession() {
 		return source;
 	}
 
+	@Nonnull
 	public SessionFactoryImplementor getFactory() {
 		return source.getFactory();
 	}

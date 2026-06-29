@@ -88,7 +88,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		final boolean[] inclusions = entityPersister.isDynamicInsert()
 				? getPropertiesToInsert( context.state() )
 				: entityPersister.getPropertyInsertability();
-		final TableInsert insert = entityPersister.isDynamicInsert()
+		final var insert = entityPersister.isDynamicInsert()
 				? buildHistoryInsert( inclusions, context.entity(), context.session() )
 				: staticHistoryInsert;
 
@@ -158,37 +158,33 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		final int[] dirtyFields = context.action().getDirtyFields();
-		if ( dirtyFields == null || dirtyFields.length == 0 ) {
-			return;
+		if ( dirtyFields != null && dirtyFields.length != 0 ) {
+			final var details = buildHistoryExcludedUpdate(
+					context.entity(),
+					context.rowId(),
+					dirtyFields,
+					context.session()
+			);
+			if ( details != null ) {
+				operationConsumer.accept( new FlushOperation(
+						historyTableDescriptor,
+						MutationKind.UPDATE,
+						details.operation.createMutationOperation( null, sessionFactory ),
+						new HistoryExcludedUpdateBindPlan(
+								context.entity(),
+								context.identifier(),
+								context.rowId(),
+								context.state(),
+								context.previousState() == null ? context.state() : context.previousState(),
+								context.previousVersion(),
+								details.attributeIndexes,
+								details.applyVersionRestriction
+						),
+						context.ordinalBase() * 1_000 + 500,
+						"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-excluded)"
+				) );
+			}
 		}
-
-		final HistoryExcludedUpdateDetails details = buildHistoryExcludedUpdate(
-				context.entity(),
-				context.rowId(),
-				dirtyFields,
-				context.session()
-		);
-		if ( details == null ) {
-			return;
-		}
-
-		operationConsumer.accept( new FlushOperation(
-				historyTableDescriptor,
-				MutationKind.UPDATE,
-				details.operation.createMutationOperation( null, sessionFactory ),
-				new HistoryExcludedUpdateBindPlan(
-						context.entity(),
-						context.identifier(),
-						context.rowId(),
-						context.state(),
-						context.previousState() == null ? context.state() : context.previousState(),
-						context.previousVersion(),
-						details.attributeIndexes,
-						details.applyVersionRestriction
-				),
-				context.ordinalBase() * 1_000 + 500,
-				"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-excluded)"
-		) );
 	}
 
 	private FlushOperation createHistoryEndOperation(

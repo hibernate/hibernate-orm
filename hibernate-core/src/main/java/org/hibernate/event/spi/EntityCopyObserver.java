@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
+import jakarta.annotation.Nonnull;
+
 
 /**
  * An observer for detection of multiple entity representations for a persistent entity being merged.
@@ -21,14 +23,14 @@ public interface EntityCopyObserver {
 	 * @param mergeEntity2 A different managed or detached entity being merged; must be non-null.
 	 * @param session The session.
 	 */
-	void entityCopyDetected(Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource session);
+	void entityCopyDetected(@Nonnull Object managedEntity, @Nonnull Object mergeEntity1, @Nonnull Object mergeEntity2, @Nonnull EventSource session);
 
 	/**
 	 * Called when the toplevel merge operation is complete.
 	 *
 	 * @param session The session
 	 */
-	void topLevelMergeComplete(EventSource session);
+	void topLevelMergeComplete(@Nonnull EventSource session);
 
 	/**
 	 * Called to clear any data stored in this {@code EntityCopyObserver}.

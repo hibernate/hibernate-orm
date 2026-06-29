@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import jakarta.annotation.Nonnull;
 
 /**
  * Composite for the things related to Hibernate's event system.
@@ -34,11 +35,11 @@ public class EventEngine {
 	private final EventListenerRegistry listenerRegistry;
 
 	@Deprecated(since = "8.0", forRemoval = true)
-	public EventEngine(MetadataImplementor mappings, SessionFactoryImplementor sessionFactory) {
+	public EventEngine(@Nonnull MetadataImplementor mappings, @Nonnull SessionFactoryImplementor sessionFactory) {
 		this( sessionFactory.getSessionFactoryOptions(), sessionFactory.getServiceRegistry() );
 	}
 
-	public EventEngine(SessionFactoryOptions options, ServiceRegistry registry) {
+	public EventEngine(@Nonnull SessionFactoryOptions options, @Nonnull ServiceRegistry registry) {
 		final var listenerRegistryBuilder =
 				new EventListenerRegistryImpl.Builder( options.isJpaBootstrap() );
 		final Map<String,EventType<?>> eventTypes = new HashMap<>();
@@ -49,8 +50,8 @@ public class EventEngine {
 	}
 
 	private static void callContributors(
-			ServiceRegistry serviceRegistry,
-			EventEngineContributions contributionManager) {
+			@Nonnull ServiceRegistry serviceRegistry,
+			@Nonnull EventEngineContributions contributionManager) {
 		final var discoveredContributors =
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( EventEngineContributor.class );
@@ -61,15 +62,18 @@ public class EventEngine {
 		}
 	}
 
+	@Nonnull
 	public Collection<EventType<?>> getRegisteredEventTypes() {
 		return registeredEventTypes.values();
 	}
 
-	public <T> EventType<T> findRegisteredEventType(String name) {
+	@Nonnull
+	public <T> EventType<T> findRegisteredEventType(@Nonnull String name) {
 		//noinspection unchecked
 		return (EventType<T>) registeredEventTypes.get( name );
 	}
 
+	@Nonnull
 	public EventListenerRegistry getListenerRegistry() {
 		return listenerRegistry;
 	}
@@ -86,19 +90,22 @@ public class EventEngine {
 			implements EventEngineContributions {
 
 		@Override
-		public <T> EventType<T> findEventType(String name) {
+		@Nonnull
+		public <T> EventType<T> findEventType(@Nonnull String name) {
 			//noinspection unchecked
 			return (EventType<T>) eventTypes.get( name );
 		}
 
 		@Override
-		public <T> EventType<T> contributeEventType(String name, Class<T> listenerRole) {
+		@Nonnull
+		public <T> EventType<T> contributeEventType(@Nonnull String name, @Nonnull Class<T> listenerRole) {
 			final var eventType = registerEventType( name, listenerRole );
 			listenerRegistryBuilder.prepareListeners( eventType );
 			return eventType;
 		}
 
-		private <T> EventType<T> registerEventType(String name, Class<T> listenerRole) {
+		@Nonnull
+		private <T> EventType<T> registerEventType(@Nonnull String name, @Nonnull Class<T> listenerRole) {
 			if ( name == null ) {
 				throw new HibernateException( "Custom event-type name must be non-null." );
 			}
@@ -120,8 +127,9 @@ public class EventEngine {
 		}
 
 		@Override
+		@Nonnull
 		@SafeVarargs
-		public final <T> EventType<T> contributeEventType(String name, Class<T> listenerRole, T... defaultListeners) {
+		public final <T> EventType<T> contributeEventType(@Nonnull String name, @Nonnull Class<T> listenerRole, @Nonnull T... defaultListeners) {
 			final var eventType = contributeEventType( name, listenerRole );
 			if ( defaultListeners != null ) {
 				listenerRegistryBuilder.getListenerGroup( eventType ).appendListeners( defaultListeners );
@@ -130,7 +138,7 @@ public class EventEngine {
 		}
 
 		@Override
-		public <T> void configureListeners(EventType<T> eventType, Consumer<EventListenerGroup<T>> action) {
+		public <T> void configureListeners(@Nonnull EventType<T> eventType, @Nonnull Consumer<EventListenerGroup<T>> action) {
 			if ( !eventTypes.containsValue( eventType ) ) {
 				throw new HibernateException( "EventType [" + eventType + "] not registered" );
 			}

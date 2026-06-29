@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -60,7 +61,7 @@ public class AggregatedCollectionEventListener
 	}
 
 	@Override
-	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException {
+	public void onInitializeCollection(@Nonnull InitializeCollectionEvent event) throws HibernateException {
 		addEvent( event );
 	}
 
@@ -73,12 +74,12 @@ public class AggregatedCollectionEventListener
 	// recreate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void onPreRecreateCollection(PreCollectionRecreateEvent event) {
+	public void onPreRecreateCollection(@Nonnull PreCollectionRecreateEvent event) {
 		addEvent( event );
 	}
 
 	@Override
-	public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
+	public void onPostRecreateCollection(@Nonnull PostCollectionRecreateEvent event) {
 		addEvent( event );
 	}
 
@@ -86,12 +87,12 @@ public class AggregatedCollectionEventListener
 	// remove ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
+	public void onPreRemoveCollection(@Nonnull PreCollectionRemoveEvent event) {
 		addEvent( event );
 	}
 
 	@Override
-	public void onPostRemoveCollection(PostCollectionRemoveEvent event) {
+	public void onPostRemoveCollection(@Nonnull PostCollectionRemoveEvent event) {
 		addEvent( event );
 	}
 
@@ -99,12 +100,12 @@ public class AggregatedCollectionEventListener
 	// update ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+	public void onPreUpdateCollection(@Nonnull PreCollectionUpdateEvent event) {
 		addEvent( event );
 	}
 
 	@Override
-	public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
+	public void onPostUpdateCollection(@Nonnull PostCollectionUpdateEvent event) {
 		addEvent( event );
 	}
 

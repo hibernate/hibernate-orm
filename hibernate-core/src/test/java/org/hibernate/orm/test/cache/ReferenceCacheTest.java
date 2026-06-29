@@ -42,11 +42,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ReferenceCacheTest {
 
 	@Test
-	public void testUseOfDirectReferencesInCache(SessionFactoryScope scope) throws Exception {
+	public void testUseOfDirectReferencesInCache(SessionFactoryScope scope) {
 		EntityPersister persister = scope.getSessionFactory().getMappingMetamodel()
 				.getEntityDescriptor( MyReferenceData.class );
 		assertFalse( persister.isMutable() );
-		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
+		assertTrue( persister.buildCacheEntry( new Object(), new Object[0], null, null ).isReferenceEntry() );
 		assertFalse( persister.hasProxy() );
 
 		final MyReferenceData myReferenceData = new MyReferenceData( 1, "first item", "abc" );

@@ -4,8 +4,8 @@
  */
 package org.hibernate.event.internal;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
@@ -14,6 +14,7 @@ import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * Determines if the current session holds modified state which
@@ -34,7 +35,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 
 	@Override
-	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
+	public void onDirtyCheck(@Nonnull DirtyCheckEvent event) {
 		final var session = event.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
@@ -57,7 +58,7 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 		}
 	}
 
-	private static boolean isEntityDirty(EntityHolder holder, EventSource session) {
+	private static boolean isEntityDirty(@Nonnull EntityHolder holder, @Nonnull EventSource session) {
 		final var entityEntry = holder.getEntityEntry();
 		if ( entityEntry == null ) {
 			// holders with no entity entry yet cannot contain dirty entities
@@ -67,12 +68,19 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 		return switch ( status ) {
 			case GONE, READ_ONLY -> false;
 			case DELETED -> true;
-			case MANAGED -> isManagedEntityDirty( holder.getEntity(), entityEntry, session );
+			case MANAGED -> {
+				final Object entity = holder.getEntity();
+				assert entity != null;
+				yield isManagedEntityDirty( entity, entityEntry, session );
+			}
 			case SAVING, LOADING -> throw new AssertionFailure( "Unexpected status: " + status );
 		};
 	}
 
-	private static boolean isManagedEntityDirty(Object entity, EntityEntry entityEntry, EventSource session) {
+	private static boolean isManagedEntityDirty(
+			@Nonnull Object entity,
+			@Nonnull EntityEntry entityEntry,
+			@Nonnull EventSource session) {
 		if ( entityEntry.requiresDirtyCheck( entity ) ) { // takes into account CustomEntityDirtinessStrategy
 			final var persister = entityEntry.getPersister();
 			final var propertyValues =
@@ -88,7 +96,9 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 		}
 	}
 
-	private static boolean isCollectionDirty(PersistentCollection<?> collection, CollectionPersister loadedPersister) {
+	private static boolean isCollectionDirty(
+			@Nonnull PersistentCollection<?> collection,
+			@Nullable CollectionPersister loadedPersister) {
 		return collection.isDirty()
 			|| collection.wasInitialized()
 				&& loadedPersister != null

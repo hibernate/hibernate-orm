@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -46,12 +48,14 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @param session - the session
 	 */
 	protected AbstractEntityInsertAction(
-			Object id,
-			Object[] state,
-			Object instance,
-			EntityPersister persister,
-			EventSource session) {
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull Object instance,
+			@Nonnull EntityPersister persister,
+			@Nonnull EventSource session) {
 		super( session, id, instance, persister );
+		assert state != null;
+		assert instance != null;
 		this.state = state;
 		this.isExecuted = false;
 		this.areTransientReferencesNullified = false;
@@ -71,11 +75,20 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *
 	 * @see #nullifyTransientReferencesIfNotAlready
 	 */
+	@Nonnull
 	public Object[] getState() {
 		return state;
 	}
 
-	public void executePreInsertCallbacks(SharedSessionContractImplementor session) {
+	@Override
+	@Nonnull
+	public Object getInstance() {
+		final Object instance = super.getInstance();
+		assert instance != null;
+		return instance;
+	}
+
+	public void executePreInsertCallbacks(@Nonnull SharedSessionContractImplementor session) {
 		final var callbacks = getPersister().getEntityCallbacks();
 		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_INSERT )
 				&& session.callEntityLifecycleCallback( () -> callbacks.preInsert( getInstance() ) ) ) {
@@ -83,7 +96,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		}
 	}
 
-	private void copyStateFromEntity(SharedSessionContractImplementor session) {
+	private void copyStateFromEntity(@Nonnull SharedSessionContractImplementor session) {
 		final var persister = getPersister();
 		final Object[] currentState = persister.getValues( getInstance() );
 		System.arraycopy( currentState, 0, state, 0, state.length );
@@ -111,7 +124,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * @return the transient unsaved entity dependencies that are non-nullable,
 	 *         or null if there are none.
 	 */
-	public NonNullableTransientDependencies findNonNullableTransientEntities() {
+	public @Nullable NonNullableTransientDependencies findNonNullableTransientEntities() {
 		return ForeignKeys.findNonNullableTransientEntities(
 				getPersister().getEntityName(),
 				getInstance(),
@@ -128,8 +141,8 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * action is executed, whichever is first.
 	 * <p>
 	 * References will only be nullified the first time this method is
-	 * called for a this object, so it can safely be called both when
-	 * the entity is made "managed" and when this action is executed.
+	 * called for this object, so it can safely be called both when the
+	 * entity is made "managed" and when this action is executed.
 	 *
 	 * @see #makeEntityManaged()
 	 */
@@ -153,9 +166,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		final Object[] state = getState();
 		final Object version = getVersion( state, persister );
 		final var persistenceContext = getSession().getPersistenceContextInternal();
-		final var entityHolder = persistenceContext.addEntityHolder( key, getInstance() );
+		final Object instance = getInstance();
+		final var entityHolder = persistenceContext.addEntityHolder( key, instance );
 		final var entityEntry = persistenceContext.addEntry(
-				getInstance(),
+				instance,
 				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
 				state,
 				getRowId(),
@@ -171,7 +185,9 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		}
 	}
 
-	public void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
+	public void addCollectionsByKeyToPersistenceContext(
+			@Nonnull PersistenceContext persistenceContext,
+			@Nonnull Object[] objects) {
 		for ( int i = 0; i < objects.length; i++ ) {
 			final var attributeMapping = getPersister().getAttributeMapping( i );
 			if ( attributeMapping.isEmbeddedAttributeMapping() ) {
@@ -192,9 +208,9 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	}
 
 	private void visitEmbeddedAttributeMapping(
-			EmbeddedAttributeMapping attributeMapping,
-			Object object,
-			PersistenceContext persistenceContext) {
+			@Nonnull EmbeddedAttributeMapping attributeMapping,
+			@Nullable Object object,
+			@Nonnull PersistenceContext persistenceContext) {
 		if ( object != null ) {
 			final var descriptor = attributeMapping.getEmbeddableTypeDescriptor();
 			final var concreteEmbeddableType =
@@ -223,15 +239,16 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	}
 
 	private void addCollectionKey(
-			PluralAttributeMapping pluralAttributeMapping,
-			Object object,
-			PersistenceContext persistenceContext) {
+			@Nonnull PluralAttributeMapping pluralAttributeMapping,
+			@Nullable Object object,
+			@Nonnull PersistenceContext persistenceContext) {
 		if ( object instanceof PersistentCollection ) {
 			final var collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
+			final Object instance = getInstance();
 			final Object key = AbstractEntityPersister.getCollectionKey(
 					collectionPersister,
-					getInstance(),
-					persistenceContext.getEntry( getInstance() ),
+					instance,
+					persistenceContext.getEntry( instance ),
 					getSession()
 			);
 			if ( key != null ) {
@@ -252,16 +269,17 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * Returns the {@link EntityKey}.
 	 * @return the {@link EntityKey}.
 	 */
-	protected abstract EntityKey getEntityKey();
+	protected abstract @Nonnull EntityKey getEntityKey();
 
+	@Nullable
 	protected abstract Object getRowId();
 
-	private NaturalIdResolutions getNaturalIdResolutions() {
+	private @Nonnull NaturalIdResolutions getNaturalIdResolutions() {
 		return getSession().getPersistenceContextInternal().getNaturalIdResolutions();
 	}
 
 	@Override
-	public void afterDeserialize(EventSource session) {
+	public void afterDeserialize(@Nullable EventSource session) {
 		super.afterDeserialize( session );
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
 		// guard against NullPointerException
@@ -292,7 +310,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *
 	 * @param generatedId The generated entity identifier
 	 */
-	public void handleNaturalIdPostSaveNotifications(Object generatedId) {
+	public void handleNaturalIdPostSaveNotifications(@Nullable Object generatedId) {
 		final var persister = getPersister();
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {

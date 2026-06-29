@@ -7,6 +7,7 @@ package org.hibernate.event.spi;
 import java.util.function.Consumer;
 
 import org.hibernate.event.service.spi.EventListenerGroup;
+import jakarta.annotation.Nonnull;
 
 /**
  * Callback for {@link EventEngineContributor}
@@ -17,7 +18,8 @@ public interface EventEngineContributions {
 	/**
 	 * Return the EventType by name, if one
 	 */
-	<T> EventType<T> findEventType(String name);
+	@Nonnull
+	<T> EventType<T> findEventType(@Nonnull String name);
 
 	/**
 	 * Register a custom event type.
@@ -26,15 +28,17 @@ public interface EventEngineContributions {
 	 * the `EventType#ordinal` property.  All registered types must be contiguous, so we handle
 	 * the ordinality behind the scenes
 	 */
-	<T> EventType<T> contributeEventType(String name, Class<T> listenerRole);
+	@Nonnull
+	<T> EventType<T> contributeEventType(@Nonnull String name, @Nonnull Class<T> listenerRole);
 
 	/**
 	 * Register a custom event type with a default listener.
 	 */
-	<T> EventType<T> contributeEventType(String name, Class<T> listenerRole, T... defaultListener);
+	@Nonnull
+	<T> EventType<T> contributeEventType(@Nonnull String name, @Nonnull Class<T> listenerRole, @Nonnull T... defaultListener);
 
 	/**
 	 * Perform an action against the listener group for the specified event-type
 	 */
-	<T> void configureListeners(EventType<T> eventType, Consumer<EventListenerGroup<T>> action);
+	<T> void configureListeners(@Nonnull EventType<T> eventType, @Nonnull Consumer<EventListenerGroup<T>> action);
 }

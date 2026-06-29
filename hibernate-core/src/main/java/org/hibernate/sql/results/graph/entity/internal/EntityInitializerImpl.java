@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.EntityFilterException;
@@ -78,6 +79,7 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
@@ -1121,10 +1123,6 @@ public class EntityInitializerImpl
 						assert proxy != instance;
 						instance = resolveEntityInstance( data );
 						data.entityKey = entityKey;
-						if ( proxy != null ) {
-							castNonNull( extractLazyInitializer( proxy ) )
-									.setImplementation( instance );
-						}
 					}
 					else if ( entity != instance ) {
 						// The instance contained in the parent entity is different from the managed persistent instance
@@ -1156,7 +1154,6 @@ public class EntityInitializerImpl
 				final Object proxy = data.entityHolder.getProxy();
 				if ( proxy == instance ) {
 					data.entityInstanceForNotify = resolveEntityInstance( data );
-					lazyInitializer.setImplementation( data.entityInstanceForNotify );
 				}
 				else {
 					resolveEntity( data, proxy );
@@ -1238,10 +1235,6 @@ public class EntityInitializerImpl
 		final Object entity = data.entityHolder.getEntity();
 		if ( entity == null ) {
 			data.entityInstanceForNotify = resolveEntityInstance( data );
-			if ( proxy != null ) {
-				castNonNull( extractLazyInitializer( proxy ) )
-						.setImplementation( data.entityInstanceForNotify );
-			}
 			data.setState( State.RESOLVED );
 		}
 		else {
@@ -1342,7 +1335,6 @@ public class EntityInitializerImpl
 					final var lazyInitializer = extractLazyInitializer( proxy );
 					assert lazyInitializer != null;
 					data.entityInstanceForNotify = resolveEntityInstance2( data );
-					lazyInitializer.setImplementation( data.entityInstanceForNotify );
 				}
 			}
 		}
@@ -1805,16 +1797,13 @@ public class EntityInitializerImpl
 			PersistenceContext persistenceContext,
 			Object[] resolvedEntityState,
 			Object version) {
-		if ( data.concreteDescriptor.canWriteToCache()
-				// No need to put into the entity cache if this is coming from the query cache already
-				&& !data.getRowProcessingState().isQueryCacheHit()
+		// No need to put into the entity cache if this is coming from the query cache already.
+		// Don't cache temporal snapshots in the 2LC.
+		if ( !data.getRowProcessingState().isQueryCacheHit()
 				&& isCachePutEnabled( session )
-				// Don't cache temporal snapshots in the 2LC
 				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {
-			final var cacheAccess = data.concreteDescriptor.getCacheAccessStrategy();
-			if ( cacheAccess != null  ) {
-				putInCache( data, session, persistenceContext, resolvedEntityState, version, cacheAccess );
-			}
+			writingToCache( data.concreteDescriptor,
+					cache -> putInCache( data, session, persistenceContext, resolvedEntityState, version, cache ) );
 		}
 	}
 
@@ -1877,12 +1866,12 @@ public class EntityInitializerImpl
 	}
 
 	private void putInCache(
-			EntityInitializerData data,
-			SharedSessionContractImplementor session,
-			PersistenceContext persistenceContext,
-			Object[] resolvedEntityState,
-			Object version,
-			EntityDataAccess cacheAccess) {
+			@Nonnull EntityInitializerData data,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull PersistenceContext persistenceContext,
+			@Nonnull Object[] resolvedEntityState,
+			@Nullable Object version,
+			@Nonnull EntityDataAccess cacheAccess) {
 		final var cacheEntry =
 				data.concreteDescriptor.buildCacheEntry(
 						data.entityInstanceForNotify,

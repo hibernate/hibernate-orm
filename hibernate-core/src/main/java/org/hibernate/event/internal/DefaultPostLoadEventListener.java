@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.OptimisticLockHelper;
+import jakarta.annotation.Nonnull;
 
 /**
  * Performs needed {@link EntityEntry#getLockMode()}-related processing.
@@ -22,7 +23,7 @@ import org.hibernate.internal.OptimisticLockHelper;
  */
 public class DefaultPostLoadEventListener implements PostLoadEventListener {
 	@Override
-	public void onPostLoad(PostLoadEvent event) {
+	public void onPostLoad(@Nonnull PostLoadEvent event) {
 		final Object entity = event.getEntity();
 		event.getSession().runEntityLifecycleCallback(
 				() -> event.getPersister().getEntityCallbacks().postLoad( entity ) );

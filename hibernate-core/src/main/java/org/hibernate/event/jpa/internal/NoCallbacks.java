@@ -10,6 +10,7 @@ import org.hibernate.event.jpa.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackType;
 
 import java.util.function.Consumer;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Steve Ebersole
@@ -18,87 +19,89 @@ public class NoCallbacks implements EntityCallbacks<Object> {
 	public static final NoCallbacks NO_CALLBACKS = new NoCallbacks();
 
 	@Override
-	public boolean hasRegisteredCallbacks(CallbackType callbackType) {
+	public boolean hasRegisteredCallbacks(@Nonnull CallbackType callbackType) {
 		return false;
 	}
 
 	@Override
-	public boolean preCreate(Object entity) {
+	public boolean preCreate(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postCreate(Object entity) {
+	public boolean postCreate(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean preMerge(Object entity) {
+	public boolean preMerge(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean preInsert(Object entity) {
+	public boolean preInsert(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postInsert(Object entity) {
+	public boolean postInsert(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean preUpdate(Object entity) {
+	public boolean preUpdate(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postUpdate(Object entity) {
+	public boolean postUpdate(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean preUpsert(Object entity) {
+	public boolean preUpsert(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postUpsert(Object entity) {
+	public boolean postUpsert(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean preRemove(Object entity) {
+	public boolean preRemove(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postRemove(Object entity) {
+	public boolean postRemove(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean preDelete(Object entity) {
+	public boolean preDelete(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postDelete(Object entity) {
+	public boolean postDelete(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postLoad(Object entity) {
+	public boolean postLoad(@Nonnull Object entity) {
 		return false;
 	}
 
 	@Override
-	public EntityListenerRegistration addListener(CallbackType type, Consumer<? super Object> listener) {
+	@Nonnull
+	public EntityListenerRegistration addListener(@Nonnull CallbackType type, @Nonnull Consumer<? super Object> listener) {
 		return RegistrationImpl.NO_REG;
 	}
 
 	@Override
-	public EntityListenerRegistration addListener(CallbackType type, Callback<? super Object> callback) {
+	@Nonnull
+	public EntityListenerRegistration addListener(@Nonnull CallbackType type, @Nonnull Callback<? super Object> callback) {
 		return RegistrationImpl.NO_REG;
 	}
 

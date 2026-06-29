@@ -42,6 +42,7 @@ import org.hibernate.service.ServiceRegistry;
 import java.util.Objects;
 
 import static org.hibernate.event.spi.EventType.*;
+import jakarta.annotation.Nonnull;
 
 /**
  * Holds the {@link org.hibernate.event.spi event} listener groups for the various event types.
@@ -91,11 +92,12 @@ public final class EventListenerGroups {
 	public final EventListenerGroup<PreUpsertEventListener> eventListenerGroup_PRE_UPSERT;
 	public final EventListenerGroup<RefreshEventListener> eventListenerGroup_REFRESH;
 
-	private static <T> EventListenerGroup<T> listeners(EventListenerRegistry listenerRegistry, EventType<T> type) {
+	@Nonnull
+	private static <T> EventListenerGroup<T> listeners(@Nonnull EventListenerRegistry listenerRegistry, @Nonnull EventType<T> type) {
 		return listenerRegistry.getEventListenerGroup( type );
 	}
 
-	public EventListenerGroups(ServiceRegistry serviceRegistry) {
+	public EventListenerGroups(@Nonnull ServiceRegistry serviceRegistry) {
 		Objects.requireNonNull( serviceRegistry );
 
 		final var eventListenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );

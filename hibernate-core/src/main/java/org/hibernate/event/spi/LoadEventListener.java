@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the contract for handling of load events generated from a session.
@@ -19,7 +20,7 @@ public interface LoadEventListener {
 	 * @param event The load event to be handled.
 	 *
 	 */
-	void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
+	void onLoad(@Nonnull LoadEvent event, @Nonnull LoadType loadType) throws HibernateException;
 
 	/**
 	 * Normal {@linkplain org.hibernate.Session#find} (and by extension
@@ -81,7 +82,7 @@ public interface LoadEventListener {
 		private boolean checkDeleted;
 		private boolean allowProxyCreation;
 
-		private LoadType(String name) {
+		private LoadType(@Nonnull String name) {
 			this.name = name;
 		}
 
@@ -89,7 +90,7 @@ public interface LoadEventListener {
 			return allowNulls;
 		}
 
-		private LoadType setAllowNulls(boolean allowNulls) {
+		private @Nonnull LoadType setAllowNulls(boolean allowNulls) {
 			this.allowNulls = allowNulls;
 			return this;
 		}
@@ -98,7 +99,7 @@ public interface LoadEventListener {
 			return nakedEntityReturned;
 		}
 
-		private LoadType setNakedEntityReturned(boolean immediateLoad) {
+		private @Nonnull LoadType setNakedEntityReturned(boolean immediateLoad) {
 			this.nakedEntityReturned = immediateLoad;
 			return this;
 		}
@@ -107,7 +108,7 @@ public interface LoadEventListener {
 			return checkDeleted;
 		}
 
-		private LoadType setCheckDeleted(boolean checkDeleted) {
+		private @Nonnull LoadType setCheckDeleted(boolean checkDeleted) {
 			this.checkDeleted = checkDeleted;
 			return this;
 		}
@@ -116,17 +117,17 @@ public interface LoadEventListener {
 			return allowProxyCreation;
 		}
 
-		private LoadType setAllowProxyCreation(boolean allowProxyCreation) {
+		private @Nonnull LoadType setAllowProxyCreation(boolean allowProxyCreation) {
 			this.allowProxyCreation = allowProxyCreation;
 			return this;
 		}
 
-		public String getName() {
+		public @Nonnull String getName() {
 			return name;
 		}
 
 		@Override
-		public String toString() {
+		public @Nonnull String toString() {
 			return name;
 		}
 	}

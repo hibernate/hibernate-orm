@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -54,7 +55,7 @@ public class RegisterUserEventListenersTest {
 		private final MutableInteger afterCounter = new MutableInteger();
 
 		@Override
-		public void onPostInsert(PostInsertEvent event) {
+		public void onPostInsert(@Nonnull PostInsertEvent event) {
 			event.getSession().getTransactionCompletionCallbacks().registerCallback(
 					new BeforeTransactionCompletionProcess() {
 						@Override
@@ -74,7 +75,7 @@ public class RegisterUserEventListenersTest {
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 			return true;
 		}
 

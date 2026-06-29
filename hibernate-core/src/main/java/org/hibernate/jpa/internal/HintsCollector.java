@@ -4,10 +4,10 @@
  */
 package org.hibernate.jpa.internal;
 
-import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.SpecHints;
@@ -26,6 +26,7 @@ public class HintsCollector {
 		return HINTS;
 	}
 
+	@Nonnull
 	private static Set<String> buildHintsSet() {
 		final HashSet<String> hints = new HashSet<>();
 		applyHints( hints, HibernateHints.class );
@@ -33,8 +34,8 @@ public class HintsCollector {
 		return unmodifiableSet( hints );
 	}
 
-	private static void applyHints(HashSet<String> hints, Class<?> hintsClass) {
-		for ( final Field field : hintsClass.getDeclaredFields() ) {
+	private static void applyHints(@Nonnull HashSet<String> hints, @Nonnull Class<?> hintsClass) {
+		for ( final var field : hintsClass.getDeclaredFields() ) {
 			if ( field.getName().startsWith( "HINT_" )
 					&& field.getType().equals( String.class ) ) {
 				// the field's value is the hint name

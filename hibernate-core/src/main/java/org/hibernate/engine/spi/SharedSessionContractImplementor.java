@@ -456,7 +456,7 @@ public interface SharedSessionContractImplementor
 	 * initializing the new instance with the given identifier.
 	 */
 	@Nonnull
-	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id);
+	Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id);
 
 	/**
 	 * Are entities and proxies loaded by this session read-only by default?

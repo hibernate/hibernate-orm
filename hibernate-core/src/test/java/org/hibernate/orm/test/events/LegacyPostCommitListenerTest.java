@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.events;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -175,12 +176,12 @@ public class LegacyPostCommitListenerTest {
 		int fired;
 
 		@Override
-		public void onPostDelete(PostDeleteEvent event) {
+		public void onPostDelete(@Nonnull PostDeleteEvent event) {
 			fired++;
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 			return true;
 		}
 	}
@@ -189,12 +190,12 @@ public class LegacyPostCommitListenerTest {
 		int fired;
 
 		@Override
-		public void onPostUpdate(PostUpdateEvent event) {
+		public void onPostUpdate(@Nonnull PostUpdateEvent event) {
 			fired++;
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 			return true;
 		}
 	}
@@ -203,12 +204,12 @@ public class LegacyPostCommitListenerTest {
 		int fired;
 
 		@Override
-		public void onPostInsert(PostInsertEvent event) {
+		public void onPostInsert(@Nonnull PostInsertEvent event) {
 			fired++;
 		}
 
 		@Override
-		public boolean requiresPostCommitHandling(EntityPersister persister) {
+		public boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 			return true;
 		}
 	}

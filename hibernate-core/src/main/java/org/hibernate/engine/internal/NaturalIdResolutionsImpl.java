@@ -6,7 +6,6 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -290,10 +289,9 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final Object previousCacheKey =
 				cacheAccess.generateCacheKey( previousNaturalIdValues, rootEntityPersister, session );
 		if ( !cacheKey.equals( previousCacheKey ) ) {  // prevent identical re-caching, solves HHH-7309
-			final SoftLock removalLock = cacheAccess.lockItem( session, previousCacheKey, null );
+			final var removalLock = cacheAccess.lockItem( session, previousCacheKey, null );
 			cacheAccess.remove( session, previousCacheKey );
-			final SoftLock lock = cacheAccess.lockItem( session, cacheKey, null );
-
+			final var lock = cacheAccess.lockItem( session, cacheKey, null );
 			final var statistics = session.getFactory().getStatistics();
 			final var eventMonitor = session.getEventMonitor();
 			boolean put = false;
@@ -453,42 +451,40 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	@Override
 	public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean delayToAfterTransactionCompletion) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
-		if ( naturalIdMapping == null ) {
-			// nothing to do
-			return;
-		}
+		if ( naturalIdMapping != null ) {
+			final var cacheAccess = naturalIdMapping.getCacheAccess();
+			if ( cacheAccess != null ) {
+				//TODO: Couple of things wrong here:
+				//		1) should be using access strategy, not plain evict
+				//		2) should prefer session-cached values, if any
+				//		   (requires interaction from removeLocalNaturalIdCrossReference)
 
-		final var cacheAccess = naturalIdMapping.getCacheAccess();
-		if ( cacheAccess == null ) {
-			// nothing to do
-			return;
-		}
-
-		// todo : couple of things wrong here:
-		//		1) should be using access strategy, not plain evict..
-		//		2) should prefer session-cached values if any (requires interaction from removeLocalNaturalIdCrossReference)
-
-		final var session = session();
-		final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
-		final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalId, persister, session );
-		if ( delayToAfterTransactionCompletion ) {
-			session.asEventSource().getActionQueue().registerCallback(
-				(success, sess) -> {
-					if ( success ) {
-						cacheAccess.evict( naturalIdCacheKey );
-					}
+				final var session = session();
+				final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
+				final Object naturalIdCacheKey = cacheAccess.generateCacheKey( naturalId, persister, session );
+				if ( delayToAfterTransactionCompletion ) {
+					session.asEventSource().getActionQueue().registerCallback(
+							(success, sess) -> {
+								if ( success ) {
+									cacheAccess.evict( naturalIdCacheKey );
+								}
+							}
+					);
 				}
-			);
-		}
-		else {
-			cacheAccess.evict( naturalIdCacheKey );
+				else {
+					cacheAccess.evict( naturalIdCacheKey );
+				}
+
+//				if ( sessionCachedNaturalIdValues != null
+//				     && !Arrays.equals( sessionCachedNaturalIdValues, deletedNaturalIdValues ) ) {
+//					final NaturalIdCacheKey sessionNaturalIdCacheKey =
+//							new NaturalIdCacheKey( sessionCachedNaturalIdValues, persister, session );
+//					cacheAccess.evict( sessionNaturalIdCacheKey );
+//				}
+			}
+
 		}
 
-//			if ( sessionCachedNaturalIdValues != null
-//					&& !Arrays.equals( sessionCachedNaturalIdValues, deletedNaturalIdValues ) ) {
-//				final NaturalIdCacheKey sessionNaturalIdCacheKey = new NaturalIdCacheKey( sessionCachedNaturalIdValues, persister, session );
-//				cacheAccess.evict( sessionNaturalIdCacheKey );
-//			}
 	}
 
 	@Override

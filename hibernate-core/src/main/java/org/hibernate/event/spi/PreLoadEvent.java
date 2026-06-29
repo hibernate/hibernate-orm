@@ -5,6 +5,8 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Called before injecting property values into a newly loaded entity instance.
@@ -17,7 +19,7 @@ public class PreLoadEvent extends AbstractSessionEvent {
 	private Object id;
 	private EntityPersister persister;
 
-	public PreLoadEvent(EventSource session) {
+	public PreLoadEvent(@Nonnull EventSource session) {
 		super(session);
 	}
 
@@ -28,38 +30,39 @@ public class PreLoadEvent extends AbstractSessionEvent {
 		persister = null;
 	}
 
-	public Object getEntity() {
+	public @Nullable Object getEntity() {
 		return entity;
 	}
 
-	public Object getId() {
+	public @Nullable Object getId() {
 		return id;
 	}
 
-	public EntityPersister getPersister() {
+	public @Nullable EntityPersister getPersister() {
 		return persister;
 	}
 
+	@Nullable
 	public Object[] getState() {
 		return state;
 	}
 
-	public PreLoadEvent setEntity(Object entity) {
+	public @Nonnull PreLoadEvent setEntity(@Nullable Object entity) {
 		this.entity = entity;
 		return this;
 	}
 
-	public PreLoadEvent setId(Object id) {
+	public @Nonnull PreLoadEvent setId(@Nullable Object id) {
 		this.id = id;
 		return this;
 	}
 
-	public PreLoadEvent setPersister(EntityPersister persister) {
+	public @Nonnull PreLoadEvent setPersister(@Nullable EntityPersister persister) {
 		this.persister = persister;
 		return this;
 	}
 
-	public PreLoadEvent setState(Object[] state) {
+	public @Nonnull PreLoadEvent setState(@Nullable Object[] state) {
 		this.state = state;
 		return this;
 	}

@@ -6,6 +6,7 @@ package org.hibernate.event.spi;
 
 
 import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
 
 /**
  * Defines the contract for handling of refresh events generated from a session.
@@ -19,8 +20,8 @@ public interface RefreshEventListener {
 	 *
 	 * @param event The refresh event to be handled.
 	 */
-	void onRefresh(RefreshEvent event) throws HibernateException;
+	void onRefresh(@Nonnull RefreshEvent event) throws HibernateException;
 
-	void onRefresh(RefreshEvent event, RefreshContext refreshedAlready) throws HibernateException;
+	void onRefresh(@Nonnull RefreshEvent event, @Nonnull RefreshContext refreshedAlready) throws HibernateException;
 
 }

@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.persister.entity.EntityPersister;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Andrea Boriero
@@ -18,7 +19,7 @@ interface PostActionEventListener {
 	 *
 	 * @return {@code true} if after transaction callbacks should be added.
 	 */
-	default boolean requiresPostCommitHandling(EntityPersister persister) {
+	default boolean requiresPostCommitHandling(@Nonnull EntityPersister persister) {
 		return false;
 	}
 }

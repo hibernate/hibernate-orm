@@ -7,6 +7,8 @@ package org.hibernate.event.spi;
 import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * An event that occurs after a collection is updated
@@ -17,9 +19,9 @@ public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 
 	@Internal
 	public PostCollectionUpdateEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			EventSource source) {
+			@Nonnull CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull EventSource source) {
 		super(
 				collectionPersister,
 				collection,
@@ -31,10 +33,10 @@ public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 
 	@Internal
 	public PostCollectionUpdateEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			EventSource source,
-			Object affectedOwner) {
+			@Nonnull CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull EventSource source,
+			@Nullable Object affectedOwner) {
 		super(
 				collectionPersister,
 				collection,
@@ -46,11 +48,11 @@ public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 
 	@Internal
 	public PostCollectionUpdateEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			EventSource source,
-			Object affectedOwner,
-			Object affectedOwnerId) {
+			@Nonnull CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull EventSource source,
+			@Nullable Object affectedOwner,
+			@Nullable Object affectedOwnerId) {
 		super(
 				collectionPersister,
 				collection,
@@ -62,11 +64,11 @@ public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 
 	@Internal
 	public PostCollectionUpdateEvent(
-			CollectionPersister collectionPersister,
-			PersistentCollection<?> collection,
-			Object id,
-			String entityName,
-			Object loadedOwner) {
+			@Nonnull CollectionPersister collectionPersister,
+			@Nonnull PersistentCollection<?> collection,
+			@Nullable Object id,
+			@Nonnull String entityName,
+			@Nullable Object loadedOwner) {
 		super( collectionPersister, collection, entityName, loadedOwner, id );
 	}
 }

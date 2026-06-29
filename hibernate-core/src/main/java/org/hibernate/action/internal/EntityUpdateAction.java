@@ -4,9 +4,10 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
-import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -28,6 +29,7 @@ import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.Versioning.getVersion;
 
 /**
@@ -36,16 +38,24 @@ import static org.hibernate.engine.internal.Versioning.getVersion;
 public class EntityUpdateAction extends EntityAction {
 
 	private final Object[] state;
+	@Nullable
 	private final Object[] previousState;
+	@Nullable
 	private final Object previousVersion;
+	@Nullable
 	private final int[] dirtyFields;
 	private final boolean hasDirtyCollection;
+	@Nullable
 	private final Object rowId;
 
+	@Nullable
 	private final Object previousNaturalIdValues;
 
+	@Nullable
 	private Object nextVersion;
+	@Nullable
 	private Object cacheEntry;
+	@Nullable
 	private SoftLock lock;
 
 	/**
@@ -63,18 +73,21 @@ public class EntityUpdateAction extends EntityAction {
 	 * @param session The session
 	 */
 	public EntityUpdateAction(
-			final Object id,
-			final Object[] state,
-			final int[] dirtyProperties,
+			final @Nonnull Object id,
+			final @Nonnull Object[] state,
+			final @Nullable int[] dirtyProperties,
 			final boolean hasDirtyCollection,
-			final Object[] previousState,
-			final Object previousVersion,
-			final Object nextVersion,
-			final Object instance,
-			final Object rowId,
-			final EntityPersister persister,
-			final EventSource session) {
+			final @Nullable Object[] previousState,
+			final @Nullable Object previousVersion,
+			final @Nullable Object nextVersion,
+			final @Nonnull Object instance,
+			final @Nullable Object rowId,
+			final @Nonnull EntityPersister persister,
+			final @Nonnull EventSource session) {
 		super( session, id, instance, persister );
+		assert state != null;
+		assert instance != null;
+		assert id != null;
 		this.state = state;
 		this.previousState = previousState;
 		this.previousVersion = previousVersion;
@@ -90,29 +103,50 @@ public class EntityUpdateAction extends EntityAction {
 						: determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );
 	}
 
+	@Nullable
 	private static Object determinePreviousNaturalIdValues(
-			EntityPersister persister,
-			NaturalIdMapping naturalIdMapping,
-			Object id,
-			Object[] previousState,
-			SharedSessionContractImplementor session) {
+			@Nonnull EntityPersister persister,
+			@Nonnull NaturalIdMapping naturalIdMapping,
+			@Nonnull Object id,
+			@Nullable Object[] previousState,
+			@Nonnull SharedSessionContractImplementor session) {
 		return previousState == null
 				? session.getPersistenceContextInternal().getNaturalIdSnapshot( id, persister )
 				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
+	@Override
+	@Nonnull
+	public Object getInstance() {
+		final Object instance = super.getInstance();
+		assert instance != null;
+		return instance;
+	}
+
+	@Override
+	@Nonnull
+	public Object getId() {
+		final Object id = super.getId();
+		assert id != null;
+		return id;
+	}
+
+	@Nonnull
 	public Object[] getState() {
 		return state;
 	}
 
+	@Nullable
 	public Object[] getPreviousState() {
 		return previousState;
 	}
 
+	@Nullable
 	public Object getNextVersion() {
 		return nextVersion;
 	}
 
+	@Nullable
 	public int[] getDirtyFields() {
 		return dirtyFields;
 	}
@@ -120,28 +154,31 @@ public class EntityUpdateAction extends EntityAction {
 		return hasDirtyCollection;
 	}
 
+	@Nullable
 	protected NaturalIdMapping getNaturalIdMapping() {
 		return getPersister().getNaturalIdMapping();
 	}
 
+	@Nullable
 	protected Object getPreviousNaturalIdValues() {
 		return previousNaturalIdValues;
 	}
 
+	@Nullable
 	public Object getRowId() {
 		return rowId;
 	}
 
-	protected void setLock(SoftLock lock) {
+	protected void setLock(@Nullable SoftLock lock) {
 		this.lock = lock;
 	}
 
-	protected void setCacheEntry(Object cacheEntry) {
+	protected void setCacheEntry(@Nullable Object cacheEntry) {
 		this.cacheEntry = cacheEntry;
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	public void execute() {
 		if ( !preUpdate() ) {
 			final var persister = getPersister();
 			final var session = getSession();
@@ -191,7 +228,10 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	public void handleNaturalIdLocalResolutions(Object id, EntityPersister persister, PersistenceContext context) {
+	public void handleNaturalIdLocalResolutions(
+			@Nonnull Object id,
+			@Nonnull EntityPersister persister,
+			@Nonnull PersistenceContext context) {
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null) {
 			context.getNaturalIdResolutions().manageLocalResolution(
@@ -203,7 +243,10 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	public void handleNaturalIdSharedResolutions(Object id, EntityPersister persister, PersistenceContext context) {
+	public void handleNaturalIdSharedResolutions(
+			@Nonnull Object id,
+			@Nonnull EntityPersister persister,
+			@Nonnull PersistenceContext context) {
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			context.getNaturalIdResolutions().manageSharedResolution(
@@ -216,39 +259,43 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	public void updateCacheItem(Object previousVersion, Object cacheKey, EntityEntry entry) {
+	public void updateCacheItem(
+			@Nullable Object previousVersion,
+			@Nullable Object cacheKey,
+			@Nonnull EntityEntry entry) {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
+		writingToCache( persister, cache -> {
 			final var session = getSession();
+			assert cacheKey != null;
 			if ( isCacheInvalidationRequired( persister, session ) || entry.getStatus() != Status.MANAGED ) {
-				persister.getCacheAccessStrategy().remove( session, cacheKey );
+				cache.remove( session, cacheKey );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
 				cacheEntry = buildStructuredCacheEntry( getInstance(), nextVersion, state, persister, session );
-				final boolean put = updateCache( persister, previousVersion, cacheKey );
+				final boolean put = updateCache( cache, persister, previousVersion, cacheKey );
 
 				final var statistics = session.getFactory().getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut(
 							StatsHelper.getRootEntityRole( persister ),
-							persister.getCacheAccessStrategy().getRegion().getName()
+							cache.getRegion().getName()
 					);
 				}
 			}
-		}
+		} );
 	}
 
 	private static boolean isCacheInvalidationRequired(
-			EntityPersister persister,
-			SharedSessionContractImplementor session) {
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor session) {
 		// the cache has to be invalidated when CacheMode is equal to GET or IGNORE
 		return persister.isCacheInvalidationRequired()
 			|| session.getCacheMode() == CacheMode.GET
 			|| session.getCacheMode() == CacheMode.IGNORE;
 	}
 
-	public void handleGeneratedProperties(EntityEntry entry, GeneratedValues generatedValues) {
+	public void handleGeneratedProperties(@Nonnull EntityEntry entry, @Nullable GeneratedValues generatedValues) {
 		final var persister = getPersister();
 		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {
 			final var session = getSession();
@@ -281,7 +328,7 @@ public class EntityUpdateAction extends EntityAction {
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	public void handleDeleted(EntityEntry entry) {
+	public void handleDeleted(@Nonnull EntityEntry entry) {
 		if ( entry.getStatus() == Status.DELETED ) {
 			final var entityMetamodel = getPersister();
 			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()
@@ -295,6 +342,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
+	@Nullable
 	public Object getPreviousVersion() {
 		final var persister = getPersister();
 		if ( persister.isVersionPropertyGenerated() ) {
@@ -308,11 +356,11 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	public Object lockCacheItem(Object previousVersion) {
+	@Nullable
+	public Object lockCacheItem(@Nullable Object previousVersion) {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
+		return writingToCache( persister, cache -> {
 			final var session = getSession();
-			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(
 					getId(),
 					persister,
@@ -321,30 +369,31 @@ public class EntityUpdateAction extends EntityAction {
 			);
 			lock = cache.lockItem( session, cacheKey, previousVersion );
 			return cacheKey;
-		}
-		else {
-			return null;
-		}
+		}, null );
 	}
 
-	protected boolean updateCache(EntityPersister persister, Object previousVersion, Object cacheKey) {
+	protected boolean updateCache(
+			@Nonnull EntityDataAccess cache,
+			@Nonnull EntityPersister persister,
+			@Nullable Object previousVersion,
+			@Nonnull Object cacheKey) {
 		final var session = getSession();
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
-		final var cacheAccessStrategy = persister.getCacheAccessStrategy();
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
 			eventListenerManager.cachePutStart();
-			update = cacheAccessStrategy.update( session, cacheKey, cacheEntry, nextVersion, previousVersion );
+			assert cacheEntry != null;
+			update = cache.update( session, cacheKey, cacheEntry, nextVersion, previousVersion );
 			return update;
 		}
 		finally {
 			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
-					cacheAccessStrategy,
-					getPersister(),
+					cache,
+					persister,
 					update,
 					EventMonitor.CacheActionDescription.ENTITY_UPDATE
 			);
@@ -358,8 +407,7 @@ public class EntityUpdateAction extends EntityAction {
 			return false;
 		}
 		else {
-			final PreUpdateEvent event =
-					new PreUpdateEvent( getInstance(), getId(), state, previousState, getPersister(), eventSource() );
+			final var event = new PreUpdateEvent( getInstance(), getId(), state, previousState, getPersister(), eventSource() );
 			boolean veto = false;
 			for ( var listener : listenerGroup.listeners() ) {
 				veto |= listener.onPreUpdate( event );
@@ -373,6 +421,7 @@ public class EntityUpdateAction extends EntityAction {
 				.fireLazyEventOnEachListener( this::newPostUpdateEvent, PostUpdateEventListener::onPostUpdate );
 	}
 
+	@Nonnull
 	private PostUpdateEvent newPostUpdateEvent() {
 		return new PostUpdateEvent( getInstance(), getId(), state, previousState, dirtyFields, getPersister(), eventSource() );
 	}
@@ -383,7 +432,7 @@ public class EntityUpdateAction extends EntityAction {
 						success ? PostUpdateEventListener::onPostUpdate : this::onPostCommitFailure );
 	}
 
-	private void onPostCommitFailure(PostUpdateEventListener listener, PostUpdateEvent event) {
+	private void onPostCommitFailure(@Nonnull PostUpdateEventListener listener, @Nonnull PostUpdateEvent event) {
 		if ( listener instanceof PostCommitUpdateEventListener postCommitUpdateEventListener ) {
 			postCommitUpdateEventListener.onPostUpdateCommitFailed( event );
 		}
@@ -405,15 +454,15 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	@Override
-	public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) throws CacheException {
+	public void doAfterTransactionCompletion(boolean success, @Nonnull SharedSessionContractImplementor session)
+			throws CacheException {
 		updateCacheIfNecessary( success, session );
 		postCommitUpdate( success );
 	}
 
-	private void updateCacheIfNecessary(boolean success, SharedSessionContractImplementor session) {
+	private void updateCacheIfNecessary(boolean success, @Nonnull SharedSessionContractImplementor session) {
 		final var persister = getPersister();
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
+		writingToCache( persister, cache -> {
 			final var factory = session.getFactory();
 			final Object cacheKey = cache.generateCacheKey(
 					getId(),
@@ -423,28 +472,35 @@ public class EntityUpdateAction extends EntityAction {
 
 			);
 			if ( cacheUpdateRequired( success, persister, session ) ) {
-				cacheAfterUpdate( cache, cacheKey, session);
+				cacheAfterUpdate( cache, cacheKey, session );
 			}
 			else {
 				cache.unlockItem( session, cacheKey, lock );
 			}
-		}
+		} );
 	}
 
-	private boolean cacheUpdateRequired(boolean success, EntityPersister persister, SharedSessionContractImplementor session) {
+	private boolean cacheUpdateRequired(
+			boolean success,
+			@Nonnull EntityPersister persister,
+			@Nonnull SharedSessionContractImplementor session) {
 		return success
 			&& cacheEntry != null
 			&& !persister.isCacheInvalidationRequired()
 			&& session.getCacheMode().isPutEnabled();
 	}
 
-	protected void cacheAfterUpdate(EntityDataAccess cache, Object cacheKey, SharedSessionContractImplementor session) {
+	protected void cacheAfterUpdate(
+			@Nonnull EntityDataAccess cache,
+			@Nonnull Object cacheKey,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var eventListenerManager = session.getEventListenerManager();
 		final var eventMonitor = session.getEventMonitor();
 		final var cachePutEvent = eventMonitor.beginCachePutEvent();
 		boolean put = false;
 		try {
 			eventListenerManager.cachePutStart();
+			assert cacheEntry != null;
 			put = cache.afterUpdate( session, cacheKey, cacheEntry, nextVersion, previousVersion, lock );
 		}
 		finally {

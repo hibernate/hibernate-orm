@@ -4,11 +4,13 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
-import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -34,6 +36,7 @@ import java.util.List;
 
 import static java.lang.System.arraycopy;
 import static java.lang.reflect.Array.newInstance;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -53,8 +56,11 @@ public class LoaderHelper {
 	 * @param session The session which is the source of the event being processed.
 	 */
 	public static void upgradeLock(
-			Object object, EntityEntry entry, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		final LockMode requestedLockMode = lockOptions.getLockMode();
+			@Nonnull Object object,
+			@Nonnull EntityEntry entry,
+			@Nonnull LockOptions lockOptions,
+			@Nonnull SharedSessionContractImplementor session) {
+		final var requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// Request is for a more restrictive lock than the lock already held
 			final var persister = entry.getPersister();
@@ -76,15 +82,16 @@ public class LoaderHelper {
 				);
 			}
 
-			final boolean cachingEnabled = persister.canWriteToCache();
-			SoftLock lock = null;
-			Object cacheKey = null;
+			CacheLock cacheLock = null;
 			try {
-				if ( cachingEnabled ) {
-					final var cache = persister.getCacheAccessStrategy();
-					cacheKey = cache.generateCacheKey( entry.getId(), persister, session.getFactory(), session.getTenantIdentifier() );
-					lock = cache.lockItem( session, cacheKey, entry.getVersion() );
-				}
+				final EntityEntry entryToLock = entry;
+				cacheLock = writingToCache( persister, cache -> {
+					final Object cacheKey =
+							cache.generateCacheKey( entryToLock.getId(), persister,
+									session.getFactory(), session.getTenantIdentifier() );
+					final var lock = cache.lockItem( session, cacheKey, entryToLock.getVersion() );
+					return new CacheLock( cache, cacheKey, lock );
+				}, null );
 
 				if ( persister.isVersioned() && entry.getVersion() == null ) {
 					// This should be an empty entry created for an uninitialized bytecode proxy
@@ -129,8 +136,8 @@ public class LoaderHelper {
 			finally {
 				// the database now holds a lock + the object is flushed from the cache,
 				// so release the soft lock
-				if ( cachingEnabled ) {
-					persister.getCacheAccessStrategy().unlockItem( session, cacheKey, lock );
+				if ( cacheLock != null ) {
+					cacheLock.cache().unlockItem( session, cacheLock.cacheKey(), cacheLock.lock() );
 				}
 			}
 		}
@@ -139,14 +146,16 @@ public class LoaderHelper {
 	/**
 	 * Determine if the influencers associated with the given Session indicate read-only
 	 */
-	public static Boolean getReadOnlyFromLoadQueryInfluencers(SharedSessionContractImplementor session) {
+	@Nullable
+	public static Boolean getReadOnlyFromLoadQueryInfluencers(@Nonnull SharedSessionContractImplementor session) {
 		return getReadOnlyFromLoadQueryInfluencers( session.getLoadQueryInfluencers() );
 	}
 
 	/**
 	 * Determine if given influencers indicate read-only
 	 */
-	public static Boolean getReadOnlyFromLoadQueryInfluencers(LoadQueryInfluencers influencers) {
+	@Nullable
+	public static Boolean getReadOnlyFromLoadQueryInfluencers(@Nullable LoadQueryInfluencers influencers) {
 		return influencers == null ? null : influencers.getReadOnly();
 	}
 
@@ -159,16 +168,14 @@ public class LoaderHelper {
 	 * key {@linkplain org.hibernate.cfg.AvailableSettings#JPA_LOAD_BY_ID_COMPLIANCE coercion} is enabled, the
 	 * values will be coerced to the key type.
 	 *
+	 * @param <K> The key type
 	 * @param keys The keys to normalize
 	 * @param keyPart The ModelPart describing the key
-	 *
-	 * @param <K> The key type
 	 */
 	public static <K> K[] normalizeKeys(
-			K[] keys,
-			BasicValuedModelPart keyPart,
-			SharedSessionContractImplementor session,
-			SessionFactoryImplementor sessionFactory) {
+			@Nonnull K[] keys,
+			@Nonnull BasicValuedModelPart keyPart,
+			@Nonnull SessionFactoryImplementor sessionFactory) {
 		assert keys.getClass().isArray();
 
 		//noinspection unchecked
@@ -215,20 +222,17 @@ public class LoaderHelper {
 	 * @param <K> The type of the keys
 	 */
 	public static <R,K> List<R> loadByArrayParameter(
-			K[] idsToInitialize,
-			SelectStatement sqlAst,
-			JdbcSelect jdbcOperation,
-			JdbcParameter jdbcParameter,
-			JdbcMapping arrayJdbcMapping,
-			Object entityId,
-			Object entityInstance,
-			EntityMappingType rootEntityDescriptor,
-			LockOptions lockOptions,
-			Boolean readOnly,
-			SharedSessionContractImplementor session) {
-		assert jdbcOperation != null;
-		assert jdbcParameter != null;
-
+			@Nonnull K[] idsToInitialize,
+			@Nonnull SelectStatement sqlAst,
+			@Nonnull JdbcSelect jdbcOperation,
+			@Nonnull JdbcParameter jdbcParameter,
+			@Nonnull JdbcMapping arrayJdbcMapping,
+			@Nullable Object entityId,
+			@Nullable Object entityInstance,
+			@Nullable EntityMappingType rootEntityDescriptor,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var bindings = new JdbcParameterBindingsImpl( 1);
 		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize ) );
 		return session.getJdbcServices().getJdbcSelectExecutor().list(

@@ -21,7 +21,6 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
@@ -32,7 +31,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.model.MutationOperation;
@@ -43,9 +41,9 @@ import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.ast.builder.VersionUpdateBuilder;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -53,6 +51,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -140,10 +139,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		}
 
 		final Object entity = action.getInstance();
-		Object identifier = action.getId();
-		if ( identifier == null && decompositionContext != null ) {
-			identifier = decompositionContext.getGeneratedIdentifierHandle( entity );
-		}
+		final Object identifier = action.getId();
+//		if ( identifier == null && decompositionContext != null ) {
+//			identifier = decompositionContext.getGeneratedIdentifierHandle( entity );
+//		}
 		final Object rowId = action.getRowId();
 		final Object[] state = action.getState();
 		final Object[] previousState = action.getPreviousState();
@@ -176,7 +175,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		}
 
 		action.handleNaturalIdLocalResolutions( identifier, entityPersister, session.getPersistenceContext() );
-		final UpdateCacheHandling.CacheUpdate cacheUpdate = UpdateCacheHandling.lockItem( action, previousVersion, session );
+		final var cacheUpdate = UpdateCacheHandling.lockItem( action, previousVersion, session );
 		registerAfterTransactionCompletion( action, cacheUpdate, session );
 
 		if ( hasOnlyInversePluralDirtiness( action ) ) {
@@ -188,7 +187,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			return;
 		}
 
-		final EntityMutationPlanContributor.UpdateContext context = new EntityMutationPlanContributor.UpdateContext(
+		final var context = new EntityMutationPlanContributor.UpdateContext(
 				entityPersister,
 				action,
 				ordinalBase,
@@ -204,15 +203,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				cacheUpdate
 		);
 
-		if ( mutationPlanContributor.contributeReplacementUpdate(
-				context,
-				operationConsumer
-		) ) {
+		if ( mutationPlanContributor.contributeReplacementUpdate( context, operationConsumer ) ) {
 			return;
 		}
 
-		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister, sessionFactory );
-		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling(
+		final var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister, sessionFactory );
+		final var postUpdateHandling = new PostUpdateHandling(
 				action,
 				cacheUpdate,
 				previousVersion,
@@ -222,25 +218,19 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null ) {
-			var forceIncrementOperation = possiblyBuildForcedVersionIncrementOperation(
-					action,
+			final var forceIncrementOperation = possiblyBuildForcedVersionIncrementOperation(
 					ordinalBase,
-					cacheUpdate,
 					entity,
 					identifier,
 					state,
 					previousVersion,
 					action.getDirtyFields(),
 					versionMapping,
-					session,
-					entityEntry
+					session
 			);
 			if ( forceIncrementOperation != null ) {
 				final List<FlushOperation> additionalOperations = new ArrayList<>();
-				mutationPlanContributor.contributeAdditionalUpdate(
-						context,
-						additionalOperations::add
-				);
+				mutationPlanContributor.contributeAdditionalUpdate( context, additionalOperations::add );
 				emitTailOperations( forceIncrementOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
 				return;
 			}
@@ -277,23 +267,20 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				|| preUpdateGeneratedAttributeIndexes.length > 0
 				|| entityPersister.hasUninitializedLazyProperties( entity );
 
-		final Map<String, LogicalTableUpdate<?>> effectiveGroup;
-		if ( needsDynamicUpdate ) {
-			effectiveGroup = generateDynamicUpdateOperations(
-					entity,
-					identifier,
-					rowId,
-					state,
-					previousState,
-					previousVersion,
-					updateability,
-					valuesAnalysis,
-					session
-			);
-		}
-		else {
-			effectiveGroup = staticUpdateOperations;
-		}
+		final var effectiveGroup =
+				needsDynamicUpdate
+						? generateDynamicUpdateOperations(
+								entity,
+								identifier,
+								rowId,
+								state,
+								previousState,
+								previousVersion,
+								updateability,
+								valuesAnalysis,
+								session
+						)
+						: staticUpdateOperations;
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
@@ -303,88 +290,74 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				&& decompositionContext.isBeingDeletedInCurrentFlush( entity );
 
 		for ( var tableDescriptor : entityPersister.getTableDescriptors() ) {
-			if ( tableDescriptor.isInverse() ) {
-				continue;
+			if ( !tableDescriptor.isInverse() ) {
+				final String name = tableDescriptor.name();
+				final var tableUpdate = effectiveGroup.get( name );
+				if ( tableUpdate != null ) {
+					final var operation = resolveJdbcUpdateOperation( name, tableUpdate );
+					final var shapeKey = resolveStatementShapeKey( name, tableUpdate );
+					// For static updates, only execute secondary tables when one of their
+					// attributes actually drove the update.  Static mutation groups may
+					// contain generated SQL assignments for joined-subclass tables, but
+					// legacy execution only runs tables registered as needing update and
+					// reads other generated values through the post-update select.
+					final boolean needsUpdate =
+							needsDynamicUpdate
+								|| tableDescriptor.isIdentifierTable()
+								|| valuesAnalysis.needsUpdate( tableDescriptor );
+					// If this entity is being deleted in the same flush, skip UPDATEs to optional tables.
+					// These UPDATEs can re-insert rows that were just deleted, causing constraint violations.
+					// DELETE -> DELETE edges ensure proper FK ordering, so UPDATEs are unnecessary.
+					// (We could also skip updates to the primary table if no foreign keys are being nullified.
+					// This should be a rare enough occurrence that it is probably not worth even checking for.)
+					final boolean canBeSkipped = isBeingDeleted && tableDescriptor.isOptional();
+					if ( needsUpdate && !canBeSkipped ) {
+						final var op = new FlushOperation(
+								tableDescriptor,
+								MutationKind.UPDATE,
+								operation,
+								createUpdateBindPlan(
+										tableDescriptor,
+										entity,
+										identifier,
+										rowId,
+										state,
+										previousState,
+										previousVersion,
+										updateability,
+										effectiveOptLockStyle,
+										valuesAnalysis,
+										needsDynamicUpdate,
+										generatedValuesCollector
+								),
+								ordinalBase * 1_000 + (localOrd++),
+								origin,
+								shapeKey
+						);
+						if ( previousOperation != null ) {
+							operationConsumer.accept( previousOperation );
+						}
+						previousOperation = op;
+					}
+				}
 			}
-			final var tableUpdate = effectiveGroup.get( tableDescriptor.name() );
-			if ( tableUpdate == null ) {
-				continue;
-			}
-			var operation = resolveJdbcUpdateOperation( tableDescriptor.name(), tableUpdate );
-			var shapeKey = resolveStatementShapeKey( tableDescriptor.name(), tableUpdate );
-
-			// For static updates, only execute secondary tables when one of their
-			// attributes actually drove the update.  Static mutation groups may
-			// contain generated SQL assignments for joined-subclass tables, but
-			// legacy execution only runs tables registered as needing update and
-			// reads other generated values through the post-update select.
-			if ( !needsDynamicUpdate
-					&& !tableDescriptor.isIdentifierTable()
-					&& !valuesAnalysis.needsUpdate( tableDescriptor ) ) {
-				continue;
-			}
-
-			// If this entity is being deleted in the same flush, skip UPDATEs to optional tables.
-			// These UPDATEs can re-insert rows that were just deleted, causing constraint violations.
-			// DELETE -> DELETE edges ensure proper FK ordering, so UPDATEs are unnecessary.
-			//
-			// Technically we could also skip updates to the primary table if no foreign keys are being nullified.
-			// This should be a rare enough occurrence that it is probably not worth even checking for.
-			if ( isBeingDeleted && tableDescriptor.isOptional() ) {
-				continue;
-			}
-
-			final EntityUpdateBindPlan bindPlan = createUpdateBindPlan(
-					tableDescriptor,
-					entity,
-					identifier,
-					rowId,
-					state,
-					previousState,
-					previousVersion,
-					updateability,
-					effectiveOptLockStyle,
-					valuesAnalysis,
-					needsDynamicUpdate,
-					generatedValuesCollector
-			);
-
-			final FlushOperation op = new FlushOperation(
-					tableDescriptor,
-					MutationKind.UPDATE,
-					operation,
-					bindPlan,
-					ordinalBase * 1_000 + (localOrd++),
-					origin,
-					shapeKey
-			);
-
-			if ( previousOperation != null ) {
-				operationConsumer.accept( previousOperation );
-			}
-			previousOperation = op;
 		}
 
 		final List<FlushOperation> additionalOperations = new ArrayList<>();
-		mutationPlanContributor.contributeAdditionalUpdate(
-				context,
-				additionalOperations::add
-		);
-
+		mutationPlanContributor.contributeAdditionalUpdate( context, additionalOperations::add );
 		emitTailOperations( previousOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
 	}
 
 	private void logImmutablePropertyModifications(int[] dirtyAttributeIndexes, boolean[] updateability) {
-		if ( dirtyAttributeIndexes == null ) {
-			return;
-		}
-		for ( int dirtyAttributeIndex : dirtyAttributeIndexes ) {
-			if ( !updateability[dirtyAttributeIndex] ) {
-				final AttributeMapping attributeMapping = entityPersister.getAttributeMapping( dirtyAttributeIndex );
-				CORE_LOGGER.ignoreImmutablePropertyModification(
-						attributeMapping.getAttributeName(),
-						entityPersister.getEntityName()
-				);
+		if ( dirtyAttributeIndexes != null ) {
+			for ( int dirtyAttributeIndex : dirtyAttributeIndexes ) {
+				if ( !updateability[dirtyAttributeIndex] ) {
+					final var attributeMapping = entityPersister.getAttributeMapping( dirtyAttributeIndex );
+					CORE_LOGGER.ignoreImmutablePropertyModification(
+							attributeMapping.getAttributeName(),
+							entityPersister.getEntityName()
+					);
+				}
 			}
 		}
 	}
@@ -416,7 +389,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		for ( int i = 0; i < additionalOperations.size() - 1; i++ ) {
 			operationConsumer.accept( additionalOperations.get( i ) );
 		}
-		final FlushOperation lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
+		final var lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
 		lastOperation.setPostExecutionCallback( postExecutionCallback );
 		operationConsumer.accept( lastOperation );
 	}
@@ -424,14 +397,16 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	private boolean hasOnlyInversePluralDirtiness(EntityUpdateAction action) {
 		final int[] dirtyFields = action.getDirtyFields();
 		if ( dirtyFields == null
-				|| ( action.getNextVersion() != null && !entityPersister.isVersionPropertyGenerated() ) ) {
+				|| action.getNextVersion() != null && !entityPersister.isVersionPropertyGenerated() ) {
 			return false;
 		}
 
 		for ( int dirtyField : dirtyFields ) {
-			final AttributeMapping attribute = entityPersister.getAttributeMapping( dirtyField );
-			final PluralAttributeMapping pluralAttribute = attribute.asPluralAttributeMapping();
-			if ( pluralAttribute == null || !pluralAttribute.getCollectionDescriptor().isInverse() ) {
+			final var pluralAttribute =
+					entityPersister.getAttributeMapping( dirtyField )
+							.asPluralAttributeMapping();
+			if ( pluralAttribute == null
+					|| !pluralAttribute.getCollectionDescriptor().isInverse() ) {
 				return false;
 			}
 		}
@@ -453,25 +428,54 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	/// We treat this case specially in `#coordinateUpdate` to leverage
 	/// `#doVersionUpdate`.
 	private FlushOperation possiblyBuildForcedVersionIncrementOperation(
-			EntityUpdateAction action,
 			int ordinalBase,
-			UpdateCacheHandling.CacheUpdate cacheUpdate,
 			Object entity,
 			Object identifier,
 			Object[] state,
 			Object previousVersion,
 			int[] dirtyFields,
 			EntityVersionMapping versionMapping,
-			SharedSessionContractImplementor session,
-			EntityEntry entityEntry) {
+			SharedSessionContractImplementor session) {
 		if ( entityPersister.hasUpdateGeneratedProperties() || entityPersister.hasPreUpdateGeneratedProperties() ) {
 			// if we have any fields generated by the UPDATE event,
 			// then we have to include the generated fields in the
 			// update statement
 			return null;
 		}
+		else {
+			final Object newVersion =
+					getNewVersion( state, previousVersion, dirtyFields, versionMapping, session );
+			if ( newVersion == null ) {
+				return null;
+			}
+			else {
+				final var identifierTableDescriptor = entityPersister.getIdentifierTableDescriptor();
+				return new FlushOperation(
+						identifierTableDescriptor,
+						MutationKind.UPDATE,
+						versionJdbcUpdate,
+						new ForceVersionBindPlan(
+								identifierTableDescriptor,
+								entityPersister,
+								entity,
+								identifier,
+								previousVersion,
+								newVersion
+						),
+						ordinalBase * 1_000,
+						"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
+				);
+			}
+		}
+	}
 
-		Object newVersion = null;
+	@Nullable
+	private Object getNewVersion(
+			Object[] state,
+			Object previousVersion,
+			int[] dirtyFields,
+			EntityVersionMapping versionMapping,
+			SharedSessionContractImplementor session) {
 		if ( dirtyFields != null ) {
 			switch ( dirtyFields.length ) {
 				case 1:
@@ -480,24 +484,22 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 					final var dirtyAttribute = entityPersister.getAttributeMapping( dirtyAttributeIndex );
 					if ( versionAttribute == dirtyAttribute ) {
 						// only the version attribute itself is dirty
-						newVersion = state[dirtyAttributeIndex];
+						return state[dirtyAttributeIndex];
 					}
 					else {
 						// the dirty field is some other field
 						return null;
 					}
-					break;
 				case 0:
 					if ( previousVersion != null ) {
-						newVersion = state[versionMapping.getVersionAttribute().getStateArrayPosition()];
-						if ( versionMapping.areEqual( newVersion, previousVersion, session ) ) {
-							return null;
-						}
+						final Object newVersion = state[versionMapping.getVersionAttribute().getStateArrayPosition()];
+						return versionMapping.areEqual( newVersion, previousVersion, session )
+								? null
+								: newVersion;
 					}
 					else {
 						return null;
 					}
-					break;
 				default:
 					return null;
 			}
@@ -505,28 +507,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		else {
 			return null;
 		}
-
-		// we have just the version being updated - use the special handling
-		assert newVersion != null;
-
-		final var identifierTableDescriptor = entityPersister.getIdentifierTableDescriptor();
-		var bindPlan = new ForceVersionBindPlan(
-				identifierTableDescriptor,
-				entityPersister,
-				entity,
-				identifier,
-				previousVersion,
-				newVersion
-		);
-
-		return new FlushOperation(
-				identifierTableDescriptor,
-				MutationKind.UPDATE,
-				versionJdbcUpdate,
-				bindPlan,
-				ordinalBase * 1_000,
-				"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
-		);
 	}
 
 	protected boolean preUpdate(EntityUpdateAction action, SharedSessionContractImplementor session) {
@@ -535,7 +515,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			return false;
 		}
 		else {
-			final PreUpdateEvent event = new PreUpdateEvent(
+			final var event = new PreUpdateEvent(
 					action.getInstance(),
 					action.getId(),
 					action.getState(),
@@ -555,30 +535,27 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			Object object,
 			Object[] newValues,
 			SharedSessionContractImplementor session) {
-		if ( !entityPersister.hasPreUpdateGeneratedProperties() ) {
-			return EMPTY_INT_ARRAY;
-		}
-
-		final var generators = entityPersister.getGenerators();
-		if ( generators.length != 0 ) {
-			final int[] fieldsPreUpdateNeeded = new int[generators.length];
-			int count = 0;
-			for ( int i = 0; i < generators.length; i++ ) {
-				final Generator generator = generators[i];
-				if ( generator != null
+		if ( entityPersister.hasPreUpdateGeneratedProperties() ) {
+			final var generators = entityPersister.getGenerators();
+			if ( generators.length != 0 ) {
+				final int[] fieldsPreUpdateNeeded = new int[generators.length];
+				int count = 0;
+				for ( int i = 0; i < generators.length; i++ ) {
+					final Generator generator = generators[i];
+					if ( generator != null
 						&& generator.generatesOnUpdate()
 						&& generator.generatedBeforeExecution( object, session ) ) {
-					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
-					entityPersister.setValue( object, i, newValues[i] );
-					fieldsPreUpdateNeeded[count++] = i;
+						newValues[i] = ((BeforeExecutionGenerator) generator).generate( session, object, newValues[i],
+								UPDATE );
+						entityPersister.setValue( object, i, newValues[i] );
+						fieldsPreUpdateNeeded[count++] = i;
+					}
+				}
+				if ( count > 0 ) {
+					return trim( fieldsPreUpdateNeeded, count );
 				}
 			}
-
-			if ( count > 0 ) {
-				return trim( fieldsPreUpdateNeeded, count );
-			}
 		}
-
 		return EMPTY_INT_ARRAY;
 	}
 
@@ -594,20 +571,17 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	private OptimisticLockStyle effectiveOptLockStyle(Object version, Object[] previousState) {
-		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
-
+		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
 		if ( optimisticLockStyle.isVersion() ) {
 			if ( version == null || entityPersister.getVersionMapping() == null) {
 				return OptimisticLockStyle.NONE;
 			}
 		}
-
 		if ( optimisticLockStyle.isAllOrDirty() ) {
 			if ( previousState == null ) {
 				return OptimisticLockStyle.NONE;
 			}
 		}
-
 		return optimisticLockStyle;
 	}
 
@@ -618,14 +592,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		// Process tables in forward order
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
-			if ( tableDescriptor.isInverse() ) {
-				// skip inverse tables
-				return;
+			if ( !tableDescriptor.isInverse() ) { // skip inverse tables
+				staticOperationBuilders.put(
+						tableDescriptor.name(),
+						createTableUpdateBuilder( tableDescriptor )
+				);
 			}
-			staticOperationBuilders.put(
-					tableDescriptor.name(),
-					createTableUpdateBuilder(tableDescriptor)
-			);
 		} );
 
 		applyStaticUpdateDetails( staticOperationBuilders );
@@ -638,7 +610,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				staticOperations.put( name, operationBuilder.buildMutation() );
 			}
 		} );
-		return Collections.unmodifiableMap( staticOperations );
+		return unmodifiableMap( staticOperations );
 	}
 
 	private Map<String, MutationOperation> generateStaticJdbcOperations(
@@ -647,7 +619,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		staticOperations.forEach( (name, operation) -> {
 			jdbcOperations.put( name, operation.createMutationOperation( null, sessionFactory ) );
 		} );
-		return Collections.unmodifiableMap( jdbcOperations );
+		return unmodifiableMap( jdbcOperations );
 	}
 
 	private Map<String, StatementShapeKey> generateStaticStatementShapeKeys(
@@ -661,25 +633,25 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 					operation
 			) );
 		} );
-		return Collections.unmodifiableMap( shapeKeys );
+		return unmodifiableMap( shapeKeys );
 	}
 
 	private MutationOperation resolveJdbcUpdateOperation(
 			String tableName,
 			LogicalTableUpdate<?> tableUpdate) {
-		if ( staticJdbcUpdateOperations != null && tableUpdate == staticUpdateOperations.get( tableName ) ) {
-			return staticJdbcUpdateOperations.get( tableName );
-		}
-		return tableUpdate.createMutationOperation( null, sessionFactory );
+		return staticJdbcUpdateOperations != null
+			&& tableUpdate == staticUpdateOperations.get( tableName )
+				? staticJdbcUpdateOperations.get( tableName )
+				: tableUpdate.createMutationOperation( null, sessionFactory );
 	}
 
 	private StatementShapeKey resolveStatementShapeKey(
 			String tableName,
 			LogicalTableUpdate<?> tableUpdate) {
-		if ( staticStatementShapeKeys != null && tableUpdate == staticUpdateOperations.get( tableName ) ) {
-			return staticStatementShapeKeys.get( tableName );
-		}
-		return null;
+		return staticStatementShapeKeys != null
+			&& tableUpdate == staticUpdateOperations.get( tableName )
+				? staticStatementShapeKeys.get( tableName )
+				: null;
 	}
 
 	private TableUpdateBuilder<?> createTableUpdateBuilder(TableDescriptor tableDescriptor) {
@@ -687,7 +659,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				&& entityTableDescriptor.isIdentifierTable() ) {
 			final var delegate = entityPersister.getUpdateDelegate();
 			if ( delegate != null ) {
-				return (TableUpdateBuilder<?>) delegate.createTableMutationBuilder( null, sessionFactory );
+				return (TableUpdateBuilder<?>)
+						delegate.createTableMutationBuilder( null, sessionFactory );
 			}
 		}
 
@@ -708,10 +681,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	private TableDescriptorAsTableMapping createTableMappingAdapter(TableDescriptor tableDescriptor) {
-		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
-				&& entityTableDescriptor.isIdentifierTable();
-		final boolean isInverse = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
-				&& entityTableDescriptor.isInverse();
+		final boolean isIdentifierTable =
+				tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
+						&& entityTableDescriptor.isIdentifierTable();
+		final boolean isInverse =
+				tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
+						&& entityTableDescriptor.isInverse();
 		return new TableDescriptorAsTableMapping(
 				tableDescriptor,
 				tableDescriptor.getRelativePosition(),
@@ -770,10 +745,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private void applyStaticUpdateDetails(Map<String, TableUpdateBuilder<?>> builders) {
 		final boolean[] propertyUpdateability = entityPersister.getPropertyUpdateability();
-
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			final var builder = builders.get( tableDescriptor.name() );
-
 			// Apply SET clause columns for attributes
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
@@ -811,8 +784,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			AttributeMapping attributeMapping,
 			AssigningTableMutationBuilder<?> tableUpdateBuilder,
 			SharedSessionContractImplementor session) {
-		final var generator = attributeMapping.getGenerator();
-		if ( generator instanceof OnExecutionGenerator onExecutionGenerator
+		if ( attributeMapping.getGenerator() instanceof OnExecutionGenerator onExecutionGenerator
 				&& hasValueGenerationOnExecution( onExecutionGenerator, UPDATE, entity, session, dialect() ) ) {
 			handleValueGeneration( attributeMapping, tableUpdateBuilder, onExecutionGenerator );
 		}
@@ -838,9 +810,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		final var columnInclusions = generator.getColumnInclusions( dialect, UPDATE );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
 			if ( columnInclusions == null || columnInclusions[j] ) {
-				final String columnValue = columnValues != null && columnValues[j] != null
-						? columnValues[j]
-						: "?";
+				final String columnValue =
+						columnValues != null && columnValues[j] != null
+								? columnValues[j]
+								: "?";
 				tableUpdateBuilder.addColumnAssignment( mapping, columnValue );
 			}
 		} );
@@ -848,9 +821,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private boolean isValueGenerationOnUpdateInSql(Generator generator) {
 		return generator != null
-				&& generator.generatedOnExecution()
-				&& generator.generatesOnUpdate()
-				&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect(), EventType.UPDATE );
+			&& generator.generatedOnExecution()
+			&& generator.generatesOnUpdate()
+			&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect(), EventType.UPDATE );
 	}
 
 	private void applyDynamicUpdateDetails(
@@ -865,27 +838,24 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			SharedSessionContractImplementor session) {
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			final var builder = builders.get( tableDescriptor.name() );
-			if ( builder == null ) {
-				return;
-			}
-
-			// Apply SET clause columns for attributes
-			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-				var attribute = tableDescriptor.attributes().get( i );
-				if ( shouldIncludeInDynamicUpdate( attribute, builder, updateable, entity, valuesAnalysis, session ) ) {
-					if ( state[attribute.getStateArrayPosition()] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-						// it was not fetched and so could not have changed, skip it
-						continue;
+			if ( builder != null ) {// Apply SET clause columns for attributes
+				for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+					final var attribute = tableDescriptor.attributes().get( i );
+					if ( shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis ) ) {
+						if ( state[attribute.getStateArrayPosition()] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+							// it was not fetched and so could not have changed, skip it
+							continue;
+						}
+						applyValueAssignment( entity, entityPersister.getVersionMapping(), attribute, builder, session );
 					}
-					applyValueAssignment( entity, entityPersister.getVersionMapping(), attribute, builder, session );
 				}
+
+				// Apply WHERE clause - key restrictions
+				applyKeyRestriction( tableDescriptor, builder, rowId );
+
+				// Apply optimistic locking
+				applyOptimisticLocking( tableDescriptor, builder, previousState, valuesAnalysis, session );
 			}
-
-			// Apply WHERE clause - key restrictions
-			applyKeyRestriction( tableDescriptor, builder, rowId );
-
-			// Apply optimistic locking
-			applyOptimisticLocking( tableDescriptor, builder, previousState, valuesAnalysis, session );
 		} );
 
 		// Apply partitioned selection restrictions if needed
@@ -896,10 +866,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private boolean shouldIncludeInDynamicUpdate(
 			AttributeMapping attribute,
-			AssigningTableMutationBuilder<?> builder,
 			boolean[] updateable,
-			Object entity,
-			UpdateValuesAnalysis valuesAnalysis, SharedSessionContractImplementor session) {
+			UpdateValuesAnalysis valuesAnalysis) {
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null
 				&& versionMapping.getVersionAttribute() == attribute ) {
@@ -942,7 +910,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			UpdateValuesAnalysis valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
-
 		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
 			applyVersionBasedOptLocking( tableDescriptor, tableUpdateBuilder );
 		}
@@ -954,8 +921,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	private void applyVersionBasedOptLocking(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder) {
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null
-				&& tableDescriptor.name().equals(
-					versionMapping.getContainingTableExpression() ) ) {
+				&& tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( versionMapping );
 		}
 	}
@@ -978,43 +944,37 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			var attribute = tableDescriptor.attributes().get( i );
-			if ( !versionability[attribute.getStateArrayPosition()] ) {
-				continue;
-			}
+			final var attribute = tableDescriptor.attributes().get( i );
+			if ( versionability[attribute.getStateArrayPosition()] ) {
+				if ( !optimisticLockStyle.isDirty()
+						|| valuesAnalysis.getDirtiness()[attribute.getStateArrayPosition()] ) {
+					// we know the attribute is part of optimistically locking the entity.
+					// check the loaded state to determine if we need `where col = ?` or `where col is null`
+					var previousValue = previousState[attribute.getStateArrayPosition()];
+					// todo : not sure how all ModelParts handle `null` for breakDownJdbcValues...
+					//		we may need explicit handling of that here...
+					attribute.breakDownJdbcValues(
+							previousValue,
+							(valueIndex, value, jdbcValueMapping) -> {
+								if ( !jdbcValueMapping.isFormula() ) { // skip formulas
+									if ( value == null ) {
+										tableUpdateBuilder.addNullOptimisticLockRestriction( jdbcValueMapping );
+									}
+									else {
+										tableUpdateBuilder.addOptimisticLockRestriction( jdbcValueMapping );
+									}
+								}
+							},
+							session
+					);
+				}
 
-			if ( optimisticLockStyle.isDirty() && !valuesAnalysis.getDirtiness()[attribute.getStateArrayPosition()] ) {
-				continue;
 			}
-
-			// we know the attribute is part of optimistically locking the entity.
-			// check the loaded state to determine if we need `where col = ?` or `where col is null`
-			var previousValue = previousState[attribute.getStateArrayPosition()];
-			// todo : not sure how all ModelParts handle `null` for breakDownJdbcValues...
-			//		we may need explicit handling of that here...
-			attribute.breakDownJdbcValues(
-					previousValue,
-					(valueIndex, value, jdbcValueMapping) -> {
-						if ( jdbcValueMapping.isFormula() ) {
-							// skip formulas
-						}
-						else {
-							if ( value == null ) {
-								tableUpdateBuilder.addNullOptimisticLockRestriction( jdbcValueMapping );
-							}
-							else {
-								tableUpdateBuilder.addOptimisticLockRestriction( jdbcValueMapping );
-							}
-						}
-					},
-					session
-			);
 		}
 	}
 
 	private void applyPartitionedSelectionRestrictions(Map<String, TableUpdateBuilder<?>> builders) {
 		final var attributeMappings = entityPersister.getAttributeMappings();
-
 		for ( int m = 0; m < attributeMappings.size(); m++ ) {
 			final var attributeMapping = attributeMappings.get( m );
 			final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
@@ -1023,7 +983,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				if ( selectableMapping.isPartitioned() ) {
 					final String tableNameForMutation =
 							entityPersister.physicalTableNameForMutation( selectableMapping );
-					final TableUpdateBuilder<?> builder = builders.get( tableNameForMutation );
+					final var builder = builders.get( tableNameForMutation );
 					if ( builder != null ) {
 						builder.addKeyRestrictionLeniently( selectableMapping );
 					}
@@ -1045,17 +1005,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			UpdateValuesAnalysis valuesAnalysis,
 			boolean needsDynamicUpdate,
 			GeneratedValuesCollector generatedValuesCollector) {
-		final EntityTableDescriptor tableDescriptorToUse;
-
-		if ( entityPersister instanceof UnionSubclassEntityPersister ) {
-			tableDescriptorToUse = entityPersister.getIdentifierTableDescriptor();
-		}
-		else {
-			tableDescriptorToUse = tableDescriptor;
-		}
-
 		return new EntityUpdateBindPlan(
-				tableDescriptorToUse,
+				entityPersister instanceof UnionSubclassEntityPersister
+						? entityPersister.getIdentifierTableDescriptor()
+						: tableDescriptor,
 				entityPersister,
 				entity,
 				identifier,

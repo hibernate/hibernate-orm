@@ -10,6 +10,7 @@ import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
 
 import static org.hibernate.pretty.MessageHelper.infoString;
+import jakarta.annotation.Nonnull;
 
 /**
  * @author Gail Badner
@@ -27,10 +28,10 @@ public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 
 	@Override
 	public void entityCopyDetected(
-			Object managedEntity,
-			Object mergeEntity1,
-			Object mergeEntity2,
-			EventSource session) {
+			@Nonnull Object managedEntity,
+			@Nonnull Object mergeEntity1,
+			@Nonnull Object mergeEntity2,
+			@Nonnull EventSource session) {
 		if ( mergeEntity1 == managedEntity && mergeEntity2 == managedEntity) {
 			throw new AssertionFailure( "entity1 and entity2 are the same as managedEntity; must be different" );
 		}
@@ -40,7 +41,7 @@ public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 				+ "; " + managedOrDetachedEntityString( managedEntity, mergeEntity2 ) );
 	}
 
-	private String managedOrDetachedEntityString(Object managedEntity, Object entity ) {
+	private @Nonnull String managedOrDetachedEntityString(@Nonnull Object managedEntity, @Nonnull Object entity ) {
 		return new StringBuilder()
 				.append( entity == managedEntity ? "Managed" : "Detached" )
 				.append( " [" )
@@ -54,7 +55,7 @@ public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 	}
 
 	@Override
-	public void topLevelMergeComplete(EventSource session) {
+	public void topLevelMergeComplete(@Nonnull EventSource session) {
 		// Nothing to do
 	}
 }

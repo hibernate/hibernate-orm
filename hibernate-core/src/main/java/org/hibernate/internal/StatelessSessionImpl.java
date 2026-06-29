@@ -84,6 +84,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.TypeHelper;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.List;
@@ -99,6 +100,8 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.QuerySettings.CRITERIA_COPY_TREE;
+import static org.hibernate.engine.internal.CacheHelper.usingCache;
+import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
@@ -170,7 +173,9 @@ public class StatelessSessionImpl
 		connectionProvided = options.getConnection() != null;
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
-			transactionCompletionCallbacks = sharedOptions.getTransactionCompletionCallbacks();
+			final var sharedCoordinator = sharedOptions.getTransactionCompletionCallbacks();
+			assert sharedCoordinator != null; // safe, checked isTransactionCoordinatorShared()
+			transactionCompletionCallbacks = sharedCoordinator;
 //			// register a callback with the child session to propagate auto flushing
 //			transactionCompletionCallbacks.registerCallback( session -> {
 //				// NOTE: `session` here is the parent
@@ -240,41 +245,48 @@ public class StatelessSessionImpl
 	// with the Session forms on SharedSessionContract
 
 	@Override
+	@Nonnull
 	protected Map<String, Object> getInitialProperties() {
 		return new HashMap<>();
 	}
 
 	@SuppressWarnings("deprecation")
-	protected void interpretProperty(String propertyName, Object value) {
+	protected void interpretProperty(
+			@Nonnull String propertyName,
+			@Nullable Object value,
+			@NotNull Map<String, Object> properties) {
 		switch ( propertyName ) {
 			case JPA_SHARED_CACHE_RETRIEVE_MODE:
 			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
-				properties().put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
-				properties().put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties.put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
-								determineCacheStoreMode( properties() ),
+								determineCacheStoreMode( properties ),
 								(CacheRetrieveMode) value
 						)
 				);
 				break;
 			case JPA_SHARED_CACHE_STORE_MODE:
 			case JAKARTA_SHARED_CACHE_STORE_MODE:
-				properties().put( JPA_SHARED_CACHE_STORE_MODE, value );
-				properties().put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
+				properties.put( JPA_SHARED_CACHE_STORE_MODE, value );
+				properties.put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
 								(CacheStoreMode) value,
-								determineCacheRetrieveMode( properties() )
+								determineCacheRetrieveMode( properties )
 						)
 				);
 				break;
 			case CRITERIA_COPY_TREE:
+				if ( value == null ) {
+					throw new IllegalArgumentException( CRITERIA_COPY_TREE + " cannot be null" );
+				}
 				setCriteriaCopyTreeEnabled( parseBoolean( value.toString() ) );
 				break;
 			case STATEMENT_BATCH_SIZE:
 			case HINT_JDBC_BATCH_SIZE:
-				setJdbcBatchSize( parseInt( value.toString() ) );
+				setJdbcBatchSize( value == null ? null : parseInt( value.toString() ) );
 				break;
 			default:
 				SESSION_LOGGER.tracef( "Unsupported property : %s", propertyName  );
@@ -1268,18 +1280,15 @@ public class StatelessSessionImpl
 			SESSION_LOGGER.refreshingTransient( infoString( persister, id, getFactory() ) );
 		}
 
-		if ( persister.canWriteToCache() ) {
-			final var cacheAccess = persister.getCacheAccessStrategy();
-			if ( cacheAccess != null ) {
-				final Object cacheKey = cacheAccess.generateCacheKey(
-						id,
-						persister,
-						getFactory(),
-						getTenantIdentifier()
-				);
-				cacheAccess.evict( cacheKey );
-			}
-		}
+		writingToCache( persister, cache -> {
+			final Object cacheKey = cache.generateCacheKey(
+					id,
+					persister,
+					getFactory(),
+					getTenantIdentifier()
+			);
+			cache.evict( cacheKey );
+		} );
 
 		final Object result =
 				getLoadQueryInfluencers()
@@ -1355,10 +1364,13 @@ public class StatelessSessionImpl
 		}
 		if ( !collection.wasInitialized() ) {
 			final var loadedPersister = ce.getLoadedPersister();
+			final Object loadedKey = ce.getLoadedKey();
 			if ( loadedPersister == null ) {
 				throw new AssertionFailure( "collection entry has no loaded persister" );
 			}
-			final Object loadedKey = ce.getLoadedKey();
+			if ( loadedKey == null ) {
+				throw new AssertionFailure( "collection entry has no loaded key" );
+			}
 			if ( SESSION_LOGGER.isTraceEnabled() ) {
 				SESSION_LOGGER.initializingCollection(
 						collectionInfoString( loadedPersister, collection, loadedKey, this ) );
@@ -1368,12 +1380,12 @@ public class StatelessSessionImpl
 			if ( foundInCache ) {
 				SESSION_LOGGER.collectionInitializedFromCache();
 			}
-				else {
-					loadedPersister.initialize( loadedKey, this );
-					if ( !collection.wasInitialized() || persistenceContext.getCollectionEntry( collection ) == null ) {
-						handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
-					}
-					SESSION_LOGGER.collectionInitialized();
+			else {
+				loadedPersister.initialize( loadedKey, this );
+				if ( !collection.wasInitialized() || persistenceContext.getCollectionEntry( collection ) == null ) {
+					handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
+				}
+				SESSION_LOGGER.collectionInitialized();
 				final var statistics = getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.fetchCollection( loadedPersister.getRole() );
@@ -1384,7 +1396,7 @@ public class StatelessSessionImpl
 
 	@Override
 	@Nonnull
-	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) {
+	public Object instantiate(@Nonnull EntityPersister persister, @Nullable Object id) {
 		checkOpen();
 		return persister.instantiate( id, this );
 	}
@@ -1508,6 +1520,9 @@ public class StatelessSessionImpl
 			if ( !collection.wasInitialized() ) {
 				final var collectionDescriptor = requireCollectionPersister( collection.getRole() );
 				final Object key = collection.getKey();
+				if ( key == null ) {
+					throw new AssertionFailure( "collection entry has no loaded key" );
+				}
 				persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key );
 				collection.setCurrentSession( this );
 				try {
@@ -1518,8 +1533,7 @@ public class StatelessSessionImpl
 					}
 					else {
 						collectionDescriptor.initialize( key, this );
-						handlePotentiallyEmptyCollection( collection, getPersistenceContextInternal(), key,
-								collectionDescriptor );
+						handlePotentiallyEmptyCollection( collection, persistenceContext, key, collectionDescriptor );
 						SESSION_LOGGER.collectionFetched();
 						final var statistics = getStatistics();
 						if ( statistics.isStatisticsEnabled() ) {
@@ -1783,8 +1797,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
-		if ( persister.canWriteToCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
+		return writingToCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					id,
 					persister,
@@ -1792,25 +1805,18 @@ public class StatelessSessionImpl
 					getTenantIdentifier()
 			);
 			final var lock = cache.lockItem( this, cacheKey, previousVersion );
-			transactionCompletionCallbacks.registerCallback( (success, session) -> {
-				cache.unlockItem( session, cacheKey, lock );
-			} );
+			transactionCompletionCallbacks.registerCallback(
+					(success, session) -> cache.unlockItem( session, cacheKey, lock ) );
 			return cacheKey;
-		}
-		else {
-			return null;
-		}
+		}, null );
 	}
 
 	protected void removeCacheItem(Object cacheKey, EntityPersister persister) {
-		if ( persister.canWriteToCache() ) {
-			persister.getCacheAccessStrategy().remove( this, cacheKey );
-		}
+		writingToCache( persister, cache -> cache.remove( this, cacheKey ) );
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
-		if ( persister.hasCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
+		return usingCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					key,
 					persister,
@@ -1818,20 +1824,14 @@ public class StatelessSessionImpl
 					getTenantIdentifier()
 			);
 			final var lock = cache.lockItem( this, cacheKey, null );
-			transactionCompletionCallbacks.registerCallback( (success, session) -> {
-				cache.unlockItem( this, cacheKey, lock );
-			} );
+			transactionCompletionCallbacks.registerCallback(
+					(success, session) -> cache.unlockItem( this, cacheKey, lock ) );
 			return cacheKey;
-		}
-		else {
-			return null;
-		}
+		}, null );
 	}
 
 	protected void removeCacheItem(Object cacheKey, CollectionPersister persister) {
-		if ( persister.hasCache() ) {
-			persister.getCacheAccessStrategy().remove( this, cacheKey );
-		}
+		usingCache( persister, cache -> cache.remove( this, cacheKey ) );
 	}
 
 	@Override

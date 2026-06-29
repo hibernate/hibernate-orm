@@ -4,7 +4,8 @@
  */
 package org.hibernate.action.internal;
 
-import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
@@ -30,18 +31,26 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 	 * @param session The session
 	 */
 	public QueuedOperationCollectionAction(
-			final PersistentCollection<?> collection,
-			final CollectionPersister persister,
-			final Object id,
-			final EventSource session) {
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nonnull Object id,
+			final @Nonnull EventSource session) {
 		super( persister, collection, id, session );
+		assert collection != null;
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	@Nonnull
+	public PersistentCollection<?> getCollection() {
+		final var collection = super.getCollection();
+		assert collection != null;
+		return collection;
+	}
+
+	@Override
+	public void execute() {
 		// this QueuedOperationCollectionAction has to be executed before any other
 		// CollectionAction involving the same collection.
-
 		getPersister().processQueuedOps( getCollection(), getKey(), getSession() );
 		afterQueuedOperationsProcessed();
 	}
@@ -55,13 +64,15 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 			// The other CollectionAction types call CollectionEntry#afterAction, which
 			// clears the dirty flag. We don't want to call CollectionEntry#afterAction unless
 			// there is no other CollectionAction that will be executed on the same collection.
-			final var ce = getSession().getPersistenceContextInternal().getCollectionEntry( getCollection() );
+			final var collectionEntry =
+					getSession().getPersistenceContextInternal()
+							.getCollectionEntry( getCollection() );
 			final var collectionFlushActionTracker =
 					getSession().getPersistenceContextInternal()
 							.getCollectionFlushActionTracker();
 			if ( collectionFlushActionTracker == null
 					|| !collectionFlushActionTracker.hasQueuedCollectionAction( getCollection() ) ) {
-				ce.afterAction( getCollection() );
+				collectionEntry.afterAction( getCollection() );
 			}
 		}
 	}

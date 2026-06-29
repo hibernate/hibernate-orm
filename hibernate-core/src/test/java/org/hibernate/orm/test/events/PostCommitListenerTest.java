@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.events;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -187,12 +188,12 @@ public class PostCommitListenerTest {
 		int failed;
 
 		@Override
-		public void onPostDelete(PostDeleteEvent event) {
+		public void onPostDelete(@Nonnull PostDeleteEvent event) {
 			success++;
 		}
 
 		@Override
-		public void onPostDeleteCommitFailed(PostDeleteEvent event) {
+		public void onPostDeleteCommitFailed(@Nonnull PostDeleteEvent event) {
 			failed++;
 		}
 
@@ -227,12 +228,12 @@ public class PostCommitListenerTest {
 		int failed;
 
 		@Override
-		public void onPostInsert(PostInsertEvent event) {
+		public void onPostInsert(@Nonnull PostInsertEvent event) {
 			success++;
 		}
 
 		@Override
-		public void onPostInsertCommitFailed(PostInsertEvent event) {
+		public void onPostInsertCommitFailed(@Nonnull PostInsertEvent event) {
 			failed++;
 		}
 

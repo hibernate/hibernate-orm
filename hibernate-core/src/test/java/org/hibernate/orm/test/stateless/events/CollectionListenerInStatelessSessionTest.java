@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.stateless.events;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
@@ -64,7 +65,7 @@ class MyPreCollectionRecreateEventListener implements PreCollectionRecreateEvent
 	int called = 0;
 
 	@Override
-	public void onPreRecreateCollection(PreCollectionRecreateEvent event) {
+	public void onPreRecreateCollection(@Nonnull PreCollectionRecreateEvent event) {
 		assertThat( event.getAffectedOwnerOrNull() ).isNotNull();
 		assertThat( event.getCollection().getOwner() ).isNotNull();
 		called++;
@@ -77,7 +78,7 @@ class MyPreCollectionRemoveEventListener implements PreCollectionRemoveEventList
 	int called = 0;
 
 	@Override
-	public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
+	public void onPreRemoveCollection(@Nonnull PreCollectionRemoveEvent event) {
 		assertThat( event.getAffectedOwnerOrNull() ).isNotNull();
 		assertThat( event.getCollection().getOwner() ).isNotNull();
 		called++;

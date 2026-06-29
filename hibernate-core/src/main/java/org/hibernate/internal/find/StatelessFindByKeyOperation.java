@@ -75,16 +75,14 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 				Helper.coerceId( getEntityDescriptor(), key,
 						getSession().getFactory() );
 
-		if ( getEntityDescriptor().canReadFromCache() ) {
-			final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
-			if ( cachedEntity != null ) {
-				final var temporaryPersistenceContext = getSession().getPersistenceContext();
-				if ( temporaryPersistenceContext.isLoadFinished() ) {
-					temporaryPersistenceContext.clear();
-				}
-				//noinspection unchecked
-				return (T) cachedEntity;
+		final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
+		if ( cachedEntity != null ) {
+			final var temporaryPersistenceContext = getSession().getPersistenceContext();
+			if ( temporaryPersistenceContext.isLoadFinished() ) {
+				temporaryPersistenceContext.clear();
 			}
+			//noinspection unchecked
+			return (T) cachedEntity;
 		}
 
 		return withOptions( () -> {
@@ -105,7 +103,7 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 		return CacheLoadHelper.loadFromSecondLevelCache(
 				context.getStatelessSession(),
 				null,
-				getLockMode(),
+				getNullSafeLockMode(),
 				getEntityDescriptor(),
 				new EntityKey( key, getEntityDescriptor() )
 		);

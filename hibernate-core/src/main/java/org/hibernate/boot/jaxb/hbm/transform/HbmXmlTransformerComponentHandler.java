@@ -7,15 +7,23 @@ package org.hibernate.boot.jaxb.hbm.transform;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
+import jakarta.persistence.AccessType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Property;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -46,9 +54,11 @@ public class HbmXmlTransformerComponentHandler {
 	private final Map<String, ComponentTypeInfo> embeddableInfoByRole;
 	private final JaxbEntityMappingsImpl mappingRoot;
 	private final NestedAttributeProcessor nestedAttributeProcessor;
+	private final String defaultAccess;
 
 	// todo (7.0) : use transformation-state instead
 	private final Map<String, JaxbEmbeddableImpl> jaxbEmbeddableByClassName = new HashMap<>();
+	private final Map<String, ComponentTypeInfo> referenceComponentByClassName = new HashMap<>();
 	private int counter = 1;
 
 	/**
@@ -57,14 +67,17 @@ public class HbmXmlTransformerComponentHandler {
 	 * @param embeddableInfoByRole component type info populated from the boot model
 	 * @param mappingRoot the target mapping root to add embeddables to
 	 * @param nestedAttributeProcessor callback to process nested attributes inside a component
+	 * @param defaultAccess the HBM mapping's default-access value
 	 */
 	public HbmXmlTransformerComponentHandler(
 			Map<String, ComponentTypeInfo> embeddableInfoByRole,
 			JaxbEntityMappingsImpl mappingRoot,
-			NestedAttributeProcessor nestedAttributeProcessor) {
+			NestedAttributeProcessor nestedAttributeProcessor,
+			String defaultAccess) {
 		this.embeddableInfoByRole = embeddableInfoByRole;
 		this.mappingRoot = mappingRoot;
 		this.nestedAttributeProcessor = nestedAttributeProcessor;
+		this.defaultAccess = defaultAccess;
 	}
 
 	/**
@@ -75,7 +88,7 @@ public class HbmXmlTransformerComponentHandler {
 	 * @param mappingRoot the target mapping root to add embeddables to
 	 */
 	public HbmXmlTransformerComponentHandler(JaxbEntityMappingsImpl mappingRoot) {
-		this( Map.of(), mappingRoot, null );
+		this( Map.of(), mappingRoot, null, "property" );
 	}
 
 	/**
@@ -97,6 +110,13 @@ public class HbmXmlTransformerComponentHandler {
 			}
 		}
 
+		if ( componentTypeInfo != null ) {
+			final String compositeUserTypeName = componentTypeInfo.getComponent().getTypeName();
+			if ( isNotEmpty( compositeUserTypeName ) && isNotEmpty( embeddableClassName ) ) {
+				applyCompositeUserTypeRegistration( embeddableClassName, compositeUserTypeName );
+			}
+		}
+
 		final String role = roleBase + "." + hbmComponent.getName();
 		final String embeddableName = determineEmbeddableName( embeddableClassName, hbmComponent.getName() );
 		final var jaxbEmbeddable = convertEmbeddable(
@@ -109,6 +129,9 @@ public class HbmXmlTransformerComponentHandler {
 
 		if ( isNotEmpty( embeddableClassName ) ) {
 			jaxbEmbeddableByClassName.put( embeddableClassName, jaxbEmbeddable );
+			if ( componentTypeInfo != null ) {
+				referenceComponentByClassName.put( embeddableClassName, componentTypeInfo );
+			}
 		}
 
 		return jaxbEmbeddable;
@@ -116,11 +139,73 @@ public class HbmXmlTransformerComponentHandler {
 
 	public JaxbEmbeddedImpl transformEmbedded(
 			JaxbEmbeddableImpl jaxbEmbeddable,
-			JaxbHbmCompositeAttributeType hbmComponent) {
+			JaxbHbmCompositeAttributeType hbmComponent,
+			ComponentTypeInfo componentTypeInfo) {
 		final var embedded = new JaxbEmbeddedImpl();
 		embedded.setName( hbmComponent.getName() );
 		embedded.setTarget( jaxbEmbeddable.getName() );
+
+		if ( componentTypeInfo != null ) {
+			final String embeddableClassName = jaxbEmbeddable.getClazz();
+			final var referenceInfo = embeddableClassName != null
+					? referenceComponentByClassName.get( embeddableClassName )
+					: null;
+			if ( referenceInfo != null && referenceInfo != componentTypeInfo ) {
+				applyAttributeOverrides( embedded, referenceInfo, componentTypeInfo );
+			}
+		}
+
 		return embedded;
+	}
+
+	private void applyAttributeOverrides(
+			JaxbEmbeddedImpl embedded,
+			ComponentTypeInfo referenceInfo,
+			ComponentTypeInfo currentInfo) {
+		for ( Property currentProp : currentInfo.getComponent().getProperties() ) {
+			final Property referenceProp = findProperty( referenceInfo, currentProp.getName() );
+			if ( referenceProp == null ) {
+				continue;
+			}
+
+			final var currentColumns = currentProp.getValue().getColumns();
+			final var referenceColumns = referenceProp.getValue().getColumns();
+			if ( currentColumns.size() != 1 || referenceColumns.size() != 1 ) {
+				continue;
+			}
+
+			final Column currentCol = currentColumns.get( 0 );
+			final Column referenceCol = referenceColumns.get( 0 );
+			if ( columnsMatch( currentCol, referenceCol ) ) {
+				continue;
+			}
+
+			final var override = new JaxbAttributeOverrideImpl();
+			override.setName( currentProp.getName() );
+			final var column = new JaxbColumnImpl();
+			column.setName( currentCol.getQuotedName() );
+			column.setNullable( currentCol.isNullable() );
+			column.setUnique( currentCol.isUnique() );
+			column.setRead( currentCol.getCustomReadExpression() );
+			column.setWrite( currentCol.getCustomWriteExpression() );
+			override.setColumn( column );
+			embedded.getAttributeOverrides().add( override );
+		}
+	}
+
+	private static Property findProperty(ComponentTypeInfo info, String name) {
+		for ( Property p : info.getComponent().getProperties() ) {
+			if ( name.equals( p.getName() ) ) {
+				return p;
+			}
+		}
+		return null;
+	}
+
+	private static boolean columnsMatch(Column a, Column b) {
+		return Objects.equals( a.getQuotedName(), b.getQuotedName() )
+				&& Objects.equals( a.getCustomReadExpression(), b.getCustomReadExpression() )
+				&& Objects.equals( a.getCustomWriteExpression(), b.getCustomWriteExpression() );
 	}
 
 	private JaxbEmbeddableImpl convertEmbeddable(
@@ -134,6 +219,12 @@ public class HbmXmlTransformerComponentHandler {
 		embeddable.setMetadataComplete( true );
 		embeddable.setName( embeddableName );
 		embeddable.setClazz( embeddableClassName );
+
+		final String componentAccess = hbmComponent.getAccess();
+		final String effectiveAccess = componentAccess != null ? componentAccess : defaultAccess;
+		if ( effectiveAccess == null || "property".equalsIgnoreCase( effectiveAccess ) ) {
+			embeddable.setAccess( AccessType.PROPERTY );
+		}
 
 		embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
 		if ( nestedAttributeProcessor != null ) {
@@ -152,7 +243,7 @@ public class HbmXmlTransformerComponentHandler {
 			}
 		}
 
-		transferEmbeddableTransients( embeddableClassName, componentTypeInfo, embeddable );
+		transferEmbeddableTransients( embeddableClassName, componentTypeInfo, hbmComponent, embeddable );
 
 		return embeddable;
 	}
@@ -160,6 +251,7 @@ public class HbmXmlTransformerComponentHandler {
 	private void transferEmbeddableTransients(
 			String embeddableClassName,
 			ComponentTypeInfo componentTypeInfo,
+			JaxbHbmCompositeAttributeType hbmComponent,
 			JaxbEmbeddableImpl embeddable) {
 		if ( embeddableClassName == null || componentTypeInfo == null ) {
 			return;
@@ -175,7 +267,9 @@ public class HbmXmlTransformerComponentHandler {
 				return;
 			}
 
-			final boolean fieldAccess = component.getParentProperty() == null;
+			final String componentAccess = hbmComponent.getAccess();
+			final String effectiveAccess = componentAccess != null ? componentAccess : defaultAccess;
+			final boolean fieldAccess = "field".equals( effectiveAccess.toLowerCase( Locale.ROOT ) );
 			final Set<String> transientNames = TransformationHelper.discoverUnmappedPropertyNames(
 					javaClass, mappedPropertyNames, fieldAccess
 			);
@@ -184,6 +278,18 @@ public class HbmXmlTransformerComponentHandler {
 		catch (Exception e) {
 			// if we can't load the class, skip transient generation
 		}
+	}
+
+	private void applyCompositeUserTypeRegistration(String embeddableClassName, String compositeUserTypeName) {
+		for ( JaxbCompositeUserTypeRegistrationImpl existing : mappingRoot.getCompositeUserTypeRegistrations() ) {
+			if ( embeddableClassName.equals( existing.getClazz() ) ) {
+				return;
+			}
+		}
+		final var registration = new JaxbCompositeUserTypeRegistrationImpl();
+		registration.setClazz( embeddableClassName );
+		registration.setDescriptor( compositeUserTypeName );
+		mappingRoot.getCompositeUserTypeRegistrations().add( registration );
 	}
 
 	public String determineEmbeddableName(String componentClassName, String attributeName) {

@@ -4,7 +4,8 @@
  */
 package org.hibernate.action.internal;
 
-import org.hibernate.HibernateException;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
@@ -18,7 +19,9 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public final class CollectionRecreateAction extends CollectionAction {
 
+	@Nullable
 	private final Object affectedOwner;
+	@Nullable
 	private final Object affectedOwnerId;
 
 	/**
@@ -29,11 +32,12 @@ public final class CollectionRecreateAction extends CollectionAction {
 	 * @param session The session
 	 */
 	public CollectionRecreateAction(
-			final PersistentCollection<?> collection,
-			final CollectionPersister persister,
-			final Object id,
-			final EventSource session) {
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nullable Object id,
+			final @Nonnull EventSource session) {
 		super( persister, collection, id, session );
+		assert collection != null;
 		// Capture the owner at action creation time so it's available when the post-event
 		// fires (which may be after the collection owner reference has been cleared)
 		this.affectedOwner = collection.getOwner();
@@ -43,7 +47,15 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	@Override
-	public void execute() throws HibernateException {
+	@Nonnull
+	public PersistentCollection<?> getCollection() {
+		final var collection = super.getCollection();
+		assert collection != null;
+		return collection;
+	}
+
+	@Override
+	public void execute() {
 		// this method is called when a new non-null collection is persisted
 		// or when an existing (non-null) collection is moved to a new owner
 		final var collection = getCollection();
@@ -51,6 +63,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final var session = getSession();
 		final var persister = getPersister();
 		final Object key = getKey();
+		assert key != null;
 		final var eventMonitor = session.getEventMonitor();
 		final var event = eventMonitor.beginCollectionRecreateEvent();
 		boolean success = false;
@@ -78,6 +91,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 						PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
 
+	@Nonnull
 	private PreCollectionRecreateEvent newPreCollectionRecreateEvent() {
 		return new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
 	}
@@ -88,14 +102,18 @@ public final class CollectionRecreateAction extends CollectionAction {
 						PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}
 
+
+	@Nonnull
 	private PostCollectionRecreateEvent newPostCollectionRecreateEvent() {
 		return new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
 	}
 
+	@Nullable
 	public Object getAffectedOwner() {
 		return affectedOwner;
 	}
 
+	@Nullable
 	public Object getAffectedOwnerId() {
 		return affectedOwnerId;
 	}

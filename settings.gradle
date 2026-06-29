@@ -31,16 +31,16 @@ dependencyResolutionManagement {
         if ( !org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it) ) {
             // temporary for 4.0 snapshot testing
             maven {
-                url "https://central.sonatype.com/repository/maven-snapshots/"
+                url = "https://central.sonatype.com/repository/maven-snapshots/"
             }
 
             if (System.getProperty('JPA_PREVIEW') != null) {
                 maven {
-                    url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+                    url = "https://jakarta.oss.sonatype.org/content/repositories/releases/"
                 }
                 // Needed for the SNAPSHOT versions of Jakarta Persistence
                 maven {
-                    url "https://central.sonatype.com/repository/maven-snapshots/"
+                    url = "https://central.sonatype.com/repository/maven-snapshots/"
                 }
             }
         }
@@ -181,6 +181,11 @@ include 'hibernate-reveng'
 project(':hibernate-reveng').projectDir = new File(rootProject.projectDir, "tooling/hibernate-reveng")
 
 include 'hibernate-tck-runner'
+
+// Jakarta Data TCK dependencies require JDK 21+
+if ( jdkVersions.test.launcher.asInt() >= 21 ) {
+    include 'hibernate-tck-data-runner'
+}
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

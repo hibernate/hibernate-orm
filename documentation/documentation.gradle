@@ -209,7 +209,7 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 		docTitle = "Hibernate Javadoc ($project.version)"
 	}
 
-	if ( jdkVersions.explicit ) {
+	if ( rootProject.jdkVersions.explicit ) {
 //			setJFlags(
 //					getProperty( 'toolchain.javadoc.jvmargs' ).toString().
 //							split( ' ' ).toList().findAll( { !it.isEmpty() } )

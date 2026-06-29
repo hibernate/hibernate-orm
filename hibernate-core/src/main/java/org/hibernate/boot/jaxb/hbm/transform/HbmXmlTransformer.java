@@ -2239,8 +2239,15 @@ public class HbmXmlTransformer {
 		}
 
 		final var embeddable = new JaxbEmbeddableImpl();
+		embeddable.setMetadataComplete( true );
 		embeddable.setClazz( embeddableClassName );
 		embeddable.setName( embeddableName );
+
+		final String defaultAccess = hbmXmlBinding.getRoot().getDefaultAccess();
+		if ( defaultAccess == null || "property".equalsIgnoreCase( defaultAccess ) ) {
+			embeddable.setAccess( AccessType.PROPERTY );
+		}
+
 		embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
 
 		final var previousBaseTable = currentBaseTable;
@@ -2256,6 +2263,7 @@ public class HbmXmlTransformer {
 		finally {
 			currentBaseTable = previousBaseTable;
 		}
+
 		mappingXmlBinding.getRoot().getEmbeddables().add( embeddable );
 	}
 

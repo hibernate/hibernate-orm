@@ -409,7 +409,8 @@ public class TestUtil {
 				 */
 				while ( ( line = input.readLine() ) != null ) {
 					contents.append( line );
-					contents.append( System.lineSeparator() );
+					// Always use \n as line terminator for this string to avoid testing issues on Windows
+					contents.append( '\n' );
 				}
 			}
 			finally {

@@ -498,8 +498,12 @@ public interface MappingSettings {
 	 *
 	 * @since 6.0
 	 *
+	 * @deprecated Use {@link org.hibernate.annotations.Bag @Bag} at the
+	 * attribute, type, or package level instead.
+	 *
 	 * @see org.hibernate.annotations.Bag
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 
 	/**

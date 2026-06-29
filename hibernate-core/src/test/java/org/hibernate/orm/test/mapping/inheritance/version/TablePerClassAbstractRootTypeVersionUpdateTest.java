@@ -42,7 +42,7 @@ public class TablePerClassAbstractRootTypeVersionUpdateTest {
 			session.flush();
 			assertThat( dog.getVersion() ).isEqualTo( 1L );
 		} );
-		scope.inSession( session -> assertThat( session.find( Dog.class, 1L ).getVersion() ).isEqualTo( 2L ) );
+		scope.inSession( session -> assertThat( session.find( Dog.class, 1L ).getVersion() ).isEqualTo( 1L ) );
 	}
 
 	@Test

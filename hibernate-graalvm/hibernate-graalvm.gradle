@@ -10,6 +10,19 @@ plugins {
 
 description = "Experimental extension to make it easier to compile applications into a GraalVM native image"
 
+jar {
+    manifest {
+        attributes(
+                'Import-Package': [
+                        // GraalVM Native Image API: only present when building native images
+                        'org.graalvm.nativeimage.*;resolution:=optional',
+                        // All other referenced packages are required
+                        '*'
+                ].join(',')
+        )
+    }
+}
+
 dependencies {
     //No need for transitive dependencies: this is all just metadata to be used as companion jar.
     compileOnly project( ':hibernate-core' )

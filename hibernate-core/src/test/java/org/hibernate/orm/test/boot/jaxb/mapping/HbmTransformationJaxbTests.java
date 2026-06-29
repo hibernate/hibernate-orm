@@ -360,6 +360,19 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20628" )
+	public void testCompositeElementAccessTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			assertThat( embeddable.getAccess() )
+					.as( "Composite-element embeddable should have access=PROPERTY (HBM default)" )
+					.isEqualTo( jakarta.persistence.AccessType.PROPERTY );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20599" )
 	public void testCompositeElementColumnTableTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {

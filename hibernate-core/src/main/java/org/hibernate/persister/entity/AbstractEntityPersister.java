@@ -1878,12 +1878,9 @@ public abstract class AbstractEntityPersister
 		);
 
 		final NavigablePath entityPath = new NavigablePath( getRootPathName() );
-		final TableGroup rootTableGroup = createRootTableGroup(
-				true,
+		final TableGroup rootTableGroup = createSelectFragmentRootTableGroup(
+				alias,
 				entityPath,
-				null,
-				new SqlAliasBaseConstant( alias ),
-				() -> p -> {},
 				sqlAstCreationState
 		);
 
@@ -1910,7 +1907,7 @@ public abstract class AbstractEntityPersister
 			assert discriminatorMapping.getJdbcTypeCount() == 1;
 			final SelectableMapping selectableMapping = discriminatorMapping.getSelectable( 0 );
 			if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
-				aliasSelection( sqlSelections, i, getDiscriminatorAlias() + suffix );
+				aliasSelection( sqlSelections, i, getDiscriminatorAlias( suffix ) );
 				i++;
 			}
 		}
@@ -1972,6 +1969,54 @@ public abstract class AbstractEntityPersister
 		sqlSelections.set(
 				selectionIndex,
 				new SqlSelectionImpl( selectionIndex, new AliasedExpression( expression, alias ) )
+		);
+	}
+
+	private TableGroup createSelectFragmentRootTableGroup(
+			String alias,
+			NavigablePath entityPath,
+			SqlAstCreationState sqlAstCreationState) {
+
+		final TableReference rootTableReference = new NamedTableReference(
+				getTableName(),
+				alias
+		);
+		return new StandardTableGroup(
+				true,
+				entityPath,
+				this,
+				null,
+				rootTableReference,
+				true,
+				new SqlAliasBaseConstant( alias ),
+				getRootEntityDescriptor()::containsTableReference,
+				(tableExpression, tg) -> {
+					final String[] subclassTableNames = getSubclassTableNames();
+					for ( int i = 0; i < subclassTableNames.length; i++ ) {
+						if ( tableExpression.equals( subclassTableNames[i] ) ) {
+							final NamedTableReference joinedTableReference = new NamedTableReference(
+									tableExpression,
+									generateTableAlias( alias, i ),
+									isNullableSubclassTable( i )
+							);
+							return new TableReferenceJoin(
+									shouldInnerJoinSubclassTable( i, emptySet() ),
+									joinedTableReference,
+									generateJoinPredicate(
+											rootTableReference,
+											joinedTableReference,
+											needsDiscriminator()
+													? getRootTableKeyColumnNames()
+													: getIdentifierColumnNames(),
+											getSubclassTableKeyColumns( i ),
+											sqlAstCreationState
+									)
+							);
+						}
+					}
+					return null;
+				},
+				getFactory()
 		);
 	}
 

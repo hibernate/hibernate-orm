@@ -441,6 +441,11 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getCurrentTimestampSelectString() {
+		return "select current timestamp from sysibm.sysdummy1";
+	}
+
+	@Override
 	public boolean supportsValuesList() {
 		// DB2 z/OS has a VALUES statement, but that doesn't support multiple values
 		return false;

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+<hibernate-reverse-engineering>
+	<schema-selection match-schema="PUBLIC"/>
+	<table-filter match-name=".*"/>
+</hibernate-reverse-engineering>

@@ -29,7 +29,6 @@ import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.DB2SqlAstTranslator;
-import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.temporal.DB2TemporalTableSupport;
 import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.DB2GlobalTemporaryTableStrategy;
@@ -295,7 +294,7 @@ public class DB2Dialect extends Dialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
+		return new DB2SqlAstTranslator<>( factory, optionalTableUpdate )
 				.createMergeOperation( optionalTableUpdate );
 	}
 	protected UniqueDelegate createUniqueDelegate() {

@@ -582,7 +582,7 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final var memberDetails = propertyAnnotatedElement.getAttributeMember();
 		if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
-			final var property = findProperty( embeddable, memberDetails.getName() );
+			final var property = findProperty( embeddable, propertyAnnotatedElement.getPropertyName() );
 			if ( property != null ) {
 				// Identifier properties are always simple values
 				final var value = (SimpleValue) property.getValue();

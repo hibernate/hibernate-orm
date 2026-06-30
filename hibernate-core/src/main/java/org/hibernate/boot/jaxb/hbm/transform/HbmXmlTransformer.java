@@ -2264,6 +2264,10 @@ public class HbmXmlTransformer {
 			currentBaseTable = previousBaseTable;
 		}
 
+		if ( compositeElement.getParent() != null ) {
+			embeddable.getAttributes().setParent( compositeElement.getParent().getName() );
+		}
+
 		mappingXmlBinding.getRoot().getEmbeddables().add( embeddable );
 	}
 

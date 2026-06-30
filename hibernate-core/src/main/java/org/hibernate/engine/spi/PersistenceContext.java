@@ -568,15 +568,35 @@ public interface PersistenceContext {
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
 	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
+	 * @deprecated Use {@link #reentrantSafeManagedEntities()} instead
 	 */
-	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
+	@Deprecated( since = "8.0", forRemoval = true )
+	@SuppressWarnings( "unchecked" )
+	default Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries() {
+		final var managedEntities = reentrantSafeManagedEntities();
+		final var entityEntities = new Map.Entry[managedEntities.length];
+		for (var i = 0; i < managedEntities.length; i++) {
+			final var managedEntity = managedEntities[i];
+			entityEntities[i] = Map.entry(
+					managedEntity.$$_hibernate_getEntityInstance(),
+					managedEntity.$$_hibernate_getEntityEntry()
+			);
+		}
+		return entityEntities;
+	}
+
+	/**
+	 * Provides access to the managed entities associated with the persistence context in a manner that
+	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
+	 */
+	ManagedEntity[] reentrantSafeManagedEntities();
 
 //	/**
 //	 * Get the mapping from entity instance to entity entry
 //	 *
 //	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement; only valid really for
 //	 * sizing, see {@link #getNumberOfManagedEntities}.  For iterating the entity/EntityEntry combos, see
-//	 * {@link #reentrantSafeEntityEntries}
+//	 * {@link #reentrantSafeManagedEntities}
 //	 */
 //	@Deprecated
 //	Map getEntityEntries();

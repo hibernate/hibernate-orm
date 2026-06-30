@@ -778,4 +778,43 @@ public class HbmTransformationJaxbTests {
 					.contains( "effectiveDate", "cat" );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20640" )
+	public void testInverseManyToManyMappedByTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/many-to-many-inverse/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl productEntity = transformed.getEntities().stream()
+					.filter( e -> "Product".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( productEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final JaxbManyToManyImpl categories = productEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( categories.getName() ).isEqualTo( "categories" );
+			assertThat( categories.getMappedBy() )
+					.as( "Owning side should not have mapped-by" )
+					.isNull();
+			assertThat( categories.getJoinTable() )
+					.as( "Owning side should have a join-table" )
+					.isNotNull();
+			assertThat( categories.getJoinTable().getName() ).isEqualTo( "PROD_CAT" );
+
+			final JaxbEntityImpl categoryEntity = transformed.getEntities().stream()
+					.filter( e -> "Category".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( categoryEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final JaxbManyToManyImpl products = categoryEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( products.getName() ).isEqualTo( "products" );
+			assertThat( products.getMappedBy() )
+					.as( "Inverse side should have mapped-by pointing to the owning side" )
+					.isEqualTo( "categories" );
+			assertThat( products.getJoinTable() )
+					.as( "Inverse side should not have a join-table" )
+					.isNull();
+		} );
+	}
 }

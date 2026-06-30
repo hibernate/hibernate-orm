@@ -730,6 +730,19 @@ public class ManagedTypeProcessor {
 					memberAdjuster,
 					xmlDocumentContext
 			);
+
+			final String parentProperty = jaxbEmbeddable.getAttributes().getParent();
+			if ( parentProperty != null ) {
+				final var memberDetails = XmlProcessingHelper.getAttributeMember(
+						parentProperty,
+						classAccessType != null ? classAccessType : AccessType.FIELD,
+						classDetails
+				);
+				memberDetails.applyAnnotationUsage(
+						HibernateAnnotations.PARENT,
+						xmlDocumentContext.getModelBuildingContext()
+				);
+			}
 		}
 	}
 
@@ -759,6 +772,19 @@ public class ManagedTypeProcessor {
 						ManagedTypeProcessor::adjustNonDynamicTypeMember,
 						xmlDocumentContext
 				);
+
+				final String parentProperty = attributes.getParent();
+				if ( parentProperty != null ) {
+					final var memberDetails = XmlProcessingHelper.getAttributeMember(
+							parentProperty,
+							classAccessType != null ? classAccessType : AccessType.FIELD,
+							classDetails
+					);
+					memberDetails.applyAnnotationUsage(
+							HibernateAnnotations.PARENT,
+							xmlDocumentContext.getModelBuildingContext()
+					);
+				}
 			}
 		} );
 	}

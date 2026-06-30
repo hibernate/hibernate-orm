@@ -6,6 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -59,8 +60,16 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 		);
 	}
 
+	private static boolean isBinary(@Nullable CastTarget castTarget) {
+		return castTarget != null && castTarget.getJdbcMapping().getJdbcType().isBinary();
+	}
+
 	static void appendJsonValue(SqlAppender sqlAppender, Expression jsonDocument, List<JsonPathHelper.JsonPathElement> jsonPathElements, boolean isJsonType, JsonPathPassingClause jsonPathPassingClause, CastTarget castTarget, SqlAstTranslator<?> walker) {
-		if ( castTarget != null ) {
+		final boolean isBinary = isBinary( castTarget );
+		if ( isBinary ) {
+			sqlAppender.appendSql( "decode(" );
+		}
+		else if ( castTarget != null ) {
 			sqlAppender.appendSql( "cast(" );
 		}
 		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocument );
@@ -109,7 +118,10 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 		}
 		sqlAppender.appendSql( ']' );
 
-		if ( castTarget != null ) {
+		if ( isBinary ) {
+			sqlAppender.appendSql( ",'hex')" );
+		}
+		else if ( castTarget != null ) {
 			sqlAppender.appendSql( " as " );
 			castTarget.accept( walker );
 			sqlAppender.appendSql( ')' );

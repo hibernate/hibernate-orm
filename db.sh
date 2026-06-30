@@ -55,11 +55,11 @@ else
 fi
 
 if [[ $DB_COUNT -ge 16 ]]; then
-  DB_COUNT=$(($(DB_COUNT)/2))
+  DB_COUNT=$(($DB_COUNT/2))
 #elif [[ $DB_COUNT -le 4 ]]; then
   # Only start halving the
 #else
-#  DB_COUNT=$(($(DB_COUNT)/2))
+#  DB_COUNT=$(($DB_COUNT/2))
 fi
 
 ###############################################################################

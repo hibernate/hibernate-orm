@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/compositeelement/Parent.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/compositeelement/Parent.orm.xml"
 )
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJdbcEscapes.class )

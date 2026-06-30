@@ -1220,6 +1220,8 @@
             <xsd:element name="any" type="orm:hbm-any-mapping" minOccurs="0" maxOccurs="unbounded"/>
             <!-- hbm: plural discriminated association mapping -->
             <xsd:element name="many-to-any" type="orm:hbm-many-to-any" minOccurs="0" maxOccurs="unbounded" />
+            <!-- hbm: back-reference to the owning entity, see @org.hibernate.annotations.Parent -->
+            <xsd:element name="parent" type="xsd:string" minOccurs="0" />
         </xsd:sequence>
     </xsd:complexType>
 

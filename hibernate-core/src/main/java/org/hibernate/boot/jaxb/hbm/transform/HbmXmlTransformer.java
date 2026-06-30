@@ -2639,6 +2639,9 @@ public class HbmXmlTransformer {
 		for ( var hbmFilter : hbmCollection.getFilter() ) {
 			target.getFilters().add( convert( hbmFilter ) );
 		}
+		for ( var hbmFilter : manyToMany.getFilter() ) {
+			target.getFilters().add( convert( hbmFilter ) );
+		}
 
 		if ( isNotEmpty( manyToMany.getWhere() ) ) {
 			target.setSqlRestriction( manyToMany.getWhere() );

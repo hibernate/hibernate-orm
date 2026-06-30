@@ -212,9 +212,9 @@ public final class BidirectionalAssociationSynchronizer {
 			final Map<OneToManyDescriptor, Map<Object, Set<Object>>> expectedOneToMany = new IdentityHashMap<>();
 			final Map<OneToOneDescriptor, Map<Object, Object>> expectedOneToOne = new IdentityHashMap<>();
 
-			for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
-				final Object entity = entry.getKey();
-				final EntityEntry entityEntry = entry.getValue();
+			for ( var entry : persistenceContext.reentrateSafeManagedEntities() ) {
+				final Object entity = entry.$$_hibernate_getEntityInstance();
+				final EntityEntry entityEntry = entry.$$_hibernate_getEntityEntry();
 				if ( !isManaged( entityEntry ) ) {
 					continue;
 				}
@@ -251,9 +251,9 @@ public final class BidirectionalAssociationSynchronizer {
 			for ( var descriptorEntry : expectedOneToMany.entrySet() ) {
 				final OneToManyDescriptor descriptor = descriptorEntry.getKey();
 				final Map<Object, Set<Object>> expectedByParent = descriptorEntry.getValue();
-				for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
-					final Object parent = entry.getKey();
-					final EntityEntry entityEntry = entry.getValue();
+				for ( var entry : persistenceContext.reentrateSafeManagedEntities() ) {
+					final Object parent = entry.$$_hibernate_getEntityInstance();
+					final EntityEntry entityEntry = entry.$$_hibernate_getEntityEntry();
 					if ( !isManaged( entityEntry ) || !descriptor.inversePersister().isInstance( parent ) ) {
 						continue;
 					}
@@ -288,9 +288,9 @@ public final class BidirectionalAssociationSynchronizer {
 			for ( var descriptorEntry : expectedOneToOne.entrySet() ) {
 				final OneToOneDescriptor descriptor = descriptorEntry.getKey();
 				final Map<Object, Object> expected = descriptorEntry.getValue();
-				for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
-					final Object inverse = entry.getKey();
-					final EntityEntry entityEntry = entry.getValue();
+				for ( var entry : persistenceContext.reentrateSafeManagedEntities() ) {
+					final Object inverse = entry.$$_hibernate_getEntityInstance();
+					final EntityEntry entityEntry = entry.$$_hibernate_getEntityEntry();
 					if ( !isManaged( entityEntry ) || !descriptor.inversePersister().isInstance( inverse ) ) {
 						continue;
 					}
@@ -335,9 +335,9 @@ public final class BidirectionalAssociationSynchronizer {
 			for ( var descriptorEntry : expectedManyToMany.entrySet() ) {
 				final ManyToManyDescriptor descriptor = descriptorEntry.getKey();
 				final Map<Object, Set<Object>> expectedOwnersByElement = descriptorEntry.getValue();
-				for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
-					final Object element = entry.getKey();
-					final EntityEntry entityEntry = entry.getValue();
+				for ( var entry : persistenceContext.reentrateSafeManagedEntities() ) {
+					final Object element = entry.$$_hibernate_getEntityInstance();
+					final EntityEntry entityEntry = entry.$$_hibernate_getEntityEntry();
 					if ( !isManaged( entityEntry ) || !descriptor.inversePersister().isInstance( element ) ) {
 						continue;
 					}

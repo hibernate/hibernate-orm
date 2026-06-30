@@ -1046,6 +1046,12 @@ public class SessionImpl
 		final Object entity =
 				CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
 		if ( entity != null ) {
+			final var holder =
+					getPersistenceContextInternal().getEntityHolder( entityKey );
+			if ( holder != null
+				&& holder.getEntityEntry() == null ) {
+				return entity;
+			}
 			final Object id = entityKey.getIdentifierValue();
 			final var postLoadEvent = makePostLoadEvent( persister, id, entity );
 			eventListenerGroups.eventListenerGroup_POST_LOAD

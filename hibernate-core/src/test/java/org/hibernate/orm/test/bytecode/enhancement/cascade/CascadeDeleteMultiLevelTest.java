@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -59,6 +60,7 @@ public class CascadeDeleteMultiLevelTest {
 	}
 
 	@Entity
+	@Table( name = "TRADE" )
 	public static class Trade {
 
 		@Id
@@ -76,6 +78,7 @@ public class CascadeDeleteMultiLevelTest {
 	}
 
 	@Entity
+	@Table( name = "ACCUMULATION" )
 	public static class Accumulation {
 
 		@Id
@@ -95,6 +98,7 @@ public class CascadeDeleteMultiLevelTest {
 	}
 
 	@Entity
+	@Table( name = "FORMULA" )
 	public static class Formula {
 
 		@Id
@@ -112,6 +116,7 @@ public class CascadeDeleteMultiLevelTest {
 	}
 
 	@Entity
+	@Table( name = "FORMULA_TERM" )
 	public static class FormulaTerm {
 
 		@Id

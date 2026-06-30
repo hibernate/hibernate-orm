@@ -698,4 +698,60 @@ public class HbmTransformationJaxbTests {
 			}
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20638" )
+	public void testFilterDefParameterTypeResolution(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/filter-def-types/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getFilterDefinitions() ).hasSize( 3 );
+
+			final var stringFilter = transformed.getFilterDefinitions().stream()
+					.filter( f -> "stringFilter".equals( f.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( stringFilter.getFilterParams() ).hasSize( 1 );
+			assertThat( stringFilter.getFilterParams().get( 0 ).getType() )
+					.as( "HBM type 'string' should resolve to java.lang.String" )
+					.isEqualTo( "java.lang.String" );
+
+			final var timestampFilter = transformed.getFilterDefinitions().stream()
+					.filter( f -> "timestampFilter".equals( f.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( timestampFilter.getFilterParams() ).hasSize( 1 );
+			assertThat( timestampFilter.getFilterParams().get( 0 ).getType() )
+					.as( "HBM type 'timestamp' should resolve to java.util.Date" )
+					.isEqualTo( "java.util.Date" );
+
+			final var numericFilter = transformed.getFilterDefinitions().stream()
+					.filter( f -> "numericFilter".equals( f.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( numericFilter.getFilterParams() ).hasSize( 3 );
+
+			final var doubleParam = numericFilter.getFilterParams().stream()
+					.filter( p -> "amount".equals( p.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( doubleParam.getType() )
+					.as( "HBM type 'double' should resolve to double" )
+					.isEqualTo( "double" );
+
+			final var longParam = numericFilter.getFilterParams().stream()
+					.filter( p -> "count".equals( p.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( longParam.getType() )
+					.as( "HBM type 'long' should resolve to long" )
+					.isEqualTo( "long" );
+
+			final var intParam = numericFilter.getFilterParams().stream()
+					.filter( p -> "code".equals( p.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( intParam.getType() )
+					.as( "HBM type 'integer' should resolve to int" )
+					.isEqualTo( "int" );
+		} );
+	}
 }

@@ -754,4 +754,28 @@ public class HbmTransformationJaxbTests {
 					.isEqualTo( "int" );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20639" )
+	public void testManyToManyElementFilterTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/many-to-many-element-filter/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl productEntity = transformed.getEntities().stream()
+					.filter( e -> "Product".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( productEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+
+			final JaxbManyToManyImpl categories = productEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( categories.getName() ).isEqualTo( "categories" );
+
+			assertThat( categories.getFilters() )
+					.as( "Filters from <many-to-many> element should be transferred" )
+					.hasSizeGreaterThanOrEqualTo( 2 );
+
+			assertThat( categories.getFilters() )
+					.extracting( f -> f.getName() )
+					.contains( "effectiveDate", "cat" );
+		} );
+	}
 }

@@ -146,10 +146,10 @@ public abstract class AbstractFlushingEventListener {
 		EVENT_LISTENER_LOGGER.processingFlushTimeCascades();
 		final var context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
-		for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
-			final var entityEntry = entry.getValue();
+		for ( var entry : persistenceContext.reentrantSafeManagedEntities() ) {
+			final var entityEntry = entry.$$_hibernate_getEntityEntry();
 			if ( flushable( entityEntry ) ) {
-				cascadeOnFlush( session, entityEntry.getPersister(), entry.getKey(), context );
+				cascadeOnFlush( session, entityEntry.getPersister(), entry.$$_hibernate_getEntityInstance(), context );
 			}
 		}
 		checkForTransientReferences( session, persistenceContext );
@@ -160,15 +160,15 @@ public abstract class AbstractFlushingEventListener {
 		// processed, so that all entities which will be persisted are
 		// persistent when we do the check (I wonder if we could move this
 		// into Nullability, instead of abusing the Cascade infrastructure)
-		for ( var entryEntry : persistenceContext.reentrantSafeEntityEntries() ) {
-			final var entry = entryEntry.getValue();
+		for ( var entryEntry : persistenceContext.reentrantSafeManagedEntities() ) {
+			final var entry = entryEntry.$$_hibernate_getEntityEntry();
 			if ( checkable( entry ) ) {
 				Cascade.cascade(
 						CascadingActions.CHECK_ON_FLUSH,
 						CascadePoint.BEFORE_FLUSH,
 						session,
 						entry.getPersister(),
-						entryEntry.getKey(),
+						entryEntry.$$_hibernate_getEntityInstance(),
 						null
 				);
 			}
@@ -244,17 +244,22 @@ public abstract class AbstractFlushingEventListener {
 		// collections that are changing roles. This might cause entities
 		// to be loaded.
 		// So this needs to be safe from concurrent modification problems.
-		final var entityEntries = persistenceContext.reentrantSafeEntityEntries();
+		final var entityEntries = persistenceContext.reentrantSafeManagedEntities();
 		final int count = entityEntries.length;
 
 		FlushEntityEvent entityEvent = null; //allow reuse of the event as it's heavily allocated in certain use cases
 		int eventGenerationId = 0; //Used to double-check the instance reuse won't cause problems
 		for ( var me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
-			final var entry = me.getValue();
+			final var entry = me.$$_hibernate_getEntityEntry();
 			final var status = entry.getStatus();
 			if ( status != Status.LOADING && status != Status.GONE ) {
-				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
+				entityEvent = createOrReuseEventInstance(
+						entityEvent,
+						source,
+						me.$$_hibernate_getEntityInstance(),
+						entry
+				);
 				entityEvent.setInstanceGenerationId( ++eventGenerationId );
 				flushListeners.fireEventOnEachListener( entityEvent, FlushEntityEventListener::onFlushEntity );
 				entityEvent.setAllowedToReuse( true );

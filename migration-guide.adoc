@@ -54,7 +54,10 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+[[persistence-context]]
+=== Removed `PersistenceContext.reentrantSafeEntityEntries()`
 
+The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been removed. The replacement method is `PersistenceContext.reentrantSafeManagedEntities()`.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior

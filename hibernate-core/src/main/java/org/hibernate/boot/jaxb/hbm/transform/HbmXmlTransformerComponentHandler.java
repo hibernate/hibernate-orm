@@ -245,6 +245,10 @@ public class HbmXmlTransformerComponentHandler {
 
 		transferEmbeddableTransients( embeddableClassName, componentTypeInfo, hbmComponent, embeddable );
 
+		if ( hbmComponent.getParent() != null ) {
+			embeddable.getAttributes().setParent( hbmComponent.getParent().getName() );
+		}
+
 		return embeddable;
 	}
 

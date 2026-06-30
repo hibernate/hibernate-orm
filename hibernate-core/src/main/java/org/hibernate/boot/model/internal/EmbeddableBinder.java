@@ -568,7 +568,7 @@ public class EmbeddableBinder {
 
 			final MemberDetails member = propertyAnnotatedElement.getAttributeMember();
 			if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
-				final Property property = findProperty( component, member.getName() );
+				final Property property = findProperty( component, propertyAnnotatedElement.getPropertyName() );
 				if ( property != null ) {
 					// Identifier properties are always simple values
 					final SimpleValue value = (SimpleValue) property.getValue();

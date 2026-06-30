@@ -2450,6 +2450,36 @@ public class HbmXmlTransformer {
 		);
 	}
 
+	private String resolveManyToManyMappedBy(
+			Property bootModelProperty,
+			Collection bootModelValue) {
+		if ( isNotEmpty( bootModelValue.getMappedByProperty() ) ) {
+			return bootModelValue.getMappedByProperty();
+		}
+
+		final var toOneElement = (ToOne) bootModelValue.getElement();
+		final var targetEntityName = toOneElement.getReferencedEntityName();
+		final var targetEntity = transformationState.getEntityInfoByName().get( targetEntityName );
+		if ( targetEntity != null ) {
+			for ( Property targetProp : targetEntity.getPersistentClass().getProperties() ) {
+				if ( targetProp.getValue() instanceof Collection targetCollection
+						&& !targetCollection.isInverse()
+						&& matches( bootModelValue.getKey(), targetCollection.getElement().getSelectables() ) ) {
+					return targetProp.getName();
+				}
+			}
+		}
+
+		throw new AssertionFailure(
+				String.format(
+						Locale.ROOT,
+						"Unable to determine mapped-by name for inverse many-to-many : %s.%s",
+						bootModelProperty.getPersistentClass().getEntityName(),
+						bootModelProperty.getName()
+				)
+		);
+	}
+
 	private boolean matches(KeyValue collectionKey, List<Selectable> candidate) {
 		final var collectionKeySelectables = collectionKey.getSelectables();
 		if ( collectionKeySelectables.size() != candidate.size() ) {
@@ -2483,6 +2513,11 @@ public class HbmXmlTransformer {
 
 	private JaxbManyToManyImpl transformManyToMany(PluralAttributeInfo hbmCollection, PropertyInfo propertyInfo) {
 		final var target = new JaxbManyToManyImpl();
+		final var bootModelProperty = propertyInfo.bootModelProperty();
+		final var bootValue = (Collection) bootModelProperty.getValue();
+		if ( bootValue.isInverse() ) {
+			target.setMappedBy( resolveManyToManyMappedBy( bootModelProperty, bootValue ) );
+		}
 		transferManyToManyInfo(
 				hbmCollection,
 				hbmCollection.getManyToMany(),
@@ -2532,11 +2567,19 @@ public class HbmXmlTransformer {
 		if ( isNotEmpty( tableName ) ) {
 			joinTable.setName( tableName );
 		}
-		target.setJoinTable( joinTable );
 
 		final var key = hbmCollection.getKey();
+		if ( bootValue.isInverse() ) {
+			// skip join table setup — mapped-by is set by the caller
+		}
+		else {
+			target.setJoinTable( joinTable );
+			if ( key != null ) {
+				joinTable.setForeignKey( transformForeignKey( key.getForeignKey() ) );
+			}
+		}
+
 		if ( key != null ) {
-			joinTable.setForeignKey( transformForeignKey( key.getForeignKey() ) );
 			transferColumnsAndFormulas(
 					new ColumnAndFormulaSource() {
 						@Override

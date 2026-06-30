@@ -711,7 +711,7 @@ public class HbmXmlTransformer {
 						final var filterParam = new JaxbFilterDefImpl.JaxbFilterParamImpl();
 						filterDef.getFilterParams().add( filterParam );
 						filterParam.setName( hbmFilterParam.getParameterName() );
-						filterParam.setType( hbmFilterParam.getParameterValueTypeName() );
+						filterParam.setType( resolveHbmTypeName( hbmFilterParam.getParameterValueTypeName() ) );
 					}
 				}
 
@@ -720,6 +720,30 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
+	}
+
+	private static String resolveHbmTypeName(String hbmTypeName) {
+		if ( hbmTypeName == null ) {
+			return null;
+		}
+		return switch ( hbmTypeName ) {
+			case "string" -> String.class.getName();
+			case "boolean" -> boolean.class.getName();
+			case "byte" -> byte.class.getName();
+			case "short" -> short.class.getName();
+			case "integer", "int" -> int.class.getName();
+			case "long" -> long.class.getName();
+			case "float" -> float.class.getName();
+			case "double" -> double.class.getName();
+			case "timestamp" -> java.util.Date.class.getName();
+			case "date" -> java.util.Date.class.getName();
+			case "time" -> java.util.Date.class.getName();
+			case "big_decimal" -> java.math.BigDecimal.class.getName();
+			case "big_integer" -> java.math.BigInteger.class.getName();
+			case "locale" -> java.util.Locale.class.getName();
+			case "currency" -> java.util.Currency.class.getName();
+			default -> hbmTypeName;
+		};
 	}
 
 	private void transferImports() {

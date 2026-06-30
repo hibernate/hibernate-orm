@@ -360,6 +360,30 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testCompositeElementParentTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/parent/composite-element-parent.hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			assertThat( embeddable.getAttributes().getParent() )
+					.as( "<parent> in <composite-element> should produce <parent> in the embeddable" )
+					.isEqualTo( "parent" );
+		} );
+	}
+
+	@Test
+	public void testComponentParentTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/parent/component-parent.hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			assertThat( embeddable.getAttributes().getParent() )
+					.as( "<parent> in <component> should produce <parent> in the embeddable" )
+					.isEqualTo( "owner" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20628" )
 	public void testCompositeElementAccessTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {

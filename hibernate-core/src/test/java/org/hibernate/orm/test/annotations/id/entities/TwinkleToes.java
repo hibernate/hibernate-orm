@@ -15,7 +15,7 @@ import jakarta.persistence.ManyToOne;
  * Blown precision on related entity when &#064;JoinColumn is used.
  * Does not cause an issue on HyperSonic, but replicates nicely on PGSQL.
  *
- * @see ANN-748
+ * @see <a href="https://hibernate.atlassian.net/browse/ANN-748">ANN-748</a>
  * @author Andrew C. Oliver andyspam@osintegrators.com
  */
 @Entity

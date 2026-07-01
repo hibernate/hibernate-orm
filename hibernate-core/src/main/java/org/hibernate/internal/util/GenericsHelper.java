@@ -262,9 +262,13 @@ public final class GenericsHelper {
 		if ( target instanceof ParameterizedType parameterizedType ) {
 			return replaceTypeVariablesWithArguments( parameterizedType, context );
 		}
-		else if ( target instanceof TypeVariable<?> typeVariable
-					&& context instanceof ParameterizedType parameterizedContext ) {
-			return replaceTypeVariableWithArgument( typeVariable, parameterizedContext );
+		else if ( target instanceof TypeVariable<?> typeVariable ) {
+			if ( context instanceof ParameterizedType parameterizedContext ) {
+				return replaceTypeVariableWithArgument( typeVariable, parameterizedContext );
+			}
+			else {
+				return typeVariable.getBounds()[0];
+			}
 		}
 		else {
 			return target;

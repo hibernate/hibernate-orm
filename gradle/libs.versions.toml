@@ -68,7 +68,7 @@ persistenceTck="4.0.0-SNAPSHOT"
 
 # JDBC Libs
 h2 = "2.5.252"
-db2 = "12.1.4.0"
+db2 = "12.1.5.0"
 derby = "10.17.1.0"
 firebird = "6.0.5"
 hana = "2.29.7"
@@ -114,10 +114,10 @@ nullaway = "0.14.1"
 guava = "33.7.1-jre"
 
 # Plugins
-develocity = "4.4.3"
-customUserData = "2.6.0"
+develocity = "4.5.0"
+customUserData = "2.7.0"
 asciidoctor = "4.0.5"
-spotless = "8.7.0"
+spotless = "8.8.0"
 pluginPublish = "2.1.1"
 kotlin = "2.4.0"
 mavenPluginDev = "1.0.3"

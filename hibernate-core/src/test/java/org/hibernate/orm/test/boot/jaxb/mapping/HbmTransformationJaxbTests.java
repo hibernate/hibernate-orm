@@ -603,6 +603,33 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	public void testSharedEmbeddableFormulaPropertyTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/shared-embeddable-formula/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl formulaUserEntity = transformed.getEntities().stream()
+					.filter( e -> "FormulaUser".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEmbeddedImpl userPerson = formulaUserEntity.getAttributes().getEmbeddedAttributes().get( 0 );
+			assertThat( userPerson.getName() ).isEqualTo( "person" );
+
+			final JaxbEntityImpl formulaEmployeeEntity = transformed.getEntities().stream()
+					.filter( e -> "FormulaEmployee".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			final JaxbEmbeddedImpl empPerson = formulaEmployeeEntity.getAttributes().getEmbeddedAttributes().get( 0 );
+			assertThat( empPerson.getName() ).isEqualTo( "person" );
+
+			assertThat( empPerson.getAttributeOverrides() )
+					.as( "FormulaEmployee.person should have attribute override for 'heightInches'" )
+					.anySatisfy( override ->
+							assertThat( override.getName() ).isEqualTo( "heightInches" )
+					);
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

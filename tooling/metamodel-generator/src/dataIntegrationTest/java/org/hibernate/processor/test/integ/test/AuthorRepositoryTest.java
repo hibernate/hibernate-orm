@@ -14,6 +14,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,6 +57,40 @@ class AuthorRepositoryTest {
 				Author found = repo.byId( author.getId() );
 				assertNotNull( found );
 			}
+		} );
+	}
+
+	@Test
+	void testSaveAllExistingAuthors(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var repo = new _AuthorRepository( session );
+			Author bob = new Author( "Bob" );
+			Author carol = new Author( "Carol" );
+			repo.insert( bob );
+			repo.insert( carol );
+			assertNotNull( bob.getId() );
+			assertNotNull( carol.getId() );
+			bob.setName( "Robert" );
+			carol.setName( "Caroline" );
+			repo.saveAll( new ArrayList<>( List.of( bob, carol ) ) );
+			assertEquals( "Robert", repo.byId( bob.getId() ).getName() );
+			assertEquals( "Caroline", repo.byId( carol.getId() ).getName() );
+		} );
+	}
+
+	@Test
+	void testSaveAllMixedNewAndExistingAuthors(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var repo = new _AuthorRepository( session );
+			Author existing = new Author( "Eve" );
+			repo.insert( existing );
+			assertNotNull( existing.getId() );
+			existing.setName( "Evelyn" );
+			Author newAuthor = new Author( "Frank" );
+			repo.saveAll( new ArrayList<>( List.of( existing, newAuthor ) ) );
+			assertEquals( "Evelyn", repo.byId( existing.getId() ).getName() );
+			assertNotNull( newAuthor.getId(), "New author should get an ID from saveAll" );
+			assertEquals( "Frank", repo.byId( newAuthor.getId() ).getName() );
 		} );
 	}
 

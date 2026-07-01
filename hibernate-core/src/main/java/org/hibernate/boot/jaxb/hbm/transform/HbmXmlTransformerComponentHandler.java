@@ -168,6 +168,13 @@ public class HbmXmlTransformerComponentHandler {
 				continue;
 			}
 
+			// Skip formula-based properties — they have no columns, so getColumns() would
+			// throw AssertionFailure("value involves formulas"). Attribute overrides only
+			// apply to column-mapped properties.
+			if ( currentProp.getValue().hasFormula() || referenceProp.getValue().hasFormula() ) {
+				continue;
+			}
+
 			final var currentColumns = currentProp.getValue().getColumns();
 			final var referenceColumns = referenceProp.getValue().getColumns();
 			if ( currentColumns.size() != 1 || referenceColumns.size() != 1 ) {

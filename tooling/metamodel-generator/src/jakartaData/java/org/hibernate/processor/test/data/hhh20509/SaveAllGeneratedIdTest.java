@@ -19,8 +19,8 @@ class SaveAllGeneratedIdTest {
 	@WithClasses({ Item.class, ItemRepository.class })
 	void testGeneratedCodeForSaveAllWithGeneratedId() {
 		assertMetamodelClassGeneratedFor( Item.class, true );
-		assertMetamodelClassGeneratedFor( ItemRepository.class, true );
-		final String repository = getMetaModelSourceAsString( ItemRepository.class, true );
+		assertMetamodelClassGeneratedFor( ItemRepository.class );
+		final String repository = getMetaModelSourceAsString( ItemRepository.class );
 		System.out.println( repository );
 
 		// Single save should check the identifier and route to insert for null ids
@@ -42,8 +42,8 @@ class SaveAllGeneratedIdTest {
 	@Test
 	@WithClasses({ Item.class, ReactiveItemRepository.class })
 	void testGeneratedCodeForReactiveSaveAllWithGeneratedId() {
-		assertMetamodelClassGeneratedFor( ReactiveItemRepository.class, true );
-		final String repository = getMetaModelSourceAsString( ReactiveItemRepository.class, true );
+		assertMetamodelClassGeneratedFor( ReactiveItemRepository.class );
+		final String repository = getMetaModelSourceAsString( ReactiveItemRepository.class );
 		System.out.println( repository );
 
 		// Single save should check the identifier and route to insert for null ids

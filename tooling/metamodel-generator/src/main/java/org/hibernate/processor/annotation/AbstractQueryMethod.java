@@ -438,6 +438,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		annotationMetaEntity.staticImport(HIB_PAGE, "page");
 		annotationMetaEntity.staticImport("org.hibernate.query.KeyedPage.KeyInterpretation", "*");
 		annotationMetaEntity.staticImport(COLLECTORS, "toList");
+		annotationMetaEntity.importType(LIST);
 		if ( returnTypeName == null ) {
 			throw new AssertionFailure("entity class cannot be null");
 		}

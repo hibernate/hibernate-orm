@@ -1185,9 +1185,12 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
-		else if ( isNotEmpty( tableName ) ) {
-			// this is the case of transforming a <join/> where the property did not specify columns or formula.
-			// we need to create a column still to pass along the secondary table name
+		else if ( isNotEmpty( tableName )
+				|| Boolean.FALSE.equals( columnDefaults.isInsertable() )
+				|| Boolean.FALSE.equals( columnDefaults.isUpdatable() ) ) {
+			// No explicit column/formula specified, but we still need to generate a column to carry
+			// the secondary table name (for <join/>) or non-default insertable/updatable settings
+			// (e.g. <property update="false"/> inside a <component/>)
 			final var targetColumnAdapter = target.makeColumnAdapter( columnDefaults );
 			targetColumnAdapter.setTable( tableName );
 			target.addColumn( targetColumnAdapter );

@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EmbeddedIdGeneratedValueMethodTest {
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from SystemUser" ).execute() );
+		scope.dropData();
 	}
 
 	@Test

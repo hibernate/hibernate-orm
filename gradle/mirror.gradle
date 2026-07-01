@@ -1,0 +1,82 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+// Repository mirror configuration, applied from settings.gradle.
+//
+// Only active when MAVEN_MIRROR is set. Resolution order for all properties:
+// project property (-P) > system property (-D) > environment variable.
+//
+// Properties:
+//   MAVEN_MIRROR            - URL of the Maven Central mirror
+//   MAVEN_MIRROR_USERNAME   - Optional mirror credentials
+//   MAVEN_MIRROR_PASSWORD   - Optional mirror credentials
+//   MAVEN_CENTRAL_FALLBACK  - Set to 'true' to also use Maven Central as fallback
+//
+// See also: MAINTAINERS.md
+//
+// Adapted from https://blog.gradle.org/maven-central-mirror to not require a init.gradle,
+// because that solution cannot work in some environments where we don't control the filesystem
+// but only environment variables.
+
+// NOTE: using methods instead of closures-in-variables — Gradle's script classloading
+// breaks across build boundaries when inner closure classes are cached and reused.
+
+def __resolve(String key) {
+    def value = gradle.startParameter.projectProperties[key]
+    if (value) return value
+    value = System.getProperty(key)
+    if (value) return value
+    value = System.getenv(key)
+    if (value) return value
+    return null
+}
+
+def mirrorUrl = __resolve('MAVEN_MIRROR')
+if (!mirrorUrl) return
+
+def mirrorUsername = __resolve('MAVEN_MIRROR_USERNAME')
+def mirrorPassword = __resolve('MAVEN_MIRROR_PASSWORD')
+def centralFallback = 'true'.equalsIgnoreCase(__resolve('MAVEN_CENTRAL_FALLBACK'))
+
+def __rewriteMavenCentral(repositories, String url, String user, String pass) {
+    repositories.withType(MavenArtifactRepository).configureEach { repo ->
+        if (repo.name == 'MavenRepo') {
+            repo.url = URI.create(url)
+            if (user) {
+                repo.credentials {
+                    username = user
+                    password = pass
+                }
+            }
+        }
+    }
+}
+
+def __addFallback(repositories, boolean enabled) {
+    if (enabled && !repositories.findByName('Maven Central (fallback)')) {
+        repositories.maven {
+            name = 'Maven Central (fallback)'
+            url = URI.create('https://repo.maven.apache.org/maven2/')
+        }
+    }
+}
+
+// Rewrite pluginManagement repos (for the root build; included builds handle this inline).
+__rewriteMavenCentral(pluginManagement.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
+
+gradle.settingsEvaluated { s ->
+    __rewriteMavenCentral(s.dependencyResolutionManagement.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
+    __addFallback(s.dependencyResolutionManagement.repositories, centralFallback)
+}
+
+gradle.beforeProject { p ->
+    __rewriteMavenCentral(p.buildscript.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
+    __rewriteMavenCentral(p.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
+}
+
+gradle.afterProject { p ->
+    __addFallback(p.buildscript.repositories, centralFallback)
+    __addFallback(p.repositories, centralFallback)
+}

@@ -17,10 +17,18 @@ Continuous integration is split across two platforms:
 
 ### Tips
 
-The Hibernate ORM build can use a mirror instead of Maven central.
-To do so, set the `MAVEN_MIRROR` environment variable to the URL of your mirror,
-e.g. `http://something-on-aws.com/path/to/repo`.
-Alternatively, you can pass `-DMAVEN_MIRROR=...` to the `gradle` command.
+The Hibernate ORM build can use a mirror instead of Maven Central.
+The mirror configuration is in `gradle/mirror.gradle`, auto-activated from `settings.gradle`.
+It is only active when `MAVEN_MIRROR` is set.
+
+To configure a mirror, set `MAVEN_MIRROR` via any of (in order of precedence):
+* Gradle project property: `-PMAVEN_MIRROR=<url>`
+* System property: `-DMAVEN_MIRROR=<url>`
+* Environment variable: `MAVEN_MIRROR=<url>`
+
+Optional properties (same resolution order):
+* `MAVEN_MIRROR_USERNAME` / `MAVEN_MIRROR_PASSWORD` — mirror credentials
+* `MAVEN_CENTRAL_FALLBACK` — set to `true` to also use Maven Central as fallback
 
 To pick up locally built dependencies (e.g. a local Jakarta Persistence build),
 pass `-DenableMavenLocalRepo=true` to the `gradle` command.

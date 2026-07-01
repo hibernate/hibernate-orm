@@ -124,8 +124,8 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
-          MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MAVEN_CENTRAL_FALLBACK: "true"
+          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
@@ -253,8 +253,8 @@ jobs:
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
-          MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MAVEN_CENTRAL_FALLBACK: "true"
+          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           JPA_PREVIEW: "true"
           RUNID: ${{ github.run_number }}
           TESTPILOT_CONNECTION_STRING_SUFFIX: ${{ steps.create_database.outputs.connection_string_suffix }}
@@ -394,8 +394,8 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
-          MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MAVEN_CENTRAL_FALLBACK: "true"
+          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
@@ -508,7 +508,7 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
-          MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
+          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
@@ -609,8 +609,8 @@ jobs:
       - name: Run build script
         run: ./gradlew formatChecks
         env:
-          MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MAVEN_CENTRAL_FALLBACK: "true"
+          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
@@ -704,8 +704,8 @@ jobs:
       - name: Merge Jacoco Reports
         run: ./gradlew mergeCodeCoverageReport copyDependenciesSonar --no-parallel
         env:
-          MAVEN_MIRROR: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MAVEN_CENTRAL_FALLBACK: "true"
+          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           JPA_PREVIEW: "true"
 
       - name: Store build info for Sonar scanning

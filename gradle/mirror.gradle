@@ -5,14 +5,19 @@
 
 // Repository mirror configuration, applied from settings.gradle.
 //
-// Only active when MAVEN_MIRROR is set. Resolution order for all properties:
-// project property (-P) > system property (-D) > environment variable.
+// Mirrors are configured per repository via MIRROR_<REPO>_(URL|USERNAME|PASSWORD|FALLBACK)
+// properties. Resolution order: system property (-D) > environment variable.
 //
-// Properties:
-//   MAVEN_MIRROR            - URL of the Maven Central mirror
-//   MAVEN_MIRROR_USERNAME   - Optional mirror credentials
-//   MAVEN_MIRROR_PASSWORD   - Optional mirror credentials
-//   MAVEN_CENTRAL_FALLBACK  - Set to 'true' to also use Maven Central as fallback
+// Supported repositories:
+//   MIRROR_MAVEN_CENTRAL_*          - Maven Central (repo name: MavenRepo)
+//   MIRROR_MAVEN_CENTRAL_SNAPSHOTS_*- Central Portal Snapshots
+//   MIRROR_GRADLE_PLUGIN_PORTAL_*   - Gradle Plugin Portal (repo name: Gradle Central Plugin Repository)
+//
+// For each, the properties are:
+//   *_URL       - URL of the mirror (required to activate mirroring for that repo)
+//   *_USERNAME  - Optional mirror credentials
+//   *_PASSWORD  - Optional mirror credentials
+//   *_FALLBACK  - Set to 'true' to keep the original repo as a fallback
 //
 // See also: MAINTAINERS.md
 //
@@ -24,59 +29,94 @@
 // breaks across build boundaries when inner closure classes are cached and reused.
 
 def __resolve(String key) {
-    def value = gradle.startParameter.projectProperties[key]
-    if (value) return value
-    value = System.getProperty(key)
+    def value = System.getProperty(key)
     if (value) return value
     value = System.getenv(key)
     if (value) return value
     return null
 }
 
-def mirrorUrl = __resolve('MAVEN_MIRROR')
-if (!mirrorUrl) return
+class __MirrorConfig {
+    String url
+    String username
+    String password
+    boolean fallback
+}
 
-def mirrorUsername = __resolve('MAVEN_MIRROR_USERNAME')
-def mirrorPassword = __resolve('MAVEN_MIRROR_PASSWORD')
-def centralFallback = 'true'.equalsIgnoreCase(__resolve('MAVEN_CENTRAL_FALLBACK'))
+def __loadMirror(String prefix, resolveFunc) {
+    def url = resolveFunc("${prefix}_URL")
+    if (!url) return null
+    def cfg = new __MirrorConfig()
+    cfg.url = url
+    cfg.username = resolveFunc("${prefix}_USERNAME")
+    cfg.password = resolveFunc("${prefix}_PASSWORD")
+    cfg.fallback = 'true'.equalsIgnoreCase(resolveFunc("${prefix}_FALLBACK"))
+    return cfg
+}
 
-def __rewriteMavenCentral(repositories, String url, String user, String pass) {
+def centralMirror = __loadMirror('MIRROR_MAVEN_CENTRAL', this.&__resolve)
+def snapshotsMirror = __loadMirror('MIRROR_MAVEN_CENTRAL_SNAPSHOTS', this.&__resolve)
+def pluginPortalMirror = __loadMirror('MIRROR_GRADLE_PLUGIN_PORTAL', this.&__resolve)
+
+if (!centralMirror && !snapshotsMirror && !pluginPortalMirror) return
+
+def __mirrors = []
+if (centralMirror) __mirrors << "Maven Central -> ${centralMirror.url}"
+if (snapshotsMirror) __mirrors << "Central Portal Snapshots -> ${snapshotsMirror.url}"
+if (pluginPortalMirror) __mirrors << "Gradle Plugin Portal -> ${pluginPortalMirror.url}"
+println "Repository mirrors active: ${__mirrors.join(', ')}"
+
+def __rewriteRepo(repositories, String repoName, __MirrorConfig mirror) {
+    if (!mirror) return
     repositories.withType(MavenArtifactRepository).configureEach { repo ->
-        if (repo.name == 'MavenRepo') {
-            repo.url = URI.create(url)
-            if (user) {
+        if (repo.name == repoName) {
+            repo.url = URI.create(mirror.url)
+            if (mirror.username) {
                 repo.credentials {
-                    username = user
-                    password = pass
+                    username = mirror.username
+                    password = mirror.password
                 }
             }
         }
     }
 }
 
-def __addFallback(repositories, boolean enabled) {
-    if (enabled && !repositories.findByName('Maven Central (fallback)')) {
+def __addFallback(repositories, String repoName, String originalUrl, __MirrorConfig mirror) {
+    if (!mirror || !mirror.fallback) return
+    def fallbackName = "${repoName} (fallback)"
+    if (!repositories.findByName(fallbackName)) {
         repositories.maven {
-            name = 'Maven Central (fallback)'
-            url = URI.create('https://repo.maven.apache.org/maven2/')
+            name = fallbackName
+            url = URI.create(originalUrl)
         }
     }
 }
 
-// Rewrite pluginManagement repos (for the root build; included builds handle this inline).
-__rewriteMavenCentral(pluginManagement.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
+def __rewriteAll(repositories, centralMirror, snapshotsMirror, pluginPortalMirror) {
+    __rewriteRepo(repositories, 'MavenRepo', centralMirror)
+    __rewriteRepo(repositories, 'Central Portal Snapshots', snapshotsMirror)
+    __rewriteRepo(repositories, 'Gradle Central Plugin Repository', pluginPortalMirror)
+}
+
+def __addAllFallbacks(repositories, centralMirror, snapshotsMirror, pluginPortalMirror) {
+    __addFallback(repositories, 'MavenRepo', 'https://repo.maven.apache.org/maven2/', centralMirror)
+    __addFallback(repositories, 'Central Portal Snapshots', 'https://central.sonatype.com/repository/maven-snapshots/', snapshotsMirror)
+    __addFallback(repositories, 'Gradle Central Plugin Repository', 'https://plugins.gradle.org/m2', pluginPortalMirror)
+}
+
+__rewriteAll(pluginManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
 
 gradle.settingsEvaluated { s ->
-    __rewriteMavenCentral(s.dependencyResolutionManagement.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
-    __addFallback(s.dependencyResolutionManagement.repositories, centralFallback)
+    __rewriteAll(s.dependencyResolutionManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+    __addAllFallbacks(s.dependencyResolutionManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
 }
 
 gradle.beforeProject { p ->
-    __rewriteMavenCentral(p.buildscript.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
-    __rewriteMavenCentral(p.repositories, mirrorUrl, mirrorUsername, mirrorPassword)
+    __rewriteAll(p.buildscript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+    __rewriteAll(p.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
 }
 
 gradle.afterProject { p ->
-    __addFallback(p.buildscript.repositories, centralFallback)
-    __addFallback(p.repositories, centralFallback)
+    __addAllFallbacks(p.buildscript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+    __addAllFallbacks(p.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
 }

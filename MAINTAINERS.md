@@ -17,18 +17,29 @@ Continuous integration is split across two platforms:
 
 ### Tips
 
-The Hibernate ORM build can use a mirror instead of Maven Central.
+The Hibernate ORM build can use mirrors instead of public repositories.
 The mirror configuration is in `gradle/mirror.gradle`, auto-activated from `settings.gradle`.
-It is only active when `MAVEN_MIRROR` is set.
+Each mirror is activated independently when its `MIRROR_*_URL` property is set.
 
-To configure a mirror, set `MAVEN_MIRROR` via any of (in order of precedence):
-* Gradle project property: `-PMAVEN_MIRROR=<url>`
-* System property: `-DMAVEN_MIRROR=<url>`
-* Environment variable: `MAVEN_MIRROR=<url>`
+Supported mirrors (each with `_URL`, `_USERNAME`, `_PASSWORD`, `_FALLBACK` suffixes):
 
-Optional properties (same resolution order):
-* `MAVEN_MIRROR_USERNAME` / `MAVEN_MIRROR_PASSWORD` — mirror credentials
-* `MAVEN_CENTRAL_FALLBACK` — set to `true` to also use Maven Central as fallback
+| Prefix                            | Repository              |
+|-----------------------------------|-------------------------|
+| `MIRROR_MAVEN_CENTRAL`            | Maven Central           |
+| `MIRROR_MAVEN_CENTRAL_SNAPSHOTS`  | Central Portal Snapshots|
+| `MIRROR_GRADLE_PLUGIN_PORTAL`     | Gradle Plugin Portal    |
+
+For example, to mirror Maven Central set `MIRROR_MAVEN_CENTRAL_URL` via any of
+(in order of precedence):
+* System property: `-DMIRROR_MAVEN_CENTRAL_URL=<url>`
+* Environment variable: `MIRROR_MAVEN_CENTRAL_URL=<url>`
+
+Optional properties (same resolution order per mirror):
+* `*_USERNAME` / `*_PASSWORD` — mirror credentials
+* `*_FALLBACK` — set to `true` to also keep the original repo as a fallback
+
+Note: Gradle project properties (`-P`) are not supported because they don't
+propagate to included builds (`local-build-plugins`).
 
 To pick up locally built dependencies (e.g. a local Jakarta Persistence build),
 pass `-DenableMavenLocalRepo=true` to the `gradle` command.

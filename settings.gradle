@@ -8,7 +8,7 @@ pluginManagement {
         // mavenCentral before gradlePluginPortal: the plugin portal redirects transitive
         // deps to Maven Central via HTTP 303 — with a mirror, those redirects would fail.
         // Listing mavenCentral first lets Gradle resolve transitive deps directly
-        // (or from the mirror when MAVEN_MIRROR is set; see gradle/mirror.gradle).
+        // (or from the mirror when MIRROR_MAVEN_CENTRAL_URL is set; see gradle/mirror.gradle).
         mavenCentral()
         gradlePluginPortal()
         maven {

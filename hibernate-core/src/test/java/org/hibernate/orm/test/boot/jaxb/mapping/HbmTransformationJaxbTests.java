@@ -604,6 +604,36 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testComponentUpdateFalseTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/component-update-false/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			final JaxbBasicImpl nameAttr = embeddable.getAttributes().getBasicAttributes().stream()
+					.filter( b -> "name".equals( b.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( nameAttr.getColumn() )
+					.as( "Property with update=\"false\" should generate a column element" )
+					.isNotNull();
+			assertThat( nameAttr.getColumn().isUpdatable() )
+					.as( "Column should have updatable=false" )
+					.isFalse();
+
+			final JaxbBasicImpl descAttr = embeddable.getAttributes().getBasicAttributes().stream()
+					.filter( b -> "description".equals( b.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( descAttr.getColumn() )
+					.as( "Property with insert=\"false\" should generate a column element" )
+					.isNotNull();
+			assertThat( descAttr.getColumn().isInsertable() )
+					.as( "Column should have insertable=false" )
+					.isFalse();
+		} );
+	}
+
+	@Test
 	public void testSharedEmbeddableFormulaPropertyTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/shared-embeddable-formula/hbm.xml", scope, (transformed) -> {
 			final JaxbEntityImpl formulaUserEntity = transformed.getEntities().stream()

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping">
+
+    <class name="UpdateFalseEntity" table="T_OWNER">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <component name="component" class="EmbeddableComponent">
+            <property name="name" update="false" not-null="true"/>
+            <property name="description" insert="false"/>
+        </component>
+    </class>
+
+</hibernate-mapping>

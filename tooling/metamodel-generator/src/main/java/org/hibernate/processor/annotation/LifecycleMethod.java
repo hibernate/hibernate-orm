@@ -191,26 +191,17 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			delegateStatefulManyBlockingly( declaration );
 		}
 		else if ( isGeneratedIdUpsert() && parameterKind != ParameterKind.NORMAL ) {
-			delegateGeneratedIdUpsertManyBlockingly( declaration );
+			declaration
+					.append("\t\tfor (var _entity : ")
+					.append(parameterName)
+					.append(") {\n");
+			upsertOrInsertByGeneratedId( declaration, "_entity", "\t\t\t" );
+			declaration.append("\t\t}\n");
+		}
+		else if ( isGeneratedIdUpsert() ) {
+			upsertOrInsertByGeneratedId( declaration, parameterName, "\t\t" );
 		}
 		else {
-			if ( isGeneratedIdUpsert() ) {
-				declaration
-						.append("\t\tif (")
-						.append(sessionWithGetIdentifier())
-						.append(".getIdentifier(")
-						.append(parameterName)
-						.append(") == null)\n")
-						.append("\t\t\t")
-						.append(sessionName)
-						.append(getObjectCall())
-						.append('.')
-						.append("insert");
-				argument( declaration );
-				declaration
-						.append(";\n")
-						.append("\t\telse\n\t");
-			}
 			declaration
 					.append("\t\t")
 					.append(sessionName)
@@ -244,24 +235,30 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append("\t\t}\n");
 	}
 
-	private void delegateGeneratedIdUpsertManyBlockingly(StringBuilder declaration) {
+	private void upsertOrInsertByGeneratedId(StringBuilder declaration, String entityVar, String indent) {
 		declaration
-				.append("\t\tfor (var _entity : ")
-				.append(parameterName)
-				.append(") {\n")
-				.append("\t\t\tif (")
+				.append(indent)
+				.append("if (")
 				.append(sessionWithGetIdentifier())
-				.append(".getIdentifier(_entity) == null)\n")
-				.append("\t\t\t\t")
+				.append(".getIdentifier(")
+				.append(entityVar)
+				.append(") == null)\n")
+				.append(indent)
+				.append('\t')
 				.append(sessionName)
 				.append(getObjectCall())
-				.append(".insert(_entity);\n")
-				.append("\t\t\telse\n")
-				.append("\t\t\t\t")
+				.append(".insert(")
+				.append(entityVar)
+				.append(");\n")
+				.append(indent)
+				.append("else\n")
+				.append(indent)
+				.append('\t')
 				.append(sessionName)
 				.append(getObjectCall())
-				.append(".upsert(_entity);\n")
-				.append("\t\t}\n");
+				.append(".upsert(")
+				.append(entityVar)
+				.append(");\n");
 	}
 
 	private void delegateMergeBlockingly(StringBuilder declaration) {
@@ -370,29 +367,17 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 					.append(" -> ");
 		}
 		if ( isGeneratedIdUpsert() ) {
-			declaration
-					.append("(")
-					.append(localSessionName())
-					.append(".getIdentifier(")
-					.append(parameterName)
-					.append(") == null ? ")
-					.append(localSessionName())
-					.append('.')
-					.append("insert")
-					.append('(')
-					.append(parameterName)
-					.append(')')
-					.append(" : ");
+			declaration.append("(");
+			upsertOrInsertByGeneratedIdReactively( declaration, parameterName );
+			declaration.append(")");
 		}
-		declaration
-				.append(localSessionName())
-				.append( '.' )
-				.append( operationName );
-		// note that there is no upsertAll() method
-		argument( declaration );
-		if ( isGeneratedIdUpsert() ) {
+		else {
 			declaration
-					.append(')');
+					.append(localSessionName())
+					.append( '.' )
+					.append( operationName );
+			// note that there is no upsertAll() method
+			argument( declaration );
 		}
 		if ( isReactiveSessionAccess() ) {
 			declaration
@@ -422,13 +407,10 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append(parameterName)
 				.append(") {\n")
 				.append(indent)
-				.append("\t_chain = _chain.chain(() -> ")
-				.append(session)
-				.append(".getIdentifier(_entity) == null ? ")
-				.append(session)
-				.append(".insert(_entity) : ")
-				.append(session)
-				.append(".upsert(_entity));\n")
+				.append("\t_chain = _chain.chain(() -> ");
+		upsertOrInsertByGeneratedIdReactively( declaration, "_entity" );
+		declaration
+				.append(");\n")
 				.append(indent)
 				.append("}\n");
 		if ( isReactiveSessionAccess() ) {
@@ -440,6 +422,23 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append("\treturn _chain");
 		}
+	}
+
+	private void upsertOrInsertByGeneratedIdReactively(StringBuilder declaration, String entityVar) {
+		final var session = localSessionName();
+		declaration
+				.append(session)
+				.append(".getIdentifier(")
+				.append(entityVar)
+				.append(") == null ? ")
+				.append(session)
+				.append(".insert(")
+				.append(entityVar)
+				.append(") : ")
+				.append(session)
+				.append(".upsert(")
+				.append(entityVar)
+				.append(")");
 	}
 
 	private boolean isGeneratedIdUpsert() {

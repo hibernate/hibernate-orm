@@ -5,7 +5,6 @@
 package org.hibernate.boot.models.internal;
 
 import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 import jakarta.persistence.EntityListener;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
@@ -133,8 +132,10 @@ public class DomainModelCategorizationCollector {
 	}
 
 	private static boolean isConverter(ClassDetails classDetails) {
-		return classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class )
-			|| classDetails.hasDirectAnnotationUsage( Converter.class );
+		return classDetails.getClassName() != null
+			&& !classDetails.isInterface()
+			&& !classDetails.isAbstract()
+			&& classDetails.isImplementor( AttributeConverter.class );
 	}
 
 	private static boolean isLifecycleEventHandler(ClassDetails classDetails) {

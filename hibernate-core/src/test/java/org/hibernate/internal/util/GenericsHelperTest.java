@@ -42,4 +42,23 @@ public class GenericsHelperTest {
 		@Id
 		private String id;
 	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20467")
+	public void testUnboundConverterTypeVariable() {
+		Type[] types = GenericsHelper.typeArguments(
+				AttributeConverter.class,
+				AbstractMiddleConverter.class
+		);
+
+		assertThat( types ).hasSize( 2 );
+		assertThat( types[0] ).isEqualTo( Object.class );
+		assertThat( types[1] ).isEqualTo( String.class );
+	}
+
+	abstract static class AbstractBaseConverter<T> implements AttributeConverter<T, String> {
+	}
+
+	abstract static class AbstractMiddleConverter<T> extends AbstractBaseConverter<T> {
+	}
 }

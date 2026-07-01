@@ -233,34 +233,56 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private void delegateBlockingly(StringBuilder declaration) {
-		if ( isGeneratedIdUpsert() ) {
+		if ( isGeneratedIdUpsert() && parameterKind != ParameterKind.NORMAL ) {
 			declaration
-					.append("\t\tif (")
-					.append(sessionName)
-					.append(getObjectCall())
-					.append(".getIdentifier(")
+					.append("\t\tfor (var _entity : ")
 					.append(parameterName)
-					.append(") == null)\n")
-					.append("\t\t\t")
+					.append(") {\n");
+			upsertOrInsertByGeneratedId( declaration, "_entity", "\t\t\t" );
+			declaration.append("\t\t}\n");
+		}
+		else if ( isGeneratedIdUpsert() ) {
+			upsertOrInsertByGeneratedId( declaration, parameterName, "\t\t" );
+		}
+		else {
+			declaration
+					.append("\t\t")
 					.append(sessionName)
 					.append(getObjectCall())
 					.append('.')
-					.append("insert");
+					.append(operationName);
 			argument( declaration );
 			declaration
-					.append(";\n")
-					.append("\t\telse\n\t");
+					.append(";\n");
 		}
+	}
+
+	private void upsertOrInsertByGeneratedId(StringBuilder declaration, String entityVar, String indent) {
 		declaration
-				.append("\t\t")
+				.append(indent)
+				.append("if (")
+				.append(sessionName)
+				.append(".getIdentifier(")
+				.append(entityVar)
+				.append(") == null)\n")
+				.append(indent)
+				.append('\t')
 				.append(sessionName)
 				.append(getObjectCall())
-				.append('.')
-				.append(operationName);
-		argument( declaration );
-		declaration
-				.append(";\n");
+				.append(".insert(")
+				.append(entityVar)
+				.append(");\n")
+				.append(indent)
+				.append("else\n")
+				.append(indent)
+				.append('\t')
+				.append(sessionName)
+				.append(getObjectCall())
+				.append(".upsert(")
+				.append(entityVar)
+				.append(");\n");
 	}
+
 
 	private void argument(StringBuilder declaration) {
 		switch ( parameterKind ) {
@@ -308,6 +330,10 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private void delegateReactively(StringBuilder declaration) {
+		if ( isGeneratedIdUpsert() && parameterKind != ParameterKind.NORMAL ) {
+			delegateGeneratedIdUpsertManyReactively( declaration );
+			return;
+		}
 		declaration
 				.append("\treturn ");
 		if ( isReactiveSessionAccess() ) {
@@ -318,34 +344,78 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 					.append(" -> ");
 		}
 		if ( isGeneratedIdUpsert() ) {
-			declaration
-					.append("(")
-					.append(localSessionName())
-					.append(".getIdentifier(")
-					.append(parameterName)
-					.append(") == null ? ")
-					.append(localSessionName())
-					.append('.')
-					.append("insert")
-					.append('(')
-					.append(parameterName)
-					.append(')')
-					.append(" : ");
+			declaration.append("(");
+			upsertOrInsertByGeneratedIdReactively( declaration, parameterName );
+			declaration.append(")");
 		}
-		declaration
-				.append(localSessionName())
-				.append( '.' )
-				.append( operationName );
-		// note that there is no upsertAll() method
-		argument( declaration );
-		if ( isGeneratedIdUpsert() ) {
+		else {
 			declaration
-					.append(')');
+					.append(localSessionName())
+					.append( '.' )
+					.append( operationName );
+			// note that there is no upsertAll() method
+			argument( declaration );
 		}
 		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append(')');
 		}
+	}
+
+	private void delegateGeneratedIdUpsertManyReactively(StringBuilder declaration) {
+		final var uni = annotationMetaEntity.importType( UNI );
+		final var session = localSessionName();
+		if ( isReactiveSessionAccess() ) {
+			declaration
+					.append("\treturn ")
+					.append(sessionName)
+					.append(".chain(")
+					.append(session)
+					.append(" -> {\n");
+		}
+		final var indent = isReactiveSessionAccess() ? "\t\t" : "\t";
+		declaration
+				.append(indent)
+				.append("var _chain = ")
+				.append(uni)
+				.append(".createFrom().voidItem();\n")
+				.append(indent)
+				.append("for (var _entity : ")
+				.append(parameterName)
+				.append(") {\n")
+				.append(indent)
+				.append("\t_chain = _chain.chain(() -> ");
+		upsertOrInsertByGeneratedIdReactively( declaration, "_entity" );
+		declaration
+				.append(");\n")
+				.append(indent)
+				.append("}\n");
+		if ( isReactiveSessionAccess() ) {
+			declaration
+					.append("\t\treturn _chain;\n")
+					.append("\t})");
+		}
+		else {
+			declaration
+					.append("\treturn _chain");
+		}
+	}
+
+	private void upsertOrInsertByGeneratedIdReactively(StringBuilder declaration, String entityVar) {
+		final var session = localSessionName();
+		declaration
+				.append(session)
+				.append(".getIdentifier(")
+				.append(entityVar)
+				.append(") == null ? ")
+				.append(session)
+				.append(".insert(")
+				.append(entityVar)
+				.append(") : ")
+				.append(session)
+				.append(".upsert(")
+				.append(entityVar)
+				.append(")");
 	}
 
 	private boolean isGeneratedIdUpsert() {

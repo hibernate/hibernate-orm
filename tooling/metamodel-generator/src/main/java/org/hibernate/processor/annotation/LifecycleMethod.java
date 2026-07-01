@@ -190,6 +190,9 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		else if ( isStatefulOperation() && parameterKind != ParameterKind.NORMAL ) {
 			delegateStatefulManyBlockingly( declaration );
 		}
+		else if ( isGeneratedIdUpsert() && parameterKind != ParameterKind.NORMAL ) {
+			delegateGeneratedIdUpsertManyBlockingly( declaration );
+		}
 		else {
 			if ( isGeneratedIdUpsert() ) {
 				declaration
@@ -238,6 +241,26 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append('.')
 				.append(operationName)
 				.append("(_entity);\n")
+				.append("\t\t}\n");
+	}
+
+	private void delegateGeneratedIdUpsertManyBlockingly(StringBuilder declaration) {
+		declaration
+				.append("\t\tfor (var _entity : ")
+				.append(parameterName)
+				.append(") {\n")
+				.append("\t\t\tif (")
+				.append(sessionWithGetIdentifier())
+				.append(".getIdentifier(_entity) == null)\n")
+				.append("\t\t\t\t")
+				.append(sessionName)
+				.append(getObjectCall())
+				.append(".insert(_entity);\n")
+				.append("\t\t\telse\n")
+				.append("\t\t\t\t")
+				.append(sessionName)
+				.append(getObjectCall())
+				.append(".upsert(_entity);\n")
 				.append("\t\t}\n");
 	}
 
@@ -333,6 +356,10 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private void delegateReactively(StringBuilder declaration) {
+		if ( isGeneratedIdUpsert() && parameterKind != ParameterKind.NORMAL ) {
+			delegateGeneratedIdUpsertManyReactively( declaration );
+			return;
+		}
 		declaration
 				.append("\treturn ");
 		if ( isReactiveSessionAccess() ) {
@@ -370,6 +397,48 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append(')');
+		}
+	}
+
+	private void delegateGeneratedIdUpsertManyReactively(StringBuilder declaration) {
+		final var uni = annotationMetaEntity.importType( UNI );
+		final var session = localSessionName();
+		if ( isReactiveSessionAccess() ) {
+			declaration
+					.append("\treturn ")
+					.append(sessionName)
+					.append(".chain(")
+					.append(session)
+					.append(" -> {\n");
+		}
+		final var indent = isReactiveSessionAccess() ? "\t\t" : "\t";
+		declaration
+				.append(indent)
+				.append("var _chain = ")
+				.append(uni)
+				.append(".createFrom().voidItem();\n")
+				.append(indent)
+				.append("for (var _entity : ")
+				.append(parameterName)
+				.append(") {\n")
+				.append(indent)
+				.append("\t_chain = _chain.chain(() -> ")
+				.append(session)
+				.append(".getIdentifier(_entity) == null ? ")
+				.append(session)
+				.append(".insert(_entity) : ")
+				.append(session)
+				.append(".upsert(_entity));\n")
+				.append(indent)
+				.append("}\n");
+		if ( isReactiveSessionAccess() ) {
+			declaration
+					.append("\t\treturn _chain;\n")
+					.append("\t})");
+		}
+		else {
+			declaration
+					.append("\treturn _chain");
 		}
 	}
 

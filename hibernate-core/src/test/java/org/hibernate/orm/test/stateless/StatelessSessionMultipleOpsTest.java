@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.stateless;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -17,9 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel(annotatedClasses = {
-		StatelessSessionMultipleOpsTest.Person.class
+		StatelessSessionMultipleOpsTest.Person.class,
+		StatelessSessionMultipleOpsTest.PersonGenId.class
 })
 @SessionFactory(useCollectingStatementInspector = true)
 @Jira("https://hibernate.atlassian.net/browse/HHH-20065")
@@ -143,6 +146,27 @@ public class StatelessSessionMultipleOpsTest {
 		return people;
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20509")
+	public void testUpsertMultipleRejectsNullGeneratedIds(SessionFactoryScope scope) {
+		final var people = new ArrayList<PersonGenId>();
+		for ( int i = 0; i < 3; i++ ) {
+			people.add( new PersonGenId( "person_" + i ) );
+		}
+
+		scope.inStatelessTransaction( session -> {
+			assertThrows( Exception.class, () -> session.upsertMultiple( people ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20509")
+	public void testUpsertRejectsNullGeneratedId(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			assertThrows( Exception.class, () -> session.upsert( new PersonGenId( "person" ) ) );
+		} );
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 		@Id
@@ -154,6 +178,21 @@ public class StatelessSessionMultipleOpsTest {
 
 		public Person(Integer id, String name) {
 			this.id = id;
+			this.name = name;
+		}
+	}
+
+	@Entity(name = "PersonGenId")
+	public static class PersonGenId {
+		@Id
+		@GeneratedValue
+		public Long id;
+		public String name;
+
+		public PersonGenId() {
+		}
+
+		public PersonGenId(String name) {
 			this.name = name;
 		}
 	}

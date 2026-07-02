@@ -21,6 +21,10 @@ concurrency:
   # for pull requests or pushes to forks (not the upstream repository).
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
 
+env:
+  MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+  MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
+
 jobs:
 
   # Main job for h2/docker DBs.

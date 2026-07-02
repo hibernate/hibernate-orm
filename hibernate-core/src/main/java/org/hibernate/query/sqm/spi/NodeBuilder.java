@@ -44,7 +44,6 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmSetJoin;
-import org.hibernate.query.sqm.tree.spi.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.spi.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
@@ -57,6 +56,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.spi.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmXmlTableFunction;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.from.SqmJoin;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertValuesStatement;
@@ -935,7 +935,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<X, T, V extends T> SqmSingularJoin<X, V> treat(@Nonnull Join<X, T> join, @Nonnull Class<V> type);
+	<X, T, V extends T> SqmJoin<X, V> treat(@Nonnull Join<X, T> join, @Nonnull Class<V> type);
 
 	@Nonnull
 	@Override

@@ -159,7 +159,6 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmSetJoin;
-import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;

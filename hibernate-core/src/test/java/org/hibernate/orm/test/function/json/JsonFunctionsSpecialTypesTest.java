@@ -7,16 +7,13 @@ package org.hibernate.orm.test.function.json;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
@@ -41,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(annotatedClasses = JsonFunctionsSpecialTypesTest.EntityWithSpecialTypes.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
 public class JsonFunctionsSpecialTypesTest {
 
 	private static final UUID TEST_UUID = UUID.fromString( "12345678-1234-5678-1234-567812345678" );

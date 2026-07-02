@@ -471,16 +471,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isJsonFunctionsEnabled() {
-		return delegate.isJsonFunctionsEnabled();
-	}
-
-	@Override
-	public boolean isXmlFunctionsEnabled() {
-		return delegate.isXmlFunctionsEnabled();
-	}
-
-	@Override
 	public boolean isPortableIntegerDivisionEnabled() {
 		return delegate.isPortableIntegerDivisionEnabled();
 	}

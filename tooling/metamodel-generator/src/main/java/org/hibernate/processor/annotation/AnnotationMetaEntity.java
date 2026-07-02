@@ -685,7 +685,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 		}
-		if ( quarkusInjection ) {
+		// Entity metamodels in an inheritance hierarchy extend the parent metamodel.
+		// Panache 2 default repository accessors have fixed names, but their generated
+		// repository return types are entity-specific, so emitting them on subclasses
+		// would produce invalid static method hiding.
+		if ( quarkusInjection && !hasPanache2EntitySuperType() ) {
 			// FIXME: perhaps import id type?
 			final var idType = findIdType();
 			addAccessors( managedBlockingRepository, idType, "managedBlocking",
@@ -700,6 +704,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						typeNames.statelessReactiveRepositoryBase(), nestedRepositories );
 			}
 		}
+	}
+
+	private boolean hasPanache2EntitySuperType() {
+		var superClass = element.getSuperclass();
+		while ( superClass.getKind() == TypeKind.DECLARED ) {
+			final var declaredType = (DeclaredType) superClass;
+			final var superType = (TypeElement) declaredType.asElement();
+			if ( hasAnnotation( superType, ENTITY ) && isPanache2Type( superType ) ) {
+				return true;
+			}
+			superClass = superType.getSuperclass();
+		}
+		return false;
 	}
 
 	private boolean addRepositoryAccessor(

@@ -23,7 +23,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.cfg.QuerySettings;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -31,10 +30,8 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -55,7 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		XmlFunctionTests.XmlHolder.class,
 		EntityOfBasics.class
 })
-@ServiceRegistry(settings = @Setting(name = QuerySettings.XML_FUNCTIONS_ENABLED, value = "true"))
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18497")
 public class XmlFunctionTests {

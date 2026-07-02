@@ -47,12 +47,15 @@ public class OverrideRepository  {
 
 	final private static Logger log = Logger.getLogger( OverrideRepository.class );
 
+	private static final String HTTP_BASE =
+			"http://hibernate.org/dtd/hibernate-reverse-engineering";
+	private static final String HTTPS_BASE =
+			"https://hibernate.org/dtd/hibernate-reverse-engineering";
 	private static final String DTD_RESOURCE =
 			"org/hibernate/hibernate-reverse-engineering-3.0.dtd";
 
 	static final EntityResolver DTD_RESOLVER = (publicId, systemId) -> {
-		if (systemId != null
-				&& systemId.endsWith("hibernate-reverse-engineering-3.0.dtd")) {
+		if (matches(publicId) || matches(systemId)) {
 			InputStream dtdStream = OverrideRepository.class.getClassLoader()
 					.getResourceAsStream(DTD_RESOURCE);
 			if (dtdStream != null) {
@@ -64,6 +67,11 @@ public class OverrideRepository  {
 		}
 		return null;
 	};
+
+	private static boolean matches(String id) {
+		return id != null
+				&& (id.startsWith(HTTP_BASE) || id.startsWith(HTTPS_BASE));
+	}
 
 	final private Map<TypeMappingKey, List<SQLTypeMapping>> typeMappings; // from sqltypes to list of SQLTypeMapping
 

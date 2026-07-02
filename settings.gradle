@@ -20,6 +20,11 @@ pluginManagement {
     }
 
     includeBuild 'local-build-plugins'
+
+    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+    // Applied inside pluginManagement so that repos are rewritten before settings plugins
+    // are resolved at the plugins {} block; lifecycle callbacks handle per-project repos.
+    apply from: 'gradle/mirror.gradle'
 }
 
 plugins {
@@ -28,11 +33,6 @@ plugins {
     id 'com.gradle.develocity' version '3.17.6'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.0.2'
 }
-
-// Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
-// Must run before dependencyResolutionManagement so that its configureEach rules are in
-// place when repositories are added below; lifecycle callbacks handle per-project repos.
-apply from: 'gradle/mirror.gradle'
 
 dependencyResolutionManagement {
     repositories {

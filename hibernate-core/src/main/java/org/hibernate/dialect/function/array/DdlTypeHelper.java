@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -15,6 +16,7 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
@@ -31,10 +33,28 @@ public class DdlTypeHelper {
 		return arrayJavaType.resolveType(
 				typeConfiguration,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
-				(BasicType<Object>) elementType,
+				resolveElementBasicType( elementType, typeConfiguration ),
 				null,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
 		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static BasicType<Object> resolveElementBasicType(
+			DomainType<?> elementType,
+			TypeConfiguration typeConfiguration) {
+		if ( elementType instanceof BasicType<?> basicType ) {
+			return (BasicType<Object>) basicType;
+		}
+		else if ( elementType instanceof JdbcMapping jdbcMapping ) {
+			return typeConfiguration.getBasicTypeRegistry().resolve(
+					(JavaType<Object>) elementType.getExpressibleJavaType(),
+					jdbcMapping.getJdbcType()
+			);
+		}
+		else {
+			return (BasicType<Object>) elementType;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -50,7 +70,7 @@ public class DdlTypeHelper {
 		return arrayJavaType.resolveType(
 				typeConfiguration,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
-				(BasicType<Object>) elementType,
+				resolveElementBasicType( elementType, typeConfiguration ),
 				null,
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
 		);

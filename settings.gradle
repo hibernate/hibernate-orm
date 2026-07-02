@@ -7,6 +7,11 @@
 
 pluginManagement {
     repositories {
+        // mavenCentral before gradlePluginPortal: the plugin portal redirects transitive
+        // deps to Maven Central via HTTP 303 — with a mirror, those redirects would fail.
+        // Listing mavenCentral first lets Gradle resolve transitive deps directly
+        // (or from the mirror when MIRROR_MAVEN_CENTRAL_URL is set; see gradle/mirror.gradle).
+        mavenCentral()
         gradlePluginPortal()
         maven {
             name = 'localPluginRepository'
@@ -15,6 +20,11 @@ pluginManagement {
     }
 
     includeBuild 'local-build-plugins'
+
+    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+    // Applied inside pluginManagement so that repos are rewritten before settings plugins
+    // are resolved at the plugins {} block; lifecycle callbacks handle per-project repos.
+    apply from: 'gradle/mirror.gradle'
 }
 
 plugins {
@@ -25,18 +35,7 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
-        // See MAINTAINERS.md for documentation.
-        // TODO Move to infra overrides instead;
-        //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        if ( System.env['MAVEN_MIRROR'] ) {
-            maven {
-                url System.env['MAVEN_MIRROR']
-                allowInsecureProtocol = true
-            }
-        }
-        else {
-            mavenCentral()
-        }
+        mavenCentral()
         // Needed for the RC versions of Jakarta Persistence
         maven {
             url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
@@ -331,7 +330,6 @@ project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.pro
 
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
-
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

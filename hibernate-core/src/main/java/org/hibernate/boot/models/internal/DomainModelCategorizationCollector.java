@@ -5,7 +5,6 @@
 package org.hibernate.boot.models.internal;
 
 import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -129,8 +128,10 @@ public class DomainModelCategorizationCollector {
 	}
 
 	private static boolean isConverter(ClassDetails classDetails) {
-		return classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class )
-			|| classDetails.getDirectAnnotationUsage( Converter.class ) != null;
+		return classDetails.getClassName() != null
+			&& !classDetails.isInterface()
+			&& !classDetails.isAbstract()
+			&& classDetails.isImplementor( AttributeConverter.class );
 	}
 
 	public static boolean isRootEntity(ClassDetails classInfo) {

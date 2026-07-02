@@ -29,31 +29,58 @@ public abstract class AbstractMavenTestIT {
 	public static void initMavenCli() throws Exception {
 		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
 		mavenCli = new MavenCli( classWorld );
-		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
-		String mavenMirrorUsername = System.getenv( "MAVEN_MIRROR_USERNAME" );
+		String centralMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_URL" );
+		String centralMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_USERNAME" );
+		String snapshotsMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL" );
+		String snapshotsMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME" );
 		mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
 		StringBuilder settings = new StringBuilder( "<settings>\n" );
-		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
-			settings.append( """
-					<mirrors>
-						<mirror>
-						<id>ci-mirror</id>
-						<mirrorOf>central</mirrorOf>
-						<url>${env.MAVEN_MIRROR}</url>
-						</mirror>
-					</mirrors>
-					""" );
-			if ( mavenMirrorUsername != null ) {
+		boolean hasMirrors = ( centralMirror != null && !centralMirror.isEmpty() )
+				|| ( snapshotsMirror != null && !snapshotsMirror.isEmpty() );
+		if ( hasMirrors ) {
+			settings.append( "<mirrors>\n" );
+			if ( centralMirror != null && !centralMirror.isEmpty() ) {
 				settings.append( """
-						<servers>
-							<server>
-							<id>ci-mirror</id>
-							<username>${env.MAVEN_MIRROR_USERNAME}</username>
-							<password>${env.MAVEN_MIRROR_PASSWORD}</password>
-							</server>
-						</servers>
+							<mirror>
+							<id>ci-mirror-central</id>
+							<mirrorOf>central</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_URL}</url>
+							</mirror>
 						""" );
 			}
+			if ( snapshotsMirror != null && !snapshotsMirror.isEmpty() ) {
+				settings.append( """
+							<mirror>
+							<id>ci-mirror-snapshots</id>
+							<mirrorOf>central-portal-snapshots</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL}</url>
+							</mirror>
+						""" );
+			}
+			settings.append( "</mirrors>\n" );
+		}
+		boolean hasServers = centralMirrorUsername != null || snapshotsMirrorUsername != null;
+		if ( hasServers ) {
+			settings.append( "<servers>\n" );
+			if ( centralMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-central</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			if ( snapshotsMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-snapshots</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			settings.append( "</servers>\n" );
 		}
 		settings.append( """
 				<profiles>

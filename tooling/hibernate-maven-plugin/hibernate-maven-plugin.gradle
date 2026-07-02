@@ -87,14 +87,11 @@ publishingExtension.publications.named("publishedArtifacts") {
 integrationTest {
     environment "hibernateVersion", project.version
     environment "h2Version", libs.versions.h2.get()
-    providers.environmentVariable('MAVEN_MIRROR').orElse(providers.gradleProperty('MAVEN_MIRROR')).orElse('').get().with {
-        if (!empty) environment 'MAVEN_MIRROR', it
-    }
-    providers.environmentVariable('MAVEN_MIRROR_USERNAME').orElse(providers.gradleProperty('MAVEN_MIRROR_USERNAME')).orElse('').get().with {
-        if (!empty) environment 'MAVEN_MIRROR_USERNAME', it
-    }
-    providers.environmentVariable('MAVEN_MIRROR_PASSWORD').orElse(providers.gradleProperty('MAVEN_MIRROR_PASSWORD')).orElse('').get().with {
-        if (!empty) environment 'MAVEN_MIRROR_PASSWORD', it
+    ['MIRROR_MAVEN_CENTRAL_URL', 'MIRROR_MAVEN_CENTRAL_USERNAME', 'MIRROR_MAVEN_CENTRAL_PASSWORD',
+     'MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL', 'MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME', 'MIRROR_MAVEN_CENTRAL_SNAPSHOTS_PASSWORD'].each { key ->
+        providers.environmentVariable(key).orElse(providers.gradleProperty(key)).orElse('').get().with {
+            if (!empty) environment key, it
+        }
     }
     testLogging {
         exceptionFormat = 'full'

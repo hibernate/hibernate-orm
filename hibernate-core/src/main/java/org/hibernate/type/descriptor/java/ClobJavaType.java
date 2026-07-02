@@ -15,6 +15,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
+import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.engine.jdbc.proxy.ClobProxy;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -118,7 +119,7 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
-					return (X) value.getCharacterStream();
+					return (X) new CharacterStreamImpl( value.getCharacterStream(), value.length() );
 				}
 			}
 		}

@@ -101,6 +101,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmWindowFrame;
 import org.hibernate.query.sqm.tree.spi.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmXmlTableFunction;
 import org.hibernate.query.sqm.tree.spi.expression.ValueBindJpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.spi.from.SqmJoin;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.type.BindingContext;
@@ -158,8 +159,6 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmSetJoin;
-import org.hibernate.query.sqm.tree.spi.domain.SqmSingularJoin;
-import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
@@ -1101,8 +1100,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Nonnull
 	@Override
-	public <X, T, V extends T> SqmSingularJoin<X, V> treat(@Nonnull Join<X, T> join, @Nonnull Class<V> type) {
-		return (SqmTreatedSingularJoin<X,T,V>) ( (SqmSingularJoin<X, T>) join ).treatAs( type );
+	public <X, T, V extends T> SqmJoin<X, V> treat(@Nonnull Join<X, T> join, @Nonnull Class<V> type) {
+		return (SqmJoin<X,V>) ( (SqmJoin<X, T>) join ).treatAs( type );
 	}
 
 	@Nonnull

@@ -6,6 +6,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.Reader;
 import java.io.Serializable;
+import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
 
@@ -14,6 +15,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NClobImplementer;
+import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.engine.jdbc.proxy.NClobProxy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -104,6 +106,15 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 			if ( NClob.class.isAssignableFrom( type ) ) {
 				return type.cast( options.getLobCreator().toJdbcNClob( value ) );
 			}
+			else if ( Clob.class.isAssignableFrom( type ) ){
+				try {
+					return type.cast( options.getLobCreator().createClob( value.getCharacterStream(), value.length() ) );
+				}
+				catch ( SQLException ex ) {
+					// This basically shouldn't happen unless you've lost connection to the database.
+					throw new HibernateException( ex );
+				}
+			}
 			else if ( String.class.isAssignableFrom( type ) ) {
 				if (value instanceof NClobImplementer clobImplementer) {
 					// if the incoming Clob is a wrapper, just get the underlying String.
@@ -131,7 +142,7 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
-					return type.cast( value.getCharacterStream() );
+					return type.cast( new CharacterStreamImpl( value.getCharacterStream(), value.length() ) );
 				}
 			}
 		}
@@ -150,6 +161,15 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 			final LobCreator lobCreator = options.getLobCreator();
 			if ( value instanceof NClob clob ) {
 				return lobCreator.wrap( clob );
+			}
+			else if ( value instanceof Clob clob ) {
+				try {
+					return lobCreator.createNClob( clob.getCharacterStream(), clob.length() );
+				}
+				catch ( SQLException ex ) {
+					// This basically shouldn't happen unless you've lost connection to the database.
+					throw new HibernateException( ex );
+				}
 			}
 			else if ( value instanceof String string ) {
 				return lobCreator.createNClob( string );

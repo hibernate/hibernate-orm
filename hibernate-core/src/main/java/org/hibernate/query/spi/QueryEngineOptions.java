@@ -120,16 +120,6 @@ public interface QueryEngineOptions {
 	boolean allowImmutableEntityUpdate();
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED
-	 */
-	boolean isJsonFunctionsEnabled();
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#XML_FUNCTIONS_ENABLED
-	 */
-	boolean isXmlFunctionsEnabled();
-
-	/**
 	 * Should HQL integer division HQL should produce an integer on
 	 * Oracle, MySQL, and MariaDB, where the {@code /} operator produces
 	 * a non-integer.

@@ -1327,7 +1327,10 @@ public class HbmXmlTransformer {
 		}
 
 		final Set<String> mappedPropertyNames = new HashSet<>();
-		for ( var property : persistentClass.getProperties() ) {
+		// Use getPropertyClosure() (not getProperties()) to include inherited properties
+		// from parent entities — otherwise subclass entities would generate <transient/>
+		// for properties already mapped on the parent
+		for ( var property : persistentClass.getPropertyClosure() ) {
 			mappedPropertyNames.add( property.getName() );
 		}
 		if ( persistentClass.getIdentifierProperty() != null ) {
@@ -1350,6 +1353,19 @@ public class HbmXmlTransformer {
 			final boolean fieldAccess = "field".equals(
 					hbmXmlBinding.getRoot().getDefaultAccess().toLowerCase( Locale.ROOT )
 			);
+
+			// For subclass entities, also mark all parent class properties as mapped
+			// so we don't generate duplicate <transient/> for inherited properties
+			if ( persistentClass.getSuperclass() != null ) {
+				final var superClass = persistentClass.getSuperclass().getMappedClass();
+				if ( superClass != null ) {
+					final Set<String> parentPropertyNames = TransformationHelper.discoverAllPropertyNames(
+							superClass, fieldAccess
+					);
+					mappedPropertyNames.addAll( parentPropertyNames );
+				}
+			}
+
 			final Set<String> transientNames = TransformationHelper.discoverUnmappedPropertyNames(
 					javaClass, mappedPropertyNames, fieldAccess
 			);

@@ -8,6 +8,7 @@ import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
@@ -32,11 +33,26 @@ public class SQLServerJsonValueFunction extends JsonValueFunction {
 		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonValueErrorBehavior.ERROR ) {
 			throw new QueryException( "Can't emulate on error clause on SQL server" );
 		}
-		sqlAppender.appendSql( "(select v from openjson(" );
+		sqlAppender.appendSql( "(select " );
+		final CastTarget returningType = arguments.returningType();
+		if ( returningType != null && returningType.getJdbcMapping().getJdbcType().isBinary() ) {
+			sqlAppender.appendSql( "convert(" );
+			returningType.accept( walker );
+			sqlAppender.appendSql( ",v,2)" );
+		}
+		else {
+			sqlAppender.appendSql( "v" );
+		}
+		sqlAppender.appendSql( " from openjson(" );
 		arguments.jsonDocument().accept( walker );
 		sqlAppender.appendSql( ") with (v " );
-		if ( arguments.returningType() != null ) {
-			arguments.returningType().accept( walker );
+		if ( returningType != null ) {
+			if ( returningType.getJdbcMapping().getJdbcType().isBinary() ) {
+				sqlAppender.appendSql( "varchar(max)" );
+			}
+			else {
+				returningType.accept( walker );
+			}
 		}
 		else {
 			sqlAppender.appendSql( "nvarchar(max)" );

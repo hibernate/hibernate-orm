@@ -424,8 +424,8 @@ public class H2LegacyDialect extends Dialect {
 				}
 			}
 			else {
-				functionFactory.jsonObject();
-				functionFactory.jsonArray();
+				functionFactory.jsonObject_h2();
+				functionFactory.jsonArray_h2();
 
 				// Use group_concat until 2.x as listagg was buggy
 				functionFactory.listagg_groupConcat();

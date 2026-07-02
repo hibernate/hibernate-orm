@@ -5,6 +5,11 @@
 
 pluginManagement {
     repositories {
+        // mavenCentral before gradlePluginPortal: the plugin portal redirects transitive
+        // deps to Maven Central via HTTP 303 — with a mirror, those redirects would fail.
+        // Listing mavenCentral first lets Gradle resolve transitive deps directly
+        // (or from the mirror when MIRROR_MAVEN_CENTRAL_URL is set; see gradle/mirror.gradle).
+        mavenCentral()
         gradlePluginPortal()
         maven {
             name = 'localPluginRepository'
@@ -22,27 +27,18 @@ plugins {
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '2.6.0'
 }
 
+// Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+// Must run before dependencyResolutionManagement so that its configureEach rules are in
+// place when repositories are added below; lifecycle callbacks handle per-project repos.
+apply from: 'gradle/mirror.gradle'
+
 dependencyResolutionManagement {
     repositories {
         // See MAINTAINERS.md for documentation.
-        // TODO Move to infra overrides instead;
-        //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it)
-        if ( !org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it) ) {
-            // temporary for 4.0 snapshot testing
-            maven {
-                url "https://central.sonatype.com/repository/maven-snapshots/"
-            }
-
-            if (System.getProperty('JPA_PREVIEW') != null) {
-                maven {
-                    url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
-                }
-                // Needed for the SNAPSHOT versions of Jakarta Persistence
-                maven {
-                    url "https://central.sonatype.com/repository/maven-snapshots/"
-                }
-            }
+        org.hibernate.orm.env.Repositories.maybeAddMavenLocal(it)
+        mavenCentral()
+        org.hibernate.orm.env.Repositories.maybeAddMavenCentralSnapshots(it) { content ->
+            content.includeGroup "jakarta.persistence"
         }
 
         //Allow loading additional dependencies from a local path;

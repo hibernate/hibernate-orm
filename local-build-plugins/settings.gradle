@@ -1,7 +1,26 @@
+pluginManagement {
+    repositories {
+        // mavenCentral before gradlePluginPortal: the plugin portal redirects transitive
+        // deps to Maven Central via HTTP 303 — with a mirror, those redirects would fail.
+        // Listing mavenCentral first lets Gradle resolve transitive deps directly
+        // (or from the mirror when MIRROR_MAVEN_CENTRAL_URL is set; see gradle/mirror.gradle).
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
     versionCatalogs {
         libs {
             from(files("../gradle/libs.versions.toml"))
         }
     }
 }
+
+// Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+// Applied after dependencyResolutionManagement so that configureEach rules are in place
+// for repos already added above; lifecycle callbacks handle any later additions.
+apply from: '../gradle/mirror.gradle'

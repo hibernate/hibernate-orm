@@ -83,17 +83,16 @@ def __rewriteRepo(repositories, String repoName, __MirrorConfig mirror) {
 
 def __addFallback(repositories, String repoName, String originalUrl, __MirrorConfig mirror) {
     if (!mirror || !mirror.fallback) return
+    def original = repositories.findByName(repoName)
+    if (!original) return
     def fallbackName = "${repoName} (fallback)"
     if (repositories.findByName(fallbackName)) return
     def fallback = repositories.maven {
         name = fallbackName
         url = URI.create(originalUrl)
     }
-    def original = repositories.findByName(repoName)
-    if (original) {
-        repositories.remove(fallback)
-        repositories.add(repositories.indexOf(original) + 1, fallback)
-    }
+    repositories.remove(fallback)
+    repositories.add(repositories.indexOf(original) + 1, fallback)
 }
 
 def __rewriteAll(repositories, centralMirror, snapshotsMirror, pluginPortalMirror) {

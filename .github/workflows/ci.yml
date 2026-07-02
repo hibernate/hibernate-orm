@@ -21,6 +21,10 @@ concurrency:
   # for pull requests or pushes to forks (not the upstream repository).
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
 
+env:
+  MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+  MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
+
 jobs:
 
   # Main job for h2/docker DBs.
@@ -118,8 +122,6 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
-          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
@@ -246,8 +248,6 @@ jobs:
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
-          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           RUNID: ${{ github.run_number }}
           TESTPILOT_CONNECTION_STRING_SUFFIX: ${{ steps.create_database.outputs.connection_string_suffix }}
           TESTPILOT_PASSWORD: ${{ steps.create_database.outputs.database_password }}
@@ -386,8 +386,6 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
-          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
@@ -488,8 +486,6 @@ jobs:
       - name: Run build script
         run: ./gradlew formatChecks
         env:
-          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
@@ -581,9 +577,6 @@ jobs:
 
       - name: Merge Jacoco Reports
         run: ./gradlew mergeCodeCoverageReport copyDependenciesSonar --no-parallel
-        env:
-          MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
-          MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
 
       - name: Store build info for Sonar scanning
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

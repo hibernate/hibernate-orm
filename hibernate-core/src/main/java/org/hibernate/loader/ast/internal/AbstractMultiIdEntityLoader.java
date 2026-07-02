@@ -12,6 +12,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -133,6 +134,12 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			final Object id = coerce( idType, ids[i] );
 			final var entityKey = session.generateEntityKey( id, persister );
 			if ( !loadFromEnabledCaches( loadOptions, session, lockOptions, entityKey, results, i ) ) {
+				final Object managedEntity = getManagedEntityIfExists( entityKey, loadOptions, session );
+				if ( managedEntity != null ) {
+					results.add( i, managedEntity );
+					continue;
+				}
+
 				// if we did not hit any of the continues above,
 				// then we need to batch load the entity state.
 				idsInBatch.add( id );
@@ -196,6 +203,20 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	}
 
 
+	private Object getManagedEntityIfExists(EntityKey entityKey, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
+		if ( loadOptions.isRefreshSession() ) {
+			return null;
+		}
+		final var existingHolder = session.getPersistenceContextInternal().getEntityHolder( entityKey );
+		if ( existingHolder != null && existingHolder.getEntity() != null ) {
+			final var existingEntry = existingHolder.getEntityEntry();
+			if ( existingEntry != null && existingEntry.getStatus() == Status.MANAGED ) {
+				return existingHolder.getEntity();
+			}
+		}
+		return null;
+	}
+
 	protected abstract void loadEntitiesById(
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
@@ -243,7 +264,13 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		}
 
 		if ( loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			// look for it in the second-level cache
+			final Object managedEntity = getManagedEntityIfExists( entityKey, loadOptions, session );
+			if ( managedEntity != null ) {
+				results.add( i, managedEntity );
+				return true;
+			}
+
+			// Not in PC or not managed - load from second-level cache
 			final Object entity =
 					loadFromSecondLevelCache( entityKey, lockOptions, session );
 			if ( entity != null ) {
@@ -396,11 +423,19 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			sessionEntity = null;
 		}
 
-		final Object cachedEntity =
-				sessionEntity == null
-					&& loadOptions.isSecondLevelCacheCheckingEnabled()
-						? loadFromSecondLevelCache( entityKey, lockOptions, session )
-						: sessionEntity;
+		Object cachedEntity = sessionEntity;
+
+		if ( sessionEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+			final Object managedEntity = getManagedEntityIfExists( entityKey, loadOptions, session );
+			if ( managedEntity != null ) {
+				cachedEntity = managedEntity;
+			}
+
+			// Not in PC or not managed - load from second-level cache
+			if ( cachedEntity == null ) {
+				cachedEntity = loadFromSecondLevelCache( entityKey, lockOptions, session );
+			}
+		}
 
 		if ( cachedEntity != null ) {
 			//noinspection unchecked

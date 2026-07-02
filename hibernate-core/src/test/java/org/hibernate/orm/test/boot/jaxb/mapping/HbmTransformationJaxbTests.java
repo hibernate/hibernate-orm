@@ -698,4 +698,123 @@ public class HbmTransformationJaxbTests {
 			}
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20638" )
+	public void testFilterDefParameterTypeResolution(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/filter-def-types/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getFilterDefinitions() ).hasSize( 3 );
+
+			final var stringFilter = transformed.getFilterDefinitions().stream()
+					.filter( f -> "stringFilter".equals( f.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( stringFilter.getFilterParams() ).hasSize( 1 );
+			assertThat( stringFilter.getFilterParams().get( 0 ).getType() )
+					.as( "HBM type 'string' should resolve to java.lang.String" )
+					.isEqualTo( "java.lang.String" );
+
+			final var timestampFilter = transformed.getFilterDefinitions().stream()
+					.filter( f -> "timestampFilter".equals( f.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( timestampFilter.getFilterParams() ).hasSize( 1 );
+			assertThat( timestampFilter.getFilterParams().get( 0 ).getType() )
+					.as( "HBM type 'timestamp' should resolve to java.util.Date" )
+					.isEqualTo( "java.util.Date" );
+
+			final var numericFilter = transformed.getFilterDefinitions().stream()
+					.filter( f -> "numericFilter".equals( f.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( numericFilter.getFilterParams() ).hasSize( 3 );
+
+			final var doubleParam = numericFilter.getFilterParams().stream()
+					.filter( p -> "amount".equals( p.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( doubleParam.getType() )
+					.as( "HBM type 'double' should resolve to double" )
+					.isEqualTo( "double" );
+
+			final var longParam = numericFilter.getFilterParams().stream()
+					.filter( p -> "count".equals( p.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( longParam.getType() )
+					.as( "HBM type 'long' should resolve to long" )
+					.isEqualTo( "long" );
+
+			final var intParam = numericFilter.getFilterParams().stream()
+					.filter( p -> "code".equals( p.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( intParam.getType() )
+					.as( "HBM type 'integer' should resolve to int" )
+					.isEqualTo( "int" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20639" )
+	public void testManyToManyElementFilterTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/many-to-many-element-filter/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl productEntity = transformed.getEntities().stream()
+					.filter( e -> "Product".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( productEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+
+			final JaxbManyToManyImpl categories = productEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( categories.getName() ).isEqualTo( "categories" );
+
+			assertThat( categories.getFilters() )
+					.as( "Filters from <many-to-many> element should be transferred" )
+					.hasSizeGreaterThanOrEqualTo( 2 );
+
+			assertThat( categories.getFilters() )
+					.extracting( f -> f.getName() )
+					.contains( "effectiveDate", "cat" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20640" )
+	public void testInverseManyToManyMappedByTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/many-to-many-inverse/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl productEntity = transformed.getEntities().stream()
+					.filter( e -> "Product".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( productEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final JaxbManyToManyImpl categories = productEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( categories.getName() ).isEqualTo( "categories" );
+			assertThat( categories.getMappedBy() )
+					.as( "Owning side should not have mapped-by" )
+					.isNull();
+			assertThat( categories.getJoinTable() )
+					.as( "Owning side should have a join-table" )
+					.isNotNull();
+			assertThat( categories.getJoinTable().getName() ).isEqualTo( "PROD_CAT" );
+
+			final JaxbEntityImpl categoryEntity = transformed.getEntities().stream()
+					.filter( e -> "Category".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( categoryEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final JaxbManyToManyImpl products = categoryEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( products.getName() ).isEqualTo( "products" );
+			assertThat( products.getMappedBy() )
+					.as( "Inverse side should have mapped-by pointing to the owning side" )
+					.isEqualTo( "categories" );
+			assertThat( products.getJoinTable() )
+					.as( "Inverse side should not have a join-table" )
+					.isNull();
+		} );
+	}
 }

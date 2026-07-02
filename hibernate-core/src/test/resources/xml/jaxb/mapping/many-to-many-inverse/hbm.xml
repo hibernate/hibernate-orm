@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.filter">
+
+    <class name="Product" table="PRODUCT">
+        <id name="id" column="PROD_ID">
+            <generator class="native"/>
+        </id>
+        <property name="name"/>
+        <set name="categories" table="PROD_CAT" cascade="all" inverse="false">
+            <key column="PROD_ID"/>
+            <many-to-many class="Category" column="CAT_ID"/>
+        </set>
+    </class>
+
+    <class name="Category" table="CATEGORY">
+        <id name="id" column="CAT_ID">
+            <generator class="native"/>
+        </id>
+        <property name="name"/>
+        <set name="products" table="PROD_CAT" cascade="none" inverse="true">
+            <key column="CAT_ID"/>
+            <many-to-many class="Product" column="PROD_ID"/>
+        </set>
+    </class>
+
+</hibernate-mapping>

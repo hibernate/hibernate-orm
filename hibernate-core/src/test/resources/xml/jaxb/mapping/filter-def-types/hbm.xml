@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping">
+
+    <filter-def name="stringFilter">
+        <filter-param name="name" type="string"/>
+    </filter-def>
+
+    <filter-def name="timestampFilter">
+        <filter-param name="asOfDate" type="timestamp"/>
+    </filter-def>
+
+    <filter-def name="numericFilter">
+        <filter-param name="amount" type="double"/>
+        <filter-param name="count" type="long"/>
+        <filter-param name="code" type="integer"/>
+    </filter-def>
+
+    </hibernate-mapping>

@@ -14,6 +14,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NClobImplementer;
+import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.engine.jdbc.proxy.NClobProxy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -131,7 +132,7 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 				}
 				else {
 					// otherwise we need to build a CharacterStream...
-					return type.cast( value.getCharacterStream() );
+					return type.cast( new CharacterStreamImpl( value.getCharacterStream(), value.length() ) );
 				}
 			}
 		}

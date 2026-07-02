@@ -29,20 +29,83 @@ public abstract class AbstractMavenTestIT {
 	public static void initMavenCli() throws Exception {
 		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
 		mavenCli = new MavenCli( classWorld );
-		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
-		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
-			mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
-			Files.writeString( mavenSettingsFile,
-					"<settings>\n" +
-					"  <mirrors>\n" +
-					"    <mirror>\n" +
-					"      <id>ci-mirror</id>\n" +
-					"      <mirrorOf>central</mirrorOf>\n" +
-					"      <url>${env.MAVEN_MIRROR}</url>\n" +
-					"    </mirror>\n" +
-					"  </mirrors>\n" +
-					"</settings>\n" );
+		String centralMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_URL" );
+		String centralMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_USERNAME" );
+		String snapshotsMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL" );
+		String snapshotsMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME" );
+		mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
+		StringBuilder settings = new StringBuilder( "<settings>\n" );
+		boolean hasMirrors = ( centralMirror != null && !centralMirror.isEmpty() )
+				|| ( snapshotsMirror != null && !snapshotsMirror.isEmpty() );
+		if ( hasMirrors ) {
+			settings.append( "<mirrors>\n" );
+			if ( centralMirror != null && !centralMirror.isEmpty() ) {
+				settings.append( """
+							<mirror>
+							<id>ci-mirror-central</id>
+							<mirrorOf>central</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_URL}</url>
+							</mirror>
+						""" );
+			}
+			if ( snapshotsMirror != null && !snapshotsMirror.isEmpty() ) {
+				settings.append( """
+							<mirror>
+							<id>ci-mirror-snapshots</id>
+							<mirrorOf>jakarta-snapshots</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL}</url>
+							</mirror>
+						""" );
+			}
+			settings.append( "</mirrors>\n" );
 		}
+		boolean hasServers = centralMirrorUsername != null || snapshotsMirrorUsername != null;
+		if ( hasServers ) {
+			settings.append( "<servers>\n" );
+			if ( centralMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-central</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			if ( snapshotsMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-snapshots</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			settings.append( "</servers>\n" );
+		}
+		settings.append( """
+				<profiles>
+					<profile>
+					<id>jakarta-snapshots</id>
+					<repositories>
+						<repository>
+						<id>jakarta-snapshots</id>
+						<url>https://jakarta.oss.sonatype.org/content/repositories/snapshots/</url>
+						<snapshots>
+							<enabled>true</enabled>
+						</snapshots>
+						<releases>
+							<enabled>false</enabled>
+						</releases>
+						</repository>
+					</repositories>
+					</profile>
+				</profiles>
+				<activeProfiles>
+					<activeProfile>jakarta-snapshots</activeProfile>
+				</activeProfiles>
+				""" );
+		settings.append( "</settings>\n" );
+		Files.writeString( mavenSettingsFile, settings.toString() );
 	}
 
 	@AfterAll

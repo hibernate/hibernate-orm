@@ -2757,7 +2757,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonValueFunction(HqlParser.JsonValueFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
 		final var jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 		final var returningClause = ctx.jsonValueReturningClause();
@@ -2813,7 +2812,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonQueryFunction(HqlParser.JsonQueryFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
 		final var jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 		final var jsonQuery = (SqmJsonQueryExpression) getFunctionDescriptor( "json_query" ).<String>generateSqmExpression(
@@ -2894,7 +2892,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonExistsFunction(HqlParser.JsonExistsFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
 		final var jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 
@@ -2928,7 +2925,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonArrayFunction(HqlParser.JsonArrayFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var nullClause = ctx.jsonNullClause();
 		final var argumentContexts = ctx.expressionOrPredicate();
 		int count = argumentContexts.size();
@@ -2953,7 +2949,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJsonObjectFunction(HqlParser.JsonObjectFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var entries = ctx.jsonObjectFunctionEntries();
 		final List<SqmTypedNode<?>> arguments;
 		if ( entries == null ) {
@@ -2985,7 +2980,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJsonArrayAggFunction(HqlParser.JsonArrayAggFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var jsonNullClauseContext = ctx.jsonNullClause();
 		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( jsonNullClauseContext == null ? 1 : 2 );
 		arguments.add( (SqmTypedNode<?>) ctx.expressionOrPredicate().accept( this ) );
@@ -3010,7 +3004,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJsonObjectAggFunction(HqlParser.JsonObjectAggFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var jsonNullClauseContext = ctx.jsonNullClause();
 		final var jsonUniqueKeysClauseContext = ctx.jsonUniqueKeysClause();
 		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 4 );
@@ -3043,7 +3036,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJsonTableFunction(HqlParser.JsonTableFunctionContext ctx) {
-		checkJsonFunctionsEnabled( ctx );
 		final var argumentsContexts = ctx.expression();
 		final var jsonDocument = (SqmExpression<?>) argumentsContexts.get( 0 ).accept( this );
 		final SqmJsonTableFunction<?> jsonTable;
@@ -3129,19 +3121,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	private void checkJsonFunctionsEnabled(ParserRuleContext ctx) {
-		if ( !creationOptions.isJsonFunctionsEnabled() ) {
-			throw new SemanticException(
-					"Can't use function '" + ctx.children.get( 0 ).getText() +
-							"', because tech preview JSON functions are not enabled. To enable, set the '" + QuerySettings.JSON_FUNCTIONS_ENABLED + "' setting to 'true'.",
-					query
-			);
-		}
-	}
-
 	@Override
 	public SqmExpression<?> visitXmlelementFunction(HqlParser.XmlelementFunctionContext ctx) {
-		checkXmlFunctionsEnabled( ctx );
 		final String elementName = visitIdentifier( ctx.identifier() );
 		final var xmlelement = nodeBuilder().xmlelement( elementName );
 		final var attributeCtx = ctx.xmlattributesFunction();
@@ -3161,7 +3142,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitXmlforestFunction(HqlParser.XmlforestFunctionContext ctx) {
-		checkXmlFunctionsEnabled( ctx );
 		final ArrayList<SqmExpression<?>> elementExpressions = new ArrayList<>( ctx.getChildCount() >> 1 );
 		for ( int i = 2; i < ctx.getChildCount(); i++ ) {
 			if ( ctx.getChild( i ) instanceof HqlParser.ExpressionOrPredicateContext exprCtx ) {
@@ -3189,7 +3169,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitXmlpiFunction(HqlParser.XmlpiFunctionContext ctx) {
-		checkXmlFunctionsEnabled( ctx );
 		final String name = visitIdentifier( ctx.identifier() );
 		final var exprCtx = ctx.expression();
 		//noinspection unchecked
@@ -3200,7 +3179,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitXmlqueryFunction(HqlParser.XmlqueryFunctionContext ctx) {
-		checkXmlFunctionsEnabled( ctx );
 		final var query = (SqmExpression<String>) ctx.expression( 0 ).accept( this );
 		final var xmlDocument = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 		return nodeBuilder().xmlquery( query, xmlDocument );
@@ -3208,7 +3186,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitXmlexistsFunction(HqlParser.XmlexistsFunctionContext ctx) {
-		checkXmlFunctionsEnabled( ctx );
 		final var query = (SqmExpression<String>) ctx.expression( 0 ).accept( this );
 		final var xmlDocument = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
 		return nodeBuilder().xmlexists( query, xmlDocument );
@@ -3216,7 +3193,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitXmlaggFunction(HqlParser.XmlaggFunctionContext ctx) {
-		checkXmlFunctionsEnabled( ctx );
 		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 1 );
 		arguments.add( (SqmTypedNode<?>) ctx.expression().accept( this ) );
 		return applyOverClause(
@@ -3235,7 +3211,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitXmltableFunction(HqlParser.XmltableFunctionContext ctx) {
-		checkXmlFunctionsEnabled( ctx );
 		final var argumentsContexts = ctx.expression();
 		//noinspection unchecked
 		final var xpath = (SqmExpression<String>) argumentsContexts.get( 0 ).accept( this );
@@ -3276,16 +3251,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						= (HqlParser.XmlTableOrdinalityColumnContext) columnContext;
 				xmlTable.ordinalityColumn( visitIdentifier( ordinalityColumnContext.identifier() ) );
 			}
-		}
-	}
-
-	private void checkXmlFunctionsEnabled(ParserRuleContext ctx) {
-		if ( !creationOptions.isXmlFunctionsEnabled() ) {
-			throw new SemanticException(
-					"Can't use function '" + ctx.children.get( 0 ).getText() +
-							"', because tech preview XML functions are not enabled. To enable, set the '" + QuerySettings.XML_FUNCTIONS_ENABLED + "' setting to 'true'.",
-					query
-			);
 		}
 	}
 

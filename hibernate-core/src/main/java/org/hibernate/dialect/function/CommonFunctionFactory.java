@@ -3921,6 +3921,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * H2 json_object() function
+	 */
+	public void jsonObject_h2() {
+		functionRegistry.register( "json_object", new H2JsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
 	 * DB2 json_object() function
 	 */
 	public void jsonObject_db2() {
@@ -3965,8 +3972,13 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_object() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void jsonObject_postgresql() {
-		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration ) );
+		jsonObject_postgresql( false );
+	}
+
+	public void jsonObject_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration, supportsStandard ) );
 	}
 
 	/**
@@ -3974,6 +3986,13 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArray() {
 		functionRegistry.register( "json_array", new JsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_array() function
+	 */
+	public void jsonArray_h2() {
+		functionRegistry.register( "json_array", new H2JsonArrayFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -4028,8 +4047,16 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_array() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void jsonArray_postgresql() {
-		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration ) );
+		jsonArray_postgresql( false );
+	}
+
+	/**
+	 * PostgreSQL json_array() function
+	 */
+	public void jsonArray_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration, supportsStandard ) );
 	}
 
 	/**

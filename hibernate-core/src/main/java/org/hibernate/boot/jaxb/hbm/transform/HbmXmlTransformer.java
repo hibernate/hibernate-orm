@@ -2228,7 +2228,42 @@ public class HbmXmlTransformer {
 						target.setFormula( formula );
 					}
 				},
-				ColumnDefaultsBasicImpl.INSTANCE,
+				new ColumnDefaults() {
+					@Override
+					public Boolean isNullable() {
+						return !element.isNotNull();
+					}
+
+					@Override
+					public Integer getLength() {
+						return element.getLength();
+					}
+
+					@Override
+					public Integer getScale() {
+						return element.getScale();
+					}
+
+					@Override
+					public Integer getPrecision() {
+						return element.getPrecision();
+					}
+
+					@Override
+					public Boolean isUnique() {
+						return element.isUnique();
+					}
+
+					@Override
+					public Boolean isInsertable() {
+						return Boolean.TRUE;
+					}
+
+					@Override
+					public Boolean isUpdatable() {
+						return Boolean.TRUE;
+					}
+				},
 				null
 		);
 	}

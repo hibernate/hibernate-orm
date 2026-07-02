@@ -46,7 +46,7 @@ class OverrideRepositoryDtdTest {
 
 	@Test
 	void parseRevengXmlWithStrictJaxp() throws Exception {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance( "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl", null );
 		dbf.setFeature(
 				"http://apache.org/xml/features/nonvalidating/load-external-dtd",
 				true);

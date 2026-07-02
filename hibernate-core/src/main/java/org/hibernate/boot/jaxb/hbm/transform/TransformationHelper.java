@@ -43,6 +43,10 @@ public class TransformationHelper {
 		}
 	}
 
+	static Set<String> discoverAllPropertyNames(Class<?> javaClass, boolean fieldAccess) {
+		return discoverUnmappedPropertyNames( javaClass, Set.of(), fieldAccess );
+	}
+
 	static Set<String> discoverUnmappedPropertyNames(
 			Class<?> javaClass,
 			Set<String> mappedPropertyNames,

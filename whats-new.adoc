@@ -244,3 +244,10 @@ The following major enhancements were made to subselect fetching.
 Note that batch fetching may be requested using the standard JPA 4 fetch option `BatchSize`.
 
 These changes finally make bulk select fetching a first-class citizen.
+
+[[json-xml-functions-incubation]]
+== JSON/XML functions out of incubation
+
+As of 8.0, the JSON and XML functions are out of incubation and hence are available by default.
+The configuration settings `hibernate.query.hql.json_functions_enabled` and `hibernate.query.hql.xml_functions_enabled`
+were removed.

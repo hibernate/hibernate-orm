@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@RequiresDialect(DB2Dialect.class)
+@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
 @Jpa(annotatedClasses = Db2PartitionedTableTest.Partitioned.class)
 class Db2PartitionedTableTest {
 	@Test void test(EntityManagerFactoryScope scope) {

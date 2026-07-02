@@ -60,7 +60,7 @@ public class UniqueConstraintGenerationTest {
 		if ( !(dialect.getUniqueDelegate() instanceof SkipNullableUniqueDelegate) ) {
 			if ( dialect.getUniqueDelegate() instanceof AlterTableUniqueIndexDelegate ) {
 				MatcherAssert.assertThat( "The test_entity_item table unique constraint has not been generated",
-						isCreateUniqueIndexGenerated("test_entity_item", "item", scriptFile),
+						isCreateUniqueIndexGenerated("test_entity_item", "item", dialect, scriptFile),
 						is(true)
 				);
 			}
@@ -111,8 +111,9 @@ public class UniqueConstraintGenerationTest {
 	private boolean isCreateUniqueIndexGenerated(
 			String tableName,
 			String columnName,
+			Dialect dialect,
 			File scriptFile) throws IOException {
-		String regex = "create unique (nonclustered |null_filtered )?index uk.* on " + tableName
+		String regex = dialect.getCreateIndexString( true ) + " uk.* on " + tableName
 				+ " \\(" + columnName + "\\)( where .*| exclude null keys)?;";
 		final String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );

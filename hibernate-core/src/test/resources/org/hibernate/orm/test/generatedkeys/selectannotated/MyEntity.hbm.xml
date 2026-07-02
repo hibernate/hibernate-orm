@@ -93,6 +93,7 @@
             <![CDATA[drop trigger my_entity_trigger]]>
         </drop>
         <dialect-scope name="org.hibernate.dialect.DB2Dialect"/>
+        <dialect-scope name="org.hibernate.dialect.DB2zDialect"/>
     </database-object>
 
     <database-object>

@@ -86,7 +86,7 @@ public class CompositeUserTypeTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "HHH-6788")
-	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "HHH-6867")
+	@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true, reason = "HHH-6867")
 	public void testCustomColumnReadAndWrite(SessionFactoryScope scope) {
 		final BigDecimal AMOUNT = new BigDecimal( 73000000d );
 		final BigDecimal AMOUNT_MILLIONS = AMOUNT.divide( new BigDecimal( 1000000d ) );

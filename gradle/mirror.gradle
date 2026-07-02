@@ -73,10 +73,14 @@ def __rewriteRepo(repositories, String repoName, __MirrorConfig mirror) {
     repositories.withType(MavenArtifactRepository).configureEach { repo ->
         if (repo.name == repoName) {
             repo.url = URI.create(mirror.url)
-            if (mirror.username) {
+            if (mirror.username || mirror.password) {
                 repo.credentials {
-                    username = mirror.username
-                    password = mirror.password
+                    if (mirror.username) {
+                        username = mirror.username
+                    }
+                    if (mirror.password) {
+                        password = mirror.password
+                    }
                 }
             }
         }

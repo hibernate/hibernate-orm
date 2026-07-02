@@ -20,6 +20,11 @@ pluginManagement {
     }
 
     includeBuild 'local-build-plugins'
+
+    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+    // Applied inside pluginManagement so that repos are rewritten before settings plugins
+    // are resolved at the plugins {} block; lifecycle callbacks handle per-project repos.
+    apply from: 'gradle/mirror.gradle'
 }
 
 plugins {
@@ -27,11 +32,6 @@ plugins {
     id 'com.gradle.enterprise' version '3.16'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.12.1'
 }
-
-// Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
-// Applied after pluginManagement so that configureEach rules are in place
-// for repos already added above; lifecycle callbacks handle any later additions.
-apply from: 'gradle/mirror.gradle'
 
 dependencyResolutionManagement {
     repositories {
@@ -330,7 +330,6 @@ project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.pro
 
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
-
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

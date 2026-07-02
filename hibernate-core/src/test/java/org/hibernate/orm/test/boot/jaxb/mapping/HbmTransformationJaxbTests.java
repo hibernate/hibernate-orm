@@ -634,6 +634,33 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testUnionSubclassNoInheritedTransients(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/union-subclass-transient/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl employeeEntity = transformed.getEntities().stream()
+					.filter( e -> "Employee".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			for ( JaxbTransientImpl transientAttr : employeeEntity.getAttributes().getTransients() ) {
+				assertThat( transientAttr.getName() )
+						.as( "Subclass should not have transient for inherited property '%s'", transientAttr.getName() )
+						.isNotIn( "sex", "name", "id" );
+			}
+
+			final JaxbEntityImpl customerEntity = transformed.getEntities().stream()
+					.filter( e -> "Customer".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			for ( JaxbTransientImpl transientAttr : customerEntity.getAttributes().getTransients() ) {
+				assertThat( transientAttr.getName() )
+						.as( "Subclass should not have transient for inherited property '%s'", transientAttr.getName() )
+						.isNotIn( "sex", "name", "id" );
+			}
+		} );
+	}
+
+	@Test
 	public void testSharedEmbeddableFormulaPropertyTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/shared-embeddable-formula/hbm.xml", scope, (transformed) -> {
 			final JaxbEntityImpl formulaUserEntity = transformed.getEntities().stream()

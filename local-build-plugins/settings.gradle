@@ -7,6 +7,9 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+
+    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+    apply from: '../gradle/mirror.gradle'
 }
 
 dependencyResolutionManagement {
@@ -14,8 +17,3 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
-// Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
-// Applied after dependencyResolutionManagement so that configureEach rules are in place
-// for repos already added above; lifecycle callbacks handle any later additions.
-apply from: '../gradle/mirror.gradle'

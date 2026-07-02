@@ -7,6 +7,10 @@ on:
 
 permissions: {} # none
 
+env:
+  MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+  MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
+
 # See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
 concurrency:
   # Consider that two builds are in the same concurrency group (cannot run concurrently)

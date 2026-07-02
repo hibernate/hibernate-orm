@@ -661,6 +661,25 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testElementCollectionNotNullTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getAttributes().getElementCollectionAttributes() ).hasSize( 1 );
+
+			final var elementCollection = entity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( elementCollection.getName() ).isEqualTo( "persons" );
+			assertThat( elementCollection.getColumn() )
+					.as( "Element collection should have a column element" )
+					.isNotNull();
+			assertThat( elementCollection.getColumn().isNullable() )
+					.as( "Element column with not-null='true' should have nullable=false" )
+					.isFalse();
+		} );
+	}
+
+	@Test
 	public void testSharedEmbeddableFormulaPropertyTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/shared-embeddable-formula/hbm.xml", scope, (transformed) -> {
 			final JaxbEntityImpl formulaUserEntity = transformed.getEntities().stream()

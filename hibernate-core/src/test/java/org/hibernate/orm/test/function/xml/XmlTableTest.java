@@ -8,7 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -20,10 +19,8 @@ import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.AfterEach;
@@ -59,7 +56,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @DomainModel(annotatedClasses = XmlTableTest.XmlHolder.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = QuerySettings.XML_FUNCTIONS_ENABLED, value = "true"))
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlTable.class)
 public class XmlTableTest {
 

@@ -91,17 +91,22 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 			}
 			else if ( memberMapping instanceof EmbeddedMapping<?,?> embeddedMapping ) {
 				final var attributeMapping =
-						(EmbeddableValuedModelPart)
 								entityDescriptor.findSubPart( embeddedMapping.name() );
 				if ( !identifierFetchHandler.handleMember( embeddedMapping ) ) {
-					attributeFetchBuilders.put(
-							embeddedMapping.name(),
-							new CompleteFetchBuilderEmbeddableValuedModelPart(
-									rootPath.append( attributeMapping.getPartName() ),
-									attributeMapping,
-									extractColumnNames( embeddedMapping, attributeMapping )
-							)
-					);
+					if ( attributeMapping instanceof EmbeddableValuedModelPart modelPart ) {
+						attributeFetchBuilders.put(
+								embeddedMapping.name(),
+								new CompleteFetchBuilderEmbeddableValuedModelPart(
+										rootPath.append( attributeMapping.getPartName() ),
+										modelPart,
+										extractColumnNames( embeddedMapping, modelPart )
+								)
+						);
+					}
+					else {
+						throw new IllegalArgumentException( "Not an embedded attribute: "
+								+ attributeMapping.getNavigableRole().getFullPath() );
+					}
 				}
 			}
 			else {

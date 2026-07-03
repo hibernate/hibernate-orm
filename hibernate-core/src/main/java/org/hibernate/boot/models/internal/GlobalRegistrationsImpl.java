@@ -800,10 +800,10 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 			Map<ClassDetails, TargetedLifecycleEventHandlerBuilder> builders) {
 		if ( methodDetails.hasDirectAnnotationUsage( callbackAnnotation ) ) {
 			if ( !LifecycleEventHandler.matchesSignature( JpaEventListenerStyle.LISTENER, methodDetails ) ) {
-				throw new ModelsException( "Callback methods annotated for "
-						+ callbackAnnotation.getName() + " in "
+				throw new ModelsException( "Callback method annotated '@"
+						+ callbackAnnotation.getSimpleName() + "' in '"
 						+ listenerClassDetails.getClassName()
-						+ " must return void and take one argument: " + methodDetails );
+						+ "' must return void and accept one argument: " + methodDetails );
 			}
 
 			builders.computeIfAbsent( methodDetails.getArgumentTypes().get( 0 ),

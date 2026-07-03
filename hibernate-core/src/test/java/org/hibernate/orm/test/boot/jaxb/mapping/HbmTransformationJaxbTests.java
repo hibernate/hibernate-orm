@@ -688,6 +688,31 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testOneToOnePropertyRefTransformation(ServiceRegistryScope scope) {
+		transformAndVerifyMultiple(
+				new String[] { "xml/jaxb/mapping/one-to-one-property-ref/hbm.xml" },
+				scope,
+				(transformedRoots) -> {
+					final JaxbEntityMappingsImpl transformed = transformedRoots.get( 0 );
+					assertThat( transformed.getEntities() ).hasSize( 2 );
+
+					final JaxbEntityImpl personEntity = transformed.getEntities().stream()
+							.filter( e -> "Person".equals( e.getClazz() ) )
+							.findFirst()
+							.orElseThrow();
+
+					// Person.address one-to-one with property-ref should become mapped-by
+					assertThat( personEntity.getAttributes().getOneToOneAttributes() ).hasSize( 1 );
+					final JaxbOneToOneImpl address = personEntity.getAttributes().getOneToOneAttributes().get( 0 );
+					assertThat( address.getName() ).isEqualTo( "address" );
+					assertThat( address.getMappedBy() )
+							.as( "One-to-one with property-ref should generate mapped-by" )
+							.isEqualTo( "resident" );
+				}
+		);
+	}
+
+	@Test
 	public void testElementCollectionNotNullTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, (transformed) -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );

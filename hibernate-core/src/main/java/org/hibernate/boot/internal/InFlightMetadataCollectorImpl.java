@@ -65,6 +65,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -255,6 +256,12 @@ public class InFlightMetadataCollectorImpl
 	@Override
 	public NamedObjectRepository buildNamedQueryRepository() {
 		throw new UnsupportedOperationException( "#buildNamedQueryRepository should not be called on InFlightMetadataCollector" );
+	}
+
+	@Override
+	public List<PersistenceUnitCallbackDefinition> getPersistenceUnitLifecycleCallbackDefinitions() {
+		return PersistenceUnitCallbackDefinition.from(
+				globalRegistrations.getPersistenceUnitLifecycleEventHandlers() );
 	}
 
 	@Override
@@ -2013,6 +2020,7 @@ public class InFlightMetadataCollectorImpl
 					sqlResultSetMappingMap,
 					namedEntityGraphMap,
 					sqlFunctionMap,
+					getPersistenceUnitLifecycleCallbackDefinitions(),
 					getDatabase(),
 					bootstrapContext
 			);

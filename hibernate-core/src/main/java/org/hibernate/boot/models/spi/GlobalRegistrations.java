@@ -22,6 +22,8 @@ public interface GlobalRegistrations {
 
 	Map<ClassDetails, List<LifecycleEventHandler>> getTargetedEntityListenerRegistrations();
 
+	List<PersistenceUnitLifecycleEventHandler> getPersistenceUnitLifecycleEventHandlers();
+
 	List<ConversionRegistration> getConverterRegistrations();
 
 	List<JavaTypeRegistration> getJavaTypeRegistrations();

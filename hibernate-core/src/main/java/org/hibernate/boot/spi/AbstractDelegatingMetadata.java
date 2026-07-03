@@ -16,6 +16,7 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
@@ -29,6 +30,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -263,5 +265,10 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Override
 	public Set<String> getContributors() {
 		return delegate.getContributors();
+	}
+
+	@Override
+	public List<PersistenceUnitCallbackDefinition> getPersistenceUnitLifecycleCallbackDefinitions() {
+		return delegate.getPersistenceUnitLifecycleCallbackDefinitions();
 	}
 }

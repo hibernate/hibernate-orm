@@ -38,6 +38,7 @@ public class MetadataCopyingTest {
 				existingInstance.getSqlResultSetMappingMap(),
 				existingInstance.getNamedEntityGraphs(),
 				existingInstance.getSqlFunctionMap(),
+				existingInstance.getPersistenceUnitLifecycleCallbackDefinitions(),
 				existingInstance.getDatabase(),
 				existingInstance.getBootstrapContext()
 		);

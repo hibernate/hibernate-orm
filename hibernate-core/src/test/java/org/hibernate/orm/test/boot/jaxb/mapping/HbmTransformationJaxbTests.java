@@ -661,6 +661,33 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testPropertyIndexTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/property-index/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl personEntity = transformed.getEntities().stream()
+					.filter( e -> "Person".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( personEntity.getTable() ).isNotNull();
+			assertThat( personEntity.getTable().getIndexes() )
+					.as( "Entity table should have indexes from property and many-to-one index attributes" )
+					.hasSizeGreaterThanOrEqualTo( 2 );
+
+			assertThat( personEntity.getTable().getIndexes() )
+					.anySatisfy( index -> {
+						assertThat( index.getName() ).isEqualTo( "person_name_index" );
+						assertThat( index.getColumnList() ).isEqualTo( "name" );
+					} );
+
+			assertThat( personEntity.getTable().getIndexes() )
+					.anySatisfy( index -> {
+						assertThat( index.getName() ).isEqualTo( "person_persongroup_index" );
+						assertThat( index.getColumnList() ).isEqualTo( "personGroup" );
+					} );
+		} );
+	}
+
+	@Test
 	public void testElementCollectionNotNullTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, (transformed) -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );

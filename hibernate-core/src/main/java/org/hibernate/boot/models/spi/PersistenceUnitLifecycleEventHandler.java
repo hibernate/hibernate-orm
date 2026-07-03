@@ -154,8 +154,9 @@ public class PersistenceUnitLifecycleEventHandler {
 			@Nonnull MethodDetails methodDetails,
 			@Nonnull Class<? extends Annotation> callbackAnnotation) {
 		if ( !hasValidSignature( methodDetails ) ) {
-			throw new ModelsException( "Callback method '" + methodDetails.getName() + "' annotated '"
-					+ callbackAnnotation.getName() + "' in '"
+			throw new ModelsException( "Callback method '"
+					+ methodDetails.getName() + "' annotated '@"
+					+ callbackAnnotation.getSimpleName() + "' in '"
 					+ listenerClassDetails.getClassName()
 					+ "' must return void and have one parameter of type 'EntityAgent', 'EntityManager', or 'EntityManagerFactory'");
 		}

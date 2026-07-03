@@ -2,7 +2,19 @@
 
 @@@@ FIXTURE @@@@
 === ID ===
-simple_select
+simple_select_oneline
+
+=== SQL ===
+select name,dept,salary from empl e where e.salary >= 50000;
+
+=== EXPECTED ===
+select name, dept, salary
+from empl e
+where e.salary >= 50000;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+simple_select_multiline
 
 === SQL ===
 select id,name,dept,salary from empl e where e.salary >= 50000;
@@ -564,3 +576,46 @@ truncate table empl continue identity cascade;
 
 === EXPECTED ===
 truncate table empl continue identity cascade;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+window_function
+
+=== SQL ===
+select department,name,salary,rank() over (partition by department order by name, salary desc) as salary_rank from employees
+order by department, salary_rank;
+
+=== EXPECTED ===
+select
+    department,
+    name,
+    salary,
+    rank() over (
+        partition by department
+        order by name, salary desc
+    ) as salary_rank
+from employees
+order by department, salary_rank;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+jira_example
+
+=== SQL ===
+select t1.column,"t1".`column`,trim(both '' from [t2].column) from tbl1 t1 left join tbl2 t2 on t2.fk = t1.fk
+join lateral(select t3.c1, t3.c2 from tbl3 t3) t(col1,col2) on true order by 1,2 offset 1 rows fetch first 1 rows only with ties
+
+=== EXPECTED ===
+select t1.column, "t1".`column`, trim(both '' from [t2].column)
+from tbl1 t1
+left join tbl2 t2
+    on t2.fk = t1.fk
+join lateral (
+    select t3.c1, t3.c2
+    from tbl3 t3
+) t(col1, col2)
+    on true
+order by 1, 2
+offset 1 rows
+fetch first 1 rows only
+with ties

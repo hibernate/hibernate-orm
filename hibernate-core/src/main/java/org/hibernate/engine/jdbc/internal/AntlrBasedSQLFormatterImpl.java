@@ -67,7 +67,8 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			FUNCTION,       // Function call
 			BETWEEN_EXPR,	// Between expression
 			CASE_EXPR,      // CASE expression
-			OPERATOR_LIST;   // Operator list (IN, ALL, etc.)
+			OVER_WINDOW,	// Window declaration
+			OPERATOR_LIST;	// Operator list (IN, ALL, etc.)
 
 			public boolean isCurrent(Context currentContext) {
 				return currentContext != null && this.equals( currentContext.type );
@@ -156,17 +157,6 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					break;
 				case SqlFormatterLexer.UPDATE:
 					processUpdate(token);
-					break;
-				case SqlFormatterLexer.INTO,
-					SqlFormatterLexer.LATERAL,
-					SqlFormatterLexer.CONFLICT,
-					SqlFormatterLexer.DUPLICATE,
-					SqlFormatterLexer.KEY,
-					SqlFormatterLexer.MATCHED,
-					SqlFormatterLexer.NOTHING,
-					SqlFormatterLexer.CONSTRAINT:
-					space();
-					writeToken(token);
 					break;
 				case SqlFormatterLexer.VALUES:
 					processValues( token );
@@ -314,9 +304,34 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			writeToken( token );
 			// Check if list is multi-line
 			var previousToken = peekBack(1);
-			int[] terminators = (previousToken != null && previousToken.getType() == SqlFormatterLexer.ORDER)
-					? new int[]{ SqlFormatterLexer.OFFSET, SqlFormatterLexer.FETCH, SqlFormatterLexer.LIMIT }
-					: new int[]{ SqlFormatterLexer.HAVING, SqlFormatterLexer.ORDER, SqlFormatterLexer.OFFSET };
+			int[] terminators;
+
+			if (previousToken != null && previousToken.getType() == SqlFormatterLexer.ORDER) {
+				// ORDER BY - check context
+				if (ContextType.OVER_WINDOW.isCurrent(currentContext())) {
+					// Inside OVER() - ends at frame clause or closing paren
+					terminators = new int[]{
+							SqlFormatterLexer.ROWS,
+							SqlFormatterLexer.RANGE,
+							SqlFormatterLexer.GROUPS,
+							SqlFormatterLexer.RPAREN
+					};
+				} else {
+					// Query-level ORDER BY
+					terminators = new int[]{
+							SqlFormatterLexer.OFFSET,
+							SqlFormatterLexer.FETCH,
+							SqlFormatterLexer.LIMIT
+					};
+				}
+			} else {
+				// GROUP BY
+				terminators = new int[]{
+						SqlFormatterLexer.HAVING,
+						SqlFormatterLexer.ORDER,
+						SqlFormatterLexer.OFFSET
+				};
+			}
 			if (shouldListBeMultiline(terminators)) {
 				newLine(false);
 				baseIndent = currentContext().indent + 1;
@@ -521,6 +536,9 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					Token beforeValues = peekBack(2);
 					isParenthesizedList = (beforeValues == null || beforeValues.getType() != SqlFormatterLexer.EQ);
 				}
+				else if (prevType == SqlFormatterLexer.OVER) {
+					newContextType = ContextType.OVER_WINDOW;
+				}
 				else if (prevType == SqlFormatterLexer.IDENTIFIER && ContextType.INSERT.isCurrent(currentContext())) {
 					// INSERT INTO table (columns) - newline and indent, but keep content inline
 					isParenthesizedList = true;
@@ -593,7 +611,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				}
 			}
 			else {
-				// Subquery/CTE - newline and indent
+				// Subquery/CTE/OVER - newline and indent
 				newLine(false);
 				contextStack.push(new Context(newContextType, baseIndent + 1));
 				baseIndent = currentContext().indent;
@@ -874,7 +892,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 						prevType == SqlFormatterLexer.ALL || prevType == SqlFormatterLexer.ANY ||
 						prevType == SqlFormatterLexer.CONFLICT || prevType == SqlFormatterLexer.ON ||
 						prevType == SqlFormatterLexer.INSERT || prevType == SqlFormatterLexer.BETWEEN ||
-						prevType == SqlFormatterLexer.AND
+						prevType == SqlFormatterLexer.AND || prevType == SqlFormatterLexer.OVER
 				) {
 					return true;
 				}
@@ -966,7 +984,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				}
 			}
 
-			return commaCount > 0;
+			return commaCount > 3;
 		}
 
 		private boolean shouldOperatorListBeMultiline() {

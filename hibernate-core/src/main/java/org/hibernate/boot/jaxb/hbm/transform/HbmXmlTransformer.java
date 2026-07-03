@@ -124,6 +124,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritanceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
@@ -1317,6 +1318,40 @@ public class HbmXmlTransformer {
 			transferJoins( (JaxbHbmRootEntityType) hbmEntity, mappingEntity, bootEntityInfo );
 		}
 		transferTransients( bootEntityInfo, mappingEntity );
+		transferPropertyIndexes( hbmEntity, mappingEntity );
+	}
+
+	private void transferPropertyIndexes(JaxbHbmEntityBaseDefinition hbmEntity, JaxbEntityImpl mappingEntity) {
+		if ( mappingEntity.getTable() == null ) {
+			return;
+		}
+		for ( Object attr : hbmEntity.getAttributes() ) {
+			if ( attr instanceof JaxbHbmBasicAttributeType basic ) {
+				if ( isNotEmpty( basic.getIndex() ) ) {
+					addTableIndex( mappingEntity, basic.getIndex(),
+							isNotEmpty( basic.getColumnAttribute() ) ? basic.getColumnAttribute() : basic.getName() );
+				}
+				for ( Serializable colOrFormula : basic.getColumnOrFormula() ) {
+					if ( colOrFormula instanceof JaxbHbmColumnType column && isNotEmpty( column.getIndex() ) ) {
+						addTableIndex( mappingEntity, column.getIndex(), column.getName() );
+					}
+				}
+			}
+			else if ( attr instanceof JaxbHbmManyToOneType manyToOne && isNotEmpty( manyToOne.getIndex() ) ) {
+				addTableIndex( mappingEntity, manyToOne.getIndex(),
+						isNotEmpty( manyToOne.getColumnAttribute() ) ? manyToOne.getColumnAttribute() : manyToOne.getName() );
+			}
+			else if ( attr instanceof JaxbHbmAnyAssociationType any && isNotEmpty( any.getIndex() ) ) {
+				addTableIndex( mappingEntity, any.getIndex(), any.getName() );
+			}
+		}
+	}
+
+	private void addTableIndex(JaxbEntityImpl mappingEntity, String indexName, String columnName) {
+		final var index = new JaxbIndexImpl();
+		index.setName( indexName );
+		index.setColumnList( columnName );
+		mappingEntity.getTable().getIndexes().add( index );
 	}
 
 	private void transferTransients(EntityTypeInfo entityInfo, JaxbEntityImpl mappingEntity) {

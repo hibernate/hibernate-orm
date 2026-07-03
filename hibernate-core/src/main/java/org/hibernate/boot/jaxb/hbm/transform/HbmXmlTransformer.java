@@ -202,6 +202,7 @@ import static org.hibernate.boot.jaxb.hbm.transform.HbmTransformationLogging.TRA
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import org.hibernate.internal.util.StringHelper;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.split;
@@ -1752,7 +1753,10 @@ public class HbmXmlTransformer {
 	private boolean isPropertyRefBackReference(JaxbHbmOneToOneType hbmOneToOne, PropertyInfo propertyInfo) {
 		final String targetEntityName = isNotEmpty( hbmOneToOne.getEntityName() )
 				? hbmOneToOne.getEntityName()
-				: hbmOneToOne.getClazz();
+				: StringHelper.qualifyConditionallyIfNot(
+						hbmXmlBinding.getRoot().getPackage(),
+						hbmOneToOne.getClazz()
+				);
 		final var targetEntityInfo = transformationState.getEntityInfoByName().get( targetEntityName );
 		if ( targetEntityInfo == null ) {
 			return false;

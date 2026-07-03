@@ -39,6 +39,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
@@ -92,6 +93,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
+	private final List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions;
 	private final Database database;
 
 	public MetadataImpl(
@@ -114,6 +116,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
 			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
+			List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions,
 			Database database,
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
@@ -135,6 +138,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
 		this.sqlFunctionMap = sqlFunctionMap;
+		this.persistenceUnitLifecycleCallbackDefinitions = persistenceUnitLifecycleCallbackDefinitions;
 		this.database = database;
 		this.bootstrapContext = bootstrapContext;
 	}
@@ -152,6 +156,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
 		return bootstrapContext.getFunctionRegistry();
+	}
+
+	@Override
+	public List<PersistenceUnitCallbackDefinition> getPersistenceUnitLifecycleCallbackDefinitions() {
+		return persistenceUnitLifecycleCallbackDefinitions;
 	}
 
 	@Override

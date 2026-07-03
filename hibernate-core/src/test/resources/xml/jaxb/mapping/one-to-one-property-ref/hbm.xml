@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.ops">
+
+    <class name="Person" table="OPS_PERSON">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="name" column="NAME" type="string"/>
+        <one-to-one name="address" class="Address" property-ref="resident"/>
+    </class>
+
+    <class name="Address" table="OPS_ADDRESS">
+        <id name="id" column="ID" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="streetAddress" column="STREET" type="string"/>
+        <property name="city" column="CITY" type="string"/>
+        <property name="country" column="CTRY" type="string"/>
+        <many-to-one name="resident" column="RESIDENT" class="Person"/>
+    </class>
+
+</hibernate-mapping>

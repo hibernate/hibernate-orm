@@ -77,6 +77,7 @@ import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -2213,6 +2214,11 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public NamedObjectRepository buildNamedQueryRepository() {
 			return null;
+		}
+
+		@Override
+		public List<PersistenceUnitCallbackDefinition> getPersistenceUnitLifecycleCallbackDefinitions() {
+			return List.of();
 		}
 
 		@Override

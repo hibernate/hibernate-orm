@@ -214,13 +214,26 @@ public class StatelessSessionImpl
 	@Override
 	public void close() {
 		checkSessionReentrancy();
+		RuntimeException preCloseException = null;
 		if ( !isClosed() ) {
+			preCloseException = getFactory().preClose( this );
 			final var statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.closeSession();
 			}
 		}
-		super.close();
+		try {
+			super.close();
+		}
+		catch (RuntimeException e) {
+			if ( preCloseException != null ) {
+				e.addSuppressed( preCloseException );
+			}
+			throw e;
+		}
+		if ( preCloseException != null ) {
+			throw preCloseException;
+		}
 	}
 
 	@Override

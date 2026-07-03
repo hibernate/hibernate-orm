@@ -9,6 +9,7 @@ import java.util.Map;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.EntityHandler;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -383,4 +384,9 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 */
 	@Nonnull
 	ActionQueueFactory getActionQueueFactory();
+
+	void postCreate(@Nonnull EntityHandler target);
+
+	@Nullable
+	RuntimeException preClose(@Nonnull EntityHandler target);
 }

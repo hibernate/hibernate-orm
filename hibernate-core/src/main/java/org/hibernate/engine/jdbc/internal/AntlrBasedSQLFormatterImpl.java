@@ -141,10 +141,14 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					SqlFormatterLexer.INNER,
 					SqlFormatterLexer.OUTER,
 					SqlFormatterLexer.FULL,
-					SqlFormatterLexer.CROSS:
+					SqlFormatterLexer.CROSS,
+					SqlFormatterLexer.WINDOW:
 					newLine(true);
 					baseIndent = currentContext().indent;
 					writeToken(token);
+					break;
+				case SqlFormatterLexer.ROWS:
+					processRows(token);
 					break;
 				case SqlFormatterLexer.MERGE:
 					processMerge(token);
@@ -251,10 +255,21 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			}
 		}
 
+		private void processRows(Token token) {
+			if (currentContext().type == ContextType.OVER_WINDOW) {
+				newLine(false);
+			}
+			baseIndent = currentContext().indent;
+			writeToken(token);
+		}
+
 		private void processBetween(Token token) {
 			baseIndent = currentContext().indent;
 			writeToken( token );
-			contextStack.push(new Context(ContextType.BETWEEN_EXPR, baseIndent));
+			Token prevToken = peekBack(1);
+			if (prevToken != null && prevToken.getType() != SqlFormatterLexer.ROWS) {
+				contextStack.push(new Context(ContextType.BETWEEN_EXPR, baseIndent));
+			}
 		}
 
 		private void processSemiColon(Token token) {
@@ -316,7 +331,8 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 							SqlFormatterLexer.GROUPS,
 							SqlFormatterLexer.RPAREN
 					};
-				} else {
+				}
+				else {
 					// Query-level ORDER BY
 					terminators = new int[]{
 							SqlFormatterLexer.OFFSET,
@@ -324,7 +340,8 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 							SqlFormatterLexer.LIMIT
 					};
 				}
-			} else {
+			}
+			else {
 				// GROUP BY
 				terminators = new int[]{
 						SqlFormatterLexer.HAVING,
@@ -536,7 +553,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					Token beforeValues = peekBack(2);
 					isParenthesizedList = (beforeValues == null || beforeValues.getType() != SqlFormatterLexer.EQ);
 				}
-				else if (prevType == SqlFormatterLexer.OVER) {
+				else if (prevType == SqlFormatterLexer.OVER || prevType == SqlFormatterLexer.WINDOW) {
 					newContextType = ContextType.OVER_WINDOW;
 				}
 				else if (prevType == SqlFormatterLexer.IDENTIFIER && ContextType.INSERT.isCurrent(currentContext())) {
@@ -904,7 +921,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 		}
 
 		private boolean isKeyword(int type) {
-			return type >= SqlFormatterLexer.SELECT && type <= SqlFormatterLexer.INTERVAL;
+			return type >= SqlFormatterLexer.ALL && type <= SqlFormatterLexer.WITH;
 		}
 
 		private boolean isLogical(int type) {

@@ -223,6 +223,7 @@ public abstract class MockSessionFactory
 				emptyMap(),
 				emptyMap(),
 				emptyMap(),
+				emptyList(),
 				new Database(this, MockJdbcServicesInitiator.jdbcServices.getJdbcEnvironment()),
 				this
 		);

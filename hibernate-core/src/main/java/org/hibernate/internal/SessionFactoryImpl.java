@@ -71,6 +71,7 @@ import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.jpa.internal.PersistenceUnitLifecycleCallbacks;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
@@ -80,7 +81,7 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
@@ -153,6 +154,7 @@ import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGE
 import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
 import static org.hibernate.internal.SessionFactorySettings.getMaskedSettings;
 import static org.hibernate.internal.SessionFactorySettings.getSessionFactoryName;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
@@ -211,6 +213,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
 	private final transient EventListenerGroups eventListenerGroups;
+	private final transient PersistenceUnitLifecycleCallbacks persistenceUnitLifecycleCallbacks;
 
 	private final transient WrapperOptions wrapperOptions;
 	private final transient SessionBuilderImplementor defaultSessionOpenOptions;
@@ -344,6 +347,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			parameterMarkerStrategy = serviceRegistry.requireService( ParameterMarkerStrategy.class );
 			batchBuilder = serviceRegistry.requireService( BatchBuilder.class );
 			managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+			persistenceUnitLifecycleCallbacks =
+					persistenceUnitLifecycleCallbacks( bootMetamodel.getPersistenceUnitLifecycleCallbackDefinitions() );
 
 			final boolean multiTenancyEnabled = options.isMultiTenancyEnabled();
 			connectionProvider =
@@ -366,10 +371,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				jpaMetamodel.populateStaticMetamodelResultSetMappings( bootMetamodel, this );
 			}
 
-			actionQueueFactory = serviceRegistry.requireService( ActionQueueFactoryService.class )
-					.buildActionQueueFactory( this );
+			actionQueueFactory =
+					serviceRegistry.requireService( ActionQueueFactoryService.class )
+							.buildActionQueueFactory( this );
 
 			observerChain.sessionFactoryCreated( this );
+
+			persistenceUnitLifecycleCallbacks.postCreate( this );
 		}
 		catch ( Exception e ) {
 			disintegrate( e, integratorObserver );
@@ -384,6 +392,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		SESSION_FACTORY_LOGGER.instantiatedFactory( uuid );
+	}
+
+	private PersistenceUnitLifecycleCallbacks persistenceUnitLifecycleCallbacks(
+			@Nonnull List<PersistenceUnitCallbackDefinition> definitions) {
+		return PersistenceUnitLifecycleCallbacks.from(
+				definitions,
+				definitions.isEmpty()
+						? managedBeanRegistry
+						: serviceRegistry.requireService( ManagedBeanRegistry.class )
+		);
 	}
 
 	private JavaType<Object> tenantIdentifierType(SessionFactoryOptions options) {
@@ -543,15 +561,44 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		integratorObserver.integrators.clear();
 	}
 
+	@Override
+	public void postCreate(@Nonnull EntityHandler target) {
+		try {
+			persistenceUnitLifecycleCallbacks.postCreate( target );
+		}
+		catch (RuntimeException e) {
+			try {
+				target.close();
+			}
+			catch (Exception closeException) {
+				e.addSuppressed( closeException );
+			}
+			throw e;
+		}
+	}
 
+	@Override
+	@Nullable
+	public RuntimeException preClose(@Nonnull EntityHandler target) {
+		try {
+			persistenceUnitLifecycleCallbacks.preClose( target );
+			return null;
+		}
+		catch (RuntimeException e) {
+			return e;
+		}
+	}
+
+	@Nullable
 	private SessionBuilderImplementor createDefaultSessionOpenOptionsIfPossible() {
 		final var tenantIdResolver = getCurrentTenantIdentifierResolver();
 		// Don't store a default SessionBuilder when a CurrentTenantIdentifierResolver is provided
 		return tenantIdResolver == null ? withOptions() : null;
 	}
 
+	@Nonnull
 	private SessionBuilderImplementor buildTemporarySessionOpenOptions() {
-		return withOptions()
+		return sessionBuilder( false )
 				.autoClose( false )
 				.flushMode( FlushMode.MANUAL )
 				.connectionHandlingMode( DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
@@ -644,10 +691,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	@Nonnull
 	public SessionBuilderImplementor withOptions() {
+		return sessionBuilder( true );
+	}
+
+	private SessionBuilderImplementor sessionBuilder(boolean notifyLifecycleCallbacks) {
 		return new SessionBuilderImpl( this ) {
 			@Override
 			protected SessionImplementor createSession(StatefulOptions options) {
-				return new SessionImpl( SessionFactoryImpl.this, options );
+				final var session = new SessionImpl( SessionFactoryImpl.this, options );
+				if ( notifyLifecycleCallbacks ) {
+					postCreate( session );
+				}
+				return session;
 			}
 		};
 	}
@@ -655,10 +710,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	@Nonnull
 	public StatelessSessionBuilder withStatelessOptions() {
+		return statelessSessionBuilder( true );
+	}
+
+	private StatelessSessionBuilder statelessSessionBuilder(boolean notifyLifecycleCallbacks) {
 		return new StatelessSessionBuilderImpl( this ) {
 			@Override
 			protected StatelessSessionImplementor createStatelessSession(StatelessOptions options) {
-				return new StatelessSessionImpl( SessionFactoryImpl.this, options );
+				final var session = new StatelessSessionImpl( SessionFactoryImpl.this, options );
+				if ( notifyLifecycleCallbacks ) {
+					postCreate( session );
+				}
+				return session;
 			}
 		};
 	}
@@ -772,7 +835,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 		}
 
-		return new SessionImpl( this, optionsCollector );
+		final var session = new SessionImpl( this, optionsCollector );
+		postCreate( session );
+		return session;
 	}
 
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
@@ -798,6 +863,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 			}
 		}
+		postCreate( session );
 		return session;
 	}
 
@@ -837,27 +903,30 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private StatelessSession createEntityAgent() {
 		validateNotClosed();
-		return openStatelessSession();
+		return statelessSessionBuilder( false ).openStatelessSession();
 	}
 
 	@Override
 	@Nonnull
 	public StatelessSession createEntityAgent(@Nullable EntityAgent.CreationOption... options) {
 		validateNotClosed();
-		if ( CollectionHelper.isEmpty( options ) ) {
-			return openStatelessSession();
+		final StatelessSession session;
+		if ( isEmpty( options ) ) {
+			session = createEntityAgent();
 		}
-
-		final var optionsCollector = new StatelessOptions( this );
-		optionsCollector.apply( options );
-
-		return new StatelessSessionImpl( this, optionsCollector );
+		else {
+			final var optionsCollector = new StatelessOptions( this );
+			optionsCollector.apply( options );
+			session = new StatelessSessionImpl( this, optionsCollector );
+		}
+		postCreate( session );
+		return session;
 	}
 
 	@Override
 	@Nonnull
 	public EntityAgent createEntityAgent(@Nullable Map<?, ?> map) {
-		var agent = createEntityAgent();
+		final var agent = createEntityAgent();
 		if ( map != null ) {
 			map.forEach( (key,val) -> {
 				if ( key instanceof String prop ) {
@@ -865,6 +934,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 			} );
 		}
+		postCreate( agent );
 		return agent;
 	}
 
@@ -974,6 +1044,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			status = Status.CLOSING;
 		}
 
+		final var preCloseException = preClose();
+
 		try {
 			SESSION_FACTORY_LOGGER.closingFactory( uuid );
 			observerChain.sessionFactoryClosing( this );
@@ -1015,6 +1087,21 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		observerChain.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
+
+		if ( preCloseException != null ) {
+			throw preCloseException;
+		}
+	}
+
+	@Nullable
+	private RuntimeException preClose() {
+		try {
+			persistenceUnitLifecycleCallbacks.preClose( this );
+			return null;
+		}
+		catch (RuntimeException e) {
+			return e;
+		}
 	}
 
 	@Override

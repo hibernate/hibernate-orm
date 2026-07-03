@@ -35,8 +35,7 @@ public class NoPackageTest {
 					"select e from " + AnnotationMappedNoPackageEntity.class.getSimpleName() + " e",
 					AnnotationMappedNoPackageEntity.class
 			);
-			AnnotationMappedNoPackageEntity box = query.getSingleResult();
-			assertEquals( (Integer) 42, box.getId() );
+			assertEquals( (Integer) 42, query.getSingleResult().getId() );
 		} );
 	}
 }

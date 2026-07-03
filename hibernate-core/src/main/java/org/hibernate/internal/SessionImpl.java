@@ -353,7 +353,19 @@ public class SessionImpl
 			SESSION_LOGGER.alreadyClosed();
 		}
 		else {
-			closeWithoutOpenChecks();
+			final var preCloseException = getFactory().preClose( this );
+			try {
+				closeWithoutOpenChecks();
+			}
+			catch (RuntimeException e) {
+				if ( preCloseException != null ) {
+					e.addSuppressed( preCloseException );
+				}
+				throw e;
+			}
+			if ( preCloseException != null ) {
+				throw preCloseException;
+			}
 		}
 	}
 

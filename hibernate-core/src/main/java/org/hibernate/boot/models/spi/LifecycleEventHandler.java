@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.hibernate.boot.models.JpaAnnotations.POST_LOAD;
 import static org.hibernate.boot.models.JpaAnnotations.POST_PERSIST;
@@ -235,7 +236,7 @@ public class LifecycleEventHandler {
 			);
 		} );
 
-		final LifecycleEventHandler descriptor =
+		final var descriptor =
 				new LifecycleEventHandler( consumerType, listenerClassDetails, callbackMethods );
 		if ( errorIfEmpty ) {
 			errorIfEmpty( descriptor );
@@ -283,7 +284,9 @@ public class LifecycleEventHandler {
 
 	private static void errorIfEmpty(LifecycleEventHandler descriptor) {
 		if ( !descriptor.hasCallbackMethods() ) {
-			throw new ModelsException( "Mapping for entity-listener specified no callback methods - " + descriptor.listenerClass.getClassName() );
+			throw new ModelsException( "Mapping for entity listener '"
+										+ descriptor.listenerClass.getClassName()
+										+ "' specified no callback methods" );
 		}
 	}
 
@@ -416,7 +419,7 @@ public class LifecycleEventHandler {
 			);
 		} );
 
-		final LifecycleEventHandler descriptor =
+		final var descriptor =
 				new LifecycleEventHandler( consumerType, listenerClassDetails, callbackMethods );
 		if ( errorIfEmpty ) {
 			errorIfEmpty( descriptor );
@@ -547,8 +550,9 @@ public class LifecycleEventHandler {
 		} );
 
 		if ( errorIfEmpty && descriptors.isEmpty() ) {
-			throw new ModelsException( "Mapping for entity-listener specified no callback methods - "
-					+ listenerClassDetails.getClassName() );
+			throw new ModelsException( "Mapping for entity listener '"
+										+ listenerClassDetails.getClassName()
+										+ "' specified no callback methods" );
 		}
 		return descriptors;
 	}
@@ -585,10 +589,9 @@ public class LifecycleEventHandler {
 						+ methodDetails.getName() + "' annotated '@"
 						+ callbackAnnotation.getSimpleName() + "' in '"
 						+ listenerClassDetails.getClassName() + "'"
-						+ signatureRequirement( JpaEventListenerStyle.LISTENER )
-						+ ": " + methodDetails );
+						+ signatureRequirement( JpaEventListenerStyle.LISTENER ) );
 			}
-			if ( methodDetails.getArgumentTypes().get( 0 ).toJavaClass()
+			if ( firstParameterType( methodDetails )
 					.isAssignableFrom( targetClassDetails.toJavaClass() ) ) {
 				addIfAbsent( listenerClassDetails, callbackType, methodDetails, descriptors );
 			}
@@ -602,20 +605,20 @@ public class LifecycleEventHandler {
 			List<LifecycleEventHandler> descriptors) {
 		for ( var existing : descriptors ) {
 			final var existingMethod = existing.getCallbackMethod( callbackType );
-			if ( existingMethod != null && hasSameParameterType( existingMethod, methodDetails ) ) {
-				if ( existingMethod != methodDetails ) {
-					throw new ModelsException(
-							"You can only annotate one callback method per callback type and parameter type"
-							+ " in callback class: " + listenerClassDetails.getClassName() );
-				}
+			if ( existingMethod != null && existingMethod != methodDetails
+					&& Objects.equals( firstParameterType( existingMethod ), firstParameterType( methodDetails ) ) ) {
+				throw new ModelsException(
+						"Multiple callback methods for callback type '@"
+						+ callbackType.getCallbackAnnotation().getSimpleName()
+						+ "' and parameter type '" + firstParameterType( methodDetails ).getSimpleName()
+						+ "' in listener class '" + listenerClassDetails.getClassName() + "'" );
 			}
 		}
 		descriptors.add( withCallbackMethod( listenerClassDetails, callbackType, methodDetails ) );
 	}
 
-	private static boolean hasSameParameterType(MethodDetails first, MethodDetails second) {
-		return first.getArgumentTypes().get( 0 ).toJavaClass()
-				.equals( second.getArgumentTypes().get( 0 ).toJavaClass() );
+	private static Class<?> firstParameterType(MethodDetails first) {
+		return first.getArgumentTypes().get( 0 ).toJavaClass();
 	}
 
 	private static LifecycleEventHandler withCallbackMethod(
@@ -685,9 +688,9 @@ public class LifecycleEventHandler {
 					+ signatureRequirement( consumerType ) );
 		}
 		if ( callbackMethods.containsKey( callbackType ) ) {
-			throw new ModelsException( "Duplicate callback method " + source  + " '@"
-					+ callbackAnnotation.getSimpleName() + "' in listener class "
-					+ listenerClassDetails.getClassName() );
+			throw new ModelsException( "Duplicate callback method " + source + " '@"
+					+ callbackAnnotation.getSimpleName() + "' in listener class '"
+					+ listenerClassDetails.getClassName() + "'" );
 		}
 		callbackMethods.put( callbackType, methodDetails );
 	}

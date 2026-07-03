@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="4.0">
+    <persistence-unit-metadata>
+        <persistence-unit-defaults>
+            <entity-listeners>
+                <entity-listener class="org.hibernate.orm.test.jpa.callbacks.jpa4.PersistenceUnitLifecycleXmlCallbackTests$XmlFactoryListener">
+                    <post-create method-name="factoryCreated"/>
+                    <pre-close method-name="factoryClosing"/>
+                </entity-listener>
+                <entity-listener class="org.hibernate.orm.test.jpa.callbacks.jpa4.PersistenceUnitLifecycleXmlCallbackTests$XmlManagerListener">
+                    <post-create method-name="managerCreated"/>
+                    <pre-close method-name="managerClosing"/>
+                </entity-listener>
+                <entity-listener class="org.hibernate.orm.test.jpa.callbacks.jpa4.PersistenceUnitLifecycleXmlCallbackTests$XmlAgentListener">
+                    <post-create method-name="agentCreated"/>
+                    <pre-close method-name="agentClosing"/>
+                </entity-listener>
+            </entity-listeners>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+</entity-mappings>

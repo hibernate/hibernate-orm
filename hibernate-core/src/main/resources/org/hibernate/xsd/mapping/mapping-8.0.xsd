@@ -1438,6 +1438,26 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
+            <xsd:element name="post-create" type="orm:lifecycle-callback" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+
+                        @Target({METHOD}) @Retention(RUNTIME)
+                        public @interface PostCreate {}
+
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="pre-close" type="orm:lifecycle-callback" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+
+                        @Target({METHOD}) @Retention(RUNTIME)
+                        public @interface PreClose {}
+
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
         </xsd:sequence>
         <xsd:attribute name="class" type="xsd:string" use="required"/>
     </xsd:complexType>

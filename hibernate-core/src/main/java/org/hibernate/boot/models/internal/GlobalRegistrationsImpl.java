@@ -706,13 +706,31 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 
 	public void collectEntityListenerRegistrations(List<JaxbEntityListenerImpl> listeners, ModelsContext modelsContext) {
 		final var classDetailsRegistry = getClassDetailsRegistry();
-		listeners.forEach( jaxbEntityListener ->
-				addJpaEventListener( LifecycleEventHandler.from(
+		listeners.forEach( jaxbEntityListener -> {
+			final var listenerClassDetails =
+					classDetailsRegistry.resolveClassDetails( jaxbEntityListener.getClazz() );
+			final var lifecycleEventHandler = LifecycleEventHandler.from(
 						JpaEventListenerStyle.LISTENER,
-						classDetailsRegistry.resolveClassDetails( jaxbEntityListener.getClazz() ),
+						listenerClassDetails,
 						jaxbEntityListener,
-						modelsContext
-				) ) );
+						modelsContext,
+						LifecycleEventHandler.hasExplicitXmlCallbackMappings( jaxbEntityListener )
+			);
+			final var persistenceUnitLifecycleEventHandler =
+					PersistenceUnitLifecycleEventHandler.from( listenerClassDetails, jaxbEntityListener );
+
+			if ( lifecycleEventHandler.hasCallbackMethods() ) {
+				addJpaEventListener( lifecycleEventHandler );
+			}
+			if ( persistenceUnitLifecycleEventHandler.hasCallbackMethods() ) {
+				addPersistenceUnitLifecycleEventHandler( persistenceUnitLifecycleEventHandler );
+			}
+			if ( !lifecycleEventHandler.hasCallbackMethods()
+					&& !persistenceUnitLifecycleEventHandler.hasCallbackMethods() ) {
+				throw new ModelsException( "Mapping for entity listener specified no callback methods: "
+						+ listenerClassDetails.getClassName() );
+			}
+		} );
 	}
 
 	public void addJpaEventListener(LifecycleEventHandler listener) {

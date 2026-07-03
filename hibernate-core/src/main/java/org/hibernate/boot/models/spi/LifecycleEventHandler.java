@@ -130,8 +130,19 @@ public class LifecycleEventHandler {
 			ClassDetails listenerClassDetails,
 			JaxbEntityListenerImpl jaxbMapping,
 			ModelsContext modelsContext) {
+		return from( consumerType, listenerClassDetails, jaxbMapping, modelsContext, true );
+	}
+
+	/// Create a handler from XML representation of a [callback][JpaEventListenerStyle#CALLBACK]
+	/// or [listener][JpaEventListenerStyle#LISTENER].
+	public static LifecycleEventHandler from(
+			JpaEventListenerStyle consumerType,
+			ClassDetails listenerClassDetails,
+			JaxbEntityListenerImpl jaxbMapping,
+			ModelsContext modelsContext,
+			boolean errorIfEmpty) {
 		if ( isImplicitMethodMappings( jaxbMapping ) ) {
-			return from( consumerType, listenerClassDetails );
+			return from( consumerType, listenerClassDetails, errorIfEmpty );
 		}
 
 		final EnumMap<CallbackType, MethodDetails> callbackMethods = new EnumMap<>( CallbackType.class );
@@ -226,8 +237,14 @@ public class LifecycleEventHandler {
 
 		final LifecycleEventHandler descriptor =
 				new LifecycleEventHandler( consumerType, listenerClassDetails, callbackMethods );
-		errorIfEmpty( descriptor );
+		if ( errorIfEmpty ) {
+			errorIfEmpty( descriptor );
+		}
 		return descriptor;
+	}
+
+	public static boolean hasExplicitXmlCallbackMappings(JaxbEntityListenerImpl jaxbMapping) {
+		return !isImplicitMethodMappings( jaxbMapping );
 	}
 
 	private static <A extends Annotation> void applyXmlCallback(

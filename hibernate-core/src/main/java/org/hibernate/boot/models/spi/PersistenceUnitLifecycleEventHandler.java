@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import org.hibernate.Internal;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
 import org.hibernate.jpa.event.spi.PersistenceUnitCallbackType;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
@@ -72,6 +76,38 @@ public class PersistenceUnitLifecycleEventHandler {
 		return new PersistenceUnitLifecycleEventHandler( listenerClassDetails, callbackMethods );
 	}
 
+	@Internal
+	@Nonnull
+	public static PersistenceUnitLifecycleEventHandler from(
+			@Nonnull ClassDetails listenerClassDetails,
+			@Nonnull JaxbEntityListenerImpl jaxbMapping) {
+		if ( !hasExplicitXmlCallbackMappings( jaxbMapping ) ) {
+			return from( listenerClassDetails );
+		}
+
+		final List<CallbackMethod> callbackMethods = new ArrayList<>();
+		applyXmlCallback(
+				listenerClassDetails,
+				jaxbMapping.getPostCreate(),
+				PostCreate.class,
+				PersistenceUnitCallbackType.POST_CREATE,
+				callbackMethods
+		);
+		applyXmlCallback(
+				listenerClassDetails,
+				jaxbMapping.getPreClose(),
+				PreClose.class,
+				PersistenceUnitCallbackType.PRE_CLOSE,
+				callbackMethods
+		);
+		return new PersistenceUnitLifecycleEventHandler( listenerClassDetails, callbackMethods );
+	}
+
+	public static boolean hasExplicitXmlCallbackMappings(@Nonnull JaxbEntityListenerImpl jaxbMapping) {
+		return jaxbMapping.getPostCreate() != null
+			|| jaxbMapping.getPreClose() != null;
+	}
+
 	private static void applyAnnotatedCallback(
 			@Nonnull ClassDetails listenerClassDetails,
 			@Nonnull MethodDetails methodDetails,
@@ -85,18 +121,50 @@ public class PersistenceUnitLifecycleEventHandler {
 		}
 	}
 
+	private static void applyXmlCallback(
+			@Nonnull ClassDetails listenerClassDetails,
+			@Nullable JaxbLifecycleCallback lifecycleCallback,
+			@Nonnull Class<? extends Annotation> callbackAnnotation,
+			@Nonnull PersistenceUnitCallbackType callbackType,
+			@Nonnull List<CallbackMethod> callbackMethods) {
+		if ( lifecycleCallback != null ) {
+			MethodDetails namedMethod = null;
+			for ( var methodDetails : listenerClassDetails.getMethods() ) {
+				if ( methodDetails.getName().equals( lifecycleCallback.getMethodName() ) ) {
+					namedMethod = methodDetails;
+					if ( hasValidSignature( methodDetails ) ) {
+						checkDuplicate( listenerClassDetails, methodDetails, callbackType, callbackMethods );
+						callbackMethods.add( new CallbackMethod( callbackType, methodDetails ) );
+						return;
+					}
+				}
+			}
+
+			if ( namedMethod != null ) {
+				validateSignature( listenerClassDetails, namedMethod, callbackAnnotation );
+			}
+			throw new ModelsException( "Persistence unit lifecycle callback method not found: "
+										+ lifecycleCallback.getMethodName()
+										+ " (" + listenerClassDetails.getClassName() + ")" );
+		}
+	}
+
 	private static void validateSignature(
 			@Nonnull ClassDetails listenerClassDetails,
 			@Nonnull MethodDetails methodDetails,
 			@Nonnull Class<? extends Annotation> callbackAnnotation) {
-		if ( methodDetails.getArgumentTypes().size() != 1
-				|| methodDetails.getReturnType() != ClassDetails.VOID_CLASS_DETAILS
-				|| !isPersistenceUnitLifecycleTarget( methodDetails.getArgumentTypes().get( 0 ) ) ) {
+		if ( !hasValidSignature( methodDetails ) ) {
 			throw new ModelsException( "Callback method '" + methodDetails.getName() + "' annotated '"
 					+ callbackAnnotation.getName() + "' in '"
 					+ listenerClassDetails.getClassName()
 					+ "' must return void and have one parameter of type 'EntityAgent', 'EntityManager', or 'EntityManagerFactory'");
 		}
+	}
+
+	private static boolean hasValidSignature(@Nonnull MethodDetails methodDetails) {
+		return methodDetails.getArgumentTypes().size() == 1
+			&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS
+			&& isPersistenceUnitLifecycleTarget( methodDetails.getArgumentTypes().get( 0 ) );
 	}
 
 	private static boolean isPersistenceUnitLifecycleTarget(@Nonnull ClassDetails argumentType) {

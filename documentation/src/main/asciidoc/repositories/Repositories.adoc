@@ -361,7 +361,7 @@ If there is no `Book` with the given `isbn` in the database, the method throws `
 There are two ways around this if that's not what we want:
 
 - declare the method to return `Optional`, or
-- annotate the method `@jakarta.annotation.Nullable`.
+- annotate the method `@jakarta.annotation.Nullable` or `@org.jetbrains.annotations.Nullable`.
 
 The first option is blessed by the specification:
 

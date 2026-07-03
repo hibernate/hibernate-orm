@@ -599,6 +599,43 @@ order by department, salary_rank;
 
 @@@@ FIXTURE @@@@
 === ID ===
+named_window
+
+=== SQL ===
+select salesperson,region,sale_date,amount,row_number() over w as rn,rank() over w as ranking,sum(amount) over (w rows
+between unbounded preceding and current row) as running_total,avg(amount) over (w rows between 2 preceding and current
+row) as moving_average,lag(amount) over w as previous_sale,lead(amount) over w as next_sale from sales window w as (
+partition by region order by sale_date) order by region, sale_date;
+
+=== EXPECTED ===
+select
+    salesperson,
+    region,
+    sale_date,
+    amount,
+    row_number() over w as rn,
+    rank() over w as ranking,
+    sum(amount) over (
+        w
+        rows between unbounded preceding
+            and current row
+    ) as running_total,
+    avg(amount) over (
+        w
+        rows between 2 preceding
+            and current row
+    ) as moving_average,
+    lag(amount) over w as previous_sale,
+    lead(amount) over w as next_sale
+from sales
+window w as (
+    partition by region
+    order by sale_date
+)
+order by region, sale_date;
+
+@@@@ FIXTURE @@@@
+=== ID ===
 jira_example
 
 === SQL ===

@@ -1,8 +1,8 @@
 = SQL Formatting Constraints
 
-*Extracted from:* `AntlrBasedSQLFormatterTest.testComplexQuery()` +
+*Extracted from:* `AntlrBasedSQLFormatterTest` test fixtures +
 *Initial Date:* 2026-05-08 +
-*Last Updated:* 2026-05-21
+*Last Updated:* 2026-07-03
 
 '''
 
@@ -196,6 +196,7 @@ The following operators require a space before the opening `(`:
 * `IN (...)` - for membership tests
 * `ALL (...)` - for quantified comparisons
 * `ANY (...)` - for quantified comparisons
+* `OVER (...)` - for window functions
 
 Examples:
 
@@ -203,6 +204,7 @@ Examples:
 * `WHERE col IN ('a', 'b')` ✓ (not `WHERE col IN('a', 'b')`)
 * `WHERE value = ALL (1, 2, 3)` ✓
 * `WHERE value > ANY (10, 20)` ✓
+* `RANK() OVER (PARTITION BY ...)` ✓
 
 *Note:* Regular functions do NOT have a space: `COUNT(*)`, `UPPER(name)`, etc.
 
@@ -717,6 +719,95 @@ TRUNCATE TABLE table_name RESTART IDENTITY CASCADE;
 
 '''
 
+== 12. Window Functions
+
+Window functions use the `OVER` clause with optional `PARTITION BY`, `ORDER BY`, and frame specification.
+
+=== 12.1 OVER Clause Structure
+
+*Basic window function:*
+
+[source,sql]
+----
+SELECT
+    department,
+    name,
+    salary,
+    rank() over (
+        partition by department
+        order by name, salary desc
+    ) as salary_rank
+FROM employees
+----
+
+* OVER keyword requires space before opening `(` (see section 6.6)
+* Opening `(` triggers newline and indent (+1 from current context)
+* Contents of OVER clause are indented relative to the opening
+* Closing `)` dedented to match the line that opened the OVER clause
+
+=== 12.2 PARTITION BY
+
+[source,sql]
+----
+rank() over (
+    partition by department
+    ...
+)
+----
+
+* PARTITION BY follows same formatting as other BY clauses
+* List items follow standard rules: ≤3 inline, >3 multiline
+
+=== 12.3 ORDER BY Inside OVER
+
+**Context-aware terminators:**
+
+* ORDER BY inside OVER clause has different terminators than query-level ORDER BY
+* Inside OVER: terminators are `ROWS`, `RANGE`, `GROUPS`, `RPAREN`
+* Query-level: terminators are `OFFSET`, `FETCH`, `LIMIT`
+
+*Example with ≤3 items (inline):*
+
+[source,sql]
+----
+rank() over (
+    partition by department
+    order by name, salary desc
+)
+----
+
+*Example with >3 items (multiline):*
+
+[source,sql]
+----
+dense_rank() over (
+    partition by region
+    order by
+        year desc,
+        quarter desc,
+        month desc,
+        day desc
+)
+----
+
+=== 12.4 Frame Clauses
+
+Frame clauses (`ROWS`, `RANGE`, `GROUPS`) follow the ORDER BY:
+
+[source,sql]
+----
+sum(amount) over (
+    partition by account_id
+    order by transaction_date
+    rows between unbounded preceding and current row
+)
+----
+
+* Frame clause keywords at same indent level as PARTITION BY and ORDER BY
+* Frame specification stays on same line (BETWEEN ... AND ...)
+
+'''
+
 == Revision History
 
 * Extracted base constraints from `testComplexQuery()`
@@ -774,6 +865,14 @@ TRUNCATE TABLE table_name RESTART IDENTITY CASCADE;
 ** Minor corrections to formatter implementation
 ** Use System.lineSeparator() to append a line separator, instead of hardcoding '\n'
 ** Replaced Stack with Deque implementation
+* Added window function support (2026-07-03):
+** New Section 12: Window Functions with OVER clause formatting
+** Added OVER_WINDOW context type in implementation
+** Context-aware terminators for ORDER BY: inside OVER uses ROWS/RANGE/GROUPS/RPAREN, query-level uses OFFSET/FETCH/LIMIT
+** New lexer keywords: OVER, GROUPS, EXCLUDE, LAST, OTHERS
+** Space before `(` required for OVER keyword (section 6.6 updated)
+** Test fixtures: `window_function` (RANK() OVER with PARTITION BY and ORDER BY), `jira_example` (comprehensive test)
+** Bug fix: Changed `shouldListBeMultiline()` fallback from `return commaCount > 0` to `return commaCount > 3` for consistency
 
 '''
 

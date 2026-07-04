@@ -688,6 +688,25 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testImmutableTypeTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/immutable-type/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			final JaxbBasicImpl createdAttr = entity.getAttributes().getBasicAttributes().stream()
+					.filter( b -> "created".equals( b.getName() ) )
+					.findFirst()
+					.orElseThrow();
+
+			// imm_date type should generate <mutable>false</mutable>
+			// to avoid false dirty-checks during merge
+			assertThat( createdAttr.isMutable() )
+					.as( "Property with imm_date type should have mutable=false" )
+					.isFalse();
+		} );
+	}
+
+	@Test
 	public void testOneToOnePropertyRefTransformation(ServiceRegistryScope scope) {
 		transformAndVerifyMultiple(
 				new String[] { "xml/jaxb/mapping/one-to-one-property-ref/hbm.xml" },

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.ops">
+
+    <class name="NumberedNode" polymorphism="explicit">
+        <id name="id" unsaved-value="0">
+            <generator class="native"/>
+        </id>
+        <property name="name" not-null="true"/>
+        <property name="description"/>
+        <property name="created" not-null="true" type="imm_date"/>
+    </class>
+
+</hibernate-mapping>

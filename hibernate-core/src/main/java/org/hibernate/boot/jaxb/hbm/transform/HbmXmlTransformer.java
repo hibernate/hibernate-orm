@@ -168,6 +168,8 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.OneToOne;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -1734,6 +1736,26 @@ public class HbmXmlTransformer {
 				oneToOne.getPropertyRef().setName( hbmOneToOne.getPropertyRef() );
 			}
 		}
+		else {
+			// For bidirectional one-to-one without property-ref, check if:
+			// 1. The boot model resolved a mapped-by (e.g. property-ref on the other side)
+			// 2. The FK direction is TO_PARENT (meaning the other side owns the FK via constrained="true")
+			final Value value = propertyInfo.bootModelProperty().getValue();
+			if ( value instanceof OneToOne oneToOneValue ) {
+				if ( isNotEmpty( oneToOneValue.getMappedByProperty() ) ) {
+					oneToOne.setMappedBy( oneToOneValue.getMappedByProperty() );
+				}
+				else if ( oneToOneValue.getForeignKeyType() == ForeignKeyDirection.TO_PARENT ) {
+					final String mappedBy = findConstrainedOneToOnePropertyName(
+							oneToOneValue.getReferencedEntityName(),
+							propertyInfo.bootModelProperty().getPersistentClass().getEntityName()
+					);
+					if ( mappedBy != null ) {
+						oneToOne.setMappedBy( mappedBy );
+					}
+				}
+			}
+		}
 		for ( String formula : hbmOneToOne.getFormula() ) {
 			oneToOne.getJoinColumnOrJoinFormula().add( formula );
 		}
@@ -1771,6 +1793,21 @@ public class HbmXmlTransformer {
 		}
 		final String declaringEntityName = propertyInfo.bootModelProperty().getPersistentClass().getEntityName();
 		return declaringEntityName.equals( refToOne.getReferencedEntityName() );
+	}
+
+	private String findConstrainedOneToOnePropertyName(String targetEntityName, String ownerEntityName) {
+		final var targetEntityInfo = transformationState.getEntityInfoByName().get( targetEntityName );
+		if ( targetEntityInfo == null ) {
+			return null;
+		}
+		for ( Property prop : targetEntityInfo.getPersistentClass().getPropertyClosure() ) {
+			if ( prop.getValue() instanceof OneToOne oto
+					&& oto.isConstrained()
+					&& ownerEntityName.equals( oto.getReferencedEntityName() ) ) {
+				return prop.getName();
+			}
+		}
+		return null;
 	}
 
 	private void transferManyToOne(

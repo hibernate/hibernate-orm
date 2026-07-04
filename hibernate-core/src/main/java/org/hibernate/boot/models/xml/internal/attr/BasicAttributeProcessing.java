@@ -74,6 +74,12 @@ public class BasicAttributeProcessing {
 		XmlAnnotationHelper.applyConvert( jaxbBasic.getConvert(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyBasicTypeComposition( jaxbBasic, memberDetails, xmlDocumentContext );
+		if ( jaxbBasic.isMutable() != null && !jaxbBasic.isMutable() ) {
+			memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.IMMUTABLE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+		}
 		XmlAnnotationHelper.applyTemporal( jaxbBasic.getTemporal(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyLob( jaxbBasic.getLob(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyEnumerated( jaxbBasic.getEnumerated(), memberDetails, xmlDocumentContext );

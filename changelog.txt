@@ -1,6 +1,28 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.4.Final (July 05, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39929
+
+
+** Bug
+    * HHH-20647 Binding an NClob attribute fails on PostgreSQL with "Could not convert 'java.sql.NClob' to 'java.sql.Clob'"
+    * HHH-20634 Property based id generator configuration no longer working for EmbeddedId
+    * HHH-20633 Unnecessary cast to SessionFactoryImplementor in AuditLogFactory
+    * HHH-20614 AnnotationBasedGenerator is not initialized when the interface is implemented by an (abstract) superclass instead of the concrete class (after upgrading to hibernate 7.3/7.4)
+    * HHH-20586 GlobalRegistrationsImpl is not extracting query hints correctly
+    * HHH-20582 Envers `ToOneRelationMetadataGenerator.checkMappedByAudited` fails when inverse `@OneToOne` mappedBy points to a property declared on a superclass `@Entity`
+    * HHH-20550 SqmSelectStatement.createCountQuery() doesn't copy CTE statements
+    * HHH-20467 StackOverflow with Converters with unbounded Generics
+    * HHH-20318 Unable to update CLOB column
+    * HHH-20146 Cascade delete with bytecode enhancement throws transient exception
+    * HHH-19569 Hibernate 6 alias injection in native query problem when using Joined Inheritance
+
+** Task
+    * HHH-20642 Handle renaming of Panache Next to Quarkus Data in hibernate-processor and add name SPI
+
 Changes in 7.4.3.Final (June 28, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

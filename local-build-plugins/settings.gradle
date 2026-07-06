@@ -1,0 +1,23 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+pluginManagement {
+    repositories {
+        // mavenCentral before gradlePluginPortal: the plugin portal redirects transitive
+        // deps to Maven Central via HTTP 303 — with a mirror, those redirects would fail.
+        // Listing mavenCentral first lets Gradle resolve transitive deps directly
+        // (or from the mirror when MIRROR_MAVEN_CENTRAL_URL is set; see gradle/mirror.gradle).
+        mavenCentral()
+        gradlePluginPortal()
+    }
+
+    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+    apply from: '../gradle/mirror.gradle'
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}

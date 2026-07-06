@@ -11,6 +11,10 @@ defaults:
 
 permissions: { } # none, jobs are defining their own if they need any
 
+env:
+  MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
+  MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
+
 jobs:
   publish-build-scans:
     name: Publish Develocity build scans

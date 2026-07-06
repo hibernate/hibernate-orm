@@ -29,34 +29,65 @@ public abstract class AbstractMavenTestIT {
 	public static void initMavenCli() throws Exception {
 		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
 		mavenCli = new MavenCli( classWorld );
-		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
-		String mavenMirrorUsername = System.getenv( "MAVEN_MIRROR_USERNAME" );
+		String centralMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_URL" );
+		String centralMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_USERNAME" );
+		String centralFallback = System.getenv( "MIRROR_MAVEN_CENTRAL_FALLBACK" );
+		String snapshotsMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL" );
+		String snapshotsMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME" );
+		String snapshotsFallback = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_FALLBACK" );
 		mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
 		StringBuilder settings = new StringBuilder( "<settings>\n" );
-		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
-			settings.append( """
-					<mirrors>
-						<mirror>
-						<id>ci-mirror</id>
-						<mirrorOf>central</mirrorOf>
-						<url>${env.MAVEN_MIRROR}</url>
-						</mirror>
-					</mirrors>
-					""" );
-			if ( mavenMirrorUsername != null ) {
+		boolean hasCentralMirror = centralMirror != null && !centralMirror.isEmpty();
+		boolean hasSnapshotsMirror = snapshotsMirror != null && !snapshotsMirror.isEmpty();
+		if ( hasCentralMirror || hasSnapshotsMirror ) {
+			settings.append( "<mirrors>\n" );
+			if ( hasCentralMirror ) {
 				settings.append( """
-						<servers>
-							<server>
-							<id>ci-mirror</id>
-							<username>${env.MAVEN_MIRROR_USERNAME}</username>
-							<password>${env.MAVEN_MIRROR_PASSWORD}</password>
-							</server>
-						</servers>
+							<mirror>
+							<id>ci-mirror-central</id>
+							<mirrorOf>central</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_URL}</url>
+							</mirror>
 						""" );
 			}
+			if ( hasSnapshotsMirror ) {
+				settings.append( """
+							<mirror>
+							<id>ci-mirror-snapshots</id>
+							<mirrorOf>central-portal-snapshots</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL}</url>
+							</mirror>
+						""" );
+			}
+			settings.append( "</mirrors>\n" );
 		}
+		boolean hasServers = centralMirrorUsername != null || snapshotsMirrorUsername != null;
+		if ( hasServers ) {
+			settings.append( "<servers>\n" );
+			if ( centralMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-central</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			if ( snapshotsMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-snapshots</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			settings.append( "</servers>\n" );
+		}
+		boolean hasCentralFallback = hasCentralMirror && "true".equalsIgnoreCase( centralFallback );
+		boolean hasSnapshotsFallback = hasSnapshotsMirror && "true".equalsIgnoreCase( snapshotsFallback );
+		settings.append( "<profiles>\n" );
 		settings.append( """
-				<profiles>
 					<profile>
 					<id>central-snapshots</id>
 					<repositories>
@@ -72,11 +103,38 @@ public abstract class AbstractMavenTestIT {
 						</repository>
 					</repositories>
 					</profile>
-				</profiles>
-				<activeProfiles>
-					<activeProfile>central-snapshots</activeProfile>
-				</activeProfiles>
 				""" );
+		if ( hasCentralFallback || hasSnapshotsFallback ) {
+			settings.append( "<profile>\n<id>mirror-fallbacks</id>\n<repositories>\n" );
+			if ( hasCentralFallback ) {
+				settings.append( """
+							<repository>
+							<id>central-fallback</id>
+							<url>https://repo.maven.apache.org/maven2/</url>
+							<releases><enabled>true</enabled></releases>
+							<snapshots><enabled>false</enabled></snapshots>
+							</repository>
+						""" );
+			}
+			if ( hasSnapshotsFallback ) {
+				settings.append( """
+							<repository>
+							<id>central-portal-snapshots-fallback</id>
+							<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+							<releases><enabled>false</enabled></releases>
+							<snapshots><enabled>true</enabled></snapshots>
+							</repository>
+						""" );
+			}
+			settings.append( "</repositories>\n</profile>\n" );
+		}
+		settings.append( "</profiles>\n" );
+		settings.append( "<activeProfiles>\n" );
+		settings.append( "<activeProfile>central-snapshots</activeProfile>\n" );
+		if ( hasCentralFallback || hasSnapshotsFallback ) {
+			settings.append( "<activeProfile>mirror-fallbacks</activeProfile>\n" );
+		}
+		settings.append( "</activeProfiles>\n" );
 		settings.append( "</settings>\n" );
 		Files.writeString( mavenSettingsFile, settings.toString() );
 	}

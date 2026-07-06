@@ -98,7 +98,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 		final Map<String, Object> properties = PropertiesHelper.map( buildProperties() );
 		ServiceRegistryUtil.applySettings( properties );
 
-		sessionFactory = org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
+		sessionFactory = org.hibernate.boot.pipeline.internal.BootstrapPipeline
 				.build(
 						new PersistenceUnitDescriptorAdapter() {
 							@Override

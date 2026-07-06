@@ -9,7 +9,6 @@ import java.net.URL;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -17,6 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -45,9 +45,7 @@ public class SimpleTests {
 				.applySetting( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, extendedBeanManager );
 
 		try ( final StandardServiceRegistry ssr = ssrbBuilder.build() ) {
-			final Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( MappedEntity.class )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, MappedEntity.class );
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( MappedEntity.class.getName() );
 			final Property property = entityBinding.getProperty( "url" );
@@ -66,7 +64,7 @@ public class SimpleTests {
 				extendedBeanManager.injectBeanManager( beanManager );
 			}
 
-			try ( final SessionFactory sf = metadata.buildSessionFactory() ) {
+			try ( final SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata ) ) {
 				sf.inSession( (session) -> {
 					session.createSelectionQuery( "from MappedEntity", MappedEntity.class ).list();
 				} );

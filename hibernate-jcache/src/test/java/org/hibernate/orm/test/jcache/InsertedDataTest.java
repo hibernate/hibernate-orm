@@ -16,13 +16,15 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.MetadataBuildingHelper;
 import org.hibernate.testing.orm.junit.ExtraAssertions;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class InsertedDataTest {
 
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
 	@BeforeEach
@@ -53,13 +55,15 @@ public class InsertedDataTest {
 				.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" )
 				.build();
 
-		final Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( CacheableItem.class )
-				.addAnnotatedClass( CacheableEmbeddedIdItem.class )
-				.buildMetadata();
+		final Metadata metadata = MetadataBuildingHelper.buildMetadata(
+				serviceRegistry,
+				new MappingSources()
+						.addManagedClass( CacheableItem.class )
+						.addManagedClass( CacheableEmbeddedIdItem.class )
+		);
 		TestHelper.createRegions( metadata, true, false );
 
-		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		sessionFactory = SessionFactoryUtil.buildSessionFactory( metadata );
 	}
 
 	@AfterEach

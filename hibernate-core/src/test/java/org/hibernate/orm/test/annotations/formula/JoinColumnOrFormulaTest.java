@@ -12,11 +12,11 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -62,15 +62,12 @@ public class JoinColumnOrFormulaTest {
 	@Test
 	@JiraKey(value = "HHH-9897")
 	public void testUseOfJoinColumnOrFormula() {
-		Metadata metadata = new MetadataSources( ssr )
-				.addAnnotatedClass( A.class )
-				.addAnnotatedClass( D.class )
-				.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, A.class, D.class );
 
 		// Binding to the mapping model works after the simple change for HHH-9897
 		// But building the SessionFactory fails in the collection persister trying to
 		// use the formula (it expects Columns too)
-		metadata.buildSessionFactory().close();
+		org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata ).close();
 	}
 
 	@Entity(name = "A")

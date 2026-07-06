@@ -9,11 +9,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.AfterAll;
@@ -30,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @BaseUnitTest
 public class CamelCaseToUnderscoresNamingStrategyTest {
 
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 
 	@BeforeAll
 	public void setUp() {
@@ -46,11 +47,11 @@ public class CamelCaseToUnderscoresNamingStrategyTest {
 
 	@Test
 	public void testWithWordWithDigitNamingStrategy() {
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( B.class )
-				.getMetadataBuilder()
-				.applyPhysicalNamingStrategy( new PhysicalNamingStrategySnakeCaseImpl() )
-				.build();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithPhysicalNaming(
+				serviceRegistry,
+				new MappingSources().addManagedClass( B.class ),
+				new PhysicalNamingStrategySnakeCaseImpl()
+		);
 
 		PersistentClass entityBinding = metadata.getEntityBinding( B.class.getName() );
 		assertThat( entityBinding.getProperty( "wordWithDigitD1" ).getSelectables().get( 0 ).getText() )

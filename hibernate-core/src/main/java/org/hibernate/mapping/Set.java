@@ -145,7 +145,7 @@ public non-sealed class Set extends Collection {
 						key.addColumn( column );
 					}
 				}
-				key.setName( getBuildingContext().getBuildingOptions().getImplicitNamingStrategy()
+				key.setName( getBuildingContext().getBuildingPlan().getImplicitNamingStrategy()
 						.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 							@Override
 							public Identifier getTableName() {

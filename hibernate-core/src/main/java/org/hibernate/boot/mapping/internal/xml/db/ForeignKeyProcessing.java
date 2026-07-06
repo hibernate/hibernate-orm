@@ -38,7 +38,7 @@ public class ForeignKeyProcessing {
 		}
 		final ForeignKeyJpaAnnotation foreignKeyUsage = (ForeignKeyJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.FOREIGN_KEY,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		transferFkDetails( jaxbForeignKey, foreignKeyUsage, xmlDocumentContext );
 		return foreignKeyUsage;
@@ -67,7 +67,7 @@ public class ForeignKeyProcessing {
 	public static ForeignKeyJpaAnnotation createNestedForeignKeyAnnotation(
 			JaxbForeignKeyImpl jaxbForeignKey,
 			XmlDocumentContext xmlDocumentContext) {
-		final ForeignKeyJpaAnnotation foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage( xmlDocumentContext.getModelBuildingContext() );
+		final ForeignKeyJpaAnnotation foreignKeyUsage = JpaAnnotations.FOREIGN_KEY.createUsage( xmlDocumentContext.getModelsContext() );
 		if ( jaxbForeignKey != null ) {
 			transferFkDetails( jaxbForeignKey, foreignKeyUsage, xmlDocumentContext );
 		}

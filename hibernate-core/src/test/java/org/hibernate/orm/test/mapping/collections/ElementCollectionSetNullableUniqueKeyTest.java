@@ -13,7 +13,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -25,6 +24,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -125,10 +125,7 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 	}
 
 	private static MetadataImplementor buildMetadata(StandardServiceRegistry registry) {
-		final var metadata = (MetadataImplementor)
-				new MetadataSources( registry )
-						.addAnnotatedClass( Book.class )
-						.buildMetadata();
+		final var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( registry, Book.class );
 		metadata.orderColumns( true );
 		metadata.validate();
 		return metadata;

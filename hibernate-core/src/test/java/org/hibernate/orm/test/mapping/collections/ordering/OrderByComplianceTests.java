@@ -25,7 +25,7 @@ public class OrderByComplianceTests {
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "false" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, AddressBook.class } )
 	public void testNonCompliantBaseline(DomainModelScope scope) {
-		try(final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
+		try(final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( scope.getDomainModel() )) {
 			assertThat( sessionFactory ).isNotNull();
 		}
 	}
@@ -34,7 +34,7 @@ public class OrderByComplianceTests {
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "true" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, AddressBook.class } )
 	public void testNonCompliantStrictly(DomainModelScope scope) {
-		try (final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
+		try (final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( scope.getDomainModel() )) {
 			assertThat( sessionFactory ).isNotNull();
 			fail( "Expecting a failure here" );
 		}
@@ -50,7 +50,7 @@ public class OrderByComplianceTests {
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "false" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, CompliantAddressBook.class } )
 	public void testCompliantBaseline(DomainModelScope scope) {
-		try (final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
+		try (final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( scope.getDomainModel() )) {
 			assertThat( sessionFactory ).isNotNull();
 		}
 	}
@@ -59,7 +59,7 @@ public class OrderByComplianceTests {
 	@ServiceRegistry( settings = @Setting( name= AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "true" ) )
 	@DomainModel( annotatedClasses = { TypesOfThings.class, Contact.class, CompliantAddressBook.class } )
 	public void testCompliantStrictly(DomainModelScope scope) {
-		try (final SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory()) {
+		try (final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( scope.getDomainModel() )) {
 			assertThat( sessionFactory ).isNotNull();
 		}
 	}

@@ -13,7 +13,6 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.mapping.Any;
@@ -30,6 +29,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -62,7 +62,7 @@ public class DiscriminatedAssociationAttributeMapping
 		implements DiscriminatedAssociationModelPart {
 	private final NavigableRole navigableRole;
 	private final DiscriminatedAssociationMapping discriminatorMapping;
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 
 	public DiscriminatedAssociationAttributeMapping(
 			NavigableRole attributeRole,
@@ -97,7 +97,7 @@ public class DiscriminatedAssociationAttributeMapping
 				bootValueMapping,
 				creationProcess
 		);
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		this.sessionFactoryAccess = creationProcess.getCreationContext().getSessionFactoryAccess();
 	}
 
 	@Override
@@ -277,6 +277,7 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
+		final var sessionFactory = sessionFactoryAccess.getSessionFactory();
 		final String entityName =
 				session == null
 						? sessionFactory.bestGuessEntityName( entity )

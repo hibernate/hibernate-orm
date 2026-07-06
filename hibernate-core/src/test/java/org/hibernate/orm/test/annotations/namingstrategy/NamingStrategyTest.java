@@ -5,15 +5,16 @@
 package org.hibernate.orm.test.annotations.namingstrategy;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.AfterEach;
@@ -32,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @BaseUnitTest
 public class NamingStrategyTest {
 
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 
 	@BeforeEach
 	public void setUp() {
@@ -48,27 +49,26 @@ public class NamingStrategyTest {
 
 	@Test
 	public void testWithCustomNamingStrategy() {
-		new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Address.class )
-				.addAnnotatedClass( Person.class )
-				.getMetadataBuilder()
-				.applyPhysicalNamingStrategy( new DummyNamingStrategy() )
-				.build();
+		MetadataBuildingTestHelper.buildMetadataWithPhysicalNaming(
+				serviceRegistry,
+				new MappingSources().addManagedClasses( Address.class, Person.class ),
+				new DummyNamingStrategy()
+		);
 	}
 
 	@Test
 	public void testWithUpperCaseNamingStrategy() throws Exception {
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( A.class )
-				.getMetadataBuilder()
-				.applyPhysicalNamingStrategy( new PhysicalNamingStrategyStandardImpl() {
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithPhysicalNaming(
+				serviceRegistry,
+				new MappingSources().addManagedClass( A.class ),
+				new PhysicalNamingStrategyStandardImpl() {
 					@Override
 					public Identifier toPhysicalColumnName(
 							Identifier logicalName, JdbcEnvironment context) {
 						return new Identifier( logicalName.getText().toUpperCase(), logicalName.isQuoted() );
 					}
-				} )
-				.build();
+				}
+		);
 
 		PersistentClass entityBinding = metadata.getEntityBinding( A.class.getName() );
 		assertThat( entityBinding.getProperty( "name" ).getSelectables().get( 0 ).getText() )
@@ -79,12 +79,11 @@ public class NamingStrategyTest {
 
 	@Test
 	public void testWithJpaCompliantNamingStrategy() {
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( A.class )
-				.addAnnotatedClass( AddressEntry.class )
-				.getMetadataBuilder()
-				.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
-				.build();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+				serviceRegistry,
+				new MappingSources().addManagedClasses( A.class, AddressEntry.class ),
+				ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+		);
 
 		Collection collectionBinding = metadata.getCollectionBinding( A.class.getName() + ".address" );
 		assertThat( collectionBinding.getCollectionTable().getQuotedName().toUpperCase( Locale.ROOT ) )
@@ -96,9 +95,6 @@ public class NamingStrategyTest {
 
 	@Test
 	public void testWithoutCustomNamingStrategy() {
-		new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Address.class )
-				.addAnnotatedClass( Person.class )
-				.buildMetadata();
+		MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Address.class, Person.class );
 	}
 }

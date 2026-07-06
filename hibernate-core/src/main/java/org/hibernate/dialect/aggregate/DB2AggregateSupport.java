@@ -578,7 +578,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 		}
 		final String columnType = aggregateColumn.getTypeName();
 		final TypeConfiguration typeConfiguration = aggregateColumn.getComponent().getMetadata().getTypeConfiguration();
-		final boolean legacyXmlFormatEnabled = aggregateColumn.getValue().getBuildingContext().getBuildingOptions()
+		final boolean legacyXmlFormatEnabled = aggregateColumn.getValue().getBuildingContext().getBuildingPlan()
 				.isXmlFormatMapperLegacyFormatEnabled();
 		// The serialize and deserialize functions, as well as the transform are for supporting struct types in native queries and functions
 		var list = new ArrayList<AuxiliaryDatabaseObject>( 3 );

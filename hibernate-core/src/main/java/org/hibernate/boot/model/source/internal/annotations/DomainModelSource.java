@@ -7,7 +7,7 @@ package org.hibernate.boot.model.source.internal.annotations;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.models.spi.ConversionRegistration;
 import org.hibernate.boot.models.spi.ConverterRegistration;
 import org.hibernate.boot.models.spi.GlobalRegistrations;

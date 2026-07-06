@@ -6,6 +6,7 @@ package org.hibernate.orm.test.annotations.generics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -73,13 +74,17 @@ public class GenericToOneAssociationTest {
 	public void testParentCriteriaQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
-			final CriteriaQuery<Long> query = cb.createQuery( Long.class );
-			final Root<Child> root = query.from( Child.class );
-			final Path<Parent> parent = root.get( "parent" );
-			// generic attributes are always reported as Object java type
-			assertThat( parent.getJavaType() ).isEqualTo( Object.class );
-			assertThat( parent.getModel() ).isSameAs( root.getModel().getAttribute( "parent" ) );
-			assertThat( ( (SqmPath<?>) parent ).getResolvedModel().getBindableJavaType() ).isEqualTo( Parent.class );
+				final CriteriaQuery<Long> query = cb.createQuery( Long.class );
+				final Root<Child> root = query.from( Child.class );
+				final Path<Parent> parent = root.get( "parent" );
+				// Applied generic mapped-superclass paths expose their specialized Java type
+				assertThat( parent.getJavaType() ).isEqualTo( Parent.class );
+				assertThat( parent.getModel() ).isSameAs( root.getModel().getAttribute( "parent" ) );
+				assertThat( ( (SqmPath<?>) parent ).getResolvedModel().getBindableJavaType() ).isEqualTo( Parent.class );
+				assertThat( ( (PersistentAttribute<?, ?>) ( (SqmPath<?>) parent ).getResolvedModel() )
+						.getAttributeJavaType()
+						.getJavaTypeClass() )
+						.isEqualTo( Parent.class );
 			final Long result = session.createQuery( query.select( parent.get( "id" ) ) ).getSingleResult();
 			assertThat( result ).isEqualTo( 1L );
 		} );
@@ -97,13 +102,17 @@ public class GenericToOneAssociationTest {
 	public void testChildCriteriaQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
-			final CriteriaQuery<Long> query = cb.createQuery( Long.class );
-			final Root<Parent> root = query.from( Parent.class );
-			final Join<Parent, Child> join = root.join( "child" );
-			// generic attributes are always reported as Object java type
-			assertThat( join.getJavaType() ).isEqualTo( Object.class );
-			assertThat( join.getModel() ).isSameAs( root.getModel().getAttribute( "child" ) );
-			assertThat( ( (SqmPath<?>) join ).getResolvedModel().getBindableJavaType() ).isEqualTo( Child.class );
+				final CriteriaQuery<Long> query = cb.createQuery( Long.class );
+				final Root<Parent> root = query.from( Parent.class );
+				final Join<Parent, Child> join = root.join( "child" );
+				// Applied generic mapped-superclass paths expose their specialized Java type
+				assertThat( join.getJavaType() ).isEqualTo( Child.class );
+				assertThat( join.getModel() ).isSameAs( root.getModel().getAttribute( "child" ) );
+				assertThat( ( (SqmPath<?>) join ).getResolvedModel().getBindableJavaType() ).isEqualTo( Child.class );
+				assertThat( ( (PersistentAttribute<?, ?>) ( (SqmPath<?>) join ).getResolvedModel() )
+						.getAttributeJavaType()
+						.getJavaTypeClass() )
+						.isEqualTo( Child.class );
 			final Long result = session.createQuery( query.select( join.get( "id" ) ) ).getSingleResult();
 			assertThat( result ).isEqualTo( 2L );
 		} );

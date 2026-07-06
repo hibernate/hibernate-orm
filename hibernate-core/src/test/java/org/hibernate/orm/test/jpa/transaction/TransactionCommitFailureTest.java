@@ -15,7 +15,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
 
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
@@ -54,7 +54,7 @@ public class TransactionCommitFailureTest {
 		connectionIsOpen = new AtomicBoolean();
 
 		final Map<String, Object> settings = basicSettings();
-		emf = SessionFactoryBootstrap.build( new PersistenceUnitDescriptorAdapter(), settings );
+		emf = BootstrapPipeline.build( new PersistenceUnitDescriptorAdapter(), settings );
 	}
 
 	@AfterEach

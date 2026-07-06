@@ -99,7 +99,7 @@ public class CallbackTests {
 
 		checkDomainModel(
 				(context) -> {
-					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						sessionFactory.getSchemaManager().create( true );
 						try {
 							try (var session = sessionFactory.openSession()) {

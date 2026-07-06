@@ -209,7 +209,7 @@ class PluralAssociationAttributeBinder {
 						ownerType.getClassDetails(),
 						ownerType.getHierarchy().getRoot().getClassDetails(),
 						associationOverride,
-						bindingContext.getBootstrapContext().getModelsContext()
+						bindingContext.getModelsContext()
 				)
 				: collectionValueIntent.source();
 		final ManyToMany manyToMany = source.manyToMany();
@@ -226,7 +226,7 @@ class PluralAssociationAttributeBinder {
 						ownerType.getClassDetails(),
 						ownerType.getHierarchy().getRoot().getClassDetails(),
 						associationOverride,
-						bindingContext.getBootstrapContext().getModelsContext()
+						bindingContext.getModelsContext()
 				)
 				: collectionValueIntent.source();
 		final OneToMany oneToMany = source.oneToMany();
@@ -244,7 +244,7 @@ class PluralAssociationAttributeBinder {
 		final CollectionSource source = collectionValueIntent == null
 				? CollectionSource.manyToAny(
 						attributeMetadata.getMember(),
-						bindingContext.getBootstrapContext().getModelsContext()
+						bindingContext.getModelsContext()
 				)
 				: collectionValueIntent.source();
 		return bindManyToAny( source, property );
@@ -905,7 +905,7 @@ class PluralAssociationAttributeBinder {
 			String propertyName,
 			String targetColumnName) {
 		return bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
 					@Override
@@ -971,7 +971,7 @@ class PluralAssociationAttributeBinder {
 		}
 		return classDetails.getRepeatedAnnotationUsages(
 				PrimaryKeyJoinColumn.class,
-				target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+				target.typeBinder().getBindingContext().getModelsContext()
 		);
 	}
 

@@ -5,10 +5,11 @@
 package org.hibernate.orm.test.annotations.embeddables.collection;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -24,11 +25,11 @@ public abstract class AbstractEmbeddableWithManyToManyTest {
 	public void test() {
 		try (BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 			StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr ).build()) {
-			MetadataSources metadataSources = new MetadataSources( ssr );
-			addResources( metadataSources );
-			addAnnotatedClasses(metadataSources);
+			MappingSources mappingSources = new MappingSources();
+			addResources( mappingSources );
+			addAnnotatedClasses( mappingSources );
 
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( ssr, mappingSources );
 			fail( "Should throw AnnotationException!" );
 		}
 		catch (AnnotationException expected) {
@@ -38,11 +39,11 @@ public abstract class AbstractEmbeddableWithManyToManyTest {
 		}
 	}
 
-	protected void addAnnotatedClasses(MetadataSources metadataSources){
+	protected void addAnnotatedClasses(MappingSources mappingSources) {
 
 	}
 
-	protected void addResources(MetadataSources metadataSources){
+	protected void addResources(MappingSources mappingSources) {
 
 	}
 }

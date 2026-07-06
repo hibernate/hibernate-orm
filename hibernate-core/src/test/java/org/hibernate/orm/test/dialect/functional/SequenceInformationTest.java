@@ -10,12 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -43,17 +43,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class SequenceInformationTest extends
 		EntityManagerFactoryBasedFunctionalTest {
 
-	protected ServiceRegistry serviceRegistry;
+	protected StandardServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 	protected EntityManagerFactory entityManagerFactory;
 
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
 		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Product.class )
-				.addAnnotatedClass( Vehicle.class )
-				.buildMetadata();
+		metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				serviceRegistry,
+				Product.class,
+				Vehicle.class
+		);
 
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );

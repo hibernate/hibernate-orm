@@ -10,11 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
@@ -49,15 +50,16 @@ public class SequenceMismatchStrategyWithoutSequenceGeneratorTest extends Entity
 
 	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090203:" );
 
-	protected ServiceRegistry serviceRegistry;
+	protected StandardServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
 		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( ApplicationConfigurationHBM2DDL.class )
-				.buildMetadata();
+		metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				serviceRegistry,
+				new MappingSources().addManagedClass( ApplicationConfigurationHBM2DDL.class )
+		);
 
 		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
 		return super.produceEntityManagerFactory();

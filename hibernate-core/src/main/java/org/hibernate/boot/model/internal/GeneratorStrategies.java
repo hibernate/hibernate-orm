@@ -83,7 +83,7 @@ public class GeneratorStrategies {
 				return SelectGenerator.class;
 		}
 		final Class<? extends Generator> clazz =
-				idValue.getBuildingContext().getBootstrapContext()
+				idValue.getBuildingContext()
 						.getClassLoaderService()
 						.classForName( strategy );
 		if ( !Generator.class.isAssignableFrom( clazz ) ) {

@@ -12,9 +12,11 @@ import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.context.MappedSuperclassPropertyHandoff;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassContribution;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
@@ -33,7 +35,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
 
-import static org.hibernate.boot.model.internal.ClassPropertyHolder.genericComponentCopy;
+import static org.hibernate.boot.mapping.internal.binders.GenericComponentHelper.genericComponentCopy;
 
 /// Binder for a mapped-superclass type.
 ///
@@ -189,15 +191,24 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 						(EntityTypeMetadata) subType,
 						entityBinding,
 						entityBinding.getTable(),
-						(property) -> {
+						(property, usage) -> {
 							applyMappedSuperclassProperty( property, entityBinding );
 							if ( entityBinding.getMappedSuperclassProperties().contains( property ) ) {
-								contribution.addAppliedAttributeName( property.getName() );
+								final var attributeUsage = getBindingState().getBootBindingModel()
+										.addAppliedMappedSuperclassAttributeUsage( contribution, usage );
 								getBindingState().addMappedSuperclassPropertyHandoff(
-										new MappedSuperclassPropertyHandoff( contributionView, entityBinding, property )
+										new MappedSuperclassPropertyHandoff(
+												contributionView,
+												attributeUsage,
+												entityBinding,
+												property
+										)
 								);
 							}
-						}
+						},
+						true,
+						true,
+						(attributeMetadata) -> true
 				);
 				applyDeclaredIdentifierAndVersion( entityBinding );
 			}
@@ -214,6 +225,14 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 					? entityBinding.getIdentifierProperty()
 					: entityBinding.getDeclaredIdentifierProperty();
 			if ( identifierProperty != null && declaresAttribute( identifierProperty.getName(), idMapping ) ) {
+				final AttributeMetadata attribute = getManagedType().findAttribute( identifierProperty.getName() );
+				if ( isUnresolvedGenericAttribute( attribute ) ) {
+					final var identifierBinding = getBindingState().getBootBindingModel()
+							.findEntityIdentifierBinding( entityBinding.getClassName() );
+					if ( identifierBinding != null ) {
+						identifierBinding.setIdentifierMember( attribute.getMember() );
+					}
+				}
 				binding.setDeclaredIdentifierProperty( prepareDeclaredIdentifierProperty( identifierProperty ) );
 			}
 			final var identifierMapper = entityBinding.getDeclaredIdentifierMapper();
@@ -387,10 +406,9 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private BasicValue genericBasicValue(BasicValue source) {
-		final BasicValue basicValue = new BasicValue( getBindingState().getMetadataBuildingContext(), source.getTable() );
+		final BasicValue basicValue = BasicValue.unregistered( getBindingState().getMetadataBuildingContext(), source.getTable() );
 		basicValue.setTable( source.getTable() );
 		basicValue.setTypeName( Object.class.getName() );
-		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Object.class );
 		for ( int i = 0; i < source.getSelectables().size(); i++ ) {
 			final var selectable = source.getSelectables().get( i );
 			if ( selectable instanceof org.hibernate.mapping.Column column ) {
@@ -400,6 +418,9 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				basicValue.addFormula( new org.hibernate.mapping.Formula( formula.getFormula() ) );
 			}
 		}
+		final BasicValueSource valueSource = BasicValueSource.genericDeclaration();
+		basicValue.setImplicitSourceJavaType( valueSource.sourceJavaType() );
+		BasicValueResolutionBuilder.applyResolution( BasicValueResolutionBuilder.Input.create( basicValue, valueSource ) );
 		return basicValue;
 	}
 

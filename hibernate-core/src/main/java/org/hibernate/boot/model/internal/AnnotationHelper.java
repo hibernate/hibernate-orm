@@ -4,10 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.HashMap;
-
 import jakarta.annotation.Nonnull;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
@@ -25,36 +22,26 @@ import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.createJpaAttributeConverter;
 
 /**
  * @author Steve Ebersole
  */
 public class AnnotationHelper {
-	public static HashMap<String, String> extractParameterMap(Parameter[] parameters) {
-		final HashMap<String,String> paramMap = mapOfSize( parameters.length );
-		for ( var parameter : parameters ) {
-			paramMap.put( parameter.name(), parameter.value() );
-		}
-		return paramMap;
-	}
 
 	public static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
-		final var bootstrapContext = context.getBootstrapContext();
 		final var userType =
-				context.getBuildingOptions().isAllowExtensionsInCdi()
-						? bootstrapContext.getManagedBeanRegistry().getBean( userTypeClass ).getBeanInstance()
+				context.getBuildingPlan().isAllowExtensionsInCdi()
+						? context.getManagedBeanRegistry().getBean( userTypeClass ).getBeanInstance()
 						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
-		return new CustomType<>( userType, bootstrapContext.getTypeConfiguration() );
+		return new CustomType<>( userType, context.getTypeConfiguration() );
 	}
 
 	public static <X,Y> JdbcMapping resolveAttributeConverter(
 			Class<? extends AttributeConverter<? extends X,? extends Y>> type,
 			MetadataBuildingContext context) {
-		final var bootstrapContext = context.getBootstrapContext();
-		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final var bean = bootstrapContext.getManagedBeanRegistry().getBean( type );
+		final var typeConfiguration = context.getTypeConfiguration();
+		final var bean = context.getManagedBeanRegistry().getBean( type );
 		@SuppressWarnings("unchecked")
 		final var castBean = (ManagedBean<? extends AttributeConverter<X,Y>>) bean;
 		final var registry = typeConfiguration.getJavaTypeRegistry();
@@ -74,7 +61,8 @@ public class AnnotationHelper {
 	}
 
 	public static BasicType<?> resolveBasicType(Class<?> type, MetadataBuildingContext context) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var typeConfiguration = context.getTypeConfiguration();
+		final var mappingPreferences = context.getBuildingPlan().getMappingPreferences();
 		final var jtd = typeConfiguration.getJavaTypeRegistry().findDescriptor( type );
 		if ( jtd != null ) {
 			final JdbcType jdbcType = jtd.getRecommendedJdbcType(
@@ -87,27 +75,27 @@ public class AnnotationHelper {
 
 						@Override
 						public int getPreferredSqlTypeCodeForBoolean() {
-							return context.getPreferredSqlTypeCodeForBoolean();
+							return mappingPreferences.getPreferredSqlTypeCodeForBoolean();
 						}
 
 						@Override
 						public int getPreferredSqlTypeCodeForDuration() {
-							return context.getPreferredSqlTypeCodeForDuration();
+							return mappingPreferences.getPreferredSqlTypeCodeForDuration();
 						}
 
 						@Override
 						public int getPreferredSqlTypeCodeForUuid() {
-							return context.getPreferredSqlTypeCodeForUuid();
+							return mappingPreferences.getPreferredSqlTypeCodeForUuid();
 						}
 
 						@Override
 						public int getPreferredSqlTypeCodeForInstant() {
-							return context.getPreferredSqlTypeCodeForInstant();
+							return mappingPreferences.getPreferredSqlTypeCodeForInstant();
 						}
 
 						@Override
 						public int getPreferredSqlTypeCodeForArray() {
-							return context.getPreferredSqlTypeCodeForArray();
+							return mappingPreferences.getPreferredSqlTypeCodeForArray();
 						}
 
 						@Override
@@ -124,7 +112,7 @@ public class AnnotationHelper {
 	}
 
 	public static JdbcMapping resolveJavaType(Class<JavaType<?>> type, MetadataBuildingContext context) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var typeConfiguration = context.getTypeConfiguration();
 		final var jtd = getJavaType( type, context, typeConfiguration );
 		final var jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 		return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
@@ -140,11 +128,11 @@ public class AnnotationHelper {
 		if ( registeredJtd != null ) {
 			return registeredJtd;
 		}
-		else if ( !context.getBuildingOptions().isAllowExtensionsInCdi() ) {
+		else if ( !context.getBuildingPlan().isAllowExtensionsInCdi() ) {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 		}
 		else {
-			return context.getBootstrapContext().getManagedBeanRegistry()
+			return context.getManagedBeanRegistry()
 					.getBean( javaTypeClass ).getBeanInstance();
 		}
 	}

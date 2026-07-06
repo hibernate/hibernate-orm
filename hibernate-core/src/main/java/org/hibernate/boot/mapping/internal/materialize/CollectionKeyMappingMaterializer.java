@@ -212,7 +212,7 @@ public class CollectionKeyMappingMaterializer {
 
 	private String implicitKeyName(Collection collection, Constraint key) {
 		final MetadataBuildingContext buildingContext = collection.getBuildingContext();
-		return buildingContext.getBuildingOptions()
+		return buildingContext.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 					@Override

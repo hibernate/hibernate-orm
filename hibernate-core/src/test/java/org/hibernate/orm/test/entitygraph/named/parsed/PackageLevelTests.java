@@ -28,7 +28,7 @@ public class PackageLevelTests extends AbstractPackageLevelTests {
 			annotatedPackageNames = "org.hibernate.orm.test.entitygraph.named.parsed.pkg2"
 	)
 	void givenModernGraphParserModeShouldThrowExceptionWhenUsingAnnotationsWithoutRootAttribute(DomainModelScope modelScope) {
-		try (org.hibernate.SessionFactory sessionFactory = modelScope.getDomainModel().buildSessionFactory()) {
+		try (org.hibernate.SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( modelScope.getDomainModel() )) {
 			fail( "Expected an exception" );
 		}
 		catch (InvalidNamedEntityGraphParameterException expected) {

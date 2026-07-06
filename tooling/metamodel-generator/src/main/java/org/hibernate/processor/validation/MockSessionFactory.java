@@ -15,7 +15,9 @@ import org.hibernate.audit.AuditStrategy;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.TimeZoneStorageStrategy;
+import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.boot.internal.DefaultCustomEntityDirtinessStrategy;
+import org.hibernate.boot.pipeline.internal.MappingResolutionServicesImpl;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.internal.StandardEntityNotFoundDelegate;
 import org.hibernate.boot.model.FunctionContributions;
@@ -32,22 +34,29 @@ import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorImpl;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
-import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.GlobalMappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionServices;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.mapping.internal.context.MappingPreferences;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.internal.DisabledCaching;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -76,9 +85,11 @@ import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
 import org.hibernate.metamodel.model.domain.internal.SetAttributeImpl;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -92,6 +103,8 @@ import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.sql.internal.FetchProfileRegistry;
+import org.hibernate.query.sql.internal.SqlTranslationContextImpl;
 import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -104,8 +117,11 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmPersistentAttribute;
 import org.hibernate.query.sqm.tree.spi.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddableDomainType;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.stat.internal.StatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.type.BagType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -120,8 +136,10 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
+import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Collections;
@@ -144,7 +162,7 @@ import static java.util.Collections.singletonList;
 @SuppressWarnings("NullAway")
 public abstract class MockSessionFactory
 		implements SessionFactoryImplementor, SessionFactoryOptions, QueryEngine, FunctionContributions,
-		MetadataBuildingOptions, MetadataBuildingContext, RuntimeModelCreationContext, BootstrapContext,
+		MappingResolutionOptions, MetadataBuildingContext, RuntimeModelCreationContext, BootstrapContext,
 		JdbcTypeIndicators, RuntimeMetamodelsImplementor {
 
 	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
@@ -161,11 +179,13 @@ public abstract class MockSessionFactory
 
 	private final MetadataImplementor bootModel;
 //	private final MetadataContext metadataContext;
+	private final MappingPreferences mappingPreferences;
 
 	private final NodeBuilder nodeBuilder;
 	private final SqlTranslationEngine sqlTranslationEngine;
 
 	private final ClassLoaderServiceImpl classLoaderService;
+	private MappingResolutionServices metadataBuildingServiceComponents;
 
 	public MockSessionFactory() {
 		classLoaderService = new ClassLoaderServiceImpl() {
@@ -201,6 +221,47 @@ public abstract class MockSessionFactory
 
 		functionRegistry = new SqmFunctionRegistry();
 		metamodel = new MockMappingMetamodelImpl();
+		mappingPreferences = new MappingPreferences() {
+			@Override
+			public int getPreferredSqlTypeCodeForBoolean() {
+				return SqlTypes.BOOLEAN;
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForDuration() {
+				return SqlTypes.NUMERIC;
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForUuid() {
+				return SqlTypes.UUID;
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForInstant() {
+				return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+			}
+
+			@Override
+			public int getPreferredSqlTypeCodeForArray() {
+				return SqlTypes.ARRAY;
+			}
+
+			@Override
+			public boolean isPreferJavaTimeJdbcTypesEnabled() {
+				return false;
+			}
+
+			@Override
+			public boolean isPreferNativeEnumTypesEnabled() {
+				return false;
+			}
+
+			@Override
+			public boolean isPreferLocaleLanguageTagEnabled() {
+				return false;
+			}
+		};
 
 		bootModel = new MetadataImpl(
 				UUID.randomUUID(),
@@ -221,6 +282,7 @@ public abstract class MockSessionFactory
 				emptyMap(),
 				emptyMap(),
 				emptyMap(),
+				functionRegistry,
 				emptyMap(),
 				new Database(this, MockJdbcServicesInitiator.jdbcServices.getJdbcEnvironment()),
 				this
@@ -248,7 +310,38 @@ public abstract class MockSessionFactory
 
 		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this, serviceRegistry);
 
-		sqlTranslationEngine = new SqlTranslationEngineImpl(this, typeConfiguration, emptyMap() );
+		sqlTranslationEngine = new SqlTranslationEngineImpl(
+				new SqlTranslationContextImpl(
+						this,
+						this,
+						typeConfiguration,
+						this,
+						new WrapperOptions() {
+							@Override
+							@Nonnull
+							public SharedSessionContractImplementor getSession() {
+								throw new UnsupportedOperationException( "No session" );
+							}
+
+							@Override
+							@Nonnull
+							public SessionFactoryImplementor getSessionFactory() {
+								return MockSessionFactory.this;
+							}
+
+							@Override
+							public FormatMapper getXmlFormatMapper() {
+								return null;
+							}
+
+							@Override
+							public FormatMapper getJsonFormatMapper() {
+								return null;
+							}
+						},
+						new FetchProfileRegistry()
+				)
+		);
 	}
 
 	@Override
@@ -280,7 +373,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public MetadataBuildingOptions getBuildingOptions() {
+	public MappingResolutionOptions getBuildingPlan() {
 		return this;
 	}
 
@@ -463,17 +556,17 @@ public abstract class MockSessionFactory
 
 	@Override
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
-		return MetadataBuildingContext.super.isPreferJavaTimeJdbcTypesEnabled();
+		return mappingPreferences.isPreferJavaTimeJdbcTypesEnabled();
 	}
 
 	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
-		return false;
+		return mappingPreferences.isPreferNativeEnumTypesEnabled();
 	}
 
 	@Override
 	public boolean isPreferLocaleLanguageTagEnabled() {
-		return MetadataBuildingContext.super.isPreferLocaleLanguageTagEnabled();
+		return mappingPreferences.isPreferLocaleLanguageTagEnabled();
 	}
 
 	@Override
@@ -600,6 +693,20 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public void registerAdHocBasicType(BasicType<?> basicType) {
+	}
+
+	@Override
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
+		return null;
+	}
+
+	@Override
+	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
+		return null;
+	}
+
+	@Override
 	public String getSessionFactoryName() {
 		return "mock";
 	}
@@ -642,7 +749,7 @@ public abstract class MockSessionFactory
 	@Override
 	public void setCheckNullability(boolean enabled) {}
 
-	private static class MockMappingDefaults implements MappingDefaults {
+	private static class MockMappingDefaults implements GlobalMappingDefaults {
 		@Override
 		public String getImplicitSchemaName() {
 			return null;
@@ -716,28 +823,66 @@ public abstract class MockSessionFactory
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return SqlTypes.BOOLEAN;
+		return mappingPreferences.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForDuration() {
-		return SqlTypes.NUMERIC;
+		return mappingPreferences.getPreferredSqlTypeCodeForDuration();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForUuid() {
-		return SqlTypes.UUID;
+		return mappingPreferences.getPreferredSqlTypeCodeForUuid();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForInstant() {
-		return SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+		return mappingPreferences.getPreferredSqlTypeCodeForInstant();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForArray() {
-		return SqlTypes.ARRAY;
+		return mappingPreferences.getPreferredSqlTypeCodeForArray();
 	}
+
+	@Override
+	public MappingPreferences getMappingPreferences() {
+		return mappingPreferences;
+	}
+
+	@Override
+	public abstract ManagedBeanRegistry getManagedBeanRegistry();
+
+	@Override
+	public abstract BeanInstanceProducer getCustomTypeProducer();
+
+	@Override
+	public abstract ModelsContext getModelsContext();
+
+	@Override
+	public abstract ClassLoaderAccess getClassLoaderAccess();
+
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return MetadataBuildingContext.super.getConfigurationService();
+	}
+
+	@Override
+	public MappingResolutionOptions getMappingResolutionOptions() {
+		return this;
+	}
+
+	@Override
+	public CollectionSemanticsResolver getPersistentCollectionRepresentationResolver() {
+		return MappingResolutionOptions.super.getPersistentCollectionRepresentationResolver();
+	}
+
+	@Override
+	public abstract ChangesetCoordinator getChangesetCoordinator();
+
+	@Override
+	public abstract ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 
 	private static class MockJavaType<X> implements BasicJavaType<X> {
 		private final String typeName;
@@ -819,6 +964,14 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public MappingResolutionServices getServiceComponents() {
+		if ( metadataBuildingServiceComponents == null ) {
+			metadataBuildingServiceComponents = new MappingResolutionServicesImpl( this );
+		}
+		return metadataBuildingServiceComponents;
+	}
+
+	@Override
 	public MetadataImplementor getBootModel() {
 		return bootModel;
 	}
@@ -845,7 +998,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public MappingDefaults getMappingDefaults() {
+	public GlobalMappingDefaults getMappingDefaults() {
 		return new MockMappingDefaults();
 	}
 
@@ -858,6 +1011,22 @@ public abstract class MockSessionFactory
 	@Nonnull
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return TimeZoneStorageStrategy.NATIVE;
+	}
+
+	@Override
+	@Nonnull
+	public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
+		return TimeZoneStorageStrategy.NATIVE;
+	}
+
+	@Override
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NATIVE;
+	}
+
+	@Override
+	public WrapperArrayHandling getWrapperArrayHandling() {
+		return WrapperArrayHandling.DISALLOW;
 	}
 
 	private class MockJpaMetamodelImpl extends JpaMetamodelImpl {

@@ -11,12 +11,13 @@ import java.util.EnumSet;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -43,7 +44,7 @@ import static org.hamcrest.Matchers.containsString;
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledSequences.class )
 public class SequenceGeneratorIncrementTest {
 	private File output;
-	private ServiceRegistry ssr;
+	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
 	@BeforeEach
@@ -230,16 +231,14 @@ public class SequenceGeneratorIncrementTest {
 		}
 
 		ssr = standardServiceRegistryBuilder.build();
-		final MetadataSources metadataSources = new MetadataSources( ssr );
+		final MappingSources mappingSources = new MappingSources();
 		if ( annotatedClass != null ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
+			mappingSources.addManagedClass( annotatedClass );
 		}
 		if ( hbm != null ) {
-			metadataSources.addResource( hbm );
+			mappingSources.addMappingResource( hbm );
 		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, mappingSources );
 	}
 
 	private void createSchema() {

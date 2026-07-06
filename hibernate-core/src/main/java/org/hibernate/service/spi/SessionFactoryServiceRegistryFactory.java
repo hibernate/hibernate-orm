@@ -6,7 +6,7 @@ package org.hibernate.service.spi;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.service.Service;
 
 /**
@@ -20,16 +20,16 @@ public interface SessionFactoryServiceRegistryFactory extends Service {
 	/**
 	 * Create the registry.
 	 *
-	 * @param sessionFactory The (still being built) session factory.  Generally this is useful
-	 * for grabbing a reference for later use.  However, care should be taken when invoking on
-	 * the session factory until after it has been fully initialized.
+	 * @param sessionFactoryAccess Access to the SessionFactory.  Generally this is useful
+	 * for grabbing a reference for later use.  However, care should be taken when dereferencing
+	 * the access object until after the SessionFactory has been fully initialized.
 	 * @param sessionFactoryOptions The build options.
 	 *
 	 * @return The registry
 	 */
 	@Nonnull
 	SessionFactoryServiceRegistry buildServiceRegistry(
-			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionFactoryAccess sessionFactoryAccess,
 			@Nonnull SessionFactoryOptions sessionFactoryOptions);
 
 }

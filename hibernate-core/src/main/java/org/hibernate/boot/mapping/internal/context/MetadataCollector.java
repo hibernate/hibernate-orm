@@ -105,6 +105,9 @@ public interface MetadataCollector {
 	/// Register a named SQL result set mapping.
 	void addResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor);
 
+	/// Register a default named SQL result set mapping.
+	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor);
+
 	/// Register a fetch profile.
 	void addFetchProfile(FetchProfile fetchProfile);
 

@@ -12,9 +12,10 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
@@ -48,12 +49,12 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 	@Test
 	@JiraKey( value = "HHH-10050" )
 	public void testNestedTypeParameterAutoApplication(ServiceRegistryScope scope) {
-		final var metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( SampleEntity.class )
-				.getMetadataBuilder()
-				.applyAttributeConverter( IntegerListConverter.class )
-				.applyAttributeConverter( StringListConverter.class )
-				.build();
+		final var metadata = MetadataBuildingTestHelper.buildMetadataWithAttributeConverters(
+				scope.getRegistry(),
+				new MappingSources().addManagedClass( SampleEntity.class ),
+				ConverterDescriptors.of( IntegerListConverter.class ),
+				ConverterDescriptors.of( StringListConverter.class )
+		);
 
 		// lets make sure the auto-apply converters were applied properly...
 		var pc = metadata.getEntityBinding( SampleEntity.class.getName() );

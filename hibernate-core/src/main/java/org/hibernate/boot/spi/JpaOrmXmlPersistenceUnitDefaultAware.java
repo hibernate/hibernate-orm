@@ -8,7 +8,7 @@ import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 
 /**
  * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.
- * Only {@link MetadataBuildingOptions} are supported to implement this contract.
+ * Only {@link org.hibernate.boot.pipeline.internal.MappingResolutionOptions} are supported to implement this contract.
  *
  * @since 5.0
  *

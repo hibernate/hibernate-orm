@@ -21,7 +21,7 @@
 /// These contracts and implementations are internal to Hibernate.  They are not
 /// supported extension SPIs.
 ///
-/// @see org.hibernate.boot.models.AvailableResources
+/// @see org.hibernate.boot.pipeline.internal.source.PreparedMappingSources
 /// @see org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer
 /// @see org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel
 ///

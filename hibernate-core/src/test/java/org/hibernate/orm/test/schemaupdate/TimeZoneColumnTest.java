@@ -14,12 +14,12 @@ import java.util.Locale;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -75,14 +75,7 @@ public class TimeZoneColumnTest {
 	}
 
 	private void createSchema(Class... annotatedClasses) {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-
-		for ( Class c : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( c );
-		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, annotatedClasses );
 		new SchemaExport()
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )

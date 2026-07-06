@@ -7,9 +7,9 @@ package org.hibernate.orm.test.onetoone.bidirectional;
 import java.io.Serializable;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -36,11 +36,9 @@ public class BidirectionalOneToOneWithIdClassesUnownedAssociationTest {
 	public void test() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
-			new MetadataSources( ssr ).addAnnotatedClass( Price.class )
-					.addAnnotatedClass( Product.class )
-					.addAnnotatedClass( Operator.class )
-					.buildMetadata()
-					.buildSessionFactory();
+			org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( ssr, Price.class, Product.class, Operator.class )
+			);
 			fail( "Unowned association should not be allowed as an entity identifier" );
 			// See JPA spec: https://jakarta.ee/specifications/persistence/3.1/jakarta-persistence-spec-3.1.html#a149
 			// > The identity of an entity may be derived from the identity of another entity (the “parent” entity) when

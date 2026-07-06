@@ -4,11 +4,11 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter.custom;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.spi.MetadataBuilderImplementor;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -33,18 +33,19 @@ public class CustomTypeConverterTest {
 	) )
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	public void testConverterAppliedScopedContributions(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( PayloadWrapperConverter.class )
-				.addAnnotatedClass( MyEntity.class );
-		final MetadataBuilderImplementor metadataBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder();
-		final TypeConfiguration bootTypeConfiguration = metadataBuilder.getBootstrapContext().getTypeConfiguration();
-		performAssertions( metadataBuilder, bootTypeConfiguration );
+		final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				PayloadWrapperConverter.class,
+				MyEntity.class
+		);
+		final TypeConfiguration bootTypeConfiguration = metadata.getTypeConfiguration();
+		performAssertions( metadata, bootTypeConfiguration );
 	}
 
 	protected void performAssertions(
-			MetadataBuilderImplementor metadataBuilder,
+			MetadataImplementor metadata,
 			TypeConfiguration bootTypeConfiguration) {
-		try ( final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadataBuilder.build().buildSessionFactory()) {
+		try ( final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 			assertThat(
 					sessionFactory.getMappingMetamodel().getTypeConfiguration(),
 					sameInstance( bootTypeConfiguration )

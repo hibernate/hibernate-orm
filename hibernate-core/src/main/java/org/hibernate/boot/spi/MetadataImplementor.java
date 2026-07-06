@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
@@ -30,9 +31,9 @@ public interface MetadataImplementor extends Metadata {
 	/**
 	 * Access to the options used to build this {@code Metadata}
 	 *
-	 * @return The {@link MetadataBuildingOptions}
+	 * @return The {@link MappingResolutionOptions}
 	 */
-	MetadataBuildingOptions getMetadataBuildingOptions();
+	MappingResolutionOptions getMappingResolutionOptions();
 
 	/**
 	 * Access to the {@link TypeConfiguration} belonging to the {@link BootstrapContext}
@@ -40,7 +41,7 @@ public interface MetadataImplementor extends Metadata {
 	TypeConfiguration getTypeConfiguration();
 
 	/**
-	 * Access to the {@link SqmFunctionRegistry} belonging to the {@link BootstrapContext}
+	 * Access to the resolved {@link SqmFunctionRegistry}.
 	 */
 	SqmFunctionRegistry getFunctionRegistry();
 
@@ -61,6 +62,4 @@ public interface MetadataImplementor extends Metadata {
 
 	DiscriminatorType<?> resolveEmbeddableDiscriminatorType(Class<?> embeddableClass, Supplier<DiscriminatorType<?>> supplier);
 
-	@Override
-	SessionFactoryImplementor buildSessionFactory();
 }

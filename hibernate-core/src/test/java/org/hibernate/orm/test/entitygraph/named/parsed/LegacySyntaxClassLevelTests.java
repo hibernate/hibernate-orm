@@ -24,7 +24,7 @@ public class LegacySyntaxClassLevelTests extends AbstractClassLevelTests {
 	void testInvalidParsedGraph(DomainModelScope modelScope) {
 		final MetadataImplementor domainModel = modelScope.getDomainModel();
 		try {
-			try (org.hibernate.SessionFactory sessionFactory = domainModel.buildSessionFactory()) {
+			try (org.hibernate.SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( domainModel )) {
 				fail( "Expecting an exception" );
 			}
 			catch (InvalidGraphException expected) {

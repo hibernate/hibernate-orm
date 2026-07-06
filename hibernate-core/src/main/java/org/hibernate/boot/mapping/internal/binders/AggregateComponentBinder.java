@@ -5,8 +5,10 @@
 package org.hibernate.boot.mapping.internal.binders;
 
 import org.hibernate.annotations.Struct;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.AggregateValuePlan;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.mapping.AggregateColumn;
@@ -49,26 +51,28 @@ final class AggregateComponentBinder {
 				intent.aggregateColumnSource(),
 				() -> source.sourceMember().resolveAttributeName()
 		);
-		final BasicValue aggregateValue = new BasicValue( state.getMetadataBuildingContext(), memberTarget.table() );
+		final BasicValue aggregateValue = BasicValue.unregistered( state.getMetadataBuildingContext(), memberTarget.table() );
 		aggregateValue.setTable( memberTarget.table() );
 		aggregateValue.setTypeUsingReflection(
 				source.sourceMember().getDeclaringType().getName(),
 				source.sourceMember().resolveAttributeName()
 		);
+		final var resolutionInput = BasicValueResolutionBuilder.Input.create(
+				aggregateValue,
+				BasicValueSource.attribute( source.sourceMember() )
+		);
 		if ( plan.explicitAggregateJavaType() ) {
-			aggregateValue.setExplicitJavaTypeAccess(
-					(typeConfiguration) -> new EmbeddableAggregateJavaType<>( component.getComponentClass(), plan.structNameText() )
+			resolutionInput.setExplicitJavaType(
+					new EmbeddableAggregateJavaType<>( component.getComponentClass(), plan.structNameText() )
 			);
 		}
 		if ( plan.aggregateValueJdbcTypeCode() != null ) {
-			final int aggregateValueJdbcTypeCode = plan.aggregateValueJdbcTypeCode();
 			aggregateValue.setExplicitJdbcTypeCode( plan.aggregateValueJdbcTypeCode() );
-			aggregateValue.setExplicitJdbcTypeAccess( (typeConfiguration) -> {
-				final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-				return jdbcTypeRegistry.getConstructor( aggregateValueJdbcTypeCode ) == null
-						? jdbcTypeRegistry.getDescriptor( aggregateValueJdbcTypeCode )
-						: null;
-			} );
+			resolutionInput.setConfiguredJdbcTypeCode( plan.aggregateValueJdbcTypeCode() );
+			final var jdbcTypeRegistry = state.getMetadataBuildingContext().getTypeConfiguration().getJdbcTypeRegistry();
+			if ( jdbcTypeRegistry.getConstructor( plan.aggregateValueJdbcTypeCode() ) == null ) {
+				resolutionInput.setExplicitJdbcType( jdbcTypeRegistry.getDescriptor( plan.aggregateValueJdbcTypeCode() ) );
+			}
 		}
 		final AggregateColumn aggregateColumn = new AggregateColumn( column, component );
 		aggregateColumn.setValue( aggregateValue );
@@ -80,13 +84,14 @@ final class AggregateComponentBinder {
 			aggregateColumn.setSqlTypeCode( plan.aggregateColumnSqlTypeCode() );
 		}
 		aggregateValue.addColumn( aggregateColumn );
+		BasicValueResolutionBuilder.applyResolution( resolutionInput );
 		if ( !source.isNested() ) {
 			memberTarget.table().addColumn( aggregateColumn );
 		}
 		component.setAggregateColumn( aggregateColumn );
 
-		state.getMetadataBuildingContext().getMetadataCollector().addSecondPass(
-				new org.hibernate.boot.model.internal.AggregateComponentSecondPass(
+		state.addComponentAggregateFinalization(
+				ComponentBinding.aggregate(
 						memberTarget.table(),
 						ownerBinding.getEntityName(),
 						component,

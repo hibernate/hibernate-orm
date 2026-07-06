@@ -80,8 +80,8 @@ public class GenericToManyAssociationTest {
 			final CriteriaQuery<Long> query = cb.createQuery( Long.class );
 			final Root<Child> root = query.from( Child.class );
 			final Path<Parent> parent = root.get( "parent" );
-			// generic attributes are always reported as Object java type
-			assertThat( parent.getJavaType() ).isEqualTo( Object.class );
+				// Applied generic mapped-superclass attributes expose their specialized Java type
+				assertThat( parent.getJavaType() ).isEqualTo( Parent.class );
 			assertThat( parent.getModel() ).isSameAs( root.getModel().getAttribute( "parent" ) );
 			assertThat( ( (SqmPath<?>) parent ).getResolvedModel().getBindableJavaType() ).isEqualTo( Parent.class );
 			final Long result = session.createQuery( query.select( parent.get( "id" ) ) ).getSingleResult();

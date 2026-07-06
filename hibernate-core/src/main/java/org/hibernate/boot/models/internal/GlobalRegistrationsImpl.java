@@ -1137,7 +1137,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	private QueryHint[] collectQueryHints(JaxbNamedHqlQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
 		final var hints = extractQueryHints( jaxbNamedQuery );
 
-		final var modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final var modelBuildingContext = xmlDocumentContext.getModelsContext();
 
 		if ( jaxbNamedQuery.isCacheable() == Boolean.TRUE ) {
 			final var cacheableHint = JpaAnnotations.QUERY_HINT.createUsage( modelBuildingContext );

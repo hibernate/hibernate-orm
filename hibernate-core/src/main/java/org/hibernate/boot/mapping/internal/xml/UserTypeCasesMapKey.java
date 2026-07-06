@@ -32,7 +32,7 @@ public class UserTypeCasesMapKey extends AbstractUserTypeCases {
 			XmlDocumentContext xmlDocumentContext) {
 		final MapKeyJavaTypeAnnotation javaTypeAnnotation = (MapKeyJavaTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.MAP_KEY_JAVA_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		javaTypeAnnotation.value( descriptor );
 	}
@@ -68,7 +68,7 @@ public class UserTypeCasesMapKey extends AbstractUserTypeCases {
 
 		final MapKeyTemporalJpaAnnotation temporalAnnotation = (MapKeyTemporalJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.MAP_KEY_TEMPORAL,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		temporalAnnotation.value( temporalType );
 	}
@@ -82,7 +82,7 @@ public class UserTypeCasesMapKey extends AbstractUserTypeCases {
 		assert userTypeImpl.isImplementor( UserType.class );
 		final MapKeyTypeAnnotation typeAnn = (MapKeyTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.MAP_KEY_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		typeAnn.value( userTypeImpl.toJavaClass() );
 		typeAnn.parameters( XmlAnnotationHelper.collectParameters( jaxbType.getParameters(), xmlDocumentContext ) );

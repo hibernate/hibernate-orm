@@ -387,7 +387,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 					return null;
 				}
 				try {
-					componentClass = classForName( componentClassName, getBootstrapContext() );
+					componentClass = classForName( componentClassName, getBuildingContext().getClassLoaderAccess() );
 				}
 				catch (ClassLoadingException e) {
 					throw new MappingException( "Embeddable class not found: " + componentClassName, e );
@@ -449,10 +449,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	private CompositeUserType<?> createCompositeUserType(Component component) {
 		final var buildingContext = getBuildingContext();
-		final var bootstrapContext = buildingContext.getBootstrapContext();
-		final var clazz = classForName( CompositeUserType.class, component.getTypeName(), bootstrapContext );
-		return buildingContext.getBuildingOptions().isAllowExtensionsInCdi()
-				? bootstrapContext.getManagedBeanRegistry().getBean( clazz ).getBeanInstance()
+		final var clazz = classForName( CompositeUserType.class, component.getTypeName(), buildingContext.getClassLoaderAccess() );
+		return buildingContext.getBuildingPlan().isAllowExtensionsInCdi()
+				? buildingContext.getManagedBeanRegistry().getBean( clazz ).getBeanInstance()
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( clazz );
 	}
 

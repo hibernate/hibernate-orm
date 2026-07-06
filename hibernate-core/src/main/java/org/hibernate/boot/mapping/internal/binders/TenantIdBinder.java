@@ -74,7 +74,15 @@ public class TenantIdBinder {
 					"@TenantId contributor did not materialize property `" + attributeMetadata.getName() + "`"
 			);
 		}
-		CustomMappingBinder.callAttributeBinders( memberDetails, typeBinding, property, bindingState, bindingContext );
+		bindingState.addAttributeCustomMapping(
+				CustomMappingBinder.attributeBinding(
+						memberDetails,
+						typeBinding,
+						property,
+						bindingState,
+						bindingContext
+				)
+		);
 	}
 
 	private static AttributeUsageBinding createTenantIdUsage(

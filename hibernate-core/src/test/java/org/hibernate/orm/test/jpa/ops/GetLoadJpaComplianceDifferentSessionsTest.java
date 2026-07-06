@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
@@ -59,7 +59,7 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFact
 		settings.put( AvailableSettings.JPA_PROXY_COMPLIANCE, Boolean.TRUE.toString() );
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 
-		EntityManagerFactory newEntityManagerFactory = SessionFactoryBootstrap.build(
+		EntityManagerFactory newEntityManagerFactory = BootstrapPipeline.build(
 				new TestingPersistenceUnitDescriptorImpl(
 						getClass().getSimpleName(),
 						List.of(Workload.class.getName()),

@@ -24,8 +24,6 @@ import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 
 import static org.hibernate.internal.util.NullnessHelper.nullif;
-import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
-
 /// Creates mapping-model columns from source column annotations.
 ///
 /// Column binding is deliberately small and reusable because columns are created
@@ -37,6 +35,8 @@ import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEF
 /// @since 9.0
 /// @author Steve Ebersole
 public class ColumnBinder {
+	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "DTYPE";
+
 	public static Column bindColumn(
 			ColumnSource columnSource,
 			Supplier<String> defaultNameSupplier) {
@@ -186,7 +186,7 @@ public class ColumnBinder {
 				explicit
 		);
 		return bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getPhysicalNamingStrategy()
 				.toPhysicalColumnName( identifier, database.getJdbcEnvironment() )
 				.render( database.getDialect() );

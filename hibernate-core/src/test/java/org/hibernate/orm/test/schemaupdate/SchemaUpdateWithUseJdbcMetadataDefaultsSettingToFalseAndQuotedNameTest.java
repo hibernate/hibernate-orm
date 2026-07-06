@@ -18,12 +18,12 @@ import jakarta.persistence.Table;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -65,12 +65,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 				)
 				.build();
 
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( AnotherTestEntity.class );
-
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, AnotherTestEntity.class );
 	}
 
 	@AfterEach
@@ -99,9 +94,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 		ssr = ServiceRegistryUtil.serviceRegistry();
 		final AnnotationException exception = assertThrows(
 				AnnotationException.class,
-				() -> new MetadataSources( ssr )
-						.addAnnotatedClass( entityClass )
-						.buildMetadata()
+				() -> MetadataBuildingTestHelper.buildMetadata( ssr, entityClass )
 		);
 		assertTrue( exception.getMessage().contains( "is quoted" ) );
 	}

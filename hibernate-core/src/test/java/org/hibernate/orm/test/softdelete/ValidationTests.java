@@ -9,8 +9,10 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.type.YesNoConverter;
 
 import org.junit.jupiter.api.Test;
@@ -30,24 +32,33 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ValidationTests {
 	@Test
 	void testLazyToOne() {
-		final Metadata metadata = new MetadataSources().addAnnotatedClass( Person.class )
-				.addAnnotatedClass( Address.class )
-				.buildMetadata();
-		try (SessionFactory sessionFactory = metadata.buildSessionFactory()) {
-			fail( "Expecting a failure" );
-		}
-		catch (UnsupportedMappingException expected) {
+		try (var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources()
+							.addManagedClass( Person.class )
+							.addManagedClass( Address.class )
+			);
+			try (SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
+				fail( "Expecting a failure" );
+			}
+			catch (UnsupportedMappingException expected) {
+			}
 		}
 	}
 
 	@Test
 	void testCustomSql() {
-		final Metadata metadata = new MetadataSources().addAnnotatedClass( NoNo.class )
-				.buildMetadata();
-		try (SessionFactory sessionFactory = metadata.buildSessionFactory()) {
-			fail( "Expecting a failure" );
-		}
-		catch (UnsupportedMappingException expected) {
+		try (var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources().addManagedClass( NoNo.class )
+			);
+			try (SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
+				fail( "Expecting a failure" );
+			}
+			catch (UnsupportedMappingException expected) {
+			}
 		}
 	}
 

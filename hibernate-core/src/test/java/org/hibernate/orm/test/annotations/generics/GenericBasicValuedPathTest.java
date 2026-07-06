@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.annotations.generics;
 
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -71,6 +72,10 @@ public class GenericBasicValuedPathTest {
 			assertThat( dataPath.getJavaType() ).isEqualTo( Object.class );
 			assertThat( dataPath.getModel() ).isSameAs( root.getModel().getAttribute( "data" ) );
 			assertThat( ( (SqmPath<?>) dataPath ).getResolvedModel().getBindableJavaType() ).isEqualTo( String.class );
+			assertThat( ( (PersistentAttribute<?, ?>) ( (SqmPath<?>) dataPath ).getResolvedModel() )
+					.getAttributeJavaType()
+					.getJavaTypeClass() )
+					.isEqualTo( String.class );
 			final Object result = session.createQuery( query.select( dataPath ) ).getSingleResult();
 			assertThat( result ).isEqualTo( "my_entity" );
 		} );

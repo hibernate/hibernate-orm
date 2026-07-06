@@ -21,7 +21,9 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.internal.IdentifierHandoffResolver;
 import org.hibernate.mapping.Subclass;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchyRoot;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchySuper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -34,6 +36,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 
@@ -172,6 +175,10 @@ public class MappedSuperclassTests {
 					assertThat( rootBinding.getMappedSuperclassPropertyOrigin( rootCode ) ).isSameAs( contributionBinding );
 					final var handoff = context.getBindingState().getMappedSuperclassPropertyHandoff( rootCode );
 					assertThat( handoff ).isNotNull();
+					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoff( rootBinding, rootCode ) )
+							.isSameAs( handoff );
+					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoff( leafBinding, rootCode ) )
+							.isNull();
 					assertThat( handoff.owner() ).isSameAs( rootBinding );
 					assertThat( handoff.property() ).isSameAs( rootCode );
 					assertThat( handoff.contribution().declaration().getClassDetails().toJavaClass() )
@@ -179,6 +186,18 @@ public class MappedSuperclassTests {
 					assertThat( handoff.contribution().consumer().getClassDetails().toJavaClass() )
 							.isEqualTo( RootConsumer.class );
 					assertThat( handoff.contribution().appliedAttributeNames() ).containsExactly( "rootCode" );
+					assertThat( handoff.contribution().appliedAttributeUsages() )
+							.singleElement()
+							.satisfies( (attributeUsage) -> {
+								assertThat( attributeUsage.attributeName() ).isEqualTo( "rootCode" );
+								assertThat( attributeUsage ).isSameAs( handoff.attributeUsage() );
+								assertThat( attributeUsage.declaration().declarationContainer().classDetails().toJavaClass() )
+										.isEqualTo( RootContribution.class );
+								assertThat( ( (ManagedTypeBinding) attributeUsage.usageContainer() )
+										.classDetails()
+										.toJavaClass() )
+										.isEqualTo( RootConsumer.class );
+							} );
 					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( handoff.contribution() ) )
 							.containsExactly( handoff );
 					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( rootBinding ) )
@@ -304,11 +323,50 @@ public class MappedSuperclassTests {
 					final ManagedTypeBinding entityBinding = managedTypeBinding( context, GenericStringEntity.class );
 					final ManagedTypeBinding superBinding = managedTypeBinding( context, GenericMappedSuper.class );
 					final AttributeUsageBinding usage = attributeUsage( entityBinding, "genericValue" );
+					final var metadataCollector = context.getMetadataCollector();
+					final PersistentClass persistentClass =
+							metadataCollector.getEntityBinding( GenericStringEntity.class.getName() );
+					final Property genericValueProperty = persistentClass.getProperty( "genericValue" );
+					final var handoff = context.getBindingState()
+							.getMappedSuperclassPropertyHandoff( genericValueProperty );
 
 					assertThat( usage ).isInstanceOf( StandardAttributeUsageBinding.class );
 					assertThat( usage.declaration() ).isInstanceOf( IdentifiableAttributeDeclarationBinding.class );
 					assertThat( usage.declaration() ).isSameAs( superBinding.declaredAttributes().get( 0 ) );
 					assertThat( usage.resolvedType().determineRawClass().toJavaClass() ).isEqualTo( String.class );
+					assertThat( handoff ).isNotNull();
+					assertThat( context.getBindingState()
+							.getMappedSuperclassPropertyHandoff( persistentClass, genericValueProperty ) )
+							.isSameAs( handoff );
+					assertThat( handoff.attributeUsage() ).isSameAs( usage );
+					assertThat( handoff.attributeUsage().declaration() ).isSameAs( usage.declaration() );
+					assertThat( handoff.contribution().declaration().getClassDetails().toJavaClass() )
+							.isEqualTo( GenericMappedSuper.class );
+					assertThat( handoff.contribution().consumer().getClassDetails().toJavaClass() )
+							.isEqualTo( GenericStringEntity.class );
+					final var nearestEntityClassDetails =
+							handoff.contribution().nearestEntityConsumer().getClassDetails();
+					assertThat( context.getBindingState()
+							.getBootBindingModel()
+							.findAppliedMappedSuperclassAttributeUsage(
+									nearestEntityClassDetails.getName(),
+									"genericValue"
+							) )
+							.isSameAs( handoff.attributeUsage() );
+					assertThat( context.getBindingState()
+							.getBootBindingModel()
+							.findAppliedMappedSuperclassAttributeUsage(
+									nearestEntityClassDetails.getClassName(),
+									"genericValue"
+							) )
+							.isSameAs( handoff.attributeUsage() );
+					assertThat( context.getBindingState()
+							.getBootBindingModel()
+							.findAppliedMappedSuperclassAttributeUsage(
+									GenericStringEntity.class.getName(),
+									"genericValue"
+							) )
+							.isSameAs( handoff.attributeUsage() );
 					assertThat( entityBinding.declaredAttributes() )
 							.extracting( "attributeName" )
 							.doesNotContain( "genericValue" );
@@ -319,6 +377,36 @@ public class MappedSuperclassTests {
 				scope.getRegistry(),
 				GenericMappedSuper.class,
 				GenericStringEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void genericMappedSuperclassToOneAttributesAreIndexedByEntityName(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final AttributeUsageBinding childUsage = bootBindingModel.findAppliedMappedSuperclassAttributeUsage(
+							"ToOneParent",
+							"child"
+					);
+					final AttributeUsageBinding parentUsage = bootBindingModel.findAppliedMappedSuperclassAttributeUsage(
+							"ToOneChild",
+							"parent"
+					);
+
+					assertThat( childUsage ).isNotNull();
+					assertThat( childUsage.resolvedType().determineRawClass().toJavaClass() )
+							.isEqualTo( ToOneChild.class );
+					assertThat( parentUsage ).isNotNull();
+					assertThat( parentUsage.resolvedType().determineRawClass().toJavaClass() )
+							.isEqualTo( ToOneParent.class );
+				},
+				scope.getRegistry(),
+				GenericToOneParent.class,
+				ToOneParent.class,
+				GenericToOneChild.class,
+				ToOneChild.class
 		);
 	}
 
@@ -343,6 +431,60 @@ public class MappedSuperclassTests {
 				GenericCollectionMappedSuper.class,
 				GenericCollectionEntity.class,
 				GenericCollectionChild.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void genericMappedSuperclassIdentifierIsResolvedFromIdentifierBinding(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var identifierBinding = bootBindingModel.findEntityIdentifierBinding(
+							GenericIntegerIdEntity.class.getName()
+					);
+					final PersistentClass persistentClass = context.getMetadataCollector()
+							.getEntityBinding( GenericIntegerIdEntity.class.getName() );
+					final Property identifierProperty = persistentClass.getIdentifierProperty();
+
+					assertThat( identifierBinding ).isNotNull();
+					assertThat( identifierBinding.identifierMember() ).isNotNull();
+					assertThat( identifierBinding.identifierMember().getType().getTypeKind() )
+							.isEqualTo( TypeDetails.Kind.TYPE_VARIABLE );
+					assertThat( new IdentifierHandoffResolver( bootBindingModel )
+							.isConcreteGenericIdentifier( persistentClass, identifierProperty ) )
+							.isTrue();
+				},
+				scope.getRegistry(),
+				GenericIdentifierMappedSuper.class,
+				GenericIntegerIdEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void genericMappedSuperclassIdentifierWithExplicitEntityNameIsResolvedFromIdentifierBinding(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var identifierBinding = bootBindingModel.findEntityIdentifierBinding(
+							"ExplicitGenericIdEntity"
+					);
+					final PersistentClass persistentClass = context.getMetadataCollector()
+							.getEntityBinding( ExplicitGenericIdEntity.class.getName() );
+					final Property identifierProperty = persistentClass.getIdentifierProperty();
+
+					assertThat( identifierBinding ).isNotNull();
+					assertThat( identifierBinding.identifierMember() ).isNotNull();
+					assertThat( identifierBinding.identifierMember().getType().getTypeKind() )
+							.isEqualTo( TypeDetails.Kind.TYPE_VARIABLE );
+					assertThat( new IdentifierHandoffResolver( bootBindingModel )
+							.isConcreteGenericIdentifier( persistentClass, identifierProperty ) )
+							.isTrue();
+				},
+				scope.getRegistry(),
+				GenericIdentifierAndDataMappedSuper.class,
+				ExplicitGenericIdEntity.class
 		);
 	}
 
@@ -442,6 +584,51 @@ public class MappedSuperclassTests {
 
 	@Entity
 	public static class GenericStringEntity extends GenericMappedSuper<String> {
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public abstract static class GenericToOneParent<T> {
+		@OneToOne
+		private T child;
+	}
+
+	@Entity( name = "ToOneParent" )
+	public static class ToOneParent extends GenericToOneParent<ToOneChild> {
+		@Id
+		private Long id;
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public abstract static class GenericToOneChild<T> {
+		@OneToOne
+		private T parent;
+	}
+
+	@Entity( name = "ToOneChild" )
+	public static class ToOneChild extends GenericToOneChild<ToOneParent> {
+		@Id
+		private Long id;
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class GenericIdentifierMappedSuper<T> {
+		@Id
+		private T id;
+	}
+
+	@Entity
+	public static class GenericIntegerIdEntity extends GenericIdentifierMappedSuper<Integer> {
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class GenericIdentifierAndDataMappedSuper<T, S> {
+		@Id
+		private T id;
+		private S data;
+	}
+
+	@Entity(name = "ExplicitGenericIdEntity")
+	public static class ExplicitGenericIdEntity extends GenericIdentifierAndDataMappedSuper<Integer, String> {
 	}
 
 	@jakarta.persistence.MappedSuperclass

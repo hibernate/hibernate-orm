@@ -7,10 +7,10 @@ package org.hibernate.orm.test.mapping.onetoone.primarykey;
 import java.util.List;
 import java.util.Properties;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -38,12 +38,16 @@ public class NullablePrimaryKeyTest {
 		var serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );
 
 		try {
-			var ms = new MetadataSources( serviceRegistry );
-			ms.addAnnotatedClass( Address.class );
-			ms.addAnnotatedClass( Person.class );
 			final List<String> commands =
 					new SchemaCreatorImpl( serviceRegistry )
-							.generateCreationCommands( ms.buildMetadata(), false );
+							.generateCreationCommands(
+									MetadataBuildingTestHelper.buildMetadata(
+											serviceRegistry,
+											Address.class,
+											Person.class
+									),
+									false
+							);
 
 			String expectedMappingTableSql =
 					"create table personAddress (address_id bigint not null, person_id bigint not null, primary key (person_id))";

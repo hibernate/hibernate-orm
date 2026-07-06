@@ -143,7 +143,6 @@ public interface CacheSettings {
 	 *
 	 * @settingDefault The cache provider's default strategy
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyAccessType(org.hibernate.cache.spi.access.AccessType)
 	 * @see RegionFactory#getDefaultAccessType
 	 */
 	String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";

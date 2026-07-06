@@ -80,6 +80,14 @@ public class DomainModelCategorizationCollector {
 		}
 	}
 
+	public void applyDiscoveredEmbeddable(ClassDetails classDetails) {
+		final String className = classDetails.getClassName();
+		if ( className != null && !embeddables.containsKey( className ) ) {
+			collectGlobalRegistrations( classDetails );
+			embeddables.put( className, classDetails );
+		}
+	}
+
 	public void apply(JaxbEntityMappingsImpl jaxbRoot, XmlDocumentContext xmlDocumentContext) {
 		getGlobalRegistrations().collectJavaTypeRegistrations( jaxbRoot.getJavaTypeRegistrations() );
 		getGlobalRegistrations().collectJdbcTypeRegistrations( jaxbRoot.getJdbcTypeRegistrations() );

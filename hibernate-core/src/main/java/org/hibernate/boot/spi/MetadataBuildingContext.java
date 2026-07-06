@@ -4,26 +4,32 @@
  */
 package org.hibernate.boot.spi;
 
-import org.hibernate.Incubating;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionServices;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
-import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
-import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
 import static org.hibernate.audit.AuditStrategy.DEFAULT;
 import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
- * Describes the context in which the process of building {@link org.hibernate.boot.Metadata}
- * from {@link org.hibernate.boot.MetadataSources} occurs.
+ * Describes the context in which the process of building {@link org.hibernate.boot.Metadata}.
  * <p>
  * {@link MetadataBuildingContext}s are hierarchical: global, persistence unit, document, mapping.
  *
@@ -34,12 +40,14 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 public interface MetadataBuildingContext {
 	BootstrapContext getBootstrapContext();
 
+	MappingResolutionServices getServiceComponents();
+
 	/**
-	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}
+	 * Access to the metadata building plan.
 	 *
-	 * @return The options
+	 * @return The plan
 	 */
-	MetadataBuildingOptions getBuildingOptions();
+	MappingResolutionOptions getBuildingPlan();
 
 	/**
 	 * Access to mapping defaults in effect for this context
@@ -62,75 +70,6 @@ public interface MetadataBuildingContext {
 	 */
 	ObjectNameNormalizer getObjectNameNormalizer();
 
-	private StandardServiceRegistry getRegistry() {
-		return getBootstrapContext().getServiceRegistry();
-	}
-
-	@Incubating
-	default int getPreferredSqlTypeCodeForBoolean() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getRegistry() );
-	}
-
-	@Incubating
-	default int getPreferredSqlTypeCodeForDuration() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForDuration( getRegistry() );
-	}
-
-	@Incubating
-	default int getPreferredSqlTypeCodeForUuid() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForUuid( getRegistry() );
-	}
-
-	@Incubating
-	default int getPreferredSqlTypeCodeForInstant() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getRegistry() );
-	}
-
-	@Incubating
-	default int getPreferredSqlTypeCodeForArray() {
-		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getRegistry() );
-	}
-
-	@Incubating
-	default boolean isPreferJavaTimeJdbcTypesEnabled() {
-		return isPreferJavaTimeJdbcTypesEnabled( getRegistry() );
-	}
-
-	@Incubating
-	default boolean isPreferNativeEnumTypesEnabled() {
-		return isPreferNativeEnumTypesEnabled( getRegistry() );
-	}
-
-	@Incubating
-	default boolean isPreferLocaleLanguageTagEnabled() {
-		return isPreferLocaleLanguageTagEnabled( getRegistry() );
-	}
-
-	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
-		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
-	}
-
-	static boolean isPreferNativeEnumTypesEnabled(ServiceRegistry serviceRegistry) {
-		return isPreferNativeEnumTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
-	}
-
-	static boolean isPreferLocaleLanguageTagEnabled(ServiceRegistry serviceRegistry) {
-		return isPreferLocaleLanguageTagEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
-	}
-
-	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
-		return getBoolean( JAVA_TIME_USE_DIRECT_JDBC, configurationService.getSettings() );
-	}
-
-	static boolean isPreferNativeEnumTypesEnabled(ConfigurationService configurationService) {
-		//TODO: HHH-17905 proposes to switch this default to true
-		return getBoolean( PREFER_NATIVE_ENUM_TYPES, configurationService.getSettings() );
-	}
-
-	static boolean isPreferLocaleLanguageTagEnabled(ConfigurationService configurationService) {
-		return getBoolean( PREFER_LOCALE_LANGUAGE_TAG, configurationService.getSettings() );
-	}
-
 	TypeDefinitionRegistry getTypeDefinitionRegistry();
 
 	/**
@@ -144,5 +83,64 @@ public interface MetadataBuildingContext {
 
 	default AuditStrategy getAuditStrategy() {
 		return DEFAULT;
+	}
+
+	default JpaCompliance getJpaCompliance() {
+		return getBootstrapContext().getJpaCompliance();
+	}
+
+	default void registerAdHocBasicType(BasicType<?> basicType) {
+	}
+
+	default <T> BasicType<T> resolveAdHocBasicType(String key) {
+		return null;
+	}
+
+	default <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
+		return null;
+	}
+
+	default ServiceRegistry getServiceRegistry() {
+		return getServiceComponents().getServiceRegistry();
+	}
+
+	default StandardServiceRegistry getStandardServiceRegistry() {
+		return getServiceComponents().getStandardServiceRegistry();
+	}
+
+	default ConfigurationService getConfigurationService() {
+		return getServiceComponents().getConfigurationService();
+	}
+
+	default ClassLoaderService getClassLoaderService() {
+		return getServiceComponents().getClassLoaderService();
+	}
+
+	default ClassLoaderAccess getClassLoaderAccess() {
+		return getServiceComponents().getClassLoaderAccess();
+	}
+
+	default ManagedBeanRegistry getManagedBeanRegistry() {
+		return getServiceComponents().getManagedBeanRegistry();
+	}
+
+	default BeanInstanceProducer getCustomTypeProducer() {
+		return getServiceComponents().getCustomTypeProducer();
+	}
+
+	default ModelsContext getModelsContext() {
+		return getServiceComponents().getModelsContext();
+	}
+
+	default TypeConfiguration getTypeConfiguration() {
+		return getServiceComponents().getTypeConfiguration();
+	}
+
+	default JdbcServices getJdbcServices() {
+		return getServiceComponents().getJdbcServices();
+	}
+
+	default ChangesetCoordinator getChangesetCoordinator() {
+		return getServiceComponents().getChangesetCoordinator();
 	}
 }

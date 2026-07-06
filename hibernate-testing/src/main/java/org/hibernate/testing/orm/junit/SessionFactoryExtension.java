@@ -219,7 +219,7 @@ public class SessionFactoryExtension
 			}
 			settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, true );
 		}
-		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
+		final StandardServiceRegistry serviceRegistry = model.getMappingResolutionOptions().getServiceRegistry();
 
 		SchemaManagementToolCoordinator.process(
 				model,

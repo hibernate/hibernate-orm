@@ -59,9 +59,8 @@ the implementation using the `hibernate.implicit_naming_strategy` configuration 
 * reference to a Class that implements the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
 * FQN of a class that implements the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract
 
-Secondly, applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy`
-to specify the ImplicitNamingStrategy to use.  See
-<<chapters/bootstrap/Bootstrap.adoc#bootstrap,Bootstrap>> for additional details on bootstrapping.
+The same setting may be applied through native bootstrap.  See
+<<chapters/bootstrap/Bootstrap.adoc#bootstrap,Bootstrap>> for additional details.
 
 
 [NOTE]
@@ -114,8 +113,7 @@ the implementation using the `hibernate.physical_naming_strategy` configuration 
 * reference to a Class that implements the `org.hibernate.boot.model.naming.PhysicalNamingStrategy` contract
 * FQN of a class that implements the `org.hibernate.boot.model.naming.PhysicalNamingStrategy` contract
 
-Secondly, applications and integrations can leverage `org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy`.
-See <<chapters/bootstrap/Bootstrap.adoc#bootstrap,Bootstrap>> for additional details on bootstrapping.
-
+The same setting may be applied through native bootstrap.
+See <<chapters/bootstrap/Bootstrap.adoc#bootstrap,Bootstrap>> for additional details.
 
 

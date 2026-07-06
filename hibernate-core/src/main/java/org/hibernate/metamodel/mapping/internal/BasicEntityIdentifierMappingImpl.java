@@ -14,9 +14,9 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -70,7 +70,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	private final BasicType<Object> idType;
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
@@ -108,7 +108,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
 		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ID_ROLE_NAME );
-		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		sessionFactoryAccess = creationProcess.getCreationContext().getSessionFactoryAccess();
 
 		unsavedStrategy = UnsavedValueFactory.getUnsavedIdentifierValue(
 				bootEntityDescriptor.getIdentifier(),
@@ -254,7 +254,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				expressionResolver.resolveSqlExpression( rootTableReference, this ),
 				idType.getJdbcJavaType(),
 				fetchParent,
-				sessionFactory.getTypeConfiguration()
+				sessionFactoryAccess.getSessionFactory().getTypeConfiguration()
 		);
 	}
 

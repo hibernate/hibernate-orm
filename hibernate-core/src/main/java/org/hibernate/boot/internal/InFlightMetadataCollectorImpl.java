@@ -13,6 +13,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Imported;
 import org.hibernate.boot.CacheRegionDefinition;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionContributions;
+import org.hibernate.boot.mapping.internal.context.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -23,29 +27,15 @@ import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
-import org.hibernate.boot.model.internal.AggregateComponentSecondPass;
 import org.hibernate.boot.model.internal.AnnotatedClassType;
-import org.hibernate.boot.model.internal.CreateKeySecondPass;
-import org.hibernate.boot.model.internal.FkSecondPass;
-import org.hibernate.boot.model.internal.IdGeneratorResolver;
-import org.hibernate.boot.model.internal.ImplicitToOneJoinTableSecondPass;
-import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;
-import org.hibernate.boot.model.internal.QuerySecondPass;
-import org.hibernate.boot.model.internal.SecondaryTableFromAnnotationSecondPass;
-import org.hibernate.boot.model.internal.SecondaryTableSecondPass;
-import org.hibernate.boot.model.internal.SetBasicValueTypeSecondPass;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
-import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
-import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -54,10 +44,9 @@ import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -104,18 +93,17 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbeddable;
-import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
-import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.models.internal.ManagedTypeMetadata.isEmbeddable;
+import static org.hibernate.boot.models.internal.ManagedTypeMetadata.isEntity;
+import static org.hibernate.boot.models.internal.ManagedTypeMetadata.isMappedSuperclass;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
  * The implementation of the {@linkplain InFlightMetadataCollector in-flight
@@ -131,7 +119,9 @@ public class InFlightMetadataCollectorImpl
 		implements InFlightMetadataCollector, ConverterRegistry, GeneratorSettings {
 
 	private final BootstrapContext bootstrapContext;
-	private final MetadataBuildingOptions options;
+	private final MappingResolutionOptions buildingPlan;
+	private final MappingResolutionContributions mappingContributions;
+	private final SqmFunctionRegistry functionRegistry;
 
 	private final GlobalRegistrations globalRegistrations;
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
@@ -180,13 +170,20 @@ public class InFlightMetadataCollectorImpl
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Set<DelayedPropertyReferenceHandler> delayedPropertyReferenceHandlers;
-	private List<Function<MetadataBuildingContext, Boolean>> valueResolvers;
 
 	public InFlightMetadataCollectorImpl(
 			BootstrapContext bootstrapContext,
-			MetadataBuildingOptions options) {
+			MappingResolutionOptions buildingPlan) {
+		this( bootstrapContext, buildingPlan, MappingResolutionContributions.EMPTY );
+	}
+
+	public InFlightMetadataCollectorImpl(
+			BootstrapContext bootstrapContext,
+			MappingResolutionOptions buildingPlan,
+			MappingResolutionContributions mappingContributions) {
 		this.bootstrapContext = bootstrapContext;
-		this.options = options;
+		this.buildingPlan = buildingPlan;
+		this.mappingContributions = mappingContributions == null ? MappingResolutionContributions.EMPTY : mappingContributions;
 
 		uuid = UUID.randomUUID();
 
@@ -195,10 +192,16 @@ public class InFlightMetadataCollectorImpl
 
 		// we need this to be a ConcurrentHashMap for the one we ultimately pass along to the SF,
 		// but is this the reference that gets passed along?
-		sqlFunctionMap = new ConcurrentHashMap<>( bootstrapContext.getSqlFunctions() );
+		sqlFunctionMap = new ConcurrentHashMap<>( this.mappingContributions.sqlFunctions() );
+		functionRegistry = this.mappingContributions.functionRegistry() == null
+				? new SqmFunctionRegistry()
+				: this.mappingContributions.functionRegistry();
 
-		bootstrapContext.getAuxiliaryDatabaseObjectList()
+		this.mappingContributions.auxiliaryDatabaseObjects()
 				.forEach( getDatabase()::addAuxiliaryDatabaseObject );
+
+		this.mappingContributions.attributeConverters()
+				.forEach( getConverterRegistry()::addAttributeConverter );
 
 		configurationService = bootstrapContext.getConfigurationService();
 	}
@@ -213,8 +216,8 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
-		return options;
+	public MappingResolutionOptions getMappingResolutionOptions() {
+		return buildingPlan;
 	}
 
 	@Override
@@ -239,14 +242,14 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
-		return bootstrapContext.getFunctionRegistry();
+		return functionRegistry;
 	}
 
 	@Override
 	public Database getDatabase() {
 		// important to delay this instantiation until as late as possible.
 		if ( database == null ) {
-			database = new Database( options );
+			database = new Database( buildingPlan );
 		}
 		return database;
 	}
@@ -330,16 +333,6 @@ public class InFlightMetadataCollectorImpl
 			Class<?> embeddableClass,
 			Supplier<DiscriminatorType<?>> supplier) {
 		return embeddableDiscriminatorTypesMap.computeIfAbsent( embeddableClass, k -> supplier.get() );
-	}
-
-	@Override
-	public SessionFactoryImplementor buildSessionFactory() {
-		throw new UnsupportedOperationException(
-				"""
-				You should not be building a SessionFactory from an in-flight metadata collector; \
-				and of course we should better segment this in the API :)
-				"""
-		);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -426,14 +419,6 @@ public class InFlightMetadataCollectorImpl
 	@Override
 	public void addTypeDefinition(TypeDefinition typeDefinition) {
 		typeDefRegistry.register( typeDefinition );
-	}
-
-	@Override
-	public void registerValueMappingResolver(Function<MetadataBuildingContext, Boolean> resolver) {
-		if ( valueResolvers == null ) {
-			valueResolvers = new ArrayList<>();
-		}
-		valueResolvers.add( resolver );
 	}
 
 	@Override
@@ -1428,42 +1413,6 @@ public class InFlightMetadataCollectorImpl
 		}
 
 		@Override
-		public void addSecondaryTable(
-				LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin) {
-			if ( Identifier.areEqual( primaryTableLogicalName, logicalName ) ) {
-				throw new org.hibernate.boot.MappingException(
-						String.format(
-								Locale.ENGLISH,
-								"Attempt to add secondary table with same name as primary table [%s]",
-								primaryTableLogicalName
-						),
-						buildingContext.getOrigin()
-				);
-			}
-
-			if ( secondaryTableJoinMap == null ) {
-				//secondaryTableJoinMap = new HashMap<Identifier,Join>();
-				//secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
-				secondaryTableJoinMap = new HashMap<>();
-				secondaryTableJoinMap.put( logicalName.getCanonicalName(), secondaryTableJoin );
-			}
-			else {
-				//final Join existing = secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
-				final Join existing = secondaryTableJoinMap.put( logicalName.getCanonicalName(), secondaryTableJoin );
-				if ( existing != null ) {
-					throw new org.hibernate.boot.MappingException(
-							String.format(
-									Locale.ENGLISH,
-									"Added secondary table with same name [%s]",
-									logicalName
-							),
-							buildingContext.getOrigin()
-					);
-				}
-			}
-		}
-
-		@Override
 		public void addSecondaryTable(QualifiedTableName logicalQualifiedTableName, Join secondaryTableJoin) {
 			final Identifier tableName = logicalQualifiedTableName.getTableName();
 
@@ -1549,329 +1498,20 @@ public class InFlightMetadataCollectorImpl
 		}
 	}
 
-	private ArrayList<IdGeneratorResolver> idGeneratorResolverSecondPassList;
-	private ArrayList<SetBasicValueTypeSecondPass> setBasicValueTypeSecondPassList;
-	private ArrayList<AggregateComponentSecondPass> aggregateComponentSecondPassList;
-	private ArrayList<FkSecondPass> fkSecondPassList;
-	private ArrayList<CreateKeySecondPass> createKeySecondPassList;
-	private ArrayList<ImplicitToOneJoinTableSecondPass> toOneJoinTableSecondPassList;
-	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
-	private ArrayList<SecondaryTableFromAnnotationSecondPass> secondaryTableFromAnnotationSecondPassesList;
-	private ArrayList<QuerySecondPass> querySecondPassList;
-	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNamingSecondPassList;
-
-	private ArrayList<SecondPass> generalSecondPassList;
-	private ArrayList<OptionalDeterminationSecondPass> optionalDeterminationSecondPassList;
-
-	@Override
-	public void addSecondPass(SecondPass secondPass) {
-		addSecondPass( secondPass, false );
-	}
-
-	@Override
-	public void addSecondPass(SecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( secondPass instanceof IdGeneratorResolver generatorResolver ) {
-			addIdGeneratorResolverSecondPass( generatorResolver, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof SetBasicValueTypeSecondPass setBasicValueTypeSecondPass ) {
-			addSetBasicValueTypeSecondPass( setBasicValueTypeSecondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof AggregateComponentSecondPass aggregateComponentSecondPass ) {
-			addAggregateComponentSecondPass( aggregateComponentSecondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof FkSecondPass fkSecondPass ) {
-			addFkSecondPass( fkSecondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof CreateKeySecondPass createKeySecondPass ) {
-			addCreateKeySecondPass( createKeySecondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof ImplicitToOneJoinTableSecondPass implicitToOneJoinTableSecondPass ) {
-			addImplicitToOneJoinTableSecondPass( implicitToOneJoinTableSecondPass );
-		}
-		else if ( secondPass instanceof SecondaryTableSecondPass secondaryTableSecondPass ) {
-			addSecondaryTableSecondPass( secondaryTableSecondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof SecondaryTableFromAnnotationSecondPass secondaryTableFromAnnotationSecondPass ) {
-			addSecondaryTableFromAnnotationSecondPass( secondaryTableFromAnnotationSecondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof QuerySecondPass querySecondPass ) {
-			addQuerySecondPass( querySecondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof ImplicitColumnNamingSecondPass implicitColumnNamingSecondPass ) {
-			addImplicitColumnNamingSecondPass( implicitColumnNamingSecondPass );
-		}
-		else if ( secondPass instanceof OptionalDeterminationSecondPass optionalDeterminationSecondPass ) {
-			addOptionalDeterminationSecondPass( optionalDeterminationSecondPass );
-		}
-		else {
-			// add to the general SecondPass list
-			if ( generalSecondPassList == null ) {
-				generalSecondPassList = new ArrayList<>();
-			}
-			addSecondPass( secondPass, generalSecondPassList, onTopOfTheQueue );
-		}
-	}
-
-	private <T extends SecondPass> void addSecondPass(T secondPass, ArrayList<T> secondPassList, boolean onTopOfTheQueue) {
-		if ( onTopOfTheQueue ) {
-			secondPassList.add( 0, secondPass );
-		}
-		else {
-			secondPassList.add( secondPass );
-		}
-	}
-
-	private void addSetBasicValueTypeSecondPass(SetBasicValueTypeSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( setBasicValueTypeSecondPassList == null ) {
-			setBasicValueTypeSecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, setBasicValueTypeSecondPassList, onTopOfTheQueue );
-	}
-
-	private void addAggregateComponentSecondPass(AggregateComponentSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( aggregateComponentSecondPassList == null ) {
-			aggregateComponentSecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, aggregateComponentSecondPassList, onTopOfTheQueue );
-	}
-
-	private void addIdGeneratorResolverSecondPass(IdGeneratorResolver secondPass, boolean onTopOfTheQueue) {
-		if ( idGeneratorResolverSecondPassList == null ) {
-			idGeneratorResolverSecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, idGeneratorResolverSecondPassList, onTopOfTheQueue );
-	}
-
-	private void addFkSecondPass(FkSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( fkSecondPassList == null ) {
-			fkSecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, fkSecondPassList, onTopOfTheQueue );
-	}
-
-	private void addCreateKeySecondPass(CreateKeySecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( createKeySecondPassList == null ) {
-			createKeySecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, createKeySecondPassList, onTopOfTheQueue );
-	}
-
-	private void addImplicitToOneJoinTableSecondPass(ImplicitToOneJoinTableSecondPass secondPass) {
-		if ( toOneJoinTableSecondPassList == null ) {
-			toOneJoinTableSecondPassList = new ArrayList<>();
-		}
-		toOneJoinTableSecondPassList.add( secondPass );
-	}
-
-	private void addSecondaryTableSecondPass(SecondaryTableSecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( secondaryTableSecondPassList == null ) {
-			secondaryTableSecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, secondaryTableSecondPassList, onTopOfTheQueue );
-	}
-
-	private void addSecondaryTableFromAnnotationSecondPass(
-			SecondaryTableFromAnnotationSecondPass secondPass, boolean onTopOfTheQueue){
-		if ( secondaryTableFromAnnotationSecondPassesList == null ) {
-			secondaryTableFromAnnotationSecondPassesList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, secondaryTableFromAnnotationSecondPassesList, onTopOfTheQueue );
-	}
-
-	private void addQuerySecondPass(QuerySecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( querySecondPassList == null ) {
-			querySecondPassList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, querySecondPassList, onTopOfTheQueue );
-	}
-
-	private void addImplicitColumnNamingSecondPass(ImplicitColumnNamingSecondPass secondPass) {
-		if ( implicitColumnNamingSecondPassList == null ) {
-			implicitColumnNamingSecondPassList = new ArrayList<>();
-		}
-		implicitColumnNamingSecondPassList.add( secondPass );
-	}
-
-	private void addOptionalDeterminationSecondPass(OptionalDeterminationSecondPass secondPass) {
-		if ( optionalDeterminationSecondPassList == null ) {
-			optionalDeterminationSecondPassList = new ArrayList<>();
-		}
-		optionalDeterminationSecondPassList.add( secondPass );
-	}
-
-
-	private boolean inSecondPass = false;
-
-
 	/**
 	 * Ugh!  But we need this done before we ask Envers to produce its entities.
 	 */
 	public void processSecondPasses(MetadataBuildingContext buildingContext) {
-		assert !inSecondPass;
-		inSecondPass = true;
+		composites.forEach( Component::sortProperties );
 
-		try {
-			processSecondPasses( idGeneratorResolverSecondPassList );
-			processSecondPasses( implicitColumnNamingSecondPassList );
-			processSecondPasses( setBasicValueTypeSecondPassList );
-			processSecondPasses( toOneJoinTableSecondPassList );
+		processPropertyReferences();
 
-			composites.forEach( Component::sortProperties );
+		secondPassCompileForeignKeys( buildingContext );
 
-			processFkSecondPassesInOrder();
+		processNaturalIdUniqueKeyBinders();
 
-			processSecondPasses( createKeySecondPassList );
-			processSecondPasses( secondaryTableSecondPassList );
+		processCachingOverrides();
 
-			processSecondPasses( querySecondPassList );
-			processSecondPasses( generalSecondPassList );
-			processSecondPasses( optionalDeterminationSecondPassList );
-
-			processPropertyReferences();
-
-			processSecondPasses( aggregateComponentSecondPassList );
-			secondPassCompileForeignKeys( buildingContext );
-
-			processNaturalIdUniqueKeyBinders();
-
-			processCachingOverrides();
-
-			processValueResolvers( buildingContext );
-		}
-		finally {
-			inSecondPass = false;
-		}
-	}
-
-	private void processValueResolvers(MetadataBuildingContext buildingContext) {
-		if ( valueResolvers != null ) {
-			while ( !valueResolvers.isEmpty() ) {
-				final boolean anyRemoved =
-						valueResolvers.removeIf( resolver -> resolver.apply( buildingContext ) );
-				if ( !anyRemoved ) {
-					throw new MappingException( "Unable to complete initialization of boot meta-model" );
-				}
-			}
-		}
-	}
-
-	private void processSecondPasses(ArrayList<? extends SecondPass> secondPasses) {
-		if ( secondPasses != null ) {
-			for ( var secondPass : secondPasses ) {
-				secondPass.doSecondPass( getEntityBindingMap() );
-			}
-			secondPasses.clear();
-		}
-	}
-
-	private void processFkSecondPassesInOrder() {
-		if ( fkSecondPassList == null || fkSecondPassList.isEmpty() ) {
-			processSecondPasses( secondaryTableFromAnnotationSecondPassesList );
-		}
-		else {
-			// split FkSecondPass instances into primary key and non primary key FKs.
-			// While doing so build a map of class names to FkSecondPass instances depending on this class.
-			final Map<String, Set<FkSecondPass>> isADependencyOf = new HashMap<>();
-			final List<FkSecondPass> endOfQueueFkSecondPasses = new ArrayList<>( fkSecondPassList.size() );
-			for ( var fkSecondPass : fkSecondPassList ) {
-				if ( fkSecondPass.isInPrimaryKey() ) {
-					final String referencedEntityName = fkSecondPass.getReferencedEntityName();
-					final var classMapping = getEntityBinding( referencedEntityName );
-					if ( classMapping == null ) {
-						throw new HibernateException( "Primary key referenced an unknown entity: "
-													+ referencedEntityName );
-					}
-					final String dependentTable = classMapping.getTable().getQualifiedTableName().render();
-					if ( !isADependencyOf.containsKey( dependentTable ) ) {
-						isADependencyOf.put( dependentTable, new HashSet<>() );
-					}
-					isADependencyOf.get( dependentTable ).add( fkSecondPass );
-				}
-				else {
-					endOfQueueFkSecondPasses.add( fkSecondPass );
-				}
-			}
-
-			// using the isADependencyOf map we order the FkSecondPass recursively instances into the right order for processing
-			final List<FkSecondPass> orderedFkSecondPasses = new ArrayList<>( fkSecondPassList.size() );
-			for ( String tableName : isADependencyOf.keySet() ) {
-				buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, tableName, tableName );
-			}
-
-			// process the ordered FkSecondPasses
-			for ( var sp : orderedFkSecondPasses ) {
-				sp.doSecondPass( getEntityBindingMap() );
-			}
-
-			processSecondPasses( secondaryTableFromAnnotationSecondPassesList );
-
-			processEndOfQueue( endOfQueueFkSecondPasses );
-
-			fkSecondPassList.clear();
-		}
-	}
-
-	/**
-	 * Recursively builds a list of {@link FkSecondPass} instances ready to be processed in this order.
-	 * Checking all dependencies recursively seems quite expensive, but the original code just relied
-	 * on some sort of table name sorting which failed in certain circumstances.
-	 * <p>
-	 * See {@code ANN-722} and {@code ANN-730}
-	 *
-	 * @param orderedFkSecondPasses The list containing the {@link FkSecondPass} instances ready
-	 * for processing.
-	 * @param isADependencyOf Our lookup data structure to determine dependencies between tables
-	 * @param startTable Table name to start recursive algorithm.
-	 * @param currentTable The current table name used to check for 'new' dependencies.
-	 */
-	private void buildRecursiveOrderedFkSecondPasses(
-			List<FkSecondPass> orderedFkSecondPasses,
-			Map<String, Set<FkSecondPass>> isADependencyOf,
-			String startTable,
-			String currentTable) {
-		final Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
-		if ( dependencies != null ) {
-			for ( var fkSecondPass : dependencies ) {
-				final String dependentTable = fkSecondPass.getValue().getTable().getQualifiedTableName().render();
-				if ( dependentTable.compareTo( startTable ) != 0 ) {
-					buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
-				}
-				if ( !orderedFkSecondPasses.contains( fkSecondPass ) ) {
-					orderedFkSecondPasses.add( 0, fkSecondPass );
-				}
-			}
-		}
-		// else bottom out
-	}
-
-	private void processEndOfQueue(List<FkSecondPass> endOfQueueFkSecondPasses) {
-		// If a second pass raises a recoverableException, queue it for next round
-		// stop of no pass has to be processed or if the number of pass to processes
-		// does not diminish between two rounds.
-		// If some failing pass remain, raise the original exception
-		boolean stopProcess = false;
-		RuntimeException originalException = null;
-		while ( !stopProcess ) {
-			List<FkSecondPass> failingSecondPasses = new ArrayList<>();
-			for ( var pass : endOfQueueFkSecondPasses ) {
-				try {
-					pass.doSecondPass( getEntityBindingMap() );
-				}
-				catch (FailedSecondPassException e) {
-					failingSecondPasses.add( pass );
-					if ( originalException == null ) {
-						originalException = (RuntimeException) e.getCause();
-					}
-				}
-			}
-			stopProcess = failingSecondPasses.isEmpty()
-							|| failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
-			endOfQueueFkSecondPasses = failingSecondPasses;
-		}
-		if ( !endOfQueueFkSecondPasses.isEmpty() ) {
-			assert originalException != null;
-			throw originalException;
-		}
 	}
 
 	private void secondPassCompileForeignKeys(MetadataBuildingContext buildingContext) {
@@ -1899,7 +1539,7 @@ public class InFlightMetadataCollectorImpl
 					foreignKey.setReferencedTable( referencedClass.getTable() );
 				}
 				final Identifier nameIdentifier =
-						getMetadataBuildingOptions().getImplicitNamingStrategy()
+						getMappingResolutionOptions().getImplicitNamingStrategy()
 								.determineForeignKeyName( new ForeignKeyNameSource( foreignKey, table, buildingContext ) );
 				foreignKey.setName( nameIdentifier.render( dialect ) );
 				foreignKey.alignColumns();
@@ -1945,8 +1585,8 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private void processCachingOverrides() {
-		if ( bootstrapContext.getCacheRegionDefinitions() != null ) {
-			for ( var cacheRegionDefinition : bootstrapContext.getCacheRegionDefinitions() ) {
+		if ( !mappingContributions.cacheRegionDefinitions().isEmpty() ) {
+			for ( var cacheRegionDefinition : mappingContributions.cacheRegionDefinitions() ) {
 				if ( cacheRegionDefinition.regionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
 					final var entityBinding = getEntityBinding( cacheRegionDefinition.role() );
 					if ( entityBinding == null ) {
@@ -1978,11 +1618,6 @@ public class InFlightMetadataCollectorImpl
 		}
 	}
 
-	@Override
-	public boolean isInSecondPass() {
-		return inSecondPass;
-	}
-
 	/**
 	 * Builds the complete and immutable Metadata instance from the collected info.
 	 *
@@ -1995,7 +1630,7 @@ public class InFlightMetadataCollectorImpl
 		try {
 			return new MetadataImpl(
 					uuid,
-					options,
+					buildingPlan,
 					entityBindingMap,
 					composites,
 					genericComponentsMap,
@@ -2012,6 +1647,7 @@ public class InFlightMetadataCollectorImpl
 					namedProcedureCallMap,
 					sqlResultSetMappingMap,
 					namedEntityGraphMap,
+					functionRegistry,
 					sqlFunctionMap,
 					getDatabase(),
 					bootstrapContext

@@ -52,7 +52,7 @@
 /// In the broader design this package belongs to an eventual
 /// `org.hibernate.boot.mapping` pipeline:
 ///
-/// 1. available resources are gathered;
+/// 1. resolved mapping sources are gathered;
 /// 2. XML and annotation sources are normalized;
 /// 3. sources are categorized into managed-type facts;
 /// 4. this model records and resolves the boot-time semantic interpretation;

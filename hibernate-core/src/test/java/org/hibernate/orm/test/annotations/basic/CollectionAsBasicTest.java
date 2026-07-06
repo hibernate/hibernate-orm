@@ -9,11 +9,11 @@ import java.util.Set;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.usertype.UserTypeSupport;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -32,7 +32,7 @@ public class CollectionAsBasicTest {
 	public void testCollectionAsBasic() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
-			Metadata metadata = new MetadataSources(ssr).addAnnotatedClass( Post.class ).getMetadataBuilder().build();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, Post.class );
 			PersistentClass postBinding = metadata.getEntityBinding( Post.class.getName() );
 			Property tagsAttribute = postBinding.getProperty( "tags" );
 		}

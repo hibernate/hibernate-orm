@@ -8,39 +8,16 @@
  * for Hibernate. They collectively provide a way to specify configuration
  * information and construct a new instance of {@link org.hibernate.SessionFactory}.
  * <p>
- * Configuring Hibernate using these APIs usually involves working with:
- * <ol>
- * <li>{@link org.hibernate.boot.registry.StandardServiceRegistryBuilder},
- *     then
- * <li>{@link org.hibernate.boot.MetadataSources} and
- *     {@link org.hibernate.boot.MetadataBuilder}, and
- * <li>finally, {@link org.hibernate.boot.Metadata#buildSessionFactory()}.
- * </ol>
+ * Native programmatic bootstrap is exposed via
+ * {@link org.hibernate.jpa.HibernatePersistenceConfiguration}, which extends
+ * Jakarta Persistence's programmatic bootstrap API with Hibernate-specific
+ * conveniences.
  * <pre>
- * StandardServiceRegistry standardRegistry =
- *         new StandardServiceRegistryBuilder()
- *                 // set a configuration property
- *                 .applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
- *                 .build();
- * MetadataBuilder metadataBuilder =
- *         new MetadataSources(standardRegistry)
- *                 // supply annotated classes
- *                 .addAnnotatedClass(MyEntity.class)
- *                 .addAnnotatedClassName("org.hibernate.example.Customer")
- *                 // supply XML-based mappings
- *                 .addResource("org/hibernate/example/Order.hbm.xml")
- *                 .addResource("org/hibernate/example/Product.orm.xml")
- *                 .getMetadataBuilder();
- * Metadata metadata =
- *         metadataBuilder
- *                 // set the naming strategies
- *                 .applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
- *                 .applyPhysicalNamingStrategy(new CustomPhysicalNamingStrategy())
- *                 // add a TypeContributor
- *                 .applyTypes(new CustomTypeContributor())
- *                 .build();
  * SessionFactory sessionFactory =
- *         metadata.buildSessionFactory();
+ *         new org.hibernate.jpa.HibernatePersistenceConfiguration("example")
+ *                 .property(AvailableSettings.HBM2DDL_AUTO, "create-drop")
+ *                 .managedClass(MyEntity.class)
+ *                 .createEntityManagerFactory();
  * </pre>
  * <p>
  * In more advanced scenarios,
@@ -54,8 +31,7 @@
  * <li>{@linkplain org.hibernate.boot.registry implementations} of
  *     {@link org.hibernate.service.ServiceRegistry} used during
  *     the bootstrap process,
- * <li>implementations of {@link org.hibernate.boot.MetadataBuilder}
- *     and {@link org.hibernate.boot.Metadata},
+ * <li>implementations of {@link org.hibernate.boot.Metadata},
  * <li>{@linkplain org.hibernate.boot.model.naming support} for
  *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
  *     and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy},

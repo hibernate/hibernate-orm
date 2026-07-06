@@ -6,6 +6,7 @@ package org.hibernate.engine.extension.spi;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.extension.internal.ExtensionIntegrationServiceImpl;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
@@ -21,7 +22,8 @@ public class ExtensionIntegrationServiceInitiator
 	@Override
 	@Nonnull
 	public ExtensionIntegrationService initiateService(@Nonnull SessionFactoryServiceInitiatorContext context) {
-		return ExtensionIntegrationServiceImpl.create( Set.of(), context.getSessionFactory().getClassLoaderService() );
+		final var classLoaderService = context.getServiceRegistry().requireService( ClassLoaderService.class );
+		return ExtensionIntegrationServiceImpl.create( Set.of(), classLoaderService );
 	}
 
 	@Override

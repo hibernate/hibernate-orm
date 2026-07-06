@@ -10,7 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -48,12 +48,12 @@ class UniqueConstraintColumnOrderTest {
 
 		Path ddlScript = tempDir.resolve( "ddl.sql" );
 
-		try (var metadataBootstrap = SessionFactoryBootstrap.resolveMetadata( puDescriptor, settings )) {
+		try (var metadataResolution = BootstrapPipeline.resolveMetadata( puDescriptor, settings )) {
 			new SchemaExport()
 					.setHaltOnError( true )
 					.setOutputFile( ddlScript.toString() )
 					.setFormat( true )
-					.create( EnumSet.of( TargetType.SCRIPT ), metadataBootstrap.metadata() );
+					.create( EnumSet.of( TargetType.SCRIPT ), metadataResolution.metadata() );
 		}
 
 		String ddl = Files.readString( ddlScript );

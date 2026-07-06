@@ -36,7 +36,7 @@ public class IdGeneratorCreationContext implements GeneratorCreationContext {
 
 	public IdGeneratorCreationContext(MetadataImplementor domainModel, RootClass entityMapping) {
 		this(
-				domainModel.getMetadataBuildingOptions().getServiceRegistry(),
+				domainModel.getMappingResolutionOptions().getServiceRegistry(),
 				domainModel,
 				entityMapping
 		);

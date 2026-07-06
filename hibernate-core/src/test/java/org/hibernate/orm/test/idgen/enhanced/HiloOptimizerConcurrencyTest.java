@@ -9,12 +9,12 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.hibernate.tool.schema.Action;
@@ -70,16 +70,17 @@ public class HiloOptimizerConcurrencyTest {
 
 	private void inSessionFactory(boolean createSchema, Consumer<SessionFactoryImplementor> action) {
 		try (var serviceRegistry = createServiceRegistry( createSchema )) {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( HibPerson.class )
-					.buildMetadata();
-			try (var sessionFactory = metadata.buildSessionFactory()) {
+			final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					HibPerson.class
+			);
+			try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 				action.accept(  sessionFactory );
 			}
 		}
 	}
 
-	private ServiceRegistry createServiceRegistry(boolean createSchema) {
+	private StandardServiceRegistry createServiceRegistry(boolean createSchema) {
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
 		if ( createSchema ) {
 			ssrb.applySetting( HBM2DDL_AUTO, Action.CREATE_DROP );

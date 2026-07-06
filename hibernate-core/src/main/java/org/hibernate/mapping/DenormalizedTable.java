@@ -70,7 +70,7 @@ public class DenormalizedTable extends Table {
 
 			final var denormalizedForeignKey = createDenormalizedForeignKey( foreignKey );
 			createForeignKey(
-					context.getBuildingOptions()
+					context.getBuildingPlan()
 							.getImplicitNamingStrategy()
 							.determineForeignKeyName( new ForeignKeyNameSource( denormalizedForeignKey, this, context ) )
 							.render( context.getMetadataCollector().getDatabase().getDialect() ),

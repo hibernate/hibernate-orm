@@ -5,8 +5,7 @@
 package org.hibernate.tool.language;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.tool.language.domain.Address;
 import org.hibernate.tool.language.domain.Company;
 import org.hibernate.tool.language.domain.Employee;
@@ -47,11 +46,11 @@ public class MetamodelJsonSerializerTest {
 
 	@Test
 	public void testSimpleDomainModel() {
-		final Metadata metadata = new MetadataSources().addAnnotatedClass( Address.class )
-				.addAnnotatedClass( Company.class )
-				.addAnnotatedClass( Employee.class )
-				.buildMetadata();
-		try (final SessionFactory sf = metadata.buildSessionFactory()) {
+		try (final SessionFactory sf = new HibernatePersistenceConfiguration( "metamodel-simple" )
+				.managedClass( Address.class )
+				.managedClass( Company.class )
+				.managedClass( Employee.class )
+				.createEntityManagerFactory()) {
 			try {
 				final JsonNode root = toJson( sf.getMetamodel() );
 
@@ -97,12 +96,12 @@ public class MetamodelJsonSerializerTest {
 	@Test
 	public void testMappedSuperclasses() {
 		// We need entities that extend mapped-superclasses, otherwise they will just be ignored
-		final Metadata metadata = new MetadataSources().addAnnotatedClass( MappedSuperWithEmbeddedId.class )
-				.addAnnotatedClass( Entity1.class )
-				.addAnnotatedClass( MappedSuperWithoutId.class )
-				.addAnnotatedClass( Entity2.class )
-				.buildMetadata();
-		try (final SessionFactory sf = metadata.buildSessionFactory()) {
+		try (final SessionFactory sf = new HibernatePersistenceConfiguration( "metamodel-mapped-superclasses" )
+				.managedClass( MappedSuperWithEmbeddedId.class )
+				.managedClass( Entity1.class )
+				.managedClass( MappedSuperWithoutId.class )
+				.managedClass( Entity2.class )
+				.createEntityManagerFactory()) {
 			try {
 				final JsonNode root = toJson( sf.getMetamodel() );
 
@@ -139,8 +138,9 @@ public class MetamodelJsonSerializerTest {
 	@Test
 	public void testStandardDomainModelInheritance() {
 		final Class<?>[] annotatedClasses = AnimalDomainModel.INSTANCE.getAnnotatedClasses();
-		final Metadata metadata = new MetadataSources().addAnnotatedClasses( annotatedClasses ).buildMetadata();
-		try (final SessionFactory sf = metadata.buildSessionFactory()) {
+		try (final SessionFactory sf = new HibernatePersistenceConfiguration( "metamodel-animal-domain" )
+				.managedClasses( annotatedClasses )
+				.createEntityManagerFactory()) {
 			try {
 				final Metamodel metamodel = sf.getMetamodel();
 				final JsonNode root = toJson( metamodel );

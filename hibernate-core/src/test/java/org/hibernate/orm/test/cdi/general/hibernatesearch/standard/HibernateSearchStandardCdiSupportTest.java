@@ -6,7 +6,6 @@ package org.hibernate.orm.test.cdi.general.hibernatesearch.standard;
 
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.se.SeContainer;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -28,6 +27,7 @@ import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNamedDependentBean;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNestedDependentBean;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNonHibernateBeanConsumer;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheSharedApplicationScopedBean;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.delayed.HibernateSearchDelayedCdiSupportTest;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.extended.HibernateSearchExtendedCdiSupportTest;
 import org.hibernate.orm.test.cdi.testsupport.CdiContainer;
@@ -189,10 +189,9 @@ public class HibernateSearchStandardCdiSupportTest {
 				.build();
 
 		try {
-			return (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata()
-					.buildSessionFactory();
+			return (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( ssr, TheEntity.class )
+			);
 	}
 		catch ( Exception e ) {
 			StandardServiceRegistryBuilder.destroy( ssr );

@@ -118,7 +118,8 @@ public class IdentifierBinder {
 		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				typeMetadata,
 				false,
-				null
+				null,
+				idAttributeMember
 		);
 		final IdentifierAttributeBinding attributeBinding = new IdentifierAttributeBinding(
 				idAttribute.getName(),
@@ -654,7 +655,8 @@ public class IdentifierBinder {
 		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				false,
-				null
+				null,
+				componentSource.sourceMember()
 		);
 		for ( ComponentSource.ComponentMember componentMember : componentSource.members() ) {
 			if ( componentMember.member().hasDirectAnnotationUsage( org.hibernate.annotations.Parent.class ) ) {

@@ -10,10 +10,11 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
 import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
@@ -84,21 +85,11 @@ public class ValidateConstraintTests implements ServiceRegistryProducer {
 	void testValidationOfConstraints(ServiceRegistryScope registryScope) {
 		final ServiceRegistryImplementor registry = (ServiceRegistryImplementor) registryScope.getRegistry();
 
-		final Metadata schema1 = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Gender.class, Person1.class )
-				.buildMetadata();
-		final Metadata schema2 = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Gender.class, Person2.class )
-				.buildMetadata();
-		final Metadata schema3 = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Gender.class, Person3.class )
-				.buildMetadata();
-		final Metadata schema4 = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Gender.class, Person4.class )
-				.buildMetadata();
-		final Metadata schema5 = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Gender.class, Person5.class )
-				.buildMetadata();
+		final Metadata schema1 = buildMetadata( registryScope, Person1.class );
+		final Metadata schema2 = buildMetadata( registryScope, Person2.class );
+		final Metadata schema3 = buildMetadata( registryScope, Person3.class );
+		final Metadata schema4 = buildMetadata( registryScope, Person4.class );
+		final Metadata schema5 = buildMetadata( registryScope, Person5.class );
 
 		final HibernateSchemaManagementTool schemaTooling = new HibernateSchemaManagementTool();
 		schemaTooling.injectServices( registry );
@@ -176,6 +167,15 @@ public class ValidateConstraintTests implements ServiceRegistryProducer {
 		createSchema( schema5, schemaTooling, registry );
 		schemaToDrop = schema5;
 
+	}
+
+	private Metadata buildMetadata(ServiceRegistryScope registryScope, Class<?> personClass) {
+		return MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				new MappingSources()
+						.addManagedClass( Gender.class )
+						.addManagedClass( personClass )
+		);
 	}
 
 	private void validateSchema(

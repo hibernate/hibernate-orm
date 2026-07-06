@@ -7,8 +7,8 @@ package org.hibernate.orm.test.jpa.compliance.tck2_2;
 import java.util.Collections;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -28,9 +28,9 @@ public class ClosedFactoryTests {
 	@Test
 	public void testClosedChecks(ServiceRegistryScope scope) {
 
-			final SessionFactory sf = new MetadataSources( scope.getRegistry() )
-					.buildMetadata()
-					.buildSessionFactory();
+			final SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( scope.getRegistry() )
+			);
 
 			sf.close();
 

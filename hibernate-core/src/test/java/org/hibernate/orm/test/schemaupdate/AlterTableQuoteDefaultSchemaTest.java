@@ -14,8 +14,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -24,6 +22,7 @@ import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -100,22 +99,11 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
+				.applySetting( AvailableSettings.DEFAULT_SCHEMA, "default-schema" )
 				.build();
 
 		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr ) {
-				@Override
-				public MetadataBuilder getMetadataBuilder() {
-					MetadataBuilder metadataBuilder = super.getMetadataBuilder();
-					metadataBuilder.applyImplicitSchemaName( "default-schema" );
-					return metadataBuilder;
-				}
-			};
-			metadataSources.addAnnotatedClass( MyEntity.class );
-
-			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, MyEntity.class );
 
 			new SchemaUpdate()
 					.setHaltOnError( true )
@@ -144,21 +132,13 @@ public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSch
 
 		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
+				.applySetting( AvailableSettings.DEFAULT_SCHEMA, "default-schema" )
 				.build();
 		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr ) {
-				@Override
-				public MetadataBuilder getMetadataBuilder() {
-					MetadataBuilder metadataBuilder = super.getMetadataBuilder();
-					metadataBuilder.applyImplicitSchemaName( "default-schema" );
-					return metadataBuilder;
-				}
-			};
-			metadataSources.addAnnotatedClass( MyEntityUpdated.class );
-
-			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+					ssr,
+					MyEntityUpdated.class
+			);
 
 			new SchemaUpdate()
 					.setHaltOnError( true )

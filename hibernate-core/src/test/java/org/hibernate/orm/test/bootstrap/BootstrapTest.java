@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.bootstrap;
 
-import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,17 +18,12 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
@@ -39,11 +33,9 @@ import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.orm.test.mapping.basic.bitset.BitSetType;
-import org.hibernate.orm.test.mapping.basic.bitset.BitSetUserType;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -114,186 +106,113 @@ public class BootstrapTest {
 
 	@Test
 	@Disabled
-	public void testMetadataSources() {
-		//tag::example-bootstrap-native-MetadataSources[]
-		ServiceRegistry standardRegistry =
-				new StandardServiceRegistryBuilder().build();
-
-		MetadataSources sources = new MetadataSources(standardRegistry);
+	public void testHibernatePersistenceConfigurationSources() {
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration-sources[]
+		HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( "CRM" );
 
 		// add a class using JPA/Hibernate annotations for mapping
-		sources.addAnnotatedClass(MyEntity.class);
+		configuration.managedClass(MyEntity.class);
 
 		// add the name of a class using JPA/Hibernate annotations for mapping.
 		// differs from above in that accessing the Class is deferred which is
 		// important if using runtime bytecode-enhancement
-		sources.addAnnotatedClassName("org.hibernate.example.Customer");
+		configuration.managedClassName("org.hibernate.example.Customer");
 
 		// Read package-level metadata.
-		sources.addPackage("hibernate.example");
+		configuration.packageName("hibernate.example");
 
 		// Adds the named JPA orm.xml resource as a source: which performs the
 		// classpath lookup and parses the XML
-		sources.addResource("org/hibernate/example/Product.orm.xml");
-		//end::example-bootstrap-native-MetadataSources[]
+		configuration.mappingResource("org/hibernate/example/Product.orm.xml");
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration-sources[]
 	}
 
 	@Test
 	@Disabled
-	public void testMetadataSourcesChaining() {
-		//tag::example-bootstrap-native-MetadataSources-chained[]
-		ServiceRegistry standardRegistry =
-				new StandardServiceRegistryBuilder().build();
-
-		MetadataSources sources = new MetadataSources(standardRegistry)
-				.addAnnotatedClass(MyEntity.class)
-				.addAnnotatedClassName("org.hibernate.example.Customer")
-				.addPackage("hibernate.example")
-				.addResource("org/hibernate/example/Product.orm.xml");
-		//end::example-bootstrap-native-MetadataSources-chained[]
+	public void testHibernatePersistenceConfigurationSourcesChaining() {
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration-sources-chained[]
+		HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( "CRM" )
+				.managedClass(MyEntity.class)
+				.managedClassName("org.hibernate.example.Customer")
+				.packageName("hibernate.example")
+				.mappingResource("org/hibernate/example/Product.orm.xml");
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration-sources-chained[]
 	}
 
 	@Test
 	public void testBuildMetadataNoBuilder() {
-		ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
-		MetadataSources sources = new MetadataSources(standardRegistry).addAnnotatedClass(MyEntity.class);
-
-		//tag::example-bootstrap-native-Metadata-no-builder[]
-		Metadata metadata = sources.buildMetadata();
-		//end::example-bootstrap-native-Metadata-no-builder[]
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration-createEntityManagerFactory[]
+		SessionFactory sessionFactory = new HibernatePersistenceConfiguration( "CRM" )
+				.managedClass(MyEntity.class)
+				.createEntityManagerFactory();
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration-createEntityManagerFactory[]
+		sessionFactory.close();
 	}
 
 	@Test
 	public void testBuildMetadataUsingBuilder() {
-		ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
-		MetadataSources sources = new MetadataSources(standardRegistry).addAnnotatedClass(MyEntity.class);
-
-		//tag::example-bootstrap-native-Metadata-using-builder[]
-		Metadata metadata = sources.getMetadataBuilder()
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration-with-settings[]
+		SessionFactory sessionFactory = new HibernatePersistenceConfiguration( "CRM" )
+				.managedClass(MyEntity.class)
 				// configure second-level caching
-				.applyAccessType( AccessType.READ_WRITE )
+				.property( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-write" )
 				// default catalog
-				.applyImplicitCatalogName( "my_catalog" )
+				.defaultCatalog( "my_catalog" )
 				// default schema
-				.applyImplicitSchemaName( "my_schema" )
-				.build();
-		//end::example-bootstrap-native-Metadata-using-builder[]
+				.defaultSchema( "my_schema" )
+				.createEntityManagerFactory();
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration-with-settings[]
+		sessionFactory.close();
 	}
 
 	@Test
 	public void testBuildSessionFactoryNoBuilder() {
-		ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
-		Metadata metadata = new MetadataSources(standardRegistry)
-				.addAnnotatedClass(MyEntity.class)
-				.buildMetadata();
-
-		//tag::example-bootstrap-native-SessionFactory-no-builder[]
-		final SessionFactory sessionFactory = metadata.buildSessionFactory();
-		//end::example-bootstrap-native-SessionFactory-no-builder[]
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration-sessionFactory[]
+		final SessionFactory sessionFactory = new HibernatePersistenceConfiguration( "CRM" )
+				.managedClass(MyEntity.class)
+				.createEntityManagerFactory();
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration-sessionFactory[]
 
 		sessionFactory.close();
 	}
 
 	@Test
 	public void testBuildSessionFactoryUsingSettings() {
-		ServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
-		Metadata metadata = new MetadataSources(standardRegistry)
-				.addAnnotatedClass(MyEntity.class)
-				.buildMetadata();
-
-		//tag::example-bootstrap-native-SessionFactory-with-settings[]
-		final SessionFactory sessionFactory = metadata.buildSessionFactory();
-		//end::example-bootstrap-native-SessionFactory-with-settings[]
+	//tag::example-bootstrap-native-SessionFactory-with-settings[]
+		final SessionFactory sessionFactory = new HibernatePersistenceConfiguration( "CRM" )
+				.managedClass(MyEntity.class)
+				.property( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+				.createEntityManagerFactory();
+	//end::example-bootstrap-native-SessionFactory-with-settings[]
 
 		sessionFactory.close();
 	}
 
 	@Test
 	public void testNativeBuilders() {
-		//tag::example-bootstrap-native-MetadataBuilder[]
-		ServiceRegistry standardRegistry =
-				new StandardServiceRegistryBuilder().build();
-
-		MetadataSources sources = new MetadataSources(standardRegistry);
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration[]
+		HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( "CRM" );
 		// ...
-		//end::example-bootstrap-native-MetadataBuilder[]
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration[]
 
-		sources.addAnnotatedClass(MyEntity.class);
+		configuration.managedClass(MyEntity.class);
 
-		//tag::example-bootstrap-native-MetadataBuilder[]
-		final MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
-
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration[]
 		// configure second-level caching
-		metadataBuilder.applyAccessType( AccessType.READ_WRITE );
+		configuration.property( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-write" );
 
 		// default catalog
-		metadataBuilder.applyImplicitCatalogName( "my_catalog" );
+		configuration.defaultCatalog( "my_catalog" );
 
 		// default schema
-		metadataBuilder.applyImplicitSchemaName( "my_schema" );
-		//end::example-bootstrap-native-MetadataBuilder[]
+		configuration.defaultSchema( "my_schema" );
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration[]
 
-		//tag::example-bootstrap-native-Metadata[]
-		Metadata metadata = metadataBuilder.build();
-		// or Metadata metadata = sources.buildMetadata()
-		//end::example-bootstrap-native-Metadata[]
+		//tag::example-bootstrap-native-HibernatePersistenceConfiguration-build[]
+		SessionFactory sessionFactory = configuration.createEntityManagerFactory();
+		//end::example-bootstrap-native-HibernatePersistenceConfiguration-build[]
 
-		metadata.buildSessionFactory().close();
-	}
-
-	@Test
-	public void test_bootstrap_bootstrap_native_registry_MetadataSources_example() {
-
-		try {
-			//tag::bootstrap-bootstrap-native-registry-MetadataSources-example[]
-			ServiceRegistry standardRegistry =
-					new StandardServiceRegistryBuilder().build();
-
-			MetadataSources sources = new MetadataSources(standardRegistry);
-
-			// alternatively, we can build the MetadataSources without passing
-			// a service registry, in which case it will build a default
-			// BootstrapServiceRegistry to use.  But the approach shown
-			// above is preferred
-			// MetadataSources sources = new MetadataSources();
-
-			// add a class using JPA/Hibernate annotations for mapping
-			sources.addAnnotatedClass(MyEntity.class);
-
-			// add the name of a class using JPA/Hibernate annotations for mapping.
-			// differs from above in that accessing the Class is deferred which is
-			// important if using runtime bytecode-enhancement
-			sources.addAnnotatedClassName("org.hibernate.example.Customer");
-
-			// Read package-level metadata.
-			sources.addPackage("hibernate.example");
-
-			// Read package-level metadata.
-			sources.addPackage(MyEntity.class.getPackage());
-
-			// Adds the named hbm.xml resource as a source: which performs the
-			// classpath lookup and parses the XML
-			sources.addResource("org/hibernate/example/Order.hbm.xml");
-
-			// Adds the named JPA orm.xml resource as a source: which performs the
-			// classpath lookup and parses the XML
-			sources.addResource("org/hibernate/example/Product.orm.xml");
-
-			// Read all mapping documents from a directory tree.
-			// Assumes that any file named *.hbm.xml is a mapping document.
-			sources.addDirectory(new File("."));
-
-			// Read mappings from a particular XML file
-			sources.addFile(new File("./mapping.xml"));
-
-			// Read all mappings from a jar file.
-			// Assumes that any file named *.hbm.xml is a mapping document.
-			sources.addJar(new File("./entities.jar"));
-			//end::bootstrap-bootstrap-native-registry-MetadataSources-example[]
-		}
-		catch (Exception ignore) {
-
-		}
+		sessionFactory.close();
 	}
 
 
@@ -302,14 +221,10 @@ public class BootstrapTest {
 		try {
 			{
 				//tag::bootstrap-native-metadata-source-example[]
-				ServiceRegistry standardRegistry =
-						new StandardServiceRegistryBuilder().build();
-
-				MetadataSources sources = new MetadataSources(standardRegistry)
-					.addAnnotatedClass(MyEntity.class)
-					.addAnnotatedClassName("org.hibernate.example.Customer")
-					.addResource("org/hibernate/example/Order.hbm.xml")
-					.addResource("org/hibernate/example/Product.orm.xml");
+				HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( "CRM" )
+					.managedClass(MyEntity.class)
+					.managedClassName("org.hibernate.example.Customer")
+					.mappingResource("org/hibernate/example/Product.orm.xml");
 				//end::bootstrap-native-metadata-source-example[]
 			}
 
@@ -326,24 +241,21 @@ public class BootstrapTest {
 					}
 				} ;
 				//tag::bootstrap-native-metadata-builder-example[]
-				ServiceRegistry standardRegistry =
-					new StandardServiceRegistryBuilder().build();
-
-				MetadataSources sources = new MetadataSources(standardRegistry);
-
-				MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
+				HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( "CRM" );
 
 				// Use the JPA-compliant implicit naming strategy
-				metadataBuilder.applyImplicitNamingStrategy(
-					ImplicitNamingStrategyJpaCompliantImpl.INSTANCE);
+				configuration.property(
+					AvailableSettings.IMPLICIT_NAMING_STRATEGY,
+					"jpa");
 
 				// specify the schema name to use for tables, etc when none is explicitly specified
-				metadataBuilder.applyImplicitSchemaName("my_default_schema");
+				configuration.defaultSchema("my_default_schema");
 
 				// specify a custom Attribute Converter
-				metadataBuilder.applyAttributeConverter(myAttributeConverter);
+				configuration.managedClass(myAttributeConverter.getClass());
 
-				Metadata metadata = metadataBuilder.build();
+				SessionFactory sessionFactory = configuration.createEntityManagerFactory();
+				sessionFactory.close();
 				//end::bootstrap-native-metadata-builder-example[]
 			}
 		}
@@ -357,41 +269,29 @@ public class BootstrapTest {
 		try {
 			{
 				//tag::bootstrap-native-SessionFactory-example[]
-				StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-					.build();
+				SessionFactory sessionFactory = new HibernatePersistenceConfiguration( "CRM" )
+					.property( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+					.managedClass(MyEntity.class)
+					.managedClassName("org.hibernate.example.Customer")
+					.mappingResource("org/hibernate/example/Product.orm.xml")
+					.property(AvailableSettings.IMPLICIT_NAMING_STRATEGY, "jpa")
+					.createEntityManagerFactory();
 
-				Metadata metadata = new MetadataSources(standardRegistry)
-					.addAnnotatedClass(MyEntity.class)
-					.addAnnotatedClassName("org.hibernate.example.Customer")
-					.addResource("org/hibernate/example/Order.hbm.xml")
-					.addResource("org/hibernate/example/Product.orm.xml")
-					.getMetadataBuilder()
-					.applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
-					.build();
-
-				SessionFactory sessionFactory = metadata.buildSessionFactory();
 				sessionFactory.close();
 				//end::bootstrap-native-SessionFactory-example[]
 			}
 			{
 				//tag::bootstrap-native-SessionFactory-settings-example[]
-				StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-						.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-						.applySetting( AvailableSettings.INTERCEPTOR, new CustomSessionFactoryInterceptor() )
-						.applySetting( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, getBeanManager() )
-						.build();
+				SessionFactory sessionFactory = new HibernatePersistenceConfiguration( "CRM" )
+						.property( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+						.property( AvailableSettings.INTERCEPTOR, new CustomSessionFactoryInterceptor() )
+						.property( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, getBeanManager() )
+						.managedClass(MyEntity.class)
+						.managedClassName("org.hibernate.example.Customer")
+						.mappingResource("org/hibernate/example/Product.orm.xml")
+						.property(AvailableSettings.IMPLICIT_NAMING_STRATEGY, "jpa")
+						.createEntityManagerFactory();
 
-				Metadata metadata = new MetadataSources(standardRegistry)
-					.addAnnotatedClass(MyEntity.class)
-					.addAnnotatedClassName("org.hibernate.example.Customer")
-					.addResource("org/hibernate/example/Order.hbm.xml")
-					.addResource("org/hibernate/example/Product.orm.xml")
-					.getMetadataBuilder()
-					.applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
-					.build();
-
-				SessionFactory sessionFactory = metadata.buildSessionFactory();
 				//end::bootstrap-native-SessionFactory-settings-example[]
 				sessionFactory.close();
 			}
@@ -432,7 +332,7 @@ public class BootstrapTest {
 					new CustomSessionFactoryInterceptor()
 		);
 
-			EntityManagerFactory emf = SessionFactoryBootstrap.build(
+			EntityManagerFactory emf = BootstrapPipeline.build(
 				new PersistenceUnitInfoDescriptor(persistenceUnitInfo),
 				integrationSettings
 			);
@@ -446,7 +346,7 @@ public class BootstrapTest {
 	@Test
 	@JiraKey("HHH-17154")
 	public void build_EntityManagerFactory_with_NewTempClassLoader() {
-		try (var ignored = SessionFactoryBootstrap.resolveMetadata(
+		try (var ignored = BootstrapPipeline.resolveMetadata(
 				new PersistenceUnitInfoDescriptor(
 						new PersistenceUnitInfoImpl( "", new ArrayList<>(), new Properties() ) {
 							@Override
@@ -704,42 +604,4 @@ public class BootstrapTest {
 		}
 	}
 	//end::bootstrap-native-PersistenceUnitInfoImpl-example[]
-
-	@Test
-	public void test_basic_custom_type_register_BasicType_example() {
-		try {
-			//tag::basic-custom-type-register-BasicType-example[]
-			ServiceRegistry standardRegistry =
-					new StandardServiceRegistryBuilder().build();
-
-			MetadataSources sources = new MetadataSources( standardRegistry );
-
-			MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
-
-			metadataBuilder.applyBasicType( BitSetType.INSTANCE );
-			//end::basic-custom-type-register-BasicType-example[]
-		}
-		catch (Exception ignore) {
-
-		}
-	}
-
-	@Test
-	public void test_basic_custom_type_register_UserType_example() {
-		try {
-			//tag::basic-custom-type-register-UserType-example[]
-			ServiceRegistry standardRegistry =
-				new StandardServiceRegistryBuilder().build();
-
-			MetadataSources sources = new MetadataSources(standardRegistry);
-
-			MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
-
-			metadataBuilder.applyBasicType(new BitSetUserType(), "bitset");
-			//end::basic-custom-type-register-UserType-example[]
-		}
-		catch (Exception ignore) {
-
-		}
-	}
 }

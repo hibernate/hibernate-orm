@@ -507,7 +507,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	 */
 	public void doDrop(Metadata metadata, boolean manageNamespaces, GenerationTarget... targets) {
 		final var serviceRegistry =
-				( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
+				( (MetadataImplementor) metadata ).getMappingResolutionOptions()
 						.getServiceRegistry();
 		doDrop(
 				metadata,

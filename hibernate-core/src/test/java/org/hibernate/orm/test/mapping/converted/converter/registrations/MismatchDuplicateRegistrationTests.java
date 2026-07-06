@@ -6,8 +6,8 @@ package org.hibernate.orm.test.mapping.converted.converter.registrations;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.ConverterRegistration;
-import org.hibernate.boot.MetadataSources;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -28,7 +28,7 @@ public class MismatchDuplicateRegistrationTests {
 	@Test
 	@ExpectedException(AnnotationException.class)
 	public void verifyMappingError(ServiceRegistryScope registryScope) {
-		new MetadataSources( registryScope.getRegistry() ).addAnnotatedClass( TroublesomeEntity.class ).buildMetadata();
+		MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), TroublesomeEntity.class );
 	}
 
 	@Entity( name = "TroublesomeEntity" )

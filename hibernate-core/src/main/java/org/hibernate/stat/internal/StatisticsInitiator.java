@@ -41,7 +41,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 				context.getServiceRegistry().requireService( ConfigurationService.class )
 						.getSettings().get( STATS_BUILDER );
 		final var statisticsFactory = statisticsFactory( configValue, context.getServiceRegistry() );
-		final var statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
+		final var statistics = statisticsFactory.buildStatistics( context.getSessionFactoryAccess().getSessionFactory() );
 		final boolean enabled = context.getSessionFactoryOptions().isStatisticsEnabled();
 		STATISTICS_LOGGER.statisticsInitialized();
 		statistics.setStatisticsEnabled( enabled );

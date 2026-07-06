@@ -5,7 +5,8 @@
 package org.hibernate.tool.reveng.lint.SchemaAnalyzer;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.SequenceMismatchStrategy;
@@ -46,11 +47,13 @@ public class TestCase {
 		ssrb.applySetting(
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
 				SequenceMismatchStrategy.NONE);
-		MetadataSources metadataSources = new MetadataSources(ssrb.build());
-		metadataSources.addAnnotatedClass(Category.class);
-		metadataSources.addAnnotatedClass(BadType.class);
-		metadataSources.addAnnotatedClass(MissingTable.class);
-		Metadata metadata = metadataSources.buildMetadata();
+		Metadata metadata = MetadataBuildingHelper.buildMetadata(
+				ssrb.build(),
+				new MappingSources()
+						.addManagedClass(Category.class)
+						.addManagedClass(BadType.class)
+						.addManagedClass(MissingTable.class)
+		);
 		SchemaByMetaDataDetector analyzer = new SchemaByMetaDataDetector();
 		analyzer.initialize(metadata);
 

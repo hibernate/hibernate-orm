@@ -5,10 +5,8 @@
 package org.hibernate.orm.test.boot.models;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
@@ -22,13 +20,14 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.jandex.internal.JandexModelsContextImpl;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
@@ -46,6 +45,9 @@ import static org.hibernate.models.internal.BaseLineJavaTypes.forEachJavaType;
 import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
 /**
+ * Test helper for creating source-model contexts and applying XML overlays.
+ * This helper intentionally does not build legacy metadata.
+ *
  * @author Steve Ebersole
  */
 public class SourceModelTestHelper {
@@ -125,8 +127,8 @@ public class SourceModelTestHelper {
 	public static ModelsContext createBuildingContext(
 			ManagedResources managedResources,
 			StandardServiceRegistry serviceRegistry) {
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext =
 				new BootstrapContextImpl( serviceRegistry, metadataBuildingOptions );
 		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
@@ -142,8 +144,8 @@ public class SourceModelTestHelper {
 			ManagedResources managedResources,
 			Index jandexIndex,
 			StandardServiceRegistry serviceRegistry) {
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
 		final BootstrapContextTesting bootstrapContext =
 				new BootstrapContextTesting( jandexIndex, serviceRegistry, metadataBuildingOptions );
 		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
@@ -158,14 +160,8 @@ public class SourceModelTestHelper {
 	public static ModelsContext createBuildingContext(
 			ManagedResources managedResources,
 			boolean buildJandexIndex,
-			MetadataBuildingOptions metadataBuildingOptions,
+			MappingResolutionOptions metadataBuildingOptions,
 			BootstrapContext bootstrapContext) {
-		MetadataBuildingProcess.complete(
-				managedResources,
-				bootstrapContext,
-				metadataBuildingOptions
-		);
-
 		final ClassLoaderService classLoaderService =
 				bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
@@ -201,6 +197,8 @@ public class SourceModelTestHelper {
 
 		final RootMappingDefaults rootMappingDefaults =
 				new RootMappingDefaults( metadataBuildingOptions.getMappingDefaults(), persistenceUnitMetadata );
+		final var metadataBuildingContext =
+				new MetadataBuildingContextTestingImpl( bootstrapContext.getServiceRegistry() );
 
 		final GlobalRegistrationsImpl globalRegistrations =
 				new GlobalRegistrationsImpl( ModelsContext, bootstrapContext );
@@ -214,7 +212,7 @@ public class SourceModelTestHelper {
 				persistenceUnitMetadata,
 				modelCategorizationCollector::apply,
 				ModelsContext,
-				bootstrapContext,
+				metadataBuildingContext,
 				rootMappingDefaults
 		);
 

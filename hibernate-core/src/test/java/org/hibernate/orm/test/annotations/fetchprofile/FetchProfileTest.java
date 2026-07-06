@@ -5,8 +5,10 @@
 package org.hibernate.orm.test.annotations.fetchprofile;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -39,11 +41,13 @@ public class FetchProfileTest {
 	@Test
 	@ServiceRegistry
 	public void testWrongAssociationName(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Customer2.class, Order.class, Country.class );
-
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					registryScope.getRegistry(),
+					Customer2.class,
+					Order.class,
+					Country.class
+			);
 			fail( "Expecting an exception, but none thrown" );
 		}
 		catch (MappingException expected) {
@@ -53,11 +57,13 @@ public class FetchProfileTest {
 	@Test
 	@ServiceRegistry
 	public void testWrongClass(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Customer2.class, Order.class, Country.class );
-
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					registryScope.getRegistry(),
+					Customer2.class,
+					Order.class,
+					Country.class
+			);
 			fail( "Expecting an exception, but none thrown" );
 		}
 		catch (MappingException expected) {
@@ -76,11 +82,14 @@ public class FetchProfileTest {
 	@ServiceRegistry
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-19417" )
 	public void testXmlOverride(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Customer5.class, Order.class, Country.class )
-				.addResource( "org/hibernate/orm/test/annotations/fetchprofile/mappings.xml" );
+		final Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				new MappingSources()
+						.addManagedClasses( Customer5.class, Order.class, Country.class )
+						.addMappingResource( "org/hibernate/orm/test/annotations/fetchprofile/mappings.xml" )
+		);
 		try ( SessionFactoryImplementor sessionFactory =
-					(SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory() ) {
+					(SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata ) ) {
 			assertThat( sessionFactory.containsFetchProfileDefinition( "orders-profile" ) ).isTrue();
 		}
 	}
@@ -88,10 +97,13 @@ public class FetchProfileTest {
 	@Test
 	@ServiceRegistry
 	public void testMissingXmlOverride(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Customer5.class, Order.class, Country.class );
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					registryScope.getRegistry(),
+					Customer5.class,
+					Order.class,
+					Country.class
+			);
 			fail( "Expecting an exception, but none thrown" );
 		}
 		catch (MappingException expected) {

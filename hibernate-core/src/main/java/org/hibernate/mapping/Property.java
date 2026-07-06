@@ -494,6 +494,19 @@ public class Property implements Serializable, MetaAttributable {
 		this.naturalIdentifier = naturalIdentifier;
 	}
 
+	/**
+	 * Whether this property represents the generic declaration-side view of an
+	 * attribute.
+	 * <p>
+	 * A generic property is the compatibility {@code Property} used for the
+	 * declaring mapped type when the source member type still contains unresolved
+	 * type variables.  For example, for {@code @MappedSuperclass class Base<T>}
+	 * declaring {@code T value}, the declaration-side property for {@code value}
+	 * is generic.
+	 * <p>
+	 * This is different from {@link #isGenericSpecialization()}, which marks a
+	 * copied property representing a concrete use of such a declaration.
+	 */
 	public boolean isGeneric() {
 		return isGeneric;
 	}
@@ -502,6 +515,23 @@ public class Property implements Serializable, MetaAttributable {
 		this.isGeneric = generic;
 	}
 
+	/**
+	 * Whether this property represents a concrete specialization of a generic
+	 * declaration-side property.
+	 * <p>
+	 * A generic-specialization property is usually a copied compatibility
+	 * {@code Property} attached to a concrete entity hierarchy after type-variable
+	 * substitution has been applied.  For example, if
+	 * {@code Customer extends Base<String>}, the copied property for
+	 * {@code Customer#value} is the specialization of the generic declaration
+	 * {@code Base<T>#value}.
+	 * <p>
+	 * This flag is a bridge for legacy {@code org.hibernate.mapping} consumers.
+	 * Newer boot binding metadata should prefer applied attribute usage metadata
+	 * when available.
+	 *
+	 * @see #isGeneric()
+	 */
 	public boolean isGenericSpecialization() {
 		return isGenericSpecialization;
 	}
@@ -618,7 +648,7 @@ public class Property implements Serializable, MetaAttributable {
 
 		@Override
 		public ServiceRegistry getServiceRegistry() {
-			return context.getBootstrapContext().getServiceRegistry();
+			return context.getServiceRegistry();
 		}
 
 		@Override

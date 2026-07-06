@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import org.hibernate.action.queue.spi.PlanningOptions;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -36,6 +37,8 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
@@ -121,6 +124,7 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		private final SessionFactoryImplementor sessionFactory;
 		private final SessionFactoryScope scope;
 		private final JdbcServices jdbcServices;
+		private final BootBindingModel bootBindingModel = new BootBindingModel();
 
 		public ModelCreationContext(SessionFactoryImplementor sessionFactory, SessionFactoryScope scope, JdbcServices jdbcServices) {
 			this.sessionFactory = sessionFactory;
@@ -151,6 +155,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		@Override
 		public MetadataImplementor getBootModel() {
 			return scope.getMetadataImplementor();
+		}
+
+		@Override
+		public BootBindingModel getBootBindingModel() {
+			return bootBindingModel;
 		}
 
 		@Override
@@ -196,6 +205,16 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 					null,
 					null
 			);
+		}
+
+		@Override
+		public WrapperOptions getWrapperOptions() {
+			return sessionFactory.getWrapperOptions();
+		}
+
+		@Override
+		public ChangesetCoordinator getChangesetCoordinator() {
+			return sessionFactory.getChangesetCoordinator();
 		}
 
 		@Override

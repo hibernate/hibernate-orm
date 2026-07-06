@@ -41,13 +41,13 @@ public class EmbeddedAttributeProcessing {
 
 		memberDetails.applyAnnotationUsage(
 				JpaAnnotations.EMBEDDED,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		if ( StringHelper.isNotEmpty( jaxbEmbedded.getTarget() ) ) {
 			final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
 					XmlAnnotations.TARGET,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			targetAnn.value( determineTargetName( jaxbEmbedded.getTarget(), xmlDocumentContext ) );
 		}

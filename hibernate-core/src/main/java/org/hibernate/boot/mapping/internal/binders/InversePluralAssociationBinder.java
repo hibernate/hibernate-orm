@@ -261,12 +261,12 @@ class InversePluralAssociationBinder {
 				owningProperty.getMemberDetails().getDeclaringType().getClassName(),
 				owningProperty.getName(),
 				null,
-				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+				entityBinder.getBindingContext().getModelsContext()
 		).valueForeignKeySource( null );
 		return foreignKeySource == null
 				? !owningElement.isForeignKeyEnabled()
 				: foreignKeySource.isNoConstraint(
-						bindingState.getMetadataBuildingContext().getBuildingOptions().isNoConstraintByDefault()
+						bindingState.getMetadataBuildingContext().getBuildingPlan().isNoConstraintByDefault()
 				);
 	}
 
@@ -404,7 +404,7 @@ class InversePluralAssociationBinder {
 			Collection inverseCollection) {
 		final CollectionSource source = CollectionSource.oneToMany(
 				inverseBinding.attributeMetadata().getMember(),
-				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+				entityBinder.getBindingContext().getModelsContext()
 		);
 		if ( !( inverseCollection instanceof org.hibernate.mapping.Map inverseMap ) ) {
 			if ( inverseCollection instanceof IndexedCollection indexedCollection ) {
@@ -468,20 +468,26 @@ class InversePluralAssociationBinder {
 	}
 
 	private BasicValue copyBasicIndex(org.hibernate.mapping.Map inverseMap, BasicValue owningIndex) {
-		final BasicValue inverseIndex = new BasicValue(
+		final BasicValue inverseIndex = BasicValue.unregistered(
 				bindingState.getMetadataBuildingContext(),
 				inverseMap.getCollectionTable()
-		);
-		inverseIndex.copyTypeFrom( owningIndex );
-		if ( inverseIndex.getImplicitJavaTypeAccess() == null ) {
-			inverseIndex.setImplicitJavaTypeAccess( (typeConfiguration) -> owningIndex.resolve()
-					.getDomainJavaType()
-					.getJavaType() );
-		}
+			);
+			inverseIndex.copyTypeFrom( owningIndex );
 		for ( Column column : owningIndex.getColumns() ) {
 			inverseIndex.addColumn( copyColumn( inverseMap.getCollectionTable(), column, column.isUnique() ) );
 		}
+		bindingState.addPostAttributeValueResolution( () ->
+				inverseIndex.applyResolution( owningIndex.resolve() )
+		);
 		return inverseIndex;
+	}
+
+	private static BasicValue.Resolution<?> requireResolution(BasicValue basicValue) {
+		final BasicValue.Resolution<?> resolution = basicValue.getResolution();
+		if ( resolution == null ) {
+			throw new IllegalStateException( "BasicValue resolution has not been applied: " + basicValue );
+		}
+		return resolution;
 	}
 
 	private Value copyIndexValue(

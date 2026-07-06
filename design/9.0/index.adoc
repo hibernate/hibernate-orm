@@ -58,16 +58,37 @@ Use this document when reasoning about custom `SessionFactory` implementations,
 the replacement for builder-factory extension points, and which work should move
 out of the `SessionFactoryImpl` constructor.
 
+link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`]
+
+This is the focused design note for customization ownership during bootstrap.
+It records how explicit user/API customizations should be grouped, how ambient
+integrations should be applied by product-specific owners, and why
+`BootstrapContext` should not become a general state bag for mapping options,
+function registries, or contribution buckets.
+
+Use this document when changing `MappingCustomizations`, function contributor
+ordering, type contributor handling, SessionFactory customizations,
+`BootstrapContext` surface area, or normalized bootstrap request state.
+
 link:orm-bootstrap-direction.adoc[`orm-bootstrap-direction.adoc`]
 
 This is a historical direction note from the early PoC.  It explains why the
 work moved toward a normalized source model, explicit settings resolution,
-`AvailableResources`, categorization, and phased binding.
+`PreparedMappingSources`, categorization, and phased binding.
 
 Read it for background and rationale.  Prefer the design and plan documents
 above for the current target.
 
 == Model Binding and Integration
+
+link:boot-model-terminology.adoc[`boot-model-terminology.adoc`]
+
+This is the glossary for the ORM 9 boot-model vocabulary.  It explains
+`Binding`, `Declaration`, `Usage`, `Contribution`, `Applied`, `Handoff`,
+`Correspondence`, and `View` using one small mapped-superclass generic example.
+
+Read this before the focused contribution notes when the object names start to
+blur together.
 
 link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
 
@@ -101,13 +122,6 @@ and index creation explicit instead of hiding it behind `Value`, `Collection`,
 Use this document when changing `Collection#createPrimaryKeyIfNeeded()`,
 `Value#createUniqueKey()`, `Value#createForeignKey()`, table-key creation,
 correspondence-backed FK creation, or uniqueness/constraint materialization.
-
-link:mapping-finalization-design.adoc[`mapping-finalization-design.adoc`]
-
-This is the focused design note for replacing new-pipeline legacy `SecondPass`
-callbacks with named boot mapping finalization work.  Use it when moving
-discriminator, aggregate, constraint, or similar all-facts-known mapping side
-effects out of the legacy second-pass queue.
 
 link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
 
@@ -144,6 +158,19 @@ eventual mapping-model reshaping.
 Use this document when a fix touches more than one of the focused model areas,
 or when deciding whether to add a bridge fact, sidecar metadata, a resolved
 view, a runtime handoff adapter, or a mapping-model API change.
+
+link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
+
+This is the focused handoff note for mapped-superclass attributes applied to a
+concrete entity hierarchy.  It records the current
+`AttributeDeclarationBinding` -> `AttributeUsageBinding` ->
+`MappedSuperclassPropertyHandoff` pipeline, the ownership split between
+semantic boot metadata and copied `Property` compatibility, and the migration
+target for retiring ad hoc generic specialization checks.
+
+Use this document when changing mapped-superclass generic attribute handoff,
+runtime metamodel lookup, `AttributeTypeCorrespondence`, or copied
+mapped-superclass `Property` bridge behavior.
 
 link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
 
@@ -201,7 +228,7 @@ This is the design note for making aggregate-valued embeddables such as SQL
 runtime model, binder, and extractor architecture.
 
 Use this document when aggregate support exposes pressure on `Component`,
-`AggregateColumn`, `AggregateComponentSecondPass`, runtime embeddable mappings,
+`AggregateColumn`, component aggregate finalization, runtime embeddable mappings,
 or dialect aggregate read/write/extraction handling.
 
 link:annotation-coverage.adoc[`annotation-coverage.adoc`]

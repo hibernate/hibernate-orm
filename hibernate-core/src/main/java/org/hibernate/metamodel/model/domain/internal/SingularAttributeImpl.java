@@ -112,9 +112,11 @@ public class SingularAttributeImpl<D,J>
 				name,
 				this,
 				attributeType,
+				attributeJavaType,
 				relationalJavaType,
 				SINGULAR_ATTRIBUTE,
-				isGeneric
+				isGeneric,
+				isGeneric && attributeJavaType.getJavaTypeClass() == Object.class
 		);
 	}
 

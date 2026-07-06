@@ -647,7 +647,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				jpaStaticMetaModelPopulationSetting,
 				jpaMetaModelPopulationSetting,
 				runtimeModelCreationContext,
-				runtimeModelCreationContext.getBootstrapContext().getClassLoaderService(),
+				runtimeModelCreationContext.getClassLoaderService(),
 				bootBindingModel == null ? null : JpaStaticMetamodelInjectionSource.from( bootBindingModel )
 		);
 

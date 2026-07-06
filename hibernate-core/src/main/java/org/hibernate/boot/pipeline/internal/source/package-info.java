@@ -12,7 +12,7 @@
  * This package sits between ORM boot source declarations and model categorization.
  * It normalizes explicit persistence-unit declarations, programmatic persistence
  * configuration, package metadata, annotated classes, and XML mapping bindings into
- * the {@link org.hibernate.boot.models.AvailableResources} contract.
+ * the {@link org.hibernate.boot.pipeline.internal.source.PreparedMappingSources} contract.
  * Categorization then interprets those source resources.
  *
  * @author Steve Ebersole

@@ -7,7 +7,7 @@ package org.hibernate.orm.test.boot.models.xml;
 import java.util.List;
 
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
-import org.hibernate.boot.pipeline.internal.source.AvailableResources;
+import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.orm.test.boot.models.XmlHelper;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -75,12 +75,12 @@ public class XmlPhaseBoundaryTests {
 			String mappingResource,
 			ServiceRegistryScope scope) {
 		final var metadataBuildingContext = new MetadataBuildingContextTestingImpl( scope.getRegistry() );
-		final var availableResources = new AvailableResources(
+		final var resolvedMappingSources = new PreparedMappingSources(
 				List.of(),
 				List.of(),
 				List.of( XmlHelper.bindMapping( mappingResource, SIMPLE_CLASS_LOADING ) )
 		);
-		return DomainModelCategorizer.categorize( availableResources, metadataBuildingContext );
+		return DomainModelCategorizer.categorize( resolvedMappingSources, metadataBuildingContext );
 	}
 
 	@Entity

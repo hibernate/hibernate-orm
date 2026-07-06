@@ -16,7 +16,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
-import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.query.JakartaQuery;
 import jakarta.persistence.query.NativeQuery;
@@ -210,7 +209,7 @@ public abstract class QueryBinder {
 	public static void bindStaticQueries(
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getModelsContext();
 		final var processedMethods = new HashSet<MethodSignature>();
 		bindDeclaredStaticQueries( classDetails, classDetails, context, modelsContext, processedMethods );
 		if ( isJakartaDataRepository( classDetails ) ) {
@@ -837,23 +836,6 @@ public abstract class QueryBinder {
 					definition.getRegistrationName(),
 					definition.getProcedureName() );
 		}
-	}
-
-	public static void bindSqlResultSetMapping(
-			SqlResultSetMapping resultSetMappingAnn,
-			MetadataBuildingContext context,
-			boolean isDefault) {
-		bindSqlResultSetMapping( resultSetMappingAnn, context, null, isDefault );
-	}
-
-	public static void bindSqlResultSetMapping(
-			SqlResultSetMapping resultSetMappingAnn,
-			MetadataBuildingContext context,
-			AnnotationTarget location,
-			boolean isDefault) {
-		//no need to handle inSecondPass
-		context.getMetadataCollector()
-				.addSecondPass( new ResultSetMappingSecondPass( resultSetMappingAnn, context, location, isDefault ) );
 	}
 
 }

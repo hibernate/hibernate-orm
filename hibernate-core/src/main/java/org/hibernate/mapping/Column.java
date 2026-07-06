@@ -430,10 +430,13 @@ public sealed class Column
 	}
 
 	Size calculateColumnSize(Dialect dialect, MappingContext mappingContext) {
+		return calculateColumnSize( dialect, mappingContext, getValue().getType() );
+	}
+
+	Size calculateColumnSize(Dialect dialect, MappingContext mappingContext, Type type) {
 		var lengthToUse = getLength();
 		var precisionToUse = getPrecision();
 		var scaleToUse = getScale();
-		var type = getValue().getType();
 		if ( type instanceof EntityType ) {
 			type = getTypeForEntityValue( mappingContext, type, getTypeIndex() );
 		}

@@ -5,9 +5,9 @@
 package org.hibernate.orm.test.bootstrap.schema;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.Action;
@@ -43,7 +43,7 @@ public class SchemaToolingAutoActionTests {
 
 		try (StandardServiceRegistryImpl serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			// build metadata with no entity classes
-			final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry );
 			assertThat( metadata.getContributors() ).isEmpty();
 
 			final Set<ActionGrouping> groupings = ActionGrouping.interpret( metadata, props );

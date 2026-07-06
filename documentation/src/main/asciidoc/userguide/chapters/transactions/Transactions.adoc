@@ -27,7 +27,7 @@ which are built by the `org.hibernate.resource.transaction.spi.TransactionCoordi
 Which `TransactionCoordinatorBuilder` implementation to use is defined by the `hibernate.transaction.coordinator_class` setting.
 
 `jdbc` (the default for non-Jakarta Persistence applications):: Manages transactions via calls to `java.sql.Connection`
-`jta`:: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>
+`jta`:: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#PersistenceUnitInfo,Java EE bootstrapping>>
 
 If a Jakarta Persistence application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will
 automatically build the proper transaction coordinator based on the transaction type for the persistence unit.

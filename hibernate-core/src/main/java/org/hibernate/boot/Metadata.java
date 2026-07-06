@@ -27,21 +27,12 @@ import org.hibernate.type.MappingContext;
 
 /**
  * Represents the ORM model as determined by aggregating the provided mapping sources.
- * An instance may be obtained by calling {@link MetadataSources#buildMetadata()}.
  *
  * @author Steve Ebersole
  *
  * @since 5.0
  */
 public interface Metadata extends MappingContext {
-	/**
-	 * Short-hand form of building a {@link org.hibernate.SessionFactory}
-	 * without any additional option overrides.
-	 *
-	 * @return THe built SessionFactory.
-	 */
-	org.hibernate.SessionFactory buildSessionFactory();
-
 	/**
 	 * Gets the {@link UUID} for this metamodel.
 	 *

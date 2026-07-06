@@ -8,6 +8,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.tool.reveng.internal.export.common.AbstractExporter;
 
 import java.io.File;
@@ -27,7 +29,7 @@ public class QueryExporter extends AbstractExporter {
 		SessionFactory sessionFactory = null;
 		Transaction transaction = null;
 		try {
-			sessionFactory = buildMetadata().buildSessionFactory();
+			sessionFactory = SessionFactoryPipeline.build( buildMetadata(), new SessionFactoryOptionsCollector() );
 			session = sessionFactory.openSession();
 			transaction = session.beginTransaction();
 			for ( Object o : getQueryList() ) {

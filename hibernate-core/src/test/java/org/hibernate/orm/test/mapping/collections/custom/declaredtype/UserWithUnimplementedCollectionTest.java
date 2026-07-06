@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.mapping.collections.custom.declaredtype;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -33,10 +33,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class UserWithUnimplementedCollectionTest {
 	@Test
 	void testCollectionNotCollectionFailure(ServiceRegistryScope serviceRegistryScope) {
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistryScope.getRegistry() );
-		metadataSources.addAnnotatedClasses( UserWithUnimplementedCollection.class, Email.class );
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistryScope.getRegistry(),
+					UserWithUnimplementedCollection.class,
+					Email.class
+			);
 			fail( "Expecting an AnnotationException" );
 		}
 		catch (AnnotationException e) {

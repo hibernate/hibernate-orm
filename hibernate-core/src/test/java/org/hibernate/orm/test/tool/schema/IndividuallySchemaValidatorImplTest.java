@@ -7,12 +7,13 @@ package org.hibernate.orm.test.tool.schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
@@ -86,12 +87,10 @@ public class IndividuallySchemaValidatorImplTest  {
 
 	@Test
 	public void testMissingEntityContainsQualifiedEntityName(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
-		metadataSources.addAnnotatedClass( MissingEntity.class );
-
-		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		final MetadataImplementor metadata = buildValidatedMetadata(
+				registryScope,
+				MissingEntity.class
+		);
 
 		try {
 			getSchemaValidator( metadata );
@@ -105,12 +104,10 @@ public class IndividuallySchemaValidatorImplTest  {
 
 	@Test
 	public void testMissingEntityContainsUnqualifiedEntityName(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
-		metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
-
-		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		final MetadataImplementor metadata = buildValidatedMetadata(
+				registryScope,
+				UnqualifiedMissingEntity.class
+		);
 
 		try {
 			getSchemaValidator( metadata );
@@ -123,12 +120,10 @@ public class IndividuallySchemaValidatorImplTest  {
 
 	@Test
 	public void testMissingColumn(ServiceRegistryScope registryScope) {
-		MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
-		metadataSources.addAnnotatedClass( NoNameColumn.class );
-
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		MetadataImplementor metadata = buildValidatedMetadata(
+				registryScope,
+				NoNameColumn.class
+		);
 
 		Map<String, Object> settings = new HashMap<>(  );
 
@@ -156,12 +151,10 @@ public class IndividuallySchemaValidatorImplTest  {
 					schemaGenerator
 			);
 
-			metadataSources = new MetadataSources( registryScope.getRegistry() );
-			metadataSources.addAnnotatedClass( NameColumn.class );
-
-			metadata = (MetadataImplementor) metadataSources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			metadata = buildValidatedMetadata(
+					registryScope,
+					NameColumn.class
+			);
 
 			try {
 				getSchemaValidator( metadata );
@@ -181,12 +174,10 @@ public class IndividuallySchemaValidatorImplTest  {
 
 	@Test
 	public void testMismatchColumnType(ServiceRegistryScope registryScope) {
-		MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
-		metadataSources.addAnnotatedClass( NameColumn.class );
-
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		MetadataImplementor metadata = buildValidatedMetadata(
+				registryScope,
+				NameColumn.class
+		);
 
 		Map<String, Object> settings = new HashMap<>(  );
 
@@ -214,12 +205,10 @@ public class IndividuallySchemaValidatorImplTest  {
 					schemaGenerator
 			);
 
-			metadataSources = new MetadataSources( registryScope.getRegistry() );
-			metadataSources.addAnnotatedClass( IntegerNameColumn.class );
-
-			metadata = (MetadataImplementor) metadataSources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			metadata = buildValidatedMetadata(
+					registryScope,
+					IntegerNameColumn.class
+			);
 
 			try {
 				getSchemaValidator( metadata );
@@ -249,6 +238,15 @@ public class IndividuallySchemaValidatorImplTest  {
 	protected void getSchemaValidator(MetadataImplementor metadata) {
 		new IndividuallySchemaValidatorImpl( tool, DefaultSchemaFilter.INSTANCE )
 				.doValidation( metadata, executionOptions, ContributableMatcher.ALL );
+	}
+
+	private MetadataImplementor buildValidatedMetadata(
+			ServiceRegistryScope registryScope,
+			Class<?> annotatedClass) {
+		return MetadataBuildingTestHelper.buildValidatedMetadata(
+				registryScope.getRegistry(),
+				new MappingSources().addManagedClass( annotatedClass )
+		);
 	}
 
 	protected Properties properties() {

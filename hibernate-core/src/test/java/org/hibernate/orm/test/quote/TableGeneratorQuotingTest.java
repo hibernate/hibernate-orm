@@ -12,12 +12,12 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
@@ -59,8 +59,7 @@ public class TableGeneratorQuotingTest {
 	@Test
 	@JiraKey(value = "HHH-7927")
 	public void testTableGeneratorQuoting() {
-		final Metadata metadata = new MetadataSources( serviceRegistry ).addAnnotatedClass( TestEntity.class )
-				.buildMetadata();
+		final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, TestEntity.class );
 
 		final ConnectionProvider connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
 

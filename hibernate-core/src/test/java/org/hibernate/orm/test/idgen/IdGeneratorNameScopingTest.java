@@ -10,11 +10,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -62,10 +62,7 @@ public class IdGeneratorNameScopingTest {
 
 		try {
 			// this will fail with global scoping and pass with local scoping
-			new MetadataSources( registry )
-					.addAnnotatedClass( FirstEntity.class )
-					.addAnnotatedClass( SecondEntity.class )
-					.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( registry, FirstEntity.class, SecondEntity.class );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( registry );

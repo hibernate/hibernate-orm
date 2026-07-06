@@ -13,9 +13,8 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -48,9 +47,8 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  * ({@link org.hibernate.annotations.Type}) or XML mappings. An alternative way to
  * supply custom types is programmatically, via one of:
  * <ul>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)}</li>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String[])}</li>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}</li>
+ *     <li>{@link org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)}</li>
+ *     <li>{@link org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getBasicTypeRegistrations()}</li>
  * </ul>
  *
  * @author Steve Ebersole
@@ -142,8 +140,7 @@ public class TypeDefinition implements Serializable {
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
-		final var bootstrapContext = context.getBootstrapContext();
-		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final var typeConfiguration = context.getTypeConfiguration();
 
 		final boolean isKnownType =
 				Type.class.isAssignableFrom( typeImplementorClass )
@@ -151,8 +148,13 @@ public class TypeDefinition implements Serializable {
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
 			final T typeInstance =
-					instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
-							name, typeImplementorClass, bootstrapContext.getCustomTypeProducer() );
+					instantiateType(
+							context.getBuildingPlan(),
+							name,
+							typeImplementorClass,
+							context.getCustomTypeProducer(),
+							context.getManagedBeanRegistry()
+					);
 
 			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );
@@ -300,18 +302,17 @@ public class TypeDefinition implements Serializable {
 	}
 
 	private static <T> T instantiateType(
-			StandardServiceRegistry serviceRegistry,
-			MetadataBuildingOptions buildingOptions,
+			MappingResolutionOptions buildingPlan,
 			String name,
 			Class<T> typeImplementorClass,
-			BeanInstanceProducer instanceProducer) {
-		if ( !buildingOptions.isAllowExtensionsInCdi() ) {
+			BeanInstanceProducer instanceProducer,
+			ManagedBeanRegistry beanRegistry) {
+		if ( !buildingPlan.isAllowExtensionsInCdi() ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );
 		}
 		else {
-			final var beanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 			final var typeBean = name != null
 					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
 					: beanRegistry.getBean( typeImplementorClass, instanceProducer );
@@ -329,7 +330,7 @@ public class TypeDefinition implements Serializable {
 				typeImplementorClass,
 				localTypeParams,
 				null,
-				buildingContext.getBootstrapContext().getTypeConfiguration()
+				buildingContext.getTypeConfiguration()
 						.getCurrentBaseSqlTypeIndicators(),
 				buildingContext
 		);

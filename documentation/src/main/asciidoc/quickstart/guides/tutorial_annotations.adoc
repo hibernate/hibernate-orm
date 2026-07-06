@@ -132,7 +132,7 @@ private LocalDateTime date;
 The class `org.hibernate.tutorial.annotations.HibernateIllustrationTest` illustrates the use of the Hibernate's native APIs, including:
 
 - `Session` and `SessionFactory`, and
-- `org.hibernate.boot` for configuration and bootstrap.
+- `HibernatePersistenceConfiguration` for configuration and bootstrap.
 
 There are several different ways to configure and start Hibernate, and this is not even the most common approach.
 
@@ -147,29 +147,16 @@ created when the program starts, and closed when the program terminates.
 ----
 protected void setUp() {
     // A SessionFactory is set up once for an application!
-    final StandardServiceRegistry registry =
-            new StandardServiceRegistryBuilder()
-                    .build();   <1> <2>
-    try {
-        sessionFactory =
-                new MetadataSources(registry)             <3>
-                        .addAnnotatedClass(Event.class)   <4>
-                        .buildMetadata()                  <5>
-                        .buildSessionFactory();           <6>
-    }
-    catch (Exception e) {
-        // The registry would be destroyed by the SessionFactory, but we
-        // had trouble building the SessionFactory so destroy it manually.
-        StandardServiceRegistryBuilder.destroy(registry);
-    }
+    sessionFactory =
+            new HibernatePersistenceConfiguration( "hibernate-tutorial-annotations" )  <1> <2>
+                    .managedClass(Event.class)        <3>
+                    .createEntityManagerFactory();    <4>
 }
 ----
-<1> The `setUp()` method first builds a `StandardServiceRegistry` instance which incorporates configuration information into a working set of `Services` for use by the `SessionFactory`.
+<1> The `setUp()` method first creates a Hibernate-specific persistence configuration.
 <2> Here we put all configuration information in `hibernate.properties`, so there's not much interesting to see.
-<3> Using the `StandardServiceRegistry` we create the `MetadataSources` which lets us tell Hibernate about our domain model.
-<4> Here we have only one entity class to register.
-<5> An instance of `Metadata` represents a complete, partially-validated view of the application domain model.
-<6> The final step in the bootstrap process is to build a `SessionFactory` for the configured services and validated domain model.
+<3> Here we have only one entity class to register.
+<4> The final step in the bootstrap process is to build a `SessionFactory` for the configured services and validated domain model.
 The `SessionFactory` is a thread-safe object that's instantiated once to serve the entire application.
 
 The `SessionFactory` produces instances of `Session`.

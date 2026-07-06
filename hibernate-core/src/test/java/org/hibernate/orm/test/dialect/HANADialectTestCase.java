@@ -38,7 +38,7 @@ public class HANADialectTestCase {
 	public void testIdentityInsertNoColumns(DomainModelScope modelScope) {
 		final MetadataImplementor domainModel = modelScope.getDomainModel();
 
-		try ( SessionFactoryImplementor sessionFactory = domainModel.buildSessionFactory() ) {
+		try ( SessionFactoryImplementor sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( domainModel ) ) {
 			fail( "Expecting a MappingException" );
 		}
 		catch (MappingException expected) {

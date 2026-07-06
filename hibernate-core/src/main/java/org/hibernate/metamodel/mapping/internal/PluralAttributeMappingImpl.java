@@ -229,8 +229,7 @@ public class PluralAttributeMappingImpl
 	private static ClassDetails declaringClassDetails(
 			ManagedMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
-		return creationProcess.getCreationContext().getBootstrapContext()
-				.getModelsContext().getClassDetailsRegistry()
+		return creationProcess.getCreationContext().getModelsContext().getClassDetailsRegistry()
 				.resolveClassDetails( declaringType.getJavaType().getTypeName() );
 	}
 
@@ -1136,9 +1135,7 @@ public class PluralAttributeMappingImpl
 						sqlAliasBase,
 						creationState
 				),
-				creationState.getCreationContext()
-						// TODO: FIX ME
-						.getSessionFactory()
+				creationState.getLoadQueryInfluencers().getSessionFactory()
 		);
 		if ( indexDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
@@ -1201,9 +1198,7 @@ public class PluralAttributeMappingImpl
 				sqlAliasBase,
 				s -> false,
 				null,
-				creationState.getCreationContext()
-						// TODO: FIX ME
-						.getSessionFactory()
+				creationState.getLoadQueryInfluencers().getSessionFactory()
 		);
 
 		final boolean nestedJoin = isNestedJoin( joinType, addsPredicate, creationState );

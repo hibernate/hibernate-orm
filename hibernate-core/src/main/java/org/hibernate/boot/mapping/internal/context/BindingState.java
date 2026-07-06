@@ -23,7 +23,9 @@ import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTargetBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
+import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.CollectionTableBinding;
+import org.hibernate.boot.mapping.internal.binders.ComponentBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.DerivedIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.ForeignKeyBinding;
 import org.hibernate.boot.mapping.internal.binders.IdentifierBinding;
@@ -32,6 +34,7 @@ import org.hibernate.boot.mapping.internal.binders.InversePluralAssociationBindi
 import org.hibernate.boot.mapping.internal.binders.InverseToOneAssociationBinding;
 import org.hibernate.boot.mapping.internal.binders.ManagedTypeBinder;
 import org.hibernate.boot.mapping.internal.binders.PropertyMapKeyBinding;
+import org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.TableForeignKeyBinding;
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
@@ -43,7 +46,6 @@ import org.hibernate.boot.mapping.internal.view.VersionBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
-import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -64,7 +66,6 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -155,6 +156,9 @@ public interface BindingState {
 
 	/// Register a named SQL result set mapping for eventual publication to the metadata collector.
 	void addResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor);
+
+	/// Register a default named SQL result set mapping for eventual publication to the metadata collector.
+	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor);
 
 	/// Register a fetch profile for eventual publication to the metadata collector.
 	void addFetchProfile(FetchProfile fetchProfile);
@@ -302,23 +306,53 @@ public interface BindingState {
 	/// Visit table-key foreign-key constraints waiting for late binding.
 	void forEachTableForeignKeyBinding(java.util.function.Consumer<TableForeignKeyBinding> consumer);
 
-	/// Register an entity whose state-management annotations are applied after core mapping binding.
-	void addStateManagementRootBinding(ClassDetails classDetails, RootClass rootClass);
+	/// Queue custom component mapping work for the component custom-mapping phase.
+	void addComponentCustomMapping(ComponentBindingPhase.CustomMapping binding);
 
-	/// Visit entity state-management bindings.
-	void forEachStateManagementRootBinding(java.util.function.BiConsumer<ClassDetails, RootClass> consumer);
+	/// Run and clear queued custom component mapping work.
+	void runComponentCustomMappings();
 
-	/// Register a property whose state-management annotations are applied after core mapping binding.
-	void addStateManagementPropertyBinding(MemberDetails memberDetails, Property property);
+	/// Queue aggregate component finalization work.
+	void addComponentAggregateFinalization(ComponentBindingPhase.AggregateFinalization binding);
 
-	/// Visit property state-management bindings.
-	void forEachStateManagementPropertyBinding(java.util.function.BiConsumer<MemberDetails, Property> consumer);
+	/// Run and clear queued aggregate component finalization work.
+	void runComponentAggregateFinalizations();
+
+	/// Queue custom attribute/value mapping work for the attribute custom-mapping phase.
+	void addAttributeCustomMapping(AttributeBindingPhase.CustomMapping binding);
+
+	/// Run and clear queued custom attribute/value mapping work.
+	void runAttributeCustomMappings();
+
+	/// Queue value-resolution work that depends on completed custom mapping.
+	void addAttributeValueResolution(AttributeBindingPhase.ValueResolution binding);
+
+	/// Queue work that must run after queued value-resolution actions.
+	void addPostAttributeValueResolution(AttributeBindingPhase.PostValueResolution binding);
+
+	/// Run and clear queued value-resolution and post-resolution actions.
+	void runAttributeValueResolutions();
+
+	/// Queue root-entity state-management work.
+	void addStateManagementRootBinding(StateManagementBindingPhase.RootEntity binding);
+
+	/// Run root-entity state-management work.
+	void runStateManagementRootBindings();
+
+	/// Queue property state-management work.
+	void addStateManagementPropertyBinding(StateManagementBindingPhase.PropertyExclusions binding);
+
+	/// Run property and collection state-management work.
+	void runStateManagementPropertyAndCollectionBindings();
 
 	/// Register the contribution handoff for a materialized mapped-superclass property.
 	void addMappedSuperclassPropertyHandoff(MappedSuperclassPropertyHandoff handoff);
 
 	/// Resolve the contribution handoff for a materialized mapped-superclass property.
 	@Nullable MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(Property property);
+
+	/// Resolve the contribution handoff for a materialized mapped-superclass property on a specific owner.
+	@Nullable MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(PersistentClass owner, Property property);
 
 	/// Resolve materialized property handoffs for one mapped-superclass contribution.
 	List<MappedSuperclassPropertyHandoff> getMappedSuperclassPropertyHandoffs(
@@ -381,26 +415,17 @@ public interface BindingState {
 	/// Resolve materialized embeddable component handoffs for one entity owner.
 	List<EmbeddableComponentHandoff> getEmbeddableComponentHandoffs(PersistentClass owner);
 
-	/// Register a collection whose state-management annotations are applied after core mapping binding.
-	void addStateManagementCollectionBinding(CollectionSource source, Collection collection);
+	/// Queue collection state-management work.
+	void addStateManagementCollectionBinding(StateManagementBindingPhase.CollectionMapping binding);
 
-	/// Visit collection state-management bindings.
-	void forEachStateManagementCollectionBinding(java.util.function.BiConsumer<CollectionSource, Collection> consumer);
+	/// Queue FK-on-child one-to-many collection state-management work.
+	void addStateManagementOneToManyCollectionBinding(StateManagementBindingPhase.OneToManyAuditCollection binding);
 
-	/// Register a FK-on-child one-to-many collection whose audit table needs the target entity name.
-	void addStateManagementOneToManyCollectionBinding(
-			CollectionSource source,
-			Collection collection,
-			String referencedEntityName);
+	/// Queue state-management work that must run after root, property, and collection state-management binding.
+	void addStateManagementFinalizer(StateManagementBindingPhase.Finalizer binding);
 
-	/// Visit FK-on-child one-to-many collection state-management bindings.
-	void forEachStateManagementOneToManyCollectionBinding(StateManagementOneToManyCollectionConsumer consumer);
-
-	/// Consumer for one-to-many collection state-management bindings.
-	@FunctionalInterface
-	interface StateManagementOneToManyCollectionConsumer {
-		void accept(CollectionSource source, Collection collection, String referencedEntityName);
-	}
+	/// Run and clear queued state-management finalization work.
+	void runStateManagementFinalizers();
 
 	/// Register the identifier binding produced for an entity hierarchy root.
 	void addIdentifierBinding(EntityTypeMetadata rootType, IdentifierBinding identifierBinding);

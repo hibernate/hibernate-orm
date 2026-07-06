@@ -32,7 +32,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 			BasicValue basicValue,
 			TimeZoneStorageType timeZoneStorageType,
 			MetadataBuildingContext context) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var typeConfiguration = context.getTypeConfiguration();
 		final var implicitJavaType = basicValue.impliedJavaType( typeConfiguration );
 		final var registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
 		return resolve( timeZoneStorageType, context, (BasicJavaType<?>) registered );
@@ -42,7 +42,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 			TimeZoneStorageType timeZoneStorageType,
 			MetadataBuildingContext context,
 			BasicJavaType<E> basicJavaType) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var typeConfiguration = context.getTypeConfiguration();
+		final var mappingPreferences = context.getBuildingPlan().getMappingPreferences();
 		final var recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
@@ -59,12 +60,12 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 					@Override
 					public boolean isPreferJavaTimeJdbcTypesEnabled() {
-						return context.isPreferJavaTimeJdbcTypesEnabled();
+						return mappingPreferences.isPreferJavaTimeJdbcTypesEnabled();
 					}
 
 					@Override
 					public boolean isPreferNativeEnumTypesEnabled() {
-						return context.isPreferNativeEnumTypesEnabled();
+						return mappingPreferences.isPreferNativeEnumTypesEnabled();
 					}
 
 					@Override
@@ -75,27 +76,27 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 					@Override
 					public int getPreferredSqlTypeCodeForBoolean() {
-						return context.getPreferredSqlTypeCodeForBoolean();
+						return mappingPreferences.getPreferredSqlTypeCodeForBoolean();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForDuration() {
-						return context.getPreferredSqlTypeCodeForDuration();
+						return mappingPreferences.getPreferredSqlTypeCodeForDuration();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForUuid() {
-						return context.getPreferredSqlTypeCodeForUuid();
+						return mappingPreferences.getPreferredSqlTypeCodeForUuid();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForInstant() {
-						return context.getPreferredSqlTypeCodeForInstant();
+						return mappingPreferences.getPreferredSqlTypeCodeForInstant();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForArray() {
-						return context.getPreferredSqlTypeCodeForArray();
+						return mappingPreferences.getPreferredSqlTypeCodeForArray();
 					}
 
 					@Override

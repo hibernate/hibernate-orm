@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.boot.models.xml.column;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -34,8 +33,8 @@ public class ColumnTests {
 				.addXmlMappings( "mappings/models/column/complete.xml" )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
 				metadataBuildingOptions
@@ -68,8 +67,8 @@ public class ColumnTests {
 				.build();
 
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
 				metadataBuildingOptions

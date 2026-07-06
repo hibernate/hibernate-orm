@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -27,6 +26,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelCheckContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -696,10 +696,11 @@ public class SimpleIdTests {
 	@ServiceRegistry
 	@SuppressWarnings("removal")
 	void testLegacyAssociationIdWithJoinTable(ServiceRegistryScope scope) {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( MapsIdParent.class )
-				.addAnnotatedClass( JoinTableAssociationIdChild.class )
-				.buildMetadata();
+		final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				scope.getRegistry(),
+				MapsIdParent.class,
+				JoinTableAssociationIdChild.class
+		);
 
 		assertJoinTableAssociationIdBinding(
 				(RootClass) metadata.getEntityBinding( JoinTableAssociationIdChild.class.getName() )

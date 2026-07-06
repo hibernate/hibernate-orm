@@ -35,10 +35,12 @@ import org.hibernate.StatementObserver;
 import org.hibernate.UnknownFilterException;
 import org.hibernate.action.queue.spi.ActionQueueFactory;
 import org.hibernate.action.queue.spi.PlanningOptions;
-import org.hibernate.boot.pipeline.internal.SessionFactoryConstructionPreparation;
-import org.hibernate.boot.pipeline.internal.SessionFactoryIntegratorPreparation;
-import org.hibernate.boot.pipeline.internal.SessionFactoryRuntimePreparation;
-import org.hibernate.boot.pipeline.internal.SessionFactoryServicePreparation;
+import org.hibernate.boot.pipeline.internal.SessionFactoryConstructionPlan;
+import org.hibernate.boot.pipeline.internal.SessionFactoryConstructionPlanBuilder;
+import org.hibernate.boot.pipeline.internal.ResolvedMappingImplementor;
+import org.hibernate.boot.pipeline.internal.SessionFactoryIntegratorLifecycle;
+import org.hibernate.boot.pipeline.internal.SessionFactoryRuntimeComponents;
+import org.hibernate.boot.pipeline.internal.StandardServiceComponents;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -67,17 +69,16 @@ import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.generator.Generator;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -89,21 +90,19 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
+import org.hibernate.metamodel.internal.RuntimeModelHandoffResolvers;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
-import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.MutationOrSelectionQuery;
-import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -115,6 +114,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -147,7 +147,6 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
-import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGER;
 import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
 import static org.hibernate.internal.SessionFactorySettings.getMaskedSettings;
@@ -172,7 +171,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  *           that the class is not only thread-safe, but also highly concurrent.
  *           Synchronization must be used extremely sparingly.
  *
- * @see org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
+ * @see org.hibernate.boot.pipeline.internal.BootstrapPipeline
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -194,6 +193,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String,Object> settings;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
+	private final transient StandardServiceComponents standardServiceComponents;
 	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
 	private final transient SqlStringGenerationContext sqlStringGenerationContext;
@@ -221,16 +221,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient SchemaManager schemaManager;
 
-	final transient ClassLoaderService classLoaderService;
-	final transient TransactionCoordinatorBuilder transactionCoordinatorBuilder;
-	final transient ConnectionProvider connectionProvider;
-	final transient MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
-	final transient ManagedBeanRegistry managedBeanRegistry;
-	final transient BatchBuilder batchBuilder;
-	final transient EventMonitor eventMonitor;
-	final transient EntityCopyObserverFactory entityCopyObserverFactory;
-	final transient ParameterMarkerStrategy parameterMarkerStrategy;
-	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 	final transient ChangesetCoordinator changesetCoordinator;
 
 	private final PlanningOptions graphPlanningOptions;
@@ -240,10 +230,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
-		this( SessionFactoryConstructionPreparation.prepare(
+		this( SessionFactoryConstructionPlanBuilder.build(
 				bootMetamodel,
 				options,
-				bootstrapContext
+				bootstrapContext,
+				extractBootBindingModel( bootMetamodel )
 		) );
 	}
 
@@ -251,15 +242,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext,
-			final SessionFactoryRuntimePreparation preparation) {
-		this( new SessionFactoryConstructionPreparation(
+			final SessionFactoryRuntimeComponents runtimeComponents) {
+		this( new SessionFactoryConstructionPlan(
 				bootMetamodel,
 				null,
 				null,
 				options,
 				bootstrapContext,
-				null,
-				preparation
+				extractBootBindingModel( bootMetamodel ),
+				runtimeComponents
 		) );
 	}
 
@@ -269,36 +260,50 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final BootstrapContext bootstrapContext,
 			final ResolvedSessionFactorySettings resolvedSettings,
 			final SessionFactoryConstructionIdentity identity,
-			final SessionFactoryRuntimePreparation preparation) {
-		this( new SessionFactoryConstructionPreparation(
+			final SessionFactoryRuntimeComponents runtimeComponents) {
+		this( new SessionFactoryConstructionPlan(
 				bootMetamodel,
 				resolvedSettings,
 				identity,
 				options,
 				bootstrapContext,
-				null,
-				preparation
+				extractBootBindingModel( bootMetamodel ),
+				runtimeComponents
 		) );
 	}
 
-	public SessionFactoryImpl(final SessionFactoryConstructionPreparation constructionPreparation) {
-		final var bootMetamodel = constructionPreparation.metadata();
-		final var options = constructionPreparation.options();
-		final var bootstrapContext = constructionPreparation.bootstrapContext();
-		final var identity = constructionPreparation.identity();
-		final var preparation = constructionPreparation.runtimePreparation();
+	private static BootBindingModel extractBootBindingModel(MetadataImplementor bootMetamodel) {
+		if ( bootMetamodel instanceof ResolvedMappingImplementor resolvedMappingImplementor ) {
+			return resolvedMappingImplementor.getResolvedMapping().bindingState().getBootBindingModel();
+		}
+		throw new IllegalArgumentException(
+				"SessionFactory construction requires resolved mapping exposing a BootBindingModel"
+		);
+	}
+
+	public SessionFactoryImpl(final SessionFactoryConstructionPlan constructionPlan) {
+		final var bootMetamodel = constructionPlan.metadata();
+		final var options = constructionPlan.options();
+		final var bootstrapContext = constructionPlan.bootstrapContext();
+		final var identity = constructionPlan.identity();
+		final var runtimeComponents = constructionPlan.runtimeComponents();
+		final var plannedStandardServiceComponents = constructionPlan.standardServiceComponents();
+		final var sessionFactoryReference = constructionPlan.sessionFactoryReference();
+		sessionFactoryReference.injectSessionFactory( this );
 
 		SESSION_FACTORY_LOGGER.buildingSessionFactory();
-		typeConfiguration = preparation.typeConfiguration();
+		typeConfiguration = runtimeComponents.typeConfiguration();
 
 		sessionFactoryOptions = options;
 
-		statementObserver = preparation.statementObserver();
+		statementObserver = runtimeComponents.statementObserver();
 
-		final var servicePreparation = SessionFactoryServicePreparation.prepare( options, this );
-		serviceRegistry = servicePreparation.serviceRegistry();
-		eventEngine = servicePreparation.eventEngine();
-		graphPlanningOptions = servicePreparation.graphPlanningOptions();
+		standardServiceComponents = plannedStandardServiceComponents;
+		serviceRegistry = standardServiceComponents.serviceRegistry()
+				.requireService( SessionFactoryServiceRegistryFactory.class )
+				.buildServiceRegistry( sessionFactoryReference, options );
+		eventEngine = standardServiceComponents.eventEngine();
+		graphPlanningOptions = standardServiceComponents.graphPlanningOptions();
 
 		bootMetamodel.initSessionFactory( this );
 
@@ -306,7 +311,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		jndiName = identity == null ? determineJndiName( name, options, serviceRegistry ) : identity.jndiName();
 		uuid = identity == null ? options.getUuid() : identity.uuid();
 
-		jdbcServices = servicePreparation.jdbcServices();
+		jdbcServices = standardServiceComponents.jdbcServices();
 
 		settings = getMaskedSettings( options, serviceRegistry );
 		SESSION_FACTORY_LOGGER.instantiatingFactory( uuid, settings );
@@ -317,82 +322,69 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
 
-		for ( var sessionFactoryObserver : preparation.sessionFactoryObservers() ) {
+		for ( var sessionFactoryObserver : runtimeComponents.sessionFactoryObservers() ) {
 			observerChain.addObserver( sessionFactoryObserver );
 		}
 
-		filters = preparation.filterDefinitions();
-		autoEnabledFilters = preparation.autoEnabledFilters();
-		tenantIdentifierJavaType = preparation.tenantIdentifierJavaType();
+		filters = runtimeComponents.filterDefinitions();
+		autoEnabledFilters = runtimeComponents.autoEnabledFilters();
+		tenantIdentifierJavaType = runtimeComponents.tenantIdentifierJavaType();
 
 		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 
-		// used for initializing the MappingMetamodelImpl
-		classLoaderService = servicePreparation.classLoaderService();
-		jdbcValuesMappingProducerProvider = servicePreparation.jdbcValuesMappingProducerProvider();
+		changesetCoordinator = standardServiceComponents.changesetCoordinator();
 
-		changesetCoordinator = servicePreparation.changesetCoordinator();
-
-		final var integratorPreparation = new SessionFactoryIntegratorPreparation( this, serviceRegistry );
-		observerChain.addObserver( integratorPreparation );
+		final var integratorLifecycle = new SessionFactoryIntegratorLifecycle( sessionFactoryReference, serviceRegistry );
+		observerChain.addObserver( integratorLifecycle );
 		try {
-			integratorPreparation.integrate( bootMetamodel, bootstrapContext );
+			integratorLifecycle.integrate( bootMetamodel, bootstrapContext );
 
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
-			// create the empty runtime metamodels object
-			final var runtimeMetamodelsImpl = new RuntimeMetamodelsImpl( typeConfiguration );
-			runtimeMetamodels = runtimeMetamodelsImpl;
+			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
+			final var inFlightModel = SessionFactoryModelBuilder.buildInFlight(
+					bootMetamodel,
+					options,
+					typeConfiguration,
+					wrapperOptions,
+					serviceRegistry,
+					settings,
+					name
+			);
+			runtimeMetamodels = inFlightModel.runtimeMetamodels();
+			queryEngine = inFlightModel.queryEngine();
+			sqlTranslationEngine = inFlightModel.sqlTranslationEngine();
 
-			// we build this before creating the runtime metamodels
-			// because the SqlAstTranslators (unnecessarily, perhaps)
-			// use the SqmFunctionRegistry when rendering SQL for Loaders
-			queryEngine = new QueryEngineImpl( bootMetamodel, options, runtimeMetamodels, serviceRegistry, settings, name );
-			final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
-			sqlTranslationEngine = new SqlTranslationEngineImpl( this, typeConfiguration, fetchProfiles );
-
-			// now actually create the mapping and JPA metamodels
-			final var mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
-			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
-			mappingMetamodelImpl.finishInitialization( new ModelCreationContext(
-					bootstrapContext,
-				bootMetamodel,
-				mappingMetamodelImpl,
-				typeConfiguration,
-				graphPlanningOptions,
-				constructionPreparation.bootBindingModel()
-			) );
-			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
-
-			// this needs to happen after the mapping metamodel is
-			// completely built, since we need to use the persisters
-			addFetchProfiles( bootMetamodel, runtimeMetamodelsImpl, fetchProfiles );
+			// Mapping model initialization calls back through this incomplete
+			// factory for query and SQL infrastructure, so these fields must be
+			// assigned before the model is finished.
+			inFlightModel.finishModelInitialization(
+					bootMetamodel,
+					new ModelCreationContext(
+							bootstrapContext,
+							bootMetamodel,
+							inFlightModel.mappingMetamodel(),
+							typeConfiguration,
+							graphPlanningOptions,
+							constructionPlan.bootBindingModel(),
+							queryEngine,
+							wrapperOptions,
+							changesetCoordinator,
+							sessionFactoryReference
+					)
+			);
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			defaultStatelessOptions = defaultSessionOpenOptions == null ? null : withStatelessOptions();
 
-			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
-
 			currentSessionContext = buildCurrentSessionContext();
 
-			transactionCoordinatorBuilder = servicePreparation.transactionCoordinatorBuilder();
-			entityCopyObserverFactory = servicePreparation.entityCopyObserverFactory();
-			parameterMarkerStrategy = servicePreparation.parameterMarkerStrategy();
-			batchBuilder = servicePreparation.batchBuilder();
-			managedBeanRegistry = servicePreparation.managedBeanRegistry();
-			connectionProvider = servicePreparation.connectionProvider();
-			multiTenantConnectionProvider = servicePreparation.multiTenantConnectionProvider();
-			eventMonitor = servicePreparation.eventMonitor();
-			// EventListenerGroups resolves listener services through the factory
-			// service registry, which currently calls back to getEventEngine().
-			// Keep it after the eventEngine field has been assigned until that
-			// incomplete-factory interaction is removed.
-			eventListenerGroups = new EventListenerGroups( serviceRegistry );
+			eventListenerGroups = new EventListenerGroups( eventEngine.getListenerRegistry() );
 
 			// re-scope the TypeConfiguration to this SessionFactory,
 			// now that we are (almost) fully-initialized ... note,
@@ -401,16 +393,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// we're in an incompletely-initialized state
 			typeConfiguration.scope( this );
 
-			if ( mappingMetamodelImpl.getJpaMetamodel() instanceof JpaMetamodelImpl jpaMetamodel ) {
+			if ( inFlightModel.jpaMetamodel() instanceof JpaMetamodelImpl jpaMetamodel ) {
 				jpaMetamodel.populateStaticMetamodelResultSetMappings( bootMetamodel, this );
 			}
 
-			actionQueueFactory = servicePreparation.actionQueueFactoryService().buildActionQueueFactory( this );
+			actionQueueFactory = standardServiceComponents.actionQueueFactoryService().buildActionQueueFactory( this );
 
 			observerChain.sessionFactoryCreated( this );
 		}
 		catch ( Exception e ) {
-			integratorPreparation.disintegrate( e );
+			integratorLifecycle.disintegrate( e );
 
 			try {
 				close();
@@ -483,31 +475,31 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public ParameterMarkerStrategy getParameterMarkerStrategy() {
-		return parameterMarkerStrategy;
+		return standardServiceComponents.parameterMarkerStrategy();
 	}
 
 	@Nonnull
 	@Override
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
-		return jdbcValuesMappingProducerProvider;
+		return standardServiceComponents.jdbcValuesMappingProducerProvider();
 	}
 
 	@Override
 	@Nonnull
 	public EntityCopyObserverFactory getEntityCopyObserver() {
-		return entityCopyObserverFactory;
+		return standardServiceComponents.entityCopyObserverFactory();
 	}
 
 	@Override
 	@Nonnull
 	public ClassLoaderService getClassLoaderService() {
-		return classLoaderService;
+		return standardServiceComponents.classLoaderService();
 	}
 
 	@Override
 	@Nullable
 	public ManagedBeanRegistry getManagedBeanRegistry() {
-		return managedBeanRegistry;
+		return standardServiceComponents.managedBeanRegistry();
 	}
 
 	@Override
@@ -797,7 +789,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// JPA requires that we throw IllegalStateException in cases where:
 		//		1) the PersistenceUnitTransactionType (TransactionCoordinator) is non-JTA
 		//		2) an explicit SynchronizationType is specified
-		if ( !transactionCoordinatorBuilder.isJta() ) {
+		if ( !standardServiceComponents.transactionCoordinatorBuilder().isJta() ) {
 			throw new IllegalStateException(
 					"Illegal attempt to specify a SynchronizationType when building an EntityManager from an " +
 							"EntityManagerFactory defined as RESOURCE_LOCAL (as opposed to JTA)"
@@ -1012,7 +1004,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	@Nonnull
 	public PersistenceUnitTransactionType getTransactionType() {
-		return transactionCoordinatorBuilder.isJta()
+		return standardServiceComponents.transactionCoordinatorBuilder().isJta()
 				? PersistenceUnitTransactionType.JTA
 				: PersistenceUnitTransactionType.RESOURCE_LOCAL;
 
@@ -1325,15 +1317,35 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	boolean connectionProviderHandlesConnectionReadOnly() {
-		return multiTenantConnectionProvider != null
-				? multiTenantConnectionProvider.handlesConnectionReadOnly()
-				: connectionProvider.handlesConnectionReadOnly();
+		return standardServiceComponents.multiTenantConnectionProvider() != null
+				? standardServiceComponents.multiTenantConnectionProvider().handlesConnectionReadOnly()
+				: standardServiceComponents.connectionProvider().handlesConnectionReadOnly();
 	}
 
 	boolean connectionProviderHandlesConnectionSchema() {
-		return multiTenantConnectionProvider != null
-				? multiTenantConnectionProvider.handlesConnectionSchema()
-				: connectionProvider.handlesConnectionSchema();
+		return standardServiceComponents.multiTenantConnectionProvider() != null
+				? standardServiceComponents.multiTenantConnectionProvider().handlesConnectionSchema()
+				: standardServiceComponents.connectionProvider().handlesConnectionSchema();
+	}
+
+	TransactionCoordinatorBuilder getTransactionCoordinatorBuilder() {
+		return standardServiceComponents.transactionCoordinatorBuilder();
+	}
+
+	BatchBuilder getBatchBuilder() {
+		return standardServiceComponents.batchBuilder();
+	}
+
+	ConnectionProvider getConnectionProvider() {
+		return standardServiceComponents.connectionProvider();
+	}
+
+	MultiTenantConnectionProvider<Object> getMultiTenantConnectionProvider() {
+		return standardServiceComponents.multiTenantConnectionProvider();
+	}
+
+	EventMonitor getEventMonitor() {
+		return standardServiceComponents.eventMonitor();
 	}
 
 	@Override
@@ -1476,6 +1488,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final TypeConfiguration typeConfiguration;
 		private final PlanningOptions graphPlanningOptions;
 		private final BootBindingModel bootBindingModel;
+		private final QueryEngine queryEngine;
+		private final WrapperOptions wrapperOptions;
+		private final ChangesetCoordinator changesetCoordinator;
+		private final SessionFactoryAccess sessionFactoryAccess;
+		private final RuntimeModelHandoffResolvers handoffResolvers;
 
 		private ModelCreationContext(
 				BootstrapContext bootstrapContext,
@@ -1483,13 +1500,22 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				MappingMetamodelImplementor mappingMetamodel,
 				TypeConfiguration typeConfiguration,
 				PlanningOptions graphPlanningOptions,
-				BootBindingModel bootBindingModel) {
+				BootBindingModel bootBindingModel,
+				QueryEngine queryEngine,
+				WrapperOptions wrapperOptions,
+				ChangesetCoordinator changesetCoordinator,
+				SessionFactoryAccess sessionFactoryAccess) {
 			this.bootstrapContext = bootstrapContext;
 			this.bootMetamodel = bootMetamodel;
 			this.mappingMetamodel = mappingMetamodel;
 			this.typeConfiguration = typeConfiguration;
 			this.graphPlanningOptions = graphPlanningOptions;
 			this.bootBindingModel = bootBindingModel;
+			this.queryEngine = queryEngine;
+			this.wrapperOptions = wrapperOptions;
+			this.changesetCoordinator = changesetCoordinator;
+			this.sessionFactoryAccess = sessionFactoryAccess;
+			this.handoffResolvers = RuntimeModelHandoffResolvers.create( bootBindingModel );
 			generators = new HashMap<>();
 		}
 
@@ -1505,6 +1531,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
+		public SessionFactoryAccess getSessionFactoryAccess() {
+			return sessionFactoryAccess;
+		}
+
+		@Override
 		public MetadataImplementor getBootModel() {
 			return bootMetamodel;
 		}
@@ -1512,6 +1543,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public BootBindingModel getBootBindingModel() {
 			return bootBindingModel;
+		}
+
+		@Override
+		public RuntimeModelHandoffResolvers getHandoffResolvers() {
+			return handoffResolvers;
 		}
 
 		@Override
@@ -1586,6 +1622,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public SqlStringGenerationContext getSqlStringGenerationContext() {
 			return sqlStringGenerationContext;
+		}
+
+		@Override
+		public WrapperOptions getWrapperOptions() {
+			return wrapperOptions;
+		}
+
+		@Override
+		public ChangesetCoordinator getChangesetCoordinator() {
+			return changesetCoordinator;
 		}
 
 		@Override

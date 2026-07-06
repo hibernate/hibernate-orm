@@ -4,11 +4,10 @@
  */
 package org.hibernate.orm.test.entitymode.dom4j;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -31,16 +30,11 @@ public class DeprecationLoggingTest {
 	public void basicTest() {
 		logInspection.registerListener( LogListenerImpl.INSTANCE );
 
-		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addResource( "org/hibernate/orm/test/entitymode/dom4j/Car.hbm.xml" );
-		try {
-			metadataSources.buildMetadata();
-		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if ( metaServiceRegistry instanceof BootstrapServiceRegistry ) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources().addMappingResource( "org/hibernate/orm/test/entitymode/dom4j/Car.hbm.xml" )
+			);
 		}
 	}
 }

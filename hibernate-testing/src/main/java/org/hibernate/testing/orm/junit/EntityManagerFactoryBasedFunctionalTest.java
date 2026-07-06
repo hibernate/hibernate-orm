@@ -12,7 +12,7 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
@@ -47,7 +47,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
-		final EntityManagerFactory entityManagerFactory = SessionFactoryBootstrap.build(
+		final EntityManagerFactory entityManagerFactory = BootstrapPipeline.build(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
 		);

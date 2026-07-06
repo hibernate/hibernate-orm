@@ -10,8 +10,8 @@ import jakarta.persistence.Id;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -43,12 +43,9 @@ public class TransactionsTest {
 		*/
 
 		//tag::transactions-api-jdbc-example[]
-		Metadata metadata = new MetadataSources(serviceRegistry)
-				.addAnnotatedClass(Customer.class)
-				.getMetadataBuilder()
-				.build();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Customer.class );
 
-		SessionFactory sessionFactory = metadata.buildSessionFactory();
+		SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 		Session session = sessionFactory.openSession();
 		try {
@@ -94,12 +91,9 @@ public class TransactionsTest {
 		*/
 
 		//tag::transactions-api-cmt-example[]
-		Metadata metadata = new MetadataSources(serviceRegistry)
-				.addAnnotatedClass(Customer.class)
-				.getMetadataBuilder()
-				.build();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Customer.class );
 
-		SessionFactory sessionFactory = metadata.buildSessionFactory();
+		SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 		// Note: depending on the JtaPlatform used and some optional settings,
 		// the underlying transactions here will be controlled through either
@@ -151,12 +145,9 @@ public class TransactionsTest {
 		*/
 
 		//tag::transactions-api-bmt-example[]
-		Metadata metadata = new MetadataSources(serviceRegistry)
-				.addAnnotatedClass(Customer.class)
-				.getMetadataBuilder()
-				.build();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Customer.class );
 
-		SessionFactory sessionFactory = metadata.buildSessionFactory();
+		SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 		// Note: depending on the JtaPlatform used and some optional settings,
 		// the underlying transactions here will be controlled through either

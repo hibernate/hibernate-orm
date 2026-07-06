@@ -405,9 +405,12 @@ public final class ConfigurationHelper {
 	}
 
 	private static Integer getConfiguredTypeCode(ServiceRegistry serviceRegistry, String setting) {
+		return getConfiguredTypeCode( serviceRegistry.requireService( ConfigurationService.class ), setting );
+	}
+
+	private static Integer getConfiguredTypeCode(ConfigurationService configurationService, String setting) {
 		final Integer typeCode =
-				serviceRegistry.requireService( ConfigurationService.class )
-						.getSetting( setting, TypeCodeConverter.INSTANCE );
+				configurationService.getSetting( setting, TypeCodeConverter.INSTANCE );
 		if ( typeCode != null ) {
 			INCUBATION_LOGGER.incubatingSetting( setting );
 		}
@@ -432,9 +435,24 @@ public final class ConfigurationHelper {
 	}
 
 	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForBoolean(ConfigurationService configurationService, Dialect dialect) {
+		final Integer typeCode =
+				getConfiguredTypeCode( configurationService, PREFERRED_BOOLEAN_JDBC_TYPE );
+		return typeCode != null ? typeCode : dialect.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForDuration(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_DURATION_JDBC_TYPE );
+		return explicitSetting != null ? explicitSetting : SqlTypes.DURATION;
+
+	}
+
+	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForDuration(ConfigurationService configurationService) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( configurationService, PREFERRED_DURATION_JDBC_TYPE );
 		return explicitSetting != null ? explicitSetting : SqlTypes.DURATION;
 
 	}
@@ -448,9 +466,25 @@ public final class ConfigurationHelper {
 	}
 
 	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForUuid(ConfigurationService configurationService) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( configurationService, PREFERRED_UUID_JDBC_TYPE );
+		return explicitSetting != null ? explicitSetting : SqlTypes.UUID;
+
+	}
+
+	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_INSTANT_JDBC_TYPE );
+		return explicitSetting != null ? explicitSetting : SqlTypes.TIMESTAMP_UTC;
+
+	}
+
+	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForInstant(ConfigurationService configurationService) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( configurationService, PREFERRED_INSTANT_JDBC_TYPE );
 		return explicitSetting != null ? explicitSetting : SqlTypes.TIMESTAMP_UTC;
 
 	}
@@ -463,6 +497,15 @@ public final class ConfigurationHelper {
 				? explicitSetting
 				: serviceRegistry.requireService( JdbcServices.class )
 						.getDialect().getPreferredSqlTypeCodeForArray();
+	}
+
+	@Incubating
+	public static synchronized int getPreferredSqlTypeCodeForArray(ConfigurationService configurationService, Dialect dialect) {
+		final Integer explicitSetting =
+				getConfiguredTypeCode( configurationService, PREFERRED_ARRAY_JDBC_TYPE );
+		return explicitSetting != null
+				? explicitSetting
+				: dialect.getPreferredSqlTypeCodeForArray();
 	}
 
 	public static void setIfNotEmpty(String value, String settingName, Map<String, String> configuration) {

@@ -457,7 +457,10 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			) );
 			final SqlAstTranslator<JdbcSelect> translator =
 					creationContext.getDialect().getSqlAstTranslatorFactory()
-							.buildSelectTranslator( creationContext.getSessionFactory(), new SelectStatement( fakeQuery ) );
+							.buildSelectTranslator(
+									converter.getLoadQueryInfluencers().getSessionFactory(),
+									new SelectStatement( fakeQuery )
+							);
 			final JdbcSelect operation = translator.translate( null, QueryOptions.NONE );
 			final String sqlString = operation.getSqlString();
 			assert sqlString.startsWith( "select " );

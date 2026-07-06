@@ -43,7 +43,7 @@ public class EntityGraphProcessing {
 			return;
 		}
 
-		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelsContext();
 		final NamedEntityGraphsJpaAnnotation entityGraphsUsage = (NamedEntityGraphsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.NAMED_ENTITY_GRAPH,
 				JpaAnnotations.NAMED_ENTITY_GRAPHS,

@@ -50,7 +50,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.context.MappingPreferences;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
@@ -64,7 +64,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
@@ -341,7 +340,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				settings.get( XML_FORMAT_MAPPER ),
 				strategySelector,
 				xmlFormatMapperLegacyFormatEnabled =
-						context.getMetadataBuildingOptions()
+						context.getMappingResolutionOptions()
 								.isXmlFormatMapperLegacyFormatEnabled(),
 				formatMapperCreationContext
 		);
@@ -456,15 +455,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		namedQueryStartupCheckingEnabled =
 				configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 
-		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
-		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
-		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
-		preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
-		preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
-		preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
-		preferredSqlTypeCodeForInstant = ConfigurationHelper.getPreferredSqlTypeCodeForInstant( serviceRegistry );
-		preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( serviceRegistry );
-		defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
+		final var mappingPreferences = MappingPreferences.from( serviceRegistry );
+		preferJavaTimeJdbcTypes = mappingPreferences.isPreferJavaTimeJdbcTypesEnabled();
+		preferNativeEnumTypes = mappingPreferences.isPreferNativeEnumTypesEnabled();
+		preferLocaleLanguageTagEnabled = mappingPreferences.isPreferLocaleLanguageTagEnabled();
+		preferredSqlTypeCodeForBoolean = mappingPreferences.getPreferredSqlTypeCodeForBoolean();
+		preferredSqlTypeCodeForDuration = mappingPreferences.getPreferredSqlTypeCodeForDuration();
+		preferredSqlTypeCodeForUuid = mappingPreferences.getPreferredSqlTypeCodeForUuid();
+		preferredSqlTypeCodeForInstant = mappingPreferences.getPreferredSqlTypeCodeForInstant();
+		preferredSqlTypeCodeForArray = mappingPreferences.getPreferredSqlTypeCodeForArray();
+		defaultTimeZoneStorageStrategy = context.getMappingResolutionOptions().getDefaultTimeZoneStorage();
 
 		final var regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {

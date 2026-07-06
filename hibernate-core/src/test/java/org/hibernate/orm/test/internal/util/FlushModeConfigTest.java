@@ -7,11 +7,11 @@ package org.hibernate.orm.test.internal.util;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import org.hibernate.jpa.HibernateHints;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -32,7 +32,9 @@ public class FlushModeConfigTest {
 		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(HibernateHints.HINT_FLUSH_MODE, flushMode.name() )
 				.build();
-		try ( final SessionFactory sessionFactory = new MetadataSources(serviceRegistry).buildMetadata().buildSessionFactory() ) {
+		try ( final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( serviceRegistry )
+		) ) {
 			try ( final Session session = sessionFactory.openSession() ) {
 				assertThat( session.getHibernateFlushMode() ).isEqualTo( flushMode );
 			}

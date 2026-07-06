@@ -12,8 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -59,10 +60,12 @@ class RecordNestedEmbeddedWithASecondaryTableTest {
 	@Test
 	void test(ServiceRegistryScope scope) {
 		final StandardServiceRegistry registry = scope.getRegistry();
-		final MetadataSources sources = new MetadataSources( registry ).addAnnotatedClass( UserEntity1.class );
 
 		try {
-			sources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					registry,
+					new MappingSources().addManagedClass( UserEntity1.class )
+			);
 			fail( "Expecting to fail" );
 		} catch (AnnotationException expected) {
 			assertThat( expected ).hasMessageContaining( "all properties of the embeddable class must map to the same table" );

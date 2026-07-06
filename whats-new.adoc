@@ -28,7 +28,6 @@ of bootstrap entry points and centralizes the handling based on that pipeline -
 * Jakarta Persistence SE bootstrap with `Persistence`
 * Jakarta Persistence EE bootstrap with container and `PersistenceUnitInfo`
 * Hibernate native bootstrap with `Configuration` footnote:recommentation[Consider migrating to `(Hibernate)PersistenceConfiguration`]
-* Hibernate native bootstrap with `MetadataSources`, `SessionFactoryBuilder`, etc. footnote:recommentation[]
 
 The end-user impact of this pipeline specifically is small - basically some
 historical bootstrap entry paths are compatibility paths rather than the

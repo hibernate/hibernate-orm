@@ -45,7 +45,7 @@ import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.annotation.Nullable;
 
-import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
+import static org.hibernate.boot.mapping.internal.binders.GenericComponentHelper.handleGenericComponentProperty;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
 import static org.hibernate.boot.models.AttributeNature.ELEMENT_COLLECTION;
 import static org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;

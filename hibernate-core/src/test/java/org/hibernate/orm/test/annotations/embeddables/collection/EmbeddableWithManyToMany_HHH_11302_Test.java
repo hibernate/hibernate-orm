@@ -23,7 +23,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.internal.util.StringHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -33,11 +33,11 @@ import org.hibernate.testing.orm.junit.JiraKey;
  */
 @JiraKey(value = "HHH-11302")
 public class EmbeddableWithManyToMany_HHH_11302_Test
-		extends AbstractEmbeddableWithManyToManyTest {
+	extends AbstractEmbeddableWithManyToManyTest {
 
 	@Override
-	protected void addAnnotatedClasses(MetadataSources metadataSources) {
-		metadataSources.addAnnotatedClasses( ContactType.class, Person.class );
+	protected void addAnnotatedClasses(MappingSources mappingSources) {
+		mappingSources.addManagedClasses( ContactType.class, Person.class );
 	}
 
 	@Entity

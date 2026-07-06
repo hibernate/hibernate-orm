@@ -6,7 +6,7 @@ package org.hibernate.tool.reveng.internal.metadata;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
@@ -25,9 +25,9 @@ public class JpaMetadataDescriptor implements MetadataDescriptor {
 			final Properties properties) {
 		final var integrationSettings = properties == null ? new Properties() : properties;
 		final var persistenceUnitDescriptor = locatePersistenceUnit( persistenceUnit, integrationSettings );
-		final var metadataBootstrap = SessionFactoryBootstrap.resolveMetadata( persistenceUnitDescriptor, integrationSettings );
-		metadata = metadataBootstrap.metadata();
-		this.properties.putAll( metadataBootstrap.configurationValues() );
+		final var metadataResolution = BootstrapPipeline.resolveMetadata( persistenceUnitDescriptor, integrationSettings );
+		metadata = metadataResolution.metadata();
+		this.properties.putAll( metadataResolution.configurationValues() );
 	}
 
 	public Metadata createMetadata() {

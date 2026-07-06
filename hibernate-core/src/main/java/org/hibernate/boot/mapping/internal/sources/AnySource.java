@@ -105,7 +105,7 @@ public record AnySource(
 			throw new ModelsException( "Missing @Any annotation - " + member.getName() );
 		}
 
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		final var anyKeyJavaClass = member.locateAnnotationUsage( AnyKeyJavaClass.class, modelsContext );
 		final JoinTable joinTable = member.getDirectAnnotationUsage( JoinTable.class );
 		final List<JoinColumn> keyColumns = joinTable == null
@@ -139,7 +139,7 @@ public record AnySource(
 
 		final List<JoinColumn> inverseJoinColumns = collectionSource.associationInverseJoinColumns();
 
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		final var anyKeyJavaClass = member.locateAnnotationUsage( AnyKeyJavaClass.class, modelsContext );
 		return new AnySource(
 				member,
@@ -162,7 +162,7 @@ public record AnySource(
 				member,
 				Formula.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 	}
 
@@ -200,7 +200,7 @@ public record AnySource(
 		if ( bindingContext != null ) {
 			result.addAll( Arrays.asList( member.getRepeatedAnnotationUsages(
 					AnyDiscriminatorValue.class,
-					bindingContext.getBootstrapContext().getModelsContext()
+					bindingContext.getModelsContext()
 			) ) );
 		}
 		if ( result.isEmpty() ) {
@@ -208,7 +208,7 @@ public record AnySource(
 					? member.getDirectAnnotationUsage( AnyDiscriminatorValues.class )
 					: member.locateAnnotationUsage(
 							AnyDiscriminatorValues.class,
-							bindingContext.getBootstrapContext().getModelsContext()
+							bindingContext.getModelsContext()
 					);
 			if ( values != null ) {
 				result.addAll( Arrays.asList( values.value() ) );
@@ -218,7 +218,7 @@ public record AnySource(
 						? member.getDirectAnnotationUsage( AnyDiscriminatorValue.class )
 						: member.locateAnnotationUsage(
 								AnyDiscriminatorValue.class,
-								bindingContext.getBootstrapContext().getModelsContext()
+								bindingContext.getModelsContext()
 						);
 				if ( value != null ) {
 					result.add( value );

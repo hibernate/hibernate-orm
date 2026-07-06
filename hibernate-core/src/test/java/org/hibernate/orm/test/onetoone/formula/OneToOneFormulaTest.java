@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.onetoone.formula;
 
+import java.util.List;
+
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
@@ -11,7 +13,8 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.OracleDialect;
@@ -58,10 +61,25 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+	protected MappingCustomizations metadataCustomizations() {
 		if ( OracleDialect.class.isInstance( getDialect() ) ) {
-			metadataBuilder.applyBasicType( TextAsMaterializedClobType.INSTANCE );
+			return new MappingCustomizations(
+					null,
+					null,
+					null,
+					null,
+					List.of( new BasicTypeRegistration( TextAsMaterializedClobType.INSTANCE ) ),
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null
+			);
 		}
+		return MappingCustomizations.NONE;
 	}
 
 	@Override

@@ -63,7 +63,7 @@ public class AnyMappingAttributeProcessing {
 
 		final AnyAnnotation anyAnn = (AnyAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.ANY,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		applyAccess( jaxbHbmAnyMapping.getAccess(), memberDetails, xmlDocumentContext );
@@ -86,7 +86,7 @@ public class AnyMappingAttributeProcessing {
 		final JaxbAnyMapping.Discriminator jaxbDiscriminator = jaxbHbmAnyMapping.getDiscriminator();
 		final AnyDiscriminatorAnnotation anyDiscriminatorAnn = (AnyDiscriminatorAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.ANY_DISCRIMINATOR,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		if ( jaxbDiscriminator == null ) {
@@ -101,7 +101,7 @@ public class AnyMappingAttributeProcessing {
 		final JaxbColumnImpl jaxbColumn = jaxbDiscriminator.getColumn();
 		final ColumnJpaAnnotation columnAnn = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.COLUMN,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		if ( jaxbColumn != null ) {
 			columnAnn.apply( jaxbColumn, xmlDocumentContext );
@@ -112,7 +112,7 @@ public class AnyMappingAttributeProcessing {
 			final AnyDiscriminatorValuesAnnotation discriminatorValuesUsage = (AnyDiscriminatorValuesAnnotation) memberDetails.replaceAnnotationUsage(
 					ANY_DISCRIMINATOR_VALUE,
 					HibernateAnnotations.ANY_DISCRIMINATOR_VALUES,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			discriminatorValuesUsage.value( collectDiscriminatorValues(
 					jaxbValueMappings,
@@ -126,7 +126,7 @@ public class AnyMappingAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		final AnyDiscriminatorValue[] values = new AnyDiscriminatorValue[jaxbValueMappings.size()];
 		for ( int i = 0; i < jaxbValueMappings.size(); i++ ) {
-			final AnyDiscriminatorValueAnnotation valueAnn = ANY_DISCRIMINATOR_VALUE.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final AnyDiscriminatorValueAnnotation valueAnn = ANY_DISCRIMINATOR_VALUE.createUsage( xmlDocumentContext.getModelsContext() );
 			values[i] = valueAnn;
 
 			final JaxbDiscriminatorMapping jaxbValue = jaxbValueMappings.get( i );
@@ -137,7 +137,7 @@ public class AnyMappingAttributeProcessing {
 					xmlDocumentContext.getXmlDocument().getDefaults().getPackage(),
 					jaxbValue.getCorrespondingEntityName()
 			);
-			final ClassDetails entityClassDetails = xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( name );
+			final ClassDetails entityClassDetails = xmlDocumentContext.getModelsContext().getClassDetailsRegistry().resolveClassDetails( name );
 			valueAnn.entity( entityClassDetails.toJavaClass() );
 		}
 		return values;
@@ -151,33 +151,33 @@ public class AnyMappingAttributeProcessing {
 		if ( StringHelper.isNotEmpty( jaxbKey.getType() ) ) {
 			final AnyKeTypeAnnotation keyTypeUsage = (AnyKeTypeAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.ANY_KEY_TYPE,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			keyTypeUsage.value( jaxbKey.getType() );
 		}
 		else if ( StringHelper.isNotEmpty( jaxbKey.getJavaClass() ) ) {
 			final AnyKeyJavaClassAnnotation keyJavaType = (AnyKeyJavaClassAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.ANY_KEY_JAVA_CLASS,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			keyJavaType.value( resolveKeyType( jaxbKey.getJavaClass(), xmlDocumentContext ) );
 		}
 
 		if ( jaxbKey.getColumns().isEmpty() ) {
-			memberDetails.applyAnnotationUsage( JpaAnnotations.JOIN_COLUMN, xmlDocumentContext.getModelBuildingContext() );
+			memberDetails.applyAnnotationUsage( JpaAnnotations.JOIN_COLUMN, xmlDocumentContext.getModelsContext() );
 		}
 		else {
 			final JoinColumnsJpaAnnotation joinColumnsUsage = (JoinColumnsJpaAnnotation) memberDetails.replaceAnnotationUsage(
 					JOIN_COLUMN,
 					JpaAnnotations.JOIN_COLUMNS,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 
 			final JoinColumn[] joinColumns = new JoinColumn[jaxbKey.getColumns().size()];
 			joinColumnsUsage.value( joinColumns );
 
 			for ( int i = 0; i < jaxbKey.getColumns().size(); i++ ) {
-				final JoinColumnJpaAnnotation joinColumn = JOIN_COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
+				final JoinColumnJpaAnnotation joinColumn = JOIN_COLUMN.createUsage( xmlDocumentContext.getModelsContext() );
 				joinColumns[i] = joinColumn;
 
 				final JaxbColumnImpl jaxbJoinColumn = jaxbKey.getColumns().get( i );
@@ -193,7 +193,6 @@ public class AnyMappingAttributeProcessing {
 		}
 
 		return xmlDocumentContext
-				.getBootstrapContext()
 				.getModelsContext()
 				.getClassLoading()
 				.classForName( xmlDocumentContext.resolveClassName( name ) );

@@ -7,10 +7,8 @@ package org.hibernate.action.queue;
 import jakarta.persistence.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -142,29 +140,26 @@ public class CollectionBundlingBenchmark {
 	// ========== Helper Methods ==========
 
 	private static SessionFactory createSessionFactory(String queueImpl, boolean bundling) {
-		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect")
-				.applySetting(AvailableSettings.URL, "jdbc:h2:mem:collectionbench_" + queueImpl + "_" + bundling + ";DB_CLOSE_DELAY=-1")
-				.applySetting(AvailableSettings.USER, "sa")
-				.applySetting(AvailableSettings.PASS, "")
-				.applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
-				.applySetting(AvailableSettings.SHOW_SQL, "false")
-				.applySetting(AvailableSettings.FORMAT_SQL, "false")
-				.applySetting(AvailableSettings.USE_SQL_COMMENTS, "false")
-				.applySetting(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
-				.applySetting(AvailableSettings.FLUSH_QUEUE_TYPE, queueImpl);
+		final var configuration = new HibernatePersistenceConfiguration( "collection-bundling-" + queueImpl )
+				.property(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect")
+				.property(AvailableSettings.URL, "jdbc:h2:mem:collectionbench_" + queueImpl + "_" + bundling + ";DB_CLOSE_DELAY=-1")
+				.property(AvailableSettings.USER, "sa")
+				.property(AvailableSettings.PASS, "")
+				.property(AvailableSettings.HBM2DDL_AUTO, "create-drop")
+				.property(AvailableSettings.SHOW_SQL, "false")
+				.property(AvailableSettings.FORMAT_SQL, "false")
+				.property(AvailableSettings.USE_SQL_COMMENTS, "false")
+				.property(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
+				.property(AvailableSettings.FLUSH_QUEUE_TYPE, queueImpl);
 
 		if (bundling) {
-			builder.applySetting("hibernate.bundle_collection_operations", "true");
+			configuration.property("hibernate.bundle_collection_operations", "true");
 		}
 
-		ServiceRegistry registry = builder.build();
-
-		return new MetadataSources(registry)
-				.addAnnotatedClass(Document.class)
-				.addAnnotatedClass(Article.class)
-				.buildMetadata()
-				.buildSessionFactory();
+		return configuration
+				.managedClass( Document.class )
+				.managedClass( Article.class )
+				.createEntityManagerFactory();
 	}
 
 	// ========================================================================

@@ -96,7 +96,7 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 	private static boolean isRowLevelSecurityEnabled(MetadataBuildingContext buildingContext) {
 		return getBoolean(
 				MULTI_TENANT_RLS_ENABLED,
-				buildingContext.getBootstrapContext().getConfigurationService().getSettings(),
+				buildingContext.getConfigurationService().getSettings(),
 				true
 		);
 	}
@@ -126,11 +126,9 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 	}
 
 	private static boolean hasTenantCredentialsMapper(MetadataBuildingContext buildingContext) {
-		final var bootstrapContext = buildingContext.getBootstrapContext();
-		return bootstrapContext.getConfigurationService().getSettings()
-					.get( MULTI_TENANT_CREDENTIALS_MAPPER ) != null
-			|| bootstrapContext.getServiceRegistry().requireService( MultiTenancy.class )
-					.getTenantCredentialsMapper() != null;
+		final var settings = buildingContext.getConfigurationService().getSettings();
+		return settings.get( MULTI_TENANT_CREDENTIALS_MAPPER ) != null
+			|| getTenantCredentialsMapper( settings, buildingContext.getStandardServiceRegistry() ) != null;
 	}
 
 	private String columnNameOrFormula(Property property) {

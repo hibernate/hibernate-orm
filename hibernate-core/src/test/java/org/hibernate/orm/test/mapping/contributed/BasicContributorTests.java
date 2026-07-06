@@ -46,7 +46,7 @@ public class BasicContributorTests {
 		assertThat( metadata.getEntityBindings().size(), Matchers.is( 2 ) );
 
 		final StandardServiceRegistry serviceRegistry = metadata
-				.getMetadataBuildingOptions()
+				.getMappingResolutionOptions()
 				.getServiceRegistry();
 
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();

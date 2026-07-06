@@ -11,10 +11,6 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaClass;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -28,7 +24,6 @@ import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
-import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -278,29 +273,32 @@ public class ToOneAssociationTests {
 	@Test
 	@ServiceRegistry
 	void testSelfReferentialInverseOneToOneMappedBy(ServiceRegistryScope scope) {
-		final var legacyMetadata = buildLegacyBinderMetadata(
-				scope,
-				SelfReferentialMappedByOneToOne.class
+		final ToOneSnapshot expectedParentSnapshot = manyToOneSnapshot(
+				SelfReferentialMappedByOneToOne.class,
+				"parent",
+				List.of( "parent_id" )
 		);
-		final PersistentClass legacyEntityBinding = legacyMetadata.getEntityBinding(
-				SelfReferentialMappedByOneToOne.class.getName()
+		final ToOneSnapshot expectedChildSnapshot = oneToOneSnapshot(
+				SelfReferentialMappedByOneToOne.class,
+				"child",
+				true,
+				"parent",
+				org.hibernate.engine.FetchStyle.SELECT
 		);
-		final ToOneSnapshot legacyParentSnapshot = snapshotToOne( legacyEntityBinding.getProperty( "parent" ) );
-		final ToOneSnapshot legacyChildSnapshot = snapshotToOne( legacyEntityBinding.getProperty( "child" ) );
 
 		checkDomainModel(
 				(context) -> {
 					final PersistentClass entityBinding = context.getMetadataCollector()
 							.getEntityBinding( SelfReferentialMappedByOneToOne.class.getName() );
 					final org.hibernate.mapping.Property parentProperty = entityBinding.getProperty( "parent" );
-					assertThat( snapshotToOne( parentProperty ) ).isEqualTo( legacyParentSnapshot );
+					assertThat( snapshotToOne( parentProperty ) ).isEqualTo( expectedParentSnapshot );
 					assertThat( parentProperty.isLazy() ).isFalse();
 					assertThat( parentProperty.getValue() ).isInstanceOf( ManyToOne.class );
 					final ManyToOne parentValue = (ManyToOne) parentProperty.getValue();
 					assertThat( parentValue.isLazy() ).isTrue();
 
 					final org.hibernate.mapping.Property property = entityBinding.getProperty( "child" );
-					assertThat( snapshotToOne( property ) ).isEqualTo( legacyChildSnapshot );
+					assertThat( snapshotToOne( property ) ).isEqualTo( expectedChildSnapshot );
 					assertThat( property.isLazy() ).isFalse();
 					assertThat( property.getValue() ).isInstanceOf( org.hibernate.mapping.OneToOne.class );
 					final org.hibernate.mapping.OneToOne value = (org.hibernate.mapping.OneToOne) property.getValue();
@@ -326,19 +324,30 @@ public class ToOneAssociationTests {
 	@Test
 	@ServiceRegistry
 	void testLazyRemoveFlushAccessModelMatchesLegacyBinderToOneShape(ServiceRegistryScope scope) {
-		final var legacyMetadata = buildLegacyBinderMetadata(
-				scope,
+		final ToOneSnapshot expectedParentSnapshot = manyToOneSnapshot(
 				LazyRemoveContainingEntity.class,
-				LazyRemoveContainedEntity.class
+				"parent",
+				List.of( "parent_id" )
 		);
-		final PersistentClass legacyContainingBinding =
-				legacyMetadata.getEntityBinding( LazyRemoveContainingEntity.class.getName() );
-		final PersistentClass legacyContainedBinding =
-				legacyMetadata.getEntityBinding( LazyRemoveContainedEntity.class.getName() );
-		final ToOneSnapshot legacyParentSnapshot = snapshotToOne( legacyContainingBinding.getProperty( "parent" ) );
-		final ToOneSnapshot legacyChildSnapshot = snapshotToOne( legacyContainingBinding.getProperty( "child" ) );
-		final ToOneSnapshot legacyContainedSnapshot = snapshotToOne( legacyContainingBinding.getProperty( "contained" ) );
-		final ToOneSnapshot legacyContainingSnapshot = snapshotToOne( legacyContainedBinding.getProperty( "containing" ) );
+		final ToOneSnapshot expectedChildSnapshot = oneToOneSnapshot(
+				LazyRemoveContainingEntity.class,
+				"child",
+				true,
+				"parent",
+				org.hibernate.engine.FetchStyle.SELECT
+		);
+		final ToOneSnapshot expectedContainedSnapshot = oneToOneSnapshot(
+				LazyRemoveContainedEntity.class,
+				"contained",
+				false,
+				"containing",
+				org.hibernate.engine.FetchStyle.JOIN
+		);
+		final ToOneSnapshot expectedContainingSnapshot = manyToOneSnapshot(
+				LazyRemoveContainingEntity.class,
+				"containing",
+				List.of( "containing" )
+		);
 
 		checkDomainModel(
 				(context) -> {
@@ -347,30 +356,14 @@ public class ToOneAssociationTests {
 					final PersistentClass containedBinding = context.getMetadataCollector()
 							.getEntityBinding( LazyRemoveContainedEntity.class.getName() );
 
-					assertThat( snapshotToOne( containingBinding.getProperty( "parent" ) ) ).isEqualTo( legacyParentSnapshot );
-					assertThat( snapshotToOne( containingBinding.getProperty( "child" ) ) ).isEqualTo( legacyChildSnapshot );
-					assertThat( snapshotToOne( containingBinding.getProperty( "contained" ) ) ).isEqualTo( legacyContainedSnapshot );
-					assertThat( snapshotToOne( containedBinding.getProperty( "containing" ) ) ).isEqualTo( legacyContainingSnapshot );
+					assertThat( snapshotToOne( containingBinding.getProperty( "parent" ) ) ).isEqualTo( expectedParentSnapshot );
+					assertThat( snapshotToOne( containingBinding.getProperty( "child" ) ) ).isEqualTo( expectedChildSnapshot );
+					assertThat( snapshotToOne( containingBinding.getProperty( "contained" ) ) ).isEqualTo( expectedContainedSnapshot );
+					assertThat( snapshotToOne( containedBinding.getProperty( "containing" ) ) ).isEqualTo( expectedContainingSnapshot );
 				},
 				scope.getRegistry(),
 				LazyRemoveContainingEntity.class,
 				LazyRemoveContainedEntity.class
-		);
-	}
-
-	private static MetadataImplementor buildLegacyBinderMetadata(ServiceRegistryScope scope, Class<?>... domainClasses) {
-		final MetadataSources metadataSources = new MetadataSources( scope.getRegistry() );
-		for ( Class<?> domainClass : domainClasses ) {
-			metadataSources.addAnnotatedClass( domainClass );
-		}
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( scope.getRegistry() );
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( scope.getRegistry(), options );
-		options.setBootstrapContext( bootstrapContext );
-		return MetadataBuildingProcess.complete(
-				MetadataBuildingProcess.prepare( metadataSources, bootstrapContext ),
-				bootstrapContext,
-				options
 		);
 	}
 
@@ -401,6 +394,66 @@ public class ToOneAssociationTests {
 				type.getRHSUniqueKeyPropertyName(),
 				type.getPropertyName(),
 				value.getColumns().stream().map( org.hibernate.mapping.Column::getName ).toList()
+		);
+	}
+
+	private static ToOneSnapshot manyToOneSnapshot(
+			Class<?> associatedType,
+			String propertyName,
+			List<String> columns) {
+		return new ToOneSnapshot(
+				false,
+				true,
+				ManyToOne.class,
+				true,
+				false,
+				true,
+				org.hibernate.engine.FetchStyle.SELECT,
+				associatedType.getName(),
+				true,
+				null,
+				true,
+				null,
+				null,
+				null,
+				org.hibernate.type.ManyToOneType.class,
+				associatedType.getName(),
+				false,
+				true,
+				null,
+				propertyName,
+				columns
+		);
+	}
+
+	private static ToOneSnapshot oneToOneSnapshot(
+			Class<?> associatedType,
+			String propertyName,
+			boolean valueLazy,
+			String mappedByProperty,
+			org.hibernate.engine.FetchStyle fetchStyle) {
+		return new ToOneSnapshot(
+				false,
+				true,
+				org.hibernate.mapping.OneToOne.class,
+				valueLazy,
+				!valueLazy,
+				true,
+				fetchStyle,
+				associatedType.getName(),
+				false,
+				mappedByProperty,
+				null,
+				mappedByProperty,
+				org.hibernate.type.ForeignKeyDirection.TO_PARENT,
+				false,
+				org.hibernate.type.OneToOneType.class,
+				associatedType.getName(),
+				true,
+				false,
+				mappedByProperty,
+				propertyName,
+				List.of()
 		);
 	}
 

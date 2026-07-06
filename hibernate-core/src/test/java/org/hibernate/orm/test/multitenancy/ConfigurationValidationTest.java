@@ -1,11 +1,12 @@
 package org.hibernate.orm.test.multitenancy;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -35,7 +36,9 @@ public class ConfigurationValidationTest  {
 								.applySetting( Environment.MULTI_TENANT_CONNECTION_PROVIDER, "class.not.present.in.classpath" )
 								.build();
 
-						new MetadataSources( serviceRegistry ).buildMetadata().buildSessionFactory().close();
+						org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+								MetadataBuildingTestHelper.buildMetadata( (StandardServiceRegistry) serviceRegistry )
+						).close();
 					}
 					finally {
 						if ( serviceRegistry != null ) {
@@ -67,7 +70,9 @@ public class ConfigurationValidationTest  {
 					)
 					.build();
 
-			new MetadataSources( serviceRegistry ).buildMetadata().buildSessionFactory().close();
+			org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( (StandardServiceRegistry) serviceRegistry )
+			).close();
 		}
 		finally {
 			if ( serviceRegistry != null ) {

@@ -438,7 +438,7 @@ public class AnonymousTupleEntityValuedModelPart
 						primaryTableReference,
 						creationState
 				),
-				creationState.getCreationContext().getSessionFactory()
+				creationState.getLoadQueryInfluencers().getSessionFactory()
 		);
 	}
 
@@ -475,7 +475,7 @@ public class AnonymousTupleEntityValuedModelPart
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationState.getCreationContext().getSessionFactory(),
+				creationState.getLoadQueryInfluencers().getSessionFactory(),
 				lhs
 		);
 

@@ -46,9 +46,9 @@ public class ManagedTypeInheritanceState {
 		EXCEPTION,
 		/// Warn and continue walking past the missing persistent superclass.
 		WARN_AND_IGNORE,
-		/// Warn, add the missing persistent superclass to the visible set, and use it
-		/// as the visible supertype.
-		WARN_AND_USE
+		/// Add the missing persistent superclass to the visible set and use it as
+		/// the visible supertype.
+		INCLUDE
 	}
 
 	private final MissingPersistentSuperclassHandling missingPersistentSuperclassHandling;
@@ -182,11 +182,7 @@ public class ManagedTypeInheritanceState {
 						);
 						current = current.getSuperClass();
 						continue;
-					case WARN_AND_USE:
-						CATEGORIZATION_LOGGER.warnf(
-								"%s; using the superclass",
-								missingPersistentSuperclassMessage( current, classDetails )
-						);
+					case INCLUDE:
 						persistentTypes.add( current );
 						persistentTypesToProcess.add( current );
 						return current;
@@ -215,7 +211,7 @@ public class ManagedTypeInheritanceState {
 	private static String missingPersistentSuperclassMessage(
 			ClassDetails persistentSuperType,
 			ClassDetails classDetails) {
-		return "Persistent superclass `%s` of `%s` was not included in AvailableResources".formatted(
+		return "Persistent superclass `%s` of `%s` was not included in PreparedMappingSources".formatted(
 				persistentSuperType.getName(),
 				classDetails.getName()
 		);

@@ -27,6 +27,23 @@ import static org.hibernate.internal.util.GenericsHelper.typeArguments;
  * Invokes user-defined mapping binders declared through Hibernate annotations.
  */
 public class CustomMappingBinder {
+	public static ComponentBindingPhase.CustomMapping typeBinding(
+			ClassDetails classDetails,
+			Component component,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		return new ComponentTypeBinding( classDetails, component, bindingState, bindingContext );
+	}
+
+	public static AttributeBindingPhase.CustomMapping attributeBinding(
+			MemberDetails member,
+			PersistentClass persistentClass,
+			Property property,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		return new AttributeBinding( member, persistentClass, property, bindingState, bindingContext );
+	}
+
 	static void callTypeBinders(
 			ClassDetails classDetails,
 			PersistentClass persistentClass,
@@ -35,7 +52,7 @@ public class CustomMappingBinder {
 		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
 		for ( var metaAnnotated : classDetails.getMetaAnnotated(
 				TypeBinderType.class,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		) ) {
 			callTypeBinder( metaAnnotated, metaAnnotated.annotationType(), persistentClass, metadataBuildingContext );
 		}
@@ -49,7 +66,7 @@ public class CustomMappingBinder {
 		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
 		for ( var metaAnnotated : classDetails.getMetaAnnotated(
 				TypeBinderType.class,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		) ) {
 			callTypeBinder( metaAnnotated, metaAnnotated.annotationType(), component, metadataBuildingContext );
 		}
@@ -68,13 +85,36 @@ public class CustomMappingBinder {
 		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
 		for ( var metaAnnotated : member.getMetaAnnotated(
 				AttributeBinderType.class,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		) ) {
 			if ( metaAnnotated.annotationType() == TenantId.class
 					|| metaAnnotated.annotationType() == Collate.class ) {
 				continue;
 			}
 			callAttributeBinder( metaAnnotated, metaAnnotated.annotationType(), persistentClass, property, metadataBuildingContext );
+		}
+	}
+
+	private record ComponentTypeBinding(
+			ClassDetails classDetails,
+			Component component,
+			BindingState bindingState,
+			BindingContext bindingContext) implements ComponentBindingPhase.CustomMapping {
+		@Override
+		public void bindCustomMapping() {
+			callTypeBinders( classDetails, component, bindingState, bindingContext );
+		}
+	}
+
+	private record AttributeBinding(
+			MemberDetails member,
+			PersistentClass persistentClass,
+			Property property,
+			BindingState bindingState,
+			BindingContext bindingContext) implements AttributeBindingPhase.CustomMapping {
+		@Override
+		public void bindCustomMapping() {
+			callAttributeBinders( member, persistentClass, property, bindingState, bindingContext );
 		}
 	}
 

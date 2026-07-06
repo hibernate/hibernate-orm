@@ -228,8 +228,8 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 				lateral,
 				canUseInnerJoins,
 				getFunctionRenderer()
-						.rendersIdentifierVariable( arguments, walker.getCreationContext().getSessionFactory() ),
-				walker.getCreationContext().getSessionFactory()
+						.rendersIdentifierVariable( arguments, walker.getLoadQueryInfluencers().getSessionFactory() ),
+				walker.getLoadQueryInfluencers().getSessionFactory()
 		);
 	}
 

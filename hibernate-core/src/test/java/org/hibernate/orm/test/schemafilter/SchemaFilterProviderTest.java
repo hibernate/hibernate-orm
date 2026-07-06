@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
@@ -17,6 +16,7 @@ import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.Helper;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
@@ -158,10 +158,11 @@ public class SchemaFilterProviderTest {
 		settings.putAll( environmentProperties );
 		settings.putAll( configurationValues );
 		try (final StandardServiceRegistryImpl serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings )) {
-			consumer.accept( serviceRegistry, new MetadataSources( serviceRegistry ).addAnnotatedClasses(
+			consumer.accept( serviceRegistry, MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
 					Entity1.class,
 					Entity2.class
-			).buildMetadata() );
+			) );
 		}
 	}
 

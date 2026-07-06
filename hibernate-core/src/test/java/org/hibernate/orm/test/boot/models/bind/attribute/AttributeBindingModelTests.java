@@ -180,9 +180,7 @@ public class AttributeBindingModelTests {
 
 					final BasicValue mutabilityValue = (BasicValue) entityBinding.getProperty( "mutabilityPlanned" )
 							.getValue();
-					assertThat( mutabilityValue.getExplicitMutabilityPlanAccess() ).isNotNull();
-					assertThat( mutabilityValue.getExplicitMutabilityPlanAccess()
-							.apply( context.getMetadataCollector().getTypeConfiguration() ) )
+					assertThat( mutabilityValue.resolve().getMutabilityPlan() )
 							.isInstanceOf( CustomMutabilityPlan.class );
 
 					final Property customBound = entityBinding.getProperty( "customBound" );

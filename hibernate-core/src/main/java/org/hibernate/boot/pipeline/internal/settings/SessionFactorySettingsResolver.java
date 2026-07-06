@@ -29,7 +29,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.context.MappingPreferences;
 import org.hibernate.boot.internal.StandardEntityNotFoundDelegate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BatchSettings;
@@ -89,8 +89,6 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
 import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForBoolean;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode;
 
@@ -123,9 +121,11 @@ public class SessionFactorySettingsResolver {
 			);
 		}
 
+		final var context = settingsResolutionContext( standardServiceRegistry );
 		final var configurationValues = bootstrapSettings.configurationValues();
-		final var cacheSettings = resolveCacheSettings( configurationValues, standardServiceRegistry );
+		final var cacheSettings = resolveCacheSettings( configurationValues, context );
 		final var defaultSessionProperties = resolveDefaultSessionProperties( configurationValues );
+		final var mappingPreferences = MappingPreferences.from( context.serviceRegistry() );
 		return new ResolvedSessionFactorySettings(
 				configurationValues,
 				bootstrapSettings.jpaBootstrap(),
@@ -134,7 +134,7 @@ public class SessionFactorySettingsResolver {
 				asString( configurationValues.get( PersistenceSettings.SESSION_FACTORY_JNDI_NAME ) ),
 				asBoolean( configurationValues.get( PersistenceSettings.SESSION_FACTORY_NAME_IS_JNDI ), true ),
 				resolveStatementObserver( configurationValues ),
-				resolveStatementInspector( configurationValues, standardServiceRegistry ),
+				resolveStatementInspector( configurationValues, context ),
 				CacheMode.NORMAL,
 				resolveDefaultFlushMode( defaultSessionProperties ),
 				resolveDefaultLockOptions( defaultSessionProperties ),
@@ -142,7 +142,7 @@ public class SessionFactorySettingsResolver {
 				resolveDefaultCacheRetrieveMode( configurationValues ),
 				resolveDefaultCacheStoreMode( configurationValues ),
 				GraphParserMode.interpret( configurationValues.get( GraphParserSettings.GRAPH_PARSER_MODE ) ),
-				resolvePhysicalConnectionHandlingMode( configurationValues, standardServiceRegistry ),
+				resolvePhysicalConnectionHandlingMode( configurationValues, context ),
 				asBoolean( configurationValues.get( JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT ), false ),
 				resolveJdbcTimeZone( configurationValues ),
 				asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
@@ -159,9 +159,9 @@ public class SessionFactorySettingsResolver {
 				),
 				resolveBidirectionalAssociationManagementEnabled( configurationValues ),
 				asBoolean( configurationValues.get( AvailableSettings.GENERATE_STATISTICS ), false ),
-				resolveInterceptor( configurationValues, standardServiceRegistry ),
-				resolveStatelessInterceptorSupplier( configurationValues, standardServiceRegistry ),
-				resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),
+				resolveInterceptor( configurationValues, context ),
+				resolveStatelessInterceptorSupplier( configurationValues, context ),
+				resolveSessionFactoryObservers( configurationValues, context ),
 				resolveValidatorFactoryReference( configurationValues ),
 				bootstrapSettings.jpaBootstrap()
 						? JpaEntityNotFoundDelegate.INSTANCE
@@ -178,21 +178,21 @@ public class SessionFactorySettingsResolver {
 					asInteger( configurationValues.get( BatchSettings.STATEMENT_BATCH_SIZE ), 1 ),
 					Collections.emptyMap(),
 					null,
-					resolveHqlTranslator( configurationValues, standardServiceRegistry ),
-					resolveSqmTranslatorFactory( configurationValues, standardServiceRegistry ),
-					resolveSqmMultiTableMutationStrategy( configurationValues, standardServiceRegistry ),
-					resolveSqmMultiTableInsertStrategy( configurationValues, standardServiceRegistry ),
+					resolveHqlTranslator( configurationValues, context ),
+					resolveSqmTranslatorFactory( configurationValues, context ),
+					resolveSqmMultiTableMutationStrategy( configurationValues, context ),
+					resolveSqmMultiTableInsertStrategy( configurationValues, context ),
 					resolveJpaCompliance( bootstrapSettings ),
 					ValueHandlingMode.interpret( configurationValues.get( QuerySettings.CRITERIA_VALUE_HANDLING_MODE ) ),
 					asBoolean( configurationValues.get( QuerySettings.CRITERIA_COPY_TREE ), bootstrapSettings.jpaBootstrap() ),
 					ImmutableEntityUpdateQueryHandlingMode.interpret(
 							configurationValues.get( QuerySettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 					),
-					getPreferredSqlTypeCodeForBoolean( standardServiceRegistry ),
-					getPreferredSqlTypeCodeForDuration( standardServiceRegistry ),
-					resolveDefaultTimeZoneStorageStrategy( configurationValues, standardServiceRegistry ),
+					mappingPreferences.getPreferredSqlTypeCodeForBoolean(),
+					mappingPreferences.getPreferredSqlTypeCodeForDuration(),
+					resolveDefaultTimeZoneStorageStrategy( configurationValues, context ),
 					asBoolean( configurationValues.get( QuerySettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES ), false ),
-					MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( standardServiceRegistry ),
+					mappingPreferences.isPreferJavaTimeJdbcTypesEnabled(),
 					asBoolean( configurationValues.get( QuerySettings.NATIVE_PREFER_JDBC_DATETIME_TYPES ), false ),
 					asBoolean( configurationValues.get( QuerySettings.IN_CLAUSE_PARAMETER_PADDING ), false ),
 					asBoolean( configurationValues.get( QuerySettings.JSON_FUNCTIONS_ENABLED ), false ),
@@ -207,15 +207,26 @@ public class SessionFactorySettingsResolver {
 					asInteger( configurationValues.get( FetchSettings.MAX_FETCH_DEPTH ) ),
 					asBoolean( configurationValues.get( FetchSettings.USE_SUBSELECT_FETCH ), false ),
 					asBoolean( configurationValues.get( JdbcSettings.USE_SQL_COMMENTS ), false ),
-					resolveTemporalTableStrategy( configurationValues, standardServiceRegistry ),
+					resolveTemporalTableStrategy( configurationValues, context ),
 						resolveAuditStrategy( configurationValues ),
-						MultiTenancy.isMultiTenancyEnabled( serviceRegistry ),
-						MultiTenancy.getTenantIdentifierResolver( configurationValues, standardServiceRegistry ),
-						MultiTenancy.getTenantSchemaMapper( configurationValues, standardServiceRegistry ),
-						MultiTenancy.getTenantCredentialsMapper( configurationValues, standardServiceRegistry ),
+						MultiTenancy.isMultiTenancyEnabled( context.serviceRegistry() ),
+						MultiTenancy.getTenantIdentifierResolver( configurationValues, context.serviceRegistry() ),
+						MultiTenancy.getTenantSchemaMapper( configurationValues, context.serviceRegistry() ),
+						MultiTenancy.getTenantCredentialsMapper( configurationValues, context.serviceRegistry() ),
 						ObjectJavaType.INSTANCE,
 					asString( configurationValues.get( MappingSettings.DEFAULT_CATALOG ) ),
 					asString( configurationValues.get( MappingSettings.DEFAULT_SCHEMA ) )
+		);
+	}
+
+	private static SessionFactorySettingsResolutionContext settingsResolutionContext(
+			StandardServiceRegistry serviceRegistry) {
+		return new SessionFactorySettingsResolutionContext(
+				serviceRegistry,
+				serviceRegistry.requireService( StrategySelector.class ),
+				serviceRegistry.requireService( JdbcServices.class ),
+				serviceRegistry.requireService( TransactionCoordinatorBuilder.class ),
+				serviceRegistry.getService( RegionFactory.class )
 		);
 	}
 
@@ -247,15 +258,15 @@ public class SessionFactorySettingsResolver {
 
 	private static Interceptor resolveInterceptor(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
-		return serviceRegistry.requireService( StrategySelector.class )
+			SessionFactorySettingsResolutionContext context) {
+		return context.strategySelector()
 				.resolveStrategy( Interceptor.class, configurationValues.get( SessionEventSettings.INTERCEPTOR ) );
 	}
 
 	@SuppressWarnings("unchecked")
 	private static Supplier<? extends Interceptor> resolveStatelessInterceptorSupplier(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
+			SessionFactorySettingsResolutionContext context) {
 		final Object setting = configurationValues.get( SessionEventSettings.SESSION_SCOPED_INTERCEPTOR );
 		if ( setting == null ) {
 			return null;
@@ -267,8 +278,7 @@ public class SessionFactorySettingsResolver {
 			return interceptorSupplier( (Class<? extends Interceptor>) setting );
 		}
 		return interceptorSupplier(
-				serviceRegistry.requireService( StrategySelector.class )
-						.selectStrategyImplementor( Interceptor.class, setting.toString() )
+				context.strategySelector().selectStrategyImplementor( Interceptor.class, setting.toString() )
 		);
 	}
 
@@ -332,21 +342,20 @@ public class SessionFactorySettingsResolver {
 
 	private static StatementInspector resolveStatementInspector(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
-		return serviceRegistry.requireService( StrategySelector.class )
+			SessionFactorySettingsResolutionContext context) {
+		return context.strategySelector()
 				.resolveStrategy( StatementInspector.class, configurationValues.get( JdbcSettings.STATEMENT_INSPECTOR ) );
 	}
 
 	private static PhysicalConnectionHandlingMode resolvePhysicalConnectionHandlingMode(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
+			SessionFactorySettingsResolutionContext context) {
 		final var specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
 				configurationValues.get( JdbcSettings.CONNECTION_HANDLING )
 		);
 		return specifiedHandlingMode != null
 				? specifiedHandlingMode
-				: serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
-						.getDefaultConnectionHandlingMode();
+				: context.transactionCoordinatorBuilder().getDefaultConnectionHandlingMode();
 	}
 
 	private static TimeZone resolveJdbcTimeZone(Map<String, Object> configurationValues) {
@@ -365,9 +374,9 @@ public class SessionFactorySettingsResolver {
 
 	private static TimeZoneStorageStrategy resolveDefaultTimeZoneStorageStrategy(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
+			SessionFactorySettingsResolutionContext context) {
 		final var storageType = resolveTimeZoneStorageType( configurationValues );
-		final var timeZoneSupport = resolveTimeZoneSupport( serviceRegistry );
+		final var timeZoneSupport = resolveTimeZoneSupport( context );
 		return switch ( storageType ) {
 			case NATIVE -> {
 				if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
@@ -396,9 +405,9 @@ public class SessionFactorySettingsResolver {
 		return setting == null ? TimeZoneStorageType.DEFAULT : TimeZoneStorageType.valueOf( setting.toString() );
 	}
 
-	private static TimeZoneSupport resolveTimeZoneSupport(StandardServiceRegistry serviceRegistry) {
+	private static TimeZoneSupport resolveTimeZoneSupport(SessionFactorySettingsResolutionContext context) {
 		try {
-			return serviceRegistry.requireService( JdbcServices.class ).getDialect().getTimeZoneSupport();
+			return context.jdbcServices().getDialect().getTimeZoneSupport();
 		}
 		catch (ServiceException se) {
 			return TimeZoneSupport.NONE;
@@ -407,8 +416,8 @@ public class SessionFactorySettingsResolver {
 
 	private static ResolvedCacheSettings resolveCacheSettings(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
-		final var regionFactory = serviceRegistry.getService( RegionFactory.class );
+			SessionFactorySettingsResolutionContext context) {
+		final var regionFactory = context.regionFactory();
 		if ( regionFactory instanceof NoCachingRegionFactory ) {
 			return new ResolvedCacheSettings(
 					false,
@@ -423,12 +432,11 @@ public class SessionFactorySettingsResolver {
 			);
 		}
 
-			final var strategySelector = serviceRegistry.requireService( StrategySelector.class );
 			return new ResolvedCacheSettings(
 				asBoolean( configurationValues.get( CacheSettings.USE_SECOND_LEVEL_CACHE ), true ),
 				asBoolean( configurationValues.get( CacheSettings.USE_QUERY_CACHE ), false ),
 				resolveCacheLayout( configurationValues.get( CacheSettings.QUERY_CACHE_LAYOUT ) ),
-				strategySelector.resolveDefaultableStrategy(
+				context.strategySelector().resolveDefaultableStrategy(
 						TimestampsCacheFactory.class,
 						configurationValues.get( CacheSettings.QUERY_CACHE_FACTORY ),
 						StandardTimestampsCacheFactory.INSTANCE
@@ -446,22 +454,22 @@ public class SessionFactorySettingsResolver {
 
 		private static HqlTranslator resolveHqlTranslator(
 				Map<String, Object> configurationValues,
-				StandardServiceRegistry serviceRegistry) {
-			return serviceRegistry.requireService( StrategySelector.class )
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
 					.resolveStrategy( HqlTranslator.class, configurationValues.get( QuerySettings.SEMANTIC_QUERY_PRODUCER ) );
 		}
 
 		private static SqmTranslatorFactory resolveSqmTranslatorFactory(
 				Map<String, Object> configurationValues,
-				StandardServiceRegistry serviceRegistry) {
-			return serviceRegistry.requireService( StrategySelector.class )
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
 					.resolveStrategy( SqmTranslatorFactory.class, configurationValues.get( QuerySettings.SEMANTIC_QUERY_TRANSLATOR ) );
 		}
 
 		private static SqmMultiTableMutationStrategy resolveSqmMultiTableMutationStrategy(
 				Map<String, Object> configurationValues,
-				StandardServiceRegistry serviceRegistry) {
-			return serviceRegistry.requireService( StrategySelector.class )
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
 					.resolveStrategy(
 							SqmMultiTableMutationStrategy.class,
 							configurationValues.get( QuerySettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY )
@@ -470,8 +478,8 @@ public class SessionFactorySettingsResolver {
 
 		private static SqmMultiTableInsertStrategy resolveSqmMultiTableInsertStrategy(
 				Map<String, Object> configurationValues,
-				StandardServiceRegistry serviceRegistry) {
-			return serviceRegistry.requireService( StrategySelector.class )
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
 					.resolveStrategy(
 							SqmMultiTableInsertStrategy.class,
 							configurationValues.get( QuerySettings.QUERY_MULTI_TABLE_INSERT_STRATEGY )
@@ -485,11 +493,10 @@ public class SessionFactorySettingsResolver {
 
 	private static TemporalTableStrategy resolveTemporalTableStrategy(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
+			SessionFactorySettingsResolutionContext context) {
 		final var strategy = TemporalHelper.determineTemporalTableStrategy( configurationValues );
 		return strategy == TemporalTableStrategy.AUTO
-				? serviceRegistry.requireService( JdbcServices.class )
-						.getDialect()
+				? context.jdbcServices().getDialect()
 						.getTemporalTableSupport()
 						.getDefaultTemporalTableStrategy()
 				: strategy;
@@ -537,20 +544,20 @@ public class SessionFactorySettingsResolver {
 
 	private static SessionFactoryObserver[] resolveSessionFactoryObservers(
 			Map<String, Object> configurationValues,
-			StandardServiceRegistry serviceRegistry) {
+			SessionFactorySettingsResolutionContext context) {
 		final Object setting = configurationValues.get( PersistenceSettings.SESSION_FACTORY_OBSERVER );
 		if ( setting == null ) {
 			return new SessionFactoryObserver[0];
 		}
 
 		final var observers = new ArrayList<SessionFactoryObserver>();
-		addSessionFactoryObservers( setting, serviceRegistry, observers );
+		addSessionFactoryObservers( setting, context, observers );
 		return observers.toArray( SessionFactoryObserver[]::new );
 	}
 
 	private static void addSessionFactoryObservers(
 			Object setting,
-			StandardServiceRegistry serviceRegistry,
+			SessionFactorySettingsResolutionContext context,
 			ArrayList<SessionFactoryObserver> observers) {
 		if ( setting instanceof SessionFactoryObserver observer ) {
 			observers.add( observer );
@@ -560,7 +567,7 @@ public class SessionFactorySettingsResolver {
 		}
 		else if ( setting instanceof Collection<?> collection ) {
 			for ( Object item : collection ) {
-				addSessionFactoryObservers( item, serviceRegistry, observers );
+				addSessionFactoryObservers( item, context, observers );
 			}
 		}
 		else if ( setting instanceof Class<?> javaType ) {
@@ -568,8 +575,7 @@ public class SessionFactorySettingsResolver {
 		}
 		else {
 			observers.add(
-					serviceRegistry.requireService( StrategySelector.class )
-							.resolveStrategy( SessionFactoryObserver.class, setting )
+					context.strategySelector().resolveStrategy( SessionFactoryObserver.class, setting )
 			);
 		}
 	}
@@ -612,6 +618,14 @@ public class SessionFactorySettingsResolver {
 		}
 		final String string = value.toString().trim();
 		return string.isEmpty() ? null : Integer.valueOf( string );
+	}
+
+	private record SessionFactorySettingsResolutionContext(
+			StandardServiceRegistry serviceRegistry,
+			StrategySelector strategySelector,
+			JdbcServices jdbcServices,
+			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
+			RegionFactory regionFactory) {
 	}
 
 	private static <T> T instantiate(Class<?> javaType, Class<T> expectedType) {

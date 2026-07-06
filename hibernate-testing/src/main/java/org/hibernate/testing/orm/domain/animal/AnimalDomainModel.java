@@ -1,6 +1,6 @@
 package org.hibernate.testing.orm.domain.animal;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 
 import org.hibernate.testing.orm.domain.AbstractDomainModelDescriptor;
 
@@ -13,7 +13,7 @@ public class AnimalDomainModel extends AbstractDomainModelDescriptor {
 	 */
 	public static final AnimalDomainModel INSTANCE = new AnimalDomainModel();
 
-	public static void applyContactsModel(MetadataSources sources) {
+	public static void applyContactsModel(MappingSources sources) {
 		INSTANCE.applyDomainModel( sources );
 	}
 

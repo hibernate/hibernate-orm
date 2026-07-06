@@ -23,7 +23,7 @@
 ///    [org.hibernate.boot.mapping.internal.context.BindingState].
 ///
 /// The surrounding [org.hibernate.boot.mapping] package family names the
-/// larger "available resources to mapping model" process.  This package is just
+/// larger "resolved mapping sources to mapping model" process.  This package is just
 /// the shared implementation context for that process, not the home for phase
 /// specific binders, views, materializers, or relational table references.
 ///

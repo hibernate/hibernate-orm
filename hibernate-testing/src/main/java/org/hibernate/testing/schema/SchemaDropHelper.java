@@ -20,7 +20,7 @@ public class SchemaDropHelper {
 	public static void drop(Metadata metadata) {
 		drop(
 				metadata,
-				( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry()
+				( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry()
 		);
 	}
 

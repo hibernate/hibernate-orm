@@ -3,7 +3,6 @@ package org.hibernate.boot.spi;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -12,6 +11,7 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
@@ -69,12 +69,6 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public SessionFactoryImplementor buildSessionFactory() {
-		return delegate.buildSessionFactory();
-	}
-
-	@Override
-	@Nullable
 	public UUID getUUID() {
 		return delegate.getUUID();
 	}
@@ -221,9 +215,8 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	@Remove
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
-		return delegate.getMetadataBuildingOptions();
+	public MappingResolutionOptions getMappingResolutionOptions() {
+		return delegate.getMappingResolutionOptions();
 	}
 
 	@Override

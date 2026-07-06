@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -136,7 +137,7 @@ public class AttributeFactory {
 				false,
 				false,
 				property.isOptional(),
-				property.isGeneric(),
+				property.isGeneric() || attributeMetadata.getTypeCorrespondence().isConcreteGenericUsage(),
 				isTimeZoneStorageComposite( valueContext )
 		);
 	}
@@ -241,6 +242,16 @@ public class AttributeFactory {
 		if ( domainType instanceof BasicDomainType<?> ) {
 			return expressibleJavaType;
 		}
+		if ( !attributeMetadata.getPropertyMapping().isGeneric() ) {
+			final Class<?> usageJavaType = AttributeTypeCorrespondence.javaType(
+					attributeMetadata.getTypeCorrespondence().usageType()
+			);
+			if ( usageJavaType != null ) {
+				return usageJavaType == expressibleJavaType.getJavaTypeClass()
+						? expressibleJavaType
+						: new JavaTypeBasicAdaptor( usageJavaType );
+			}
+		}
 		final Class<?> declaredJavaType = attributeMetadata.getTypeCorrespondence().declaredJavaType();
 		return declaredJavaType != null && declaredJavaType != expressibleJavaType.getJavaTypeClass()
 				? new JavaTypeBasicAdaptor( declaredJavaType )
@@ -315,7 +326,7 @@ public class AttributeFactory {
 			final java.util.Map<String, EmbeddableTypeImpl<?>> domainTypes = new HashMap<>();
 			domainTypes.put( embeddableType.getTypeName(), embeddableType );
 			final var classLoaderService =
-					context.getRuntimeModelCreationContext().getBootstrapContext().getClassLoaderService();
+					context.getRuntimeModelCreationContext().getClassLoaderService();
 			for ( final String subclassName : embeddableSubclasses ) {
 				if ( domainTypes.containsKey( subclassName ) ) {
 					assert subclassName.equals( embeddableType.getTypeName() );
@@ -375,6 +386,15 @@ public class AttributeFactory {
 		if ( type instanceof EntityType entityType ) {
 			final var domainType = context.locateIdentifiableType( entityType.getAssociatedEntityName() );
 			if ( domainType == null ) {
+				final var usageJavaType = AttributeTypeCorrespondence.javaType(
+						typeContext.getAttributeMetadata().getTypeCorrespondence().usageType()
+				);
+				if ( usageJavaType != null ) {
+					final var usageDomainType = context.locateEntityType( usageJavaType );
+					if ( usageDomainType != null ) {
+						return usageDomainType;
+					}
+				}
 				// Due to the use of generics, it can happen that a mapped super class uses a type
 				// for an attribute that is not a managed type. Since this case is not specifically mentioned
 				// in the Jakarta Persistence spec, we handle this by returning a "dummy" entity type
@@ -393,7 +413,7 @@ public class AttributeFactory {
 				(Any) typeContext.getHibernateValue(),
 				anyType,
 				context.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( anyType.getReturnedClass() ),
-				context.getRuntimeModelCreationContext().getSessionFactory().getMappingMetamodel()
+				context.getRuntimeModelCreationContext().getDomainModel()
 		);
 	}
 
@@ -457,6 +477,34 @@ public class AttributeFactory {
 		};
 	}
 
+	private static AttributeUsageBinding resolveAppliedAttributeUsage(
+			AttributeContext<?> attributeContext,
+			Property propertyMapping,
+			MetadataContext context) {
+		final var ownerType = attributeContext.getOwnerType();
+		if ( ownerType instanceof EmbeddableDomainType<?> embeddableDomainType ) {
+			final var component = context.getEmbeddableBootDescriptor( embeddableDomainType );
+			if ( component != null ) {
+				final var memberBinding = context.getEmbeddableHandoffResolver().findMemberBinding( component, propertyMapping );
+				if ( memberBinding != null ) {
+					return memberBinding;
+				}
+			}
+		}
+		if ( ownerType instanceof AbstractIdentifiableType<?> identifiableType ) {
+			final var declaringEntity = getDeclaringEntity( identifiableType, context );
+			if ( declaringEntity != null ) {
+				final var attributeUsage = context.getMappedSuperclassHandoffResolver()
+						.findAttributeUsage( declaringEntity, propertyMapping );
+				if ( attributeUsage != null ) {
+					return attributeUsage;
+				}
+			}
+		}
+		return context.getMappedSuperclassHandoffResolver()
+				.findAttributeUsage( ownerType, propertyMapping );
+	}
+
 	/**
 	 * Here is most of the nuts and bolts of this factory, where we interpret the known JPA metadata
 	 * against the known Hibernate metadata and build a descriptor for the attribute.
@@ -484,8 +532,13 @@ public class AttributeFactory {
 
 		final var member = memberResolver.resolveMember( attributeContext, context );
 		CORE_LOGGER.tracef( "\tMember: %s", member );
+		final var appliedAttributeUsage = resolveAppliedAttributeUsage(
+				attributeContext,
+				propertyMapping,
+				context
+		);
 		final var typeCorrespondence = context.getAttributeTypeCorrespondenceRegistry()
-				.resolve( propertyMapping, attributeContext.getOwnerType(), member );
+				.resolve( propertyMapping, attributeContext.getOwnerType(), member, appliedAttributeUsage );
 
 		final var value = propertyMapping.getValue();
 		final var type = value.getType();
@@ -686,7 +739,7 @@ public class AttributeFactory {
 			// When an entity uses a type variable, bound by a mapped superclass, for an embedded id,
 			// we will not create a model part for the component, but we still need the representation strategy here,
 			// in order to discover the property members to expose on the JPA metamodel
-			return ownerBootDescriptor.getBuildingContext().getBootstrapContext()
+			return metadataContext.getRuntimeModelCreationContext()
 							.getRepresentationStrategySelector()
 							.resolveStrategy( ownerBootDescriptor, null,
 									metadataContext.getRuntimeModelCreationContext() );
@@ -737,7 +790,8 @@ public class AttributeFactory {
 		return switch ( persistenceType ) {
 			case ENTITY ->
 					resolveEntityMember( property,
-							getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, metadataContext ) );
+							getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, metadataContext ),
+							metadataContext );
 			case MAPPED_SUPERCLASS ->
 					resolveMappedSuperclassMember( property, (MappedSuperclassDomainType<?>) ownerType, metadataContext );
 			case EMBEDDABLE ->
@@ -746,9 +800,14 @@ public class AttributeFactory {
 		};
 	};
 
-	private static Member resolveEntityMember(Property property, EntityPersister declaringEntity) {
-		if ( property.isGenericSpecialization() && property.getMemberDetails() != null ) {
-			return property.getMemberDetails().toJavaMember();
+	private static Member resolveEntityMember(
+			Property property,
+			EntityPersister declaringEntity,
+			MetadataContext context) {
+		final var appliedMappedSuperclassMember = context.getMappedSuperclassHandoffResolver()
+				.resolveMember( declaringEntity, property );
+		if ( appliedMappedSuperclassMember != null ) {
+			return appliedMappedSuperclassMember;
 		}
 		final String propertyName = property.getName();
 		return !propertyName.equals( declaringEntity.getIdentifierPropertyName() )
@@ -795,8 +854,10 @@ public class AttributeFactory {
 			final var declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
 			final var identifierMapping = declaringEntityMapping.getIdentifierMapping();
 			final Property propertyMapping = attributeContext.getPropertyMapping();
-			if ( propertyMapping.isGenericSpecialization() && propertyMapping.getMemberDetails() != null ) {
-				return propertyMapping.getMemberDetails().toJavaMember();
+			final var appliedMappedSuperclassMember = metadataContext.getMappedSuperclassHandoffResolver()
+					.resolveMember( declaringEntityMapping, propertyMapping );
+			if ( appliedMappedSuperclassMember != null ) {
+				return appliedMappedSuperclassMember;
 			}
 			return !propertyMapping.getName().equals( identifierMapping.getAttributeName() )
 					// this *should* indicate processing part of an IdClass

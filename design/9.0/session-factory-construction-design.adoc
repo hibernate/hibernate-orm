@@ -91,7 +91,7 @@ The final phase should be modeled as:
 
 [source]
 ----
-ResolvedMetadata
+ResolvedMapping
 ResolvedSessionFactorySettings
 Resolved runtime construction inputs
     -> SessionFactoryConstructionRequest
@@ -375,14 +375,14 @@ Implemented pieces:
   the coordinator
 * tests for default construction, custom producer construction, multiple
   producer failure, and request shape
-* `org.hibernate.boot.pipeline.internal.SessionFactoryRuntimePreparation` as an
-  internal-only preparation product for the first constructor values that do not
+* `org.hibernate.boot.pipeline.internal.SessionFactoryRuntimeComponentsBuilder`
+  and `SessionFactoryRuntimeComponents` for the first constructor values that do not
   need the factory instance or `SessionFactoryServiceRegistry`
-* `org.hibernate.boot.pipeline.internal.SessionFactoryServicePreparation` as an
-  internal-only handoff for SessionFactory service-registry construction and
-  safe service-registry-sourced constructor values
-* default ORM construction now prepares those values in the coordinator before
-  invoking `SessionFactoryImpl`
+* `org.hibernate.boot.pipeline.internal.StandardServiceComponentsBuilder`
+  and `StandardServiceComponents` for standard-service-backed constructor
+  values
+* default ORM construction now carries runtime and service components through
+  `SessionFactoryConstructionPlan` before invoking `SessionFactoryImpl`
 * `org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings` is the chosen
   resolved factory settings product for the construction handoff
 * the pipeline builder now carries `ResolvedSessionFactorySettings` into the
@@ -398,16 +398,18 @@ Implemented pieces:
   BootstrapContext)` constructor remains as a compatibility bridge and delegates
   to the preparation path
 * the public/staged factory-builder API, SPI, and default service are removed
-* `Metadata#buildSessionFactory()` remains as a temporary bridge into
-  `SessionFactoryPipeline`
+* `Metadata#buildSessionFactory()` has been removed; native factory creation
+  now routes through `HibernatePersistenceConfiguration`, `Configuration`, or internal
+  pipeline requests
 * `SessionFactoryOptionsCollector` is the internal transition point for legacy
   factory customizations that are not yet expressed purely as resolved settings
-* `org.hibernate.boot.pipeline.internal.SessionFactoryConstructionPreparation`
+* `org.hibernate.boot.pipeline.internal.SessionFactoryConstructionPlanBuilder`
+  and `SessionFactoryConstructionPlan`
   bundles ORM's default construction handoff into a single internal product
 * statement observer and SessionFactory observer selection moved into
-  `SessionFactoryRuntimePreparation`, using resolved settings on the pipeline
+  `SessionFactoryRuntimeComponentsBuilder`, using resolved settings on the pipeline
   path and the transitional options bridge on legacy/native paths
-* `org.hibernate.boot.pipeline.internal.SessionFactoryIntegratorPreparation`
+* `org.hibernate.boot.pipeline.internal.SessionFactoryIntegratorLifecycle`
   adapts legacy `Integrator` callbacks, tracks successfully integrated
   instances, and handles disintegration on close or startup failure
 
@@ -419,24 +421,28 @@ Current transitional compromises:
   not exposed through `SessionFactoryConstructionRequest` yet.
 * The internal construction request still carries `BootstrapContext` for the ORM
   default producer, because `SessionFactoryImpl` still requires it.
-* `SessionFactoryRuntimePreparation` is internal to ORM's default producer and
+* `SessionFactoryRuntimeComponents` is internal to ORM's default producer and
   is not exposed through `SessionFactoryConstructionRequest`.
-* `SessionFactoryConstructionPreparation` is internal to ORM's default
+* `SessionFactoryConstructionPlan` is internal to ORM's default
   `SessionFactoryImpl` construction path and is not exposed through
   `SessionFactoryConstructionRequest`.
-* `SessionFactoryServicePreparation` is internal to ORM's default
+* `StandardServiceComponents` is internal to ORM's default
   `SessionFactoryImpl` construction path and is not exposed through
   `SessionFactoryConstructionRequest`.
-* `SessionFactoryServicePreparation` is created inside the `SessionFactoryImpl`
-  constructor because `SessionFactoryServiceRegistryFactory#buildServiceRegistry`
-  still requires the incompletely initialized factory instance.
+* `StandardServiceComponents` is created before entering the
+  `SessionFactoryImpl` constructor and carried by `SessionFactoryConstructionPlan`;
+  it carries the standard service registry but does not own
+  `SessionFactoryServiceRegistry` construction.
+* `SessionFactoryImpl` still builds the `SessionFactoryServiceRegistry`
+  directly.  Service-registry creation receives `SessionFactoryAccess` rather
+  than the concrete incomplete factory.
 * `SessionFactoryImpl` still performs most runtime construction work.  The first
   slimming steps move no-factory-needed value lookup/copy/derivation and the
   safe service-registry-sourced value lookups.
 * Legacy `Integrator` callbacks still receive the factory and `BootstrapContext`;
   only discovery/bookkeeping has moved out of `SessionFactoryImpl`.
 
-Prepared in `SessionFactoryRuntimePreparation` v1:
+Built as `SessionFactoryRuntimeComponents` v1:
 
 * `TypeConfiguration`
 * `StatementObserver`, including the `IgnoredStatementObserver.IGNORE` fallback
@@ -454,13 +460,13 @@ pipeline path:
 * factory name
 * factory JNDI name
 
-Prepared in `SessionFactoryServicePreparation` v1:
+Built as `StandardServiceComponents` v1:
 
-* `SessionFactoryServiceRegistry`
+* standard `StandardServiceRegistry`
+* `ConfigurationService`
 * `EventEngine`
 * graph planning options
 * `JdbcServices`
-* `CacheImplementor`
 * `ClassLoaderService`
 * `JdbcValuesMappingProducerProvider`
 * `ChangesetCoordinator`
@@ -485,8 +491,6 @@ Intentionally deferred:
 * session option templates
 * building `ActionQueueFactory`, because `ActionQueueFactoryService` still
   requires the factory instance
-* `EventListenerGroups`, because listener-service resolution currently calls
-  back through `SessionFactoryImplementor#getEventEngine()`
 * `TypeConfiguration.scope( this )`
 * observer callback firing and failure cleanup
 
@@ -518,23 +522,24 @@ factory instance exists.
   fallback already applied.
 
 | `getServiceRegistry( options, this )`
-| Builds the `SessionFactoryServiceRegistry` using an incompletely initialized
-  factory instance.
-| Yes today, because `SessionFactoryServiceRegistryFactory#buildServiceRegistry`
-  takes the factory.
-| Keep in constructor until the service-registry factory contract is redesigned,
-  or introduce a deferred factory reference if a preparable service-registry plan
-  is needed.
+| Builds the `SessionFactoryServiceRegistry` using `SessionFactoryAccess`.
+| Not directly.  The registry stores access to the eventual factory, and some
+  session-factory-scoped services dereference it when initialized.
+| Keep explicit in `SessionFactoryImpl` until factory-scoped service creation
+  has a clearer owner separate from the standard-service-backed constructor
+  components.
 
-| `new EventEngine( options, serviceRegistry )`
-| Creates event engine after factory service registry exists.
-| No obvious direct need, but depends on `SessionFactoryServiceRegistry`.
-| Move to runtime components after service-registry construction is separated.
+| `new EventEngine( options, standardServiceRegistry )`
+| Creates event engine from options and standard services.
+| No.
+| Moved to `StandardServiceComponents`; listener groups consume its
+  registry directly.
 
 | `buildPlanningOptions(...)`
 | Reads graph planning settings from `ConfigurationService`.
 | No.
-| Move to a construction/request component once service registry is available.
+| Moved to `StandardServiceComponents` and carried through
+  `SessionFactoryConstructionPlan`.
 
 | `bootMetamodel.initSessionFactory( this )`
 | Installs factory back-reference into metadata.
@@ -546,10 +551,12 @@ factory instance exists.
   `JdbcValuesMappingProducerProvider`, `ChangesetCoordinator`, hot services, and
   connection providers.
 | Resolves services and caches frequently used references.
-| Generally no, except resolution is from `SessionFactoryServiceRegistry`.
-| Moved to `SessionFactoryServicePreparation`, while keeping service-registry
-  creation itself at the constructor boundary because it still receives the
-  incomplete factory.
+| Generally no for the standard-service-backed components.  `CacheImplementor`
+  remains session-factory-scoped.
+| Standard-service-backed values moved to `StandardServiceComponents`;
+  `CacheImplementor` remains resolved from `SessionFactoryServiceRegistry` in
+  `SessionFactoryImpl`.  `StandardServiceComponents` is now prepared as
+  part of `SessionFactoryConstructionPlan`.
 
 | `SqlStringGenerationContext`
 | Builds SQL naming/rendering context from metadata database, JDBC environment,
@@ -581,7 +588,7 @@ factory instance exists.
 | Yes today because `Integrator#integrate` receives the factory and
   `BootstrapContext`.
 | Discovery, callback invocation, successful-integrator tracking, and
-  disintegration moved to `SessionFactoryIntegratorPreparation`.  The legacy
+  disintegration moved to `SessionFactoryIntegratorLifecycle`.  The legacy
   callback still receives the factory and `BootstrapContext`; replacing it with
   narrower phase-specific integration hooks remains a follow-up.
 
@@ -614,12 +621,16 @@ factory instance exists.
 | Move with runtime metamodel planning.  This likely needs an explicit ordering
   product for query engine, SQL translation engine, and metamodel creation.
 
-| `SqlTranslationEngineImpl( this, typeConfiguration, fetchProfiles )`
-| Creates SQL translation engine with direct factory reference and mutable fetch
-  profile map.
-| Yes today.
-| Keep until SQL translation engine can depend on a narrower factory/runtime
-  access contract.
+| `SqlTranslationContextImpl(...)` and `SqlTranslationEngineImpl( sqlTranslationContext )`
+| Creates SQL translation engine from an explicit SQL translation context.  The
+  context names runtime metamodels, options, query-engine facts, wrapper
+  options, and a runtime fetch-profile registry whose contents are populated
+  after persister initialization.
+| No direct factory reference for the SQL translation engine itself.  The
+  fetch-profile registry remains in-flight until persisters exist.
+| Keep as the current narrow context boundary.  Continue auditing table-group
+  creation paths that still need runtime factory access through load/query
+  influencers.
 
 | `addFetchProfiles(...)`
 | Populates fetch profiles after persisters exist.
@@ -639,14 +650,14 @@ factory instance exists.
 | `loadEventMonitor()`
 | Loads Java service `EventMonitor` through `ClassLoaderService`.
 | No, once class-loader service is available.
-| Moved to `SessionFactoryServicePreparation`.
+| Moved to `StandardServiceComponents`.
 
 | `EventListenerGroups`
-| Creates listener groups from service registry.
-| Yes today: listener-service resolution calls back through the factory's
-  `getEventEngine()`.
-| Keep after the `eventEngine` field is assigned until the service-registry
-  callback is removed.
+| Creates listener groups from the already-built `EventEngine` listener
+  registry.
+| No.
+| Construct directly from `EventEngine#getListenerRegistry()` to avoid the
+  factory-service-registry callback.
 
 | `typeConfiguration.scope( this )`
 | Final scopes type configuration to the completed factory.
@@ -692,8 +703,8 @@ Good early move candidates:
 
 Likely blockers before major constructor slimming:
 
-* `SessionFactoryServiceRegistryFactory#buildServiceRegistry` currently needs the
-  factory instance;
+* some session-factory-scoped services still dereference `SessionFactoryAccess`
+  during service initialization;
 * legacy `Integrator#integrate` receives both `BootstrapContext` and the factory;
 * runtime metamodel creation still uses `ModelCreationContext` with
   `BootstrapContext`;
@@ -703,9 +714,9 @@ Likely blockers before major constructor slimming:
 
 Suggested next implementation slice:
 
-* Introduce a `SessionFactoryRuntimePreparation` or similarly named internal
-  builder that prepares only the no-factory-needed values from the "good early
-  move candidates" list.
+* Continue refining `SessionFactoryRuntimeComponentsBuilder` and related
+  builders so they prepare only the no-factory-needed values from the "good
+  early move candidates" list.
 * Keep `SessionFactoryImpl` assigning those prepared values and running all
   lifecycle/back-reference work.
 * Do not attempt runtime metamodel extraction until `ModelCreationContext` is

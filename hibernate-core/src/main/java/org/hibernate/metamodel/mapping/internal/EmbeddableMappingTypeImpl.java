@@ -173,7 +173,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			RuntimeModelCreationContext creationContext) {
 		super( 5 );
 		this.representationStrategy = creationContext
-				.getBootstrapContext()
 				.getRepresentationStrategySelector()
 				.resolveStrategy( bootDescriptor, () -> this, creationContext );
 

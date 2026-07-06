@@ -27,7 +27,7 @@ public class SimpleAttributeBinderTests {
 
 			final BasicValue.Resolution<?> resolution = activeMapping.resolve();
 			final JdbcTypeRegistry jdbcTypeRegistry = activeMapping.getBuildingContext()
-					.getBuildingOptions()
+					.getBuildingPlan()
 					.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 

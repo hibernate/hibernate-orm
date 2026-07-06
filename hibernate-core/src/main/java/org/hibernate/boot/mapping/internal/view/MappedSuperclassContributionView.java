@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.view;
 
 import java.util.List;
 
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassContribution;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
@@ -26,6 +27,10 @@ public record MappedSuperclassContributionView(MappedSuperclassContribution cont
 
 	public EntityTypeMetadata nearestEntityConsumer() {
 		return contribution.nearestEntityConsumer();
+	}
+
+	public List<AttributeUsageBinding> appliedAttributeUsages() {
+		return contribution.appliedAttributeUsages();
 	}
 
 	public List<String> appliedAttributeNames() {

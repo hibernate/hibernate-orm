@@ -200,11 +200,11 @@ class ForeignKeyBinder {
 	private boolean isNoConstraint(ForeignKeySource foreignKeySource) {
 		return foreignKeySource == null
 				? entityBinder.getBindingState().getMetadataBuildingContext()
-						.getBuildingOptions()
+						.getBuildingPlan()
 						.isNoConstraintByDefault()
 				: foreignKeySource.isNoConstraint(
 						entityBinder.getBindingState().getMetadataBuildingContext()
-								.getBuildingOptions()
+								.getBuildingPlan()
 								.isNoConstraintByDefault()
 				);
 	}

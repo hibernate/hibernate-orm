@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.ContactsDomainModel;
@@ -33,10 +33,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
+	protected void applyMetadataSources(MappingSources metadataSources) {
 		super.applyMetadataSources( metadataSources );
 		ContactsDomainModel.applyContactsModel( metadataSources );
-		metadataSources.addAnnotatedClass( EntityWithNumericId.class );
+		metadataSources.addManagedClass( EntityWithNumericId.class );
 	}
 
 	@BeforeAll

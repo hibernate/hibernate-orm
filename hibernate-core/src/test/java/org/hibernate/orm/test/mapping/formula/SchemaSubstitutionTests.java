@@ -31,7 +31,7 @@ public class SchemaSubstitutionTests {
 	@ServiceRegistry( settings = @Setting( name = MappingSettings.DEFAULT_SCHEMA, value = "my_schema" ) )
 	@DomainModel( annotatedClasses = Thing.class )
 	void testWithSchema(DomainModelScope modelScope) {
-		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) modelScope.getDomainModel().buildSessionFactory()) {
+		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( modelScope.getDomainModel() )) {
 			final EntityPersister persister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Thing.class );
 			final AttributeMapping attributeMapping = persister.findAttributeMapping( "externalName" );
 			verifyFormula( attributeMapping, true );
@@ -42,7 +42,7 @@ public class SchemaSubstitutionTests {
 	@ServiceRegistry
 	@DomainModel( annotatedClasses = Thing.class )
 	void testWithoutSchema(DomainModelScope modelScope) {
-		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) modelScope.getDomainModel().buildSessionFactory()) {
+		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( modelScope.getDomainModel() )) {
 			final EntityPersister persister = sessionFactory.getMappingMetamodel().getEntityDescriptor( Thing.class );
 			final AttributeMapping attributeMapping = persister.findAttributeMapping( "externalName" );
 			verifyFormula( attributeMapping, false );

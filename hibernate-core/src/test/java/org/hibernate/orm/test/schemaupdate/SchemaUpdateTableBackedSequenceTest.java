@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.schemaupdate;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -8,6 +8,7 @@ import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextIm
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.Setting;
@@ -39,7 +40,7 @@ public class SchemaUpdateTableBackedSequenceTest {
 	public void testCreateTableOnUpdate(ServiceRegistryScope registryScope) {
 		final var registry = registryScope.getRegistry();
 
-		final var metadata = new MetadataSources( registry ).buildMetadata();
+		final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( registry );
 		final var database = metadata.getDatabase();
 		final var tableStructure = new TableStructure(
 				"orm",

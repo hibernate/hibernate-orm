@@ -182,7 +182,7 @@ public class BindingCoordinator {
 
 	private void registerConfiguredUserTypes() {
 		bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getBasicTypeRegistrations()
 				.stream()
 				.map( BasicTypeRegistration::getBasicType )
@@ -194,7 +194,7 @@ public class BindingCoordinator {
 
 	private void registerConfiguredCompositeUserTypes() {
 		bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getCompositeUserTypes()
 				.forEach( this::registerCompositeUserType );
 	}
@@ -237,7 +237,7 @@ public class BindingCoordinator {
 	private void applyBasicTypeRegistrations() {
 		bindingState.getTypeConfiguration().addBasicTypeRegistrationContributions(
 				bindingState.getMetadataBuildingContext()
-						.getBuildingOptions()
+						.getBuildingPlan()
 						.getBasicTypeRegistrations()
 		);
 	}
@@ -265,7 +265,7 @@ public class BindingCoordinator {
 		jdbcTypeRegistry.addDescriptorIfAbsent( JsonAsStringJdbcType.VARCHAR_INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( XmlAsStringJdbcType.VARCHAR_INSTANCE );
 
-		if ( bindingState.getMetadataBuildingContext().getBuildingOptions().getWrapperArrayHandling()
+		if ( bindingState.getMetadataBuildingContext().getBuildingPlan().getWrapperArrayHandling()
 				== WrapperArrayHandling.LEGACY ) {
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( ByteArrayJavaType.INSTANCE );
 			typeConfiguration.getJavaTypeRegistry().addDescriptor( CharacterArrayJavaType.INSTANCE );
@@ -281,8 +281,8 @@ public class BindingCoordinator {
 			);
 		}
 
-		final int preferredSqlTypeCodeForUuid =
-				bindingState.getMetadataBuildingContext().getPreferredSqlTypeCodeForUuid();
+		final var mappingPreferences = bindingState.getMetadataBuildingContext().getBuildingPlan().getMappingPreferences();
+		final int preferredSqlTypeCodeForUuid = mappingPreferences.getPreferredSqlTypeCodeForUuid();
 		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
 			adaptToPreferredSqlTypeCode(
 					typeConfiguration,
@@ -298,8 +298,7 @@ public class BindingCoordinator {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UuidAsBinaryJdbcType.INSTANCE );
 		}
 
-		final int preferredSqlTypeCodeForDuration =
-				bindingState.getMetadataBuildingContext().getPreferredSqlTypeCodeForDuration();
+		final int preferredSqlTypeCodeForDuration = mappingPreferences.getPreferredSqlTypeCodeForDuration();
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.DURATION ) {
 			adaptToPreferredSqlTypeCode(
 					typeConfiguration,
@@ -310,8 +309,7 @@ public class BindingCoordinator {
 			);
 		}
 
-		final int preferredSqlTypeCodeForInstant =
-				bindingState.getMetadataBuildingContext().getPreferredSqlTypeCodeForInstant();
+		final int preferredSqlTypeCodeForInstant = mappingPreferences.getPreferredSqlTypeCodeForInstant();
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
 			adaptToPreferredSqlTypeCode(
 					typeConfiguration,
@@ -342,7 +340,7 @@ public class BindingCoordinator {
 		if ( jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY ) == null ) {
 			final JdbcTypeConstructor constructor =
 					jdbcTypeRegistry.getConstructor(
-							bindingState.getMetadataBuildingContext().getPreferredSqlTypeCodeForArray()
+							mappingPreferences.getPreferredSqlTypeCodeForArray()
 					);
 			if ( constructor != null ) {
 				jdbcTypeRegistry.addTypeConstructor( SqlTypes.ARRAY, constructor );
@@ -386,8 +384,7 @@ public class BindingCoordinator {
 	}
 
 	private List<TypeContributor> sortedTypeContributors() {
-		final Collection<TypeContributor> typeContributors = bindingContext.getBootstrapContext()
-				.getClassLoaderService()
+		final Collection<TypeContributor> typeContributors = bindingContext.getClassLoaderService()
 				.loadJavaServices( TypeContributor.class );
 		final List<TypeContributor> contributors = new ArrayList<>( typeContributors );
 		contributors.sort( TYPE_CONTRIBUTOR_COMPARATOR );
@@ -416,14 +413,26 @@ public class BindingCoordinator {
 		runPhase( binders, TypeBindingPhase.Identifiers.class, TypeBindingPhase.Identifiers::bindIdentifier );
 		runAssociationIdentifierPhase( binders, false );
 		runPhase( binders, TypeBindingPhase.Members.class, TypeBindingPhase.Members::bindMembers );
+		runPhase( binders, TypeBindingPhase.CustomMapping.class, TypeBindingPhase.CustomMapping::bindCustomMapping );
+		runComponentCustomMappingPhase();
+		runAttributeCustomMappingPhase();
+		runAttributeValueResolutionPhase();
+		runPhase( binders, TypeBindingPhase.DiscriminatorValues.class, TypeBindingPhase.DiscriminatorValues::bindDiscriminatorValues );
 		StateManagementBindingPhase.processRootEntities( bindingState );
 		runPhase( binders, TypeBindingPhase.CollectionIndexes.class, TypeBindingPhase.CollectionIndexes::bindCollectionIndexes );
 		runPhase( binders, TypeBindingPhase.AssociationTargets.class, TypeBindingPhase.AssociationTargets::bindAssociationTargets );
 		runPhase( binders, TypeBindingPhase.DerivedIdentifiers.class, TypeBindingPhase.DerivedIdentifiers::bindDerivedIdentifiers );
 		runAssociationIdentifierPhase( binders, true );
+		runComponentCustomMappingPhase();
+		runAttributeCustomMappingPhase();
+		runAttributeValueResolutionPhase();
 		runPhase( binders, TypeBindingPhase.TableKeys.class, TypeBindingPhase.TableKeys::bindTableKeys );
 		runPhase( binders, TypeBindingPhase.InverseAssociations.class, TypeBindingPhase.InverseAssociations::bindInverseAssociations );
 		runPhase( binders, TypeBindingPhase.ForeignKeys.class, TypeBindingPhase.ForeignKeys::bindForeignKeys );
+		runComponentCustomMappingPhase();
+		runAttributeCustomMappingPhase();
+		runAttributeValueResolutionPhase();
+		runComponentAggregateFinalizationPhase();
 		StateManagementBindingPhase.processPropertiesAndCollections( bindingState );
 		runPhase( binders, TypeBindingPhase.Finalization.class, TypeBindingPhase.Finalization::finalizeBinding );
 
@@ -433,6 +442,22 @@ public class BindingCoordinator {
 			final RootClass binding = (RootClass) typeBinder.getTypeBinding();
 			ModelBindingLogging.MODEL_BINDING_LOGGER.tracef( "Bound entity hierarchy - %s", binding.getEntityName() );
 		} );
+	}
+
+	private void runComponentCustomMappingPhase() {
+		bindingState.runComponentCustomMappings();
+	}
+
+	private void runComponentAggregateFinalizationPhase() {
+		bindingState.runComponentAggregateFinalizations();
+	}
+
+	private void runAttributeCustomMappingPhase() {
+		bindingState.runAttributeCustomMappings();
+	}
+
+	private void runAttributeValueResolutionPhase() {
+		bindingState.runAttributeValueResolutions();
 	}
 
 	private void registerCategorizedDeclarationContainers() {
@@ -735,9 +760,9 @@ public class BindingCoordinator {
 
 	private void processSqlResultSetMappings(GlobalRegistrations globalRegistrations) {
 		globalRegistrations.getSqlResultSetMappingRegistrations().values().forEach( (registration) ->
-				QueryBinder.bindSqlResultSetMapping(
+				QueryBindingPhase.bindSqlResultSetMapping(
 						registration.configuration(),
-						bindingState.getMetadataBuildingContext(),
+						bindingState,
 						registration.location(),
 						false
 				)
@@ -842,7 +867,6 @@ public class BindingCoordinator {
 			try {
 				auxiliaryDatabaseObject = (AuxiliaryDatabaseObject)
 						bindingState.getMetadataBuildingContext()
-								.getBootstrapContext()
 								.getClassLoaderService()
 								.classForName( registration.definition() )
 								.getConstructor()
@@ -1094,7 +1118,7 @@ public class BindingCoordinator {
 
 		final TableGenerator[] tableGenerators = typeClassDetails.getRepeatedAnnotationUsages(
 				TableGenerator.class,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		);
 		for ( TableGenerator tableGeneratorAnn : tableGenerators ) {
 			bindingState.addIdentifierGenerator(
@@ -1104,7 +1128,7 @@ public class BindingCoordinator {
 
 		final SequenceGenerator[] sequenceGenerators = typeClassDetails.getRepeatedAnnotationUsages(
 				SequenceGenerator.class,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		);
 		for ( SequenceGenerator sequenceGeneratorAnn : sequenceGenerators ) {
 			bindingState.addIdentifierGenerator(

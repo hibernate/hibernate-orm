@@ -34,7 +34,7 @@ class PathAdjustmentCollector {
 	PathAdjustmentCollector(
 			MemberDetails member,
 			BindingContext bindingContext) {
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		collectMemberAdjustments( member, modelsContext );
 	}
 
@@ -43,7 +43,7 @@ class PathAdjustmentCollector {
 			ClassDetails ownerType,
 			ClassDetails hierarchyRootType,
 			BindingContext bindingContext) {
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		collectTypeAdjustments( member, ownerTypeChain( ownerType, hierarchyRootType ), modelsContext );
 		collectMemberAdjustments( member, modelsContext );
 	}
@@ -58,7 +58,7 @@ class PathAdjustmentCollector {
 			conversions.putAll( parent.conversions );
 		}
 
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		collectMemberAdjustments( member, modelsContext );
 	}
 

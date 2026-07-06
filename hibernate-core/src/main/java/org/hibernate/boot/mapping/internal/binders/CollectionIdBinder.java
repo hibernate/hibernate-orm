@@ -41,9 +41,9 @@ class CollectionIdBinder {
 			);
 		}
 
-		final BasicValue id = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		final BasicValue id = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		id.setTable( table );
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.collectionId( source.member() ),
 				null,
 				id,
@@ -51,6 +51,7 @@ class CollectionIdBinder {
 				bindingState,
 				bindingContext
 		);
+		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
 
 		final org.hibernate.mapping.Column idColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( collectionId.column() ),

@@ -2,7 +2,7 @@ package org.hibernate.orm.test.cdi.lifecycle;
 
 import java.util.Map;
 
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl;
@@ -35,7 +35,7 @@ public class ExtendedBeanManagerSmokeTests {
 		final ExtendedBeanManagerImpl ref = new ExtendedBeanManagerImpl();
 		assertThat( ref.lifecycleListener ).isNull();
 
-		final EntityManagerFactory emf = SessionFactoryBootstrap.build(
+		final EntityManagerFactory emf = BootstrapPipeline.build(
 				new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
 				integrationSettings( settingName, ref )
 		);
@@ -58,7 +58,7 @@ public class ExtendedBeanManagerSmokeTests {
 		final ExtendedBeanManagerImpl ref = new ExtendedBeanManagerImpl();
 		assertThat( ref.lifecycleListener ).isNull();
 
-		final EntityManagerFactory emf = SessionFactoryBootstrap.build(
+		final EntityManagerFactory emf = BootstrapPipeline.build(
 				new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
 				integrationSettings( settingName, ref )
 		);

@@ -7,9 +7,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
+import org.hibernate.annotations.NaturalId;
 
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -43,11 +42,9 @@ public class EmbeddableImplicitOverrideTest {
 	}
 
 	// Preserved because of the doc inclusion
-	private void doesNothing(MetadataBuilder metadataBuilder) {
+	private void doesNothing() {
 		//tag::embeddable-multiple-ImplicitNamingStrategyComponentPathImpl[]
-		metadataBuilder.applyImplicitNamingStrategy(
-			ImplicitNamingStrategyComponentPathImpl.INSTANCE
-		);
+		String settingName = MappingSettings.IMPLICIT_NAMING_STRATEGY;
 		//end::embeddable-multiple-ImplicitNamingStrategyComponentPathImpl[]
 	}
 

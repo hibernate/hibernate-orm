@@ -7,7 +7,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -16,6 +16,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -37,10 +38,12 @@ public class StandardForeignKeyExporterTest {
 	@Test
 	public void testForeignKeySqlStringForCompositePK(ServiceRegistryScope registryScope) {
 		StandardServiceRegistry ssr = registryScope.getRegistry();
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( CompositePk.class )
-				.addAnnotatedClass( Person.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				ssr,
+				new MappingSources()
+						.addManagedClass( CompositePk.class )
+						.addManagedClass( Person.class )
+		);
 		Database database = bootModel.getDatabase();
 		SqlStringGenerationContext sqlStringGenerationContext =
 				SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );

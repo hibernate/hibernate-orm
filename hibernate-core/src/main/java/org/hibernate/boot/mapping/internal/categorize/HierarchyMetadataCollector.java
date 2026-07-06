@@ -276,6 +276,15 @@ public class HierarchyMetadataCollector {
 						)
 				);
 			}
+			if ( typeMetadata instanceof EntityTypeMetadata && hasNewIdentifierAttribute( typeMetadata ) ) {
+				throw new AnnotationException(
+						String.format(
+								Locale.ROOT,
+								"Entity subclass `%s` may not declare identifier attributes",
+								typeMetadata.getClassDetails().getName()
+						)
+				);
+			}
 			return;
 		}
 
@@ -331,6 +340,18 @@ public class HierarchyMetadataCollector {
 		typeMetadata.forEachAttribute( (index, attributeMetadata) -> {
 			if ( attributeMetadata.getMember().hasDirectAnnotationUsage( NaturalId.class ) ) {
 				found[0] = true;
+			}
+		} );
+		return found[0];
+	}
+
+	private boolean hasNewIdentifierAttribute(IdentifiableTypeMetadata typeMetadata) {
+		final boolean[] found = { false };
+		typeMetadata.forEachAttribute( (index, attributeMetadata) -> {
+			final MemberDetails member = attributeMetadata.getMember();
+			if ( member.hasDirectAnnotationUsage( Id.class )
+					|| member.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+				found[0] = found[0] || !hasCollectedIdAttribute( attributeMetadata.getName() );
 			}
 		} );
 		return found[0];

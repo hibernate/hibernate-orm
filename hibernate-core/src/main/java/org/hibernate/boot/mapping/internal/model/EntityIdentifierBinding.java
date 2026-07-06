@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.annotation.Nullable;
 
@@ -31,15 +32,25 @@ public class EntityIdentifierBinding {
 	private final EntityTypeMetadata owner;
 	private final boolean idClass;
 	private final @Nullable ClassDetails idClassType;
+	private @Nullable MemberDetails identifierMember;
 	private final List<IdentifierAttributeBinding> attributes = new ArrayList<>();
 
 	public EntityIdentifierBinding(
 			EntityTypeMetadata owner,
 			boolean idClass,
 			@Nullable ClassDetails idClassType) {
+		this( owner, idClass, idClassType, null );
+	}
+
+	public EntityIdentifierBinding(
+			EntityTypeMetadata owner,
+			boolean idClass,
+			@Nullable ClassDetails idClassType,
+			@Nullable MemberDetails identifierMember) {
 		this.owner = owner;
 		this.idClass = idClass;
 		this.idClassType = idClassType;
+		this.identifierMember = identifierMember;
 	}
 
 	public EntityTypeMetadata owner() {
@@ -52,6 +63,14 @@ public class EntityIdentifierBinding {
 
 	public @Nullable ClassDetails idClassType() {
 		return idClassType;
+	}
+
+	public @Nullable MemberDetails identifierMember() {
+		return identifierMember;
+	}
+
+	public void setIdentifierMember(@Nullable MemberDetails identifierMember) {
+		this.identifierMember = identifierMember;
 	}
 
 	public void addAttribute(IdentifierAttributeBinding attribute) {

@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
@@ -285,7 +285,7 @@ public class EntityManagerFactoryExtension
 
 		protected jakarta.persistence.EntityManagerFactory createEntityManagerFactory() {
 			final PersistenceUnitInfoDescriptor descriptor = new PersistenceUnitInfoDescriptor( persistenceUnitInfo );
-			return SessionFactoryBootstrap.build( descriptor, integrationSettings );
+			return BootstrapPipeline.build( descriptor, integrationSettings );
 		}
 	}
 }

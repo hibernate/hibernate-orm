@@ -3,7 +3,6 @@ package org.hibernate.orm.test.cdi.general.hibernatesearch.delayed;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.se.SeContainer;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -11,6 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.cdi.testsupport.CdiContainer;
 import org.hibernate.orm.test.cdi.testsupport.CdiContainerScope;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -106,10 +106,9 @@ public class HibernateSearchDelayedCdiSupportTest {
 						.applySetting( AvailableSettings.DELAY_CDI_ACCESS, "true" )
 						.build()) {
 
-					try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-							.addAnnotatedClass( TheEntity.class )
-							.buildMetadata()
-							.buildSessionFactory()) {
+					try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+							MetadataBuildingTestHelper.buildMetadata( ssr, TheEntity.class )
+					)) {
 						// Here, the HibernateSearchSimulatedIntegrator has just been integrated and has requested beans
 						// See HibernateSearchSimulatedIntegrator for a detailed list of requested beans
 

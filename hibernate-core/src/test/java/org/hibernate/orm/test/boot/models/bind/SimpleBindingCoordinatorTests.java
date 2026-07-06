@@ -151,7 +151,7 @@ public class SimpleBindingCoordinatorTests {
 	void testMinimalMetadataBuildsSessionFactory(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
-					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						assertThat( sessionFactory.getMappingMetamodel()
 								.getEntityDescriptor( SessionFactoryBuildableEntity.class ) ).isNotNull();
 					}
@@ -173,7 +173,7 @@ public class SimpleBindingCoordinatorTests {
 					assertThat( table ).isNotNull();
 					assertThat( table.getColumn( Identifier.toIdentifier( "name" ) ) ).isNotNull();
 
-					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						sessionFactory.getSchemaManager().create( true );
 						try {
 							validateSchema( sessionFactory );
@@ -199,7 +199,7 @@ public class SimpleBindingCoordinatorTests {
 	void testFilterDefinitionsReachRuntimeAndApply(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
-					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						final var activeStatusDefinition = sessionFactory.getFilterDefinition( "activeStatus" );
 						assertThat( activeStatusDefinition.getDefaultFilterCondition() ).isEqualTo( "status = 1" );
 						assertThat( activeStatusDefinition.isAutoEnabled() ).isTrue();
@@ -257,7 +257,7 @@ public class SimpleBindingCoordinatorTests {
 	void testFetchProfileAndEntityGraphReachRuntimeAndApply(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
-					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						assertThat( sessionFactory.containsFetchProfileDefinition( "child-with-parent-profile" ) )
 								.isTrue();
 						assertThat( sessionFactory.findEntityGraphByName( "child-with-parent-graph" ) )

@@ -298,7 +298,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 */
 	@Remove
 	protected NamingHelper namingHelper(MetadataBuildingContext context) {
-		return NamingHelper.withCharset( context.getBuildingOptions().getSchemaCharset() );
+		return NamingHelper.withCharset( context.getBuildingPlan().getSchemaCharset() );
 	}
 
 	/**

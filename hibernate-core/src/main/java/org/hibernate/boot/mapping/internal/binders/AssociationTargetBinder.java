@@ -5,8 +5,10 @@
 package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
@@ -146,7 +148,7 @@ class AssociationTargetBinder {
 				.getClassDetails()
 				.getRepeatedAnnotationUsages(
 						SecondaryTable.class,
-						entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+						entityBinder.getBindingContext().getModelsContext()
 				);
 		for ( SecondaryTable secondaryTable : secondaryTables ) {
 			if ( primaryKeyJoinColumnsMatch( secondaryTable.pkJoinColumns(), referencedColumnNames ) ) {
@@ -184,7 +186,7 @@ class AssociationTargetBinder {
 			result.add( property );
 		}
 		final List<Property> properties = new ArrayList<>( result );
-		final List<Property> coalescedProperties = coalesceCompleteComponents(
+		final List<Property> coalescedProperties = coalesceComponentProperties(
 				targetBinding,
 				properties,
 				referencedColumnNames
@@ -198,11 +200,12 @@ class AssociationTargetBinder {
 		return coalescedProperties;
 	}
 
-	private List<Property> coalesceCompleteComponents(
+	private List<Property> coalesceComponentProperties(
 			PersistentClass targetBinding,
 			List<Property> properties,
 			List<Identifier> referencedColumnNames) {
 		final ArrayList<Property> result = new ArrayList<>( properties.size() );
+		final Map<Property, Property> partialComponents = new LinkedHashMap<>();
 		for ( Property property : properties ) {
 			final Property componentProperty = findCompleteComponentProperty(
 					targetBinding,
@@ -215,9 +218,70 @@ class AssociationTargetBinder {
 				}
 			}
 			else {
-				result.add( property );
+				final Property containingComponentProperty = findContainingComponentProperty( targetBinding, property );
+				if ( containingComponentProperty != null ) {
+					final Property partialComponent = partialComponents.computeIfAbsent(
+							containingComponentProperty,
+							(unused) -> createPartialComponentProperty( targetBinding, containingComponentProperty, properties )
+					);
+					if ( !result.contains( partialComponent ) ) {
+						result.add( partialComponent );
+					}
+				}
+				else {
+					result.add( property );
+				}
 			}
 		}
+		return result;
+	}
+
+	private Property findContainingComponentProperty(PersistentClass targetBinding, Property property) {
+		for ( Property referenceableProperty : referenceableProperties( targetBinding ) ) {
+			if ( referenceableProperty.getValue() instanceof Component component
+					&& containsProperty( component, property ) ) {
+				return referenceableProperty;
+			}
+		}
+		return null;
+	}
+
+	private boolean containsProperty(Component component, Property property) {
+		if ( component.getProperties().contains( property ) ) {
+			return true;
+		}
+		for ( Property subProperty : component.getProperties() ) {
+			if ( subProperty.getValue() instanceof Component subComponent
+					&& containsProperty( subComponent, property ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Property createPartialComponentProperty(
+			PersistentClass targetBinding,
+			Property componentProperty,
+			List<Property> selectedProperties) {
+		final Component component = (Component) componentProperty.getValue();
+		final Component copy = component.copy();
+		copy.clearProperties();
+		copy.setDiscriminator( null );
+		copy.setDiscriminatorValues( null );
+		copy.setPreservePropertyOrder( true );
+		for ( Property subProperty : component.getProperties() ) {
+			if ( selectedProperties.contains( subProperty ) ) {
+				copy.addProperty( cloneProperty( targetBinding, subProperty ) );
+			}
+		}
+
+		final SyntheticProperty result = new SyntheticProperty();
+		result.setName( componentProperty.getName() );
+		result.setPersistentClass( targetBinding );
+		result.setUpdatable( false );
+		result.setInsertable( false );
+		result.setValue( copy );
+		result.setPropertyAccessorName( componentProperty.getPropertyAccessorName() );
 		return result;
 	}
 
@@ -343,13 +407,19 @@ class AssociationTargetBinder {
 	private Property cloneProperty(PersistentClass ownerBinding, Property property) {
 		if ( property.isComposite() ) {
 			final Component component = (Component) property.getValue();
-			final Component copy = new Component( metadataBuildingContext(), component );
-			copy.setComponentClassName( component.getComponentClassName() );
-			copy.setEmbedded( component.isEmbedded() );
-			for ( Property subProperty : component.getProperties() ) {
-				copy.addProperty( cloneProperty( ownerBinding, subProperty ) );
+			final Component copy;
+			if ( property.isSynthetic() ) {
+				copy = component.copy();
 			}
-			copy.sortProperties();
+			else {
+				copy = new Component( metadataBuildingContext(), component );
+				copy.setComponentClassName( component.getComponentClassName() );
+				copy.setEmbedded( component.isEmbedded() );
+				for ( Property subProperty : component.getProperties() ) {
+					copy.addProperty( cloneProperty( ownerBinding, subProperty ) );
+				}
+				copy.sortProperties();
+			}
 			final SyntheticProperty result = new SyntheticProperty();
 			result.setName( property.getName() );
 			result.setPersistentClass( ownerBinding );

@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -16,6 +15,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.translation.Clause;
@@ -53,7 +53,7 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	private final EntityMappingType entityMapping;
 
-	protected final SessionFactoryImplementor sessionFactory;
+	protected final SessionFactoryAccess sessionFactoryAccess;
 
 	public AbstractCompositeIdentifierMapping(
 			EntityMappingType entityMapping,
@@ -64,7 +64,7 @@ public abstract class AbstractCompositeIdentifierMapping
 						.appendContainer( ID_ROLE_NAME );
 		this.entityMapping = entityMapping;
 		this.tableExpression = tableExpression;
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		this.sessionFactoryAccess = creationProcess.getCreationContext().getSessionFactoryAccess();
 	}
 
 	/*
@@ -74,7 +74,7 @@ public abstract class AbstractCompositeIdentifierMapping
 		this.navigableRole = original.navigableRole;
 		this.entityMapping = original.entityMapping;
 		this.tableExpression = original.tableExpression;
-		this.sessionFactory = original.sessionFactory;
+		this.sessionFactoryAccess = original.sessionFactoryAccess;
 	}
 
 	@Override

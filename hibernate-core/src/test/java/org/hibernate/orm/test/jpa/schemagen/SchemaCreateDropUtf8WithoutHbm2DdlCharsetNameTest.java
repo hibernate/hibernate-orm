@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -66,7 +66,7 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 	@JiraKey(value = "HHH-10972")
 	public void testEncoding() throws Exception {
 
-		SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
+		BootstrapPipeline.generateSchema( persistenceUnitDescriptor, config );
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) )
 				.toLowerCase();

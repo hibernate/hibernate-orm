@@ -4,11 +4,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.TargetType;
@@ -133,9 +134,10 @@ public class SkipDefaultImportFileExecutionTest {
 	}
 
 	private Metadata buildMappings(StandardServiceRegistry registry) {
-		return new MetadataSources( registry )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata();
+		return MetadataBuildingTestHelper.buildMetadata(
+				registry,
+				new MappingSources().addManagedClass( TestEntity.class )
+		);
 	}
 
 	@Entity(name = "TestEntity")

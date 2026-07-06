@@ -706,7 +706,7 @@ public record ComponentSource(
 			MetadataBuildingContext buildingContext) {
 		final var timeZoneColumn = member.getDirectAnnotationUsage( TimeZoneColumn.class );
 		final var created = JpaAnnotations.COLUMN.createUsage(
-				buildingContext.getBootstrapContext().getModelsContext()
+				buildingContext.getModelsContext()
 		);
 		created.name( timeZoneColumn == null ? column.name() + "_tz" : timeZoneColumn.name() );
 		created.nullable( column.nullable() );
@@ -739,7 +739,7 @@ public record ComponentSource(
 		}
 
 		final var created = JpaAnnotations.COLUMN.createUsage(
-				buildingContext.getBootstrapContext().getModelsContext()
+				buildingContext.getModelsContext()
 		);
 		if ( column != null ) {
 			created.precision( column.precision() );
@@ -757,7 +757,7 @@ public record ComponentSource(
 		}
 
 		final Identifier implicitName = buildingContext.getObjectNameNormalizer().normalizeIdentifierQuoting(
-				buildingContext.getBuildingOptions().getImplicitNamingStrategy()
+				buildingContext.getBuildingPlan().getImplicitNamingStrategy()
 						.determineBasicColumnName( new ImplicitBasicColumnNameSource() {
 							final AttributePath attributePath = AttributePath.parse( path );
 
@@ -784,7 +784,7 @@ public record ComponentSource(
 	}
 
 	public ColumnTransformer columnTransformer(String path, MemberDetails member, BindingContext bindingContext) {
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		final ColumnTransformer directTransformer = member.getAnnotationUsage( ColumnTransformer.class, modelsContext );
 		if ( directTransformer != null ) {
 			return directTransformer;

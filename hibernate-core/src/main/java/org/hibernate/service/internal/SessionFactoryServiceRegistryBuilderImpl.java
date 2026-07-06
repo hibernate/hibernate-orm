@@ -6,7 +6,7 @@ import java.util.List;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
@@ -63,13 +63,13 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 
 	@Nonnull
 	public SessionFactoryServiceRegistry buildSessionFactoryServiceRegistry(
-			SessionFactoryImplementor sessionFactory,
+			SessionFactoryAccess sessionFactoryAccess,
 			SessionFactoryOptions options) {
 		return SessionFactoryServiceRegistryImpl.create(
 				parent,
 				initiators,
 				providedServices,
-				sessionFactory,
+				sessionFactoryAccess,
 				options
 		);
 	}

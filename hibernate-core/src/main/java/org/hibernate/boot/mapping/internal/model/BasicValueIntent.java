@@ -245,7 +245,7 @@ public record BasicValueIntent(
 				member,
 				org.hibernate.annotations.Formula.class,
 				bindingState.getDatabase().getDialect(),
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		);
 	}
 
@@ -257,7 +257,7 @@ public record BasicValueIntent(
 				member,
 				Check.class,
 				bindingState.getDatabase().getDialect(),
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		);
 	}
 

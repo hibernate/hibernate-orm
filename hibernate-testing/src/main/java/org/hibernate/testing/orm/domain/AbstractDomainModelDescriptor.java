@@ -1,6 +1,6 @@
 package org.hibernate.testing.orm.domain;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 
 /**
  * Convenience base class test domain models based on annotated classes
@@ -20,9 +20,9 @@ public abstract class AbstractDomainModelDescriptor implements DomainModelDescri
 	}
 
 	@Override
-	public void applyDomainModel(MetadataSources sources) {
+	public void applyDomainModel(MappingSources sources) {
 		for ( Class annotatedClass : annotatedClasses ) {
-			sources.addAnnotatedClass( annotatedClass );
+			sources.addManagedClass( annotatedClass );
 		}
 	}
 }

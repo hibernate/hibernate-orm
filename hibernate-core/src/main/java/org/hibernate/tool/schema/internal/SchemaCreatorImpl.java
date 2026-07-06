@@ -580,7 +580,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 						return ExceptionHandlerHaltImpl.INSTANCE;
 					}
 				},
-				metadataImplementor.getMetadataBuildingOptions()
+				metadataImplementor.getMappingResolutionOptions()
 						.getServiceRegistry()
 						.requireService( JdbcEnvironment.class )
 						.getDialect(),
@@ -599,7 +599,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			final boolean manageNamespaces,
 			GenerationTarget... targets) {
 		final var serviceRegistry =
-				( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
+				( (MetadataImplementor) metadata ).getMappingResolutionOptions()
 						.getServiceRegistry();
 		doCreation(
 				metadata,

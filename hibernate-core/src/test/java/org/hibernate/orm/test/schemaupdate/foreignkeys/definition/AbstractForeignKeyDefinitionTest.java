@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.schemaupdate.foreignkeys.definition;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -26,14 +26,7 @@ public abstract class AbstractForeignKeyDefinitionTest {
 
 	@BeforeEach
 	public void setUp(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
-
-		for ( Class<?> c : getAnnotatedClasses() ) {
-			metadataSources.addAnnotatedClass( c );
-		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( registryScope.getRegistry(), getAnnotatedClasses() );
 	}
 
 	protected abstract Class<?>[] getAnnotatedClasses();

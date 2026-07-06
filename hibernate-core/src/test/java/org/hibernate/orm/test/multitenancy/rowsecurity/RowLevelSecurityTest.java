@@ -10,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -45,9 +45,7 @@ class RowLevelSecurityTest {
 				.applySetting( DIALECT, PostgreSQLDialect.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( Document.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, Document.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( Document.class.getName() ).getTable();
 			final var context =
@@ -75,9 +73,7 @@ class RowLevelSecurityTest {
 				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( StringDocument.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, StringDocument.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
@@ -103,9 +99,7 @@ class RowLevelSecurityTest {
 				.applySetting( DIALECT, DB2Dialect.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( StringDocument.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, StringDocument.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
@@ -139,9 +133,7 @@ class RowLevelSecurityTest {
 				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( StringDocument.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, StringDocument.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
@@ -170,9 +162,7 @@ class RowLevelSecurityTest {
 				.applySetting( MULTI_TENANT_RLS_ENABLED, false )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( StringDocument.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, StringDocument.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
@@ -192,9 +182,7 @@ class RowLevelSecurityTest {
 				.applySetting( DIALECT, DB2Dialect.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( Document.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, Document.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( Document.class.getName() ).getTable();
 			final var context =
@@ -223,9 +211,7 @@ class RowLevelSecurityTest {
 				.applySetting( DIALECT, SQLServer2016Dialect.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( StringDocument.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, StringDocument.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
@@ -267,9 +253,7 @@ class RowLevelSecurityTest {
 				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( StringDocument.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, StringDocument.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
@@ -355,9 +339,7 @@ class RowLevelSecurityTest {
 				.applySetting( DIALECT, Cockroach252Dialect.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( Document.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, Document.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( Document.class.getName() ).getTable();
 			final var context =
@@ -386,9 +368,7 @@ class RowLevelSecurityTest {
 				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( StringDocument.class )
-					.buildMetadata();
+			final var metadata = MetadataBuildingTestHelper.buildMetadata( registry, StringDocument.class );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =

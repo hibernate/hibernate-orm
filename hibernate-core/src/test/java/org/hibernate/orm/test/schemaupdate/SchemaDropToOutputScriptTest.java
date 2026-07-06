@@ -10,7 +10,7 @@ import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -18,7 +18,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -41,7 +41,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SchemaDropToOutputScriptTest {
 
 	private File output;
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 	private MetadataImplementor metadata;
 
 
@@ -81,12 +81,11 @@ public class SchemaDropToOutputScriptTest {
 
 		serviceRegistry = standardServiceRegistryBuilder.build();
 
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.addAnnotatedClass( MySecondEntity.class )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+				serviceRegistry,
+				MyEntity.class,
+				MySecondEntity.class
+		);
 	}
 
 	@AfterEach

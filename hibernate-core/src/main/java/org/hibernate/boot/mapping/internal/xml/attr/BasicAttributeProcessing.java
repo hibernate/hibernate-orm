@@ -42,7 +42,7 @@ public class BasicAttributeProcessing {
 
 		final BasicJpaAnnotation basicAnn = (BasicJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.BASIC,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		applyAccess( jaxbBasic.getAccess(), memberDetails, xmlDocumentContext );
@@ -56,14 +56,14 @@ public class BasicAttributeProcessing {
 			assert jaxbBasic.getColumn() == null;
 			final FormulaAnnotation formulaAnn = (FormulaAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.FORMULA,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			formulaAnn.value( jaxbBasic.getFormula() );
 		}
 		else if ( jaxbBasic.getColumn() != null ) {
 			final ColumnJpaAnnotation columnAnn = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.COLUMN,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			columnAnn.apply( jaxbBasic.getColumn(), xmlDocumentContext );
 			XmlAnnotationHelper.applyColumnTransformation( jaxbBasic.getColumn(), memberDetails, xmlDocumentContext );

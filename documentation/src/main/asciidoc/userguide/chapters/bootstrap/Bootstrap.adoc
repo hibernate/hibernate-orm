@@ -5,111 +5,90 @@
 :bootstrap-guide-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/bootstrap/guide
 :extrasdir: extras
 
-Bootstrapping creates the factory used to access an application's persistent model.
-When Hibernate is the persistence provider, the factory implements both `EntityManagerFactory` and `SessionFactory`.
-Creating a factory is expensive. Usually, an application reuses one factory for each persistence unit until shutdown.
+The term bootstrapping refers to initializing and starting a software component.
+In Hibernate, we are specifically talking about the process of building a fully functional `SessionFactory` / `EntityManagerFactory` instance.
+
+[TIP]
+====
+This chapter mentions a number of specific configuration settings.  Be sure to check out the
+<<appendices/SettingsReference.adoc#settings>> section as well for documentation of each available setting.
+====
+
+[[bootstrap-process]]
+=== Bootstrap Process
+
+Every supported bootstrap entry point follows the same basic shape:
+
+* define mapping information;
+* define configuration settings;
+* apply integrations; and
+* build a `SessionFactory` / `EntityManagerFactory`.
+
+Mapping information may come from:
+
+* annotated classes;
+* managed class names;
+* package-level annotations;
+* XML mapping documents;
+* `persistence.xml` declarations; or
+* classpath scanning, where available.
+
+Settings may come from the selected bootstrap API, persistence-unit
+descriptors, integration-provided settings, `hibernate.properties`, system
+properties, or other environment-specific sources.  The exact precedence
+depends on the entry point and deployment environment.
+
+Hibernate also discovers a number of optional integrations using Java service
+loading.  See <<bootstrap-java-service-loadable>> for the service-loadable
+contracts that can affect bootstrap.
+
+The supported entry points collect mapping information, settings, and integrations, and
+Hibernate handles the internal bootstrap pipeline.
 
 For individual configuration properties, see <<settings>>.
 See <<database>> for datasource, JDBC connection, and pooling configuration.
 See <<schema-generation>> for creating or validating schemas and exporting schema creation or supported alteration commands to scripts.
 Build-time enhancement, metamodel generation, and other build services are covered in <<tooling>>.
 
-[[bootstrap-standardized]]
-=== Choosing a bootstrap approach
+[[bootstrap-entrypoints]]
+=== Supported Entry Points
 
-[cols="2,3,3",options="header"]
-|===
-|Entry point |Configuration |Ownership and portability
-|<<bootstrap-standardized-container,JPA EE bootstrap>>
-|A deployed persistence unit, normally declared in `META-INF/persistence.xml`.
-|The container creates and owns the factory. Deployment details depend on the container.
-|<<bootstrap-hibernate-persistence-configuration,HibernatePersistenceConfiguration>>
-|A programmatic persistence unit with Hibernate-specific conveniences.
-|The application owns the factory. Configuration code depends on Hibernate.
-|<<bootstrap-persistence-configuration,PersistenceConfiguration>>
-|A programmatic persistence unit using the standard API.
-|The application owns the factory. Standard options are portable across compatible Jakarta Persistence providers.
-|<<bootstrap-jpa-se-xml,JPA SE bootstrap with persistence.xml>>
-|A named XML persistence unit, optionally overridden by a settings map.
-|The application owns the factory. Standard configuration is portable across Jakarta Persistence providers.
-|<<bootstrap-native,Other Hibernate bootstrap APIs>>
-|`Configuration` or the metadata-builder pipeline.
-|The application or integration owns the factory. These APIs are Hibernate-specific.
-|===
+Hibernate supports several bootstrap entry points for building the factory.
+Since the Hibernate `SessionFactory` is also an implementation of the
+Jakarta Persistence `EntityManagerFactory`, these approaches are interchangeable.
 
-Bootstrap mechanism, entity-manager ownership, and transaction management are separate concerns.
-For example, an EE application can create an application-managed entity manager from a container-owned factory.
-A programmatically configured persistence unit remains an SE-style unit even when the application runs in an EE environment;
-it does not become a container-managed persistence unit.
+* <<PersistenceUnitInfo>>
+* <<Persistence>>
+* <<PersistenceConfiguration>>
+* <<HibernatePersistenceConfiguration>>
 
-The application-bootstrap examples below use this mapped class:
 
-[[bootstrap-guide-model]]
-[source,java,indent=0]
-----
-include::{bootstrap-guide-examples}/Document.java[tag=bootstrap-guide-model]
-----
+[NOTE]
+====
+`org.hibernate.cfg.Configuration` remains available (though deprecated) as a
+native compatibility facade for existing applications.  Existing
+`Configuration` usage should be migrated to
+`PersistenceConfiguration` or `HibernatePersistenceConfiguration`.
+====
 
-[[bootstrap-settings-merging]]
-==== How Hibernate merges settings
+[[PersistenceUnitInfo]]
+=== PersistenceUnitInfo
 
-When Hibernate builds a factory through a JPA bootstrap entry point, it combines environment defaults,
-persistence-unit properties, and any bootstrap overrides.
-For an ordinary property supplied under the same key, the following sources are applied in order;
-a later source replaces an earlier value:
+`jakarta.persistence.spi.PersistenceUnitInfo` is the standard way to bootstrap
+Hibernate in a container.  Jakarta Persistence calls this approach "EE
+bootstrapping".
 
-[cols="1,3",options="header"]
-|===
-|Order |Source
-|1 |The classpath resource `hibernate.properties`, if present.
-|2 |JVM system properties, which override values from `hibernate.properties`.
-|3 |Persistence-unit properties: those supplied by the EE container, declared in `persistence.xml`,
-or collected in a `PersistenceConfiguration` or `HibernatePersistenceConfiguration`.
-|4 |Properties from a Hibernate XML configuration resource explicitly selected using `hibernate.cfg_xml_file`, if present.
-|5 |Bootstrap overrides: the map passed to `Persistence.createEntityManagerFactory(unitName, overrides)`
-or supplied by the EE container to the provider.
-|===
+The application provides `META-INF/persistence.xml` for configuration.  The
+container parses the configuration and builds a `PersistenceUnitInfo`, which it
+passes to Hibernate (as the `PersistenceProvider`).  Hibernate then builds a
+factory based on the `PersistenceUnitInfo` and integration settings provided by
+the container.
+In these container environments, an `EntityManager` may be dependency injected
+via `@PersistenceContext` or located by JNDI.  In most cases, the lifecycle of such an injected
+`EntityManager` is managed by the container.
 
-Environment defaults and the optional Hibernate XML configuration resource are Hibernate-specific sources;
-Jakarta Persistence defines the persistence-unit configuration and bootstrap override contract.
-Hibernate captures the environment defaults when its `Environment` class initializes.
-Changing a JVM system property afterward does not update that captured baseline.
-These defaults also apply when the application uses the standard Jakarta Persistence bootstrap APIs.
 
-Programmatic configuration collects properties before bootstrap.
-Each `property(name, value)` call replaces the previous value for that key;
-`properties(map)` merges the supplied entries, replacing matching keys while retaining other entries.
-Thus, the last configuration call for a key wins within the programmatic unit.
-If that unit selects `hibernate.cfg_xml_file`, properties from the selected resource are applied afterward.
-Naming a programmatic unit does not import a same-named unit from `persistence.xml`.
-
-Connection settings need additional resolution because multiple keys can describe the same connection option.
-For example, `hibernate.connection.url` and `jakarta.persistence.jdbc.url` are aliases rather than independent settings.
-Within the merged properties, Hibernate prefers the Hibernate JDBC URL key when both are present,
-even if the Jakarta key came from a later source.
-A JDBC URL supplied in the bootstrap override map takes precedence over a URL in the persistence-unit properties,
-including one supplied under another alias.
-Hibernate also resolves datasource and JDBC connection settings together:
-a datasource supplied in the override map takes precedence over a JDBC URL in that map,
-and Hibernate removes conflicting connection settings after selecting the connection source.
-Transaction type, validation mode, shared-cache mode, and schema-management options also have
-specific rules for combining typed persistence-unit options and properties.
-The table therefore describes ordinary same-key property merging, not a universal ordering of every configuration option.
-
-Set application properties explicitly and use one spelling for each connection option.
-See <<database-connectionprovider>> for connection sources, <<schema-generation>> for schema management,
-and <<settings>> for individual configuration properties.
-
-[[bootstrap-standardized-container]]
-=== JPA EE bootstrap
-
-During deployment, the container discovers persistence units and supplies their configuration to the persistence provider.
-The provider builds an `EntityManagerFactory`; the container manages its lifecycle and makes it available through injection or JNDI.
-The container also coordinates persistence-context access and JTA transaction integration.
-Consult the container's documentation for datasource deployment and provider selection.
-
-The following descriptor declares a JTA persistence unit with a container-managed datasource.
-The datasource name must refer to a datasource configured in the target container.
+Consider the following `META-INF/persistence.xml` file:
 
 [[example-bootstrap-standardized-persistence-xml]]
 .META-INF/persistence.xml for an EE persistence unit
@@ -163,9 +142,54 @@ include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tag=bootstrap-guide
 [[bootstrap-hibernate-persistence-configuration]]
 === Programmatic bootstrap with HibernatePersistenceConfiguration
 
-[[bootstrap-standardized-app]]Applications can define a persistence unit directly in Java and own the resulting factory.
-`org.hibernate.jpa.HibernatePersistenceConfiguration` extends the standard `PersistenceConfiguration` API with Hibernate-specific methods.
-Its `createEntityManagerFactory()` method returns a `SessionFactory`, which is also an `EntityManagerFactory`.
+[[Persistence]]
+=== Persistence
+
+`jakarta.persistence.Persistence` is the traditional Jakarta Persistence "SE
+bootstrap" API.  It locates a `persistence.xml` persistence unit and builds an
+`EntityManagerFactory`.
+
+[[example-bootstrap-jpa-compliant-EntityManagerFactory]]
+.Application bootstrapped `EntityManagerFactory`
+====
+[source, java, indent=0]
+----
+include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManagerFactory-example]
+----
+====
+
+
+[[PersistenceConfiguration]]
+=== PersistenceConfiguration
+
+Jakarta Persistence defines a programmatic bootstrap API named
+`jakarta.persistence.PersistenceConfiguration`.
+
+`PersistenceConfiguration` is useful when an application wants to build an
+`EntityManagerFactory` without a `persistence.xml` descriptor while staying on
+portable Jakarta Persistence contracts.
+
+[[example-bootstrap-standard-PersistenceConfiguration]]
+.Using PersistenceConfiguration
+====
+[source, java, indent=0]
+----
+include::{example-dir-boot-jpa}/PersistenceConfigurationTests.java[tags=example-bootstrap-standard-PersistenceConfiguration]
+----
+====
+
+[[HibernatePersistenceConfiguration]]
+=== HibernatePersistenceConfiguration
+
+`org.hibernate.jpa.HibernatePersistenceConfiguration` is Hibernate's extension
+of `jakarta.persistence.PersistenceConfiguration`.  It produces a Hibernate
+`SessionFactory`, which is also a Jakarta Persistence `EntityManagerFactory`,
+and exposes Hibernate-specific conveniences for settings, mapping sources,
+scanning, schema tooling, caching, and other native features.
+
+Use this entry point when the application wants programmatic Jakarta
+Persistence bootstrap with Hibernate-specific conveniences, or when the
+application wants to work with a native Hibernate `SessionFactory` directly.
 
 [[example-bootstrap-standard-HibernatePersistenceConfiguration]]
 .Bootstrapping a mapped model with HibernatePersistenceConfiguration
@@ -176,221 +200,118 @@ include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tags=bootstrap-guid
 ----
 ====
 
-The configuration name identifies this programmatic persistence unit.
-It does not select or merge a same-named unit from `persistence.xml`.
-`managedClasses()` registers the model explicitly; JDBC convenience methods configure connection access.
-`schemaToolingAction()` and `collectStatistics()` demonstrate Hibernate-specific options.
-The schema action in this example creates and drops tables for an isolated example database; choose schema management deliberately for an application.
-See <<schema-generation>> and <<database-connectionprovider>> for schema and connection configuration.
+Hibernate-specific programmatic bootstrapping is organized around a
+`HibernatePersistenceConfiguration` instance.  Settings may be supplied using
+the fluent methods inherited from
+`PersistenceConfiguration` or the Hibernate-specific convenience methods
+declared by `HibernatePersistenceConfiguration`.
 
-This short example closes the factory after using it. A running application normally creates the factory during startup,
-uses it across requests, and closes it during shutdown.
-The shared `persistDocument()` operation is shown in <<bootstrap-guide-resource-local-operation>>.
-
-==== Registration and discovery
-
-Explicit managed-class and mapping-file registration makes the configured model clear and avoids reliance on scanning.
-`managedClass()` and `mappingFile()` are inherited standard methods; Hibernate adds conveniences such as `managedClasses()` and `mappingFiles()`.
-For package- and module-level mapping metadata, the current standard API also provides `managedPackageDescriptor()` and `managedModuleDescriptor()`.
-These metadata registrations are distinct from discovering entity classes.
-
-To enable Hibernate scanning, add the `hibernate-scan-jandex` module or another implementation of the `ScanningProvider` service.
-Hibernate scans locations identified by the following URL sources:
-
-* An explicit persistence-unit root URL supplied to `new HibernatePersistenceConfiguration("CRM", rootUrl)`.
-* A persistence-unit root URL inferred from a class reference supplied to `new HibernatePersistenceConfiguration("CRM", Document.class)`.
-Hibernate uses the class's code-source location as the root URL.
-* Explicit JAR URLs supplied using `jarFileUrl(url)` or `jarFileUrls(urls)`.
-* JAR URLs inferred from class references supplied using `jarFileUrl(ModelClass.class)`
-or `jarFileUrls(FirstModelClass.class, SecondModelClass.class)`.
-Hibernate uses each class's code-source location as a JAR URL.
-
-Class references used to identify scanning locations do not explicitly register those classes as managed classes.
-The constructor taking only a name does not implicitly scan the application's whole classpath.
-
-
-==== Configuration sources
-
-Hibernate starts with environment defaults and applies the programmatic properties over them.
-If `hibernate.cfg_xml_file` selects a Hibernate XML configuration resource, Hibernate then applies that resource's properties.
-See <<bootstrap-settings-merging>> for precedence and connection-setting resolution.
-
-Use this API when Hibernate-specific configuration conveniences are useful.
-For portable bootstrap code, use <<bootstrap-persistence-configuration,PersistenceConfiguration>> instead.
-
-[[bootstrap-persistence-configuration]]
-=== Programmatic bootstrap with PersistenceConfiguration
-
-Jakarta Persistence 3.2 introduced `jakarta.persistence.PersistenceConfiguration` as an alternative to defining a persistence unit in XML.
-It provides methods for registering managed classes and mapping files, selecting a provider and transaction type,
-and configuring standard options. Connection properties and vendor-specific settings may still be supplied using `property()`.
-
-[[example-bootstrap-standard-PersistenceConfiguration]]
-.Bootstrapping a mapped model with PersistenceConfiguration
+[[example-bootstrap-native-HibernatePersistenceConfiguration-sources]]
+.Building a `HibernatePersistenceConfiguration`
 ====
-[source,java,indent=0]
+[source, java, indent=0]
 ----
-include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tags=bootstrap-guide-standard-configuration;!bootstrap-guide-assertions]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-sources]
 ----
 ====
 
-The example explicitly selects Hibernate as the provider but otherwise uses standard configuration methods and properties.
-Omit `provider()` when provider discovery can select the intended provider unambiguously.
-`managedClass()` identifies the mapped class; use `mappingFile()` for XML mapping resources.
-Newer Jakarta Persistence versions add configuration methods, including package- and module-descriptor registration;
-use only options supported by the API version deployed with the application.
+All methods on `HibernatePersistenceConfiguration` offer fluent-style call chaining -
 
-`configuration.createEntityManagerFactory()` delegates to `Persistence.createEntityManagerFactory(configuration)`.
-Both forms define the unit from the supplied configuration rather than looking up a same-named XML descriptor.
-The default transaction type is `RESOURCE_LOCAL`; the example states it explicitly.
-Other standard options include datasource names, validation mode, shared-cache mode, and schema-management actions.
-When Hibernate is the provider, the settings-merging rules in <<bootstrap-settings-merging>> also apply.
-
-This is application bootstrap even when invoked within an EE environment.
-A CDI producer and disposer can expose an application-created factory and arrange its cleanup, but this does not give it the semantics of an injected container-managed persistence unit.
-
-When Hibernate-specific access is needed after standard bootstrap, obtain the factory using:
-
-[source,java]
-----
-SessionFactory sessionFactory = factory.unwrap(SessionFactory.class);
-----
-
-The unwrapped reference represents the same factory; it does not require a separate shutdown lifecycle.
-See <<pc-unwrap>> for unwrapping persistence objects.
-
-[[bootstrap-jpa-se-xml]]
-=== JPA SE bootstrap with persistence.xml
-
-For XML-based application bootstrap, place the descriptor at `META-INF/persistence.xml` in the persistence-unit root.
-Select a unit using its name. Multiple units may be available on the classpath, so choose names that identify them unambiguously.
-For portable SE discovery, list the managed persistence classes explicitly instead of relying on automatic classpath scanning.
-
-The following descriptor uses the same `Document` model and resource-local transactions:
-
-[[bootstrap-guide-se-descriptor]]
-.META-INF/persistence.xml for an SE persistence unit
+[[bootstrap-native-metadata-source-example]]
+.Configuring a `HibernatePersistenceConfiguration` with method chaining
 ====
-[source,xml,indent=0]
+[source, java, indent=0]
 ----
-include::{bootstrap-guide-resources}/unit/META-INF/persistence.xml[]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-sources-chained]
 ----
 ====
 
-[[example-bootstrap-jpa-compliant-EntityManagerFactory]]
-.Creating a named factory with property overrides
+`HibernatePersistenceConfiguration` has many other methods as well. Explore its API and link:{doc-javadoc-url}/org/hibernate/jpa/HibernatePersistenceConfiguration.html[Javadocs] for more information.
+
+Once we have the sources of mapping information defined, we can build the `SessionFactory`.
+
+If you have specified everything as settings, or if the default behavior is appropriate, call `HibernatePersistenceConfiguration#createEntityManagerFactory`.
+
+[[example-bootstrap-native-HibernatePersistenceConfiguration-createEntityManagerFactory]]
+.Using `HibernatePersistenceConfiguration#createEntityManagerFactory`
 ====
-[source,java,indent=0]
+[source, java, indent=0]
 ----
-include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tags=bootstrap-guide-xml-configuration;!bootstrap-guide-assertions]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-createEntityManagerFactory]
 ----
 ====
 
-The settings map overrides properties of the named persistence unit; it is not a portable replacement for defining that unit.
-Here it overrides the JDBC URL from the descriptor.
-See <<bootstrap-settings-merging>> for the other configuration sources and their precedence.
-Use `Persistence.createEntityManagerFactory("CRM")` when no overrides are needed.
-The descriptor's `provider` element selects Hibernate; provider selection can also be overridden using the standard provider property.
 
-The application owns this factory and the entity managers it creates.
-Share the factory across the application and close it at shutdown. Close each application-created entity manager when its unit of work ends.
+Options that affect the interpretation of mapping information may be applied as bootstrap settings.
 
-[[bootstrap-guide-resource-local-operation]]
-==== Using an application-created factory
-
-All application-bootstrap examples call this resource-local operation:
-
-[source,java,indent=0]
+[[example-bootstrap-native-HibernatePersistenceConfiguration]]
+.Configuring `HibernatePersistenceConfiguration`
+====
+[source, java, indent=0]
 ----
-include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tag=bootstrap-guide-persist]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-with-settings]
 ----
+====
 
-The operation commits on success, attempts rollback on failure while the transaction is active, and closes the entity manager.
-It is not a JTA transaction template. See <<transactions>> for transaction demarcation and failure handling.
 
-[[bootstrap-standardized-integrations]]
-=== Bootstrap integrations
+Once all mapping sources and settings have been specified, build
+the `SessionFactory` by calling `HibernatePersistenceConfiguration#createEntityManagerFactory`.
 
-Service discovery lets extensions participate in factory bootstrap without making application code reproduce Hibernate's metadata pipeline.
-Register a service implementation in `META-INF/services/<contract-class-name>` where the contract supports service loading.
-The supported callback, lifecycle, and bootstrap path depend on the extension contract; not every native builder hook applies to every JPA bootstrap path.
+[[example-bootstrap-native-SessionFactory-with-settings]]
+.Building a `SessionFactory` with settings
+====
+[source, java, indent=0]
+----
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-SessionFactory-with-settings]
+----
+====
 
-[cols="1,3",options="header"]
+[[bootstrap-java-service-loadable]]
+=== Java Service Loading
+
+Many Hibernate bootstrap integration contracts are discoverable using the
+standard Java `ServiceLoader` facility.  A contract annotated with
+`org.hibernate.service.JavaServiceLoadable` may be implemented by a library or
+application and listed in a `META-INF/services/<fully-qualified-contract-name>`
+file.  The service file contains the fully-qualified names of implementation
+classes, one per line.
+
+The service-loadable contracts most directly affecting the bootstrap process include:
+
+.`@JavaServiceLoadable` bootstrap contracts
+[cols="35,65", options="header"]
 |===
-|Contract |Purpose and further reading
-|`TypeContributor`
-|Contributes types and descriptors. See <<basic-type-contributor>> for type contributions and <<basic-mapping-registries>> for the descriptor registries.
-Service-loaded contributors run in ascending `ordinal()` order; see link:{doc-javadoc-url}org/hibernate/boot/model/TypeContributor.html[the ordering contract].
-|`ServiceContributor`
-|Contributes Hibernate services to the service registry. See link:{doc-javadoc-url}org/hibernate/service/spi/ServiceContributor.html[the contract documentation].
-|`Integrator`
-|Participates in factory initialization, for example to register listeners. See <<events-events>> and link:{doc-javadoc-url}org/hibernate/integrator/spi/Integrator.html[the current callback contract].
+| Contract
+| Purpose
+
+| `org.hibernate.boot.model.TypeContributor`
+| Contributes custom basic types, Java type descriptors, JDBC type descriptors, or related type-system registrations.
+
+| `org.hibernate.boot.model.FunctionContributor`
+| Contributes HQL/SQL functions to the function registry.
+
+| `org.hibernate.boot.spi.AdditionalMappingContributor`
+| Contributes additional mapping metadata during metadata building.
+
+| `org.hibernate.boot.scan.spi.ScanningProvider`
+| Provides classpath scanning support for discovered managed classes and mapping files.
+
+| `org.hibernate.resource.beans.container.spi.BeanContainer`
+| Supplies managed-bean integration for CDI or another bean container.
+
+| `org.hibernate.boot.pipeline.spi.SessionFactoryProducer`
+| Advanced internal extension point for replacing the SessionFactory production pipeline.
 |===
 
-[[example-bootstrap-event-listener-registration]]For event-listener behavior and examples, see <<events-events>>;
-for interceptors, see <<events-interceptors>>. Use the current `Integrator` callbacks when registering listeners during bootstrap.
-Do not assume that the factory is fully initialized inside its integration callback.
-
-Older integrations may use `MetadataSourcesContributor` or `MetadataBuilderInitializer`, both marked for removal in Hibernate 9.0.
-They are not recommended entry points for new integrations.
-Consult the supported SPI contracts for additional mapping contributions rather than treating all builder callbacks as interchangeable.
-
-[[bootstrap-native]]
-=== Other Hibernate bootstrap APIs
-
-Existing applications and integrations may use `Configuration` or the metadata-builder pipeline directly.
-These are Hibernate-specific APIs. The preceding application-bootstrap sections provide the main entry points for new application configuration.
-
-[[bootstrap-native-simple]]
-==== Configuration
-
-`org.hibernate.cfg.Configuration` combines mapping sources and settings to create a `SessionFactory`.
-It can read annotated mappings, `hibernate.cfg.xml`, and other mapping resources.
-The following example uses the same mapped model without introducing legacy `hbm.xml` mappings:
-
-[source,java,indent=0]
-----
-include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tags=bootstrap-guide-configuration;!bootstrap-guide-assertions]
-----
-
-See link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[the Configuration API] for additional configuration sources and methods.
-
-[[bootstrap-native-builders]]
-==== The metadata-builder pipeline
-
-The pipeline separates service configuration, mapping metadata, and factory creation.
-It is useful when an integration needs direct access to those stages.
-The following complete example includes cleanup if metadata or factory creation fails:
-
-[[example-bootstrap-native-MetadataSources]]
-.Building a factory through the metadata pipeline
+[NOTE]
 ====
-[source,java,indent=0]
-----
-include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tags=bootstrap-guide-pipeline;!bootstrap-guide-assertions]
-----
+Some service-loadable contracts are intended for ordinary application or
+library integration, while others are low-level replacement points for
+containers, modules, or Hibernate extensions.  This section only lists the
+contracts that directly affect the bootstrap process; other service-loadable
+contracts affect runtime services, dialect selection, schema tooling,
+statistics, or event monitoring.  Prefer the most specific contract for the
+customization you need, and use settings for ordinary configuration choices.
+
+See `@JavaServiceLoadable` and its uses to identify which services are loadable.
 ====
-
-[[bootstrap-native-metadata-source-example]]The example uses fluent calls to register sources; the chained and unchained forms configure the same `MetadataSources`.
-
-[[bootstrap-native-builders-registry]]
-===== Service registry
-
-[[example-bootstrap-native-BootstrapServiceRegistry]]`BootstrapServiceRegistryBuilder` configures bootstrap services such as class loading, strategy selection, and integrator discovery when their defaults are insufficient.
-[[example-bootstrap-native-StandardServiceRegistryBuilder]]`StandardServiceRegistryBuilder` creates the registry used by metadata and factory construction.
-Pass an explicitly created registry to `MetadataSources` and arrange its cleanup if bootstrap fails.
-See link:{doc-javadoc-url}org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[StandardServiceRegistryBuilder] for details.
-
-[[bootstrap-native-builders-metadata]]
-===== Mapping metadata
-
-[[example-bootstrap-native-Metadata-no-builder]]Call link:{doc-javadoc-url}org/hibernate/boot/MetadataSources.html#buildMetadata()[`MetadataSources.buildMetadata()`] to resolve registered mapping sources using the configured defaults.
-[[example-bootstrap-native-MetadataBuilder]]Use `getMetadataBuilder()` for additional options before calling `build()`.
-See <<basic-mapping-registries>> for type customization and link:{doc-javadoc-url}org/hibernate/boot/MetadataBuilder.html[MetadataBuilder] for metadata-building options.
-
-[[bootstrap-native-builders-sessionfactory]]
-===== Factory creation
-
-[[example-bootstrap-native-SessionFactory-no-builder]]Call link:{doc-javadoc-url}org/hibernate/boot/Metadata.html#buildSessionFactory()[`Metadata.buildSessionFactory()`] to create the factory using the configured defaults.
-[[example-bootstrap-native-SessionFactoryBuilder]]Use `getSessionFactoryBuilder()` for additional options before calling `build()`.
-See link:{doc-javadoc-url}org/hibernate/boot/SessionFactoryBuilder.html[SessionFactoryBuilder] and <<bootstrap-standardized-integrations>> for extension contracts.

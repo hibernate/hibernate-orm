@@ -6,9 +6,9 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -21,10 +21,7 @@ public class JoinedInheritanceSameTableDifferentSchemaTest {
 	public void testMapping() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final Metadata metadata = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-					.addAnnotatedClass( EntityA.class )
-					.addAnnotatedClass( EntityB.class )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, EntityA.class, EntityB.class );
 			org.hibernate.mapping.Table entity1Table = metadata.getEntityBinding( EntityA.class.getName() ).getTable();
 			org.hibernate.mapping.Table entity2Table = metadata.getEntityBinding( EntityB.class.getName() ).getTable();
 			assertThat( entity1Table.getName() ).isEqualTo( entity2Table.getName() );

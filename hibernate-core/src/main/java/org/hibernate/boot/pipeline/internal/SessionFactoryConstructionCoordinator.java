@@ -46,22 +46,6 @@ public final class SessionFactoryConstructionCoordinator {
 			ResolvedSessionFactorySettings resolvedSettings,
 			SessionFactoryConstructionIdentity identity,
 			SessionFactoryOptions options,
-			BootstrapContext bootstrapContext) {
-		return buildSessionFactory(
-				metadata,
-				resolvedSettings,
-				identity,
-				options,
-				bootstrapContext,
-				null
-		);
-	}
-
-	public static SessionFactoryImplementor buildSessionFactory(
-			MetadataImplementor metadata,
-			ResolvedSessionFactorySettings resolvedSettings,
-			SessionFactoryConstructionIdentity identity,
-			SessionFactoryOptions options,
 			BootstrapContext bootstrapContext,
 			BootBindingModel bootBindingModel) {
 		final var state = new SessionFactoryConstructionState(
@@ -73,7 +57,7 @@ public final class SessionFactoryConstructionCoordinator {
 				bootBindingModel
 		);
 		final var request = new ConstructionRequest( state );
-		final var producer = resolveProducer( request.getServiceRegistry() );
+		final var producer = resolveProducer( producerSelectionContext( request.getServiceRegistry() ) );
 		return producer == null
 				? buildDefaultSessionFactory( state )
 				: Objects.requireNonNull(
@@ -85,23 +69,36 @@ public final class SessionFactoryConstructionCoordinator {
 	public static SessionFactoryImplementor buildSessionFactory(
 			MetadataImplementor metadata,
 			SessionFactoryOptions options,
-			BootstrapContext bootstrapContext) {
-		final var request = new ConstructionRequest( metadata, options, bootstrapContext );
-		final var producer = resolveProducer( request.getServiceRegistry() );
+			BootstrapContext bootstrapContext,
+			BootBindingModel bootBindingModel) {
+		final var state = SessionFactoryConstructionState.legacy(
+				metadata,
+				options,
+				bootstrapContext,
+				bootBindingModel
+		);
+		final var request = new ConstructionRequest( state );
+		final var producer = resolveProducer( producerSelectionContext( request.getServiceRegistry() ) );
 		return producer == null
-				? buildDefaultSessionFactory( request )
+				? buildDefaultSessionFactory( state )
 				: Objects.requireNonNull(
 						producer.buildSessionFactory( request ),
 						"SessionFactoryProducer returned null"
 				);
 	}
 
-	private static SessionFactoryProducer resolveProducer(ServiceRegistry serviceRegistry) {
-		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		final var selectedProducerName = getSelectedProducerName( serviceRegistry );
+	private static ProducerSelectionContext producerSelectionContext(ServiceRegistry serviceRegistry) {
+		return new ProducerSelectionContext(
+				serviceRegistry.requireService( ClassLoaderService.class ),
+				serviceRegistry.requireService( ConfigurationService.class )
+		);
+	}
+
+	private static SessionFactoryProducer resolveProducer(ProducerSelectionContext context) {
+		final var selectedProducerName = getSelectedProducerName( context );
 		SessionFactoryProducer producer = null;
 		List<String> activeProducerNames = null;
-		for ( var discoveredProducer : classLoaderService.loadJavaServices( SessionFactoryProducer.class ) ) {
+		for ( var discoveredProducer : context.classLoaderService().loadJavaServices( SessionFactoryProducer.class ) ) {
 			final var discoveredProducerName = discoveredProducer.getProducerName();
 			if ( isBlank( discoveredProducerName ) ) {
 				throw new HibernateException(
@@ -143,9 +140,10 @@ public final class SessionFactoryConstructionCoordinator {
 		return producer;
 	}
 
-	private static String getSelectedProducerName(ServiceRegistry serviceRegistry) {
-		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
-		final var selectedProducerName = configurationService.getSettings().get( PersistenceSettings.SESSION_FACTORY_PRODUCER );
+	private static String getSelectedProducerName(ProducerSelectionContext context) {
+		final var selectedProducerName = context.configurationService()
+				.getSettings()
+				.get( PersistenceSettings.SESSION_FACTORY_PRODUCER );
 		return selectedProducerName == null || isBlank( selectedProducerName.toString() )
 				? null
 				: selectedProducerName.toString();
@@ -156,48 +154,34 @@ public final class SessionFactoryConstructionCoordinator {
 	}
 
 	private static SessionFactoryImplementor buildDefaultSessionFactory(SessionFactoryConstructionState state) {
-		return new SessionFactoryImpl( SessionFactoryConstructionPreparation.prepare( state ) );
+		return new SessionFactoryImpl( SessionFactoryConstructionPlanBuilder.build( state ) );
 	}
 
-	private static SessionFactoryImplementor buildDefaultSessionFactory(ConstructionRequest request) {
-		return new SessionFactoryImpl( SessionFactoryConstructionPreparation.prepare(
-				request.metadata,
-				request.options,
-				request.bootstrapContext
-		) );
+	private record ProducerSelectionContext(
+			ClassLoaderService classLoaderService,
+			ConfigurationService configurationService) {
 	}
 
 	private static class ConstructionRequest implements SessionFactoryConstructionRequest {
-		private final MetadataImplementor metadata;
-		private final SessionFactoryOptions options;
-		private final BootstrapContext bootstrapContext;
+		private final SessionFactoryConstructionState state;
 
 		private ConstructionRequest(SessionFactoryConstructionState state) {
-			this( state.metadata(), state.options(), state.bootstrapContext() );
-		}
-
-		private ConstructionRequest(
-				MetadataImplementor metadata,
-				SessionFactoryOptions options,
-				BootstrapContext bootstrapContext) {
-			this.metadata = metadata;
-			this.options = options;
-			this.bootstrapContext = bootstrapContext;
+			this.state = state;
 		}
 
 		@Override
 		public MetadataImplementor getMetadata() {
-			return metadata;
+			return state.metadata();
 		}
 
 		@Override
 		public SessionFactoryOptions getOptions() {
-			return options;
+			return state.options();
 		}
 
 		@Override
 		public ServiceRegistry getServiceRegistry() {
-			return options.getServiceRegistry();
+			return state.options().getServiceRegistry();
 		}
 	}
 }

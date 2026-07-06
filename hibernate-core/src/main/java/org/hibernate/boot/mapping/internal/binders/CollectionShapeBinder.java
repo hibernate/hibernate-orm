@@ -276,7 +276,7 @@ class CollectionShapeBinder {
 				source.member(),
 				Filters.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 		return filters == null ? source.filters() : filters.value();
 	}
@@ -288,7 +288,7 @@ class CollectionShapeBinder {
 						source.member(),
 						SQLRestriction.class,
 						bindingState.getDatabase().getDialect(),
-						bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+						bindingState.getMetadataBuildingContext().getModelsContext()
 				),
 				effectiveAssociatedTypeRestriction( source, bindingState )
 		);
@@ -316,7 +316,7 @@ class CollectionShapeBinder {
 				source.member(),
 				SQLInsert.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 		if ( sqlInsert != null ) {
 			collection.setCustomSqlInsert( customSqlMapping( sqlInsert.sql(), sqlInsert.callable(), sqlInsert.verify() ) );
@@ -326,7 +326,7 @@ class CollectionShapeBinder {
 				source.member(),
 				SQLUpdate.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 		if ( sqlUpdate != null ) {
 			collection.setCustomSqlUpdate( customSqlMapping( sqlUpdate.sql(), sqlUpdate.callable(), sqlUpdate.verify() ) );
@@ -336,7 +336,7 @@ class CollectionShapeBinder {
 				source.member(),
 				SQLDelete.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 		if ( sqlDelete != null ) {
 			collection.setCustomSqlDelete( customSqlMapping( sqlDelete.sql(), sqlDelete.callable(), sqlDelete.verify() ) );
@@ -346,7 +346,7 @@ class CollectionShapeBinder {
 				source.member(),
 				SQLDeleteAll.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 		if ( sqlDeleteAll != null ) {
 			collection.setCustomSqlDeleteAll( customSqlMapping(
@@ -387,7 +387,7 @@ class CollectionShapeBinder {
 				source.member(),
 				SQLSelect.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 		if ( sqlSelect != null ) {
 			final String loaderName = collection.getRole() + "$SQLSelect";
@@ -426,7 +426,7 @@ class CollectionShapeBinder {
 				source.elementType().determineRawClass(),
 				SQLRestriction.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 	}
 
@@ -457,7 +457,7 @@ class CollectionShapeBinder {
 				source.member(),
 				SQLOrder.class,
 				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				bindingState.getMetadataBuildingContext().getModelsContext()
 		);
 	}
 

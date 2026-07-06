@@ -1,6 +1,5 @@
 package org.hibernate.orm.test.schematools;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -9,6 +8,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -147,11 +147,7 @@ public class TestExtraPhysicalTableTypes {
 	}
 
 	private MetadataImplementor buildMetadata(ServiceRegistryScope registryScope) {
-		var metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
-		return metadata;
+		return MetadataBuildingTestHelper.buildValidatedMetadata( registryScope.getRegistry() );
 	}
 
 	public static class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {

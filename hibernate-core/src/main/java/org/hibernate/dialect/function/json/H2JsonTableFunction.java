@@ -229,7 +229,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 						false,
 						false,
 						true,
-						converter.getCreationContext().getSessionFactory()
+						converter.getLoadQueryInfluencers().getSessionFactory()
 				);
 				final BasicType<Integer> integerType = converter.getSqmCreationContext()
 						.getNodeBuilder()

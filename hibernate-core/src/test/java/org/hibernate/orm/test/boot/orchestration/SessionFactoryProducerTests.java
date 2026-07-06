@@ -17,7 +17,7 @@ import org.hibernate.StatementObserver;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionRequest;
@@ -32,6 +32,7 @@ import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
@@ -86,7 +87,7 @@ class SessionFactoryProducerTests {
 			)
 	)
 	void serviceLoadedProducerCanReturnCustomSessionFactory(ServiceRegistryScope registryScope) {
-		try (SessionFactory sessionFactory = buildMetadata( registryScope ).buildSessionFactory()) {
+		try (SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( buildMetadata( registryScope ) )) {
 			assertThat( sessionFactory ).isInstanceOf( MarkerSessionFactory.class );
 		}
 
@@ -109,7 +110,7 @@ class SessionFactoryProducerTests {
 			)
 	})
 	void multipleServiceLoadedProducersFail(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> buildMetadata( registryScope ).buildSessionFactory() )
+		assertThatThrownBy( () -> org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( buildMetadata( registryScope ) ) )
 				.isInstanceOf( HibernateException.class )
 				.hasMessageContaining( "Multiple active SessionFactoryProducer definitions were discovered" );
 	}
@@ -132,7 +133,7 @@ class SessionFactoryProducerTests {
 			)
 	})
 	void selectedProducerResolvesMultipleServiceLoadedProducers(ServiceRegistryScope registryScope) {
-		try (SessionFactory sessionFactory = buildMetadata( registryScope ).buildSessionFactory()) {
+		try (SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( buildMetadata( registryScope ) )) {
 			assertThat( sessionFactory ).isInstanceOf( MarkerSessionFactory.class );
 		}
 
@@ -153,7 +154,7 @@ class SessionFactoryProducerTests {
 			)
 	)
 	void unknownSelectedProducerFails(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> buildMetadata( registryScope ).buildSessionFactory() )
+		assertThatThrownBy( () -> org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( buildMetadata( registryScope ) ) )
 				.isInstanceOf( HibernateException.class )
 				.hasMessageContaining( "No SessionFactoryProducer named 'missing' was discovered" );
 	}
@@ -199,7 +200,7 @@ class SessionFactoryProducerTests {
 				new FilterDefinition( "activeFilter", "", true, false, null, null )
 		);
 
-		try (SessionFactory sessionFactory = metadata.buildSessionFactory()) {
+		try (SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 			final var sessionFactoryImplementor = sessionFactory.unwrap( SessionFactoryImplementor.class );
 
 			assertThat( sessionFactoryImplementor.getAutoEnabledFilters() )
@@ -214,7 +215,7 @@ class SessionFactoryProducerTests {
 	@Test
 	@BootstrapServiceRegistry(integrators = RecordingIntegrator.class)
 	void integratorDisintegratesOnClose(ServiceRegistryScope registryScope) {
-		try (SessionFactory ignored = buildMetadata( registryScope ).buildSessionFactory()) {
+		try (SessionFactory ignored = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( buildMetadata( registryScope ) )) {
 			assertThat( RECORDING_INTEGRATED.get() ).isTrue();
 			assertThat( RECORDING_DISINTEGRATED.get() ).isFalse();
 		}
@@ -228,7 +229,7 @@ class SessionFactoryProducerTests {
 			FailingIntegrator.class
 	})
 	void startupFailureDisintegratesOnlySuccessfullyIntegratedIntegrators(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> buildMetadata( registryScope ).buildSessionFactory() )
+		assertThatThrownBy( () -> org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( buildMetadata( registryScope ) ) )
 				.isInstanceOf( RuntimeException.class )
 				.hasMessageContaining( "failing integrator" );
 
@@ -243,11 +244,11 @@ class SessionFactoryProducerTests {
 	}
 
 	private static MetadataImplementor buildMetadata(ServiceRegistryScope registryScope, Class<?>... annotatedClasses) {
-		final var metadataSources = new MetadataSources( registryScope.getRegistry() );
+		final var mappingSources = new MappingSources();
 		for ( var annotatedClass : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
+			mappingSources.addManagedClass( annotatedClass );
 		}
-		return (MetadataImplementor) metadataSources.buildMetadata();
+		return (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), mappingSources );
 	}
 
 	public interface MarkerSessionFactory extends SessionFactoryImplementor {

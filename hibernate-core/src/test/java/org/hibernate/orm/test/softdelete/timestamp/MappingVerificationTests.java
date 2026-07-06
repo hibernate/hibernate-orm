@@ -1,14 +1,16 @@
 package org.hibernate.orm.test.softdelete.timestamp;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.softdelete.MappingVerifier;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -43,10 +45,11 @@ public class MappingVerificationTests {
 
 	@Test
 	void testBadEntityMapping() {
-		try {
-			new MetadataSources()
-					.addAnnotatedClass( BadJuju.class )
-					.buildMetadata();
+		try (var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources().addManagedClass( BadJuju.class )
+			);
 			fail( "Expecting a failure" );
 		}
 		catch (UnsupportedMappingException expected) {
@@ -55,10 +58,11 @@ public class MappingVerificationTests {
 
 	@Test
 	void testBadCollectionMapping() {
-		try {
-			new MetadataSources()
-					.addAnnotatedClass( BadAss.class )
-					.buildMetadata();
+		try (var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources().addManagedClass( BadAss.class )
+			);
 			fail( "Expecting a failure" );
 		}
 		catch (UnsupportedMappingException expected) {

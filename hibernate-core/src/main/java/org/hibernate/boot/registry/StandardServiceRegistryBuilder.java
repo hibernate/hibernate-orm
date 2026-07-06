@@ -39,7 +39,7 @@ public class StandardServiceRegistryBuilder {
 	 * <p>
 	 * Intended only for use from Hibernate's JPA bootstrap pipeline.
 	 *
-	 * @see org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
+	 * @see org.hibernate.boot.pipeline.internal.BootstrapPipeline
 	 */
 	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		return new StandardServiceRegistryBuilder(

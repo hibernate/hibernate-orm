@@ -65,7 +65,7 @@ public class GeneratorAnnotationHelper {
 			@Nullable Function<A,String> nameExtractor,
 			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getModelsContext();
 
 		A possibleMatch = null;
 
@@ -149,6 +149,23 @@ public class GeneratorAnnotationHelper {
 		}
 
 		return possibleMatch;
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
+		return locatePackageInfoDetails( classDetails, buildingContext.getModelsContext() );
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {
+		return locatePackageInfoDetails( classDetails, modelContext.getClassDetailsRegistry() );
+	}
+
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ClassDetailsRegistry classDetailsRegistry) {
+		final String packageName = qualifier( classDetails.getName() );
+		if ( packageName.isEmpty() ) {
+			return null;
+		}
+		final var packageDetails = classDetailsRegistry.resolvePackageDetails( packageName );
+		return packageDetails.isRealClass() ? packageDetails : null;
 	}
 
 	public static void handleSequenceGenerator(

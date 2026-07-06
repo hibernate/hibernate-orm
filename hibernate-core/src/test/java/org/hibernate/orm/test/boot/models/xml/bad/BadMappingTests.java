@@ -1,7 +1,8 @@
 package org.hibernate.orm.test.boot.models.xml.bad;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.models.MemberResolutionException;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -15,10 +16,11 @@ public class BadMappingTests {
 	@Test
 	@ServiceRegistry
 	void testBadEmbeddedName(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addResource( "mappings/models/bad/bad-embedded.xml" );
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					registryScope.getRegistry(),
+					new MappingSources().addMappingResource( "mappings/models/bad/bad-embedded.xml" )
+			);
 			fail( "Expecting failure" );
 		}
 		catch (MemberResolutionException expected){
@@ -30,10 +32,11 @@ public class BadMappingTests {
 	@Test
 	@ServiceRegistry
 	void testBadEmbeddedIdName(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addResource( "mappings/models/bad/bad-embedded-id.xml" );
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					registryScope.getRegistry(),
+					new MappingSources().addMappingResource( "mappings/models/bad/bad-embedded-id.xml" )
+			);
 			fail( "Expecting failure" );
 		}
 		catch (MemberResolutionException expected){

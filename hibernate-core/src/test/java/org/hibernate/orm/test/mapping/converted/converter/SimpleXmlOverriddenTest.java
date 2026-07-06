@@ -7,8 +7,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
@@ -37,9 +38,7 @@ public class SimpleXmlOverriddenTest {
 	 */
 	@Test
 	public void baseline(ServiceRegistryScope scope) {
-		Metadata metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( TheEntity.class )
-				.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), TheEntity.class );
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
@@ -54,10 +53,12 @@ public class SimpleXmlOverriddenTest {
 	@Test
 	public void testDefinitionAtAttributeLevel(ServiceRegistryScope scope) {
 		// NOTE : simple-override.xml applied disable-conversion="true" at the attribute-level
-		Metadata metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( TheEntity.class )
-				.addResource( "org/hibernate/test/converter/simple-override.xml" )
-				.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+				scope.getRegistry(),
+				new MappingSources()
+						.addManagedClass( TheEntity.class )
+						.addMappingResource( "org/hibernate/test/converter/simple-override.xml" )
+		);
 		final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase().getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
@@ -73,9 +74,7 @@ public class SimpleXmlOverriddenTest {
 	 */
 	@Test
 	public void baselineAtEntityLevel(ServiceRegistryScope scope) {
-		Metadata metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( TheEntity2.class )
-				.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), TheEntity2.class );
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity2.class.getName() );
 		Type type = pc.getProperty( "it" ).getType();
@@ -90,10 +89,12 @@ public class SimpleXmlOverriddenTest {
 	@Test
 	public void testDefinitionAtEntityLevel(ServiceRegistryScope scope) {
 		// NOTE : simple-override2.xml applied disable-conversion="true" at the entity-level
-		Metadata metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( TheEntity2.class )
-				.addResource( "org/hibernate/test/converter/simple-override2.xml" )
-				.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+				scope.getRegistry(),
+				new MappingSources()
+						.addManagedClass( TheEntity2.class )
+						.addMappingResource( "org/hibernate/test/converter/simple-override2.xml" )
+		);
 		final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase().getTypeConfiguration()
 				.getJdbcTypeRegistry();
 

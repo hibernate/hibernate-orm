@@ -487,7 +487,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	 * This method does not add a {@link UniqueKey} to the table itself!
 	 */
 	public void createUniqueKey(Column column, MetadataBuildingContext context) {
-		final String keyName = context.getBuildingOptions().getImplicitNamingStrategy()
+		final String keyName = context.getBuildingPlan().getImplicitNamingStrategy()
 				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 					@Override
 					public Identifier getTableName() {
@@ -523,7 +523,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			createUniqueKey( keyColumns.get(0), context );
 		}
 		else {
-			final String keyName = context.getBuildingOptions().getImplicitNamingStrategy()
+			final String keyName = context.getBuildingPlan().getImplicitNamingStrategy()
 					.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 						@Override
 						public Identifier getTableName() {

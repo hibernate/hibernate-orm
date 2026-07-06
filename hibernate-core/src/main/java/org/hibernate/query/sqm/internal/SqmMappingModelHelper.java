@@ -83,7 +83,9 @@ public class SqmMappingModelHelper {
 				null,
 				valueDomainType,
 				valueDomainType.getExpressibleJavaType(),
+				valueDomainType.getExpressibleJavaType(),
 				jpaBindableType,
+				isGeneric,
 				isGeneric
 		);
 	}
@@ -95,6 +97,27 @@ public class SqmMappingModelHelper {
 			JavaType<?> relationalJavaType,
 			Bindable.BindableType jpaBindableType,
 			boolean isGeneric) {
+		return resolveSqmPathSource(
+				name,
+				pathModel,
+				valueDomainType,
+				valueDomainType.getExpressibleJavaType(),
+				relationalJavaType,
+				jpaBindableType,
+				isGeneric,
+				isGeneric
+		);
+	}
+
+	public static <J> SqmPathSource<J> resolveSqmPathSource(
+			String name,
+			SqmPathSource<J> pathModel,
+			DomainType<J> valueDomainType,
+			JavaType<?> bindableJavaType,
+			JavaType<?> relationalJavaType,
+			Bindable.BindableType jpaBindableType,
+			boolean isGeneric,
+			boolean reportGenericBindableJavaType) {
 		if ( valueDomainType instanceof BasicDomainType<?> ) {
 			return new BasicSqmPathSource<>(
 					name,
@@ -118,8 +141,10 @@ public class SqmMappingModelHelper {
 					name,
 					pathModel,
 					embeddableDomainType,
+					bindableJavaType,
 					jpaBindableType,
-					isGeneric
+					isGeneric,
+					reportGenericBindableJavaType
 			);
 		}
 		else if ( valueDomainType instanceof SqmEntityDomainType<J> entityDomainType ) {
@@ -127,8 +152,10 @@ public class SqmMappingModelHelper {
 					name,
 					pathModel,
 					entityDomainType,
+					bindableJavaType,
 					jpaBindableType,
-					isGeneric
+					isGeneric,
+					reportGenericBindableJavaType
 			);
 		}
 		else if ( valueDomainType instanceof SqmMappedSuperclassDomainType<J> mappedSuperclassDomainType ) {

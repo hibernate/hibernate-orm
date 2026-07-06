@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -28,18 +28,17 @@ public class IdClassPropertiesTest {
 	@Test
 	public void testRight() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( RightEntity.class );
-			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
+			assertDoesNotThrow( () -> MetadataBuildingTestHelper.buildMetadata( ssr, RightEntity.class ) );
 		}
 	}
 
 	@Test
 	public void testWrongLess() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( WrongEntityLess.class );
-			final AnnotationException thrown = assertThrows( AnnotationException.class, metadataSources::buildMetadata );
+			final AnnotationException thrown = assertThrows(
+					AnnotationException.class,
+					() -> MetadataBuildingTestHelper.buildMetadata( ssr, WrongEntityLess.class )
+			);
 			assertTrue( thrown.getMessage().contains( "childId' belongs to an '@IdClass' but has no matching property in entity class" ) );
 		}
 	}
@@ -47,9 +46,10 @@ public class IdClassPropertiesTest {
 	@Test
 	public void testWrongMore() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( WrongEntityMore.class );
-			final AnnotationException thrown = assertThrows( AnnotationException.class, metadataSources::buildMetadata );
+			final AnnotationException thrown = assertThrows(
+					AnnotationException.class,
+					() -> MetadataBuildingTestHelper.buildMetadata( ssr, WrongEntityMore.class )
+			);
 			assertTrue( thrown.getMessage().contains( "'anotherId' which do not match properties of the specified '@IdClass'" ) );
 		}
 	}

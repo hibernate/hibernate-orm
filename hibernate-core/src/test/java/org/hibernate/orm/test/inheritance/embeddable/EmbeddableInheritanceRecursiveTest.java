@@ -1,9 +1,9 @@
 package org.hibernate.orm.test.inheritance.embeddable;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -22,11 +22,8 @@ public class EmbeddableInheritanceRecursiveTest {
 	@Test
 	public void testSimpleRecursiveEmbedded() {
 		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
-		final MetadataSources metadataSources = new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClass( Root1.class )
-				.addAnnotatedClass( Entity1.class );
-		try {
-			final Metadata metadata = metadataSources.buildMetadata();
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			MetadataBuildingTestHelper.buildMetadata( registry, Root1.class, Entity1.class );
 			fail( "Expected MappingException due to recursive embeddable mapping" );
 		}
 		catch (Exception e) {
@@ -40,12 +37,8 @@ public class EmbeddableInheritanceRecursiveTest {
 	@Test
 	public void testChildWithRootProp() {
 		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
-		final MetadataSources metadataSources = new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClass( Root2.class )
-				.addAnnotatedClass( Child2.class )
-				.addAnnotatedClass( Entity2.class );
-		try {
-			final Metadata metadata = metadataSources.buildMetadata();
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			MetadataBuildingTestHelper.buildMetadata( registry, Root2.class, Child2.class, Entity2.class );
 			fail( "Expected MappingException due to recursive embeddable mapping" );
 		}
 		catch (Exception e) {
@@ -59,12 +52,8 @@ public class EmbeddableInheritanceRecursiveTest {
 	@Test
 	public void testRootWithChildProp() {
 		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
-		final MetadataSources metadataSources = new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClass( Root3.class )
-				.addAnnotatedClass( Child3.class )
-				.addAnnotatedClass( Entity3.class );
-		try {
-			final Metadata metadata = metadataSources.buildMetadata();
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			MetadataBuildingTestHelper.buildMetadata( registry, Root3.class, Child3.class, Entity3.class );
 			fail( "Expected MappingException due to recursive embeddable mapping" );
 		}
 		catch (Exception e) {
@@ -78,13 +67,8 @@ public class EmbeddableInheritanceRecursiveTest {
 	@Test
 	public void testMidEmbedded() {
 		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
-		final MetadataSources metadataSources = new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClass( Root4.class )
-				.addAnnotatedClass( Mid4.class )
-				.addAnnotatedClass( Child4.class )
-				.addAnnotatedClass( Entity4.class );
-		try {
-			final Metadata metadata = metadataSources.buildMetadata();
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			MetadataBuildingTestHelper.buildMetadata( registry, Root4.class, Mid4.class, Child4.class, Entity4.class );
 			fail( "Expected MappingException due to recursive embeddable mapping" );
 		}
 		catch (Exception e) {
@@ -98,12 +82,8 @@ public class EmbeddableInheritanceRecursiveTest {
 	@Test
 	public void testUnrelatedRecursive() {
 		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
-		final MetadataSources metadataSources = new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClass( EmbA.class )
-				.addAnnotatedClass( EmbB.class )
-				.addAnnotatedClass( Entity5.class );
-		try {
-			final Metadata metadata = metadataSources.buildMetadata();
+		try (StandardServiceRegistry registry = registryBuilder.build()) {
+			MetadataBuildingTestHelper.buildMetadata( registry, EmbA.class, EmbB.class, Entity5.class );
 			fail( "Expected MappingException due to recursive embeddable mapping" );
 		}
 		catch (Exception e) {

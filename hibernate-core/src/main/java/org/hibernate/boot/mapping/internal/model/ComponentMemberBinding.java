@@ -274,7 +274,7 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 			ComponentSource.ComponentMember member,
 			AttributeNature nature,
 			BindingContext bindingContext) {
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		return switch ( nature ) {
 			case ELEMENT_COLLECTION -> CollectionSource.elementCollection(
 					member.member(),

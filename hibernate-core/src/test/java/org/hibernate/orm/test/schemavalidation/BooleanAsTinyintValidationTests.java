@@ -66,7 +66,7 @@ public class BooleanAsTinyintValidationTests {
 
 	@Test
 	void testRuntimeUsage(DomainModelScope domainModelScope) {
-		try (SessionFactory sessionFactory = domainModelScope.getDomainModel().buildSessionFactory()) {
+		try (SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( domainModelScope.getDomainModel() )) {
 			sessionFactory.inTransaction( (session) -> {
 				session.persist( new Client( 1, "stuff", true ) );
 			} );

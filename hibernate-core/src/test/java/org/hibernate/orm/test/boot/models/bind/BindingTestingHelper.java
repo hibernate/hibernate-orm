@@ -10,9 +10,9 @@ import java.util.Set;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
-import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.mapping.internal.context.MetadataBuildingContextRootInput;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.mapping.internal.context.BindingContextImpl;
 import org.hibernate.boot.mapping.internal.context.BindingOptionsImpl;
 import org.hibernate.boot.mapping.internal.context.BindingStateImpl;
@@ -21,8 +21,12 @@ import org.hibernate.boot.mapping.internal.binders.BindingCoordinator;
 import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.pipeline.internal.source.AvailableResources;
-import org.hibernate.boot.pipeline.internal.source.AvailableResourcesContext;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCoordinator;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.ResolvedMapping;
+import org.hibernate.boot.pipeline.internal.ResolvedMappingImplementor;
+import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -54,28 +58,29 @@ public class BindingTestingHelper {
 
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
 				bootstrapContext,
-				bootstrapContext.getMetadataBuildingOptions()
+				bootstrapContext.getMappingResolutionOptions()
 		);
 
 		final MetadataBuildingContextRootImpl metadataBuildingContext = new MetadataBuildingContextRootImpl(
+				MetadataBuildingContextRootInput.create(
 				"models",
 				bootstrapContext,
-				bootstrapContext.getMetadataBuildingOptions(),
+				bootstrapContext.getMappingResolutionOptions(),
 				metadataCollector,
 				new RootMappingDefaults(
-						bootstrapContext.getMetadataBuildingOptions().getMappingDefaults(),
+						bootstrapContext.getMappingResolutionOptions().getMappingDefaults(),
 						metadataCollector.getPersistenceUnitMetadata()
 				)
-		);
+		) );
 		bootstrapContext.getTypeConfiguration().scope( metadataBuildingContext );
 		applyDialectTypeContributions( metadataBuildingContext );
-		final AvailableResources availableResources = buildAvailableResources(
+		final PreparedMappingSources resolvedMappingSources = buildPreparedMappingSources(
 				metadataBuildingContext,
 				mappingFiles,
 				domainClasses
 		);
 		final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
-				availableResources,
+				resolvedMappingSources,
 				metadataBuildingContext
 		);
 		final BindingStateImpl bindingState = new BindingStateImpl(
@@ -85,7 +90,7 @@ public class BindingTestingHelper {
 		final BindingOptionsImpl bindingOptions = new BindingOptionsImpl( metadataBuildingContext );
 		final BindingContextImpl bindingContext = new BindingContextImpl(
 				categorizedDomainModel,
-				bootstrapContext
+				metadataBuildingContext
 		);
 
 		BindingCoordinator.coordinateBinding(
@@ -94,7 +99,20 @@ public class BindingTestingHelper {
 				bindingOptions,
 				bindingContext
 		);
-		final MetadataImplementor metadata = metadataCollector.buildMetadataInstance( metadataBuildingContext );
+		final MetadataImplementor bootMetadata = metadataCollector.buildMetadataInstance( metadataBuildingContext );
+		FunctionRegistryCoordinator.populate(
+				bootMetadata.getFunctionRegistry(),
+				MappingCustomizations.NONE,
+				serviceRegistry,
+				bootstrapContext.getTypeConfiguration()
+		);
+		final MetadataImplementor metadata = new ResolvedMappingImplementor(
+				new ResolvedMapping(
+						bootMetadata,
+						categorizedDomainModel,
+						bindingState
+				)
+		);
 		metadata.orderColumns( false );
 		metadata.validate();
 
@@ -139,7 +157,7 @@ public class BindingTestingHelper {
 
 			@Override
 			public void contributeType(CompositeUserType<?> type) {
-				metadataBuildingContext.getBuildingOptions().getCompositeUserTypes().add( type );
+				metadataBuildingContext.getBuildingPlan().getCompositeUserTypes().add( type );
 			}
 		};
 
@@ -152,10 +170,10 @@ public class BindingTestingHelper {
 	public static Set<EntityHierarchy> buildHierarchyMetadata(Class<?>... classes) {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
 			final MetadataBuildingContext metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
-			final AvailableResources availableResources = buildAvailableResources( metadataBuildingContext, classes );
+			final PreparedMappingSources resolvedMappingSources = buildPreparedMappingSources( metadataBuildingContext, classes );
 
 			final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
-					availableResources,
+					resolvedMappingSources,
 					metadataBuildingContext
 			);
 
@@ -166,25 +184,25 @@ public class BindingTestingHelper {
 	public static CategorizedDomainModel buildCategorizedDomainModel(Class<?>... classes) {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
 			final MetadataBuildingContext metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
-			final AvailableResources availableResources = buildAvailableResources( metadataBuildingContext, classes );
+			final PreparedMappingSources resolvedMappingSources = buildPreparedMappingSources( metadataBuildingContext, classes );
 
-			return DomainModelCategorizer.categorize( availableResources, metadataBuildingContext );
+			return DomainModelCategorizer.categorize( resolvedMappingSources, metadataBuildingContext );
 		}
 	}
 
 	private static BootstrapContextImpl buildBootstrapContext(StandardServiceRegistry serviceRegistry) {
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( serviceRegistry, metadataBuildingOptions );
 		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
 		return bootstrapContext;
 	}
 
-	private static AvailableResources buildAvailableResources(MetadataBuildingContext metadataBuildingContext, Class<?>... classes) {
-		return buildAvailableResources( metadataBuildingContext, List.of(), classes );
+	private static PreparedMappingSources buildPreparedMappingSources(MetadataBuildingContext metadataBuildingContext, Class<?>... classes) {
+		return buildPreparedMappingSources( metadataBuildingContext, List.of(), classes );
 	}
 
-	private static AvailableResources buildAvailableResources(
+	private static PreparedMappingSources buildPreparedMappingSources(
 			MetadataBuildingContext metadataBuildingContext,
 			List<String> mappingFiles,
 			Class<?>... classes) {
@@ -195,11 +213,11 @@ public class BindingTestingHelper {
 		for ( String mappingFile : mappingFiles ) {
 			persistenceConfiguration.mappingFile( mappingFile );
 		}
-		return AvailableResources.from(
+		return PreparedMappingSources.from(
 				persistenceConfiguration,
-				new AvailableResourcesContext(
-						metadataBuildingContext.getBootstrapContext().getModelsContext(),
-						metadataBuildingContext.getBootstrapContext().getServiceRegistry()
+				new MappingSourcePreparationContext(
+						metadataBuildingContext.getModelsContext(),
+						metadataBuildingContext.getServiceRegistry()
 				)
 		);
 	}

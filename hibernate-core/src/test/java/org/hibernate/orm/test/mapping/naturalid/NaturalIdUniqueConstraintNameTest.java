@@ -5,8 +5,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.mapping.Index;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -24,9 +24,7 @@ public class NaturalIdUniqueConstraintNameTest {
 
 	@Test
 	public void testNaturalIdUsesUniqueConstraintName(ServiceRegistryScope registryScope) {
-		var metadata = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( getAnnotatedClasses() )
-				.buildMetadata();
+		var metadata = MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), getAnnotatedClasses() );
 
 		var table = metadata.getEntityBinding( City1.class.getName() )
 				.getTable();
@@ -54,9 +52,7 @@ public class NaturalIdUniqueConstraintNameTest {
 
 	@Test
 	public void testNaturalIdUsesExplicitColumns(ServiceRegistryScope registryScope) {
-		var metadata = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( getAnnotatedClasses() )
-				.buildMetadata();
+		var metadata = MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), getAnnotatedClasses() );
 
 		var table = metadata.getEntityBinding( City1.class.getName() )
 				.getTable();

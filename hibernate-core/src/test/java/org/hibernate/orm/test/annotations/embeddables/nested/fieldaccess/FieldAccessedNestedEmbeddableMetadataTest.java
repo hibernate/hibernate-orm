@@ -1,7 +1,6 @@
 package org.hibernate.orm.test.annotations.embeddables.nested.fieldaccess;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Collection;
@@ -11,6 +10,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -30,9 +30,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( Customer.class )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, Customer.class );
 			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
 					.getJdbcTypeRegistry();

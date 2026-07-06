@@ -67,8 +67,7 @@ public class GlobalTemporaryTableStrategy {
 
 		final ConfigurationService configService =
 				mappingModelCreationProcess.getCreationContext()
-						.getBootstrapContext().getServiceRegistry()
-						.requireService( ConfigurationService.class );
+						.getConfigurationService();
 
 		if ( configService.getSetting( CREATE_ID_TABLES, StandardConverters.BOOLEAN, true ) ) {
 			QUERY_MESSAGE_LOGGER.creatingGlobalTemporaryIdTable( getTemporaryTable().getTableExpression() );

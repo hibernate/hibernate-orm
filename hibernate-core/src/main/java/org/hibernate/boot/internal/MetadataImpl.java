@@ -24,7 +24,7 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -51,7 +51,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGroup
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptySet;
-import static org.hibernate.boot.pipeline.internal.SessionFactoryPipeline.build;
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -65,8 +64,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
 
-	private final @Nonnull UUID uuid;
-	private final MetadataBuildingOptions metadataBuildingOptions;
+	private final UUID uuid;
+	private final MappingResolutionOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
 	private final Map<String,PersistentClass> entityBindingMap;
@@ -85,13 +84,14 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
+	private final SqmFunctionRegistry functionRegistry;
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions;
 	private final Database database;
 
 	public MetadataImpl(
-			@Nonnull UUID uuid,
-			MetadataBuildingOptions metadataBuildingOptions,
+			UUID uuid,
+			MappingResolutionOptions metadataBuildingOptions,
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
 			Map<Class<?>, Component> genericComponentsMap,
@@ -108,6 +108,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
+			SqmFunctionRegistry functionRegistry,
 			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
 			List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions,
 			Database database,
@@ -130,6 +131,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.namedProcedureCallMap = namedProcedureCallMap;
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
+		this.functionRegistry = functionRegistry;
 		this.sqlFunctionMap = sqlFunctionMap;
 		this.persistenceUnitLifecycleCallbackDefinitions = persistenceUnitLifecycleCallbackDefinitions;
 		this.database = database;
@@ -137,7 +139,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
+	public MappingResolutionOptions getMappingResolutionOptions() {
 		return metadataBuildingOptions;
 	}
 
@@ -148,7 +150,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
-		return bootstrapContext.getFunctionRegistry();
+		return functionRegistry;
 	}
 
 	@Override
@@ -157,12 +159,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public SessionFactoryImplementor buildSessionFactory() {
-		return build( this, new SessionFactoryOptionsCollector() );
-	}
-
-	@Override
-	@Nonnull
 	public UUID getUUID() {
 		return uuid;
 	}

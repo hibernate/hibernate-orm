@@ -11,11 +11,9 @@ import org.hibernate.service.ServiceRegistry;
 /// Request passed to a [SessionFactoryProducer] for the final
 /// SessionFactory construction step.
 ///
-/// This contract intentionally exposes finalized construction inputs rather than
-/// broad boot-time contexts such as [BootstrapContext] or
-/// [MetadataBuildingContext].  [SessionFactoryOptions] is exposed as
-/// a transitional bridge while SessionFactory construction moves toward resolved
-/// factory settings and prepared runtime components.
+/// @apiNote [SessionFactoryOptions] is exposed as a transitional bridge while
+/// SessionFactory construction moves toward resolved factory settings and
+/// prepared runtime components.
 ///
 /// @since 9.0
 /// @author Steve Ebersole

@@ -11,12 +11,12 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Column;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -49,25 +49,23 @@ public class InheritedAttributeOverridingTest {
 	@Test
 	@JiraKey( value = "HHH-9485" )
 	public void testInheritedAttributeOverridingMappedsuperclass() {
-		Metadata metadata = new MetadataSources( standardServiceRegistry )
-				.addAnnotatedClass( A.class )
-				.addAnnotatedClass( B.class )
-				.buildMetadata();
-
-		( (MetadataImplementor) metadata ).orderColumns( false );
-		( (MetadataImplementor) metadata ).validate();
+		MetadataBuildingTestHelper.buildValidatedMetadata(
+				standardServiceRegistry,
+				new MappingSources()
+						.addManagedClass( A.class )
+						.addManagedClass( B.class )
+		);
 	}
 
 	@Test
 	@JiraKey( value = "HHH-9485" )
 	public void testInheritedAttributeOverridingEntity() {
-		Metadata metadata = new MetadataSources( standardServiceRegistry )
-				.addAnnotatedClass( C.class )
-				.addAnnotatedClass( D.class )
-				.buildMetadata();
-
-		( (MetadataImplementor) metadata ).orderColumns( false );
-		( (MetadataImplementor) metadata ).validate();
+		MetadataBuildingTestHelper.buildValidatedMetadata(
+				standardServiceRegistry,
+				new MappingSources()
+						.addManagedClass( C.class )
+						.addManagedClass( D.class )
+		);
 	}
 
 	@Test

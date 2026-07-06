@@ -44,12 +44,16 @@ public class BootBindingModel {
 	private final Map<ClassDetails, ManagedTypeBinding> managedTypeBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, EntityHierarchyBinding> entityHierarchyBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, EntityIdentifierBinding> entityIdentifierBindings = new LinkedHashMap<>();
+	private final Map<String, EntityIdentifierBinding> entityIdentifierBindingsByEntityName = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, VersionBinding> versionBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, TenantIdBinding> tenantIdBindings = new LinkedHashMap<>();
 	private final List<NaturalIdContribution> naturalIdContributions = new ArrayList<>();
 	private final List<CollationContribution> collationContributions = new ArrayList<>();
 	private final List<MappedSuperclassContribution> mappedSuperclassContributions = new ArrayList<>();
+	private final Map<String, Map<String, AttributeUsageBinding>> appliedMappedSuperclassAttributeUsages =
+			new LinkedHashMap<>();
 	private final List<EmbeddableContribution> embeddableContributions = new ArrayList<>();
+	private final Map<Object, EmbeddableContribution> embeddableContributionsByComponent = new LinkedHashMap<>();
 
 	public void addManagedTypeBinding(ManagedTypeBinding binding) {
 		managedTypeBindings.put( binding.classDetails(), binding );
@@ -169,10 +173,24 @@ public class BootBindingModel {
 
 	public void addEntityIdentifierBinding(EntityTypeMetadata rootType, EntityIdentifierBinding entityIdentifierBinding) {
 		entityIdentifierBindings.put( rootType, entityIdentifierBinding );
+		indexEntityIdentifierBinding( rootType.getEntityName(), entityIdentifierBinding );
+		indexEntityIdentifierBinding( rootType.getJpaEntityName(), entityIdentifierBinding );
+		indexEntityIdentifierBinding( rootType.getClassDetails().getName(), entityIdentifierBinding );
+		indexEntityIdentifierBinding( rootType.getClassDetails().getClassName(), entityIdentifierBinding );
 	}
 
 	public @Nullable EntityIdentifierBinding getEntityIdentifierBinding(EntityTypeMetadata rootType) {
 		return entityIdentifierBindings.get( rootType );
+	}
+
+	public @Nullable EntityIdentifierBinding findEntityIdentifierBinding(String entityName) {
+		return entityIdentifierBindingsByEntityName.get( entityName );
+	}
+
+	private void indexEntityIdentifierBinding(String entityName, EntityIdentifierBinding entityIdentifierBinding) {
+		if ( entityName != null ) {
+			entityIdentifierBindingsByEntityName.put( entityName, entityIdentifierBinding );
+		}
 	}
 
 	public Collection<EntityIdentifierBinding> entityIdentifierBindings() {
@@ -288,8 +306,21 @@ public class BootBindingModel {
 		return null;
 	}
 
+	/**
+	 * Registers a mapped-superclass contribution.
+	 * <p>
+	 * The contribution owns the ordered provenance/list state.  This aggregate
+	 * root owns indexes used to resolve applied usage metadata by legacy runtime
+	 * handoff inputs, so any usages already present on the contribution are
+	 * indexed as part of registration.
+	 */
 	public void addMappedSuperclassContribution(MappedSuperclassContribution contribution) {
 		mappedSuperclassContributions.add( contribution );
+		contribution.appliedAttributeUsages()
+				.forEach( (attributeUsage) -> indexAppliedMappedSuperclassAttributeUsage(
+						contribution,
+						attributeUsage
+				) );
 	}
 
 	public List<MappedSuperclassContribution> mappedSuperclassContributions() {
@@ -306,8 +337,67 @@ public class BootBindingModel {
 		return result;
 	}
 
+	/**
+	 * Registers an applied mapped-superclass attribute usage and updates the
+	 * lookup index.
+	 * <p>
+	 * Callers should use this method instead of mutating
+	 * {@link MappedSuperclassContribution} directly so that lookup by nearest
+	 * entity consumer name remains consistent.
+	 */
+	public AttributeUsageBinding addAppliedMappedSuperclassAttributeUsage(
+			MappedSuperclassContribution contribution,
+			AttributeUsageBinding attributeUsage) {
+		final var addedUsage = contribution.addAppliedAttributeUsage( attributeUsage );
+		indexAppliedMappedSuperclassAttributeUsage( contribution, addedUsage );
+		return addedUsage;
+	}
+
+	/**
+	 * Finds an applied mapped-superclass attribute usage by nearest concrete
+	 * entity consumer name and attribute name.
+	 * <p>
+	 * The index accepts entity-name, JPA entity-name, {@code ClassDetails#getName()}
+	 * and {@code ClassDetails#getClassName()} forms for the nearest entity
+	 * consumer, matching the compatibility behavior of the previous scan-based
+	 * lookup.
+	 */
+	public @Nullable AttributeUsageBinding findAppliedMappedSuperclassAttributeUsage(
+			String nearestEntityConsumerName,
+			String attributeName) {
+		final var entityUsages = appliedMappedSuperclassAttributeUsages.get( nearestEntityConsumerName );
+		return entityUsages == null ? null : entityUsages.get( attributeName );
+	}
+
+	private void indexAppliedMappedSuperclassAttributeUsage(
+			MappedSuperclassContribution contribution,
+			AttributeUsageBinding attributeUsage) {
+		final var nearestEntityConsumer = contribution.nearestEntityConsumer();
+		indexAppliedMappedSuperclassAttributeUsage( nearestEntityConsumer.getEntityName(), attributeUsage );
+		indexAppliedMappedSuperclassAttributeUsage( nearestEntityConsumer.getJpaEntityName(), attributeUsage );
+		final var classDetails = contribution.nearestEntityConsumer().getClassDetails();
+		indexAppliedMappedSuperclassAttributeUsage( classDetails.getName(), attributeUsage );
+		indexAppliedMappedSuperclassAttributeUsage( classDetails.getClassName(), attributeUsage );
+	}
+
+	private void indexAppliedMappedSuperclassAttributeUsage(
+			String nearestEntityConsumerName,
+			AttributeUsageBinding attributeUsage) {
+		if ( nearestEntityConsumerName == null ) {
+			return;
+		}
+		appliedMappedSuperclassAttributeUsages.computeIfAbsent(
+				nearestEntityConsumerName,
+				(name) -> new LinkedHashMap<>()
+		).putIfAbsent( attributeUsage.attributeName(), attributeUsage );
+	}
+
 	public void addEmbeddableContribution(EmbeddableContribution contribution) {
 		embeddableContributions.add( contribution );
+	}
+
+	public void addEmbeddableComponentHandoff(EmbeddableContributionView contribution, Object component) {
+		embeddableContributionsByComponent.put( component, contribution.contribution() );
 	}
 
 	public List<EmbeddableContribution> embeddableContributions() {
@@ -316,5 +406,23 @@ public class BootBindingModel {
 
 	public EmbeddableContributionView embeddableContributionView(EmbeddableContribution contribution) {
 		return new EmbeddableContributionView( contribution );
+	}
+
+	public @Nullable EmbeddableContributionView findEmbeddableContribution(Object component) {
+		final EmbeddableContribution contribution = embeddableContributionsByComponent.get( component );
+		return contribution == null ? null : embeddableContributionView( contribution );
+	}
+
+	public @Nullable ComponentMemberBinding findEmbeddableMemberBinding(Object component, String attributeName) {
+		final EmbeddableContribution contribution = embeddableContributionsByComponent.get( component );
+		if ( contribution == null ) {
+			return null;
+		}
+		for ( ComponentMemberBinding member : contribution.members() ) {
+			if ( member.attributeName().equals( attributeName ) ) {
+				return member;
+			}
+		}
+		return null;
 	}
 }

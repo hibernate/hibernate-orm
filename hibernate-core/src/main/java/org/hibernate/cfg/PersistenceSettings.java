@@ -113,7 +113,7 @@ public interface PersistenceSettings {
 	 *     <li>the name of a class that implements {@code ScanningProvider}.
 	 * </ul>
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyScanning
+	 * @see #SCANNING
 	 */
 	String SCANNING = "hibernate.archive.scanning";
 
@@ -126,7 +126,7 @@ public interface PersistenceSettings {
 	 *     <li>the name of a class that implements {@code Scanner}.
 	 * </ul>
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyScanning
+	 * @see #SCANNER
 	 *
 	 * @apiNote Generally, prefer {@linkplain #SCANNING} to supply a provider
 	 */
@@ -142,7 +142,6 @@ public interface PersistenceSettings {
 	 * </ul>
 	 *
 	 * @see #SCANNER
-	 * @see org.hibernate.boot.MetadataBuilder#applyArchiveDescriptorFactory
 	 */
 	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";
 

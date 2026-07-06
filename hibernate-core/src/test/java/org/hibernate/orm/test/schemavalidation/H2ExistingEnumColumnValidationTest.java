@@ -7,9 +7,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.jdbc.JdbcUtils;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -66,10 +67,10 @@ public class H2ExistingEnumColumnValidationTest {
 		try (var ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "validate" )
 				.build()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( EntityE.class );
-
-			new SchemaValidator().validate( metadataSources.buildMetadata() );
+			new SchemaValidator().validate( MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources().addManagedClass( EntityE.class )
+			) );
 		}
 	}
 

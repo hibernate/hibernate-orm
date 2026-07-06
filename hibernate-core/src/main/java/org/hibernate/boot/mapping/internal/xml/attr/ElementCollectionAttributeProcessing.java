@@ -44,7 +44,7 @@ public class ElementCollectionAttributeProcessing {
 				declarer
 		);
 
-		final ModelsContext buildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext buildingContext = xmlDocumentContext.getModelsContext();
 		final ElementCollectionJpaAnnotation elementCollectionUsage = (ElementCollectionJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ELEMENT_COLLECTION,
 				buildingContext
@@ -122,7 +122,7 @@ public class ElementCollectionAttributeProcessing {
 		if ( StringHelper.isNotEmpty( targetClass ) ) {
 			final TargetXmlAnnotation targetUsage = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
 					XmlAnnotations.TARGET,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			targetUsage.value( xmlDocumentContext.resolveTargetEntityName( targetClass ) );
 		}
@@ -138,7 +138,7 @@ public class ElementCollectionAttributeProcessing {
 
 		final CollectionTableJpaAnnotation collectionTableAnn = (CollectionTableJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.COLLECTION_TABLE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		collectionTableAnn.apply( jaxbCollectionTable, xmlDocumentContext );

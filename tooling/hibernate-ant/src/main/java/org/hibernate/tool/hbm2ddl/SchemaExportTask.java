@@ -5,17 +5,15 @@ import java.io.OutputStreamWriter;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -189,7 +187,7 @@ public class SchemaExportTask extends MatchingTask {
 		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
 
-		final MetadataSources metadataSources = new MetadataSources( bsr );
+		final MappingSources mappingSources = new MappingSources();
 
 		if ( configurationFile != null ) {
 			ssrBuilder.configure( configurationFile );
@@ -201,10 +199,10 @@ public class SchemaExportTask extends MatchingTask {
 
 		for ( String fileName : getFiles() ) {
 			if ( fileName.endsWith(".jar") ) {
-				metadataSources.addJar( new File( fileName ) );
+				throw new BuildException( "Jar file mapping discovery is no longer supported: " + fileName );
 			}
 			else {
-				metadataSources.addFile( fileName );
+				mappingSources.addMappingFile( new File( fileName ) );
 			}
 		}
 
@@ -236,25 +234,16 @@ public class SchemaExportTask extends MatchingTask {
 			ssrBuilder.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, exportType.getAction() );
 		}
 
+		if ( implicitNamingStrategy != null ) {
+			ssrBuilder.applySetting( MappingSettings.IMPLICIT_NAMING_STRATEGY, implicitNamingStrategy );
+		}
+		if ( physicalNamingStrategy != null ) {
+			ssrBuilder.applySetting( MappingSettings.PHYSICAL_NAMING_STRATEGY, physicalNamingStrategy );
+		}
 
 		final StandardServiceRegistryImpl ssr = (StandardServiceRegistryImpl) ssrBuilder.build();
 
-
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( ssr );
-
-		ClassLoaderService classLoaderService = bsr.requireService( ClassLoaderService.class );
-		if ( implicitNamingStrategy != null ) {
-			metadataBuilder.applyImplicitNamingStrategy(
-					(ImplicitNamingStrategy) classLoaderService.classForName( implicitNamingStrategy ).newInstance()
-			);
-		}
-		if ( physicalNamingStrategy != null ) {
-			metadataBuilder.applyPhysicalNamingStrategy(
-					(PhysicalNamingStrategy) classLoaderService.classForName( physicalNamingStrategy ).newInstance()
-			);
-		}
-
-		final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+		final MetadataImplementor metadata = MetadataBuildingHelper.buildMetadata( ssr, mappingSources );
 		metadata.orderColumns( false );
 		metadata.validate();
 

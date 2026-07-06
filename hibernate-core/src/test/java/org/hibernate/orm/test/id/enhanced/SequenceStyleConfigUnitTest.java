@@ -94,7 +94,7 @@ public class SequenceStyleConfigUnitTest {
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 			assertThrows( IllegalStateException.class, databaseStructure::getPhysicalName );
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
@@ -140,7 +140,7 @@ public class SequenceStyleConfigUnitTest {
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 			assertThrows( IllegalStateException.class, databaseStructure::getPhysicalName );
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
@@ -178,7 +178,7 @@ public class SequenceStyleConfigUnitTest {
 					props
 			);
 
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
@@ -205,7 +205,7 @@ public class SequenceStyleConfigUnitTest {
 					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
 					props
 			);
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
@@ -239,7 +239,7 @@ public class SequenceStyleConfigUnitTest {
 					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
 					props
 			);
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
@@ -271,7 +271,7 @@ public class SequenceStyleConfigUnitTest {
 					new TestGeneratorCreationContext( LONG_TYPE, buildingContext, serviceRegistry ),
 					props
 			);
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
@@ -310,7 +310,7 @@ public class SequenceStyleConfigUnitTest {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure( creationContext, props );
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
@@ -368,7 +368,7 @@ public class SequenceStyleConfigUnitTest {
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure( creationContext, props );
-			Database database = new Database( buildingContext.getBuildingOptions() );
+			Database database = new Database( buildingContext.getBuildingPlan() );
 			generator.registerExportables( database );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );

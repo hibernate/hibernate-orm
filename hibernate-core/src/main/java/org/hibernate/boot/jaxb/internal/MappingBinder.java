@@ -11,6 +11,7 @@ import org.hibernate.Internal;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.UnsupportedOrmXsdVersionException;
+import org.hibernate.boot.jaxb.internal.stax.AbstractEventReader;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.internal.stax.AbstractEventReader;
 import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
@@ -168,7 +169,6 @@ public class MappingBinder extends AbstractBinder<JaxbEntityMappingsImpl> {
 				throw new UnsupportedOrmXsdVersionException( e.getRequestedVersion(), origin );
 			}
 		}
-	}
 
 	@Internal
 	public JAXBContext mappingJaxbContext() {

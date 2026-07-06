@@ -42,13 +42,13 @@ public class FetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchTiming.IMMEDIATE, fetchTiming );
 	}
@@ -63,13 +63,13 @@ public class FetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchTiming.IMMEDIATE, fetchTiming );
 	}
@@ -84,13 +84,13 @@ public class FetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchStyle.SELECT, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
@@ -105,13 +105,13 @@ public class FetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchStyle.SELECT, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
@@ -126,13 +126,13 @@ public class FetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchTiming.IMMEDIATE, fetchTiming );
 	}
@@ -147,13 +147,13 @@ public class FetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchStyle.SELECT, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
@@ -168,13 +168,13 @@ public class FetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchStyle.SUBSELECT, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				sessionFactory
+				FetchOptionsHelper.fromFactory( sessionFactory )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}

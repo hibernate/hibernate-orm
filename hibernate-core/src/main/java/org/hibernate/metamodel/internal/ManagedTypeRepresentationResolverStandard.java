@@ -90,7 +90,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			@Nonnull Component bootDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
 		if ( bootDescriptor.getTypeName() != null ) {
 			return beanInstance( creationContext,
-					creationContext.getBootstrapContext().getClassLoaderAccess()
+					creationContext.getClassLoaderAccess()
 							.classForName( bootDescriptor.getTypeName() ) );
 		}
 		else {
@@ -136,16 +136,14 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		}
 	}
 
-	@Nonnull
-	private static <T> T beanInstance(@Nonnull RuntimeModelCreationContext creationContext, @Nonnull Class<T> userTypeClass) {
-		return creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+	private static <T> T beanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
+		return creationContext.getBootModel().getMappingResolutionOptions().isAllowExtensionsInCdi()
 				? getBeanInstance( creationContext, userTypeClass )
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 	}
 
-	@Nonnull
-	private static <T> T getBeanInstance(@Nonnull RuntimeModelCreationContext creationContext, @Nonnull Class<T> userTypeClass) {
-		return creationContext.getBootstrapContext().getManagedBeanRegistry()
+	private static <T> T getBeanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
+		return creationContext.getManagedBeanRegistry()
 				.getBean( userTypeClass )
 				.getBeanInstance();
 	}

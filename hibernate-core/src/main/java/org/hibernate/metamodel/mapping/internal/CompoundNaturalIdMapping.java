@@ -7,7 +7,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
@@ -24,6 +23,7 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.accessor.AccessorFactory;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.PropertyValueAccessor;
@@ -75,7 +75,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	 */
 	private final int maxFetchableKeyIndex;
 
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 
 	public CompoundNaturalIdMapping(
 			EntityMappingType declaringType,
@@ -106,7 +106,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				}
 		);
 
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		this.sessionFactoryAccess = creationProcess.getCreationContext().getSessionFactoryAccess();
 	}
 
 	private static boolean isMutable(List<SingularAttributeMapping> attributes) {
@@ -155,7 +155,8 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Nullable
 	@Override
-	public Object[] normalizeInput(@Nullable Object incoming) {
+	public Object[] normalizeInput(Object incoming) {
+		final var sessionFactory = sessionFactoryAccess.getSessionFactory();
 		sessionFactory.getStatistics().normalizeNaturalId( getDeclaringType().getEntityName() );
 
 		if ( incoming instanceof Object[] array ) {
@@ -723,8 +724,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		final var modelsContext =
-				creationProcess.getCreationContext().getBootstrapContext()
-						.getModelsContext();
+				creationProcess.getCreationContext().getModelsContext();
 		final var hibernateAccessorFactory = creationProcess.getCreationContext().getServiceRegistry()
 				.requireService( PropertyAccessorService.class )
 				.hibernateAccessorFactory();

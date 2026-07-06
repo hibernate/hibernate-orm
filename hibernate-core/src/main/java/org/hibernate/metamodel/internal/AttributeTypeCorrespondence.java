@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -21,16 +22,18 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 
-/**
- * Internal bridge for declaration/usage type facts while the JPA metamodel is
- * still built from compatibility {@link Property} objects.
- */
+/// Internal bridge for declaration/usage type facts while the JPA metamodel is
+/// still built from compatibility [Property] objects.
+///
+/// @since 9.0
+/// @author Steve Ebersole
 public class AttributeTypeCorrespondence {
 	private final Property propertyMapping;
 	private final ManagedDomainType<?> ownerType;
 	private final Member member;
 	private final MemberDetails memberDetails;
 	private final TypeDetails declaredType;
+	private final TypeDetails usageType;
 	private final TypeVariableScope relativeTypeContainer;
 
 	public AttributeTypeCorrespondence(
@@ -46,6 +49,22 @@ public class AttributeTypeCorrespondence {
 		this.declaredType = memberDetails == null
 				? null
 				: memberDetails.resolveRelativeType( relativeTypeContainer );
+		this.usageType = declaredType;
+	}
+
+	public AttributeTypeCorrespondence(
+			Property propertyMapping,
+			ManagedDomainType<?> ownerType,
+			Member member,
+			AttributeUsageBinding attributeUsage,
+			ModelsContext modelsContext) {
+		this.propertyMapping = propertyMapping;
+		this.ownerType = ownerType;
+		this.member = member;
+		this.memberDetails = attributeUsage.member();
+		this.relativeTypeContainer = relativeTypeContainer( ownerType, modelsContext );
+		this.declaredType = attributeUsage.declaration().member().getType();
+		this.usageType = attributeUsage.resolvedType();
 	}
 
 	private static ClassDetails relativeTypeContainer(
@@ -75,6 +94,39 @@ public class AttributeTypeCorrespondence {
 
 	public TypeDetails declaredType() {
 		return declaredType;
+	}
+
+	public TypeDetails usageType() {
+		return usageType;
+	}
+
+	public boolean isConcreteGenericUsage() {
+		return isConcreteGenericUsage( declaredType, usageType );
+	}
+
+	static boolean isConcreteGenericUsage(TypeDetails declarationType, TypeDetails usageType) {
+		if ( declarationType == null || usageType == null ) {
+			return false;
+		}
+		if ( declarationType.getTypeKind() == TypeDetails.Kind.TYPE_VARIABLE
+				|| !declarationType.getName().equals( usageType.getName() ) ) {
+			return true;
+		}
+		if ( declarationType.getTypeKind() != TypeDetails.Kind.PARAMETERIZED_TYPE
+				|| usageType.getTypeKind() != TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+			return false;
+		}
+		final var declarationArguments = declarationType.asParameterizedType().getArguments();
+		final var usageArguments = usageType.asParameterizedType().getArguments();
+		if ( declarationArguments.size() != usageArguments.size() ) {
+			return true;
+		}
+		for ( int i = 0; i < declarationArguments.size(); i++ ) {
+			if ( isConcreteGenericUsage( declarationArguments.get( i ), usageArguments.get( i ) ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public TypeDetails elementType() {

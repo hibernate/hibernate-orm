@@ -1,9 +1,11 @@
 package org.hibernate.tool.reveng.internal.metadata;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 
@@ -13,7 +15,7 @@ import java.util.Properties;
 public class NativeMetadataDescriptor implements MetadataDescriptor {
 
 	private final Properties properties = new Properties();
-	private MetadataSources metadataSources = null;
+	private final MappingSources mappingSources = new MappingSources();
 	private final StandardServiceRegistryBuilder ssrb;
 	private static final String CFG_XML_UNSUPPORTED_MESSAGE =
 			"Legacy hibernate.cfg.xml bootstrap is no longer supported; use properties and mapping files";
@@ -31,14 +33,15 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
 			this.properties.putAll(properties);
 		}
 		ssrb.applySettings(getProperties());
-		metadataSources = new MetadataSources(bsr);
 		if (mappingFiles != null) {
 			for (File file : mappingFiles) {
 				if (file.getName().endsWith(".jar")) {
-					metadataSources.addJar(file);
+					throw new IllegalArgumentException(
+							"Jar file mapping discovery is no longer supported: " + file
+					);
 				}
 				else {
-					metadataSources.addFile(file);
+					mappingSources.addMappingFile(file);
 				}
 			}
 		}
@@ -50,8 +53,13 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
 		return result;
 	}
 
+	public void addAnnotatedClass(Class<?> annotatedClass) {
+		mappingSources.addManagedClass(annotatedClass);
+	}
+
 	public Metadata createMetadata() {
-		return metadataSources.buildMetadata(ssrb.build());
+		final StandardServiceRegistry serviceRegistry = ssrb.build();
+		return MetadataBuildingHelper.buildMetadata(serviceRegistry, mappingSources);
 	}
 
 }

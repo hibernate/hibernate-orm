@@ -238,7 +238,7 @@ public class TableBinder {
 
 		final List<SecondaryTable> secondaryTableAnns = Arrays.asList( typeClassDetails.getRepeatedAnnotationUsages(
 				SecondaryTable.class,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		) );
 		final List<org.hibernate.boot.mapping.internal.relational.SecondaryTable> result = new ArrayList<>( secondaryTableAnns.size() );
 
@@ -247,7 +247,7 @@ public class TableBinder {
 					SecondaryRow.class,
 					secondaryTableAnn.name(),
 					"table",
-					bindingContext.getBootstrapContext().getModelsContext()
+					bindingContext.getModelsContext()
 			);
 			final org.hibernate.boot.mapping.internal.relational.SecondaryTable binding = bindSecondaryTable( entityBinder, secondaryTableAnn, secondaryRowAnn );
 			result.add( binding );
@@ -724,7 +724,7 @@ public class TableBinder {
 		for ( PrimaryKeyJoinColumn primaryKeyJoinColumn : primaryKeyJoinColumns ) {
 			result.add( JoinColumnJpaAnnotation.toJoinColumn(
 					primaryKeyJoinColumn,
-					bindingContext.getBootstrapContext().getModelsContext()
+					bindingContext.getModelsContext()
 			) );
 		}
 		return result;

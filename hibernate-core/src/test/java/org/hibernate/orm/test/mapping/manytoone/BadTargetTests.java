@@ -6,8 +6,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -28,10 +28,13 @@ import static org.assertj.core.api.Assertions.fail;
 public class BadTargetTests {
 	@Test
 	void testToOne(ServiceRegistryScope registryScope) {
-		var model = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Foo.class, Bar.class, Baz.class )
-				.buildMetadata();
-		try (var sf = model.buildSessionFactory()) {
+		var model = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				Foo.class,
+				Bar.class,
+				Baz.class
+		);
+		try (var sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( model )) {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException expected) {
@@ -40,10 +43,13 @@ public class BadTargetTests {
 
 	@Test
 	void testToMany(ServiceRegistryScope registryScope) {
-		var model = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Brazos.class, Bar.class, Baz.class )
-				.buildMetadata();
-		try (var sf = model.buildSessionFactory()) {
+		var model = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				Brazos.class,
+				Bar.class,
+				Baz.class
+		);
+		try (var sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( model )) {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException expected) {
@@ -54,10 +60,13 @@ public class BadTargetTests {
 
 	@Test
 	void testToManyGetter(ServiceRegistryScope registryScope) {
-		var model = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Brazos2.class, Bar.class, Baz.class )
-				.buildMetadata();
-		try (var sf = model.buildSessionFactory()) {
+		var model = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				Brazos2.class,
+				Bar.class,
+				Baz.class
+		);
+		try (var sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( model )) {
 			fail( "Expecting a failure" );
 		}
 		catch (MappingException expected) {

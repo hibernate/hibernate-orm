@@ -4,7 +4,6 @@ import java.util.Properties;
 
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -19,6 +18,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
@@ -121,10 +121,10 @@ public class SequenceStyleGeneratorBehavesLikeSequenceHiloGeneratorWithZeroIncre
 				properties
 		);
 
-		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
+		final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry );
 		generator.registerExportables( metadata.getDatabase() );
 
-		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 		generator.initialize( sessionFactory.getSqlStringGenerationContext() );
 		sequenceValueExtractor = new SequenceValueExtractor(sessionFactory.getJdbcServices().getDialect(), TEST_SEQUENCE );
 	}

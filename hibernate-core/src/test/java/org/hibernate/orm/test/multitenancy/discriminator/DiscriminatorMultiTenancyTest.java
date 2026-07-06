@@ -2,7 +2,7 @@ package org.hibernate.orm.test.multitenancy.discriminator;
 
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.H2Dialect;
@@ -10,6 +10,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.multitenancy.schema.Customer;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -62,10 +63,10 @@ public class DiscriminatorMultiTenancyTest {
 				.build();
 
 		try {
-			MetadataSources ms = new MetadataSources( serviceRegistry );
-			ms.addAnnotatedClass( Customer.class );
-
-			Metadata metadata = ms.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					(StandardServiceRegistry) serviceRegistry,
+					Customer.class
+			);
 			final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
 			customerMapping.setCached( true );
 			((RootClass) customerMapping).setCacheConcurrencyStrategy( "read-write" );
@@ -95,7 +96,7 @@ public class DiscriminatorMultiTenancyTest {
 					target
 			);
 
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 			currentTenantResolver.setHibernateBooted();
 		}
 		catch (Throwable t) {

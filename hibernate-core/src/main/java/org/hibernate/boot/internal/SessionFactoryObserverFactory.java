@@ -19,7 +19,7 @@ public final class SessionFactoryObserverFactory {
 	}
 
 	public static SessionFactoryObserver[] createObservers(MetadataImplementor metadata) {
-		final var bytecodeProvider = metadata.getMetadataBuildingOptions()
+		final var bytecodeProvider = metadata.getMappingResolutionOptions()
 				.getServiceRegistry()
 				.getService( BytecodeProvider.class );
 		return new SessionFactoryObserver[] {

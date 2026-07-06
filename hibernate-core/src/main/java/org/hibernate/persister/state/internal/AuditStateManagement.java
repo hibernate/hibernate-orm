@@ -198,8 +198,10 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
-		final var csIdJdbcMapping = ((BasicValue) rootClass.getAuxiliaryColumn( CHANGESET_ID ).getValue())
-				.resolve().getLegacyResolvedBasicType();
+		final var changesetCoordinator = creationContext.getChangesetCoordinator();
+		final var csIdJdbcMapping =
+				resolveJdbcMapping( typeConfiguration,
+						changesetCoordinator.getIdentifierType() );
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
 
 		final var map = new HashMap<String, AuditMappingImpl.TableAuditInfo>();
@@ -221,7 +223,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		final Function<String, String> tableNameResolver;
 		final List<String> extraColumns;
 		if ( persister instanceof UnionSubclassEntityPersister ) {
-			tableNameResolver = originalName -> map.get( originalName ).auditTableName();
+			tableNameResolver = new AuditTableNameResolver( map );
 			final var rootInfo = map.values().iterator().next();
 			final var extras = new ArrayList<>( List.of(
 					rootInfo.changesetIdMapping().getSelectionExpression(),
@@ -280,6 +282,14 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		}
 
 		return map;
+	}
+
+	private record AuditTableNameResolver(
+			Map<String, AuditMappingImpl.TableAuditInfo> tableAuditInfoMap) implements Function<String, String> {
+		@Override
+		public String apply(String originalName) {
+			return tableAuditInfoMap.get( originalName ).auditTableName();
+		}
 	}
 
 	private static void addAuditSubquery(
@@ -404,8 +414,10 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		final String auditTableName = getTableIdentifierExpression( auditTable, creationProcess );
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
-		final var csIdJdbcMapping = ((BasicValue) bootDescriptor.getAuxiliaryColumn( CHANGESET_ID ).getValue())
-				.resolve().getLegacyResolvedBasicType();
+		final var changesetCoordinator = creationContext.getChangesetCoordinator();
+		final var csIdJdbcMapping =
+				resolveJdbcMapping( typeConfiguration,
+						changesetCoordinator.getIdentifierType() );
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
 		return new AuditMappingImpl(
 				Map.of(

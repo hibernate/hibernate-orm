@@ -4,12 +4,13 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -43,10 +44,12 @@ public class IndexesOrderTest {
 			File output = File.createTempFile( "update_script", ".sql" );
 			output.deleteOnExit();
 
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( EntityA.class )
-					.addAnnotatedClass( EntityB.class )
-					.buildMetadata();
+			final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources()
+							.addManagedClass( EntityA.class )
+							.addManagedClass( EntityB.class )
+			);
 			metadata.orderColumns( true );
 			metadata.validate();
 

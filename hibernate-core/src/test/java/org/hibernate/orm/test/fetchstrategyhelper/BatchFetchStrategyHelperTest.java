@@ -41,14 +41,14 @@ public class BatchFetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		// batch size is ignored with FetchStyle.JOIN
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchTiming.IMMEDIATE, fetchTiming );
 	}
@@ -61,14 +61,14 @@ public class BatchFetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		// batch size is ignored with FetchStyle.JOIN
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchTiming.IMMEDIATE, fetchTiming );
 	}
@@ -81,13 +81,13 @@ public class BatchFetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchStyle.BATCH, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
@@ -100,13 +100,13 @@ public class BatchFetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchStyle.BATCH, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
@@ -119,14 +119,14 @@ public class BatchFetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		// batch size is ignored with FetchStyle.JOIN
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchTiming.IMMEDIATE, fetchTiming );
 	}
@@ -139,13 +139,13 @@ public class BatchFetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchStyle.BATCH, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
@@ -158,14 +158,14 @@ public class BatchFetchStrategyHelperTest {
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		// Batch size is ignored with FetchStyle.SUBSELECT
 		Assertions.assertSame( FetchStyle.SUBSELECT, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
 				associationType,
-				factoryScope.getSessionFactory()
+				FetchOptionsHelper.fromFactory( factoryScope.getSessionFactory() )
 		);
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}

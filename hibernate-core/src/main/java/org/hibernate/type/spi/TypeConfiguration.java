@@ -497,14 +497,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		@Deprecated(since = "8.0")
 		public boolean isPreferJavaTimeJdbcTypesEnabled() {
 			return sessionFactory == null
-					? metadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled()
+					? metadataBuildingContext.getBuildingPlan().isPreferJavaTimeJdbcTypesEnabled()
 					: sessionFactory.getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled();
 		}
 
 		@Override
 		public boolean isPreferNativeEnumTypesEnabled() {
 			return sessionFactory == null
-					? metadataBuildingContext.isPreferNativeEnumTypesEnabled()
+					? metadataBuildingContext.getBuildingPlan().isPreferNativeEnumTypesEnabled()
 					: sessionFactory.getSessionFactoryOptions().isPreferNativeEnumTypesEnabled();
 		}
 
@@ -512,42 +512,42 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		@Nonnull
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 			return sessionFactory == null
-					? metadataBuildingContext.getBuildingOptions().getDefaultTimeZoneStorage()
+					? metadataBuildingContext.getBuildingPlan().getDefaultTimeZoneStorage()
 					: sessionFactory.getSessionFactoryOptions().getDefaultTimeZoneStorageStrategy();
 		}
 
 		@Override
 		public int getPreferredSqlTypeCodeForBoolean() {
 			return sessionFactory == null
-					? metadataBuildingContext.getPreferredSqlTypeCodeForBoolean()
+					? metadataBuildingContext.getBuildingPlan().getPreferredSqlTypeCodeForBoolean()
 					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
 		}
 
 		@Override
 		public int getPreferredSqlTypeCodeForDuration() {
 			return sessionFactory == null
-					? metadataBuildingContext.getPreferredSqlTypeCodeForDuration()
+					? metadataBuildingContext.getBuildingPlan().getPreferredSqlTypeCodeForDuration()
 					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForDuration();
 		}
 
 		@Override
 		public int getPreferredSqlTypeCodeForUuid() {
 			return sessionFactory == null
-					? metadataBuildingContext.getPreferredSqlTypeCodeForUuid()
+					? metadataBuildingContext.getBuildingPlan().getPreferredSqlTypeCodeForUuid()
 					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForUuid();
 		}
 
 		@Override
 		public int getPreferredSqlTypeCodeForInstant() {
 			return sessionFactory == null
-					? metadataBuildingContext.getPreferredSqlTypeCodeForInstant()
+					? metadataBuildingContext.getBuildingPlan().getPreferredSqlTypeCodeForInstant()
 					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant();
 		}
 
 		@Override
 		public int getPreferredSqlTypeCodeForArray() {
 			return sessionFactory == null
-					? metadataBuildingContext.getPreferredSqlTypeCodeForArray()
+					? metadataBuildingContext.getBuildingPlan().getPreferredSqlTypeCodeForArray()
 					: sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForArray();
 		}
 
@@ -567,7 +567,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		@Override
 		public boolean isXmlFormatMapperLegacyFormatEnabled() {
 			if ( metadataBuildingContext != null ) {
-				return metadataBuildingContext.getBuildingOptions().isXmlFormatMapperLegacyFormatEnabled();
+				return metadataBuildingContext.getBuildingPlan().isXmlFormatMapperLegacyFormatEnabled();
 			}
 			else if ( sessionFactory != null ) {
 				return sessionFactory.getSessionFactoryOptions().isXmlFormatMapperLegacyFormatEnabled();
@@ -579,13 +579,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		public ClassLoaderService getClassLoaderService() {
 			return sessionFactory == null
-					? metadataBuildingContext.getBootstrapContext().getClassLoaderService()
+					? metadataBuildingContext.getClassLoaderService()
 					: sessionFactory.getClassLoaderService();
 		}
 
 		public ManagedBeanRegistry getManagedBeanRegistry() {
 			return sessionFactory == null
-					? metadataBuildingContext.getBootstrapContext().getManagedBeanRegistry()
+					? metadataBuildingContext.getManagedBeanRegistry()
 					: sessionFactory.getManagedBeanRegistry();
 		}
 
@@ -602,7 +602,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		private ServiceRegistry getServiceRegistry() {
 			if ( metadataBuildingContext != null ) {
-				return metadataBuildingContext.getBootstrapContext().getServiceRegistry();
+				return metadataBuildingContext.getServiceRegistry();
 			}
 			else if ( sessionFactory != null ) {
 				return sessionFactory.getServiceRegistry();
@@ -612,10 +612,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 		}
 
+		private JpaCompliance getJpaCompliance() {
+			if ( metadataBuildingContext != null ) {
+				return metadataBuildingContext.getJpaCompliance();
+			}
+			else if ( sessionFactory != null ) {
+				return sessionFactory.getSessionFactoryOptions().getJpaCompliance();
+			}
+			return null;
+		}
+
 		private void setMetadataBuildingContext(MetadataBuildingContext context) {
 			metadataBuildingContext = context;
 			if ( context != null ) {
-				allowExtensionsInCdi = context.getBuildingOptions().isAllowExtensionsInCdi();
+				allowExtensionsInCdi = context.getBuildingPlan().isAllowExtensionsInCdi();
 			}
 		}
 

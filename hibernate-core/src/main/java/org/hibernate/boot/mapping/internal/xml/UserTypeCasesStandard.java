@@ -28,7 +28,7 @@ public class UserTypeCasesStandard extends AbstractUserTypeCases {
 			XmlDocumentContext xmlDocumentContext) {
 		final JavaTypeAnnotation javaTypeAnnotation = (JavaTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.JAVA_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		javaTypeAnnotation.value( descriptor );
 	}
@@ -64,7 +64,7 @@ public class UserTypeCasesStandard extends AbstractUserTypeCases {
 
 		final TemporalJpaAnnotation temporalAnnotation = (TemporalJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.TEMPORAL,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		temporalAnnotation.value( temporalType );
 	}
@@ -78,7 +78,7 @@ public class UserTypeCasesStandard extends AbstractUserTypeCases {
 		assert userTypeImpl.isImplementor( UserType.class );
 		final TypeAnnotation typeAnn = (TypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		typeAnn.value( userTypeImpl.toJavaClass() );
 		typeAnn.parameters( XmlAnnotationHelper.collectParameters( jaxbType.getParameters(), xmlDocumentContext ) );

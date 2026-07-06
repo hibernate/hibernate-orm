@@ -93,7 +93,7 @@ public class GeneratorParameters {
 
 	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
 		if ( generatorAnnotation == null ) {
-			final var configService = buildingContext.getBootstrapContext().getConfigurationService();
+			final var configService = buildingContext.getConfigurationService();
 			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, STRING );
 			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
@@ -181,7 +181,7 @@ public class GeneratorParameters {
 				return true;
 			}
 			final var physicalCatalog = identifierValue.getBuildingContext()
-					.getBuildingOptions()
+					.getBuildingPlan()
 					.getPhysicalNamingStrategy()
 					.toPhysicalCatalogName(
 							org.hibernate.boot.model.naming.Identifier.toIdentifier( defaultCatalog ),
@@ -212,7 +212,7 @@ public class GeneratorParameters {
 				return true;
 			}
 			final var physicalSchema = identifierValue.getBuildingContext()
-					.getBuildingOptions()
+					.getBuildingPlan()
 					.getPhysicalNamingStrategy()
 					.toPhysicalSchemaName(
 							org.hibernate.boot.model.naming.Identifier.toIdentifier( defaultSchema ),
@@ -235,7 +235,7 @@ public class GeneratorParameters {
 
 	private static String defaultCatalog(Value identifierValue) {
 		final String mappingDefault = identifierValue.getBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getMappingDefaults()
 				.getImplicitCatalogName();
 		return org.hibernate.internal.util.StringHelper.isNotEmpty( mappingDefault )
@@ -248,7 +248,7 @@ public class GeneratorParameters {
 
 	private static String defaultSchema(Value identifierValue) {
 		final String mappingDefault = identifierValue.getBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getMappingDefaults()
 				.getImplicitSchemaName();
 		return org.hibernate.internal.util.StringHelper.isNotEmpty( mappingDefault )

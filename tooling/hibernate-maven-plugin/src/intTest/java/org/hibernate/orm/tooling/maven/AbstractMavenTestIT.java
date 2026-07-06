@@ -29,19 +29,48 @@ public abstract class AbstractMavenTestIT {
 	public static void initMavenCli() throws Exception {
 		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
 		mavenCli = new MavenCli( classWorld );
-		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
-		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
+		String centralMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_URL" );
+		String centralMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_USERNAME" );
+		String centralFallback = System.getenv( "MIRROR_MAVEN_CENTRAL_FALLBACK" );
+		if ( centralMirror != null && !centralMirror.isEmpty() ) {
 			mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
-			Files.writeString( mavenSettingsFile,
-					"<settings>\n" +
-					"  <mirrors>\n" +
-					"    <mirror>\n" +
-					"      <id>ci-mirror</id>\n" +
-					"      <mirrorOf>central</mirrorOf>\n" +
-					"      <url>${env.MAVEN_MIRROR}</url>\n" +
-					"    </mirror>\n" +
-					"  </mirrors>\n" +
-					"</settings>\n" );
+			StringBuilder settings = new StringBuilder( "<settings>\n" );
+			settings.append( "  <mirrors>\n" );
+			settings.append( "    <mirror>\n" );
+			settings.append( "      <id>ci-mirror-central</id>\n" );
+			settings.append( "      <mirrorOf>central</mirrorOf>\n" );
+			settings.append( "      <url>${env.MIRROR_MAVEN_CENTRAL_URL}</url>\n" );
+			settings.append( "    </mirror>\n" );
+			settings.append( "  </mirrors>\n" );
+			if ( centralMirrorUsername != null ) {
+				settings.append( "  <servers>\n" );
+				settings.append( "    <server>\n" );
+				settings.append( "      <id>ci-mirror-central</id>\n" );
+				settings.append( "      <username>${env.MIRROR_MAVEN_CENTRAL_USERNAME}</username>\n" );
+				settings.append( "      <password>${env.MIRROR_MAVEN_CENTRAL_PASSWORD}</password>\n" );
+				settings.append( "    </server>\n" );
+				settings.append( "  </servers>\n" );
+			}
+			if ( "true".equalsIgnoreCase( centralFallback ) ) {
+				settings.append( "  <profiles>\n" );
+				settings.append( "    <profile>\n" );
+				settings.append( "      <id>mirror-fallbacks</id>\n" );
+				settings.append( "      <repositories>\n" );
+				settings.append( "        <repository>\n" );
+				settings.append( "          <id>central-fallback</id>\n" );
+				settings.append( "          <url>https://repo.maven.apache.org/maven2/</url>\n" );
+				settings.append( "          <releases><enabled>true</enabled></releases>\n" );
+				settings.append( "          <snapshots><enabled>false</enabled></snapshots>\n" );
+				settings.append( "        </repository>\n" );
+				settings.append( "      </repositories>\n" );
+				settings.append( "    </profile>\n" );
+				settings.append( "  </profiles>\n" );
+				settings.append( "  <activeProfiles>\n" );
+				settings.append( "    <activeProfile>mirror-fallbacks</activeProfile>\n" );
+				settings.append( "  </activeProfiles>\n" );
+			}
+			settings.append( "</settings>\n" );
+			Files.writeString( mavenSettingsFile, settings.toString() );
 		}
 	}
 

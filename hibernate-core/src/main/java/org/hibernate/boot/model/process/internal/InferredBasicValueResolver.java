@@ -13,7 +13,6 @@ import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
@@ -66,8 +65,7 @@ public class InferredBasicValueResolver {
 			String ownerName,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		final var bootstrapContext = buildingContext.getBootstrapContext();
-		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final var typeConfiguration = buildingContext.getTypeConfiguration();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
 		final JavaType<T> reflectedJtd;
@@ -120,7 +118,7 @@ public class InferredBasicValueResolver {
 						enumJavaType,
 						explicitJdbcType,
 						stdIndicators,
-						bootstrapContext
+						buildingContext
 				);
 			}
 			else if ( isTemporal( reflectedJtd ) ) {
@@ -146,7 +144,7 @@ public class InferredBasicValueResolver {
 								stdIndicators,
 								selectable,
 								reflectedJtd,
-								bootstrapContext,
+								buildingContext,
 								buildingContext.getMetadataCollector().getDatabase().getDialect()
 						);
 
@@ -209,7 +207,7 @@ public class InferredBasicValueResolver {
 		if ( jdbcMapping == null ) {
 			throw new MappingException(
 					"Could not determine JavaType nor JdbcType to use" +
-							" for " + ( (BasicValue) stdIndicators ).getResolvedJavaType() +
+							" for " + resolvedJavaType +
 							"; table = " + table.getName() +
 							"; column = " + selectable.getText()
 			);
@@ -283,10 +281,10 @@ public class InferredBasicValueResolver {
 			JdbcTypeIndicators stdIndicators,
 			Selectable selectable,
 			JavaType<T> reflectedJtd,
-			BootstrapContext bootstrapContext,
+			MetadataBuildingContext buildingContext,
 			Dialect dialect) {
 		final var basicTypeRegistry =
-				bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
+				buildingContext.getTypeConfiguration().getBasicTypeRegistry();
 		if ( reflectedJtd instanceof BasicPluralJavaType<?> pluralJavaType ) {
 			final var registeredType =
 					pluralBasicType(
@@ -296,7 +294,7 @@ public class InferredBasicValueResolver {
 							selectable,
 							reflectedJtd,
 							pluralJavaType,
-							bootstrapContext,
+							buildingContext,
 							dialect
 					);
 			if ( registeredType instanceof BasicPluralType<?, ?> ) {
@@ -316,13 +314,13 @@ public class InferredBasicValueResolver {
 			Selectable selectable,
 			@SuppressWarnings("unused") JavaType<T> reflectedJtd,
 			BasicPluralJavaType<E> pluralJavaType,
-			BootstrapContext bootstrapContext,
+			MetadataBuildingContext buildingContext,
 			Dialect dialect) {
 		final var registeredElementType = registeredElementType(
 				explicitJdbcType,
 				explicitMutabilityPlanAccess,
 				stdIndicators,
-				bootstrapContext,
+				buildingContext,
 				pluralJavaType.getElementJavaType()
 		);
 		if ( registeredElementType == null ) {
@@ -331,7 +329,7 @@ public class InferredBasicValueResolver {
 		else {
 			var basicType =
 					pluralJavaType.resolveType(
-							bootstrapContext.getTypeConfiguration(),
+							buildingContext.getTypeConfiguration(),
 							dialect,
 							resolveSqlTypeIndicators(
 									stdIndicators,
@@ -350,7 +348,7 @@ public class InferredBasicValueResolver {
 			JdbcType explicitJdbcType,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators,
-			BootstrapContext context,
+			MetadataBuildingContext context,
 			JavaType<E> elementJtd) {
 		if ( elementJtd instanceof EnumJavaType<?> enumJavaType ) {
 			final var resolution =
@@ -391,7 +389,7 @@ public class InferredBasicValueResolver {
 			EnumJavaType<E> enumJavaType,
 			JdbcType explicitJdbcType,
 			JdbcTypeIndicators stdIndicators,
-			BootstrapContext context) {
+			MetadataBuildingContext context) {
 		final Field enumeratedValueField = determineEnumeratedValueField( enumJavaType.getJavaTypeClass() );
 		if ( enumeratedValueField != null ) {
 			validateEnumeratedValue( enumeratedValueField, stdIndicators );
@@ -418,7 +416,7 @@ public class InferredBasicValueResolver {
 			EnumJavaType<E> enumJavaType,
 			JdbcType explicitJdbcType,
 			JdbcTypeIndicators stdIndicators,
-			BootstrapContext context,
+			MetadataBuildingContext context,
 			Field enumeratedValueField) {
 		if ( explicitJdbcType != null ) {
 			return explicitJdbcType;
@@ -449,7 +447,7 @@ public class InferredBasicValueResolver {
 			Field enumeratedValueField,
 			EnumJavaType<E> enumJavaType,
 			JdbcType jdbcType,
-			BootstrapContext context) {
+			MetadataBuildingContext context) {
 		final var relationalJavaType =
 				context.getTypeConfiguration().getJavaTypeRegistry()
 						.resolveDescriptor( enumeratedValueField.getType() );

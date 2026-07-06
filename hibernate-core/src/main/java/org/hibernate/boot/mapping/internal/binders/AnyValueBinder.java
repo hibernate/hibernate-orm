@@ -53,7 +53,7 @@ import jakarta.persistence.DiscriminatorType;
 /// - `@Formula` configures formula-based discriminator storage.
 /// - `@AnyDiscriminator` chooses the discriminator Java type: `STRING`,
 ///   `INTEGER`, or `CHAR`.
-/// - `@JdbcType` and `@JdbcTypeCode` are applied by [BasicValueBinder] to the
+/// - `@JdbcType` and `@JdbcTypeCode` are applied by [BasicValueSourceBinder] to the
 ///   discriminator value.
 /// - `@AnyDiscriminatorValue(s)` creates explicit discriminator-to-entity
 ///   mappings.
@@ -63,7 +63,7 @@ import jakarta.persistence.DiscriminatorType;
 ///   discriminator target entities may infer the key Java type from matching
 ///   basic target identifiers.
 /// - `@AnyKeyJavaType`, `@AnyKeyJdbcType`, and `@AnyKeyJdbcTypeCode` are applied
-///   by [BasicValueBinder] to the key value.
+///   by [BasicValueSourceBinder] to the key value.
 /// - Singular `@JoinColumn`, singular `@JoinTable#inverseJoinColumns`, or plural
 ///   `@JoinTable#inverseJoinColumns` names the key column or columns.  If absent,
 ///   the binder uses the current implicit key-column default for this prototype.
@@ -100,7 +100,7 @@ class AnyValueBinder {
 	}
 
 	private BasicValue bindDiscriminator(AnySource source, String propertyName, Table table) {
-		final BasicValue discriminator = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		final BasicValue discriminator = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		discriminator.setTable( table );
 
 		if ( source.discriminatorFormula() != null ) {
@@ -125,7 +125,7 @@ class AnyValueBinder {
 			);
 		}
 
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.anyDiscriminator( source.member(), source.discriminatorJavaType() ),
 				null,
 				discriminator,
@@ -133,11 +133,12 @@ class AnyValueBinder {
 				bindingState,
 				bindingContext
 		);
+		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
 		return discriminator;
 	}
 
 	private BasicValue bindKey(AnySource source, String propertyName, Table table) {
-		final BasicValue key = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		final BasicValue key = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		key.setTable( table );
 
 		if ( source.keyColumns().isEmpty() ) {
@@ -171,7 +172,7 @@ class AnyValueBinder {
 			}
 		}
 
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.anyKey( source.member(), resolveKeyJavaType( source ) ),
 				null,
 				key,
@@ -179,6 +180,7 @@ class AnyValueBinder {
 				bindingState,
 				bindingContext
 		);
+		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
 		return key;
 	}
 
@@ -256,7 +258,7 @@ class AnyValueBinder {
 	}
 
 	private boolean hasExplicitKeyType(AnySource source) {
-		final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = bindingContext.getModelsContext();
 		return source.keyJavaClass() != null
 				|| source.member().locateAnnotationUsage( AnyKeyJavaType.class, modelsContext ) != null
 				|| source.member().locateAnnotationUsage( AnyKeyType.class, modelsContext ) != null;
@@ -280,8 +282,7 @@ class AnyValueBinder {
 		if ( implementation == ImplicitDiscriminatorStrategy.class ) {
 			return null;
 		}
-		return bindingContext.getBootstrapContext()
-				.getCustomTypeProducer()
+		return bindingContext.getCustomTypeProducer()
 				.produceBeanInstance( implementation );
 	}
 
@@ -326,9 +327,7 @@ class AnyValueBinder {
 	}
 
 	private EntityTypeBinder resolveTargetTypeBinder(Class<?> entityClass, MemberDetails member) {
-		final ClassDetails entityClassDetails = bindingContext.getBootstrapContext()
-				.getModelsContext()
-				.getClassDetailsRegistry()
+		final ClassDetails entityClassDetails = bindingContext.getClassDetailsRegistry()
 				.resolveClassDetails( entityClass.getName() );
 		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) bindingState.getTypeBinder( entityClassDetails );
 		if ( targetTypeBinder == null ) {

@@ -143,7 +143,7 @@ public class TemporaryTable implements Exportable, Contributable {
 
 		if ( columns.size() > 1 ) {
 			final ArrayList<TemporaryTableColumn> columnsForExport = new ArrayList<>( columns );
-			creationContext.getBootModel().getMetadataBuildingOptions().getColumnOrderingStrategy()
+			creationContext.getBootModel().getMappingResolutionOptions().getColumnOrderingStrategy()
 					.orderTemporaryTableColumns( columnsForExport, creationContext.getMetadata() );
 			this.columnsForExport = columnsForExport;
 		}

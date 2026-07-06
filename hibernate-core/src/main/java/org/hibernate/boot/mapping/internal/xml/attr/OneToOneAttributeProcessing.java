@@ -65,7 +65,7 @@ public class OneToOneAttributeProcessing {
 		if ( jaxbOneToOne.getPropertyRef() != null ) {
 			final PropertyRefAnnotation propertyRefUsage = (PropertyRefAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.PROPERTY_REF,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			propertyRefUsage.value( jaxbOneToOne.getPropertyRef().getName() );
 		}
@@ -73,7 +73,7 @@ public class OneToOneAttributeProcessing {
 		if ( jaxbOneToOne.isId() == Boolean.TRUE ) {
 			memberDetails.applyAnnotationUsage(
 					JpaAnnotations.ID,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 		}
 
@@ -89,7 +89,7 @@ public class OneToOneAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		final OneToOneJpaAnnotation annotation = (OneToOneJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ONE_TO_ONE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		applyAccess( jaxbOneToOne.getAccess(), memberDetails, xmlDocumentContext );
@@ -127,7 +127,7 @@ public class OneToOneAttributeProcessing {
 
 		final TargetXmlAnnotation annotation = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
 				XmlAnnotations.TARGET,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		annotation.value( xmlDocumentContext.resolveTargetEntityName( targetEntityName ) );
 	}

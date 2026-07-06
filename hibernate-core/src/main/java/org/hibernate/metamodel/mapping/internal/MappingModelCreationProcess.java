@@ -16,13 +16,15 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
 
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole
  */
-public class MappingModelCreationProcess {
+public class MappingModelCreationProcess implements FetchOptionsHelper.AssociationPersisterResolver {
 	private final String EOL = System.lineSeparator();
 
 	/**
@@ -62,6 +64,20 @@ public class MappingModelCreationProcess {
 
 	public EntityPersister getEntityPersister(String name) {
 		return entityPersisterMap.get( name );
+	}
+
+	public CollectionPersister getCollectionPersister(String role) {
+		return collectionPersisterMap.get( role );
+	}
+
+	@Override
+	public EntityPersister resolveEntityPersister(EntityType entityType) {
+		return getEntityPersister( entityType.getAssociatedEntityName() );
+	}
+
+	@Override
+	public CollectionPersister resolveCollectionPersister(CollectionType collectionType) {
+		return getCollectionPersister( collectionType.getRole() );
 	}
 
 	public SqmFunctionRegistry getSqmFunctionRegistry() {

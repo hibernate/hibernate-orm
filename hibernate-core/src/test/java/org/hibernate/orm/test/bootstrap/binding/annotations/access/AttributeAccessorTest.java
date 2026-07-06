@@ -9,12 +9,12 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @JiraKey(value = "HHH-12062")
 public class AttributeAccessorTest {
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 
 	@BeforeEach
 	public void setUp() {
@@ -46,9 +46,7 @@ public class AttributeAccessorTest {
 
 	@Test
 	public void testAttributeAccessorConfiguration() {
-		final Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Foo.class )
-				.buildMetadata();
+		final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Foo.class );
 
 		final Property property = metadata.getEntityBinding( Foo.class.getName() ).getProperty( "name" );
 		assertEquals( BasicAttributeAccessor.class.getName(), property.getPropertyAccessorName() );

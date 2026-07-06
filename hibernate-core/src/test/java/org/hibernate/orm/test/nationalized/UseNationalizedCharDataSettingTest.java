@@ -9,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -17,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -49,10 +49,7 @@ public class UseNationalizedCharDataSettingTest {
 				.build();
 
 		try {
-			final MetadataSources ms = new MetadataSources( ssr );
-			ms.addAnnotatedClass( NationalizedBySettingEntity.class );
-
-			final Metadata metadata = ms.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, NationalizedBySettingEntity.class );
 			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
 					.getJdbcTypeRegistry();
@@ -82,10 +79,7 @@ public class UseNationalizedCharDataSettingTest {
 				.build();
 
 		try {
-			final MetadataSources ms = new MetadataSources( ssr );
-			ms.addAnnotatedClass( NationalizedBySettingEntity.class );
-
-			final Metadata metadata = ms.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, NationalizedBySettingEntity.class );
 			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
 					.getJdbcTypeRegistry();

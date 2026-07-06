@@ -13,7 +13,7 @@
 /// This package family owns the phases that turn available boot model
 /// resources into Hibernate's resolved boot mapping model.  The broad flow is:
 ///
-/// 1. discover and normalize available resources;
+/// 1. discover and normalize resolved mapping sources;
 /// 2. apply XML annotation-clearing and overlay rules;
 /// 3. categorize managed types, attributes, identifiers, and global
 ///    registrations;

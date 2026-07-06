@@ -4,18 +4,15 @@
  */
 package org.hibernate.orm.test.boot.models;
 
-import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.TypeBeanInstanceProducer;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -23,22 +20,10 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.jandex.IndexView;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.hibernate.boot.internal.BootstrapContextImpl.createModelBuildingContext;
 
@@ -52,10 +37,9 @@ import static org.hibernate.boot.internal.BootstrapContextImpl.createModelBuildi
 public class BootstrapContextTesting implements BootstrapContext {
 
 	private final StandardServiceRegistry serviceRegistry;
-	private final MetadataBuildingOptions metadataBuildingOptions;
+	private final MappingResolutionOptions metadataBuildingOptions;
 
 	private final TypeConfiguration typeConfiguration;
-	private final SqmFunctionRegistry sqmFunctionRegistry;
 	private final MutableJpaCompliance jpaCompliance;
 
 	private final ClassLoaderService classLoaderService;
@@ -69,17 +53,13 @@ public class BootstrapContextTesting implements BootstrapContext {
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private HashMap<String, SqmFunctionDescriptor> sqlFunctionMap;
-	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap;
-	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
 	private ModelsContext modelsContext;
 
 	public BootstrapContextTesting(
 			IndexView jandexIndex,
 			StandardServiceRegistry serviceRegistry,
-			MetadataBuildingOptions metadataBuildingOptions) {
+			MappingResolutionOptions metadataBuildingOptions) {
 		this.serviceRegistry = serviceRegistry;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
@@ -102,7 +82,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 		this.typeConfiguration = new TypeConfiguration();
 		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
-		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 
 		this.managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		this.configurationService = serviceRegistry.requireService( ConfigurationService.class );
@@ -131,17 +110,12 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public SqmFunctionRegistry getFunctionRegistry() {
-		return sqmFunctionRegistry;
-	}
-
-	@Override
 	public BeanInstanceProducer getCustomTypeProducer() {
 		return beanInstanceProducer;
 	}
 
 	@Override
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
+	public MappingResolutionOptions getMappingResolutionOptions() {
 		return metadataBuildingOptions;
 	}
 
@@ -191,81 +165,12 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public IndexView getJandexView() {
-		return null;
-	}
-
-	@Override
-	public Map<String, SqmFunctionDescriptor> getSqlFunctions() {
-		return sqlFunctionMap == null ? Collections.emptyMap() : sqlFunctionMap;
-	}
-
-	@Override
-	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-		return auxiliaryDatabaseObjectList == null ? Collections.emptyList() : auxiliaryDatabaseObjectList;
-	}
-
-	@Override
-	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
-		return attributeConverterDescriptorMap != null
-				? attributeConverterDescriptorMap.values()
-				: Collections.emptyList();
-	}
-
-	@Override
-	public Collection<CacheRegionDefinition> getCacheRegionDefinitions() {
-		return cacheRegionDefinitions == null ? Collections.emptyList() : cacheRegionDefinitions;
-	}
-
-	private final Map<String, BasicTypeImpl<?>> adHocBasicTypeRegistrations = new HashMap<>();
-
-	@Override
-	public void registerAdHocBasicType(BasicType<?> basicType) {
-		adHocBasicTypeRegistrations.put( basicType.getName(), (BasicTypeImpl<?>) basicType );
-	}
-
-	@Override
-	public <T> BasicTypeImpl<T> resolveAdHocBasicType(String key) {
-		//noinspection unchecked
-		return (BasicTypeImpl<T>) adHocBasicTypeRegistrations.get( key );
-	}
-
-	@Override
-	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
-		for ( BasicType<?> basicType : adHocBasicTypeRegistrations.values() ) {
-			if ( basicType.getClass() == BasicTypeImpl.class
-				&& basicType.getJavaTypeDescriptor() == javaType
-				&& basicType.getJdbcType() == jdbcType ) {
-				//noinspection unchecked
-				return (BasicType<T>) basicType;
-			}
-		}
-
-		return null;
-	}
-
-	@Override
 	public void release() {
 		classLoaderAccess.release();
 
 		scannerSetting = null;
 		archiveDescriptorFactory = null;
 
-		if ( sqlFunctionMap != null ) {
-			sqlFunctionMap.clear();
-		}
-
-		if ( auxiliaryDatabaseObjectList != null ) {
-			auxiliaryDatabaseObjectList.clear();
-		}
-
-		if ( attributeConverterDescriptorMap != null ) {
-			attributeConverterDescriptorMap.clear();
-		}
-
-		if ( cacheRegionDefinitions != null ) {
-			cacheRegionDefinitions.clear();
-		}
 	}
 
 	@Override

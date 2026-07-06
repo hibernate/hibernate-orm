@@ -5,10 +5,10 @@
 package org.hibernate.orm.test.entitygraph.named.parsed;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.internal.InvalidNamedEntityGraphParameterException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.BadRootClassEntity;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.Book;
 import org.hibernate.orm.test.entitygraph.named.parsed.entity.DomesticPublishingHouse;
@@ -81,7 +81,7 @@ public abstract class AbstractClassLevelTests {
 	void testRootEntityDifferentFromEntityMarkedWithAnnotation(DomainModelScope modelScope) {
 		final MetadataImplementor domainModel = modelScope.getDomainModel();
 
-		try (org.hibernate.SessionFactory sessionFactory = domainModel.buildSessionFactory()) {
+		try (org.hibernate.SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( domainModel )) {
 			fail( "Expecting an exception" );
 		}
 		catch (InvalidNamedEntityGraphParameterException expected) {
@@ -91,10 +91,8 @@ public abstract class AbstractClassLevelTests {
 	@Test
 	@ServiceRegistry
 	void testDuplicateNames(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Duplicator.class );
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), Duplicator.class );
 			fail( "Expecting a failure" );
 		}
 		catch (DuplicateMappingException expected) {

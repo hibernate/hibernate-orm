@@ -59,7 +59,7 @@ public class OneToMany implements Value {
 	@Override
 	@Remove
 	public ServiceRegistry getServiceRegistry() {
-		return buildingContext.getBuildingOptions().getServiceRegistry();
+		return buildingContext.getBuildingPlan().getServiceRegistry();
 	}
 
 	public PersistentClass getAssociatedClass() {
@@ -133,7 +133,7 @@ public class OneToMany implements Value {
 	@Override
 	public Type getType() {
 		return new ManyToOneType(
-				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				buildingContext.getTypeConfiguration(),
 				getReferencedEntityName(),
 				true,
 				null,

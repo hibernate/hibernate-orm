@@ -13,11 +13,11 @@ import java.util.regex.Pattern;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -58,12 +58,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 				)
 				.build();
 
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( TestEntity.class );
-
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, TestEntity.class );
 	}
 
 	@AfterEach

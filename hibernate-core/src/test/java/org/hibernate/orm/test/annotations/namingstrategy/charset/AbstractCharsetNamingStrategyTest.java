@@ -11,12 +11,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.annotations.namingstrategy.LongIdentifierNamingStrategy;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -36,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @BaseUnitTest
 public abstract class AbstractCharsetNamingStrategyTest {
 
-	protected ServiceRegistry serviceRegistry;
+	protected StandardServiceRegistry serviceRegistry;
 
 	@BeforeAll
 	public void setUp() {
@@ -56,12 +57,11 @@ public abstract class AbstractCharsetNamingStrategyTest {
 
 	@Test
 	public void testWithCustomNamingStrategy() {
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Address.class )
-				.addAnnotatedClass( Person.class )
-				.getMetadataBuilder()
-				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
-				.build();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+				serviceRegistry,
+				new MappingSources().addManagedClasses( Address.class, Person.class ),
+				new LongIdentifierNamingStrategy()
+		);
 
 		var dialect = metadata.getDatabase().getDialect();
 		if ( dialect.supportsUniqueConstraints() ) {

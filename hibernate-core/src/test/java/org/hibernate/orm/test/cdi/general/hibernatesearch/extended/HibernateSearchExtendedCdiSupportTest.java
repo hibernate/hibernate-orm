@@ -7,7 +7,6 @@ package org.hibernate.orm.test.cdi.general.hibernatesearch.extended;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -28,6 +27,7 @@ import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNamedDependentBean;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNestedDependentBean;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheNonHibernateBeanConsumer;
 import org.hibernate.orm.test.cdi.general.hibernatesearch.TheSharedApplicationScopedBean;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.cdi.testsupport.TestingExtendedBeanManager;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -75,11 +75,10 @@ public class HibernateSearchExtendedCdiSupportTest {
 					.applySetting( JAKARTA_CDI_BEAN_MANAGER, extendedBeanManager )
 					.build()) {
 
-				final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-						.addAnnotatedClass( TheEntity.class )
-						.buildMetadata();
+				final MetadataImplementor metadata =
+						(MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( ssr, TheEntity.class );
 
-				try (SessionFactoryImplementor sessionFactory = metadata.buildSessionFactory()) {
+				try (SessionFactoryImplementor sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 					final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
 							.disableDiscovery()
 							.addBeanClasses( TheApplicationScopedBean.class )

@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
@@ -42,6 +42,6 @@ public class TestingEntityManagerFactoryGenerator {
 	}
 
 	public static EntityManagerFactory generateEntityManagerFactory(PersistenceUnitDescriptor descriptor, Map<String,Object> settings) {
-		return SessionFactoryBootstrap.build( descriptor, settings );
+		return BootstrapPipeline.build( descriptor, settings );
 	}
 }

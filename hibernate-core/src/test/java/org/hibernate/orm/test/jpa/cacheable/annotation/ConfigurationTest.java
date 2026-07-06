@@ -9,8 +9,8 @@ import java.util.Map;
 
 import jakarta.persistence.SharedCacheMode;
 
-import org.hibernate.boot.pipeline.internal.MetadataBootstrap;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.MappingResolutionResult;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
@@ -32,13 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @BaseUnitTest
 public class ConfigurationTest {
 
-	private MetadataBootstrap metadataBootstrap;
+	private MappingResolutionResult mappingResolutionResult;
 
 	@AfterEach
 	public void tearDown() {
-		if ( metadataBootstrap != null ) {
-			metadataBootstrap.close();
-			metadataBootstrap = null;
+		if ( mappingResolutionResult != null ) {
+			mappingResolutionResult.close();
+			mappingResolutionResult = null;
 		}
 	}
 
@@ -128,11 +128,11 @@ public class ConfigurationTest {
 			}
 		};
 
-		metadataBootstrap = SessionFactoryBootstrap.resolveMetadata(
+		mappingResolutionResult = BootstrapPipeline.resolveMetadata(
 				new PersistenceUnitInfoDescriptor( adapter ),
 				settings
 		);
-		return metadataBootstrap.metadata();
+		return mappingResolutionResult.metadata();
 	}
 
 	public static class CustomRegionFactory extends CachingRegionFactory {

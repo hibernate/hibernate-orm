@@ -8,9 +8,10 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Struct;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -38,20 +39,7 @@ public class StructNestedComponentAssociationErrorTest {
 
 	@Test
 	public void testOneToOneMappedByNested() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( Book1.class )
-					.getMetadataBuilder()
-					.build();
-			Assertions.fail( "Expected a failure" );
-		}
-		catch (MappingException ex) {
-			assertThat( ex.getMessage(), containsString( "authorInfos.person.favoriteBook" ) );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+		assertMappingException( Book1.class, "authorInfos.person.favoriteBook" );
 	}
 
 
@@ -83,20 +71,7 @@ public class StructNestedComponentAssociationErrorTest {
 
 	@Test
 	public void testOneToManyMappedByNested() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( Book2.class )
-					.getMetadataBuilder()
-					.build();
-			Assertions.fail( "Expected a failure" );
-		}
-		catch (MappingException ex) {
-			assertThat( ex.getMessage(), containsString( "authorInfos.person.bookCollection" ) );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+		assertMappingException( Book2.class, "authorInfos.person.bookCollection" );
 	}
 
 
@@ -129,22 +104,25 @@ public class StructNestedComponentAssociationErrorTest {
 
 	@Test
 	public void testOneToMany() {
+		assertMappingException( Book3.class, "authorInfos.person.bookCollection" );
+	}
+
+	private void assertMappingException(Class<?> annotatedClass, String messageFragment) {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( Book3.class )
-					.getMetadataBuilder()
-					.build();
+			MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources().addManagedClass( annotatedClass )
+			);
 			Assertions.fail( "Expected a failure" );
 		}
 		catch (MappingException ex) {
-			assertThat( ex.getMessage(), containsString( "authorInfos.person.bookCollection" ) );
+			assertThat( ex.getMessage(), containsString( messageFragment ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
-
 
 	@Entity(name = "Book")
 	public static class Book3 {

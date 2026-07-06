@@ -10,8 +10,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -27,10 +28,14 @@ import org.junit.jupiter.api.Test;
 public class SingleTableAbstractDiscriminatorTests {
 	@Test
 	void testCompliantModel(ServiceRegistryScope registryScope) {
-		var model = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Top.class, Middle.class, Bottom.class )
-				.buildMetadata();
-		try (var sf = (SessionFactoryImplementor) model.buildSessionFactory()) {
+		var model = MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				new MappingSources()
+						.addManagedClass( Top.class )
+						.addManagedClass( Middle.class )
+						.addManagedClass( Bottom.class )
+		);
+		try (var sf = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( model )) {
 		}
 	}
 
@@ -41,10 +46,14 @@ public class SingleTableAbstractDiscriminatorTests {
 		// 		> The DiscriminatorValue annotation can only be specified on a concrete entity class.
 		//
 		// we do not validate this though
-		var model = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Root.class, Trunk.class, Branch.class )
-				.buildMetadata();
-		try (var sf = (SessionFactoryImplementor) model.buildSessionFactory()) {
+		var model = MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				new MappingSources()
+						.addManagedClass( Root.class )
+						.addManagedClass( Trunk.class )
+						.addManagedClass( Branch.class )
+		);
+		try (var sf = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( model )) {
 		}
 	}
 

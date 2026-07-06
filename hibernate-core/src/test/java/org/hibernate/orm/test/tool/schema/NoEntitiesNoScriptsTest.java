@@ -5,9 +5,9 @@
 package org.hibernate.orm.test.tool.schema;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.SourceType;
@@ -82,7 +82,7 @@ public class NoEntitiesNoScriptsTest {
 
 
 	private Metadata buildMappings(StandardServiceRegistry registry) {
-		return new MetadataSources( registry ).buildMetadata();
+		return MetadataBuildingTestHelper.buildMetadata( registry );
 	}
 
 	public class ExecutionOptionsTestImpl implements ExecutionOptions, ExceptionHandler {

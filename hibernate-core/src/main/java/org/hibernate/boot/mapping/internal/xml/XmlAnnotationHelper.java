@@ -147,7 +147,6 @@ import org.hibernate.boot.mapping.internal.xml.attr.CommonAttributeProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.ForeignKeyProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.JoinColumnProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.TableProcessing;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
@@ -232,7 +231,7 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final EntityJpaAnnotation entityAnn = (EntityJpaAnnotation) classDetails.applyAnnotationUsage(
 				JpaAnnotations.ENTITY,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		if ( isNotEmpty( jaxbEntity.getName() ) ) {
 			entityAnn.name( jaxbEntity.getName() );
@@ -240,7 +239,7 @@ public class XmlAnnotationHelper {
 		if ( jaxbEntity.isMutable() != null && !jaxbEntity.isMutable() ) {
 			classDetails.applyAnnotationUsage(
 					HibernateAnnotations.IMMUTABLE,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 		}
 	}
@@ -255,7 +254,7 @@ public class XmlAnnotationHelper {
 
 		final ColumnJpaAnnotation columnAnnotationUsage = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 				COLUMN,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		columnAnnotationUsage.apply( jaxbColumn, xmlDocumentContext );
 	}
@@ -264,7 +263,7 @@ public class XmlAnnotationHelper {
 			JaxbColumnImpl jaxbColumn,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final ColumnJpaAnnotation usage = COLUMN.createUsage( xmlDocumentContext.getModelBuildingContext() );
+		final ColumnJpaAnnotation usage = COLUMN.createUsage( xmlDocumentContext.getModelsContext() );
 		usage.apply( jaxbColumn, xmlDocumentContext );
 		return usage;
 	}
@@ -280,7 +279,7 @@ public class XmlAnnotationHelper {
 
 		final ColumnTransformerAnnotation annotationUsage = (ColumnTransformerAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.COLUMN_TRANSFORMER,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		annotationUsage.forColumn( jaxbColumn.getName() );
@@ -368,7 +367,7 @@ public class XmlAnnotationHelper {
 	public static Parameter[] collectParameters(
 			List<JaxbConfigurationParameterImpl> jaxbParameters,
 			XmlDocumentContext xmlDocumentContext) {
-		return collectParameters( jaxbParameters, xmlDocumentContext.getModelBuildingContext() );
+		return collectParameters( jaxbParameters, xmlDocumentContext.getModelsContext() );
 	}
 
 	public static Parameter[] collectParameters(
@@ -399,7 +398,7 @@ public class XmlAnnotationHelper {
 
 		final CollectionTypeAnnotation typeAnn = (CollectionTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.COLLECTION_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final ClassDetails userTypeImpl = resolveJavaType( jaxbType.getType(), xmlDocumentContext );
 		typeAnn.type( userTypeImpl.toJavaClass() );
@@ -416,7 +415,7 @@ public class XmlAnnotationHelper {
 
 		final CollectionIdAnnotation collectionIdAnn = (CollectionIdAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.COLLECTION_ID,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final JaxbColumnImpl jaxbColumn = jaxbCollectionId.getColumn();
@@ -441,7 +440,7 @@ public class XmlAnnotationHelper {
 
 			final CollectionIdJavaClassAnnotation annotationUsage = (CollectionIdJavaClassAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.COLLECTION_ID_JAVA_CLASS,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			annotationUsage.idType( simpleTypeInterpretation.getJavaType() );
 		}
@@ -490,7 +489,7 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
 				XmlAnnotations.TARGET,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		targetAnn.value( name );
 	}
@@ -506,7 +505,7 @@ public class XmlAnnotationHelper {
 
 		final TemporalJpaAnnotation temporalAnn = (TemporalJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.TEMPORAL,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		temporalAnn.value( temporalType );
 	}
@@ -516,7 +515,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		memberDetails.applyAnnotationUsage( JpaAnnotations.LOB, xmlDocumentContext.getModelBuildingContext() );
+		memberDetails.applyAnnotationUsage( JpaAnnotations.LOB, xmlDocumentContext.getModelsContext() );
 	}
 
 	public static void applyEnumerated(EnumType enumType, MutableMemberDetails memberDetails, XmlDocumentContext xmlDocumentContext) {
@@ -526,7 +525,7 @@ public class XmlAnnotationHelper {
 
 		final EnumeratedJpaAnnotation annotationUsage = (EnumeratedJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ENUMERATED,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		annotationUsage.value( enumType );
@@ -540,7 +539,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		memberDetails.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, xmlDocumentContext.getModelBuildingContext() );
+		memberDetails.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, xmlDocumentContext.getModelsContext() );
 	}
 
 	public static void applyGenerated(
@@ -558,7 +557,7 @@ public class XmlAnnotationHelper {
 
 		final GeneratedAnnotation generatedAnn = (GeneratedAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.GENERATED,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		generatedAnn.event( eventTypes.toArray( new EventType[0] ) );
@@ -574,7 +573,7 @@ public class XmlAnnotationHelper {
 
 		final GeneratedValueJpaAnnotation generatedValueAnn = (GeneratedValueJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.GENERATED_VALUE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		if ( jaxbGeneratedValue.getStrategy() != null ) {
@@ -596,7 +595,7 @@ public class XmlAnnotationHelper {
 
 		final SequenceGeneratorJpaAnnotation sequenceAnn = (SequenceGeneratorJpaAnnotation) generatorTarget.applyAnnotationUsage(
 				JpaAnnotations.SEQUENCE_GENERATOR,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		if ( isNotEmpty( jaxbGenerator.getName() ) ) {
@@ -636,7 +635,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final TableGeneratorJpaAnnotation tableAnn = (TableGeneratorJpaAnnotation) generatorTarget.applyAnnotationUsage( JpaAnnotations.TABLE_GENERATOR, xmlDocumentContext.getModelBuildingContext() );
+		final TableGeneratorJpaAnnotation tableAnn = (TableGeneratorJpaAnnotation) generatorTarget.applyAnnotationUsage( JpaAnnotations.TABLE_GENERATOR, xmlDocumentContext.getModelsContext() );
 		tableAnn.apply( jaxbGenerator, xmlDocumentContext );
 	}
 
@@ -650,7 +649,7 @@ public class XmlAnnotationHelper {
 
 		final UuidGeneratorAnnotation uuidGenAnn = (UuidGeneratorAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.UUID_GENERATOR,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		uuidGenAnn.style( jaxbGenerator.getStyle() );
@@ -658,7 +657,7 @@ public class XmlAnnotationHelper {
 			final GeneratedValueJpaAnnotation generatedValueAnn =
 					(GeneratedValueJpaAnnotation) memberDetails.applyAnnotationUsage(
 							JpaAnnotations.GENERATED_VALUE,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 			generatedValueAnn.strategy( GenerationType.UUID );
 		}
@@ -674,7 +673,7 @@ public class XmlAnnotationHelper {
 
 		final GenericGeneratorAnnotation generatorAnn = (GenericGeneratorAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.GENERIC_GENERATOR,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		generatorAnn.type( generatorClass( jaxbGenerator, xmlDocumentContext ) );
 
@@ -685,7 +684,7 @@ public class XmlAnnotationHelper {
 		else {
 			final Parameter[] parameters = new Parameter[jaxbParameters.size()];
 			for ( int i = 0; i < jaxbParameters.size(); i++ ) {
-				final ParameterAnnotation parameterUsage = PARAMETER.createUsage( xmlDocumentContext.getModelBuildingContext() );
+				final ParameterAnnotation parameterUsage = PARAMETER.createUsage( xmlDocumentContext.getModelsContext() );
 				parameterUsage.name( jaxbParameters.get(i).getName() );
 				parameterUsage.value( jaxbParameters.get(i).getValue() );
 				parameters[i] = parameterUsage;
@@ -700,17 +699,13 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final Class<? extends Generator> legacyGeneratorClass = GeneratorStrategies.mapLegacyNamedGenerator(
 				jaxbGenerator.getClazz(),
-				xmlDocumentContext.getBootstrapContext()
-						.getServiceRegistry()
-						.requireService( JdbcServices.class )
-						.getDialect()
+				xmlDocumentContext.getJdbcServices().getDialect()
 		);
 		if ( legacyGeneratorClass != null ) {
 			return legacyGeneratorClass;
 		}
 
-		final Class<?> generatorClass = xmlDocumentContext.getBootstrapContext()
-				.getClassLoaderService()
+		final Class<?> generatorClass = xmlDocumentContext.getClassLoaderService()
 				.classForName( jaxbGenerator.getClazz() );
 		if ( !Generator.class.isAssignableFrom( generatorClass ) ) {
 			throw new AnnotationException(
@@ -736,7 +731,7 @@ public class XmlAnnotationHelper {
 
 		final AttributeOverridesJpaAnnotation overridesUsage = (AttributeOverridesJpaAnnotation) memberDetails.applyAnnotationUsage(
 				ATTRIBUTE_OVERRIDES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final int numberOfOverrides = jaxbMapKeyOverrides.size() + jaxbElementOverrides.size();
@@ -781,7 +776,7 @@ public class XmlAnnotationHelper {
 			String namePrefix,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelsContext();
 
 		final AttributeOverrideJpaAnnotation overrideUsage = ATTRIBUTE_OVERRIDE.createUsage( modelBuildingContext );
 
@@ -816,7 +811,7 @@ public class XmlAnnotationHelper {
 		final AttributeOverridesJpaAnnotation overridesUsage = (AttributeOverridesJpaAnnotation) target.replaceAnnotationUsage(
 				ATTRIBUTE_OVERRIDE,
 				ATTRIBUTE_OVERRIDES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final AttributeOverride[] overrideUsages = new AttributeOverride[jaxbOverrides.size()];
@@ -843,14 +838,14 @@ public class XmlAnnotationHelper {
 		final AssociationOverridesJpaAnnotation overridesUsage = (AssociationOverridesJpaAnnotation) target.replaceAnnotationUsage(
 				ASSOCIATION_OVERRIDE,
 				ASSOCIATION_OVERRIDES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final AssociationOverride[] overrideUsages = new AssociationOverride[jaxbOverrides.size()];
 		overridesUsage.value( overrideUsages );
 
 		for ( int i = 0; i < jaxbOverrides.size(); i++ ) {
-			final AssociationOverrideJpaAnnotation override = ASSOCIATION_OVERRIDE.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final AssociationOverrideJpaAnnotation override = ASSOCIATION_OVERRIDE.createUsage( xmlDocumentContext.getModelsContext() );
 			overrideUsages[i] = override;
 			transferAssociationOverride( jaxbOverrides.get(i), override, target, xmlDocumentContext );
 		}
@@ -896,7 +891,7 @@ public class XmlAnnotationHelper {
 
 		final ConvertJpaAnnotation annotation = (ConvertJpaAnnotation) memberDetails.replaceAnnotationUsage(
 				CONVERT,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		transferConvertDetails( jaxbConvert, annotation, null, xmlDocumentContext );
 	}
@@ -912,7 +907,7 @@ public class XmlAnnotationHelper {
 		final ConvertsJpaAnnotation convertsUsage = (ConvertsJpaAnnotation) target.replaceAnnotationUsage(
 				CONVERT,
 				CONVERTS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final Convert[] convertUsages = new Convert[jaxbConverts.size()];
@@ -935,7 +930,7 @@ public class XmlAnnotationHelper {
 		final ConvertsJpaAnnotation convertsUsage = (ConvertsJpaAnnotation) memberDetails.replaceAnnotationUsage(
 				CONVERT,
 				CONVERTS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final Convert[] convertUsages = new Convert[jaxbConverts.size()];
 		convertsUsage.value( convertUsages );
@@ -957,7 +952,7 @@ public class XmlAnnotationHelper {
 			return null;
 		}
 
-		final ConvertJpaAnnotation convert = CONVERT.createUsage( xmlDocumentContext.getModelBuildingContext() );
+		final ConvertJpaAnnotation convert = CONVERT.createUsage( xmlDocumentContext.getModelsContext() );
 
 		transferConvertDetails( jaxbConvert, convert, namePrefix, xmlDocumentContext );
 
@@ -991,7 +986,7 @@ public class XmlAnnotationHelper {
 			if ( isNotEmpty( catalog ) || isNotEmpty( schema ) ) {
 				final TableJpaAnnotation tableAnn = (TableJpaAnnotation) target.applyAnnotationUsage(
 						JpaAnnotations.TABLE,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				if ( isNotEmpty( catalog ) ) {
 					tableAnn.catalog( catalog );
@@ -1005,7 +1000,7 @@ public class XmlAnnotationHelper {
 		else {
 			final TableJpaAnnotation tableAnn = (TableJpaAnnotation) target.applyAnnotationUsage(
 					JpaAnnotations.TABLE,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			tableAnn.apply( jaxbTable, xmlDocumentContext );
 		}
@@ -1018,7 +1013,7 @@ public class XmlAnnotationHelper {
 		if ( isNotEmpty( tableExpression ) ) {
 			final SubselectAnnotation subselectAnn = (SubselectAnnotation) target.applyAnnotationUsage(
 					HibernateAnnotations.SUBSELECT,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			subselectAnn.value( tableExpression.trim() );
 		}
@@ -1040,7 +1035,7 @@ public class XmlAnnotationHelper {
 
 		final NaturalIdCacheAnnotation naturalIdCacheUsage = (NaturalIdCacheAnnotation) classDetails.applyAnnotationUsage(
 				HibernateAnnotations.NATURAL_ID_CACHE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final JaxbCachingImpl jaxbCaching = jaxbNaturalId.getCaching();
@@ -1059,7 +1054,7 @@ public class XmlAnnotationHelper {
 
 		final InheritanceJpaAnnotation inheritanceUsage = (InheritanceJpaAnnotation) classDetails.applyAnnotationUsage(
 				JpaAnnotations.INHERITANCE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		if ( jaxbEntity.getInheritance().getStrategy() != null ) {
 			inheritanceUsage.strategy( jaxbEntity.getInheritance().getStrategy() );
@@ -1070,7 +1065,7 @@ public class XmlAnnotationHelper {
 		return resolveJavaType(
 				xmlDocumentContext.getXmlDocument().getDefaults().getPackage(),
 				value,
-				xmlDocumentContext.getModelBuildingContext().getClassDetailsRegistry()
+				xmlDocumentContext.getModelsContext().getClassDetailsRegistry()
 		);
 	}
 
@@ -1207,7 +1202,7 @@ public class XmlAnnotationHelper {
 		if ( isNotEmpty( jaxbBasicMapping.getMutability() ) ) {
 			final MutabilityAnnotation mutability = (MutabilityAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.MUTABILITY,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			mutability.value( resolveMutabilityPlanClass( jaxbBasicMapping.getMutability(), xmlDocumentContext ) );
 		}
@@ -1218,7 +1213,7 @@ public class XmlAnnotationHelper {
 			String mutabilityPlanClassName,
 			XmlDocumentContext xmlDocumentContext) {
 		final ClassDetails descriptorClassDetails = xmlDocumentContext
-				.getModelBuildingContext()
+				.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( mutabilityPlanClassName );
 		final Class<?> javaClass = descriptorClassDetails.toJavaClass();
@@ -1241,11 +1236,11 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final JavaTypeAnnotation typeAnn = (JavaTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.JAVA_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final ClassDetails descriptorClass = xmlDocumentContext
-				.getModelBuildingContext()
+				.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( descriptorClassName );
 		typeAnn.value( descriptorClass.toJavaClass() );
@@ -1257,11 +1252,11 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final MapKeyJavaTypeAnnotation typeAnn = (MapKeyJavaTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.MAP_KEY_JAVA_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final ClassDetails descriptorClass = xmlDocumentContext
-				.getModelBuildingContext()
+				.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( descriptorClassName );
 		typeAnn.value( descriptorClass.toJavaClass() );
@@ -1272,12 +1267,12 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final ClassDetails descriptorClassDetails = xmlDocumentContext
-				.getModelBuildingContext()
+				.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( descriptorClassName );
 		final MapKeyJdbcTypeAnnotation jdbcTypeAnn = (MapKeyJdbcTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.MAP_KEY_JDBC_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		jdbcTypeAnn.value( descriptorClassDetails.toJavaClass() );
 	}
@@ -1303,7 +1298,7 @@ public class XmlAnnotationHelper {
 
 		final MapKeyJdbcTypeCodeAnnotation typeCodeAnn = (MapKeyJdbcTypeCodeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.MAP_KEY_JDBC_TYPE_CODE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		typeCodeAnn.value( jdbcTypeCode );
 	}
@@ -1313,12 +1308,12 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final ClassDetails descriptorClassDetails = xmlDocumentContext
-				.getModelBuildingContext()
+				.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( descriptorClassName );
 		final JdbcTypeAnnotation jdbcTypeAnn = (JdbcTypeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.JDBC_TYPE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		jdbcTypeAnn.value( descriptorClassDetails.toJavaClass() );
 
@@ -1334,7 +1329,7 @@ public class XmlAnnotationHelper {
 
 		final JdbcTypeCodeAnnotation typeCodeAnn = (JdbcTypeCodeAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.JDBC_TYPE_CODE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		typeCodeAnn.value( jdbcTypeCode );
 	}
@@ -1350,14 +1345,14 @@ public class XmlAnnotationHelper {
 		final FiltersAnnotation filters = (FiltersAnnotation) target.replaceAnnotationUsage(
 				FILTER,
 				HibernateAnnotations.FILTERS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final FilterAnnotation[] filterUsages = new FilterAnnotation[jaxbFilters.size()];
 		filters.value( filterUsages );
 
 		for ( int i = 0; i < jaxbFilters.size(); i++ ) {
-			final FilterAnnotation filterUsage = FILTER.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final FilterAnnotation filterUsage = FILTER.createUsage( xmlDocumentContext.getModelsContext() );
 			filterUsages[i] = filterUsage;
 			filterUsage.apply( jaxbFilters.get(i), xmlDocumentContext );
 		}
@@ -1374,14 +1369,14 @@ public class XmlAnnotationHelper {
 		final FilterJoinTablesAnnotation filters = (FilterJoinTablesAnnotation) target.replaceAnnotationUsage(
 				FILTER_JOIN_TABLE,
 				HibernateAnnotations.FILTER_JOIN_TABLES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final FilterJoinTableAnnotation[] filterUsages = new FilterJoinTableAnnotation[jaxbFilters.size()];
 		filters.value( filterUsages );
 
 		for ( int i = 0; i < jaxbFilters.size(); i++ ) {
-			final FilterJoinTableAnnotation filterUsage = FILTER_JOIN_TABLE.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final FilterJoinTableAnnotation filterUsage = FILTER_JOIN_TABLE.createUsage( xmlDocumentContext.getModelsContext() );
 			filterUsages[i] = filterUsage;
 
 			filterUsage.apply( jaxbFilters.get(i), xmlDocumentContext );
@@ -1398,7 +1393,7 @@ public class XmlAnnotationHelper {
 
 		final SQLRestrictionAnnotation sqlRestrictionAnn = (SQLRestrictionAnnotation) target.applyAnnotationUsage(
 				SQL_RESTRICTION,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		sqlRestrictionAnn.value( sqlRestriction );
 	}
@@ -1412,7 +1407,7 @@ public class XmlAnnotationHelper {
 		}
 		final SQLJoinTableRestrictionAnnotation sqlRestrictionAnn = (SQLJoinTableRestrictionAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.SQL_JOIN_TABLE_RESTRICTION,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		sqlRestrictionAnn.value( sqlRestriction );
 	}
@@ -1428,7 +1423,7 @@ public class XmlAnnotationHelper {
 
 		final CustomSqlDetails annotation = (CustomSqlDetails) target.applyAnnotationUsage(
 				descriptor,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		applyCustomSql( jaxbCustomSql, annotation );
@@ -1473,10 +1468,10 @@ public class XmlAnnotationHelper {
 
 		final IdClassJpaAnnotation idClassAnn = (IdClassJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.ID_CLASS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
-		final ClassDetails idClassImpl = xmlDocumentContext.getModelBuildingContext()
+		final ClassDetails idClassImpl = xmlDocumentContext.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( jaxbIdClass.getClazz() );
 		idClassAnn.value( idClassImpl.toJavaClass() );
@@ -1486,7 +1481,7 @@ public class XmlAnnotationHelper {
 			JaxbEntityOrMappedSuperclass jaxbClass,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelsContext();
 
 		if ( jaxbClass.getExcludeDefaultListeners() != null ) {
 			classDetails.applyAnnotationUsage( EXCLUDE_DEFAULT_LISTENERS, modelBuildingContext );
@@ -1511,7 +1506,7 @@ public class XmlAnnotationHelper {
 
 		final EntityListenersJpaAnnotation listenersUsage = (EntityListenersJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.ENTITY_LISTENERS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final Class<?>[] listeners = new Class[entityListenerContainer.getEntityListeners().size()];
@@ -1566,7 +1561,7 @@ public class XmlAnnotationHelper {
 				) );
 			}
 
-			methodDetails.applyAnnotationUsage( annotationDescriptor, xmlDocumentContext.getModelBuildingContext() );
+			methodDetails.applyAnnotationUsage( annotationDescriptor, xmlDocumentContext.getModelsContext() );
 		}
 	}
 
@@ -1593,7 +1588,7 @@ public class XmlAnnotationHelper {
 
 		final RowIdAnnotation rowIdAnn = (RowIdAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.ROW_ID,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		if ( isNotEmpty( rowId ) ) {
 			rowIdAnn.value( rowId );
@@ -1620,7 +1615,7 @@ public class XmlAnnotationHelper {
 
 		final DiscriminatorValueJpaAnnotation valueAnn = (DiscriminatorValueJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.DISCRIMINATOR_VALUE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		valueAnn.value( discriminatorValue );
 	}
@@ -1635,14 +1630,14 @@ public class XmlAnnotationHelper {
 
 		final DiscriminatorColumnJpaAnnotation discriminatorColumnAnn = (DiscriminatorColumnJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.DISCRIMINATOR_COLUMN,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		discriminatorColumnAnn.apply( jaxbDiscriminatorColumn, xmlDocumentContext );
 
 		if ( jaxbDiscriminatorColumn.isForceSelection() || jaxbDiscriminatorColumn.isInsertable() == FALSE ) {
 			final DiscriminatorOptionsAnnotation optionsAnn = (DiscriminatorOptionsAnnotation) target.applyAnnotationUsage(
 					HibernateAnnotations.DISCRIMINATOR_OPTIONS,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			optionsAnn.force( true );
 
@@ -1665,7 +1660,7 @@ public class XmlAnnotationHelper {
 
 		final DiscriminatorFormulaAnnotation discriminatorFormulaAnn = (DiscriminatorFormulaAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.DISCRIMINATOR_FORMULA,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		discriminatorFormulaAnn.value( jaxbDiscriminatorFormula.getFragment() );
@@ -1676,7 +1671,7 @@ public class XmlAnnotationHelper {
 		if ( jaxbDiscriminatorFormula.isForceSelection() ) {
 			final DiscriminatorOptionsAnnotation optionsAnn = (DiscriminatorOptionsAnnotation) target.applyAnnotationUsage(
 					HibernateAnnotations.DISCRIMINATOR_OPTIONS,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			optionsAnn.force( true );
 		}
@@ -1687,7 +1682,7 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getXmlDocument().getDefaults().getPackage(),
 				explicitName
 		);
-		final ClassDetails classDetails = xmlDocumentContext.getModelBuildingContext()
+		final ClassDetails classDetails = xmlDocumentContext.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( qualifiedName );
 		if ( classDetails != null ) {
@@ -1783,7 +1778,7 @@ public class XmlAnnotationHelper {
 
 		final NotFoundAnnotation notFoundAnn = (NotFoundAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.NOT_FOUND,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		notFoundAnn.action( notFoundAction );
 	}
@@ -1796,7 +1791,7 @@ public class XmlAnnotationHelper {
 		final SecondaryTablesJpaAnnotation tablesUsage = (SecondaryTablesJpaAnnotation) target.replaceAnnotationUsage(
 				SECONDARY_TABLE,
 				JpaAnnotations.SECONDARY_TABLES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SecondaryTable[] tableUsages = new SecondaryTable[jaxbSecondaryTables.size()];
 		tablesUsage.value( tableUsages );
@@ -1804,19 +1799,19 @@ public class XmlAnnotationHelper {
 		final SecondaryRowsAnnotation rowsUsage = (SecondaryRowsAnnotation) target.replaceAnnotationUsage(
 				SECONDARY_ROW,
 				SECONDARY_ROWS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SecondaryRow[] rowUsages = new SecondaryRow[jaxbSecondaryTables.size()];
 		rowsUsage.value( rowUsages );
 
 		for ( int i = 0; i < jaxbSecondaryTables.size(); i++ ) {
-			final SecondaryTableJpaAnnotation tableUsage = SECONDARY_TABLE.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final SecondaryTableJpaAnnotation tableUsage = SECONDARY_TABLE.createUsage( xmlDocumentContext.getModelsContext() );
 			tableUsages[i] = tableUsage;
 
 			final JaxbSecondaryTableImpl jaxbSecondaryTable = jaxbSecondaryTables.get( i );
 			tableUsage.apply( jaxbSecondaryTable, xmlDocumentContext );
 
-			final SecondaryRowAnnotation rowUsage = SECONDARY_ROW.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final SecondaryRowAnnotation rowUsage = SECONDARY_ROW.createUsage( xmlDocumentContext.getModelsContext() );
 			rowUsages[i] = rowUsage;
 			rowUsage.table( tableUsage.name() );
 			rowUsage.optional( jaxbSecondaryTable.isOptional() == TRUE );
@@ -1838,15 +1833,15 @@ public class XmlAnnotationHelper {
 
 		final org.hibernate.annotations.SQLInsert[] previous = target.getRepeatedAnnotationUsages(
 				HibernateAnnotations.SQL_INSERT,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SQLInsertsAnnotation sqlInserts = (SQLInsertsAnnotation) target.replaceAnnotationUsage(
 				HibernateAnnotations.SQL_INSERT,
 				HibernateAnnotations.SQL_INSERTS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SQLInsertAnnotation sqlInsert = HibernateAnnotations.SQL_INSERT.createUsage(
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		applyCustomSql( jaxbSecondaryTable.getSqlInsert(), sqlInsert, jaxbSecondaryTable.getName() );
 
@@ -1865,15 +1860,15 @@ public class XmlAnnotationHelper {
 
 		final org.hibernate.annotations.SQLUpdate[] previous = target.getRepeatedAnnotationUsages(
 				HibernateAnnotations.SQL_UPDATE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SQLUpdatesAnnotation sqlUpdates = (SQLUpdatesAnnotation) target.replaceAnnotationUsage(
 				HibernateAnnotations.SQL_UPDATE,
 				HibernateAnnotations.SQL_UPDATES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SQLUpdateAnnotation sqlUpdate = HibernateAnnotations.SQL_UPDATE.createUsage(
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		applyCustomSql( jaxbSecondaryTable.getSqlUpdate(), sqlUpdate, jaxbSecondaryTable.getName() );
 
@@ -1892,15 +1887,15 @@ public class XmlAnnotationHelper {
 
 		final org.hibernate.annotations.SQLDelete[] previous = target.getRepeatedAnnotationUsages(
 				HibernateAnnotations.SQL_DELETE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SQLDeletesAnnotation sqlDeletes = (SQLDeletesAnnotation) target.replaceAnnotationUsage(
 				HibernateAnnotations.SQL_DELETE,
 				HibernateAnnotations.SQL_DELETES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		final SQLDeleteAnnotation sqlDelete = HibernateAnnotations.SQL_DELETE.createUsage(
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		applyCustomSql( jaxbSecondaryTable.getSqlDelete(), sqlDelete, jaxbSecondaryTable.getName() );
 
@@ -1920,7 +1915,7 @@ public class XmlAnnotationHelper {
 		final CheckConstraint[] checks = new CheckConstraint[jaxbChecks.size()];
 		for ( int i = 0; i < jaxbChecks.size(); i++ ) {
 			final JaxbCheckConstraintImpl jaxbCheck = jaxbChecks.get( i );
-			final CheckConstraintJpaAnnotation annotation = CHECK_CONSTRAINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final CheckConstraintJpaAnnotation annotation = CHECK_CONSTRAINT.createUsage( xmlDocumentContext.getModelsContext() );
 			checks[i] = annotation;
 			annotation.constraint( jaxbCheck.getConstraint() );
 			applyOptionalString( jaxbCheck.getName(), annotation::name );
@@ -1933,7 +1928,7 @@ public class XmlAnnotationHelper {
 	public static UniqueConstraint[] collectUniqueConstraints(
 			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
 			XmlDocumentContext xmlDocumentContext) {
-		return collectUniqueConstraints( jaxbUniqueConstraints, xmlDocumentContext.getModelBuildingContext() );
+		return collectUniqueConstraints( jaxbUniqueConstraints, xmlDocumentContext.getModelsContext() );
 	}
 
 	public static UniqueConstraint[] collectUniqueConstraints(
@@ -1960,7 +1955,7 @@ public class XmlAnnotationHelper {
 	public static Index[] collectIndexes(
 			List<JaxbIndexImpl> jaxbIndexes,
 			XmlDocumentContext xmlDocumentContext) {
-		return collectIndexes( jaxbIndexes, xmlDocumentContext.getModelBuildingContext() );
+		return collectIndexes( jaxbIndexes, xmlDocumentContext.getModelsContext() );
 	}
 
 	public static Index[] collectIndexes(
@@ -1996,7 +1991,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelsContext();
 		final PrimaryKeyJoinColumnsJpaAnnotation columnsAnn = (PrimaryKeyJoinColumnsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMNS,
@@ -2019,7 +2014,7 @@ public class XmlAnnotationHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		CollectionClassificationXmlAnnotation collectionClassification = (CollectionClassificationXmlAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.COLLECTION_CLASSIFICATION,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		collectionClassification.value( classification );
 	}
@@ -2036,7 +2031,7 @@ public class XmlAnnotationHelper {
 			);
 			memberDetails.applyAnnotationUsage(
 					JpaAnnotations.VERSION,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			CommonAttributeProcessing.applyAccess( accessType, memberDetails, xmlDocumentContext );
 			CommonAttributeProcessing.applyAttributeAccessor( version, memberDetails, xmlDocumentContext );
@@ -2044,7 +2039,7 @@ public class XmlAnnotationHelper {
 			if ( version.getColumn() != null ) {
 				final ColumnJpaAnnotation columnAnn = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 						JpaAnnotations.COLUMN,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				columnAnn.apply( version.getColumn(), xmlDocumentContext );
 				XmlAnnotationHelper.applyColumnTransformation( version.getColumn(), memberDetails, xmlDocumentContext );
@@ -2059,7 +2054,7 @@ public class XmlAnnotationHelper {
 
 		final SynchronizeAnnotation synchronizeAnnotation = (SynchronizeAnnotation) classDetails.replaceAnnotationUsage(
 				HibernateAnnotations.SYNCHRONIZE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final String[] synchronizeTableNames = new String[synchronizedTables.size()];

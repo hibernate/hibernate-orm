@@ -7,11 +7,17 @@ package org.hibernate.boot.mapping.internal.context;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.SharedCacheMode;
 
@@ -34,7 +40,7 @@ public interface BindingContext {
 
 	/// Registry used to resolve model class descriptors while binding.
 	default ClassDetailsRegistry getClassDetailsRegistry() {
-		return getBootstrapContext().getModelsContext().getClassDetailsRegistry();
+		return getModelsContext().getClassDetailsRegistry();
 	}
 
 	/// Shared cache mode in effect for this binding run.
@@ -46,16 +52,25 @@ public interface BindingContext {
 	/// Physical naming strategy used to translate logical names to physical names.
 	PhysicalNamingStrategy getPhysicalNamingStrategy();
 
-	/// Bootstrap context for services shared across boot phases.
-	BootstrapContext getBootstrapContext();
+	/// Service registry used while binding.
+	ServiceRegistry getServiceRegistry();
 
-	/// Service registry from the bootstrap context.
-	default ServiceRegistry getServiceRegistry() {
-		return getBootstrapContext().getServiceRegistry();
-	}
+	MappingResolutionOptions getBuildingPlan();
+
+	ConfigurationService getConfigurationService();
+
+	ClassLoaderService getClassLoaderService();
+
+	BeanInstanceProducer getCustomTypeProducer();
+
+	ManagedBeanRegistry getManagedBeanRegistry();
+
+	ModelsContext getModelsContext();
+
+	TypeConfiguration getTypeConfiguration();
 
 	/// Registry used to resolve annotation descriptors while binding.
 	default AnnotationDescriptorRegistry getAnnotationDescriptorRegistry() {
-		return getBootstrapContext().getModelsContext().getAnnotationDescriptorRegistry();
+		return getModelsContext().getAnnotationDescriptorRegistry();
 	}
 }

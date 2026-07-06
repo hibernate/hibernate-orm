@@ -41,7 +41,7 @@ public class CommonPluralAttributeProcessing {
 			JaxbPluralAttribute jaxbPluralAttribute,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final ModelsContext buildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext buildingContext = xmlDocumentContext.getModelsContext();
 		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
 
 		if ( jaxbPluralAttribute.isMutable() != null && !jaxbPluralAttribute.isMutable() ) {
@@ -158,7 +158,7 @@ public class CommonPluralAttributeProcessing {
 		if ( jaxbPluralAttribute.getMapKeyColumn() != null ) {
 			final MapKeyColumnJpaAnnotation columnAnn = (MapKeyColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.MAP_KEY_COLUMN,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			columnAnn.apply( jaxbPluralAttribute.getMapKeyColumn(), xmlDocumentContext );
 		}
@@ -238,7 +238,7 @@ public class CommonPluralAttributeProcessing {
 			// apply @OrderColumn in any of these cases
 			final OrderColumnJpaAnnotation orderColumnAnn = (OrderColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.ORDER_COLUMN,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 
 			if ( jaxbOrderColumn != null ) {
@@ -250,7 +250,7 @@ public class CommonPluralAttributeProcessing {
 		if ( listIndexBase != null ) {
 			final ListIndexBaseAnnotation annUsage = (ListIndexBaseAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.LIST_INDEX_BASE,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			annUsage.value( listIndexBase );
 		}

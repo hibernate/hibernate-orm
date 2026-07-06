@@ -14,12 +14,13 @@ import jakarta.persistence.Table;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderByComplianceViolation;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -52,12 +53,14 @@ public class OrderByMappingComplianceTest {
 				.build();
 
 		try {
-			final Metadata bootModel = new MetadataSources( ssr )
-					.addAnnotatedClass( Order.class )
-					.addAnnotatedClass( LineItem.class )
-					.buildMetadata();
+			final Metadata bootModel = MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources()
+							.addManagedClass( Order.class )
+							.addManagedClass( LineItem.class )
+			);
 
-			final SessionFactory sf = bootModel.buildSessionFactory();
+			final SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( bootModel );
 
 			try {
 				TransactionUtil2.inTransaction(

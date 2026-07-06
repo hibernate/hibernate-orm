@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.namingstrategy.components;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -15,6 +15,7 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -37,12 +38,13 @@ public class ComponentNamingStrategyTest {
 				.build();
 
 		try {
-			final MetadataSources ms = new MetadataSources( ssr );
-			ms.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
-
-			final Metadata metadata = ms.getMetadataBuilder()
-					.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
-					.build();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+					ssr,
+					new MappingSources()
+							.addManagedClass( Container.class )
+							.addManagedClass( Item.class ),
+					ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+			);
 
 			final PersistentClass pc = metadata.getEntityBinding( Container.class.getName() );
 			Property p = pc.getProperty( "items" );
@@ -64,12 +66,13 @@ public class ComponentNamingStrategyTest {
 				.build();
 
 		try {
-			final MetadataSources ms = new MetadataSources( ssr );
-			ms.addAnnotatedClass( Container.class ).addAnnotatedClass( Item.class );
-
-			final Metadata metadata = ms.getMetadataBuilder()
-					.applyImplicitNamingStrategy( ImplicitNamingStrategyComponentPathImpl.INSTANCE )
-					.build();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+					ssr,
+					new MappingSources()
+							.addManagedClass( Container.class )
+							.addManagedClass( Item.class ),
+					ImplicitNamingStrategyComponentPathImpl.INSTANCE
+			);
 
 			final PersistentClass pc = metadata.getEntityBinding( Container.class.getName() );
 			Property p = pc.getProperty( "items" );

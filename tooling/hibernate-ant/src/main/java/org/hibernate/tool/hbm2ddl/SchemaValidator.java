@@ -13,16 +13,14 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
@@ -43,7 +41,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 public class SchemaValidator {
 
 	public void validate(Metadata metadata) {
-		validate( metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+		validate( metadata, ( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry() );
 	}
 
 	public void validate(Metadata metadata, ServiceRegistry serviceRegistry) {
@@ -87,7 +85,6 @@ public class SchemaValidator {
 		String propertiesFile = null;
 		String cfgXmlFile = null;
 		List<String> mappingFiles = new ArrayList<>();
-		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			final CommandLineArgs parsedArgs = new CommandLineArgs();
@@ -112,7 +109,9 @@ public class SchemaValidator {
 				}
 				else {
 					if ( arg.endsWith( ".jar" ) ) {
-						parsedArgs.jarFiles.add( arg );
+						throw new IllegalArgumentException(
+								"Jar file mapping discovery is no longer supported: " + arg
+						);
 					}
 					else {
 						parsedArgs.mappingFiles.add( arg );
@@ -139,6 +138,12 @@ public class SchemaValidator {
 			}
 			ssrBuilder.applySettings( properties );
 		}
+		if ( parsedArgs.implicitNamingStrategy != null ) {
+			ssrBuilder.applySetting( MappingSettings.IMPLICIT_NAMING_STRATEGY, parsedArgs.implicitNamingStrategy );
+		}
+		if ( parsedArgs.physicalNamingStrategy != null ) {
+			ssrBuilder.applySetting( MappingSettings.PHYSICAL_NAMING_STRATEGY, parsedArgs.physicalNamingStrategy );
+		}
 
 		return ssrBuilder.build();
 	}
@@ -147,30 +152,13 @@ public class SchemaValidator {
 			CommandLineArgs parsedArgs,
 			StandardServiceRegistry serviceRegistry) {
 
-		final MetadataSources metadataSources = new MetadataSources(serviceRegistry);
+		final MappingSources mappingSources = new MappingSources();
 
 		for ( String filename : parsedArgs.mappingFiles ) {
-			metadataSources.addFile( filename );
+			mappingSources.addMappingFile( new File( filename ) );
 		}
 
-		for ( String filename : parsedArgs.jarFiles ) {
-			metadataSources.addJar( new File( filename ) );
-		}
-
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
-		if ( parsedArgs.implicitNamingStrategy != null ) {
-			metadataBuilder.applyImplicitNamingStrategy(
-					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, parsedArgs.implicitNamingStrategy )
-			);
-		}
-		if ( parsedArgs.physicalNamingStrategy != null ) {
-			metadataBuilder.applyPhysicalNamingStrategy(
-					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, parsedArgs.physicalNamingStrategy )
-			);
-		}
-
-		return (MetadataImplementor) metadataBuilder.build();
+		return MetadataBuildingHelper.buildMetadata( serviceRegistry, mappingSources );
 
 	}
 

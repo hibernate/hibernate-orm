@@ -78,7 +78,6 @@ import static java.util.Collections.singletonList;
  *
  * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
  * @see org.hibernate.cfg.Configuration#addSqlFunction
- * @see org.hibernate.boot.MetadataBuilder#applySqlFunction
  * @see org.hibernate.boot.model.FunctionContributor
  *
  * @author David Channon

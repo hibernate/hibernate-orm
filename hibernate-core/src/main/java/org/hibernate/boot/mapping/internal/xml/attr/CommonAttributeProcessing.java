@@ -48,7 +48,7 @@ public class CommonAttributeProcessing {
 
 		final AccessJpaAnnotation accessAnn = (AccessJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ACCESS,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		accessAnn.value( accessType );
 	}
@@ -61,11 +61,11 @@ public class CommonAttributeProcessing {
 		if ( attributeAccessor != null ) {
 			final AttributeAccessorAnnotation accessorAnn = (AttributeAccessorAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.ATTRIBUTE_ACCESSOR,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 
 			final ClassDetails strategyClassDetails = xmlDocumentContext
-					.getModelBuildingContext()
+					.getModelsContext()
 					.getClassDetailsRegistry()
 					.resolveClassDetails( attributeAccessor );
 			accessorAnn.strategy( strategyClassDetails.toJavaClass() );
@@ -74,7 +74,7 @@ public class CommonAttributeProcessing {
 		if ( StringHelper.isNotEmpty( jaxbAttribute.getLazyGroup() ) ) {
 			final LazyGroupAnnotation lazyGroup = (LazyGroupAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.LAZY_GROUP,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			lazyGroup.value( jaxbAttribute.getLazyGroup() );
 		}
@@ -100,7 +100,7 @@ public class CommonAttributeProcessing {
 		if ( includeInOptimisticLock != null ) {
 			final OptimisticLockAnnotation optLockAnn = (OptimisticLockAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.OPTIMISTIC_LOCK,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			optLockAnn.excluded( !includeInOptimisticLock );
 		}
@@ -134,7 +134,7 @@ public class CommonAttributeProcessing {
 			final FetchMode fetchMode = FetchMode.valueOf( jaxbFetchMode.value() );
 			final FetchAnnotation fetchAnn = (FetchAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.FETCH,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			fetchAnn.value( fetchMode );
 		}
@@ -150,7 +150,7 @@ public class CommonAttributeProcessing {
 			classAccessType,
 			declarer
 		);
-		memberDetails.applyAnnotationUsage( JpaAnnotations.TRANSIENT, xmlDocumentContext.getModelBuildingContext() );
+		memberDetails.applyAnnotationUsage( JpaAnnotations.TRANSIENT, xmlDocumentContext.getModelsContext() );
 	}
 
 	public static void applyMappedBy(
@@ -169,7 +169,7 @@ public class CommonAttributeProcessing {
 		if ( StringHelper.isNotEmpty( mapsId ) ) {
 			final MapsIdJpaAnnotation mapsIdUsage = (MapsIdJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.MAPS_ID,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			mapsIdUsage.value( mapsId );
 		}
@@ -186,7 +186,7 @@ public class CommonAttributeProcessing {
 
 		final OnDeleteAnnotation notFoundAnn = (OnDeleteAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.ON_DELETE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		notFoundAnn.action( action );
 	}

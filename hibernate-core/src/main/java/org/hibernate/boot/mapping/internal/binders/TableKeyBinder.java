@@ -526,7 +526,7 @@ public class TableKeyBinder {
 
 		final PrimaryKeyJoinColumn[] repeatableColumns = classDetails.getRepeatedAnnotationUsages(
 				PrimaryKeyJoinColumn.class,
-				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+				entityBinder.getBindingContext().getModelsContext()
 		);
 		return primaryKeyJoinColumns( repeatableColumns );
 	}
@@ -543,7 +543,7 @@ public class TableKeyBinder {
 
 		final PrimaryKeyJoinColumn[] repeatableColumns = classDetails.getRepeatedAnnotationUsages(
 				PrimaryKeyJoinColumn.class,
-				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+				entityBinder.getBindingContext().getModelsContext()
 		);
 		return ForeignKeySource.fromFirstSpecifiedPrimaryKeyJoinColumn( repeatableColumns );
 	}
@@ -556,7 +556,7 @@ public class TableKeyBinder {
 		Arrays.stream( primaryKeyJoinColumns ).forEach( (primaryKeyJoinColumn) -> result.add(
 				JoinColumnJpaAnnotation.toJoinColumn(
 						primaryKeyJoinColumn,
-						entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+						entityBinder.getBindingContext().getModelsContext()
 				)
 		) );
 		return result;
@@ -714,7 +714,7 @@ public class TableKeyBinder {
 	private String implicitCollectionKeyColumnName(CollectionTableBinding collectionTableBinding, Column referencedColumn) {
 		final AttributePath attributePath = collectionKeyAttributePath( collectionTableBinding );
 		return bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
 					@Override
@@ -886,7 +886,7 @@ public class TableKeyBinder {
 					&& !( simpleValue instanceof ToOne )
 					&& columnNamesMatch( simpleValue.getColumns(), referencedColumnNames ) ) {
 				if ( simpleValue instanceof BasicValue basicValue ) {
-					basicValue.resolve();
+					requireResolution( basicValue );
 				}
 				materializeUniqueKey( simpleValue, sourceRole );
 				return new ReferencedOwnerKey( property, simpleValue, simpleValue.getColumns() );
@@ -1060,6 +1060,14 @@ public class TableKeyBinder {
 		uniqueKeyMappingMaterializer.materializeUniqueKey(
 				ResolvedUniqueKey.from( value, metadataBuildingContext(), sourceRole )
 		);
+	}
+
+	private static BasicValue.Resolution<?> requireResolution(BasicValue basicValue) {
+		final BasicValue.Resolution<?> resolution = basicValue.getResolution();
+		if ( resolution == null ) {
+			throw new IllegalStateException( "BasicValue resolution has not been applied: " + basicValue );
+		}
+		return resolution;
 	}
 
 	private MetadataBuildingContext metadataBuildingContext() {

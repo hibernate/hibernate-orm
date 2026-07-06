@@ -48,10 +48,31 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			JdbcTypeIndicators sqlTypeIndicators,
 			JpaAttributeConverterCreationContext converterCreationContext,
 			MetadataBuildingContext context) {
+		final var typeConfiguration = context.getTypeConfiguration();
 		return fromInternal(
-				explicitJtdAccess,
-				explicitStdAccess,
-				explicitMutabilityPlanAccess,
+				explicitJtdAccess == null ? null : explicitJtdAccess.apply( typeConfiguration ),
+				explicitStdAccess == null ? null : explicitStdAccess.apply( typeConfiguration ),
+				explicitMutabilityPlanAccess == null ? null : explicitMutabilityPlanAccess.apply( typeConfiguration ),
+				converter( converterCreationContext, converterDescriptor ),
+				resolvedJavaType,
+				sqlTypeIndicators,
+				context
+		);
+	}
+
+	public static <T> NamedConverterResolution<T> from(
+			ConverterDescriptor<T,?> converterDescriptor,
+			BasicJavaType<?> explicitJtd,
+			JdbcType explicitStd,
+			MutabilityPlan<?> explicitMutabilityPlan,
+			Type resolvedJavaType,
+			JdbcTypeIndicators sqlTypeIndicators,
+			JpaAttributeConverterCreationContext converterCreationContext,
+			MetadataBuildingContext context) {
+		return fromInternal(
+				explicitJtd,
+				explicitStd,
+				explicitMutabilityPlan,
 				converter( converterCreationContext, converterDescriptor ),
 				resolvedJavaType,
 				sqlTypeIndicators,
@@ -69,14 +90,38 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			MetadataBuildingContext context) {
 		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
 		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
-		final var bootstrapContext = context.getBootstrapContext();
 		final Class<? extends AttributeConverter<T, ?>> converterClass =
-				bootstrapContext.getClassLoaderService().classForName( converterClassName );
+				context.getClassLoaderService().classForName( converterClassName );
+		final var converterDescriptor = ConverterDescriptors.of( converterClass );
+		final var typeConfiguration = context.getTypeConfiguration();
+		return fromInternal(
+				explicitJtdAccess == null ? null : explicitJtdAccess.apply( typeConfiguration ),
+				explicitStdAccess == null ? null : explicitStdAccess.apply( typeConfiguration ),
+				explicitMutabilityPlanAccess == null ? null : explicitMutabilityPlanAccess.apply( typeConfiguration ),
+				converter( converterCreationContext, converterDescriptor ),
+				null,
+				sqlTypeIndicators,
+				context
+		);
+	}
+
+	public static <T> NamedConverterResolution<T> from(
+			String name,
+			BasicJavaType<?> explicitJtd,
+			JdbcType explicitStd,
+			MutabilityPlan<?> explicitMutabilityPlan,
+			JdbcTypeIndicators sqlTypeIndicators,
+			JpaAttributeConverterCreationContext converterCreationContext,
+			MetadataBuildingContext context) {
+		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
+		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
+		final Class<? extends AttributeConverter<T, ?>> converterClass =
+				context.getClassLoaderService().classForName( converterClassName );
 		final var converterDescriptor = ConverterDescriptors.of( converterClass );
 		return fromInternal(
-				explicitJtdAccess,
-				explicitStdAccess,
-				explicitMutabilityPlanAccess,
+				explicitJtd,
+				explicitStd,
+				explicitMutabilityPlan,
 				converter( converterCreationContext, converterDescriptor ),
 				null,
 				sqlTypeIndicators,
@@ -91,30 +136,20 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	private static <T,S> NamedConverterResolution<T> fromInternal(
-			Function<TypeConfiguration, BasicJavaType<?>> explicitJtdAccess,
-			Function<TypeConfiguration, JdbcType> explicitStdAccess,
-			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			BasicJavaType<?> explicitJtd,
+			JdbcType explicitJdbcType,
+			MutabilityPlan<?> explicitMutabilityPlan,
 			JpaAttributeConverter<T,S> converter,
 			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			MetadataBuildingContext context) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-
 		//noinspection unchecked
-		final var explicitJtd =
-				explicitJtdAccess != null
-						? (JavaType<T>) explicitJtdAccess.apply( typeConfiguration )
-						: null;
+		final var explicitJavaType = (JavaType<T>) explicitJtd;
 
 		final var domainJtd =
-				explicitJtd != null
-						? explicitJtd
+				explicitJavaType != null
+						? explicitJavaType
 						: converter.getDomainJavaType();
-
-		final var explicitJdbcType =
-				explicitStdAccess != null
-						? explicitStdAccess.apply( typeConfiguration )
-						: null;
 
 		final var relationalJtd = converter.getRelationalJavaType();
 
@@ -124,8 +159,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 						: relationalJtd.getRecommendedJdbcType( sqlTypeIndicators );
 
 		final var mutabilityPlan = determineMutabilityPlan(
-				explicitMutabilityPlanAccess,
-				typeConfiguration,
+				explicitMutabilityPlan,
 				converter,
 				domainJtd
 		);
@@ -147,17 +181,12 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	private static <T> MutabilityPlan<T> determineMutabilityPlan(
-			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			TypeConfiguration typeConfiguration,
+			MutabilityPlan<?> explicitMutabilityPlan,
 			JpaAttributeConverter<T, ?> converter,
 			JavaType<T> domainJtd) {
 		//noinspection unchecked
-		final var explicitMutabilityPlan =
-				explicitMutabilityPlanAccess != null
-						? (MutabilityPlan<T>) explicitMutabilityPlanAccess.apply( typeConfiguration )
-						: null;
 		if ( explicitMutabilityPlan != null ) {
-			return explicitMutabilityPlan;
+			return (MutabilityPlan<T>) explicitMutabilityPlan;
 		}
 		else if ( converter.getConverterJavaType().getJavaTypeClass().isAnnotationPresent( Mutability.class ) ) {
 			return instantiateMutabilityPlan( converter.getConverterJavaType().getJavaTypeClass().getAnnotation( Mutability.class ) );

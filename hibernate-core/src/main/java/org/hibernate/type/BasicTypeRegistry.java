@@ -15,7 +15,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.service.UnknownServiceException;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -349,13 +348,13 @@ public class BasicTypeRegistry implements Serializable {
 		// if we are still building mappings, register this adhoc
 		// type via a unique code. (This is to support Envers.)
 		try {
-			final BootstrapContext bootstrapContext = getBootstrapContext();
-			final BasicType<J> existingAdHocBasicType = bootstrapContext.findAdHocBasicType( javaType, jdbcType );
+			final var metadataBuildingContext = typeConfiguration.getMetadataBuildingContext();
+			final BasicType<J> existingAdHocBasicType = metadataBuildingContext.findAdHocBasicType( javaType, jdbcType );
 			if ( existingAdHocBasicType != null ) {
 				return existingAdHocBasicType;
 			}
 			else {
-				bootstrapContext.registerAdHocBasicType( createdType );
+				metadataBuildingContext.registerAdHocBasicType( createdType );
 			}
 		}
 		catch (Exception ignore) {
@@ -363,10 +362,6 @@ public class BasicTypeRegistry implements Serializable {
 //			register( createdType );
 		}
 		return createdType;
-	}
-
-	private BootstrapContext getBootstrapContext() {
-		return typeConfiguration.getMetadataBuildingContext().getBootstrapContext();
 	}
 
 

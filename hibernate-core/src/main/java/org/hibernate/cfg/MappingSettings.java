@@ -28,7 +28,7 @@ public interface MappingSettings {
 	 * A default database catalog name to use for unqualified database
 	 * object (table, sequence, ...) names
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitCatalogName
+	 * @see org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getMappingDefaults()
 	 */
 	String DEFAULT_CATALOG = "hibernate.default_catalog";
 
@@ -36,7 +36,7 @@ public interface MappingSettings {
 	 * A default database schema (owner) name to use for unqualified
 	 * database object (table, sequence, ...) names
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitSchemaName
+	 * @see org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getMappingDefaults()
 	 */
 	String DEFAULT_SCHEMA = "hibernate.default_schema";
 
@@ -172,6 +172,7 @@ public interface MappingSettings {
 	 * @settingDefault {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean dialect-specific type code}
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForBoolean
 	 */
 	@Incubating
 	String PREFERRED_BOOLEAN_JDBC_TYPE = "hibernate.type.preferred_boolean_jdbc_type";
@@ -188,6 +189,7 @@ public interface MappingSettings {
 	 * @settingDefault {@link org.hibernate.type.SqlTypes#UUID}.
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForUuid
 	 */
 	@Incubating
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
@@ -204,6 +206,7 @@ public interface MappingSettings {
 	 * @settingDefault {@link org.hibernate.type.SqlTypes#NUMERIC}
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForDuration
 	 */
 	@Incubating
 	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
@@ -221,6 +224,7 @@ public interface MappingSettings {
 	 * @settingDefault {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}.
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForInstant
 	 */
 	@Incubating
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
@@ -245,6 +249,7 @@ public interface MappingSettings {
 	 * @settingDefault false
 	 *
 	 * @since 6.5
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#isPreferJavaTimeJdbcTypesEnabled
 	 */
 	@Incubating
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
@@ -303,6 +308,7 @@ public interface MappingSettings {
 	 * @see org.hibernate.type.SqlTypes#TABLE
 	 *
 	 * @since 6.6
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForArray
 	 */
 	@Incubating
 	String PREFERRED_ARRAY_JDBC_TYPE = "hibernate.type.preferred_array_jdbc_type";
@@ -404,8 +410,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code "default"}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy
-	 *
 	 * @since 5.0
 	 */
 	String IMPLICIT_NAMING_STRATEGY = "hibernate.implicit_naming_strategy";
@@ -415,8 +419,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@link org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl},
 	 * in which case physical names are taken to be identical to logical names.
-	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy
 	 *
 	 * @since 5.0
 	 */
@@ -457,8 +459,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code "default"}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyColumnOrderingStrategy
-	 *
 	 * @since 6.2
 	 */
 	String COLUMN_ORDERING_STRATEGY = "hibernate.column_ordering_strategy";
@@ -494,7 +494,6 @@ public interface MappingSettings {
 	 * {@link org.hibernate.annotations.DiscriminatorOptions#force
 	 * DiscriminatorOptions(force=true)}.
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect
 	 * @see org.hibernate.annotations.DiscriminatorOptions#force
 	 *
 	 * @settingDefault {@code false}
@@ -515,7 +514,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code false}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	String IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.implicit_for_joined";
@@ -533,7 +531,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code false}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
@@ -572,7 +569,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code false} (disabled)
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableGlobalNationalizedCharacterDataSupport(boolean)
 	 * @see Dialect#getNationalizationSupport
 	 * @see Nationalized
 	 */

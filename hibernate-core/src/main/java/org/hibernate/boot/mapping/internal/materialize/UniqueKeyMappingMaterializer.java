@@ -98,7 +98,7 @@ public class UniqueKeyMappingMaterializer {
 			List<Column> keyColumns,
 			String userProvidedName,
 			MetadataBuildingContext context) {
-		return context.getBuildingOptions().getImplicitNamingStrategy()
+		return context.getBuildingPlan().getImplicitNamingStrategy()
 				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 					@Override
 					public Identifier getTableName() {

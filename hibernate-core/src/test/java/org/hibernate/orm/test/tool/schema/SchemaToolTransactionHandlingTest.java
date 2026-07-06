@@ -8,8 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -188,9 +189,10 @@ public class SchemaToolTransactionHandlingTest {
 	}
 
 	private Metadata buildMappings(StandardServiceRegistry registry) {
-		return new MetadataSources( registry )
-				.addAnnotatedClass( MyEntity.class )
-				.buildMetadata();
+		return MetadataBuildingTestHelper.buildMetadata(
+				registry,
+				new MappingSources().addManagedClass( MyEntity.class )
+		);
 	}
 
 

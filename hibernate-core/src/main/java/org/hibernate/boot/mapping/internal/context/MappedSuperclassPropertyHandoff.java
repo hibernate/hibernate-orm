@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.context;
 
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -16,8 +17,10 @@ import org.hibernate.mapping.Property;
 /// `org.hibernate.mapping` objects produced for compatibility consumers.
 ///
 /// @since 9.0
+/// @author Steve Ebersole
 public record MappedSuperclassPropertyHandoff(
 		MappedSuperclassContributionView contribution,
+		AttributeUsageBinding attributeUsage,
 		PersistentClass owner,
 		Property property) {
 	public String attributeName() {

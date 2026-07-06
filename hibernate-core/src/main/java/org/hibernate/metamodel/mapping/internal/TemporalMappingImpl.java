@@ -95,9 +95,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		endingColumnMapping = endingColumnMapping( tableName, endingColumn, creationContext );
 
 		final var dialect = creationContext.getDialect();
-		if ( creationContext.getSessionFactory()
-				.getChangesetCoordinator()
-				.useServerTimestamp( dialect ) ) {
+		if ( creationContext.getChangesetCoordinator().useServerTimestamp( dialect ) ) {
 			currentTimestampFunctionName = dialect.currentTimestamp();
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );

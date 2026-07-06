@@ -44,7 +44,7 @@ public class PluralAnyMappingAttributeProcessing {
 
 		final ManyToAnyAnnotation manyToAnyAnn = (ManyToAnyAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.MANY_TO_ANY,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		applyAccess( jaxbHbmManyToAny.getAccess(), memberDetails, xmlDocumentContext );

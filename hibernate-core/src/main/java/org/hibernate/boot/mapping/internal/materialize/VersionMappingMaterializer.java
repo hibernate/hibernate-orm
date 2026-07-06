@@ -46,12 +46,14 @@ public class VersionMappingMaterializer {
 				bindingState,
 				bindingContext
 		);
-		CustomMappingBinder.callAttributeBinders(
-				contribution.member(),
-				typeBinding,
-				property,
-				bindingState,
-				bindingContext
+		bindingState.addAttributeCustomMapping(
+				CustomMappingBinder.attributeBinding(
+						contribution.member(),
+						typeBinding,
+						property,
+						bindingState,
+						bindingContext
+				)
 		);
 		bindingState.addVersionPropertyHandoff( new VersionPropertyHandoff( contribution, typeBinding, property ) );
 		return property;

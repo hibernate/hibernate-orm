@@ -24,7 +24,8 @@ import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
-import org.hibernate.boot.mapping.internal.binders.BasicValueBinder;
+import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
+import org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder;
 import org.hibernate.boot.mapping.internal.binders.ColumnBinder;
 import org.hibernate.boot.mapping.internal.binders.ComponentBinder;
 import org.hibernate.boot.mapping.internal.binders.CustomMappingBinder;
@@ -42,6 +43,7 @@ import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.binders.IdentifierGeneratorBindingPhase;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping;
@@ -82,7 +84,7 @@ import jakarta.annotation.Nullable;
 
 import static jakarta.persistence.GenerationType.AUTO;
 import static jakarta.persistence.GenerationType.IDENTITY;
-import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
+import static org.hibernate.boot.mapping.internal.binders.GenericComponentHelper.handleGenericComponentProperty;
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 
@@ -148,7 +150,7 @@ public class IdentifierMappingMaterializer {
 				table,
 				idValue
 		);
-		CustomMappingBinder.callAttributeBinders( idAttributeMember, typeBinding, idProperty, state, context );
+		deferAttributeBinders( idAttributeMember, typeBinding, idProperty );
 		addSelectableName( binding, idAttribute.getName(), column.getName() );
 
 		return materializeEntityIdentifierBinding(
@@ -191,13 +193,7 @@ public class IdentifierMappingMaterializer {
 		if ( declaresAttribute( type, aggregatedKeyMapping.getAttribute() ) ) {
 			typeBinding.setDeclaredIdentifierProperty( idProperty );
 		}
-		CustomMappingBinder.callAttributeBinders(
-				aggregatedKeyMapping.getAttribute().getMember(),
-				typeBinding,
-				idProperty,
-				state,
-				context
-		);
+		deferAttributeBinders( aggregatedKeyMapping.getAttribute().getMember(), typeBinding, idProperty );
 
 		final List<Column> columns = bindComponentIdentifierProperties(
 				type,
@@ -264,7 +260,7 @@ public class IdentifierMappingMaterializer {
 
 			final BasicValue basicValue = createBasicIdValue( table, member, type, typeBinding );
 			final Property rootProperty = createProperty( idAttribute.getName(), basicValue, member );
-			CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
+			deferAttributeBinders( member, typeBinding, rootProperty );
 
 			final BasicValue idClassValue = createBasicIdClassValue( table, member, idClassMember, typeBinding );
 			applyGeneratedValue( idClassValue, member, typeBinding );
@@ -318,7 +314,7 @@ public class IdentifierMappingMaterializer {
 			if ( idAttribute.getNature() == AttributeNature.BASIC ) {
 				final BasicValue basicValue = createBasicIdValue( table, member, type, typeBinding );
 				final Property rootProperty = createProperty( idAttribute.getName(), basicValue, member );
-				CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
+				deferAttributeBinders( member, typeBinding, rootProperty );
 
 				final BasicValue idClassValue = createBasicIdClassValue( table, member, idClassMember, typeBinding );
 				applyGeneratedValue( idClassValue, member, typeBinding );
@@ -512,7 +508,7 @@ public class IdentifierMappingMaterializer {
 					rootProperty.setUpdatable( false );
 					typeBinding.addProperty( rootProperty );
 				}
-				CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
+				deferAttributeBinders( member, typeBinding, rootProperty );
 
 				final BasicValue idClassValue = hasIdClass
 						? createBasicIdClassValue( table, member, idClassMember, typeBinding )
@@ -593,7 +589,7 @@ public class IdentifierMappingMaterializer {
 					rootProperty.setUpdatable( false );
 					typeBinding.addProperty( rootProperty );
 				}
-				CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
+				deferAttributeBinders( member, typeBinding, rootProperty );
 
 				if ( hasIdClass ) {
 					final ToOne identifierMapperToOne = (ToOne) toOne.copy();
@@ -734,7 +730,7 @@ public class IdentifierMappingMaterializer {
 		final MemberDetails member = idAttribute.getMember();
 		final BasicValue basicValue = createBasicIdValue( table, member, type, typeBinding );
 		final Property rootProperty = createProperty( idAttribute.getName(), basicValue, member );
-		CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
+		deferAttributeBinders( member, typeBinding, rootProperty );
 
 		final BasicValue idClassValue = createBasicIdClassValue( table, member, idClassMember, typeBinding );
 		applyGeneratedValue( idClassValue, member, typeBinding );
@@ -829,7 +825,7 @@ public class IdentifierMappingMaterializer {
 		);
 		final Property rootProperty = createProperty( idAttribute.getName(), toOne, member );
 		applyToOneIdentifierPropertyOptions( idAttribute, type, rootProperty, associationMember );
-		CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
+		deferAttributeBinders( member, typeBinding, rootProperty );
 
 		final ToOne identifierMapperToOne = (ToOne) toOne.copy();
 		identifierMapperValue.set( identifierMapperToOne );
@@ -887,7 +883,7 @@ public class IdentifierMappingMaterializer {
 				type.getClassDetails().getClassName(),
 				idAttribute.getName(),
 				null,
-				context.getBootstrapContext().getModelsContext()
+				context.getModelsContext()
 		);
 		final ClassDetails targetClassDetails = source.targetClassDetails( context );
 		final ClassDetails idClassMemberType = idClassMember.getType().determineRawClass();
@@ -1042,7 +1038,7 @@ public class IdentifierMappingMaterializer {
 				type.getClassDetails().getClassName(),
 				idAttribute.getName(),
 				null,
-				context.getBootstrapContext().getModelsContext()
+				context.getModelsContext()
 		);
 
 		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) state.getTypeBinder(
@@ -1156,7 +1152,7 @@ public class IdentifierMappingMaterializer {
 				type.getClassDetails().getClassName(),
 				idAttribute.getName(),
 				null,
-				context.getBootstrapContext().getModelsContext()
+				context.getModelsContext()
 		);
 		property.setOptional( false );
 		property.setCascade( source.cascades( state ), source.orphanRemoval() );
@@ -1255,9 +1251,9 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private BasicValue createBasicIdValue(Table table, MemberDetails member, TypeDetails type) {
-		final BasicValue basicValue = new BasicValue( state.getMetadataBuildingContext(), table );
+		final BasicValue basicValue = BasicValue.unregistered( state.getMetadataBuildingContext(), table );
 		basicValue.setTable( table );
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.identifier( member, type ),
 				null,
 				basicValue,
@@ -1265,8 +1261,17 @@ public class IdentifierMappingMaterializer {
 				state,
 				context
 		);
+		state.addAttributeValueResolution( new BasicIdValueResolutionBinding( resolutionInput ) );
 		validateIdentifierSelectable( basicValue, member );
 		return basicValue;
+	}
+
+	private record BasicIdValueResolutionBinding(
+			BasicValueResolutionBuilder.Input input) implements AttributeBindingPhase.ValueResolution {
+		@Override
+		public void resolveValue() {
+			BasicValueMappingMaterializer.applyResolution( input );
+		}
 	}
 
 	private static void validateIdentifierSelectable(BasicValue basicValue, MemberDetails member) {
@@ -1340,7 +1345,7 @@ public class IdentifierMappingMaterializer {
 			return;
 		}
 
-		GeneratorBinder.resolveGeneratedValueGenerator(
+		IdentifierGeneratorBindingPhase.resolveGeneratedValueGenerator(
 				typeBinding,
 				idValue,
 				member,
@@ -1446,7 +1451,6 @@ public class IdentifierMappingMaterializer {
 		}
 
 		final var classDetailsRegistry = state.getMetadataBuildingContext()
-				.getBootstrapContext()
 				.getModelsContext()
 				.getClassDetailsRegistry();
 		final String packageInfoName = className.substring( 0, packageEnd ) + ".package-info";
@@ -1543,11 +1547,15 @@ public class IdentifierMappingMaterializer {
 				member,
 				ColumnDefault.class,
 				state.getMetadataBuildingContext().getMetadataCollector().getDatabase().getDialect(),
-				state.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				state.getMetadataBuildingContext().getModelsContext()
 		);
 		if ( columnDefault != null ) {
 			column.setDefaultValue( columnDefault.value() );
 		}
+	}
+
+	private void deferAttributeBinders(MemberDetails member, RootClass typeBinding, Property property) {
+		state.addAttributeCustomMapping( CustomMappingBinder.attributeBinding( member, typeBinding, property, state, context ) );
 	}
 
 	private jakarta.persistence.Column columnAnnotation(MemberDetails member, @Nullable MemberDetails idClassMember) {

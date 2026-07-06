@@ -42,7 +42,7 @@ public class EmbeddedIdAttributeProcessing {
 
 		final EmbeddedIdJpaAnnotation idAnn = (EmbeddedIdJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.EMBEDDED_ID,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		applyAccess( jaxbEmbeddedId.getAccess(), memberDetails, xmlDocumentContext );
@@ -51,7 +51,7 @@ public class EmbeddedIdAttributeProcessing {
 		if ( StringHelper.isNotEmpty( jaxbEmbeddedId.getTarget() ) ) {
 			final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
 					XmlAnnotations.TARGET,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			targetAnn.value( determineTargetName( jaxbEmbeddedId.getTarget(), xmlDocumentContext ) );
 		}

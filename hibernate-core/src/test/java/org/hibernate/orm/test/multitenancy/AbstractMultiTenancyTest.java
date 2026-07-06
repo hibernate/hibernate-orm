@@ -11,14 +11,15 @@ import org.hibernate.SessionException;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.query.Query;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -208,12 +209,10 @@ public abstract class AbstractMultiTenancyTest {
 				.applySettings( settings )
 				.build();
 
-		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-		for ( Class annotatedClasses : getAnnotatedClasses() ) {
-			metadataSources.addAnnotatedClass( annotatedClasses );
-		}
-
-		Metadata metadata = metadataSources.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+				(StandardServiceRegistry) serviceRegistry,
+				getAnnotatedClasses()
+		);
 
 		HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
 		tool.injectServices( serviceRegistry );

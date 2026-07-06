@@ -14,7 +14,6 @@ import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
@@ -43,9 +42,9 @@ public class BindingOptionsImpl implements BindingOptions {
 	public BindingOptionsImpl(MetadataBuildingContext metadataBuildingContext) {
 		this(
 				metadataBuildingContext,
-				metadataBuildingContext.getBuildingOptions().createImplicitDiscriminatorsForJoinedInheritance(),
-				metadataBuildingContext.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance(),
-				metadataBuildingContext.getBuildingOptions().shouldImplicitlyForceDiscriminatorInSelect(),
+				metadataBuildingContext.getBuildingPlan().createImplicitDiscriminatorsForJoinedInheritance(),
+				metadataBuildingContext.getBuildingPlan().ignoreExplicitDiscriminatorsForJoinedInheritance(),
+				metadataBuildingContext.getBuildingPlan().shouldImplicitlyForceDiscriminatorInSelect(),
 				FetchType.EAGER
 		);
 	}
@@ -68,11 +67,9 @@ public class BindingOptionsImpl implements BindingOptions {
 			boolean ignoreExplicitDiscriminatorsForJoinedInheritance,
 			boolean shouldImplicitlyForceDiscriminatorInSelect,
 			FetchType defaultToOneFetchType) {
-		final boolean globallyQuote = metadataBuildingContext.getBuildingOptions().getMappingDefaults().shouldImplicitlyQuoteIdentifiers();
+		final boolean globallyQuote = metadataBuildingContext.getBuildingPlan().getMappingDefaults().shouldImplicitlyQuoteIdentifiers();
 		final boolean skipColumnDefinitions = metadataBuildingContext
-				.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ConfigurationService.class )
+				.getConfigurationService()
 				.getSetting(
 						AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS,
 						StandardConverters.BOOLEAN,

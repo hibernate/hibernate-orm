@@ -76,8 +76,7 @@ public abstract class PersistentTableStrategy {
 
 		final ConfigurationService configService =
 				mappingModelCreationProcess.getCreationContext()
-						.getBootstrapContext().getServiceRegistry()
-						.requireService( ConfigurationService.class );
+						.getConfigurationService();
 		boolean createIdTables = configService.getSetting(
 				CREATE_ID_TABLES,
 				StandardConverters.BOOLEAN,

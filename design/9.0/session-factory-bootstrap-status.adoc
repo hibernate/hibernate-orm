@@ -14,7 +14,7 @@ follow-up remains?", not preserve historical PoC reasoning.
 
 == Current Shape
 
-`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap` is the canonical
+`org.hibernate.boot.pipeline.internal.BootstrapPipeline` is the canonical
 internal facade for one-shot bootstrap.
 
 It supports:
@@ -23,8 +23,8 @@ It supports:
 * `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor` plus integration
   settings
 * schema generation for those source shapes
-* already-resolved `SessionFactoryBootstrapRequest`
-* metadata resolution through `SessionFactoryBootstrap.resolveMetadata(...)`
+* already-resolved `BootstrapPipelineRequest`
+* metadata resolution through `BootstrapPipeline.resolveMetadata(...)`
 
 The public JPA provider methods in `HibernatePersistenceProvider` delegate to
 this facade for EntityManagerFactory creation and schema generation.
@@ -34,9 +34,9 @@ this facade for EntityManagerFactory creation and schema generation.
 The old JPA two-phase builder facade has been removed.  The surviving use cases
 are explicit pipeline operations:
 
-* EMF/SF creation uses `SessionFactoryBootstrap.build(...)`.
-* Schema generation uses `SessionFactoryBootstrap.generateSchema(...)`.
-* Metadata inspection uses `SessionFactoryBootstrap.resolveMetadata(...)`.
+* EMF/SF creation uses `BootstrapPipeline.build(...)`.
+* Schema generation uses `BootstrapPipeline.generateSchema(...)`.
+* Metadata inspection uses `BootstrapPipeline.resolveMetadata(...)`.
 * Resolved-setting assertions use `SettingsResolver` products.
 
 The public native staged factory-builder surface has also been removed:
@@ -66,27 +66,25 @@ descriptor-backed inputs rather than settings-backed side channels.
 
 == Native Compatibility
 
-`Configuration`, `MetadataSources`, `MetadataBuilder`, and `Metadata` still
-exist as compatibility surfaces.
+`Configuration` and `Metadata` remain as compatibility surfaces.
+`MetadataSources`, `MetadataBuilder`, `SessionFactoryBuilder`, and
+`Metadata#buildSessionFactory()` have been removed.  `Metadata` is now a thin
+resolved-model inspection view; unlike the staged source/builder APIs, it does
+not currently need to be removed as part of the bootstrap cleanup.
 
 Current routing:
 
 * `Configuration#buildSessionFactory(...)` builds metadata, collects
   factory-level customizations into `SessionFactoryOptionsCollector`, and calls
   `SessionFactoryPipeline`.
-* `Metadata#buildSessionFactory()` is a temporary bridge into
-  `SessionFactoryPipeline`.
-* The default `MetadataBuilderImpl` path routes through `MetadataResolver` and
-  returns a `MetadataImplementor` view backed by `ResolvedMetadata`.
+* Direct native bootstrap should use `HibernatePersistenceConfiguration`.
+* Metadata resolution returns a `MetadataImplementor` view backed by
+  `ResolvedMapping`.
 
-Longer term, these native surfaces should converge on a smaller replacement
-native bootstrap API before deprecation.
-
-Cleanup reminder: once that replacement API is concrete, mark the remaining
-legacy staged bootstrap contracts as deprecated and `@Remove`.  Cover
-`MetadataBuilder`, `MetadataSources`, `Metadata`, staged `Configuration`
-entry points, and any surviving `SessionFactoryBuilder` /
-`EntityManagerFactoryBuilder` API, SPI, service, or implementation classes.
+Longer term, decide how much of `Configuration` should remain as a native
+compatibility facade now that the staged source/builder/factory APIs are gone.
+Keep `Metadata` as the public resolved-model inspection contract unless later
+work uncovers a concrete reason it cannot serve that role.
 
 == Construction Handoff
 
@@ -99,19 +97,801 @@ The construction seam is implemented:
 * `SessionFactoryPipeline`
 * `ResolvedSessionFactorySettings`
 * `SessionFactoryConstructionIdentity`
+* `SessionFactoryConstructionState`
 
-The ORM default construction path now prepares several internal products before
+The ORM default construction path now builds several internal products before
 calling `SessionFactoryImpl`:
 
-* `SessionFactoryRuntimePreparation`
-* `SessionFactoryConstructionPreparation`
-* `SessionFactoryServicePreparation`
-* `SessionFactoryIntegratorPreparation`
+* `SessionFactoryRuntimeComponentsBuilder` / `SessionFactoryRuntimeComponents`
+* `SessionFactoryConstructionPlanBuilder` / `SessionFactoryConstructionPlan`
+* `StandardServiceComponentsBuilder` / `StandardServiceComponents`
+* `SessionFactoryIntegratorLifecycle`
+* `SessionFactoryModelBuilder` / `InFlightSessionFactoryModel`
+
+=== Provisional Naming Grid
+
+The current naming is intentionally provisional, but the bootstrap code should
+avoid using one noun for both a process and the thing produced by that process.
+For now:
+
+* `*Builder` means an object or static helper that assembles construction
+  products from multiple inputs and may encode ordering decisions.
+* `*Factory` should be reserved for simpler creation contracts with little
+  orchestration.
+* `*Plan` means constructor inputs, instructions, identity, or other intended
+  construction shape rather than initialized runtime services.
+* `*Components` means already-created pieces that can be assigned into
+  `SessionFactoryImpl` or used to continue construction.
+* `InFlight*` means a two-phase product that is deliberately incomplete when
+  first created.
+* `*Lifecycle` means a callback/lifecycle bridge rather than a construction
+  product.
+
+This is not intended as final authoritative terminology.  It is a guardrail to
+keep `Preparation` from meaning builder, product, and lifecycle adapter at the
+same time.
+
+The same vocabulary now applies to metadata binding.  `MappingResolutionOptions`
+names the resolved instructions used while binding boot metadata.  The legacy
+`MetadataBuildingOptions` contract and `MetadataBuildingContext#getBuildingOptions()`
+accessor have been removed in favor of `MappingResolutionOptions` and
+`MetadataBuildingContext#getBuildingPlan()`.  `MappingPreferences` is modeled as a
+narrow view of the metadata building plan for Java/model-to-JDBC representation
+choices.  Follow-up cleanup renamed the obvious internal variables and parameters
+from `options` / `buildingOptions` to `buildingPlan` where they now hold a
+`MappingResolutionOptions`.
+
+Resolved bootstrap paths and legacy `Metadata -> SessionFactory` compatibility
+paths now both enter the coordinator through `SessionFactoryConstructionState`.
+When the metadata is backed by `ResolvedMapping`, that state carries the
+retained `BootBindingModel` into runtime/JPA metamodel creation.  The remaining
+intentional no-`BootBindingModel` compatibility path is direct
+`SessionFactoryImpl` reconstruction from already-serialized legacy
+metadata/options, where no resolved binding product exists.
+
+`InFlightSessionFactoryModel` is deliberately an in-flight, two-phase
+construction product rather than a completed model product.  `SessionFactoryModelBuilder` creates the
+runtime metamodel shell, query engine, SQL translation engine, mapping
+metamodel, and runtime fetch-profile registry before the mapping model is
+finished.  The factory then assigns those products to `SessionFactoryImpl`
+fields before calling `finishModelInitialization(...)`, because
+mapping-model/persister initialization still calls back through the partially
+constructed factory for query and SQL infrastructure.
+
+SQL AST creation no longer exposes `SqlAstCreationContext#getSessionFactory()`.
+The retained SQL translation engine is built from a `SqlTranslationContext`
+implementation, which names the runtime metamodels, session-factory options,
+query-engine facts, wrapper options, and fetch-profile registry needed for SQL
+translation without making the factory itself the context contract.
+
+This should not be mistaken for a clean separation of independent named
+products.  It is an ordering bundle for mutually dependent runtime products:
+the query engine needs a runtime metamodel shell, the SQL translation context is
+retained at runtime but includes fetch profiles that can only be populated after
+persisters exist, and the mapping metamodel still needs factory callbacks while
+it is being completed.  This names and contains the current ordering problem as
+temporary scaffolding until runtime model creation no longer depends on
+callbacks through an incomplete `SessionFactoryImpl`.
 
 `SessionFactoryImpl` is slimmer, but still owns the hard parts: runtime
 metamodel creation, query engine creation, SQL translation engine creation,
 cache priming, metadata validation/order finalization, session option templates,
 `TypeConfiguration.scope(this)`, observer firing, and failure cleanup.
+
+=== Runtime Model Creation Context Audit
+
+`RuntimeModelCreationContext#getSessionFactory()` remains the main reason
+runtime model creation must call back through an incomplete `SessionFactoryImpl`.
+The current usages fall into several buckets:
+
+* Stored runtime owner references.  Entity persisters, collection persisters,
+  identifier/natural-id mappings, audit mappings, and discriminated-association
+  mappings capture the `SessionFactoryImplementor` and keep it for normal
+  runtime behavior.  Identifier/natural-id, audit, and
+  discriminated-association mappings now retain a `SessionFactoryAccess`
+  handle instead of storing the concrete factory directly.  Entity and
+  collection persisters still capture the concrete factory through the access
+  object because they are broad hot-path runtime owners.  CTE mutation
+  strategies and temporary-table strategies also keep the factory for runtime
+  behavior, but they are outside `RuntimeModelCreationContext` usage.
+* Specific service/capability lookups.  Several callers only need
+  `getWrapperOptions()`, `getSqlStringGenerationContext()`,
+  `getChangesetCoordinator()`, `getMappingMetamodel()`, or factory options.
+  The first narrow accessor migration moved the cheap direct lookups for
+  wrapper options, SQL string generation context, changeset coordinator, and
+  mapping metamodel access off incomplete-factory callbacks.  The inspected
+  `ManagedBeanRegistry` hit is outside `RuntimeModelCreationContext` usage and
+  is not part of that slice.
+* Fetch/query planning helpers.  `FetchOptionsHelper` callers pass the whole
+  factory even though they primarily need options, dialect/type information, and
+  mapping/query infrastructure.  The runtime model creation callers now use the
+  in-flight `MappingModelCreationProcess` as a narrow associated-persister
+  resolver instead of passing the factory to `FetchOptionsHelper`.
+* Proxy/bytecode integration.  Proxy factory creation currently receives the
+  whole factory.  This likely needs a narrower proxy-creation context or a
+  deliberate decision that proxy factories remain factory-aware.
+* JPA/runtime metamodel bridge cases.  `AttributeFactory` and related JPA
+  metamodel code sometimes reach through the runtime context to the mapping
+  metamodel.  These should use the existing domain model / mapping metamodel
+  access instead of the factory where possible.
+
+The next implementation slices should continue reducing incomplete factory
+callbacks without trying to remove `getSessionFactory()` wholesale.
+
+Remaining `RuntimeModelCreationContext#getSessionFactory()` work should proceed
+in this order:
+
+1. Continue the delayed SessionFactory-reference migration selectively.
+   `SessionFactoryConstructionPlan` now carries a
+   `DelayedSessionFactoryReference`, and `SessionFactoryImpl` injects the
+   completed factory reference early in construction.  Lower-risk mapping
+   objects can retain `SessionFactoryAccess`; broad runtime owners such
+   as entity and collection persisters should stay concrete until there is a
+   clearer reason to pay the extra indirection across their large runtime
+   surface.  `SessionFactoryIntegratorLifecycle` also uses
+   `SessionFactoryAccess` now; its legacy callbacks still receive the concrete
+   factory, but the lifecycle object itself no longer stores one directly.
+2. Continue narrowing runtime SQL/table-group collaborators.  SQL AST creation
+   now has a named `SqlTranslationContext` instead of
+   `SqlAstCreationContext#getSessionFactory()`, but some table-group paths still
+   obtain the finished factory through load/query influencers because they are
+   runtime creation paths, not just boot-time model assembly.
+3. Isolate proxy factory creation behind a proxy creation context.  The proxy
+   factory currently receives the whole `SessionFactoryImplementor`; either keep
+   that as an intentional runtime-aware contract or replace it with a smaller
+   proxy/bytecode creation capability.
+4. Revisit late-copy/mutability cases separately.  The remaining helper hit
+   captures the factory for later `Type` deep-copy behavior, so it should not be
+   treated as an easy bootstrap callback.  It belongs with a broader type-system
+   runtime-context cleanup.
+
+The goal of these slices is to remove hidden callbacks through an incomplete
+factory during model creation.  Some completed runtime model objects may still
+legitimately retain the finished factory unless and until ORM gets a different
+runtime owner abstraction.
+
+The service-registry creation path now accepts `SessionFactoryAccess` rather
+than the concrete incomplete factory.  `SessionFactoryImpl` still builds the
+`SessionFactoryServiceRegistry` directly, while
+`StandardServiceComponentsBuilder` is limited to standard-service-backed
+constructor inputs prepared by `SessionFactoryConstructionPlanBuilder` and
+carried in `SessionFactoryConstructionPlan`.  `StandardServiceComponents` also
+carries the standard service registry so later bootstrap builders can use the
+cached component bundle without losing registry access.  Some
+session-factory-scoped services still dereference the access object when they
+are actually initialized.
+
+=== Bootstrap Service-Registry Usage Audit
+
+Focused audit of bootstrap-facing service-registry usage after introducing
+`StandardServiceComponents`:
+
+==== Bucket 1: Narrow Standard-Service-Backed Contexts
+
+These usages already map to standard services.  The current slice keeps broad
+extension contracts intact while narrowing the internal bootstrap helper
+dependencies:
+
+* `SessionFactoryConstructionCoordinator` producer selection
+  * uses `ClassLoaderService` to discover `SessionFactoryProducer`
+    implementations
+  * uses `ConfigurationService` to read
+    `hibernate.session_factory_producer`
+  * implemented shape: resolve the producer through a small internal
+    producer-selection context backed by those two services, without building
+    the full `StandardServiceComponents` bundle before custom producer
+    selection
+  * not all of `SessionFactoryConstructionCoordinator` should move at once:
+    `ConstructionRequest#getServiceRegistry()` is still part of the
+    `SessionFactoryProducer` SPI surface and should remain until there is a
+    deliberate replacement for that extension contract
+* entry-point source contribution adapters in `BootstrapPipeline` that
+  enable archive/resource discovery
+  * use `ClassLoaderService` for
+    `MappingSources.from(PersistenceUnitDescriptor, ...)` and
+    `MappingSources.from(HibernatePersistenceConfiguration, ...)`
+  * implemented shape: the scanning-aware overloads now take
+    `ContributionDiscoveryContext`; the entry-point registry lookup is an
+    edge adapter that creates this context
+  * not every `MappingSources.from(...)` overload belongs in this
+    bucket: the `MappingSources` and plain Jakarta
+    `PersistenceConfiguration` overloads mostly copy explicit declarations and
+    do not need service access
+
+==== Bucket 2: Settings Resolution Context
+
+`SessionFactorySettingsResolver` translates resolved configuration values into
+`ResolvedSessionFactorySettings`.  These service uses are settings-resolution
+inputs, not constructor handoff leaks:
+
+* `StrategySelector` for configured strategies
+* `TransactionCoordinatorBuilder` for the default connection handling mode
+* `JdbcServices` for dialect-derived defaults
+* `RegionFactory` for cache defaults
+* multitenancy helper lookups
+
+The resolver now creates an internal `SessionFactorySettingsResolutionContext`
+at the registry boundary and threads it through helpers that need those
+standard services.  The public/static resolver entry point still accepts
+`ServiceRegistry`, and `ResolvedSessionFactorySettings` still carries the
+`StandardServiceRegistry`, because those are part of the current bootstrap
+handoff contract.
+
+==== Bucket 3: Narrowed Registry Adapters
+
+`MappingSourcePreparationContext` no longer retains a raw `ServiceRegistry`.  It now
+carries the actual source-collection inputs:
+
+* `ModelsContext`
+* `ClassLoaderService`
+* XML binding setting access used by `MappingBinder`
+
+The registry-taking constructor remains only as an edge adapter.
+
+==== Bucket 4: Later BootstrapContext Work
+
+Legacy boot internals such as `MetadataImpl`, `SessionFactoryOptionsBuilder`,
+and `BootstrapContext`-backed paths still expose or consume broader registry
+access.  These are not good
+`StandardServiceComponents` migration targets yet because they belong to the
+larger `BootstrapContext` and legacy-native-bootstrap compatibility story.
+
+=== BootstrapContext Usage Audit
+
+`BootstrapContext` is currently more than one context.  It is a metadata-build
+coordination context, a source-discovery context, a standard-service shortcut,
+a metadata-builder customization store, and a temporary bootstrap resource
+holder.  That breadth is why it is difficult to remove or replace in one step.
+
+==== Context Taxonomy
+
+Use this taxonomy when deciding whether a remaining `BootstrapContext` use
+should move, stay visible, or become a new phase-specific contract.
+
+[cols="1,3,3", options="header"]
+|===
+| Contract
+| Role
+| Belongs here
+
+| `BootstrapContext`
+| Bootstrap-owned root object for compatibility and temporary boot resources.
+It is the current bridge for native bootstrap APIs and extension contracts.
+| JPA temporary class loader ownership, bootstrap lifecycle/release hooks,
+extension-facing bootstrap state, and compatibility access while an explicit
+replacement does not exist.
+
+| `MappingResolutionOptions`
+| Resolved instructions for building metadata.
+| Mapping defaults, model preferences, XML enablement, CDI-extension policy,
+cache/naming choices, and other resolved options that should be read as plan
+inputs rather than discovered through services.
+
+| `MetadataBuildingContext`
+| Current metadata-build operation state.
+| Contributor, effective defaults, metadata collector, object-name normalizer,
+type-definition registry, JPA compliance, and current build-time decisions such
+as audit and temporal-table strategy.
+
+| `MappingResolutionServices`
+| Named service access needed while building metadata.
+| Standard service registry bridge, configuration service, class loading,
+temp-class-loader-aware `ClassLoaderAccess`, managed beans, custom type
+production, `ModelsContext`, `TypeConfiguration`, JDBC services, change-set
+coordination, and strategy selection.
+
+| Phase-specific contexts
+| Narrow adapters for one phase of the metadata pipeline.
+| `BindingContext`, `XmlDocumentContext`, discovery contexts, runtime-model
+creation contexts, and similar contracts that should expose only the inputs
+their phase naturally consumes.
+|===
+
+The intent is not to make `MetadataBuildingContext` a new grab bag.  If a
+dependency is only needed by XML, source discovery, binding, or runtime-model
+creation, prefer a phase context.  If it is a service needed across metadata
+building, prefer `MappingResolutionServices`.  If it is current build
+state or a resolved build decision, prefer `MetadataBuildingContext` or
+`MappingResolutionOptions`.
+
+==== Remaining `MetadataBuildingContext#getBootstrapContext()` Uses
+
+After the narrow accessor, service-component, root-context input,
+`BindingContextImpl` construction, converter-transfer, ad-hoc basic-type, and
+XML/source-processing slices, as well as the isolated binder/helper cleanup, the
+remaining direct uses are structural rather than casual service lookups.  Root
+`MetadataBuildingContext` construction now flows through
+`MetadataBuildingContextRootInput`, so contributed contexts no longer manually
+re-thread bootstrap state at each call site.  `BindingContextImpl` is now
+constructed from `MetadataBuildingContext`, so binding implementation creation
+no longer derives from `BootstrapContext`.  Bootstrap-collected attribute
+converters and ad-hoc basic type lookup/registration are now exposed through
+`MetadataBuildingContext`.  XML processing now receives
+`MetadataBuildingContext` as its source-processing context instead of accepting
+`BootstrapContext` directly.
+Mapping-model helper cleanup removed the direct mapping-object
+`MetadataBuildingContext#getBootstrapContext()` uses that were just forwarding
+to class loading, bean access, type configuration, or service-component
+capabilities.  The remaining materializer package usage is not direct
+`BootstrapContext` access; it is the transitional use of
+`MetadataBuildingContext` as the mapping-object creation context.
+
+The remaining production uses now mostly fall into separate buckets:
+
+* explicit bridge/default methods on `MetadataBuildingContext` and
+  `InFlightMetadataCollector`
+* bootstrap pipeline/product construction where `BootstrapContext` is still an
+  explicit input or output
+* materialization and runtime-model paths that still need a more focused
+  binding, materialization, or runtime-model creation context
+
+==== Bucket 1: True Metadata/Source-Model Coordination
+
+Many usages are legitimate metadata-building inputs:
+
+* `ModelsContext` drives annotation/model inspection across the annotation,
+  XML, and new binding-model binders.
+* `TypeConfiguration`, `SqmFunctionRegistry`, custom type production, and
+  ad-hoc basic type registration are part of type/function resolution while
+  metadata is still being built.
+* metadata-builder customizations such as SQL functions, auxiliary database
+  objects, converters, and cache-region definitions are consumed while
+  producing the boot metadata model.
+
+These should not be treated as simple service-registry leaks.  Longer term they
+may split into smaller metadata-build contexts, but they belong to the metadata
+resolution/binding work rather than to `StandardServiceComponents`.
+
+==== Bucket 2: Source Discovery and Temporary Bootstrap Resources
+
+Scanning and class-loading state is also boot-only, but it has a narrower role:
+
+* `ClassLoaderService`, `ClassLoaderAccess`, JPA temporary class loader,
+  scanner setting, archive descriptor factory, and Jandex view are used while
+  discovering and interpreting mapping sources.
+* `BootstrapContext#release()` exists largely because some of this state is
+  temporary and should not survive as runtime state.
+
+This bucket points toward a smaller discovery/source-collection context.  The
+new `ContributionDiscoveryContext` and the narrowed `MappingSourcePreparationContext`
+are first examples of this direction.
+
+==== Bucket 3: Standard-Service Shortcut Leakage
+
+Some code reaches through `BootstrapContext#getServiceRegistry()` even though
+the real dependency is an already-named service available from
+`BootstrapContext` or from a small purpose-specific context.
+
+Examples:
+
+* `MetadataBuildingContextRootImpl` reads settings through
+  `getServiceRegistry().requireService(ConfigurationService.class)`, even
+  though `BootstrapContext#getConfigurationService()` already exists.
+* tenant-id, audit, temporal-table, generator, and value/type helper paths use
+  the registry for focused service lookups such as configuration, bean access,
+  class loading, JDBC services, or changelog suppliers.
+* `BindingContext` and `MetadataBuildingContext` default methods expose the raw
+  registry, which makes the broader shortcut convenient.
+
+This is the best first implementation slice for `BootstrapContext` cleanup:
+replace direct registry lookups with existing narrow accessors where available,
+and introduce narrow helper contexts only when a repeated service group becomes
+clear.
+
+First implementation slice: `MetadataBuildingContext` now exposes narrow
+building-time accessors for `ConfigurationService`, class loading, managed
+beans, custom type production, `ModelsContext`, `TypeConfiguration`,
+`JdbcServices`, and `ChangesetCoordinator`, with `getServiceRegistry()` retained
+as a bridge for adapter contracts that still require a registry.  The obvious direct
+`getBootstrapContext().getServiceRegistry()` call sites have been migrated to
+these accessors, or to `RuntimeModelCreationContext#getConfigurationService()`
+for runtime temporary-table preparation.  The remaining direct registry bridge
+methods are concentrated on `MetadataBuildingContext` and `BindingContext`.
+
+Service-component follow-up slice: `MappingResolutionServices` now owns
+the service-oriented dependencies used during metadata building.  The real root
+context stores a bootstrap-backed component object, and
+`MetadataBuildingContext` service accessors delegate to that object rather than
+directly to `BootstrapContext`.  `getBootstrapContext()` remains as a
+compatibility escape hatch, but service-style access is now isolated behind a
+metadata-building-specific contract.
+
+Second service-component slice: the component contract now also names the
+bootstrap-adjacent services still needed by metadata building: typed standard
+service registry access, temp-class-loader-aware `ClassLoaderAccess`, and
+strategy selection.  `JpaCompliance` is exposed directly from
+`MetadataBuildingContext`, since it describes metadata-building behavior rather
+than a service component.  Several remaining
+`MetadataBuildingContext#getBootstrapContext()` call sites were migrated to this
+surface, including generator-compliance checks, collection type bean creation,
+tenant credentials lookup, class loading, and common type/model/bean lookups.
+The remaining direct calls are intentionally more structural: contributed
+metadata-building context creation, bootstrap attribute-converter transfer,
+XML categorization/processing APIs still accepting `BootstrapContext`,
+additional managed-resource processing, and ad-hoc basic type registration.
+
+Annotation-binder follow-up slice: legacy annotation binding code now uses the
+narrow `MetadataBuildingContext` accessors for model access, type configuration,
+managed beans, class loading, configuration settings, and custom type
+production.  The remaining direct `BootstrapContext` access in this area is
+limited to compatibility/default bridge methods or code that accepts
+`BootstrapContext` directly rather than deriving it from
+`MetadataBuildingContext`.
+
+Follow-up slice: `BindingContext` now exposes binding-time accessors for
+`MappingResolutionOptions`, `ConfigurationService`, class loading, custom type
+production, managed beans, `ModelsContext`, and `TypeConfiguration`.
+`BindingContext` no longer exposes `BootstrapContext`; its implementation may
+still unpack a bootstrap context at construction time, but the binding contract
+now names the individual binding-time dependencies.
+
+XML follow-up slice: `XmlDocumentContext` remains a separate XML-specific
+adapter, but it no longer exposes `BootstrapContext`.  It now names the XML-time
+dependencies used by XML processing: `ModelsContext`, class loading,
+`TypeConfiguration`, and `JdbcServices`.  Its implementation may still unpack a
+bootstrap context at construction time.
+
+Deferred XML phase-boundary review: the narrow `XmlDocumentContext` cleanup does
+not decide the long-term shape of XML processing.  XML currently acts as a
+mini-pipeline: JAXB document interpretation, package/default handling, dynamic
+model discovery, metadata-complete decisions, annotation synthesis/overlay, and
+handoff into categorization/binding.  Revisit this as a source-interpretation
+phase rather than as another bootstrap-context consumer.  The worthwhile design
+questions are whether XML should produce typed source/contribution facts instead
+of directly mutating model annotations, whether dynamic XML classes should be
+represented as explicit source descriptors, and whether the XML context should
+eventually be built from the source-collection/binding pipeline instead of from
+`BootstrapContext`.  Keep this separate from the current dependency-surface
+cleanup so the small context-thinning steps do not accidentally become an XML
+pipeline redesign.
+
+==== Bucket 4: Runtime Model Creation Leakage
+
+`RuntimeModelCreationContext#getBootstrapContext()` exposes the whole
+bootstrap context during runtime model construction.  Current users include:
+
+* JPA/runtime metamodel code that needs `ModelsContext` or `ClassLoaderService`.
+* representation strategy and embeddable/entity representation code that needs
+  `ManagedBeanRegistry`, `ClassLoaderAccess`, or
+  `ManagedTypeRepresentationResolver`.
+* persister construction code that reaches back to the representation strategy
+  selector.
+
+This is related to, but distinct from,
+`RuntimeModelCreationContext#getSessionFactory()` cleanup.  The desired shape is
+probably another narrow runtime-model creation surface: expose the specific
+model, class-loading, bean, and representation capabilities needed during
+runtime model assembly rather than the full `BootstrapContext`.
+
+First implementation slice: `RuntimeModelCreationContext` now exposes narrow
+runtime-model creation capabilities for `ModelsContext`, class loading,
+managed-bean access, metadata-building plan, representation strategy selection,
+collection semantics resolution, and bytecode provider lookup.  The obvious
+runtime-model construction call sites have been migrated to these accessors.
+`RuntimeModelCreationContext#getBootstrapContext()` remains for now as the
+backing compatibility method rather than as the preferred dependency surface.
+
+Materialization/runtime-model audit:
+
+* `AttributeFactory` has an embedded-id/mapped-superclass fallback that resolves
+  an embeddable representation strategy during JPA metamodel creation.  It now
+  uses `RuntimeModelCreationContext#getRepresentationStrategySelector()` rather
+  than reaching from a boot `Component` through
+  `MetadataBuildingContext#getBootstrapContext()`.
+* `EmbeddableMappingTypeImpl` resolves its representation strategy from
+  `RuntimeModelCreationContext` and now uses the narrow representation-strategy
+  accessor.
+* `boot.mapping.internal.materialize` no longer has direct `BootstrapContext`
+  calls.  Its remaining broad dependency is `MetadataBuildingContext` as the
+  creation context for compatibility mapping objects such as `BasicValue`,
+  `Component`, and key/index sources.  That should be treated as a later
+  materialization-context design question, not as another narrow
+  `BootstrapContext` accessor migration.
+
+Materializer dependency audit:
+
+* `BasicValueMappingMaterializer`, `IdentifierMappingMaterializer`, and
+  `EmbeddableMappingMaterializer` primarily pass `MetadataBuildingContext` into
+  compatibility mapping-object constructors such as `BasicValue`, `Component`,
+  `ManyToOne`, and `OneToOne`.
+* Key/index/unique-key materializers use `MetadataBuildingContext` more narrowly
+  for database/naming work: logical table names, identifier rendering,
+  implicit key names, dialect access, and `Database`/metadata-collector access.
+* Tenant-id materialization uses it for metadata-building decisions and
+  services such as row-level-security enablement, tenant credentials mapper
+  lookup, and metadata collector access.
+* Several materializers still create anonymous legacy source objects whose
+  contracts require `MetadataBuildingContext#getBuildingContext()`.  Those are
+  adapter obligations of the old binding/materialization APIs, not independent
+  needs of the materializer itself.
+
+The deeper question is whether compatibility mapping objects should store
+`MetadataBuildingContext`.  Today they do, and they use it for more than object
+construction:
+
+* `SimpleValue` stores the context and exposes metadata collector,
+  type-configuration, service-registry, and managed-bean access to its
+  subclasses.
+* `BasicValue` performs later type resolution, converter resolution, SQL type
+  preference lookup, custom type bean creation, time-zone storage selection,
+  dynamic type-parameter construction, and ad-hoc basic type interaction through
+  the stored context.
+* `Component`, `Collection`, `ToOne`, `PersistentClass`, and related mapping
+  objects use the context for class loading, implicit naming, discriminator type
+  resolution, foreign-key/key creation, metadata collector access, and
+  compatibility second-pass behavior.
+
+So removing `MetadataBuildingContext` from mapping-object constructors is
+probably a desirable long-term direction, but it is not just a materializer
+cleanup.  It requires either moving build-time behavior out of the mapping
+objects into binding/materialization/finalization services, or replacing the
+stored context with smaller mapping-object capability contracts.  A single
+`MappingMaterializationContext` wrapper is only useful if it actively narrows
+those capabilities; if it simply forwards the full `MetadataBuildingContext`,
+it would rename the dependency without improving the boundary.
+
+Post-materialization resolution audit:
+
+* `BasicValue` is still the main active compatibility object.  Plain
+  constructors now create non-registering values, while
+  `BasicValue.legacySelfResolving(...)` preserves the old collector-driven
+  behavior.  `InFlightMetadataCollectorImpl#processValueResolvers(...)` invokes
+  those legacy resolvers after second passes, foreign-key processing, natural-id
+  key binding, and cache override processing.  This means the legacy
+  binding path still relies on mapping-object self-resolution before
+  `MetadataImpl` is produced, while the new materializer path can apply an
+  explicit resolution.
+* `BasicValue#getType()` calls `resolve()`, so later boot/runtime users can
+  still trigger resolution on demand if the collector-driven resolver has not
+  already done it.  Runtime-model/persister/JPA-metamodel callers then consume
+  the resolved result through `Value#getType()` or `BasicValue#getResolution()`.
+  Notable direct `getResolution()` callers include
+  `EmbeddableMappingTypeImpl` and `AbstractEmbeddableMapping`.
+* `DependantValue#resolve()` delegates to the wrapped `BasicValue` and is
+  therefore part of the same active type-resolution family.
+* `Component#sortProperties()`, `ToOne#sortProperties()`, and
+  `DependantValue#sortProperties()` still perform ordering side effects.
+  Callers are mixed: legacy annotation binders and second passes, new
+  `boot.mapping.internal.binders` code, `ForeignKeyMappingMaterializer`, and
+  runtime representation code such as `ManagedTypeRepresentationResolverStandard`.
+* `createForeignKey()` / `createUniqueKey(...)` methods remain compatibility
+  key-creation hooks on `Value`, `SimpleValue`, `ToOne`, `ManyToOne`,
+  `Collection`, `OneToMany`, and `Table`.  The new path increasingly uses
+  explicit key materializers, but legacy mapping objects and a few compatibility
+  helpers still call the object methods.
+* Class and discriminator resolution is also still active.  `PersistentClass`
+  and `Component` lazily load mapped/component classes from stored names, while
+  `Component#getDiscriminatorType()` resolves and caches the embeddable
+  discriminator type through the metadata collector.  Runtime model, JPA
+  metamodel, bytecode, and persister code still ask these compatibility objects
+  for those resolved classes/types.
+
+The key design implication is that the new bootstrap pipeline resolves many
+semantic facts before mapping-object materialization, but the compatibility
+projection still depends on active mapping-object resolution families.  The next
+cleanup should target one family at a time.  The likely order is: key/unique-key
+creation and property ordering first, class/discriminator resolution second, and
+`BasicValue` type/converter resolution last unless a focused use case gives it a
+safe precomputed-resolution insertion point.
+
+Initial `BasicValue` externally applied-resolution wedge:
+
+* `BasicValue` now has unregistered factory methods for materializer-created
+  compatibility values.  These do not register `this::resolve` with
+  `InFlightMetadataCollector`, so the materializer or a later finalizer owns
+  resolution explicitly.
+* `BasicValue#applyResolution(...)` is the external application hook.  Applying
+  a resolution also finalizes it immediately, because finalization is part of the
+  resolved-state contract: it applies column SQL type/check metadata and
+  auxiliary database objects.
+* `BasicValueMappingMaterializer` now creates unregistered values, builds a
+  `BasicValueResolutionBuilder.Input` after type inputs and selectables are
+  bound, asks `BasicValueResolutionBuilder` to build a
+  `BasicValue.Resolution<?>`, and applies that resolution explicitly.  The
+  materializer builder owns its input object, so it can evolve separately from
+  the legacy `BasicValue#resolve()` path.  This removes the collector-driven
+  callback and the legacy `resolve()` call from the materializer path and gives
+  the future external resolver a clear replacement point.
+* Identifier materialization now also creates unregistered `BasicValue`
+  instances and uses the explicit-resolution path after its wider
+  identifier-specific selectable timing is complete.
+
+Retired legacy `BasicValueBinder`:
+
+The old `org.hibernate.boot.model.internal.BasicValueBinder` and its dedicated
+`SetBasicValueTypeSecondPass` have been removed.  The remaining split is:
+
+* `org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder`, which binds
+  type/conversion/value-generation inputs from the source model into an
+  unregistered `BasicValue`.
+* `BasicValueMappingMaterializer` and identifier materialization, which create
+  the compatibility value, bind selectables/options, enqueue or apply explicit
+  resolution, and perform final mutability adjustments.
+* `BasicValueResolutionBuilder`, which builds `BasicValue.Resolution<?>` from a
+  materializer-owned input object and `BasicValueRole` rather than from
+  function references stored on `BasicValue`.
+
+There are no remaining production callers of the old annotation-side binder.
+
+The first retirement slice removed `AggregateComponentBinder` from this list.
+It now constructs the aggregate wrapper `BasicValue` directly and keeps legacy
+self-resolution only for that wrapper value, avoiding the old binder's mutable
+`Kind.ATTRIBUTE` state machine.
+
+The second retirement slice removed `BinderHelper` from this list.  It now
+constructs `@Any` discriminator/key `BasicValue` instances directly and keeps
+the any-specific discriminator Java/JDBC type selection plus
+`@AnyKeyJavaClass`, `@AnyKeyJavaType`, `@AnyKeyType`, `@AnyKeyJdbcType`, and
+`@AnyKeyJdbcTypeCode` handling local to the `@Any` builder.
+
+The third retirement slice removed `IdBagBinder` from this list.  It now
+constructs collection-id `BasicValue` instances directly and keeps the
+collection-id Java/JDBC type selection, `@CollectionIdMutability`, and
+`@CollectionIdType` handling local to the id-bag binder.
+
+The fourth retirement slice removed `ListBinder` from this list.  It now
+constructs list-index `BasicValue` instances directly and keeps the implicit
+`Integer` Java type plus `@ListIndexJavaType`, `@ListIndexJdbcType`, and
+`@ListIndexJdbcTypeCode` handling local to the list binder.
+
+The fifth retirement slice removed `MapBinder` from this list.  It now
+constructs map-key `BasicValue` instances directly and keeps map-key custom
+type, converter, Java/JDBC type, enum/temporal, mutability, and dynamic
+parameter handling local to the map binder.
+
+The sixth retirement slice removed `CollectionBinder` from this list.  It now
+constructs collection-element `BasicValue` instances directly and keeps
+element-value custom type, converter, Java/JDBC type, enum/temporal, mutability,
+nationalization, LOB, and dynamic parameter handling local to the collection
+binder.
+
+The seventh retirement slice removed `PropertyBinder` from this list.  It now
+constructs basic-attribute and version `BasicValue` instances directly and keeps
+normal basic custom type, converter, Java/JDBC type, enum/temporal,
+time-zone-storage, partition-key, mutability, nationalization, LOB, deferred
+foreign-key override, and dynamic parameter handling local to the property
+binder.
+
+The follow-up phase cleanup moved new-pipeline generic property specializations
+onto `AttributeBindingPhase.ValueResolution` instead of immediately calling
+`BasicValue#resolve()` on the copied specialization value.  This keeps
+materializer-created basic values under the explicit value-resolution phase even
+when the value is produced by generic mapped-superclass specialization.
+
+The next cleanup removed redundant direct `BasicValue#resolve()` calls from
+new-pipeline generic specialization JDBC-type copying, property-derived map-key
+copying, inverse map-index copying, and non-primary-key table-key handling.
+Those sites now require an already-applied value resolution because they run
+after the value-resolution phase.
+
+The discriminator implicit-value cleanup split discriminator value derivation
+into a narrow `TypeBindingPhase.DiscriminatorValues` phase that runs after the
+first attribute value-resolution drain.  `EntityTypeBinder` now creates and
+queues discriminator basic-value resolution while binding members, then derives
+explicit or implicit discriminator values in the discriminator-values phase using
+the already-applied `BasicValue.Resolution<?>`.  This removes the last direct
+new-pipeline `BasicValue#resolve()` call from the binder/materializer area.
+
+The new path already covers the main role-specific annotation families:
+`@JavaType`, `@JdbcType`, `@JdbcTypeCode`, `@MapKey*`, `@ListIndex*`,
+`@CollectionId*`, `@AnyKey*`, conversion and auto-apply conversion,
+`@Type`/registered user types, dynamic parameterized type parameters,
+`@Enumerated`, `@Temporal`, `@TimeZoneStorage`, `@Lob`, `@Nationalized`,
+`@PartitionKey`, column defaults, collation, fractional seconds, generated
+columns, and value generation.
+
+After deleting the old binder, keep the following follow-up checklist explicit:
+
+1. Add or identify broader parity tests for converter-disallowance rules,
+   especially id, version, association, embedded, struct/array, and any mappings.
+2. Confirm parity for remaining column/finalization side effects such as
+   overridden foreign-key second passes, aggregate component column linking,
+   generated column/write expression handling, and dynamic parameterized type
+   parameters.
+3. Confirm which XML, HBM, dynamic-model, or compatibility-native bootstrap cases
+   still require compatibility mapping-object self-resolution and either port
+   those cases or mark them as old-path-only until the replacement bootstrap
+   contract is ready.
+4. Remove the remaining direct legacy resolver registrations once the
+   corresponding compatibility values are created through the explicit-resolution
+   path.
+5. Delete `BasicValue.legacySelfResolving(...)` and the remaining
+   self-resolution support state once no compatibility caller needs it.
+
+Legacy mapping-construction back-door audit:
+
+* Public native bootstrap entry points such as `MetadataSources`,
+  `MetadataBuilder`, `Metadata#buildSessionFactory()`, and
+  `SessionFactoryBuilder` have been removed.  `Configuration` is not a
+  diagnostic back door; it is a compatibility entry point that now routes toward
+  `MappingResolutionPipeline` and `SessionFactoryPipeline` where possible.
+* The old `MetadataBuildingProcess` production path has been removed.  Main
+  source compilation showed no production dependency on
+  `MetadataBuildingProcess.build/prepare/complete`, and the stranded
+  `ManagedResourcesBinder`/`AdditionalManagedResourcesImpl` cluster was deleted
+  from production code.  Native/public entry points now route through
+  `MappingResolutionPipeline`/`SessionFactoryPipeline`; `AdditionalMappingContributor`
+  support is handled by the `MappingResolutionPipeline` contribution collector.
+* Test-only legacy comparisons are much narrower.  The clearest current example
+  had been `ToOneAssociationTests#buildLegacyBinderMetadata(...)`, which built
+  metadata through `MetadataBuildingProcess.complete(...)` only to snapshot old
+  to-one mapping shape and compare it with the new binder output.  That helper
+  was converted to direct expected-shape assertions before the old process class
+  was deleted.
+* `SourceModelTestHelper` is source-model/XML test scaffolding rather than a
+  runtime fallback.  Its `ManagedResources` overloads no longer call
+  `MetadataBuildingProcess.complete(...)`; they now build a `ModelsContext`,
+  apply XML/source overlays, and return that source-model view without building
+  legacy metadata.  The former production `AdditionalManagedResourcesImpl`
+  builder now exists only as test fixture support for these source-model/XML
+  tests.  The remaining cleanup is naming and fixture shape: split the plain
+  source-model and XML-overlay helpers so tests do not need to know about
+  bootstrap-facing setup details.
+* Mapping-object self-resolution remains a separate support burden, not a
+  diagnostic back door.  `BasicValue`, key creation, property ordering, class
+  loading, and discriminator resolution still make compatibility mapping objects
+  active boot participants.  These should be retired family-by-family by moving
+  the resolution/finalization work into binding or materialization services.
+
+Legacy annotation binder cleanup:
+
+The old `org.hibernate.boot.model.internal` annotation binder island is no
+longer a production boot path.  After deleting `MetadataBuildingProcess`,
+`ManagedResourcesBinder`, and `AnnotationBinder`, the remaining production
+references to the old binder classes were either comments or isolated helper
+uses.  The follow-up cleanup deleted the stranded binder/second-pass classes
+such as `EntityBinder`, `EmbeddableBinder`, `PropertyBinder`,
+`CollectionBinder`, `ToOneBinder`, `AnyBinder`, `CollectionSecondPass`, and the
+old `PropertyHolder` implementations.  Small behavior that was still genuinely
+used was moved to narrower current-path helpers:
+
+* managed-type predicates now live in `ManagedTypeMetadata`;
+* generic component copy/registration support now lives in
+  `GenericComponentHelper`;
+* the reveng collection second pass now implements `SecondPass` directly instead
+  of extending the deleted core `CollectionSecondPass`.
+
+The next pass removed the self-referential column/property-holder island that
+remained in `org.hibernate.boot.model.internal`: `PropertyHolder` and its
+remaining implementation, `AnnotatedColumn(s)`, `AnnotatedJoinColumn(s)`,
+`AnnotatedDiscriminatorColumn`, `IndexColumn`, the old annotation-side
+`TableBinder`, and the old package-local `ForeignKeyType`.  The only real leaks
+were compatibility signatures on mapping values and discriminator constants.
+Those were removed or moved to the current-path `ColumnBinder`.
+
+The remaining cleanup target is not to preserve this old binder island.  It is
+to continue moving active behavior out of compatibility mapping objects and into
+current binding/materialization phases.
+
+Recommended cleanup order:
+
+1. Split or rename `SourceModelTestHelper` so the plain source-model and
+   XML-overlay fixtures are explicit.
+2. Continue moving mapping-object active behavior into named binding or
+   materialization finalizers, using the `BasicValue` precomputed-resolution
+   wedge as the first typed example.
+3. Continue auditing public/native bootstrap compatibility and production
+   `AdditionalMappingContributor` support through the `MappingResolutionPipeline` path
+   until the replacement bootstrap API and extension story are ready.
+
+The same narrow-accessor shape was applied to `FormatMapperCreationContext` for
+Jackson format mapper construction.  The context still retains broad bootstrap
+access for compatibility, but the Jackson implementations now consume
+class-loading and XML-format preference access directly.
+
+==== Bucket 5: Legacy Native Bootstrap and Extension Contracts
+
+Some broad exposure is compatibility surface rather than internal design:
+
+* `MetadataImpl` and related native metadata APIs still sit on top of
+  `BootstrapContext`.
+* `Integrator#integrate(Metadata, BootstrapContext, SessionFactoryImplementor)`
+  receives the context as an extension contract.
+* `SessionFactoryOptionsBuilder` and legacy metadata paths still bridge old
+  native bootstrap expectations into the new construction pipeline.
+
+These should be deferred until there is a deliberate replacement story for the
+native bootstrap/metadata inspection APIs and extension contracts.
 
 == Current Status
 
@@ -129,8 +909,8 @@ parity recovery:
   metamodel/query/cache extraction;
 * replacement or narrowing of remaining `SessionFactoryOptions` and
   `BootstrapContext` handoffs;
-* a deliberate replacement story for native metadata inspection and
-  factory-level customization before deprecating `Metadata`.
+* a deliberate long-term story for `Configuration`; keep `Metadata` as the
+  resolved-model inspection view unless that role proves insufficient.
 
 == Test Signal
 
@@ -138,7 +918,7 @@ Useful control suites:
 
 * `org.hibernate.orm.test.boot.orchestration.*`
 * `org.hibernate.orm.test.bootstrap.*`
-* native `Configuration` / `Metadata#buildSessionFactory()` coverage
+* native `Configuration` / `HibernatePersistenceConfiguration` coverage
 * focused JPA provider and schema-generation suites when changing provider or
   schema-generation routing
 

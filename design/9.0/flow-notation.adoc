@@ -26,29 +26,29 @@ producing later steps, or represented only indirectly.
 
 For example:
 
-.MetadataResolver
+.MappingResolutionPipeline
 [source]
 ----
 ResolvedBootstrapSettings
-MappingSourceContributions
+MappingSources
 ServiceRegistry
-    -> AvailableResources
+    -> PreparedMappingSources
     -> CategorizedDomainModel (*)
     -> BindingState (*)
     -> MetadataCollector
     -> MetadataImplementor (*)
-    -> ResolvedMetadata
+    -> ResolvedMapping
 ----
 
-This means that `MetadataResolver` receives already-resolved settings,
+This means that `MappingResolutionPipeline` receives already-resolved settings,
 normalized source contributions, and a service registry.  It then builds
 available source resources, categorizes the domain model, binds that model
 through `BindingState`, writes completed metadata contributions through
 `MetadataCollector`, finalizes ORM's current `MetadataImplementor`, and returns
-`ResolvedMetadata`.
+`ResolvedMapping`.
 
 The notation does not mean every intermediate product belongs in the final
 result.  Some products are phase-local implementation details.  For instance,
 `ResolvedBootstrapSettings` is an input to metadata resolution, not part of
-`ResolvedMetadata`; `MetadataCollector` is used to produce the finalized
-metadata, but is not itself retained by `ResolvedMetadata`.
+`ResolvedMapping`; `MetadataCollector` is used to produce the finalized
+metadata, but is not itself retained by `ResolvedMapping`.

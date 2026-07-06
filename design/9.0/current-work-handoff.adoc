@@ -2,7 +2,7 @@
 
 Read this first when picking up the ORM 9 boot-model / binding-model branch.
 This file is intentionally compact: it describes the current branch direction,
-the green-suite close-out state, the next design-led work phase, and the
+the current in-flight redesign state, the next design-led work phase, and the
 guardrails to use before reopening any old failure bucket.
 
 Historical refresh notes, retired failure narratives, and old census buckets
@@ -28,14 +28,15 @@ pipeline:
 
 Key orientation documents:
 
+* link:boot-model-terminology.adoc[`boot-model-terminology.adoc`]
 * link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`]
 * link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
 * link:applied-contribution-model-design.adoc[`applied-contribution-model-design.adoc`]
 * link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
-* link:mapping-finalization-design.adoc[`mapping-finalization-design.adoc`]
 * link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
 * link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
 * link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+* link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
 * link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
 * link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
 * link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
@@ -45,21 +46,223 @@ Key orientation documents:
 
 == Current Status
 
-The complete `hibernate-orm` test suite is green in the current worktree as of
-2026-07-02, after the final `LazyOneToOneRemoveFlushAccessTest` fix.
+The current worktree is past the old green-suite closeout and is now in a
+large design-led cleanup.  The previous complete-suite green point was
+2026-07-02, after the final `LazyOneToOneRemoveFlushAccessTest` fix, but that
+is historical context rather than the current verification state.
+
+The active work is retiring legacy annotation binding and second-pass style
+finalization in favor of the new binding/materialization pipeline:
+
+* `MetadataBuildingProcess`, `ManagedResourcesBinder`, `AnnotationBinder`, the
+  legacy `org.hibernate.boot.model.internal.BasicValueBinder`, and most of the
+  old `org.hibernate.boot.model.internal` binder/property-holder classes have
+  been removed or are being removed.
+* The new `org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder`
+  is the active basic-value binding entry point.
+* Legacy `SecondPass` implementations have been converted into explicit
+  binding/finalization phases or deleted.  The old
+  `mapping-finalization-design.adoc` document is no longer an active design
+  artifact and has been removed from the handoff index.
+* `ComponentBinding`, `TypeBindingPhase`, `StateManagementBindingPhase`, query
+  result-set mapping finalization, and id-generator finalization now carry the
+  work that used to be hidden behind second-pass names.
+
+Current verification:
+
+* `./gradlew :hibernate-core:compileJava --console=plain` passes as of
+  2026-07-08.
+* Focused `:hibernate-core:test` runs currently stop before executing the
+  selected tests because `:hibernate-testing:compileJava` fails in
+  `DialectFeatureChecks` at the two `@Override` methods around lines 1953 and
+  1968.  Treat that as the current test-execution blocker, not as a
+  boot-model/runtime failure.
 
 There is no active failure bucket selected from the old binding-gap tracker or
 the 2026-06-30 full-suite census.  Those files were removed after the suite
 went green so they no longer drive bucket selection.
 
-The last red bucket was the inverse self-referential one-to-one tail.  The
+The last old red bucket was the inverse self-referential one-to-one tail.  The
 branch had already restored boot-model parity for the relevant `Property`,
 `ToOne`, and `EntityType` state.  The final regression was the runtime
 one-to-one unique-key selection predicate introduced around `c816c106`: the
 inverse TARGET side must still use unique-key loading even when the FK target
 selectable physically matches the identifier selectable.  The focused
-`LazyOneToOneRemoveFlushAccessTest` runtime-model guardrail now captures that
+`LazyOneToOneRemoveFlushAccessTest` runtime-model guardrail captures that
 shape.
+
+== Current BasicValue Resolution State
+
+`BasicValue` is being turned back into a simple compatibility mapping object.
+It no longer self-resolves through `InFlightMetadataCollector` and no longer
+stores deferred resolution callbacks.
+
+Current code direction:
+
+* `InFlightMetadataCollector#registerValueMappingResolver(...)` and collector
+  value-resolver execution were removed.
+* `BasicValue#resolve()` now requires an already-applied
+  `BasicValue.Resolution`; it no longer calculates one internally.
+* `BasicValue#applyResolution(...)` applies and finalizes an externally built
+  resolution.
+* `BasicValue` no longer carries the old `Function<TypeConfiguration, ...>`
+  hooks for explicit Java type, explicit JDBC type, explicit mutability plan,
+  or implicit Java type.
+* `BasicValueResolutionBuilder` is the materializer/binder-side resolution
+  engine.  Its `Input` object carries explicit facts such as Java type, JDBC
+  type, mutability plan, temporal precision, enum style, converter, configured
+  JDBC type code, source kind, and source member.
+* `BasicValueResolutionBuilder.BasicValueRole` drives role-specific annotation
+  lookup such as standard attribute, map key, list index, collection id,
+  any-key, discriminator, state-management, generic declaration, and version
+  handling.
+* `BasicValueSourceBinder`, `BasicValueMappingMaterializer`,
+  `IdentifierMappingMaterializer`, `VersionMappingMaterializer`,
+  `AttributeOptionsMappingMaterializer`, aggregate binding, temporal helper,
+  audit helper, and soft-delete helper now build/apply explicit resolution
+  input instead of asking `BasicValue` to self-resolve.
+* `DependantBasicValue` follows the referenced value's applied resolution
+  rather than depending on copied implicit type callbacks.
+
+Remaining compatibility island:
+
+* Older resolver internals such as `InferredBasicValueResolver` and
+  `NamedConverterResolution` still use
+  `Function<TypeConfiguration, MutabilityPlan<?>>` parameters internally.
+  Those are local resolver mechanics, not stored `BasicValue` state.
+
+Suggested next step in this area:
+
+* Continue retiring legacy basic-value/binder compatibility paths and move any
+  remaining type-resolution decisions into `BasicValueResolutionBuilder` input
+  facts or role methods.  Avoid adding new `BasicValue` setters that encode
+  resolution behavior.
+
+== Current Bootstrap / SessionFactory Construction State
+
+SessionFactory construction has been partially split into named inputs and
+products.  This work is intentionally still in flight: the current goal is to
+make phase boundaries explicit enough that remaining constructor-time and
+`BootstrapContext` dependencies are visible and can be narrowed.
+
+Current code direction:
+
+* `SessionFactoryAccess` / delayed SessionFactory reference work lets runtime
+  products store a factory reference without forcing all preparation code to
+  call back into an incomplete `SessionFactoryImpl`.
+* `RuntimeModelCreationContext#getSessionFactory()` remains for true factory
+  storage/runtime dependencies, but easy construction-time reads have been
+  migrated to narrower accessors such as wrapper options, SQL string generation
+  context, domain model, and changeset coordinator.
+* `FetchProfileRegistry` replaced the earlier ambiguous in-flight fetch-profile
+  map passed through SQL translation setup.
+* `SqlAstCreationContext#getSessionFactory()` was removed in favor of narrower
+  SQL translation/context access.
+* `SessionFactoryServiceComponents` was renamed/split toward
+  `StandardServiceComponents`; the intent is to pass grouped standard-service
+  access during bootstrap rather than repeatedly threading raw service
+  registries.
+* `MappingSourceContributionContext` was renamed toward
+  `ContributionDiscoveryContext` for APIs that specifically perform
+  scanning/resource-discovery.
+* `MetadataBuildingOptions` has been replaced conceptually/API-wise by
+  `MappingResolutionOptions` and `MappingPreferences`; no-arg preference methods were
+  moved off `MetadataBuildingContext` where practical.
+* `BindingContext` has been narrowed so it holds explicit bootstrap capabilities
+  instead of directly exposing `BootstrapContext`.
+* `MappingResolutionServices` now groups metadata-building service
+  dependencies, while `JpaCompliance` remains a metadata-building-context
+  concern rather than a service-component concern.
+
+Suggested next step in this area:
+
+* Keep thinning `MetadataBuildingContext#getBootstrapContext()` and raw
+  service-registry usage where the needed capability is obvious, but avoid a
+  broad rename/delete pass until the current mapping-object simplification work
+  has settled.
+
+== Current Mapped-Superclass Handoff State
+
+The active mapped-superclass/generic handoff shape is documented in
+link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
+and
+link:boot-model-terminology.adoc[`boot-model-terminology.adoc`].
+
+Current code direction:
+
+* `AttributeUsageBinding` is the applied attribute usage object.  The removed
+  `AppliedMappedSuperclassAttribute` wrapper should not be reintroduced unless
+  it carries genuinely new semantics.
+* `MappedSuperclassContribution` owns contribution provenance and the ordered
+  list of applied usages.
+* `BootBindingModel` owns indexed lookup for applied mapped-superclass usages.
+  Register usages through
+  `BootBindingModel#addAppliedMappedSuperclassAttributeUsage(...)` so the
+  contribution list and lookup index stay consistent.
+* `MappedSuperclassPropertyHandoff` links the copied compatibility `Property`
+  to the applied `AttributeUsageBinding` and contribution provenance.
+* `MappedSuperclassHandoffResolver` is exposed through
+  `RuntimeModelCreationContext` and is the runtime/JPA metamodel bridge from
+  legacy `Property` inputs to applied boot-model metadata.
+* `BootBindingModel` also owns an initial `Component -> EmbeddableContribution`
+  handoff index.  `BindingState#addEmbeddableComponentHandoff(...)` still
+  preserves the transitional binding-state API, but it now feeds the boot-model
+  index used after binding.
+* `EmbeddableHandoffResolver` is exposed through
+  `RuntimeModelCreationContext` and is the runtime/JPA metamodel bridge from a
+  legacy `Component + Property` pair to the applied `ComponentMemberBinding`.
+* `Property#isGenericSpecialization()` is localized fallback bridge state.
+  Runtime/JPA metamodel code should ask the mapped-superclass or embeddable
+  handoff resolver for semantic member/type/classification decisions instead of
+  checking the flag directly.  Resolver fallbacks should run only when no
+  applied handoff metadata is available.
+* `Property#getMemberDetails()` remains the source-member compatibility bridge,
+  but applied usage metadata should win when available.
+
+Known next modeling gap: embeddable concrete-generic classification now treats
+applied `ComponentMemberBinding` metadata as authoritative when the component
+handoff exists, but it still retains copied-property fallbacks for compatibility
+paths not yet backed by applied contribution data.  The next cleanup should
+identify those remaining unbacked paths and either model them as applied
+handoffs or keep them explicitly marked as legacy compatibility paths.
+
+=== Generic Fallback Audit
+
+The current fallback paths break down as follows:
+
+* Ordinary mapped-superclass attributes are backed by
+  `AttributeUsageBinding`.  `MappedSuperclassHandoffResolver` should treat the
+  applied usage as authoritative when found and use
+  `Property#isGenericSpecialization()` only when no applied handoff exists.
+* Embeddable members are backed by `ComponentMemberBinding` through the
+  `Component -> EmbeddableContribution` index.  `EmbeddableHandoffResolver`
+  should treat the applied member binding as authoritative when found and use
+  copied-property/mapped-superclass generic markers only when no component
+  member handoff exists.
+* Generic mapped-superclass identifiers are a distinct handoff path.  The
+  legacy runtime metamodel receives identifiers through `PersistentClass`
+  identifier slots rather than ordinary declared-property iteration.
+  `IdentifierHandoffResolver` now centralizes the classification decision and
+  prefers `EntityIdentifierBinding` metadata, including the top-level
+  identifier member for basic and aggregated ids.  When a `BootBindingModel` is
+  available, the resolver treats identifier binding metadata as authoritative.
+  The resolver-local `mappedSuperclassIdentifier.isGeneric()` fallback is now
+  limited to legacy SessionFactory construction paths that do not yet hand a
+  `BootBindingModel` to runtime/JPA metamodel creation.
+* Low-level mapping compatibility still uses
+  `Property#isGenericSpecialization()` in `MappingHelper` to avoid duplicating
+  columns/selectables for copied concrete generic properties.  That is not a
+  runtime/JPA metamodel classification path.
+
+Follow-up options:
+
+* route the remaining legacy SessionFactory construction path through
+  `SessionFactoryConstructionPlan` with a populated `BootBindingModel`
+  so `IdentifierHandoffResolver` can remove its no-boot-model generic
+  identifier `Property` fallback;
+* keep `MappingHelper` as a documented legacy mapping-model compatibility use;
+* avoid adding new direct `Property#isGenericSpecialization()` checks outside
+  resolver or low-level mapping compatibility code.
 
 == Next Phase
 
@@ -269,4 +472,5 @@ handoff deviation, then return to the design-led queue.
   materializers.
 * Keep new binding-model contracts free of `org.hibernate.mapping` types unless
   the contract is explicitly a materializer or compatibility bridge.
+* When adding new Java files, include `@since 9.0`.
 * When adding new Java files, include `@author Steve Ebersole`.

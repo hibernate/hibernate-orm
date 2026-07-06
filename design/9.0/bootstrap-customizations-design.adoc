@@ -1,0 +1,302 @@
+= Bootstrap Customizations Design
+:toc:
+
+This note records the target model for customization state during ORM 9
+bootstrap.
+
+It is motivated by the same problem showing up in several places: state that
+used to be accepted by broad legacy APIs such as `MetadataBuilder` and
+`Configuration` is now being routed through names like `MappingCustomizations`
+or exposed from `BootstrapContext` even when the state is not really mapping
+state or bootstrap-context state.
+
+The goal is to separate three concerns:
+
+* where explicit user/API customizations are collected
+* which bootstrap phase owns applying each kind of customization
+* which resolved bootstrap product exposes the result to later phases
+
+== Problem
+
+Legacy bootstrap APIs accepted many unrelated customization forms through one
+surface:
+
+* mapping defaults and naming strategies
+* type contributors and explicit basic/user type registrations
+* attribute converters
+* function contributors and explicit SQL functions
+* auxiliary database objects
+* cache region definitions
+* scanner/archive settings
+* interceptors, observers, statement inspectors, and other SessionFactory
+  options
+* service-loaded contributors and ambient integrations
+
+In the redesigned pipeline, flattening all of these into one
+`MappingCustomizations` object makes mapping resolution look responsible for
+things it does not conceptually own.
+
+Similarly, exposing assembled products or build plans from `BootstrapContext`
+makes bootstrap context look like a general state bag.  `BootstrapContext`
+should be the home for bootstrap services and bootstrap-only resources, not the
+home for every mutable product needed somewhere during bootstrap.
+
+== Design Goals
+
+Customization state should be grouped by the phase or product it affects.
+
+Each group should have one owner responsible for applying it.  Entry points
+collect user intent, but entry points should not perform categorization,
+binding, function-registry construction, query-engine construction, or final
+factory construction.
+
+Ambient integrations such as Java service loading and dialect hooks should be
+applied by the owner of the affected product, not stored as if they were
+explicit user customizations.
+
+`BootstrapContext` should remain narrow:
+
+* service registry
+* class-loading access
+* bean registry
+* scanner/archive settings
+* JPA temporary classloader
+* hibernate-models context
+* type configuration
+* other bootstrap-only services/resources
+
+`BootstrapContext` should not expose mapping-resolution options, function
+registries, mapping contribution buckets, or other assembled bootstrap products.
+
+== Customization Categories
+
+The exact Java types can evolve, but the conceptual split should be explicit.
+
+=== Mapping Customizations
+
+Mapping customizations affect interpretation or materialization of mapping
+sources.
+
+Examples:
+
+* implicit naming strategy
+* physical naming strategy
+* column ordering strategy
+* shared cache mode, if treated as mapping metadata
+* auxiliary database objects
+* attribute converters
+* cache region definitions
+* mapping-affecting defaults
+
+These are consumed by mapping source preparation, categorization, binding, or
+metadata finalization.
+
+=== Type-System Customizations
+
+Type-system customizations affect the `TypeConfiguration`, basic type registry,
+user types, composite user types, and related conversion machinery.
+
+Examples:
+
+* explicit basic type registrations
+* explicit user type registrations
+* composite user types
+* programmatic `TypeContributor` instances
+* Java service-loaded `TypeContributor` instances
+
+This group may be separate or may be folded into mapping customizations if the
+implementation benefits from that.  The important rule is that type contribution
+application should have one owner and should not be hidden behind unrelated
+bootstrap-context state.
+
+=== Function Registry Customizations
+
+Function registry customizations affect the `SqmFunctionRegistry`.
+
+Examples:
+
+* explicit SQL function descriptors
+* programmatic `FunctionContributor` instances
+* Java service-loaded `FunctionContributor` instances
+* dialect function initialization
+* SessionFactory/query-engine custom function overlays, if still supported
+
+Functions are not mapping sources or mapping defaults.  They are a bootstrap
+product used by mapping resolution and later query-engine construction.
+
+Prefer a dedicated coordinator for this product, for example
+`SqmFunctionRegistryBuilder`, `FunctionRegistryCoordinator`, or
+`QueryFunctionRegistryBuilder`.
+
+`BootstrapPipeline` should treat the function registry as a cross-phase
+bootstrap product.  It should create the shared `TypeConfiguration`, ask the
+coordinator to populate the `SqmFunctionRegistry`, and pass both products into
+mapping resolution.
+
+The coordinator should apply all function inputs in a single deterministic
+sequence and return the populated registry as a resolved bootstrap product.
+
+`QueryEngineImpl` should consume the populated registry from metadata rather
+than re-running `FunctionContributor` discovery or dialect initialization.
+
+=== SessionFactory Customizations
+
+SessionFactory customizations affect the final factory options or runtime
+construction process.
+
+Examples:
+
+* interceptor
+* statement inspector
+* entity-name resolvers
+* observer
+* entity-not-found delegate
+* tenant resolver
+* schema mapper
+* custom dirtiness strategy
+* custom query engine/runtime options
+* custom `SessionFactoryProducer`
+
+These belong with SessionFactory settings resolution and factory construction,
+not with mapping customization.
+
+=== Bootstrap Infrastructure
+
+Bootstrap infrastructure is not customization output.  It is the service and
+resource context needed by the owners above.
+
+Examples:
+
+* `StandardServiceRegistry`
+* `ClassLoaderService`
+* `ManagedBeanRegistry`
+* scanner setting and archive descriptor factory
+* JPA temporary classloader
+* hibernate-models `ModelsContext`
+* `TypeConfiguration`
+
+This is the appropriate responsibility of `BootstrapContext`.
+
+== Sources
+
+Customization inputs come from two broad categories.
+
+Explicit user/API customizations::
+These are collected by entry points and carried in normalized request state.
++
+Examples include `Configuration` convenience methods,
+`HibernatePersistenceConfiguration`, JPA persistence-unit settings,
+integration settings, and future native bootstrap APIs.
+
+Ambient bootstrap integrations::
+These are discovered or derived by the owning coordinator from bootstrap
+infrastructure.
++
+Examples include Java service-loaded contributors, dialect hooks, and services
+loaded from the `StandardServiceRegistry`.
+
+The normalized request should carry explicit user intent.  The owner of each
+product should discover and apply ambient integrations.
+
+== Possible Shape
+
+The pipeline may use a single top-level object containing named groups:
+
+[source,java]
+----
+record BootstrapCustomizations(
+        MappingCustomizations mapping,
+        TypeSystemCustomizations types,
+        FunctionRegistryCustomizations functions,
+        SessionFactoryCustomizations sessionFactory) {
+}
+----
+
+This wrapper is optional.  Its value is organizational: one top-level request
+can travel through bootstrap while each phase consumes only the group it owns.
+
+Without a wrapper, the same split can be represented directly on the bootstrap
+request:
+
+[source,java]
+----
+record BootstrapPipelineRequest(
+        ResolvedBootstrapSettings bootstrapSettings,
+        MappingSources mappingSources,
+        MappingCustomizations mappingCustomizations,
+        FunctionRegistryCustomizations functionCustomizations,
+        SessionFactoryCustomizations sessionFactoryCustomizations) {
+}
+----
+
+The important rule is to avoid using `MappingCustomizations` as a replacement
+for the old "everything accepted by `MetadataBuilder`" bucket.
+
+== Ownership Flow
+
+[source]
+----
+Entry point
+    -> normalized request
+    -> customization groups
+    -> product-specific owners
+    -> resolved bootstrap products
+    -> SessionFactory construction
+----
+
+Example with functions:
+
+[source]
+----
+Configuration#addSqlFunction / registerFunctionContributor
+    -> FunctionRegistryCustomizations
+    -> BootstrapPipeline
+    -> function registry coordinator
+    -> SqmFunctionRegistry
+    -> MappingResolutionPipeline
+    -> MetadataImplementor#getFunctionRegistry()
+    -> QueryEngineImpl
+----
+
+Example with SessionFactory options:
+
+[source]
+----
+Configuration#setInterceptor / setStatementInspector
+    -> SessionFactoryCustomizations
+    -> SessionFactoryOptionsCollector
+    -> SessionFactoryPipeline
+    -> SessionFactoryImpl
+----
+
+== Open Questions
+
+* Should type-system customizations be a separate group, or are they
+  sufficiently mapping-adjacent to remain with mapping customizations?
+* Should shared cache mode and cache region definitions live with mapping
+  customizations or with a separate caching customization group?
+* Should SessionFactory/query-engine custom function overlays be treated as
+  function registry customizations before metadata resolution, or as late
+  SessionFactory customizations?
+* What is the final deterministic ordering for dialect functions, service-loaded
+  `FunctionContributor`s, programmatic `FunctionContributor`s, and explicit SQL
+  function descriptors?
+* Should Java service-loaded contributors ever be materialized into
+  customization objects, or should they always be discovered by the product
+  owner?
+
+== Migration Notes
+
+Near-term cleanup candidates:
+
+* remove `MappingResolutionOptions` from `BootstrapContext`
+* remove `SqmFunctionRegistry` from `BootstrapContext`
+* extract function customizations from `MappingCustomizations`
+* introduce a function registry coordinator owned by `BootstrapPipeline`
+* make `QueryEngineImpl` consume the resolved function registry without
+  invoking contributors again
+* keep mapping contribution buckets constructor-fed into the metadata collector
+  rather than exposed through `BootstrapContext`
+
+This should be treated as a broader bootstrap-customization design, not only as
+a function-registry cleanup.

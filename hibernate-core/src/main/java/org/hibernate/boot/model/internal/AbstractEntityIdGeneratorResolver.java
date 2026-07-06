@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.IdGeneratorType;
+import org.hibernate.boot.mapping.internal.binders.IdentifierGeneratorBindingPhase;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
@@ -35,11 +36,11 @@ import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
 import static org.hibernate.internal.util.collections.CollectionHelper.size;
 
 /**
- * Template support for IdGeneratorResolver implementations dealing with entity identifiers
+ * Template support for identifier-generator resolvers dealing with entity identifiers
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorResolver {
+public abstract class AbstractEntityIdGeneratorResolver implements IdentifierGeneratorBindingPhase.Resolution {
 	protected final PersistentClass entityMapping;
 	protected final SimpleValue idValue;
 	protected final MemberDetails idMember;
@@ -60,7 +61,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	}
 
 	@Override
-	public final void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
+	public final void resolveIdentifierGenerator() throws MappingException {
 		switch ( generatedValue.strategy() ) {
 			case UUID -> handleUuidStrategy();
 			case IDENTITY -> handleIdentityStrategy( idValue );
@@ -161,7 +162,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	private Annotation findGeneratorAnnotation(AnnotationTarget annotationTarget) {
 		final var metaAnnotated =
 				annotationTarget.getMetaAnnotated( IdGeneratorType.class,
-						buildingContext.getBootstrapContext().getModelsContext() );
+						buildingContext.getModelsContext() );
 		return size( metaAnnotated ) > 0 ? metaAnnotated.get( 0 ) : null;
 
 	}

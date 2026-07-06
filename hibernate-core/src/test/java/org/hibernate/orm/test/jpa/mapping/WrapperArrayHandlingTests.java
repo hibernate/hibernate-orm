@@ -6,8 +6,8 @@ package org.hibernate.orm.test.jpa.mapping;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -36,9 +36,8 @@ public class WrapperArrayHandlingTests {
 	}
 
 	private SessionFactory buildSessionFactory(ServiceRegistryScope scope) {
-		final MetadataSources metadataSources = new MetadataSources( scope.getRegistry() );
-		final Metadata metadata = metadataSources.addAnnotatedClasses( TheEntity.class ).buildMetadata();
-		return metadata.buildSessionFactory();
+		final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), TheEntity.class );
+		return org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 	}
 
 	@Test

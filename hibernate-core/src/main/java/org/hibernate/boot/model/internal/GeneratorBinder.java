@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -19,7 +20,6 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.AnnotationBasedGenerator;
@@ -68,7 +68,6 @@ import java.util.function.Consumer;
 
 import static jakarta.persistence.GenerationType.AUTO;
 import static java.util.Collections.emptyMap;
-import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.Constructors.construct;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.findLocalizedMatch;
@@ -77,12 +76,10 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.collectParam
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
 import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorClass;
-import static org.hibernate.boot.model.internal.PropertyBinder.isVersion;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.combineUntyped;
 import static org.hibernate.resource.beans.internal.Helper.getBean;
 
@@ -241,7 +238,7 @@ public class GeneratorBinder {
 
 	private static String defaultCatalog(Value value) {
 		final String mappingDefault = value.getBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getMappingDefaults()
 				.getImplicitCatalogName();
 		return isNotEmpty( mappingDefault )
@@ -254,7 +251,7 @@ public class GeneratorBinder {
 
 	private static String defaultSchema(Value value) {
 		final String mappingDefault = value.getBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getMappingDefaults()
 				.getImplicitSchemaName();
 		return isNotEmpty( mappingDefault )
@@ -389,7 +386,7 @@ public class GeneratorBinder {
 			AnnotationTarget annotatedElement,
 			Consumer<IdentifierGeneratorDefinition> consumer,
 			MetadataBuildingContext buildingContext) {
-		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = buildingContext.getModelsContext();
 		annotatedElement.forEachAnnotationUsage( TableGenerator.class, modelsContext,
 				usage -> consumer.accept( buildTableIdGenerator( usage ) ) );
 		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, modelsContext,
@@ -399,7 +396,7 @@ public class GeneratorBinder {
 	public static void registerGlobalGenerators(
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
-		if ( context.getBootstrapContext().getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
+		if ( context.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
 			final var metadataCollector = context.getMetadataCollector();
 			visitIdGeneratorDefinitions(
 					annotatedElement,
@@ -748,7 +745,7 @@ public class GeneratorBinder {
 	}
 
 	private static void checkVersionGenerationAlways(MemberDetails property, Generator generator) {
-		if ( isVersion( property ) ) {
+		if ( property.hasDirectAnnotationUsage( Version.class ) ) {
 			if ( !generator.generatesOnInsert() ) {
 				throw new AnnotationException("Property '" + property.getName()
 						+ "' is annotated '@Version' but has a 'Generator' which does not generate on inserts"
@@ -817,22 +814,22 @@ public class GeneratorBinder {
 			// process and register any generators defined on the member.
 			// according to JPA these are also global.
 			metadataCollector.getGlobalRegistrations().as( GlobalRegistrar.class ).collectIdGenerators( idMember );
-			metadataCollector.addSecondPass( new StrictIdGeneratorResolverSecondPass(
+			new StrictIdentifierGeneratorResolver(
 					persistentClass,
 					idValue,
 					idMember,
 					generatedValue,
 					context
-			) );
+			).resolveIdentifierGenerator();
 		}
 		else {
-			metadataCollector.addSecondPass( new IdGeneratorResolverSecondPass(
+			new IdentifierGeneratorResolver(
 					persistentClass,
 					idValue,
 					idMember,
 					generatedValue,
 					context
-			) );
+			).resolveIdentifierGenerator();
 		}
 	}
 
@@ -847,22 +844,22 @@ public class GeneratorBinder {
 					.getGlobalRegistrations()
 					.as( GlobalRegistrar.class )
 					.collectIdGenerators( idMember );
-			new StrictIdGeneratorResolverSecondPass(
+			new StrictIdentifierGeneratorResolver(
 					persistentClass,
 					idValue,
 					idMember,
 					generatedValue,
 					context
-			).doSecondPass( emptyMap() );
+			).resolveIdentifierGenerator();
 		}
 		else {
-			new IdGeneratorResolverSecondPass(
+			new IdentifierGeneratorResolver(
 					persistentClass,
 					idValue,
 					idMember,
 					generatedValue,
 					context
-			).doSecondPass( emptyMap() );
+			).resolveIdentifierGenerator();
 		}
 	}
 
@@ -896,7 +893,10 @@ public class GeneratorBinder {
 	 * Obtain a {@link BeanContainer} to be used for instantiating generators.
 	 */
 	public static BeanContainer beanContainer(MetadataBuildingContext buildingContext) {
-		return Helper.getBeanContainer( buildingContext.getBootstrapContext().getServiceRegistry() );
+		return Helper.getBeanContainer(
+				buildingContext.getConfigurationService(),
+				buildingContext.getManagedBeanRegistry()
+		);
 	}
 
 	/**
@@ -937,30 +937,6 @@ public class GeneratorBinder {
 		} );
 	}
 
-	/**
-	 * Set up the id generator by considering all annotations of the identifier
-	 * field, including {@linkplain IdGeneratorType id generator annotations},
-	 * and {@link GeneratedValue}.
-	 */
-	static void createIdGeneratorsFromGeneratorAnnotations(
-			PropertyHolder propertyHolder,
-			PropertyData inferredData,
-			SimpleValue idValue,
-			MetadataBuildingContext buildingContext) {
-		final var idMemberDetails = inferredData.getAttributeMember();
-		if ( createIdGeneratorFromGeneratorAnnotation(
-				idValue,
-				idMemberDetails,
-				buildingContext,
-				getPath( propertyHolder, inferredData )
-		) ) {
-			return;
-		}
-		if ( idMemberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
-			createIdGenerator( idMemberDetails, idValue, propertyHolder.getPersistentClass(), buildingContext );
-		}
-	}
-
 	public static boolean createIdGeneratorFromGeneratorAnnotation(
 			SimpleValue idValue,
 			MemberDetails idMemberDetails,
@@ -981,7 +957,7 @@ public class GeneratorBinder {
 			AnnotationTarget generatorAnnotationTarget,
 			MetadataBuildingContext buildingContext,
 			String attributePath) {
-		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var modelsContext = buildingContext.getModelsContext();
 		final var idGeneratorAnnotations = generatorAnnotationTarget.getMetaAnnotated( IdGeneratorType.class, modelsContext );
 		final var generatorAnnotations = generatorAnnotationTarget.getMetaAnnotated( ValueGenerationType.class, modelsContext );
 		// Since these collections may contain proxies created by common-annotations module, we cannot reliably use
@@ -1020,24 +996,6 @@ public class GeneratorBinder {
 			) );
 		}
 		return false;
-	}
-
-	/**
-	 * Returns the value generation strategy for the given property, if any, by
-	 * considering {@linkplain ValueGenerationType generator type annotations}.
-	 */
-	static GeneratorCreator createValueGeneratorFromAnnotations(
-			PropertyHolder holder, String propertyName,
-			Value value, MemberDetails property, MetadataBuildingContext buildingContext) {
-		final var generatorAnnotations =
-				property.getMetaAnnotated( ValueGenerationType.class,
-						buildingContext.getBootstrapContext().getModelsContext() );
-		return switch ( generatorAnnotations.size() ) {
-			case 0 -> null;
-			case 1 -> generatorCreator( property, value, generatorAnnotations.get(0), beanContainer( buildingContext ) );
-			default -> throw new AnnotationException( "Property '" + qualify( holder.getPath(), propertyName )
-					+ "' has too many generator annotations: " + generatorAnnotations );
-		};
 	}
 
 	public static void applyIfNotEmpty(String name, String value, BiConsumer<String,String> consumer) {

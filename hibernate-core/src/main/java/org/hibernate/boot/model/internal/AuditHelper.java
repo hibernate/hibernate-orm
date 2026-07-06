@@ -20,6 +20,10 @@ import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.audit.ChangesetListener;
 import org.hibernate.audit.spi.ChangelogSupplier;
+import org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase;
+import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -43,9 +47,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.persister.state.internal.AuditStateManagement;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.temporal.spi.ChangesetCoordinator;
 
 import jakarta.annotation.Nullable;
 
@@ -74,23 +76,26 @@ public final class AuditHelper {
 			@Nullable Audited.Table auditTable,
 			RootClass rootClass,
 			ClassDetails classDetails,
-			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, rootClass, context );
-		bindSecondaryAuditTables( auditTable, rootClass, classDetails, context );
-		bindSubclassAuditTables( auditTable, rootClass, context );
+			MetadataBuildingContext context,
+			BindingState bindingState) {
+		bindAuditTable( auditTable, rootClass, context, bindingState );
+		bindSecondaryAuditTables( auditTable, rootClass, classDetails, context, bindingState );
+		bindSubclassAuditTables( auditTable, rootClass, context, bindingState );
 	}
 
 	public static void bindAuditTable(
 			@Nullable Audited.Table auditTable,
 			Collection collection,
-			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, (Stateful) collection, context );
+			MetadataBuildingContext context,
+			BindingState bindingState) {
+		bindAuditTable( auditTable, (Stateful) collection, context, bindingState );
 	}
 
 	private static void bindAuditTable(
 			@Nullable Audited.Table auditTable,
 			Stateful auditable,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			BindingState bindingState) {
 		final var collector = context.getMetadataCollector();
 		final var table = auditable.getMainTable();
 		final String explicitAuditTableName;
@@ -128,26 +133,43 @@ public final class AuditHelper {
 		);
 		collector.addTableNameBinding( table.getNameIdentifier(), auditLogTable );
 
-		// Defer audit column creation to a second pass so the transaction
-		// ID type is resolved after all entities are bound, including any
-		// @Changelog contributed by mapping contributors
-		collector.addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
+		bindingState.addStateManagementFinalizer(
+				new AuditTableFinalizer(
+						auditTable,
+						auditable,
+						table,
+						auditLogTable,
+						csIdColumnName,
+						modTypeColumnName,
+						context
+				)
+		);
+	}
+
+	private record AuditTableFinalizer(
+			@Nullable Audited.Table auditTable,
+			Stateful auditable,
+			Table table,
+			Table auditLogTable,
+			String csIdColumnName,
+			String modTypeColumnName,
+			MetadataBuildingContext context) implements StateManagementBindingPhase.Finalizer {
+		@Override
+		public void finalizeStateManagement() {
 			// Auto-exclude @Version property from audit tables
 			if ( auditable instanceof RootClass rootClass && rootClass.isVersioned() ) {
 				rootClass.getVersion().setAuditedExcluded( true );
 			}
-			// Resolve exclusions at second-pass time so collection-managed FK columns
-			// (added during collection binding) are detected
+			// Resolve exclusions at finalization time so collection-managed FK columns
+			// (added during collection binding) are detected.
 			final var excludedColumns = auditable instanceof RootClass rootClass
 					? resolveExcludedColumns( rootClass )
 					: Set.<String>of();
 			copyTableColumns( table, auditLogTable, excludedColumns );
 			final var changesetIdColumn =
-					createAuditColumn( csIdColumnName,
-							getChangesetIdType( context ), auditLogTable, context );
+					createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditLogTable, context );
 			final var modificationTypeColumn =
-					createAuditColumn( modTypeColumnName,
-							Byte.class, auditLogTable, context );
+					createAuditColumn( modTypeColumnName, Byte.class, auditLogTable, context );
 			auditLogTable.addColumn( changesetIdColumn );
 			auditLogTable.addColumn( modificationTypeColumn );
 			if ( auditable instanceof Collection ) {
@@ -161,14 +183,15 @@ public final class AuditHelper {
 			enableAudit( auditable, auditLogTable, changesetIdColumn, modificationTypeColumn );
 			createChangesetForeignKey( auditLogTable, changesetIdColumn, context );
 			addTransactionEndColumns( auditTable, auditable, auditLogTable, context );
-		} );
+		}
 	}
 
 	private static void bindSecondaryAuditTables(
 			@Nullable Audited.Table auditTable,
 			RootClass rootClass,
 			ClassDetails classDetails,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			BindingState bindingState) {
 		final String csIdColumnName;
 		final String auditSchema;
 		final String auditCatalog;
@@ -185,10 +208,28 @@ public final class AuditHelper {
 		final Map<String, String> secondaryAuditTableNames = new HashMap<>();
 		classDetails.forEachAnnotationUsage(
 				Audited.SecondaryTable.class,
-				context.getBootstrapContext().getModelsContext(),
+				context.getModelsContext(),
 				sat -> secondaryAuditTableNames.put( sat.secondaryTableName(), sat.secondaryAuditTableName() )
 		);
-		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
+		bindingState.addStateManagementFinalizer( new SecondaryAuditTablesFinalizer(
+				rootClass,
+				secondaryAuditTableNames,
+				csIdColumnName,
+				auditSchema,
+				auditCatalog,
+				context
+		) );
+	}
+
+	private record SecondaryAuditTablesFinalizer(
+			RootClass rootClass,
+			Map<String, String> secondaryAuditTableNames,
+			String csIdColumnName,
+			String auditSchema,
+			String auditCatalog,
+			MetadataBuildingContext context) implements StateManagementBindingPhase.Finalizer {
+		@Override
+		public void finalizeStateManagement() {
 			for ( var join : rootClass.getJoins() ) {
 				final var sourceTable = join.getTable();
 				final String customName = secondaryAuditTableNames.get( sourceTable.getName() );
@@ -206,13 +247,14 @@ public final class AuditHelper {
 				join.setAuxiliaryTable( secondaryAuditTable );
 				join.addAuxiliaryColumn( CHANGESET_ID, secondaryAuditTable.getPrimaryKey().getColumn( 0 ) );
 			}
-		} );
+		}
 	}
 
 	private static void bindSubclassAuditTables(
 			@Nullable Audited.Table auditTable,
 			RootClass rootClass,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			BindingState bindingState) {
 		final String csIdColumnName;
 		final String modTypeColumnName;
 		if ( auditTable != null ) {
@@ -223,16 +265,22 @@ public final class AuditHelper {
 			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
 			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
-		// Defer to second pass since subclasses haven't been added to rootClass yet
-		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored ->
-				bindSubclassAuditTables(
-						rootClass,
-						auditTable,
-						csIdColumnName,
-						modTypeColumnName,
-						context
-				)
+		// Defer since subclasses haven't been added to rootClass yet
+		bindingState.addStateManagementFinalizer(
+				new SubclassAuditTablesFinalizer( rootClass, auditTable, csIdColumnName, modTypeColumnName, context )
 		);
+	}
+
+	private record SubclassAuditTablesFinalizer(
+			RootClass rootClass,
+			@Nullable Audited.Table auditTable,
+			String csIdColumnName,
+			String modTypeColumnName,
+			MetadataBuildingContext context) implements StateManagementBindingPhase.Finalizer {
+		@Override
+		public void finalizeStateManagement() {
+			bindSubclassAuditTables( rootClass, auditTable, csIdColumnName, modTypeColumnName, context );
+		}
 	}
 
 	/**
@@ -245,7 +293,7 @@ public final class AuditHelper {
 			String csIdColumnName,
 			String modTypeColumnName,
 			MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getModelsContext();
 		for ( var subclass : parent.getDirectSubclasses() ) {
 			if ( subclass instanceof TableOwner ) {
 				// Check if the subclass has its own @Audited.Table for table name/schema/catalog override
@@ -308,7 +356,8 @@ public final class AuditHelper {
 			Collection collection,
 			String referencedEntityName,
 			@Nullable Audited.CollectionTable collectionAuditTable,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			BindingState bindingState) {
 		final var collector = context.getMetadataCollector();
 		final var ownerTable = collection.getOwner().getTable();
 
@@ -350,7 +399,27 @@ public final class AuditHelper {
 				context,
 				false
 		);
-		collector.addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
+		bindingState.addStateManagementFinalizer( new OneToManyAuditTableFinalizer(
+				auditTable,
+				collection,
+				referencedEntity,
+				middleAuditTable,
+				csIdColumnName,
+				modTypeColumnName,
+				context
+		) );
+	}
+
+	private record OneToManyAuditTableFinalizer(
+			@Nullable Audited.Table auditTable,
+			Collection collection,
+			PersistentClass referencedEntity,
+			Table middleAuditTable,
+			String csIdColumnName,
+			String modTypeColumnName,
+			MetadataBuildingContext context) implements StateManagementBindingPhase.Finalizer {
+		@Override
+		public void finalizeStateManagement() {
 			final var keyColumns = new ArrayList<Column>();
 			// Copy the FK columns (parent key) from the collection's key
 			for ( var column : collection.getKey().getColumns() ) {
@@ -386,7 +455,7 @@ public final class AuditHelper {
 			createChangesetForeignKey( middleAuditTable, changesetIdColumn, context );
 			enableAudit( collection, middleAuditTable, changesetIdColumn, modificationTypeColumn );
 			addTransactionEndColumns( auditTable, collection, middleAuditTable, context );
-		} );
+		}
 	}
 
 	@Nonnull
@@ -408,8 +477,9 @@ public final class AuditHelper {
 			Changelog changelog,
 			RootClass rootClass,
 			ClassDetails classDetails,
-			MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+			MetadataBuildingContext context,
+			BindingState bindingState) {
+		final var modelsContext = context.getModelsContext();
 
 		// note : @Changelog currently requires @Entity as well
 
@@ -482,11 +552,9 @@ public final class AuditHelper {
 		}
 
 		// Configure the supplier eagerly
-		final var serviceRegistry = context.getBootstrapContext().getServiceRegistry();
 		final var listenerClass = changelog.listener();
 		final var listener = listenerClass != ChangesetListener.class
-				? serviceRegistry.requireService( ManagedBeanRegistry.class )
-						.getBean( listenerClass ).getBeanInstance()
+				? context.getManagedBeanRegistry().getBean( listenerClass ).getBeanInstance()
 				: null;
 		final var supplier = new ChangelogSupplier<>(
 				classDetails.toJavaClass(),
@@ -497,17 +565,27 @@ public final class AuditHelper {
 						: null, listener
 		);
 		final var revNumberType = revNumberMember.getType().determineRawClass().toJavaClass();
-		serviceRegistry.requireService( ChangesetCoordinator.class )
-				.contributeIdentifierSupplier( supplier, revNumberType );
+		context.getChangesetCoordinator().contributeIdentifierSupplier( supplier, revNumberType );
 
 		// Defer validation (basic type, mapped as Hibernate property) and
 		// unique constraint to second pass when entity properties are fully bound
 		final String entityName = rootClass.getEntityName();
 		final String revNumberName = revNumberMember.resolveAttributeName();
 		final String revTimestampName = revTimestampMember.resolveAttributeName();
-		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored ->
-				validateChangelog( entityName, revNumberName, revTimestampName, context )
+		bindingState.addStateManagementFinalizer(
+				new ChangelogValidationFinalizer( entityName, revNumberName, revTimestampName, context )
 		);
+	}
+
+	private record ChangelogValidationFinalizer(
+			String entityName,
+			String revNumberName,
+			String revTimestampName,
+			MetadataBuildingContext context) implements StateManagementBindingPhase.Finalizer {
+		@Override
+		public void finalizeStateManagement() {
+			validateChangelog( entityName, revNumberName, revTimestampName, context );
+		}
 	}
 
 	/**
@@ -633,9 +711,7 @@ public final class AuditHelper {
 	}
 
 	private static Class<?> getChangesetIdType(MetadataBuildingContext context) {
-		return context.getBootstrapContext().getServiceRegistry()
-				.requireService( ChangesetCoordinator.class )
-				.getIdentifierType();
+		return context.getChangesetCoordinator().getIdentifierType();
 	}
 
 	private static void copyTableColumns(Table sourceTable, Table targetTable, Set<String> excludedColumns) {
@@ -679,8 +755,7 @@ public final class AuditHelper {
 			Class<?> javaType,
 			Table table,
 			MetadataBuildingContext context) {
-		final var basicValue = new BasicValue( context, table );
-		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> javaType );
+		final var basicValue = BasicValue.unregistered( context, table );
 		final var column = new Column();
 		column.setNullable( false );
 		column.setValue( basicValue );
@@ -688,8 +763,15 @@ public final class AuditHelper {
 
 		final var database = context.getMetadataCollector().getDatabase();
 		setColumnName( columnName, column, database,
-				context.getBuildingOptions().getPhysicalNamingStrategy() );
+				context.getBuildingPlan().getPhysicalNamingStrategy() );
 		setTemporalColumnType( column, database, javaType );
+
+		BasicValueResolutionBuilder.applyResolution(
+				BasicValueResolutionBuilder.Input.create(
+						basicValue,
+						BasicValueSource.stateManagement( javaType )
+				)
+		);
 
 		return column;
 	}
@@ -782,7 +864,7 @@ public final class AuditHelper {
 	}
 
 	private static @Nullable String getChangelogName(MetadataBuildingContext context) {
-		final var supplier = ChangelogSupplier.resolve( context.getBootstrapContext().getServiceRegistry() );
+		final var supplier = ChangelogSupplier.resolve( context.getServiceRegistry() );
 		return supplier != null ? supplier.getChangelogClass().getName() : null;
 	}
 

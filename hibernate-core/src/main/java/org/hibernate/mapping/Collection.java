@@ -8,7 +8,6 @@ import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.SoftDeleteType;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
@@ -194,11 +193,6 @@ public abstract sealed class Collection
 		return buildingContext;
 	}
 
-	BootstrapContext getBootstrapContext() {
-		return getBuildingContext().getBootstrapContext();
-	}
-
-	@Remove
 	public MetadataImplementor getMetadata() {
 		return getBuildingContext().getMetadataCollector();
 	}
@@ -206,7 +200,7 @@ public abstract sealed class Collection
 	@Override
 	@Remove
 	public ServiceRegistry getServiceRegistry() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+		return getMetadata().getMappingResolutionOptions().getServiceRegistry();
 	}
 
 	public boolean isSet() {
@@ -239,7 +233,7 @@ public abstract sealed class Collection
 
 	public Comparator<?> getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
-			final var clazz = classForName( Comparator.class, comparatorClassName, getBootstrapContext() );
+			final var clazz = classForName( Comparator.class, comparatorClassName, buildingContext.getClassLoaderAccess() );
 			try {
 				comparator = clazz.getConstructor().newInstance();
 			}
@@ -518,13 +512,12 @@ public abstract sealed class Collection
 	}
 
 	private ManagedBean<? extends UserCollectionType> userTypeBean() {
-		final var bootstrapContext = getBootstrapContext();
 		return createUserTypeBean(
 				role,
-				classForName( UserCollectionType.class, typeName, bootstrapContext ),
+				classForName( UserCollectionType.class, typeName, buildingContext.getClassLoaderAccess() ),
 				PropertiesHelper.map( typeParameters ),
-				bootstrapContext,
-				getMetadata().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+				buildingContext.getManagedBeanRegistry(),
+				getMetadata().getMappingResolutionOptions().isAllowExtensionsInCdi()
 		);
 	}
 

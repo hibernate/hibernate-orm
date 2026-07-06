@@ -624,7 +624,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private List<QueryHint> extractQueryHints(JaxbQueryHintContainer jaxbQuery, XmlDocumentContext xmlDocumentContext) {
 		final List<QueryHint> hints = new ArrayList<>();
 		for ( var jaxbHint : jaxbQuery.getHints() ) {
-			final var hint = JpaAnnotations.QUERY_HINT.createUsage( xmlDocumentContext.getModelBuildingContext() );
+			final var hint = JpaAnnotations.QUERY_HINT.createUsage( xmlDocumentContext.getModelsContext() );
 			hint.name( jaxbHint.getName() );
 			hint.value( jaxbHint.getValue() );
 			hints.add( hint );

@@ -4,9 +4,8 @@
  */
 package org.hibernate.orm.test.foreignkeys.disabled;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -31,14 +30,11 @@ public class DisabledForeignKeyTest {
 	public void basicTests() {
 		final var standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final var sources = new MetadataSources( standardRegistry );
-
-			sources.addAnnotatedClass( ManyToManyOwner.class );
-			sources.addAnnotatedClass( ManyToManyTarget.class );
-
-			final var metadata = (MetadataImplementor) sources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			final var metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+					standardRegistry,
+					ManyToManyOwner.class,
+					ManyToManyTarget.class
+			);
 
 			new SchemaExport().execute(
 					EnumSet.of( TargetType.STDOUT ),
@@ -72,14 +68,11 @@ public class DisabledForeignKeyTest {
 	public void expandedTests() {
 		final var standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final var sources = new MetadataSources( standardRegistry );
-
-			sources.addAnnotatedClass( ManyToManyOwner.class );
-			sources.addAnnotatedClass( ManyToManyTarget.class );
-
-			final var metadata = (MetadataImplementor) sources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			final var metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+					standardRegistry,
+					ManyToManyOwner.class,
+					ManyToManyTarget.class
+			);
 
 			// export the schema
 			new SchemaExport().execute(

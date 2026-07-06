@@ -8,8 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -29,9 +29,10 @@ public class AnnotationBinderTest {
 	public void testInvalidPrimaryKeyJoinColumn() {
 		AnnotationException annotationException = assertThrows( AnnotationException.class, () -> {
 			try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
-				new MetadataSources( serviceRegistry )
-						.addAnnotatedClass( InvalidPrimaryKeyJoinColumnAnnotationEntity.class )
-						.buildMetadata();
+				MetadataBuildingTestHelper.buildMetadata(
+						serviceRegistry,
+						InvalidPrimaryKeyJoinColumnAnnotationEntity.class
+				);
 			}
 		} );
 		assertThat( annotationException.getMessage() ).contains( "InvalidPrimaryKeyJoinColumnAnnotationEntity" );

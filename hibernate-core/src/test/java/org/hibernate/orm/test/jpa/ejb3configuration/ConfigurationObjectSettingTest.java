@@ -11,7 +11,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
@@ -20,6 +19,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
@@ -291,9 +291,7 @@ public class ConfigurationObjectSettingTest {
 		// the check above uses a "for testing only" form of what happens for "real".
 		// verify the "real" path as well
 		try (StandardServiceRegistryImpl servicedRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			final Metadata metadata = new MetadataSources( servicedRegistry )
-					.addAnnotatedClass( Bell.class )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( servicedRegistry, Bell.class );
 			final Set<ActionGrouping> actionGroupings = ActionGrouping.interpret( metadata, settings );
 			assertThat( actionGroupings ).hasSize( 1 );
 			final ActionGrouping grouping = actionGroupings.iterator().next();

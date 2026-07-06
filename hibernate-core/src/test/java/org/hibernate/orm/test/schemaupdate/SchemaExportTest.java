@@ -5,9 +5,10 @@
 package org.hibernate.orm.test.schemaupdate;
 
 import org.hamcrest.MatcherAssert;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -130,11 +131,10 @@ public class SchemaExportTest {
 			@TempDir File tempDir) throws Exception {
 		var output = new File( tempDir, "update_script.sql" );
 
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addResource( "org/hibernate/orm/test/schemaupdate/mapping2.hbm.xml" )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+				registryScope.getRegistry(),
+				new MappingSources().addMappingResource( "org/hibernate/orm/test/schemaupdate/mapping2.hbm.xml" )
+		);
 
 		final SchemaExport schemaExport = new SchemaExport();
 		schemaExport.setOutputFile( output.getAbsolutePath() );

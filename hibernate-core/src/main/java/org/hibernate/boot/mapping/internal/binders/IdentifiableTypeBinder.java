@@ -6,11 +6,13 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
@@ -192,6 +194,29 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings,
 			Predicate<AttributeMetadata> attributeFilter) {
+		bindDeclaredAttributes(
+				modelBinders,
+				sourceType,
+				ownerType,
+				attributeOwnerBinding,
+				primaryTable,
+				(property, usage) -> propertyConsumer.accept( property ),
+				includePluralAttributes,
+				registerCollectionBindings,
+				attributeFilter
+		);
+	}
+
+	protected void bindDeclaredAttributes(
+			ModelBinders modelBinders,
+			IdentifiableTypeMetadata sourceType,
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass attributeOwnerBinding,
+			Table primaryTable,
+			BiConsumer<Property, AttributeUsageBinding> propertyConsumer,
+			boolean includePluralAttributes,
+			boolean registerCollectionBindings,
+			Predicate<AttributeMetadata> attributeFilter) {
 		sourceType.forEachAttribute( (index, attributeMetadata) -> {
 			if ( sourceType.getHierarchy().getIdMapping().contains( attributeMetadata )
 					|| attributeMetadata.getMember().hasDirectAnnotationUsage( Id.class )
@@ -234,18 +259,20 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			attributeBinders.add( attributeBinder );
 			final Table attributeTable = value.getTable();
 			if ( attributeTable == primaryTable || value instanceof org.hibernate.mapping.Collection ) {
-				propertyConsumer.accept( property );
+				propertyConsumer.accept( property, attributeBinding.usageBinding() );
 			}
 			else {
 				final Join join = findJoin( attributeOwnerBinding, attributeTable );
 				join.addProperty( property );
 			}
-			CustomMappingBinder.callAttributeBinders(
-					attributeMetadata.getMember(),
-					attributeOwnerBinding,
-					property,
-					getBindingState(),
-					getBindingContext()
+			getBindingState().addAttributeCustomMapping(
+					CustomMappingBinder.attributeBinding(
+							attributeMetadata.getMember(),
+							attributeOwnerBinding,
+							property,
+							getBindingState(),
+							getBindingContext()
+					)
 			);
 		} );
 	}
@@ -365,7 +392,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	private CollectionSource collectionSource(
 			IdentifiableTypeMetadata ownerType,
 			AttributeMetadata attributeMetadata) {
-		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final var modelsContext = getBindingContext().getModelsContext();
 		final TypeDetails collectionType = attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() );
 		return switch ( attributeMetadata.getNature() ) {
 			case ELEMENT_COLLECTION -> CollectionSource.elementCollection(
@@ -404,7 +431,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	private AssociationOverride locateAssociationOverride(
 			IdentifiableTypeMetadata ownerType,
 			String attributeName) {
-		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final var modelsContext = getBindingContext().getModelsContext();
 		final ClassDetails ownerClassDetails = ownerType.getClassDetails();
 		final ClassDetails rootClassDetails = ownerType.getHierarchy().getRoot().getClassDetails();
 		AssociationOverride result = locateAssociationOverride( rootClassDetails, attributeName, modelsContext );
@@ -420,7 +447,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	private AttributeOverride locateAttributeOverride(
 			IdentifiableTypeMetadata ownerType,
 			String attributeName) {
-		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final var modelsContext = getBindingContext().getModelsContext();
 		final ClassDetails ownerClassDetails = ownerType.getClassDetails();
 		final ClassDetails rootClassDetails = ownerType.getHierarchy().getRoot().getClassDetails();
 		AttributeOverride result = locateAttributeOverride( rootClassDetails, attributeName, modelsContext );

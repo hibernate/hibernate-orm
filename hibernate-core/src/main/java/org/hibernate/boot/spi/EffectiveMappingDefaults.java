@@ -17,7 +17,7 @@ import jakarta.persistence.CascadeType;
  * Defaults which are in effect for each mapping.
  * A combination of global settings and XML-specific settings
  *
- * @see MappingDefaults
+ * @see GlobalMappingDefaults
  * @see PersistenceUnitMetadata
  * @see JaxbEntityMappingsImpl
  *
@@ -31,7 +31,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * The default database catalog name to use
 	 *
-	 * @see MappingDefaults#getImplicitCatalogName()
+	 * @see GlobalMappingDefaults#getImplicitCatalogName()
 	 * @see PersistenceUnitMetadata#getDefaultCatalog()
 	 */
 	String getDefaultCatalogName();
@@ -39,7 +39,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * The default database schema name to use
 	 *
-	 * @see MappingDefaults#getImplicitCatalogName()
+	 * @see GlobalMappingDefaults#getImplicitCatalogName()
 	 * @see PersistenceUnitMetadata#getDefaultCatalog()
 	 */
 	String getDefaultSchemaName();
@@ -47,7 +47,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * Whether database identifiers be quoted by default
 	 *
-	 * @see MappingDefaults#shouldImplicitlyQuoteIdentifiers()
+	 * @see GlobalMappingDefaults#shouldImplicitlyQuoteIdentifiers()
 	 * @see PersistenceUnitMetadata#useQuotedIdentifiers()
 	 *
 	 */
@@ -78,7 +78,7 @@ public interface EffectiveMappingDefaults {
 	 * The default package name to use if none specified in XML mappings.
 	 * Useful when all (or most) domain classes are in a single package.
 	 *
-	 * @see MappingDefaults#getImplicitPackageName()
+	 * @see GlobalMappingDefaults#getImplicitPackageName()
 	 * @see JaxbEntityMappingsImpl#getPackage()
 	 */
 	String getDefaultPackageName();
@@ -86,7 +86,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * Whether auto-importing of entity names (for queries) is enabled.
 	 *
-	 * @see MappingDefaults#isAutoImportEnabled()
+	 * @see GlobalMappingDefaults#isAutoImportEnabled()
 	 * @see JaxbEntityMappingsImpl#isAutoImport()
 	 */
 	boolean isDefaultAutoImport();
@@ -94,7 +94,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * The default cascade styles to apply to associations.
 	 *
-	 * @see MappingDefaults#getImplicitCascadeStyleName()
+	 * @see GlobalMappingDefaults#getImplicitCascadeStyleName()
 	 * @see PersistenceUnitMetadata#getDefaultCascadeTypes()
 	 * @see JaxbEntityMappingsImpl#getDefaultCascade()
 	 */
@@ -112,7 +112,7 @@ public interface EffectiveMappingDefaults {
 	 * none specified in the mapping.
 	 *
 	 * @see #getDefaultPropertyAccessType
-	 * @see MappingDefaults#getImplicitPropertyAccessorName()
+	 * @see GlobalMappingDefaults#getImplicitPropertyAccessorName()
 	 * @see JaxbEntityMappingsImpl#getAttributeAccessor()
 	 */
 	String getDefaultAccessStrategyName();
@@ -120,7 +120,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * Whether singular associations (many-to-one, one-to-one) are lazy by default if not specified in the mapping.
 	 *
-	 * @see MappingDefaults#areEntitiesImplicitlyLazy()
+	 * @see GlobalMappingDefaults#areEntitiesImplicitlyLazy()
 	 * @see JaxbEntityMappingsImpl#isDefaultLazy()
 	 * @see JaxbPersistenceImpl.JaxbPersistenceUnitImpl#getDefaultToOneFetchType()
 	 */
@@ -129,7 +129,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * Whether plural attributes are lazy by default if not specified in the mapping.
 	 *
-	 * @see MappingDefaults#areCollectionsImplicitlyLazy() ()
+	 * @see GlobalMappingDefaults#areCollectionsImplicitlyLazy() ()
 	 * @see JaxbEntityMappingsImpl#isDefaultLazy()
 	 */
 	boolean isDefaultCollectionLaziness();
@@ -137,7 +137,7 @@ public interface EffectiveMappingDefaults {
 	/**
 	 * The default cache access strategy to use if none is specified
 	 *
-	 * @see MappingDefaults#getImplicitCacheAccessType()
+	 * @see GlobalMappingDefaults#getImplicitCacheAccessType()
 	 */
 	AccessType getDefaultCacheAccessType();
 

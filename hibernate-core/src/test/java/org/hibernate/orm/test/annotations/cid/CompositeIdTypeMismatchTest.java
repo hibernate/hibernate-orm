@@ -9,8 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -26,9 +26,9 @@ public class CompositeIdTypeMismatchTest {
 	@Test
 	public void test() {
 		try ( StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder().build() ) {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( TestEntity.class );
-			assertThatExceptionOfType( AnnotationException.class).isThrownBy( metadataSources::buildMetadata ).withMessageContaining( "doesn't match type" );
+			assertThatExceptionOfType( AnnotationException.class)
+					.isThrownBy( () -> MetadataBuildingTestHelper.buildMetadata( ssr, TestEntity.class ) )
+					.withMessageContaining( "doesn't match type" );
 		}
 	}
 

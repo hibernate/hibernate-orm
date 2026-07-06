@@ -5,12 +5,13 @@
 package org.hibernate.orm.test.annotations.various;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
@@ -26,10 +27,11 @@ class OrmXmlGeneratedTest {
 		StandardServiceRegistry ssr = ServiceRegistryBuilder.buildServiceRegistry();
 
 		try {
-			MetadataSources ms = new MetadataSources( ssr );
-			ms.addResource( "org/hibernate/orm/test/annotations/generated/ormXml/orm.xml" );
-
-			Metadata metadata = ms.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources()
+							.addMappingResource( "org/hibernate/orm/test/annotations/generated/ormXml/orm.xml" )
+			);
 
 			PersistentClass entityBinding = metadata.getEntityBinding( Tractor.class.getName() );
 			GeneratorCreator generator = entityBinding

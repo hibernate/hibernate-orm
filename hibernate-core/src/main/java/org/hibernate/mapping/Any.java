@@ -7,7 +7,6 @@ package org.hibernate.mapping;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.type.AnyType;
@@ -248,10 +247,7 @@ public class Any extends SimpleValue {
 	}
 
 	private static String columnName(Column column, MetadataBuildingContext buildingContext) {
-		final var jdbcServices =
-				buildingContext.getBootstrapContext().getServiceRegistry()
-						.requireService( JdbcServices.class );
-		return column.getQuotedName( jdbcServices.getDialect() );
+		return column.getQuotedName( buildingContext.getJdbcServices().getDialect() );
 	}
 
 	public void setDiscriminator(BasicValue discriminatorDescriptor) {

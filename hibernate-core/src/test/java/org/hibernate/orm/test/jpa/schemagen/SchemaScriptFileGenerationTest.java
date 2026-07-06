@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
@@ -54,7 +54,7 @@ public class SchemaScriptFileGenerationTest {
 	@JiraKey(value = "10601")
 	public void testGenerateSchemaDoesNotProduceTheSameStatementTwice() throws Exception {
 
-		SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
+		BootstrapPipeline.generateSchema( persistenceUnitDescriptor, config );
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) ).toLowerCase();
 

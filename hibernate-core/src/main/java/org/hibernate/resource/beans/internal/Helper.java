@@ -40,9 +40,23 @@ public final class Helper {
 
 	@Nullable
 	public static BeanContainer getBeanContainer(ServiceRegistry serviceRegistry) {
-		return allowExtensionsInCdi( serviceRegistry )
-				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
+		return getBeanContainer(
+				serviceRegistry.requireService( ConfigurationService.class ),
+				serviceRegistry.requireService( ManagedBeanRegistry.class )
+		);
+	}
+
+	@Nullable
+	public static BeanContainer getBeanContainer(
+			ConfigurationService configurationService,
+			ManagedBeanRegistry managedBeanRegistry) {
+		return allowExtensionsInCdi( configurationService )
+				? managedBeanRegistry.getBeanContainer()
 				: null;
+	}
+
+	public static boolean allowExtensionsInCdi(ConfigurationService configurationService) {
+		return configurationService.getSetting( ALLOW_EXTENSIONS_IN_CDI, BOOLEAN, false );
 	}
 
 	@Nullable

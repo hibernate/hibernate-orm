@@ -13,7 +13,7 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class SchemaValidateHelper {
 	public static void validate(Metadata metadata) {
-		validate( metadata, ( ( MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+		validate( metadata, ( ( MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry() );
 	}
 
 	public static void validate(Metadata metadata, ServiceRegistry serviceRegistry) {

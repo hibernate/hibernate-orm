@@ -912,7 +912,7 @@ The broader architecture is larger than "binding" as a single phase.
 
 [source]
 ----
-AvailableResources
+PreparedMappingSources
     -> resource discovery
     -> XML/annotation source normalization and overlay
     -> categorization

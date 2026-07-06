@@ -175,7 +175,7 @@ class ElementCollectionAttributeBinder {
 						attributeMetadata.getMember(),
 						bindingContext.getClassDetailsRegistry().resolveClassDetails( ownerBinding.getClassName() ),
 						ownerType.getHierarchy().getRoot().getClassDetails(),
-						bindingContext.getBootstrapContext().getModelsContext()
+						bindingContext.getModelsContext()
 				)
 				: collectionValueIntent.source();
 		final CollectionTable collectionTable = source.collectionTable();
@@ -407,19 +407,16 @@ class ElementCollectionAttributeBinder {
 
 	private CompositeUserType<?> instantiateCompositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
-		return bindingContext.getBootstrapContext().getMetadataBuildingOptions().isAllowExtensionsInCdi()
-				? bindingContext.getBootstrapContext()
-						.getManagedBeanRegistry()
-						.getBean( compositeUserTypeClass )
-						.getBeanInstance()
+		return bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
+				? bindingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 	}
 
 	private BasicValue bindBasicElementValue(CollectionSource source, Table table) {
-		final BasicValue element = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		final BasicValue element = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		element.setTable( table );
 		final BasicValueIntent valueIntent = BasicValueIntent.fromCollectionElement( source );
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.collectionElement( source.member(), source.elementType(), bindingContext ),
 				null,
 				element,
@@ -427,6 +424,7 @@ class ElementCollectionAttributeBinder {
 				bindingState,
 				bindingContext
 		);
+		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
 
 		final jakarta.persistence.Column column = source.elementColumn();
 		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(

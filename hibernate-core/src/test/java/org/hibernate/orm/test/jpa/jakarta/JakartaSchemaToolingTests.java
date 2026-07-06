@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
@@ -168,6 +168,6 @@ public class JakartaSchemaToolingTests {
 		};
 
 
-		return SessionFactoryBootstrap.build( puDescriptor, settings ).unwrap( SessionFactoryImplementor.class );
+		return BootstrapPipeline.build( puDescriptor, settings ).unwrap( SessionFactoryImplementor.class );
 	}
 }

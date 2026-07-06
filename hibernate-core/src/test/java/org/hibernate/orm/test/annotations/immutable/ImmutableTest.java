@@ -6,10 +6,8 @@ package org.hibernate.orm.test.annotations.immutable;
 
 import jakarta.persistence.PersistenceException;
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -147,20 +145,12 @@ public class ImmutableTest {
 
 	@Test
 	public void testMisplacedImmutableAnnotation() {
-		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addAnnotatedClass( Foobar.class );
-		try {
-			metadataSources.buildMetadata();
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Foobar.class );
 //			fail( "Expecting exception due to misplaced @Immutable annotation");
 		}
 		catch (AnnotationException ignore) {
 			fail( "Exception with @Immutable on field" );
-		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if ( metaServiceRegistry instanceof BootstrapServiceRegistry ) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
 		}
 	}
 

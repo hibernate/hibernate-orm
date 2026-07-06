@@ -19,7 +19,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -28,11 +28,11 @@ import org.hibernate.testing.orm.junit.JiraKey;
  */
 @JiraKey(value = "HHH-8564")
 public class EmbeddableWithOneToMany_HHH_8564_Test
-		extends AbstractEmbeddableWithManyToManyTest {
+	extends AbstractEmbeddableWithManyToManyTest {
 
 	@Override
-	protected void addAnnotatedClasses(MetadataSources metadataSources) {
-		metadataSources.addAnnotatedClasses( User.class );
+	protected void addAnnotatedClasses(MappingSources mappingSources) {
+		mappingSources.addManagedClasses( User.class );
 	}
 
 	@Embeddable

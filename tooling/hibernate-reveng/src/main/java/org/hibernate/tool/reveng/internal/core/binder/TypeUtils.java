@@ -11,7 +11,7 @@ import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.api.core.TableIdentifier;
 import org.hibernate.tool.reveng.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.reveng.internal.util.TableNameQualifier;
-import org.hibernate.type.Type;
+import org.hibernate.type.BasicType;
 
 import java.lang.reflect.Field;
 import java.util.logging.Level;
@@ -31,7 +31,20 @@ public class TypeUtils {
 			Table table,
 			Column column,
 			boolean generatedIdentifier) {
+		return determinePreferredTypeDetails(
+				metadataCollector,
+				revengStrategy,
+				table,
+				column,
+				generatedIdentifier).name();
+	}
 
+	public static PreferredType determinePreferredTypeDetails(
+			InFlightMetadataCollector metadataCollector,
+			RevengStrategy revengStrategy,
+			Table table,
+			Column column,
+			boolean generatedIdentifier) {
 		String location =
 				"Table: " +
 				TableNameQualifier.qualify(
@@ -57,7 +70,11 @@ public class TypeUtils {
 				generatedIdentifier
 		);
 
-		Type wantedType = metadataCollector
+		if(preferredHibernateType==null) {
+			throw new RuntimeException("Could not find javatype for " + typeCodeName( sqlTypeCode ));
+		}
+
+		BasicType<?> wantedType = metadataCollector
 				.getTypeConfiguration()
 				.getBasicTypeRegistry()
 				.getRegisteredType(preferredHibernateType);
@@ -91,11 +108,10 @@ public class TypeUtils {
 
 
 
-		if(preferredHibernateType==null) {
-			throw new RuntimeException("Could not find javatype for " + typeCodeName( sqlTypeCode ));
-		}
+		return new PreferredType( preferredHibernateType, wantedType );
+	}
 
-		return preferredHibernateType;
+	public record PreferredType(String name, BasicType<?> basicType) {
 	}
 
 	private static String typeCodeName(int sqlTypeCode) {

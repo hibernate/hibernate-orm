@@ -36,7 +36,7 @@ From the JPA side, the old inline bootstrap path handled several phases inline:
 * global registrations
 * root entity, mapped-superclass, and embeddable categorization
 
-This means `ManagedResources` acts as the historical source bundle, while this PoC's `AvailableResources`
+This means `ManagedResources` acts as the historical source bundle, while this PoC's `PreparedMappingSources`
 is the cleaner replacement candidate.
 
 == Proposed Pipeline
@@ -49,10 +49,10 @@ link:flow-notation.adoc[`flow-notation.adoc`].
 [source]
 ----
 JpaBootstrapSettings
-MappingSourceContributions
-AvailableResources
+MappingSources
+PreparedMappingSources
 CategorizedDomainModel
-ResolvedMetadata
+ResolvedMapping
 ----
 
 The intended flow is:
@@ -60,10 +60,10 @@ The intended flow is:
 [source]
 ----
 PersistenceUnitDescriptor / HibernatePersistenceConfiguration
-    -> MappingSourceContributions
-    -> AvailableResources
+    -> MappingSources
+    -> PreparedMappingSources
     -> DomainModelCategorizer
-    -> BindingCoordinator / MetadataResolver
+    -> BindingCoordinator / MappingResolutionPipeline
 ----
 
 == Settings
@@ -101,11 +101,11 @@ Inputs:
 
 Output:
 
-* `MappingSourceContributions`: source contributions after entry-point source discovery, including scanner results, not yet categorized
+* `MappingSources`: source contributions after entry-point source discovery, including scanner results, not yet categorized
 
-== AvailableResources
+== PreparedMappingSources
 
-`AvailableResources` should be the normalized source model produced by source collection.
+`PreparedMappingSources` should be the normalized source model produced by source collection.
 
 It should contain:
 
@@ -114,23 +114,23 @@ It should contain:
 * XML bindings
 
 Dynamic model names/classes are discovered during XML processing rather than
-stored as separate `AvailableResources` buckets.  Extra query imports are
+stored as separate `PreparedMappingSources` buckets.  Extra query imports are
 represented explicitly so they are not folded into class or XML source buckets.
 
 It should not contain merged settings.
 
 It should not simply clone `ManagedResources`.  `ManagedResources` is raw-ish and historical, exposing class
-references, class names, package names, XML bindings, converter descriptors, and query imports.  `AvailableResources`
+references, class names, package names, XML bindings, converter descriptors, and query imports.  `PreparedMappingSources`
 should be source-model oriented and normalized for categorization.
 
 == XML Preprocessing
 
-Move XML preprocessing behind `AvailableResources`.  The PoC now uses direct
+Move XML preprocessing behind `PreparedMappingSources`.  The PoC now uses direct
 consumption:
 
 [source]
 ----
-AvailableResources -> XmlPreProcessingResult
+PreparedMappingSources -> XmlPreProcessingResult
 ----
 
 == Categorization
@@ -139,7 +139,7 @@ Categorization should consume normalized resources:
 
 [source]
 ----
-AvailableResources + MetadataBuildingContext -> CategorizedDomainModel
+PreparedMappingSources + MetadataBuildingContext -> CategorizedDomainModel
 ----
 
 This replaces the current ad hoc categorization work in `MetadataBuildingProcess.processManagedResources(...)`.
@@ -208,9 +208,9 @@ Output:
 * raw source contributions, not yet categorized
 
 
-=== Make AvailableResources the Normalized Source Model
+=== Make PreparedMappingSources the Normalized Source Model
 
-AvailableResources should be the output of source collection.
+PreparedMappingSources should be the output of source collection.
 
 It should contain:
 
@@ -222,9 +222,9 @@ It should contain:
 
 *It should not contain merged settings.*
 
-=== Move XML Preprocessing Behind AvailableResources
+=== Move XML Preprocessing Behind PreparedMappingSources
 
-Today XML preprocessing takes ManagedResources. In the PoC, make XML preprocessing consume AvailableResources directly.
+Today XML preprocessing takes ManagedResources. In the PoC, make XML preprocessing consume PreparedMappingSources directly.
 
 The pre-processing step itself belongs to categorization because it interprets
 XML bindings to discover mapped classes, dynamic model names, metadata-complete
@@ -246,16 +246,16 @@ The intended direction should be:
 
 [source]
 ----
-AvailableResources -> XmlPreProcessingResult
+PreparedMappingSources -> XmlPreProcessingResult
 ----
 
-=== Categorize From AvailableResources
+=== Categorize From PreparedMappingSources
 
 This is where the PoC’s DomainModelCategorizer belongs.
 
 [source]
 ----
-(AvailableResources + MetadataBuildingContext) -> CategorizedDomainModel
+(PreparedMappingSources + MetadataBuildingContext) -> CategorizedDomainModel
 ----
 
 This replaces the current ad hoc collection in MetadataBuildingProcess.processManagedResources(...).
@@ -270,7 +270,7 @@ Not raw MetadataSources, not raw ManagedResources.
 
 === Key Design Decision
 
-AvailableResources *is not* a clone of ManagedResources.
+PreparedMappingSources *is not* a clone of ManagedResources.
 
 ManagedResources is raw-ish and historical:
 
@@ -281,7 +281,7 @@ ManagedResources is raw-ish and historical:
 * converter descriptors
 * query imports
 
-AvailableResources should be normalized:
+PreparedMappingSources should be normalized:
 
 * source-model objects already resolved enough for categorization
 * XML already bound
@@ -296,13 +296,13 @@ The original next slice was:
 [source]
 ----
 PersistenceUnitDescriptor / HibernatePersistenceConfiguration
-    -> MappingSourceContributions
-    -> AvailableResources
+    -> MappingSources
+    -> PreparedMappingSources
     -> DomainModelCategorizer
 ----
 
 That slice is now covered locally and binding has also been wired through
-`MetadataResolver`.  Keep this section only as historical context for how the
+`MappingResolutionPipeline`.  Keep this section only as historical context for how the
 source/categorization work was first isolated.
 
 The original test target was:

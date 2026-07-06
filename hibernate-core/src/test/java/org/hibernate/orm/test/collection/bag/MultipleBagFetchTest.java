@@ -16,8 +16,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -29,14 +30,15 @@ public class MultipleBagFetchTest {
 	public void testEntityWithMultipleJoinFetchedBags() {
 		try (StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry()) {
 
-			Metadata metadata = new MetadataSources( standardRegistry )
-					.addAnnotatedClass( Post.class )
-					.addAnnotatedClass( PostComment.class )
-					.addAnnotatedClass( Tag.class )
-					.getMetadataBuilder()
-					.build();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					standardRegistry,
+					new MappingSources()
+							.addManagedClass( Post.class )
+							.addManagedClass( PostComment.class )
+							.addManagedClass( Tag.class )
+			);
 			// make sure that this model does not cause a MultipleBagFetchException
-			metadata.buildSessionFactory().close();
+			org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata ).close();
 		}
 	}
 

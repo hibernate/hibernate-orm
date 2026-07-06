@@ -94,8 +94,8 @@ class CollectionMappingHelper {
 							source.member().getDeclaringType().getName() + "." + source.member().getName(),
 							collectionType.type(),
 							extractParameters( collectionType.parameters() ),
-							bindingState.getMetadataBuildingContext().getBootstrapContext(),
-							bindingState.getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
+							bindingState.getMetadataBuildingContext().getManagedBeanRegistry(),
+							bindingState.getMetadataBuildingContext().getBuildingPlan().isAllowExtensionsInCdi()
 					);
 			return new CustomCollectionType(
 					customTypeBeanResolver.get().getBeanInstance().getClassification(),
@@ -115,8 +115,8 @@ class CollectionMappingHelper {
 						source.member().getDeclaringType().getName() + "#" + source.member().getName(),
 						registration.implementation(),
 						registration.parameters(),
-						bindingState.getMetadataBuildingContext().getBootstrapContext(),
-						bindingState.getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
+						bindingState.getMetadataBuildingContext().getManagedBeanRegistry(),
+						bindingState.getMetadataBuildingContext().getBuildingPlan().isAllowExtensionsInCdi()
 				)
 		);
 	}

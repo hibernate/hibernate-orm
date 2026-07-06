@@ -129,8 +129,8 @@ class OneToManyBinder extends AbstractBinder {
 		bindCollection(pc, fromForeignKey, null, collection);
 		OneToMany oneToMany = new OneToMany(getMetadataBuildingContext(), collection.getOwner());
 		oneToMany.setReferencedEntityName(getTableToClassName(fromForeignKey.getTable()));
-		getMetadataCollector().addSecondPass(
-				new CollectionBinderSecondPass(getMetadataBuildingContext(), collection));
+		binderContext.addCollectionAssociationFinalizer(
+				new CollectionAssociationFinalizer(getMetadataBuildingContext(), collection));
 		collection.setElement(oneToMany);
 	}
 

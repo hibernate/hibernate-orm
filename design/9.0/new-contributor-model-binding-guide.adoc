@@ -33,7 +33,7 @@ The pipeline is:
 Persistence unit / programmatic config / tests
         |
         v
-AvailableResources
+PreparedMappingSources
         |
         v
 DomainModelCategorizer.categorize(...)
@@ -57,9 +57,9 @@ org.hibernate.mapping
 Source collection is the input-assembly step.  It gathers explicit persistence
 unit declarations, programmatic configuration, XML mapping bindings, and any
 archive-scanning contributions into
-link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`].
 
-link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
 answers: "What source material should this boot process consider?"
 
 link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
@@ -85,7 +85,7 @@ re-examining that source material directly.
 ====
 Imagine a persistence unit with one class, `Customer`, annotated with `@Entity`.
 
-1. link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
+1. link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
 receives `Customer` as a managed class detail.
 2. link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
 sees `@Entity` on `Customer` and records it as a persistent entity type.  It
@@ -121,7 +121,7 @@ SessionFactory.
 | Bootstrap setting resolution used before source collection and binding
 
 | link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/package-info.java[`o.h.boot.pipeline.internal.source`]
-| Source inventory: `AvailableResources`
+| Source inventory: `PreparedMappingSources`
 
 | link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/package-info.java[`o.h.boot.mapping.internal.categorize`]
 | Internal categorization contracts and implementation: `CategorizedDomainModel`, `EntityHierarchy`, collector, hierarchy builder, and inheritance state
@@ -155,9 +155,9 @@ facts rather than mutable binding collections.
 |===
 
 
-== AvailableResources
+== PreparedMappingSources
 
-`AvailableResources` is a small source inventory: the raw inputs represented as
+`PreparedMappingSources` is a small source inventory: the raw inputs represented as
 Java class details, `package-info` class details, and XML mapping documents.  It
 has three buckets:
 
@@ -167,24 +167,27 @@ has three buckets:
 
 Touchpoint:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
 
 The record has convenience factories for the source forms used by the ORM 9
 pipeline:
 
-* `AvailableResources.from(PersistenceUnitDescriptor, AvailableResourcesContext)`
-* `AvailableResources.from(PersistenceUnitDescriptor, AvailableResourcesContext, ResolvedMappingSettings)`
-* `AvailableResources.from(PersistenceConfiguration, AvailableResourcesContext)`
-* `AvailableResources.from(HibernatePersistenceConfiguration, AvailableResourcesContext)`
-* `AvailableResources.from(HibernatePersistenceConfiguration, AvailableResourcesContext, ResolvedMappingSettings)`
-* `AvailableResources.from(MappingSourceContributions, AvailableResourcesContext, ResolvedMappingSettings)`
-* `AvailableResources.from(MetadataSources, AvailableResourcesContext)`
+* `PreparedMappingSources.from(PersistenceUnitDescriptor, MappingSourcePreparationContext)`
+* `PreparedMappingSources.from(PersistenceUnitDescriptor, MappingSourcePreparationContext, ResolvedMappingSettings)`
+* `PreparedMappingSources.from(PersistenceConfiguration, MappingSourcePreparationContext)`
+* `PreparedMappingSources.from(HibernatePersistenceConfiguration, MappingSourcePreparationContext)`
+* `PreparedMappingSources.from(HibernatePersistenceConfiguration, MappingSourcePreparationContext, ResolvedMappingSettings)`
+* `PreparedMappingSources.from(MappingSources, MappingSourcePreparationContext, ResolvedMappingSettings)`
+* `PreparedMappingSources.from(MetadataSources, MappingSourcePreparationContext)`
 
-link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResourcesContext.java[`AvailableResourcesContext`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/MappingSourcePreparationContext.java[`MappingSourcePreparationContext`]
 carries the early bootstrap inputs needed to build the inventory:
-`ModelsContext` and `ServiceRegistry`.  This keeps source collection independent
-of `MetadataBuildingContext`, which is created later when available resources
-are categorized and bound.
+`ModelsContext`, `ClassLoaderService`, and XML binding setting access.  The
+context still has a service-registry-taking adapter constructor, but it adapts
+that registry immediately to the narrower inputs needed for source collection
+and `MappingBinder` creation.  This keeps source collection independent of
+`MetadataBuildingContext`, which is created later when resolved mapping sources are
+categorized and bound.
 
 The factories resolve class names through the Hibernate Models
 `ClassDetailsRegistry`, Hibernate Models' registry for reflective class
@@ -196,7 +199,7 @@ The `HibernatePersistenceConfiguration` factory additionally applies archive
 scanning results from
 link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/HibernatePersistenceConfigurationScanner.java[`HibernatePersistenceConfigurationScanner`].
 
-Tests sometimes construct `AvailableResources` directly.  That is fine when a
+Tests sometimes construct `PreparedMappingSources` directly.  That is fine when a
 test wants tight control over the source set.
 
 
@@ -204,7 +207,7 @@ test wants tight control over the source set.
 
 Package annotations enter through `package-info` class details.  The helper
 method
-link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources#applyClassDetails`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources#applyClassDetails`]
 separates these from ordinary managed classes.
 
 That distinction matters because package metadata can contribute defaults or
@@ -216,7 +219,7 @@ or embeddable.
 == XML Pre-Processing
 
 Categorization starts with XML that has been pre-processed from
-`AvailableResources`:
+`PreparedMappingSources`:
 
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/xml/XmlPreProcessor.java[`XmlPreProcessor`]
 
@@ -227,7 +230,7 @@ the XML flag that tells Hibernate to ignore annotations on a class and use only
 the XML mapping.
 
 `DomainModelCategorizer` keeps XML pre-processing in the categorization phase by
-calling `XmlPreProcessor` with `AvailableResources#xmlMappings` directly, so this
+calling `XmlPreProcessor` with `PreparedMappingSources#xmlMappings` directly, so this
 path no longer needs ORM's historical `ManagedResources` source shape.
 
 After pre-processing, `DomainModelCategorizer` builds an `allKnownClassNames`
@@ -335,7 +338,7 @@ inheritance state:
 
 This state is scoped to the visible source set.  It does not scan every class
 reachable from the classpath.  If a persistent superclass exists in Java but was
-not included in `AvailableResources`, the inheritance state decides how to handle
+not included in `PreparedMappingSources`, the inheritance state decides how to handle
 that missing type.
 
 Then
@@ -766,7 +769,7 @@ model opportunistically.
 == Common Traps
 
 Do not assume every class in
-link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
 is persistent.  Package-info, plain converter classes, listener classes, and
 non-persistent support classes may all appear in the visible source set.
 
@@ -840,7 +843,7 @@ annotations or XML.
 
 Start with the pipeline:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/AvailableResources.java[`AvailableResources`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]

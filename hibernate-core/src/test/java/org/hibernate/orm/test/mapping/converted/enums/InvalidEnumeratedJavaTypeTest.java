@@ -9,8 +9,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -24,10 +24,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class InvalidEnumeratedJavaTypeTest {
 	@Test
 	public void testInvalidMapping(ServiceRegistryScope scope) {
-		MetadataSources metadataSources = new MetadataSources( scope.getRegistry() )
-			.addAnnotatedClass( TheEntity.class );
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), TheEntity.class );
 			fail( "Was expecting failure" );
 		}
 		catch (AnnotationException ignore) {

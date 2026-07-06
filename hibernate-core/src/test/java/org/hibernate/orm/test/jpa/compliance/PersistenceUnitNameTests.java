@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -51,7 +51,7 @@ public class PersistenceUnitNameTests {
 		var descriptors = PersistenceXmlParser.create().parse( List.of( puFile ) );
 		assertThat( descriptors ).containsKey( name );
 		final PersistenceUnitDescriptor descriptor = descriptors.get( name );
-		return SessionFactoryBootstrap.build(
+		return BootstrapPipeline.build(
 				descriptor,
 				buildSettings( scope )
 		);

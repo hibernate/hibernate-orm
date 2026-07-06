@@ -144,6 +144,11 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	}
 
 	@Override
+	public void addDefaultResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor) {
+		metadataCollector.addDefaultResultSetMapping( resultSetMappingDescriptor );
+	}
+
+	@Override
 	public void addFetchProfile(FetchProfile fetchProfile) {
 		metadataCollector.addFetchProfile( fetchProfile );
 	}

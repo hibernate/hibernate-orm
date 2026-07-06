@@ -104,7 +104,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	public void stop() {
 		if ( metadata instanceof MetadataImplementor activeMetadata ) {
 			// Avoid keeping database connections around
-			activeMetadata.getMetadataBuildingOptions().getServiceRegistry().close();
+			activeMetadata.getMappingResolutionOptions().getServiceRegistry().close();
 			metadata = null;
 		}
 	}

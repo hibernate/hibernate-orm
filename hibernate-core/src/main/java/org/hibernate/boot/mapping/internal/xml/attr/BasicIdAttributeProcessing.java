@@ -42,8 +42,8 @@ public class BasicIdAttributeProcessing {
 				declarer
 		);
 
-		memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelBuildingContext() );
-		final BasicJpaAnnotation basicAnn = (BasicJpaAnnotation) memberDetails.applyAnnotationUsage( JpaAnnotations.BASIC, xmlDocumentContext.getModelBuildingContext() );
+		memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelsContext() );
+		final BasicJpaAnnotation basicAnn = (BasicJpaAnnotation) memberDetails.applyAnnotationUsage( JpaAnnotations.BASIC, xmlDocumentContext.getModelsContext() );
 		basicAnn.fetch( FetchType.EAGER );
 		basicAnn.optional( false );
 

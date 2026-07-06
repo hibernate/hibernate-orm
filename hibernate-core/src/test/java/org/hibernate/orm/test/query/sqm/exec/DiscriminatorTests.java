@@ -6,7 +6,7 @@ package org.hibernate.orm.test.query.sqm.exec;
 
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 
 	@Override
-	protected void applyMetadataSources(MetadataSources metadataSources) {
+	protected void applyMetadataSources(MappingSources metadataSources) {
 		StandardDomainModel.RETAIL.getDescriptor().applyDomainModel( metadataSources );
 	}
 

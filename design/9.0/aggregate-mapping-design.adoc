@@ -66,7 +66,7 @@ mapping model:
 ComponentSource
     -> Component
     -> AggregateColumn
-    -> AggregateComponentSecondPass
+    -> ComponentBindingPhase.AggregateFinalization
     -> UserDefinedObjectType / aggregate metadata
 ----
 
@@ -75,15 +75,15 @@ categorization, binding, UDT metadata, and runtime compatibility without waiting
 for a larger model redesign.
 
 However, this should be treated as transitional.  The bridge is allowed to use
-existing `Component` and `AggregateComponentSecondPass` behavior, but new design
-work should not assume that second-pass table mutation is the desired final
-shape.
+existing `Component` and aggregate-column behavior, but new design work should
+not assume that compatibility projection and table mutation are the desired
+final shape.
 
 The current compatibility policy is to keep materializing the mapping shape that
 legacy boot and runtime consumers already understand.  The new pipeline may
 collect richer aggregate intent internally, but it should project that intent
-into `Component`, `AggregateColumn`, `AggregateComponentSecondPass`, and existing
-database aggregate metadata for now.
+into `Component`, `AggregateColumn`, component aggregate finalization, and
+existing database aggregate metadata for now.
 
 As with other transitional boot-model work, explicit storage descriptors should
 not be attached directly to shared `org.hibernate.mapping` contracts while
@@ -93,7 +93,7 @@ also changed to populate the same descriptor as authoritative state.
 Current bridge status:
 
 * singular embedded `@Struct` attributes materialize the legacy-compatible
-  `Component` / `AggregateColumn` / `AggregateComponentSecondPass` shape;
+  `Component` / `AggregateColumn` / aggregate finalization shape;
 * element-collection `@Struct` values use the same bridge, with the aggregate
   column on the collection table and plural struct SQL type defaults derived
   from the preferred array strategy;
@@ -142,7 +142,7 @@ Current bridge status:
   collection table-group/model boundary, not in source discovery or aggregate
   column materialization;
 * the bridge still intentionally binds component members first and lets
-  `AggregateComponentSecondPass` validate, order, contribute UDT metadata, and
+  component aggregate finalization validate, order, contribute UDT metadata, and
   remove flattened member columns from the owner or collection table.
 
 == Proposed Mapping Model
@@ -425,8 +425,8 @@ Can `UserDefinedObjectType` remain the right database metadata object for SQL
 `STRUCT`, or should aggregate member metadata move behind a more general
 database aggregate metadata contract?
 
-How much of `AggregateComponentSecondPass` can become normal binder validation
-once source roles and aggregate member containers are explicit?
+How much aggregate finalization can become normal binder validation once source
+roles and aggregate member containers are explicit?
 
 Should JSON/XML aggregate mappings share the same component storage descriptor
 as SQL `STRUCT`, or should the common contract be narrower with
@@ -525,12 +525,12 @@ Follow-up work introduced the first internal binding-side version of that same
 idea: `AggregateValuePlan` resolves the aggregate column storage code, the
 normalized aggregate value JDBC code, the explicit aggregate Java type decision,
 and the logical `AggregateMemberContainer` before the binder projects those
-facts into `Component`, `BasicValue`, `AggregateColumn`, and
-`AggregateComponentSecondPass`.  This does not yet move child binding into a
-real non-table member container; it names that target and removes another layer
-of duplicated inline aggregate type-resolution logic from the binder.  The next
-design step is to make component-member binding consume the logical container
-instead of temporarily registering aggregate members as owner-table columns.
+facts into `Component`, `BasicValue`, `AggregateColumn`, and component aggregate
+finalization.  This does not yet move child binding into a real non-table member
+container; it names that target and removes another layer of duplicated inline
+aggregate type-resolution logic from the binder.  The next design step is to
+make component-member binding consume the logical container instead of
+temporarily registering aggregate members as owner-table columns.
 
 The next bridge slice introduced `ComponentMemberTarget` and threaded it through
 component-member binding.  Normal components use a table target.  Aggregate
@@ -552,16 +552,16 @@ The next small step made that branch observable: aggregate-target basic member
 columns are registered with `AggregateMemberContainer` as logical aggregate
 members.  They are no longer registered as physical table columns in the new
 pipeline.  Runtime/schema behavior is intentionally unchanged because
-`AggregateComponentSecondPass` consumes the aggregate member list and still
-handles bridge cleanup for legacy annotation binding, but basic aggregate leaves
-no longer exist as temporary table columns.
+component aggregate finalization consumes the aggregate member list and still
+handles bridge cleanup, but basic aggregate leaves no longer exist as temporary
+table columns.
 
-`AggregateComponentSecondPass` now accepts that container from the new binding
-pipeline.  For new-pipeline aggregates it uses the container-owned member
-columns when the container is complete, while ordering them by the sorted
+Aggregate finalization now accepts that container from the new binding pipeline.
+For new-pipeline aggregates it uses the container-owned member columns when the
+container is complete, while ordering them by the sorted
 `Component#getAggregatedColumns()` view so the historical UDT/schema column
-order is preserved.  Legacy annotation binding still uses the component graph
-path, and the new path falls back to the component graph if the container does
-not describe the same aggregate member columns.  Nested aggregate columns are
-also kept in the aggregate-member container instead of being registered with the
-physical table; only root aggregate columns still register with the table.
+order is preserved.  The finalizer falls back to the component graph if the
+container does not describe the same aggregate member columns.  Nested aggregate
+columns are also kept in the aggregate-member container instead of being
+registered with the physical table; only root aggregate columns still register
+with the table.

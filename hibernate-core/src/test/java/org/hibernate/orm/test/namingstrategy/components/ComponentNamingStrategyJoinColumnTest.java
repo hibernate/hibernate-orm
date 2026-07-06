@@ -11,11 +11,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Column;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -32,14 +33,15 @@ public class ComponentNamingStrategyJoinColumnTest {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final MetadataSources ms = new MetadataSources( ssr )
-					.addAnnotatedClass( BaseEntity.class )
-					.addAnnotatedClass( CollectionWrapper.class )
-					.addAnnotatedClass( CollectionItem.class )
-					.addAnnotatedClass( ToOneEntity.class );
-			final Metadata metadata = ms.getMetadataBuilder()
-					.applyImplicitNamingStrategy( ImplicitNamingStrategyComponentPathImpl.INSTANCE )
-					.build();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+					ssr,
+					new MappingSources()
+							.addManagedClass( BaseEntity.class )
+							.addManagedClass( CollectionWrapper.class )
+							.addManagedClass( CollectionItem.class )
+							.addManagedClass( ToOneEntity.class ),
+					ImplicitNamingStrategyComponentPathImpl.INSTANCE
+			);
 
 			final org.hibernate.mapping.Collection collection = metadata.getCollectionBinding(
 					BaseEntity.class.getName() + '.' + "collectionWrapper.items"

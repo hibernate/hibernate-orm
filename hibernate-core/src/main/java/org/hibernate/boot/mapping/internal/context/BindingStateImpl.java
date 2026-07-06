@@ -25,7 +25,9 @@ import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTargetBinding;
+import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.CollectionTableBinding;
+import org.hibernate.boot.mapping.internal.binders.ComponentBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.DerivedIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.EntityTypeBinder;
 import org.hibernate.boot.mapping.internal.binders.ForeignKeyBinding;
@@ -36,6 +38,7 @@ import org.hibernate.boot.mapping.internal.binders.InverseToOneAssociationBindin
 import org.hibernate.boot.mapping.internal.binders.ManagedTypeBinder;
 import org.hibernate.boot.mapping.internal.binders.MappedSuperTypeBinder;
 import org.hibernate.boot.mapping.internal.binders.PropertyMapKeyBinding;
+import org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.TableForeignKeyBinding;
 import org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences;
 import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
@@ -51,7 +54,6 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
-import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -74,7 +76,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -128,8 +129,16 @@ public class BindingStateImpl implements BindingState {
 	private final java.util.List<InverseToOneAssociationBinding> inverseToOneAssociationBindings = new java.util.ArrayList<>();
 	private final java.util.List<ForeignKeyBinding> foreignKeyBindings = new java.util.ArrayList<>();
 	private final java.util.List<TableForeignKeyBinding> tableForeignKeyBindings = new java.util.ArrayList<>();
-	private final java.util.List<StateManagementRootBinding> stateManagementRootBindings = new java.util.ArrayList<>();
-	private final java.util.List<StateManagementPropertyBinding> stateManagementPropertyBindings = new java.util.ArrayList<>();
+	private final java.util.List<ComponentBindingPhase.CustomMapping> componentCustomMappings = new java.util.ArrayList<>();
+	private final java.util.List<ComponentBindingPhase.AggregateFinalization> componentAggregateFinalizations =
+			new java.util.ArrayList<>();
+	private final java.util.List<AttributeBindingPhase.CustomMapping> attributeCustomMappings = new java.util.ArrayList<>();
+	private final java.util.List<AttributeBindingPhase.ValueResolution> attributeValueResolutions = new java.util.ArrayList<>();
+	private final java.util.List<AttributeBindingPhase.PostValueResolution> postAttributeValueResolutions = new java.util.ArrayList<>();
+	private final java.util.List<StateManagementBindingPhase.RootEntity> stateManagementRootBindings =
+			new java.util.ArrayList<>();
+	private final java.util.List<StateManagementBindingPhase.PropertyExclusions> stateManagementPropertyBindings =
+			new java.util.ArrayList<>();
 	private final Map<Property, MappedSuperclassPropertyHandoff> mappedSuperclassPropertyHandoffs =
 			new IdentityHashMap<>();
 	private final Map<Property, NaturalIdPropertyHandoff> naturalIdPropertyHandoffs =
@@ -156,8 +165,11 @@ public class BindingStateImpl implements BindingState {
 			new IdentityHashMap<>();
 	private final java.util.List<EmbeddableComponentHandoff> embeddableComponentHandoffList =
 			new java.util.ArrayList<>();
-	private final java.util.List<StateManagementCollectionBinding> stateManagementCollectionBindings = new java.util.ArrayList<>();
-	private final java.util.List<StateManagementOneToManyCollectionBinding> stateManagementOneToManyCollectionBindings =
+	private final java.util.List<StateManagementBindingPhase.CollectionMapping> stateManagementCollectionBindings =
+			new java.util.ArrayList<>();
+	private final java.util.List<StateManagementBindingPhase.OneToManyAuditCollection> stateManagementOneToManyCollectionBindings =
+			new java.util.ArrayList<>();
+	private final java.util.List<StateManagementBindingPhase.Finalizer> stateManagementFinalizers =
 			new java.util.ArrayList<>();
 
 	private final Map<ClassDetails, ManagedTypeBinder> typeBinders = new HashMap<>();
@@ -175,7 +187,7 @@ public class BindingStateImpl implements BindingState {
 		this.metadataCollector = metadataCollector;
 		this.database = metadataCollector.getDatabase();
 		this.relationalModelCorrespondences = new RelationalModelCorrespondences( database );
-		this.jdbcServices = metadataBuildingContext.getBootstrapContext().getServiceRegistry().getService( JdbcServices.class );
+		this.jdbcServices = metadataBuildingContext.getJdbcServices();
 	}
 
 	public MetadataBuildingContext useMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
@@ -244,7 +256,7 @@ public class BindingStateImpl implements BindingState {
 
 	@Override @Nonnull
 	public TypeConfiguration getTypeConfiguration() {
-		return metadataBuildingContext.getBootstrapContext().getTypeConfiguration();
+		return metadataBuildingContext.getTypeConfiguration();
 	}
 
 	@Override @Nonnull
@@ -310,6 +322,11 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public void addResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor) {
 		metadataCollector.addResultSetMapping( resultSetMappingDescriptor );
+	}
+
+	@Override
+	public void addDefaultResultSetMapping(NamedResultSetMappingDescriptor resultSetMappingDescriptor) {
+		metadataCollector.addDefaultResultSetMapping( resultSetMappingDescriptor );
 	}
 
 	@Override
@@ -466,6 +483,63 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public List<EntityIdentifierHandoff> getEntityIdentifierHandoffs() {
 		return List.copyOf( entityIdentifierHandoffList );
+	}
+
+	@Override
+	public void addComponentCustomMapping(ComponentBindingPhase.CustomMapping binding) {
+		componentCustomMappings.add( binding );
+	}
+
+	@Override
+	public void runComponentCustomMappings() {
+		final var pendingBindings = List.copyOf( componentCustomMappings );
+		componentCustomMappings.clear();
+		pendingBindings.forEach( ComponentBindingPhase.CustomMapping::bindCustomMapping );
+	}
+
+	@Override
+	public void addComponentAggregateFinalization(ComponentBindingPhase.AggregateFinalization binding) {
+		componentAggregateFinalizations.add( binding );
+	}
+
+	@Override
+	public void runComponentAggregateFinalizations() {
+		final var pendingBindings = List.copyOf( componentAggregateFinalizations );
+		componentAggregateFinalizations.clear();
+		pendingBindings.forEach( ComponentBindingPhase.AggregateFinalization::finishAggregateMapping );
+	}
+
+	@Override
+	public void addAttributeCustomMapping(AttributeBindingPhase.CustomMapping binding) {
+		attributeCustomMappings.add( binding );
+	}
+
+	@Override
+	public void runAttributeCustomMappings() {
+		final var pendingBindings = List.copyOf( attributeCustomMappings );
+		attributeCustomMappings.clear();
+		pendingBindings.forEach( AttributeBindingPhase.CustomMapping::bindCustomMapping );
+	}
+
+	@Override
+	public void addAttributeValueResolution(AttributeBindingPhase.ValueResolution binding) {
+		attributeValueResolutions.add( binding );
+	}
+
+	@Override
+	public void addPostAttributeValueResolution(AttributeBindingPhase.PostValueResolution binding) {
+		postAttributeValueResolutions.add( binding );
+	}
+
+	@Override
+	public void runAttributeValueResolutions() {
+		final var pendingValueResolutionBindings = List.copyOf( attributeValueResolutions );
+		attributeValueResolutions.clear();
+		pendingValueResolutionBindings.forEach( AttributeBindingPhase.ValueResolution::resolveValue );
+
+		final var pendingPostValueResolutionBindings = List.copyOf( postAttributeValueResolutions );
+		postAttributeValueResolutions.clear();
+		pendingPostValueResolutionBindings.forEach( AttributeBindingPhase.PostValueResolution::afterValueResolution );
 	}
 
 	@Override
@@ -627,25 +701,33 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addStateManagementRootBinding(ClassDetails classDetails, RootClass rootClass) {
-		stateManagementRootBindings.add( new StateManagementRootBinding( classDetails, rootClass ) );
+	public void addStateManagementRootBinding(StateManagementBindingPhase.RootEntity binding) {
+		stateManagementRootBindings.add( binding );
 	}
 
 	@Override
-	public void forEachStateManagementRootBinding(BiConsumer<ClassDetails, RootClass> consumer) {
-		stateManagementRootBindings.forEach( binding -> consumer.accept( binding.classDetails, binding.rootClass ) );
+	public void runStateManagementRootBindings() {
+		final var bindings = List.copyOf( stateManagementRootBindings );
+		stateManagementRootBindings.clear();
+		bindings.forEach( StateManagementBindingPhase.RootEntity::bindRootEntity );
 	}
 
 	@Override
-	public void addStateManagementPropertyBinding(MemberDetails memberDetails, Property property) {
-		stateManagementPropertyBindings.add( new StateManagementPropertyBinding( memberDetails, property ) );
+	public void addStateManagementPropertyBinding(StateManagementBindingPhase.PropertyExclusions binding) {
+		stateManagementPropertyBindings.add( binding );
 	}
 
 	@Override
-	public void forEachStateManagementPropertyBinding(BiConsumer<MemberDetails, Property> consumer) {
-		stateManagementPropertyBindings.forEach(
-				binding -> consumer.accept( binding.memberDetails, binding.property )
-		);
+	public void runStateManagementPropertyAndCollectionBindings() {
+		final var propertyBindings = List.copyOf( stateManagementPropertyBindings );
+		final var collectionBindings = List.copyOf( stateManagementCollectionBindings );
+		final var oneToManyCollectionBindings = List.copyOf( stateManagementOneToManyCollectionBindings );
+		stateManagementPropertyBindings.clear();
+		stateManagementCollectionBindings.clear();
+		stateManagementOneToManyCollectionBindings.clear();
+		propertyBindings.forEach( StateManagementBindingPhase.PropertyExclusions::bindPropertyExclusions );
+		collectionBindings.forEach( StateManagementBindingPhase.CollectionMapping::bindCollection );
+		oneToManyCollectionBindings.forEach( StateManagementBindingPhase.OneToManyAuditCollection::bindOneToManyAuditCollection );
 	}
 
 	@Override
@@ -656,6 +738,12 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(Property property) {
 		return mappedSuperclassPropertyHandoffs.get( property );
+	}
+
+	@Override
+	public MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(PersistentClass owner, Property property) {
+		final MappedSuperclassPropertyHandoff handoff = getMappedSuperclassPropertyHandoff( property );
+		return handoff != null && handoff.owner() == owner ? handoff : null;
 	}
 
 	@Override
@@ -769,6 +857,7 @@ public class BindingStateImpl implements BindingState {
 	public void addEmbeddableComponentHandoff(EmbeddableComponentHandoff handoff) {
 		embeddableComponentHandoffs.put( handoff.component(), handoff );
 		embeddableComponentHandoffList.add( handoff );
+		bootBindingModel.addEmbeddableComponentHandoff( handoff.contribution(), handoff.component() );
 	}
 
 	@Override
@@ -794,46 +883,25 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addStateManagementCollectionBinding(CollectionSource source, Collection collection) {
-		stateManagementCollectionBindings.add( new StateManagementCollectionBinding( source, collection ) );
+	public void addStateManagementCollectionBinding(StateManagementBindingPhase.CollectionMapping binding) {
+		stateManagementCollectionBindings.add( binding );
 	}
 
 	@Override
-	public void forEachStateManagementCollectionBinding(BiConsumer<CollectionSource, Collection> consumer) {
-		stateManagementCollectionBindings.forEach( binding -> consumer.accept( binding.source, binding.collection ) );
+	public void addStateManagementOneToManyCollectionBinding(StateManagementBindingPhase.OneToManyAuditCollection binding) {
+		stateManagementOneToManyCollectionBindings.add( binding );
 	}
 
 	@Override
-	public void addStateManagementOneToManyCollectionBinding(
-			CollectionSource source,
-			Collection collection,
-			String referencedEntityName) {
-		stateManagementOneToManyCollectionBindings.add(
-				new StateManagementOneToManyCollectionBinding( source, collection, referencedEntityName )
-		);
+	public void addStateManagementFinalizer(StateManagementBindingPhase.Finalizer binding) {
+		stateManagementFinalizers.add( binding );
 	}
 
 	@Override
-	public void forEachStateManagementOneToManyCollectionBinding(
-			StateManagementOneToManyCollectionConsumer consumer) {
-		stateManagementOneToManyCollectionBindings.forEach(
-				binding -> consumer.accept( binding.source, binding.collection, binding.referencedEntityName )
-		);
-	}
-
-	private record StateManagementRootBinding(ClassDetails classDetails, RootClass rootClass) {
-	}
-
-	private record StateManagementPropertyBinding(MemberDetails memberDetails, Property property) {
-	}
-
-	private record StateManagementCollectionBinding(CollectionSource source, Collection collection) {
-	}
-
-	private record StateManagementOneToManyCollectionBinding(
-			CollectionSource source,
-			Collection collection,
-			String referencedEntityName) {
+	public void runStateManagementFinalizers() {
+		final var bindings = List.copyOf( stateManagementFinalizers );
+		stateManagementFinalizers.clear();
+		bindings.forEach( StateManagementBindingPhase.Finalizer::finalizeStateManagement );
 	}
 
 	private String resolveSchemaName(Identifier explicit) {
@@ -906,7 +974,7 @@ public class BindingStateImpl implements BindingState {
 			return Collections.emptyMap();
 		}
 
-		final ManagedBeanRegistry managedBeanRegistry = metadataBuildingContext.getBootstrapContext().getManagedBeanRegistry();
+		final ManagedBeanRegistry managedBeanRegistry = metadataBuildingContext.getManagedBeanRegistry();
 		final Map<String, ManagedBean<? extends Supplier<?>>> result = new HashMap<>();
 		parameterResolvers.forEach( (name, resolver) -> {
 			result.put( name, managedBeanRegistry.getBean( resolver.toJavaClass() ) );

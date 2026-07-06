@@ -9,6 +9,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.hibernate.mapping.Property;
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -37,6 +38,30 @@ public class AttributeTypeCorrespondenceRegistry {
 			return existing;
 		}
 		final var correspondence = new AttributeTypeCorrespondence( propertyMapping, ownerType, member, modelsContext );
+		ownerCorrespondences.put( ownerType, correspondence );
+		return correspondence;
+	}
+
+	public AttributeTypeCorrespondence resolve(
+			Property propertyMapping,
+			ManagedDomainType<?> ownerType,
+			Member member,
+			AttributeUsageBinding attributeUsage) {
+		if ( attributeUsage == null ) {
+			return resolve( propertyMapping, ownerType, member );
+		}
+		final var ownerCorrespondences = correspondences.computeIfAbsent( propertyMapping, (property) -> new IdentityHashMap<>() );
+		final var existing = ownerCorrespondences.get( ownerType );
+		if ( existing != null ) {
+			return existing;
+		}
+		final var correspondence = new AttributeTypeCorrespondence(
+				propertyMapping,
+				ownerType,
+				member,
+				attributeUsage,
+				modelsContext
+		);
 		ownerCorrespondences.put( ownerType, correspondence );
 		return correspondence;
 	}

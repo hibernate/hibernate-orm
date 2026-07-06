@@ -66,7 +66,7 @@ public class ManyToOneAttributeProcessing {
 		if ( jaxbManyToOne.getPropertyRef() != null ) {
 			final PropertyRefAnnotation propertyRefUsage = (PropertyRefAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.PROPERTY_REF,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			propertyRefUsage.value( jaxbManyToOne.getPropertyRef().getName() );
 		}
@@ -85,11 +85,11 @@ public class ManyToOneAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		final ManyToOneJpaAnnotation manyToOneUsage = (ManyToOneJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.MANY_TO_ONE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		if ( jaxbManyToOne.isId() == Boolean.TRUE ) {
-			memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelBuildingContext() );
+			memberDetails.applyAnnotationUsage( JpaAnnotations.ID, xmlDocumentContext.getModelsContext() );
 		}
 
 		CommonAttributeProcessing.applyMapsId( jaxbManyToOne.getMapsId(), memberDetails, xmlDocumentContext );
@@ -119,7 +119,7 @@ public class ManyToOneAttributeProcessing {
 
 		final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
 				XmlAnnotations.TARGET,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		targetAnn.value( xmlDocumentContext.resolveTargetEntityName( targetEntityName ) );
 	}

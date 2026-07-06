@@ -12,7 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -21,6 +20,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -45,11 +45,7 @@ public class ColumnDefinitionQuotingTest {
 				new TestWork() {
 					@Override
 					public void doTestWork(StandardServiceRegistry ssr) {
-						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-								.addAnnotatedClass( E1.class )
-								.buildMetadata();
-						metadata.orderColumns( false );
-						metadata.validate();
+						MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, E1.class );
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
 
@@ -72,11 +68,7 @@ public class ColumnDefinitionQuotingTest {
 				new TestWork() {
 					@Override
 					public void doTestWork(StandardServiceRegistry ssr) {
-						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-								.addAnnotatedClass( E1.class )
-								.buildMetadata();
-						metadata.orderColumns( false );
-						metadata.validate();
+						MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, E1.class );
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
 
@@ -110,11 +102,7 @@ public class ColumnDefinitionQuotingTest {
 				new TestWork() {
 					@Override
 					public void doTestWork(StandardServiceRegistry ssr) {
-						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-								.addAnnotatedClass( E2.class )
-								.buildMetadata();
-						metadata.orderColumns( false );
-						metadata.validate();
+						MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, E2.class );
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );
 
@@ -137,11 +125,7 @@ public class ColumnDefinitionQuotingTest {
 				new TestWork() {
 					@Override
 					public void doTestWork(StandardServiceRegistry ssr) {
-						MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-								.addAnnotatedClass( E2.class )
-								.buildMetadata();
-						metadata.orderColumns( false );
-						metadata.validate();
+						MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, E2.class );
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );
 

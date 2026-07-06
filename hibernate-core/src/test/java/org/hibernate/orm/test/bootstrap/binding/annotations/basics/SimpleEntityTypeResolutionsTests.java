@@ -99,7 +99,7 @@ public class SimpleEntityTypeResolutionsTests {
 			}
 		}
 
-		try ( final SessionFactory sf = scope.getDomainModel().buildSessionFactory() ) {
+		try ( final SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( scope.getDomainModel() ) ) {
 
 		}
 	}

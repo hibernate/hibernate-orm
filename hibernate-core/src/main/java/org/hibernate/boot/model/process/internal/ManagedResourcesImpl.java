@@ -13,22 +13,16 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Internal;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.cfg.MappingSettings;
 
 import jakarta.persistence.AttributeConverter;
 
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-
-
 /**
  * @author Steve Ebersole
  */
@@ -39,32 +33,6 @@ public class ManagedResourcesImpl implements ManagedResources {
 	private final Set<String> annotatedPackageNames = new LinkedHashSet<>();
 	private final List<Binding<JaxbEntityMappingsImpl>> mappingFileBindings = new ArrayList<>();
 	private Map<String, Class<?>> extraQueryImports;
-
-	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
-		final var managedResources = new ManagedResourcesImpl();
-		bootstrapContext.getAttributeConverters().forEach( managedResources::addAttributeConverterDefinition );
-		managedResources.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
-		managedResources.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
-		managedResources.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
-		handleXmlMappings( sources, managedResources, bootstrapContext );
-		managedResources.extraQueryImports = sources.getExtraQueryImports();
-		return managedResources;
-	}
-
-	private static void handleXmlMappings(
-			MetadataSources sources,
-			ManagedResourcesImpl impl,
-			BootstrapContext bootstrapContext) {
-		if ( !bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
-			BOOT_LOGGER.ignoringXmlMappings(
-					sources.getMappingXmlBindings().size(),
-					MappingSettings.XML_MAPPING_ENABLED
-			);
-		}
-		else {
-			impl.mappingFileBindings.addAll( sources.getMappingXmlBindings() );
-		}
-	}
 
 	public ManagedResourcesImpl() {
 	}

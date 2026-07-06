@@ -19,7 +19,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
@@ -27,7 +26,6 @@ import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMateriali
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -162,11 +160,6 @@ public abstract class SimpleValue implements KeyValue {
 		return buildingContext;
 	}
 
-	BootstrapContext getBootstrapContext() {
-		return getBuildingContext().getBootstrapContext();
-	}
-
-	@Remove
 	public MetadataImplementor getMetadata() {
 		return metadata;
 	}
@@ -178,13 +171,13 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	@Remove
 	public ServiceRegistry getServiceRegistry() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+		return getMetadata().getMappingResolutionOptions().getServiceRegistry();
 	}
 
 	@Nonnull
 	@Remove
 	public TypeConfiguration getTypeConfiguration() {
-		return getBootstrapContext().getTypeConfiguration();
+		return getBuildingContext().getTypeConfiguration();
 	}
 
 	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
@@ -314,17 +307,17 @@ public abstract class SimpleValue implements KeyValue {
 
 	void setAttributeConverterDescriptor(String typeName) {
 		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
-		final var bootstrapContext = getBootstrapContext();
 		@SuppressWarnings("unchecked") // Completely safe
-		final var clazz =
-				(Class<? extends AttributeConverter<?,?>>)
-						classForName( AttributeConverter.class, converterClassName, bootstrapContext );
-		attributeConverterDescriptor =
-				ConverterDescriptors.of( clazz, null, false );
+		final var clazz = (Class<? extends AttributeConverter<?,?>>) classForName(
+				AttributeConverter.class,
+				converterClassName,
+				buildingContext.getClassLoaderAccess()
+		);
+		attributeConverterDescriptor = ConverterDescriptors.of( clazz, null, false );
 	}
 
 	ClassLoaderService classLoaderService() {
-		return getBootstrapContext().getClassLoaderService();
+		return buildingContext.getClassLoaderService();
 	}
 
 	public void makeVersion() {
@@ -365,16 +358,6 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() throws MappingException {}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {}
 
 	/**
 	 * Compatibility-only hidden key creation hook.
@@ -743,7 +726,7 @@ public abstract class SimpleValue implements KeyValue {
 				new JpaAttributeConverterCreationContext() {
 					@Override
 					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return getBootstrapContext().getManagedBeanRegistry();
+						return buildingContext.getManagedBeanRegistry();
 					}
 
 					@Override
@@ -777,7 +760,7 @@ public abstract class SimpleValue implements KeyValue {
 					@Override
 					@Nonnull
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-						return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
+						return buildingContext.getBuildingPlan().getDefaultTimeZoneStorage();
 					}
 
 					@Override
@@ -1136,7 +1119,7 @@ public abstract class SimpleValue implements KeyValue {
 
 		@Override
 		public ServiceRegistry getServiceRegistry() {
-			return buildingContext.getBootstrapContext().getServiceRegistry();
+			return buildingContext.getServiceRegistry();
 		}
 
 		@Override

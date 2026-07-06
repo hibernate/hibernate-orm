@@ -5,8 +5,9 @@
 package org.hibernate.orm.test.mapping.enumeratedvalue;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -31,11 +32,11 @@ public class BadEnumeratedValueTests {
 	@Test
 	void testMismatchedTypes(ServiceRegistryScope scope) {
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Person2.class );
-
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources().addManagedClass( Person2.class )
+			);
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {

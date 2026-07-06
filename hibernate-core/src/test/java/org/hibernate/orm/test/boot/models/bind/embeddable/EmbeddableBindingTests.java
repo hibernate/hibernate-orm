@@ -342,6 +342,13 @@ public class EmbeddableBindingTests {
 							.isEqualTo( java.math.BigDecimal.class );
 					assertThat( amount.path() ).isEqualTo( "amount" );
 					assertThat( amount.fullPath() ).isEqualTo( "price.amount" );
+
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( GenericAmountEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "price" ).getValue();
+					assertThat( context.getBindingState().getBootBindingModel()
+							.findEmbeddableMemberBinding( component, "amount" ) )
+							.isSameAs( amount );
 				},
 				scope.getRegistry(),
 				GenericAmountEntity.class
@@ -390,6 +397,12 @@ public class EmbeddableBindingTests {
 							.containsExactly( handoff );
 					assertThat( context.getBindingState().getEmbeddableComponentHandoffs( entityBinding ) )
 							.containsExactly( handoff );
+
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					assertThat( bootBindingModel.findEmbeddableContribution( component ).contribution() )
+							.isSameAs( contribution );
+					assertThat( bootBindingModel.findEmbeddableMemberBinding( component, "line1" ) )
+							.isSameAs( componentMember( contribution.members(), "line1" ) );
 				},
 				scope.getRegistry(),
 				ExplicitEmbeddedEntity.class

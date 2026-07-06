@@ -12,9 +12,10 @@ import java.util.Set;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.usertype.AnnotationBasedUserType;
 import org.hibernate.usertype.ParameterizedType;
@@ -36,10 +37,10 @@ public final class MappingHelper {
 			String role,
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
-			BootstrapContext bootstrapContext,
+			ManagedBeanRegistry managedBeanRegistry,
 			boolean allowExtensionsInCdi) {
 		return allowExtensionsInCdi
-				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, bootstrapContext )
+				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, managedBeanRegistry )
 				: createLocalUserTypeBean( role, userCollectionTypeClass, parameters );
 	}
 
@@ -47,10 +48,9 @@ public final class MappingHelper {
 			String role,
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
-			BootstrapContext bootstrapContext) {
+			ManagedBeanRegistry managedBeanRegistry) {
 		final var managedBean =
-				bootstrapContext.getManagedBeanRegistry()
-						.getBean( userCollectionTypeClass );
+				managedBeanRegistry.getBean( userCollectionTypeClass );
 		if ( isNotEmpty( parameters ) ) {
 			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {
 				// create a copy of the parameters and create a bean wrapper to delay injecting
@@ -114,12 +114,12 @@ public final class MappingHelper {
 		}
 	}
 
-	static Class<?> classForName(String typeName, BootstrapContext bootstrapContext) {
-		return bootstrapContext.getClassLoaderAccess().classForName( typeName );
+	static Class<?> classForName(String typeName, ClassLoaderAccess classLoaderAccess) {
+		return classLoaderAccess.classForName( typeName );
 	}
 
-	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, BootstrapContext bootstrapContext) {
-		final var clazz = classForName( typeName, bootstrapContext );
+	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, ClassLoaderAccess classLoaderAccess) {
+		final var clazz = classForName( typeName, classLoaderAccess );
 		if ( supertype.isAssignableFrom( clazz ) ) {
 			//noinspection unchecked
 			return (Class<? extends T>) clazz;

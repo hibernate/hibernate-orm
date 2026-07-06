@@ -24,7 +24,7 @@ public class TableProcessing {
 
 		final JoinTableJpaAnnotation joinTableUsage = (JoinTableJpaAnnotation) target.applyAnnotationUsage(
 				JpaAnnotations.JOIN_TABLE,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		joinTableUsage.apply( jaxbJoinTable, xmlDocumentContext );
 		return joinTableUsage;

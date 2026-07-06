@@ -253,12 +253,11 @@ public abstract class AbstractCollectionPersister
 			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
-		factory = creationContext.getSessionFactory();
+		factory = creationContext.getSessionFactoryAccess().getSessionFactory();
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
 
 		collectionSemantics =
-				creationContext.getBootstrapContext().getMetadataBuildingOptions()
-						.getPersistentCollectionRepresentationResolver()
+				creationContext.getPersistentCollectionRepresentationResolver()
 						.resolveRepresentation( collectionBootDescriptor );
 
 		this.cacheAccessStrategy = cacheAccessStrategy;
@@ -531,7 +530,7 @@ public abstract class AbstractCollectionPersister
 				? null
 				: AbstractEntityPersister.getEntityNameByTableNameMap(
 						context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
-						context.getSessionFactory().getSqlStringGenerationContext()
+						context.getSqlStringGenerationContext()
 				);
 	}
 
@@ -632,7 +631,7 @@ public abstract class AbstractCollectionPersister
 							.getJdbcLiteralFormatter().toJdbcLiteral(
 									discriminatorValueDetails.getValue(),
 									creationContext.getDialect(),
-									creationContext.getSessionFactory().getWrapperOptions()
+									creationContext.getWrapperOptions()
 							);
 			return getNonEmptyOrConjunctionIfBothNonEmpty( collectionBootDescriptor.getWhere(),
 					discriminatorMapping.getSelectableName() + "=" + discriminatorLiteral );

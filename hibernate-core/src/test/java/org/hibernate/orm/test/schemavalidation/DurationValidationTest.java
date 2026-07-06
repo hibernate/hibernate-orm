@@ -10,12 +10,13 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -69,11 +70,10 @@ public class DurationValidationTest implements ExecutionOptions {
 							jdbcMetadataExtractorStrategy
 					)
 					.build();
-			metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( TestEntity.class )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+					ssr,
+					new MappingSources().addManagedClass( TestEntity.class )
+			);
 
 
 			dropSchema();

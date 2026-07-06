@@ -500,7 +500,7 @@ public abstract class AbstractEntityPersister
 						creationContext.getServiceRegistry() );
 
 		//set it here, but don't call it, since it's still uninitialized!
-		factory = creationContext.getSessionFactory();
+		factory = creationContext.getSessionFactoryAccess().getSessionFactory();
 
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( persistentClass.getEntityName() );
 
@@ -537,7 +537,7 @@ public abstract class AbstractEntityPersister
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		representationStrategy =
-				creationContext.getBootstrapContext().getRepresentationStrategySelector()
+				creationContext.getRepresentationStrategySelector()
 						.resolveStrategy( persistentClass, this, creationContext );
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;

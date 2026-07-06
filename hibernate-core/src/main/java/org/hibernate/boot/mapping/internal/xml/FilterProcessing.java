@@ -30,7 +30,7 @@ public class FilterProcessing {
 		final SqlFragmentAlias[] result = new SqlFragmentAlias[jaxbAliases.size()];
 		for ( int i = 0; i < jaxbAliases.size(); i++ ) {
 			final SqlFragmentAliasAnnotation alias = HibernateAnnotations.SQL_FRAGMENT_ALIAS.createUsage(
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			result[i] = alias;
 
@@ -40,7 +40,7 @@ public class FilterProcessing {
 				alias.table( jaxbAlias.getTable() );
 			}
 			if ( StringHelper.isNotEmpty( jaxbAlias.getEntity() ) ) {
-				final ClassDetails classDetails = xmlDocumentContext.getModelBuildingContext()
+				final ClassDetails classDetails = xmlDocumentContext.getModelsContext()
 						.getClassDetailsRegistry()
 						.resolveClassDetails( jaxbAlias.getEntity() );
 				alias.entity( classDetails.toJavaClass() );

@@ -4,8 +4,7 @@
  */
 package org.hibernate.orm.test.boot.models.xml;
 
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
@@ -15,8 +14,8 @@ import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
 import org.hibernate.boot.mapping.internal.categorize.FetchProfileRegistration;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
-import org.hibernate.boot.pipeline.internal.source.AvailableResources;
-import org.hibernate.boot.pipeline.internal.source.AvailableResourcesContext;
+import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
 import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
 import org.hibernate.boot.models.spi.NamedQueryRegistration;
@@ -138,6 +137,8 @@ public class XmlProcessingSmokeTests {
 	@Test
 	@ServiceRegistry
 	void testSimpleGlobalXmlProcessing(ServiceRegistryScope scope) {
+		final MetadataBuildingContextTestingImpl metadataBuildingContext =
+				new MetadataBuildingContextTestingImpl( scope.getRegistry() );
 		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
 		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
 
@@ -153,11 +154,11 @@ public class XmlProcessingSmokeTests {
 			final XmlDocumentContextImpl xmlDocumentContext = new XmlDocumentContextImpl(
 					xmlDocument,
 					new RootMappingDefaults(
-							new MetadataBuilderImpl.MappingDefaultsImpl( scope.getRegistry() ),
+							new org.hibernate.boot.mapping.internal.context.GlobalMappingDefaultsImpl( scope.getRegistry() ),
 							collectedXmlResources.getPersistenceUnitMetadata()
 					),
 					buildingContext,
-					new BootstrapContextImpl()
+					metadataBuildingContext
 			);
 			collector.apply( xmlMapping, xmlDocumentContext );
 		} );
@@ -185,6 +186,8 @@ public class XmlProcessingSmokeTests {
 	@Test
 	@ServiceRegistry
 	void testGlobalNamedQueryHints(ServiceRegistryScope scope) {
+		final MetadataBuildingContextTestingImpl metadataBuildingContext =
+				new MetadataBuildingContextTestingImpl( scope.getRegistry() );
 		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
 		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
 
@@ -206,11 +209,11 @@ public class XmlProcessingSmokeTests {
 			final XmlDocumentContextImpl xmlDocumentContext = new XmlDocumentContextImpl(
 					xmlDocument,
 					new RootMappingDefaults(
-							new MetadataBuilderImpl.MappingDefaultsImpl( scope.getRegistry() ),
+							new org.hibernate.boot.mapping.internal.context.GlobalMappingDefaultsImpl( scope.getRegistry() ),
 							collectedXmlResources.getPersistenceUnitMetadata()
 					),
 					buildingContext,
-					new BootstrapContextImpl()
+					metadataBuildingContext
 			);
 			collector.apply( xmlMapping, xmlDocumentContext );
 		} );
@@ -243,15 +246,15 @@ public class XmlProcessingSmokeTests {
 		final MetadataBuildingContextTestingImpl metadataBuildingContext = new MetadataBuildingContextTestingImpl( scope.getRegistry() );
 		final HibernatePersistenceConfiguration persistenceConfiguration = new HibernatePersistenceConfiguration( "test" );
 		persistenceConfiguration.mappingFile( "mappings/models/xml-global-objects.xml" );
-		final AvailableResources availableResources = AvailableResources.from(
+		final PreparedMappingSources resolvedMappingSources = PreparedMappingSources.from(
 				persistenceConfiguration,
-				new AvailableResourcesContext(
-						metadataBuildingContext.getBootstrapContext().getModelsContext(),
-						metadataBuildingContext.getBootstrapContext().getServiceRegistry()
+				new MappingSourcePreparationContext(
+						metadataBuildingContext.getModelsContext(),
+						metadataBuildingContext.getServiceRegistry()
 				)
 		);
 		final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
-				availableResources,
+				resolvedMappingSources,
 				metadataBuildingContext
 		);
 

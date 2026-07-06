@@ -7,9 +7,9 @@ package org.hibernate.orm.test.jpa.compliance.tck2_2;
 import jakarta.persistence.RollbackException;
 
 import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -34,10 +34,7 @@ public class EntityTransactionTests {
 	@Test
 	public void testGetRollbackOnlyExpectations(ServiceRegistryScope scope) {
 
-		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
-				scope.getRegistry() )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( scope )) {
 			inSession(
 					sessionFactory,
 					session -> {
@@ -57,10 +54,7 @@ public class EntityTransactionTests {
 	@Test
 	public void testMarkRollbackOnlyNoTransaction(ServiceRegistryScope scope) {
 
-		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
-				scope.getRegistry() )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( scope )) {
 			inSession(
 					sessionFactory,
 					session -> {
@@ -80,10 +74,7 @@ public class EntityTransactionTests {
 	@Test
 	public void testSetRollbackOnlyOutcomeExpectations(ServiceRegistryScope scope) {
 
-		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
-				scope.getRegistry() )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( scope )) {
 			inSession(
 					sessionFactory,
 					session -> {
@@ -140,10 +131,7 @@ public class EntityTransactionTests {
 	@Test
 	public void testSetRollbackOnlyExpectations(ServiceRegistryScope scope) {
 
-		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
-				scope.getRegistry() )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( scope )) {
 			inSession(
 					sessionFactory,
 					session -> {
@@ -163,10 +151,7 @@ public class EntityTransactionTests {
 	@Test
 	public void testRollbackExpectations(ServiceRegistryScope scope) {
 
-		try (SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
-				scope.getRegistry() )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (SessionFactoryImplementor sessionFactory = buildSessionFactory( scope )) {
 			inSession(
 					sessionFactory,
 					session -> {
@@ -181,5 +166,11 @@ public class EntityTransactionTests {
 					}
 			);
 		}
+	}
+
+	private static SessionFactoryImplementor buildSessionFactory(ServiceRegistryScope scope) {
+		return (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( scope.getRegistry() )
+		);
 	}
 }

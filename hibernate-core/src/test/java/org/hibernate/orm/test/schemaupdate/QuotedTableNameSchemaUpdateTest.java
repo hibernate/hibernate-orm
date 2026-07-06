@@ -7,8 +7,8 @@ package org.hibernate.orm.test.schemaupdate;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -46,11 +46,10 @@ public class QuotedTableNameSchemaUpdateTest {
 			@TempDir File tempDir) throws Exception {
 		var output = new File( tempDir, "update_script.sql" );
 
-		var metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( QuotedTable.class )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		var metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+				registryScope.getRegistry(),
+				new MappingSources().addManagedClass( QuotedTable.class )
+		);
 
 		new SchemaExport()
 				.setOutputFile( output.getAbsolutePath() )

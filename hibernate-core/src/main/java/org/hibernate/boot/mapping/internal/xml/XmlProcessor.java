@@ -4,10 +4,10 @@
  */
 package org.hibernate.boot.mapping.internal.xml;
 
-import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.mapping.internal.xml.XmlProcessingResult.OverrideTuple;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ModelsContext;
 
 import java.util.function.BiConsumer;
@@ -28,7 +28,7 @@ public class XmlProcessor {
 			PersistenceUnitMetadata persistenceUnitMetadata,
 			BiConsumer<JaxbEntityMappingsImpl,XmlDocumentContext> jaxbRootConsumer,
 			ModelsContext ModelsContext,
-			BootstrapContext bootstrapContext,
+			MetadataBuildingContext metadataBuildingContext,
 			RootMappingDefaults mappingDefaults) {
 		final boolean xmlMappingsGloballyComplete = persistenceUnitMetadata.areXmlMappingsComplete();
 		final var xmlOverlay = new XmlProcessingResultImpl();
@@ -38,7 +38,7 @@ public class XmlProcessor {
 					xmlDocument,
 					mappingDefaults,
 					ModelsContext,
-					bootstrapContext
+					metadataBuildingContext
 			);
 
 			final var jaxbRoot = xmlDocument.getRoot();

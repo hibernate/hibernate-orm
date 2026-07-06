@@ -4,17 +4,8 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.scan.spi.ScanningProvider;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,8 +13,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -32,18 +22,10 @@ import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandar
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.models.spi.ModelsConfiguration;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.cfg.PersistenceSettings.SCANNER;
 import static org.hibernate.cfg.PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER;
@@ -54,10 +36,9 @@ import static org.hibernate.cfg.PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER;
 public class BootstrapContextImpl implements BootstrapContext {
 
 	private final StandardServiceRegistry serviceRegistry;
-	private final MetadataBuildingOptions metadataBuildingOptions;
+	private final MappingResolutionOptions metadataBuildingOptions;
 
-	private TypeConfiguration typeConfiguration;
-	private final SqmFunctionRegistry sqmFunctionRegistry;
+	private final TypeConfiguration typeConfiguration;
 	private final MutableJpaCompliance jpaCompliance;
 
 	private final ClassLoaderService classLoaderService;
@@ -70,10 +51,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private Object scanningSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
-	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap;
-	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
 	private final ConfigurationService configurationService;
 
@@ -81,7 +58,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
-			MetadataBuildingOptions metadataBuildingOptions) {
+			MappingResolutionOptions metadataBuildingOptions) {
+		this( serviceRegistry, metadataBuildingOptions, new TypeConfiguration() );
+	}
+
+	public BootstrapContextImpl(
+			StandardServiceRegistry serviceRegistry,
+			MappingResolutionOptions metadataBuildingOptions,
+			TypeConfiguration typeConfiguration) {
 		this.serviceRegistry = serviceRegistry;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
@@ -102,8 +86,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
+		this.typeConfiguration = typeConfiguration;
 		beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
-		sqmFunctionRegistry = new SqmFunctionRegistry();
 
 		managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		configurationService = serviceRegistry.requireService( ConfigurationService.class );
@@ -122,16 +106,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public synchronized TypeConfiguration getTypeConfiguration() {
-		if ( typeConfiguration == null ) {
-			final var dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-			final boolean directJavaTimeJdbcAccessEnabled =
-					MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
-			typeConfiguration = new TypeConfiguration(
-					directJavaTimeJdbcAccessEnabled,
-					dialect.getDirectJavaTimeJdbcSupport()
-			);
-		}
+	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
@@ -141,17 +116,12 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public SqmFunctionRegistry getFunctionRegistry() {
-		return sqmFunctionRegistry;
-	}
-
-	@Override
 	public BeanInstanceProducer getCustomTypeProducer() {
 		return beanInstanceProducer;
 	}
 
 	@Override
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
+	public MappingResolutionOptions getMappingResolutionOptions() {
 		return metadataBuildingOptions;
 	}
 
@@ -201,81 +171,12 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public Object getJandexView() {
-		return null;
-	}
-
-	@Override
-	public Map<String, SqmFunctionDescriptor> getSqlFunctions() {
-		return sqlFunctionMap == null ? emptyMap() : sqlFunctionMap;
-	}
-
-	@Override
-	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-		return auxiliaryDatabaseObjectList == null ? emptyList() : auxiliaryDatabaseObjectList;
-	}
-
-	@Override
-	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
-		return attributeConverterDescriptorMap != null
-				? attributeConverterDescriptorMap.values()
-				: emptyList();
-	}
-
-	@Override
-	public Collection<CacheRegionDefinition> getCacheRegionDefinitions() {
-		return cacheRegionDefinitions == null ? emptyList() : cacheRegionDefinitions;
-	}
-
-	private final Map<String,BasicType<?>> adHocBasicTypeRegistrations = new HashMap<>();
-
-	@Override
-	public void registerAdHocBasicType(BasicType<?> basicType) {
-		adHocBasicTypeRegistrations.put( basicType.getName(), basicType );
-	}
-
-	@Override
-	public <T> BasicType<T> resolveAdHocBasicType(String key) {
-		//noinspection unchecked
-		return (BasicType<T>) adHocBasicTypeRegistrations.get( key );
-	}
-
-	@Override
-	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
-		for ( BasicType<?> basicType : adHocBasicTypeRegistrations.values() ) {
-			if ( basicType.getClass() == BasicTypeImpl.class
-				&& basicType.getJavaTypeDescriptor() == javaType
-				&& basicType.getJdbcType() == jdbcType ) {
-				//noinspection unchecked
-				return (BasicType<T>) basicType;
-			}
-		}
-
-		return null;
-	}
-
-	@Override
 	public void release() {
 		classLoaderAccess.release();
 
 		scanningSetting = null;
 		archiveDescriptorFactory = null;
 
-		if ( sqlFunctionMap != null ) {
-			sqlFunctionMap.clear();
-		}
-
-		if ( auxiliaryDatabaseObjectList != null ) {
-			auxiliaryDatabaseObjectList.clear();
-		}
-
-		if ( attributeConverterDescriptorMap != null ) {
-			attributeConverterDescriptorMap.clear();
-		}
-
-		if ( cacheRegionDefinitions != null ) {
-			cacheRegionDefinitions.clear();
-		}
 	}
 
 	@Override
@@ -286,23 +187,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutations
-
-	public void addAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
-		if ( attributeConverterDescriptorMap == null ) {
-			attributeConverterDescriptorMap = new HashMap<>();
-		}
-
-		final var attributeConverterClass = descriptor.getAttributeConverterClass();
-		final Object old = attributeConverterDescriptorMap.put( attributeConverterClass, descriptor );
-		if ( old != null ) {
-			throw new AssertionFailure(
-					String.format(
-							"AttributeConverter class [%s] registered multiple times",
-							attributeConverterClass
-					)
-			);
-		}
-	}
 
 	void injectJpaTempClassLoader(ClassLoader classLoader) {
 		if ( BOOT_LOGGER.isTraceEnabled() && classLoader != getJpaTempClassLoader() ) {
@@ -324,28 +208,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 			BOOT_LOGGER.injectingArchiveDescriptorFactory( factory, archiveDescriptorFactory );
 		}
 		this.archiveDescriptorFactory = factory;
-	}
-
-	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
-		if ( sqlFunctionMap == null ) {
-			sqlFunctionMap = new HashMap<>();
-		}
-		sqlFunctionMap.put( functionName, function );
-	}
-
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		if ( auxiliaryDatabaseObjectList == null ) {
-			auxiliaryDatabaseObjectList = new ArrayList<>();
-		}
-		auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
-	}
-
-
-	public void addCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
-		if ( cacheRegionDefinitions == null ) {
-			cacheRegionDefinitions = new ArrayList<>();
-		}
-		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
 
 	public static ModelsContext createModelBuildingContext(

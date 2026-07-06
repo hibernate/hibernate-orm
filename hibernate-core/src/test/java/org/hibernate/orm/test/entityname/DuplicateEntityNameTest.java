@@ -8,8 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -29,9 +29,7 @@ public class DuplicateEntityNameTest {
 	void testIt(ServiceRegistryScope registryScope) {
 		final StandardServiceRegistry registry = registryScope.getRegistry();
 		try {
-			new MetadataSources( registry )
-					.addAnnotatedClasses( Purchase1.class, Purchase2.class )
-					.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( registry, Purchase1.class, Purchase2.class );
 			fail("Should throw DuplicateMappingException");
 		}
 		catch (DuplicateMappingException expected) {

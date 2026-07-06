@@ -5,10 +5,10 @@
 package org.hibernate.orm.test.schemaupdate;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -26,7 +26,7 @@ public class H2DialectDataBaseToUpperTest {
 	@ValueSource(booleans = {true, false})
 	public void testToUpper(boolean toUpper) {
 		try (var registry = createServiceRegistry(toUpper)) {
-			final Metadata metadata = new MetadataSources( registry ).buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( registry );
 			new SchemaUpdate().setHaltOnError( true ).execute( EnumSet.of( TargetType.DATABASE ), metadata );
 		}
 	}

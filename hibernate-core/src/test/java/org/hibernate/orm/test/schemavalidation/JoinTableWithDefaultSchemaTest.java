@@ -10,10 +10,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -39,12 +40,12 @@ public class JoinTableWithDefaultSchemaTest {
 		try (var ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_CATALOG, resolveUsername( "hibernate_orm_test_$worker" ) )
 				.build()) {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Task.class )
-					.addAnnotatedClass( Project.class )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+					ssr,
+					new MappingSources()
+							.addManagedClass( Task.class )
+							.addManagedClass( Project.class )
+			);
 
 			// first create the schema...
 			new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );

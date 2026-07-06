@@ -19,7 +19,8 @@ import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.mapping.internal.binders.BasicValueBinder;
+import org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder;
+import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.ColumnBinder;
 import org.hibernate.boot.mapping.internal.binders.ComponentMemberTarget;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
@@ -76,7 +77,7 @@ public class BasicValueMappingMaterializer {
 			BindingContext bindingContext) {
 		final MemberDetails member = attributeBinding.member();
 		validateNonIdentifierGeneratedValue( member, member.getDeclaringType().getClassName() + "." + member.getName() );
-		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext() );
+		final BasicValue basicValue = BasicValue.unregistered( bindingState.getMetadataBuildingContext() );
 
 		final var selectable = processSelectable( attributeBinding, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
 		final var column = selectable.column();
@@ -84,7 +85,7 @@ public class BasicValueMappingMaterializer {
 		applyBasicFetch( member, property );
 		property.setLob( member.hasDirectAnnotationUsage( Lob.class ) );
 
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.attribute(
 						member,
 						attributeBinding.resolvedType(),
@@ -97,8 +98,11 @@ public class BasicValueMappingMaterializer {
 				bindingContext
 		);
 
-		new AttributeOptionsMappingMaterializer().materializeBasicValueOptions( attributeBinding, basicValue );
-		applyFinalFieldMutability( member, property, basicValue, false );
+		new AttributeOptionsMappingMaterializer().materializeBasicValueOptions( attributeBinding, basicValue, resolutionInput );
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
+		bindingState.addPostAttributeValueResolution(
+				new FinalFieldMutabilityBinding( member, property, basicValue, false )
+		);
 
 		return basicValue;
 	}
@@ -111,11 +115,11 @@ public class BasicValueMappingMaterializer {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext(), primaryTable );
+		final BasicValue basicValue = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), primaryTable );
 		basicValue.makeVersion();
 		property.setValue( basicValue );
 
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.attribute( member, bindingContext ),
 				property,
 				basicValue,
@@ -127,6 +131,7 @@ public class BasicValueMappingMaterializer {
 		final Column column = processSelectable( basicValueIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext )
 				.requireColumn( property.getName() );
 		column.setNullable( false );
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
 	}
 
 	public void materializeTenantIdBasicValue(
@@ -137,11 +142,11 @@ public class BasicValueMappingMaterializer {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext(), primaryTable );
+		final BasicValue basicValue = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), primaryTable );
 		property.setValue( basicValue );
 
 		processSelectable( basicValueIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.attribute( member, bindingContext ),
 				property,
 				basicValue,
@@ -149,6 +154,7 @@ public class BasicValueMappingMaterializer {
 				bindingState,
 				bindingContext
 		);
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
 	}
 
 	public MaterializedBasicValue createComponentMemberBasicValue(
@@ -170,7 +176,7 @@ public class BasicValueMappingMaterializer {
 		}
 		final BasicValueIntent basicValueIntent = componentMember.basicValueIntent();
 		final Table valueTable = resolveTable( basicValueIntent, ownerBinding, memberTarget );
-		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext(), valueTable );
+		final BasicValue basicValue = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), valueTable );
 		basicValue.setTable( valueTable );
 		property.setValue( basicValue );
 
@@ -179,7 +185,7 @@ public class BasicValueMappingMaterializer {
 			property.setOptional( true );
 			property.setInsertable( false );
 			property.setUpdatable( false );
-			BasicValueBinder.bindBasicValue(
+			final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 					BasicValueSource.embeddableMember( member, basicValueIntent.conversion() ),
 					property,
 					basicValue,
@@ -187,6 +193,7 @@ public class BasicValueMappingMaterializer {
 					bindingState,
 					bindingContext
 			);
+			bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
 			return new MaterializedBasicValue( basicValue, null );
 		}
 
@@ -205,7 +212,7 @@ public class BasicValueMappingMaterializer {
 				bindingState
 		);
 		applyComponentMemberOptionality( member, componentMember.type(), property, column, nullableByDefault );
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.embeddableMember( member, componentMember.type(), basicValueIntent.conversion() ),
 				property,
 				basicValue,
@@ -216,13 +223,39 @@ public class BasicValueMappingMaterializer {
 		if ( source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
 			applyGeneratedIdentifierMember( basicValue, member, bindingState );
 		}
-		applyFinalFieldMutability(
-				member,
-				property,
-				basicValue,
-				isRecordComponentMember( source.componentType(), member )
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
+		bindingState.addPostAttributeValueResolution(
+				new FinalFieldMutabilityBinding(
+						member,
+						property,
+						basicValue,
+						isRecordComponentMember( source.componentType(), member )
+				)
 		);
 		return new MaterializedBasicValue( basicValue, column );
+	}
+
+	private record BasicValueResolutionBinding(
+			BasicValueResolutionBuilder.Input input) implements AttributeBindingPhase.ValueResolution {
+		@Override
+		public void resolveValue() {
+			applyResolution( input );
+		}
+	}
+
+	private record FinalFieldMutabilityBinding(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			boolean recordComponentMember) implements AttributeBindingPhase.PostValueResolution {
+		@Override
+		public void afterValueResolution() {
+			applyFinalFieldMutability( member, property, basicValue, recordComponentMember );
+		}
+	}
+
+	static void applyResolution(BasicValueResolutionBuilder.Input input) {
+		BasicValueResolutionBuilder.applyResolution( input );
 	}
 
 	private static void applyGeneratedIdentifierMember(
@@ -339,7 +372,6 @@ public class BasicValueMappingMaterializer {
 		}
 
 		final var classDetailsRegistry = bindingState.getMetadataBuildingContext()
-				.getBootstrapContext()
 				.getModelsContext()
 				.getClassDetailsRegistry();
 		final String packageInfoName = className.substring( 0, packageEnd ) + ".package-info";

@@ -34,15 +34,21 @@ link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.ado
 
 == Top-Level Flow
 
+[NOTE]
+====
+Pipeline sketches in this document use the shared notation described in
+link:flow-notation.adoc[`flow-notation.adoc`].
+====
+
 .Top-level bootstrap pipeline
 [source]
 ----
 Entry point
     -> ResolvedBootstrapSettings
-    -> MappingSourceContributions
-    -> AvailableResources
+    -> MappingSources
+    -> PreparedMappingSources
     -> CategorizedDomainModel
-    -> ResolvedMetadata
+    -> ResolvedMapping
     -> ResolvedSessionFactorySettings
     -> SessionFactoryImplementor
 ----
@@ -51,10 +57,6 @@ Each arrow should be owned by a small resolver or builder with one gross target.
 The entry point chooses or creates the inputs, but should not perform all
 bootstrap work itself.
 
-=== Flow Notation
-
-Pipeline sketches in this document use the shared notation described in
-link:flow-notation.adoc[`flow-notation.adoc`].
 
 == Entry Points
 
@@ -79,7 +81,7 @@ runtime factory construction.
 
 Current branch status:
 
-* `org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap` is the canonical
+* `org.hibernate.boot.pipeline.internal.BootstrapPipeline` is the canonical
   internal facade for one-shot SessionFactory bootstrap.
 * `PersistenceConfiguration` bootstrap goes through this facade.
 * `PersistenceUnitDescriptor` bootstrap for
@@ -87,9 +89,9 @@ Current branch status:
   `createContainerEntityManagerFactory(PersistenceUnitInfo, Map)`, and their
   schema-generation counterparts goes through this facade.
 * The old JPA two-phase builder facade has been removed.  Metadata-only callers
-  use `SessionFactoryBootstrap.resolveMetadata(...)`; schema tooling uses
-  `SessionFactoryBootstrap.generateSchema(...)`; factory creation uses
-  `SessionFactoryBootstrap.build(...)`.
+  use `BootstrapPipeline.resolveMetadata(...)`; schema tooling uses
+  `BootstrapPipeline.generateSchema(...)`; factory creation uses
+  `BootstrapPipeline.build(...)`.
 * Descriptor-based archive scanning and container class-transformer push are
   integrated into the shared pipeline.
 
@@ -102,18 +104,18 @@ compatibility pressures.
 JPA provider entry points::
 The public `jakarta.persistence.spi.PersistenceProvider` methods implemented by
 `org.hibernate.jpa.HibernatePersistenceProvider` now delegate to
-`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap`:
+`org.hibernate.boot.pipeline.internal.BootstrapPipeline`:
 +
 * `createEntityManagerFactory(String, Map)` resolves a matching
   `PersistenceUnitDescriptor` from `persistence.xml`, then calls
-  `SessionFactoryBootstrap.build(PersistenceUnitDescriptor, Map)`.
+  `BootstrapPipeline.build(PersistenceUnitDescriptor, Map)`.
 * `createContainerEntityManagerFactory(PersistenceUnitInfo, Map)` wraps the
   `PersistenceUnitInfo` in `PersistenceUnitInfoDescriptor`, then calls the same
   descriptor-based bootstrap method.
 * `createEntityManagerFactory(PersistenceConfiguration)` calls
-  `SessionFactoryBootstrap.build(PersistenceConfiguration)`.
+  `BootstrapPipeline.build(PersistenceConfiguration)`.
 * The matching schema-generation methods call the corresponding
-  `SessionFactoryBootstrap.generateSchema(...)` methods.
+  `BootstrapPipeline.generateSchema(...)` methods.
 +
 These are the canonical JPA runtime paths for this branch.
 
@@ -121,9 +123,9 @@ JPA pipeline operations::
 The removed two-phase JPA builder facade is not replaced by another builder.
 The supported operations are explicit pipeline calls:
 +
-* `SessionFactoryBootstrap.build(...)` for EMF/SF creation.
-* `SessionFactoryBootstrap.generateSchema(...)` for schema tooling.
-* `SessionFactoryBootstrap.resolveMetadata(...)` for metadata inspection.
+* `BootstrapPipeline.build(...)` for EMF/SF creation.
+* `BootstrapPipeline.generateSchema(...)` for schema tooling.
+* `BootstrapPipeline.resolveMetadata(...)` for metadata inspection.
 * `SettingsResolver` products for tests or tooling that assert resolved setting
   behavior.
 +
@@ -140,8 +142,8 @@ ORM boot contracts:
   and convenience registrations, builds `Metadata`, collects
   `Configuration`-level factory customizations into a
   `SessionFactoryOptionsCollector`, and calls `SessionFactoryPipeline`.
-* `org.hibernate.boot.Metadata#buildSessionFactory()` is a temporary bridge
-  into `SessionFactoryPipeline`.
+* `org.hibernate.boot.Metadata` is retained as a resolved-model inspection
+  surface.  Its factory-building methods have been removed.
 * `org.hibernate.boot.Metadata#getSessionFactoryBuilder()` and the public
   `org.hibernate.boot.SessionFactoryBuilder` surface have been removed.
 * Hibernate's test infrastructure and many native tests build factories through
@@ -160,10 +162,8 @@ Current branch status:
 * The public native `org.hibernate.boot.SessionFactoryBuilder`,
   `SessionFactoryBuilderFactory`, `SessionFactoryBuilderService`, and default
   builder implementation have been removed.
-* Native metadata production now routes through `MetadataResolver` for the
-  default `MetadataBuilderImpl` path.  The returned `MetadataImplementor` is an
-  internal view over `ResolvedMetadata`, so `Metadata -> SessionFactory` can
-  reuse the categorized model and binding state instead of rebuilding them.
+* Native metadata production now routes through `MappingResolutionPipeline`.  The
+  returned `MetadataImplementor` is an internal view over `ResolvedMapping`.
 * `Configuration#buildSessionFactory(...)` remains as a compatibility adapter,
   but its final factory customization state is collected in
   `SessionFactoryOptionsCollector` and passed to `SessionFactoryPipeline`.
@@ -171,11 +171,8 @@ Current branch status:
   `SessionFactoryOptions`, or legacy `BootstrapContext` as native-entry
   handoff products.  That would move the compatibility shapes into the pipeline
   instead of replacing them.
-* `AvailableResources.from(MetadataSources, AvailableResourcesContext)` already
-  exists as a transitional native source adapter.  It is currently more accurate
-  than a `MappingSourceContributions.from(MetadataSources)` adapter because
-  `MetadataSources` stores XML mappings as already-bound mapping documents, not
-  only as source declarations.
+* Native source declarations are normalized through `MappingSources`
+  and resolved into `PreparedMappingSources` during source resolution.
 +
 Design direction:
 +
@@ -183,73 +180,64 @@ Design direction:
   replacement path covers its supported convenience methods, should be
   deprecated in favor of `PersistenceConfiguration` /
   `HibernatePersistenceConfiguration`.
-* Native bootstrap through `MetadataSources` and `Metadata` should likewise
-  converge on the shared orchestration pipeline.  These APIs should not be
-  deprecated until the pipeline has an explicit replacement story for native
-  source contribution, metadata inspection, and factory customization points.
-* Native source migration currently uses
-  `AvailableResources.from(MetadataSources, AvailableResourcesContext)` because
-  `MetadataSources` may contain already-bound XML mappings.  After XML source
-  handling is changed to retain declarations, this can move toward
-  `MappingSourceContributions`.
+* Native bootstrap should use `HibernatePersistenceConfiguration` for direct
+  SessionFactory creation.  `Metadata` remains available as a resolved-model
+  inspection view.
 
 ==== Replacement Native Workflow
 
-The replacement native workflow should preserve the useful shape of
-`Configuration -> MetadataSources -> MetadataBuilder -> Metadata -> SessionFactory`
-without cloning the old contracts.
+The replacement native workflow should preserve the useful capabilities of the
+old staged native contracts without cloning their public shape.
 
 The target workflow is:
 
 .Replacement native bootstrap workflow
 [source]
 ----
-HibernateBootstrap
-    -> MappingSourceContributions / AvailableResources
+HibernatePersistenceConfiguration
+    -> MappingSources / PreparedMappingSources
     -> ResolvedBootstrapSettings
     -> ResolvedMappingSettings
-    -> ResolvedMetadata
+    -> ResolvedMapping
     -> ResolvedSessionFactorySettings
     -> SessionFactoryImplementor
 ----
 
-`HibernateBootstrap` is the intended user-facing native bootstrap API and the
-replacement for the useful native roles of `Configuration`, `MetadataSources`,
-and `MetadataBuilder`.  It belongs in `org.hibernate.boot`, alongside the native
-bootstrap contracts it replaces.
+`HibernatePersistenceConfiguration` is the intended user-facing programmatic
+bootstrap API and the replacement for the useful native roles of the removed
+staged source and builder APIs.  Its covariant
+`createEntityManagerFactory()` terminal method returns `SessionFactory`, so
+native users do not need a separate bootstrap type.
 +
-`HibernateBootstrap` should collect source declarations, settings, and
-metadata-build customizations, then build a `SessionFactory` or perform schema
-generation through the new pipeline.  Metadata resolution remains an internal
-phase; the public native API should not lead with a durable `buildMetadata()`
-product that recreates the old two-phase workflow.
+`HibernatePersistenceConfiguration` should collect source declarations and
+settings, then build a `SessionFactory` or perform schema generation through
+the new pipeline.  Metadata resolution remains an internal phase; the public
+native API should not lead with a durable `buildMetadata()` product that
+recreates the old two-phase workflow.
 +
-`MappingSourceContributions` is the immutable internal source product created
-from `HibernateBootstrap` and other entry-point adapters.  It is the renamed
-target for the former `BootstrapSourceContributions` concept.  The record should
-stay implementation-facing.
+`MappingSources` is the immutable internal source product created
+from `HibernatePersistenceConfiguration` and other entry-point adapters.  It is
+the renamed target for the former `BootstrapSourceContributions` concept.  The
+record should stay implementation-facing.
 +
-While `MetadataSources` still stores already-bound XML mapping documents, the
-legacy native adapter may continue to produce `AvailableResources` directly.
-After native XML handling retains declarations instead of already-bound
-documents, `MetadataSources` can adapt through `MappingSourceContributions` as
-another compatibility entry point.
+Native XML source handling should retain source declarations until source
+resolution binds them into `PreparedMappingSources`.
 
-The metadata-build customization role of `MetadataBuilder` moves onto
-`HibernateBootstrap`.  These methods should map deliberately to source
-contribution, bootstrap setting, mapping setting, metadata-build customization,
-or factory setting rather than copying the old builder wholesale.
+Programmatic metadata-build customization should stay deliberate.  Java service
+loading remains the preferred path for contributors; direct customization
+methods should be added to `HibernatePersistenceConfiguration` only where there
+is a clear user-facing need, rather than copying the old builder wholesale.
 +
-`MetadataCustomizations` is the immutable internal customization product created
-from `HibernateBootstrap` and other entry-point adapters.  It carries
-programmatic metadata-build instructions such as query imports, contributor
-instances, and explicit cache-region definitions, keeping those concerns out of
-`MappingSourceContributions`.
+`MappingCustomizations` is the immutable internal customization product created
+from entry-point adapters.  It carries programmatic metadata-build instructions
+such as query imports, contributor instances, and explicit cache-region
+definitions, keeping those concerns out of `MappingSources`.
 
-The metadata inspection surface should be deliberate.  If native users still
-need metadata inspection before building a factory, expose that as a view over
-`ResolvedMetadata` rather than making the legacy `Metadata` contract the
-primary pipeline product.
+The metadata inspection surface should be deliberate.  `Metadata` is now a
+thin inspection contract rather than a staged factory-building surface, so there
+is no strong design pressure to remove it.  Native users still need a stable
+resolved-model view before building a factory, and `Metadata` can serve that
+role as the public view over the internal `ResolvedMapping` product.
 
 The factory build request is the replacement for the old public staged factory
 builder role.  It should collect runtime factory customizations into
@@ -258,39 +246,36 @@ request should be consumed by the SessionFactory construction phase, not by
 materializing legacy `SessionFactoryOptions` as the design target.
 
 The current branch has started this migration by returning an internal
-`MetadataImplementor` view over `ResolvedMetadata` from the default native
+`MetadataImplementor` view over `ResolvedMapping` from the default native
 metadata path.  That view keeps existing `Metadata` callers working while
-preserving the full `ResolvedMetadata` for `Metadata -> SessionFactory`, so
-categorization and binding are not rebuilt.
+preserving the full `ResolvedMapping` for any downstream factory construction,
+so categorization and binding are not rebuilt.  The cleanup target is the
+adapter boundary, such as `ResolvedMappingImplementor`, not the public
+`Metadata` inspection contract itself.
 
 ==== Deprecation Preconditions
 
-Deprecating `MetadataSources`, `MetadataBuilder`, and `Metadata` should happen
-only after the replacement native workflow is concrete enough to be named in
-deprecation messages.  The public `SessionFactoryBuilder` surface has already
-been removed on this branch.
+`MetadataSources`, `MetadataBuilder`, `Metadata#buildSessionFactory()`, and the
+public `SessionFactoryBuilder` surface have been removed on this branch.
+`Metadata` should be retained as the public resolved-model inspection view
+unless later work finds a concrete incompatibility with that role.
 
-When that replacement workflow is named, remember to go back through the legacy
-staged bootstrap APIs and mark the remaining public compatibility contracts as
-deprecated and `@Remove`.  This includes `MetadataBuilder`, `MetadataSources`,
-`Metadata`, `Configuration` entry points that only exist to support staged
-metadata building, and any surviving `SessionFactoryBuilder` /
-`EntityManagerFactoryBuilder` friends in API, SPI, service, or implementation
-packages.
+The remaining public compatibility question is `Configuration`: decide whether
+to keep it as a native facade over `BootstrapPipeline` or deprecate the
+entry points that only exist to support staged metadata building.
 
 Before deprecation, the branch should satisfy these conditions:
 
-* Native source contribution has a replacement for the supported
-  `MetadataSources` use cases, including class and class-name registration,
-  package metadata, XML mappings, query imports, and non-resource mapping
-  sources that remain supported.
-* Metadata build customization has a replacement for the supported
-  `MetadataBuilder` methods, with each method mapped to source contribution,
-  mapping settings, metadata-build request state, or explicitly legacy-only
-  behavior.
+* Native source contribution has a replacement for the supported source use
+  cases, including class and class-name registration, package metadata, XML
+  mappings, query imports, and non-resource mapping sources that remain
+  supported.
+* Metadata build customization has replacements for the supported former
+  builder methods, with each mapped to source contribution, mapping settings,
+  metadata-build request state, or explicitly legacy-only behavior.
 * Metadata inspection has either a replacement API or a documented view over
-  `ResolvedMetadata`.
-* `Metadata -> SessionFactory` continues to reuse the same `ResolvedMetadata`
+  `ResolvedMapping`.
+* `Metadata -> SessionFactory` continues to reuse the same `ResolvedMapping`
   product, including the categorized model and binding state.
 * Factory customizations are collected into a factory-build request or resolved
   settings product before construction.
@@ -302,8 +287,8 @@ Before deprecation, the branch should satisfy these conditions:
 
 Two-phase bootstrap::
 The old need for a two-phase JPA `EntityManagerFactory` build is gone.  This
-branch no longer has active `SessionFactoryBootstrap.prepare(...)` or
-`PreparedSessionFactoryBootstrap` call sites.
+branch no longer has active `BootstrapPipeline.prepare(...)` or
+`PreparedBootstrapPipeline` call sites.
 +
 When tests or tooling need to assert intermediate products, they should prefer
 building the specific product under test, such as metadata, source
@@ -314,11 +299,11 @@ SessionFactory bootstrap.
 
 The complete `hibernate-orm` suite is green in the current worktree as of
 2026-07-02.  Representative native bootstrap tests through `Configuration`,
-`Metadata#buildSessionFactory()`, and the pipeline construction path remain the
-useful control signal for future changes.
+`HibernatePersistenceConfiguration`, metadata inspection, and the pipeline
+construction path remain the useful control signal for future changes.
 
 Longer-term bootstrap cleanup is concentrated in the JPA provider paths that
-now route through `SessionFactoryBootstrap`:
+now route through `BootstrapPipeline`:
 
 * provider exception wrapping parity;
 * persistence-unit setting precedence parity;
@@ -357,18 +342,18 @@ have not yet earned a named slot.
 
 == Source Products
 
-`MappingSourceContributions` represents entry-point source contributions after
+`MappingSources` represents entry-point source contributions after
 entry-point-specific discovery has run.  It is an internal phase-boundary
 product, not the public collector API.
 
-`AvailableResources` represents source material that can be categorized:
+`PreparedMappingSources` represents source material that can be categorized:
 
 * managed class details
 * package-info class details
 * JPA `orm.xml` mapping bindings
 
 Programmatic metadata customizations such as query imports are intentionally
-not part of `AvailableResources`; they flow through `MetadataCustomizations`
+not part of `PreparedMappingSources`; they flow through `MappingCustomizations`
 and later binding/customization state.
 
 Scanning belongs before or inside source-contribution creation, depending on the
@@ -392,30 +377,30 @@ write to ORM's `PersistentClass` or `Collection` model directly.
 XML preprocessing and XML interpretation currently live on the categorization
 side.  A separate prepared-source phase can emerge later if XML or other sources
 need enough interpretation to justify a dedicated product between
-`AvailableResources` and `CategorizedDomainModel`.
+`PreparedMappingSources` and `CategorizedDomainModel`.
 
 That XML path means JPA `orm.xml`.  Legacy `hbm.xml` should be removed upstream
 rather than carried forward as a permanent source kind in this design.
 
 == Metadata Target
 
-`MetadataResolver` owns the metadata collector:
+`MappingResolutionPipeline` owns the metadata collector:
 
-.MetadataResolver
+.MappingResolutionPipeline
 [source]
 ----
 ResolvedBootstrapSettings
-MappingSourceContributions
+MappingSources
 ServiceRegistry
-    -> AvailableResources
+    -> PreparedMappingSources
     -> CategorizedDomainModel (*)
     -> BindingState (*)
     -> MetadataCollector
     -> MetadataImplementor (*)
-    -> ResolvedMetadata
+    -> ResolvedMapping
 ----
 
-`ResolvedMetadata` should preserve both the finalized ORM metadata and the
+`ResolvedMapping` should preserve both the finalized ORM metadata and the
 important intermediate boot-model products:
 
 * finalized `MetadataImplementor`
@@ -443,7 +428,7 @@ The SessionFactory construction phase owns only the runtime factory target:
 [source]
 ----
 ResolvedSessionFactorySettings
-ResolvedMetadata
+ResolvedMapping
 ServiceRegistry
     -> SessionFactoryImplementor
 ----

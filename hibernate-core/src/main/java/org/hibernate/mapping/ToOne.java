@@ -5,7 +5,6 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.type.EntityType;
@@ -13,7 +12,6 @@ import org.hibernate.type.MappingContext;
 
 import java.util.Objects;
 
-import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 
 /**
@@ -93,7 +91,7 @@ public abstract sealed class ToOne
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final var classLoaderService = getBootstrapContext().getClassLoaderService();
+			final var classLoaderService = getBuildingContext().getClassLoaderService();
 			referencedEntityName = reflectedPropertyClass( className, propertyName, classLoaderService ).getName();
 		}
 	}
@@ -204,44 +202,6 @@ public abstract sealed class ToOne
 
 	boolean isActuallyConstrained() {
 		return isConstrained();
-	}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Override
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		if ( referencedPropertyName == null
-				&& isActuallyConstrained()
-				&& !hasAuxiliaryColumnInPrimaryKey( referencedEntity ) ) {
-			final var firstColumn = joinColumns.getJoinColumns().get( 0 );
-			final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
-			if ( owner instanceof Join join ) {
-				// Here we handle the case of a foreign key that refers to the
-				// primary key of a secondary table of the referenced entity
-				final var foreignKey = getTable().createForeignKey(
-						getForeignKeyName(),
-						getConstraintColumns(),
-						referencedEntity.getEntityName(),
-						getForeignKeyDefinition(),
-						getForeignKeyOptions(),
-						join.getKey().getColumns()
-				);
-				foreignKey.setOnDeleteAction( getOnDeleteAction() );
-				foreignKey.setReferencedTable( join.getTable() );
-			}
-			else {
-				// it's just a reference to the primary key of the main table
-				createForeignKeyOfEntity( referencedEntity.getEntityName() );
-			}
-		}
 	}
 
 	/**

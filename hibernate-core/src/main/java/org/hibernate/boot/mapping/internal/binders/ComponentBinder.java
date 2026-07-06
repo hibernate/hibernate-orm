@@ -16,6 +16,7 @@ import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer.MaterializedBasicValue;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
@@ -29,6 +30,7 @@ import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
 import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
 import org.hibernate.boot.mapping.internal.extension.StandardAttributeBindingTarget;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
@@ -212,7 +214,7 @@ public class ComponentBinder {
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
-				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				deferAttributeBinders( member, ownerBinding, property );
 				continue;
 			}
 
@@ -254,7 +256,7 @@ public class ComponentBinder {
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
-				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				deferAttributeBinders( member, ownerBinding, property );
 				if ( value instanceof ManyToOne manyToOne ) {
 					manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
 					columns.addAll( manyToOne.getColumns() );
@@ -280,7 +282,7 @@ public class ComponentBinder {
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
-				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				deferAttributeBinders( member, ownerBinding, property );
 				value.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
 				columns.addAll( value.getColumns() );
 				continue;
@@ -346,7 +348,7 @@ public class ComponentBinder {
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
-				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+				deferAttributeBinders( member, ownerBinding, property );
 				continue;
 			}
 
@@ -376,15 +378,19 @@ public class ComponentBinder {
 			component.addProperty( property, componentMember.declaringType() );
 			applyCollation( ownerType, componentMember, property );
 			applyTenantId( member, ownerBinding, property );
-			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
+			deferAttributeBinders( member, ownerBinding, property );
 			if ( basicValue.column() != null ) {
 				final Column column = basicValue.column();
 				columnConsumer.accept( member, column );
 				columns.add( column );
 			}
 		}
-		CustomMappingBinder.callTypeBinders( source.componentType(), component, state, context );
+		state.addComponentCustomMapping( CustomMappingBinder.typeBinding( source.componentType(), component, state, context ) );
 		return columns;
+	}
+
+	private void deferAttributeBinders(MemberDetails member, PersistentClass ownerBinding, Property property) {
+		state.addAttributeCustomMapping( CustomMappingBinder.attributeBinding( member, ownerBinding, property, state, context ) );
 	}
 
 	private void applyTenantId(MemberDetails member, PersistentClass ownerBinding, Property property) {
@@ -458,10 +464,9 @@ public class ComponentBinder {
 	}
 
 	private static BasicValue genericBasicValue(BasicValue source) {
-		final BasicValue basicValue = new BasicValue( source.getBuildingContext(), source.getTable() );
+		final BasicValue basicValue = BasicValue.unregistered( source.getBuildingContext(), source.getTable() );
 		basicValue.setTable( source.getTable() );
 		basicValue.setTypeName( Object.class.getName() );
-		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Object.class );
 		for ( int i = 0; i < source.getSelectables().size(); i++ ) {
 			final var selectable = source.getSelectables().get( i );
 			if ( selectable instanceof Column column ) {
@@ -471,6 +476,9 @@ public class ComponentBinder {
 				basicValue.addFormula( new org.hibernate.mapping.Formula( formula.getFormula() ) );
 			}
 		}
+		final BasicValueSource valueSource = BasicValueSource.genericDeclaration();
+		basicValue.setImplicitSourceJavaType( valueSource.sourceJavaType() );
+		BasicValueResolutionBuilder.applyResolution( BasicValueResolutionBuilder.Input.create( basicValue, valueSource ) );
 		return basicValue;
 	}
 
@@ -533,7 +541,7 @@ public class ComponentBinder {
 				attributeName,
 				componentMember.namingPath(),
 				associationOverride,
-				context.getBootstrapContext().getModelsContext(),
+				context.getModelsContext(),
 				componentMember.type()
 		);
 		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) state.getTypeBinder(

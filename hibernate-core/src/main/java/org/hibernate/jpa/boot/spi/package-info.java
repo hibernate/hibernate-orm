@@ -10,7 +10,7 @@
  * This package includes symbolic setting names, contributor contracts, and
  * provider-specific extension points consumed by the bootstrap pipeline.
  * One-shot bootstrap entry points use
- * {@link org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap}.
+ * {@link org.hibernate.boot.pipeline.internal.BootstrapPipeline}.
  *
  * @author Steve Ebersole
  */

@@ -29,9 +29,27 @@ record SessionFactoryConstructionState(
 
 	SessionFactoryConstructionState {
 		Objects.requireNonNull( metadata );
-		Objects.requireNonNull( resolvedSettings );
-		Objects.requireNonNull( identity );
 		Objects.requireNonNull( options );
 		Objects.requireNonNull( bootstrapContext );
+		Objects.requireNonNull( bootBindingModel );
+	}
+
+	static SessionFactoryConstructionState legacy(
+			MetadataImplementor metadata,
+			SessionFactoryOptions options,
+			BootstrapContext bootstrapContext,
+			BootBindingModel bootBindingModel) {
+		return new SessionFactoryConstructionState(
+				metadata,
+				null,
+				null,
+				options,
+				bootstrapContext,
+				bootBindingModel
+		);
+	}
+
+	boolean hasResolvedSettings() {
+		return resolvedSettings != null;
 	}
 }

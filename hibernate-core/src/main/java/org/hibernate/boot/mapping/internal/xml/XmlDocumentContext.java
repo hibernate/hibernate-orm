@@ -5,11 +5,14 @@
 package org.hibernate.boot.mapping.internal.xml;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Context for a specific XML mapping file
@@ -27,12 +30,20 @@ public interface XmlDocumentContext {
 	/**
 	 * Access to the containing ModelsContext
 	 */
-	ModelsContext getModelBuildingContext();
+	ModelsContext getModelsContext();
 
 	/**
-	 * Access to the containing BootstrapContext
+	 * Registry used to resolve model class descriptors while processing XML.
 	 */
-	BootstrapContext getBootstrapContext();
+	default ClassDetailsRegistry getClassDetailsRegistry() {
+		return getModelsContext().getClassDetailsRegistry();
+	}
+
+	ClassLoaderService getClassLoaderService();
+
+	TypeConfiguration getTypeConfiguration();
+
+	JdbcServices getJdbcServices();
 
 	/**
 	 * Resolve a ClassDetails by name, accounting for XML-defined package name if one.
@@ -54,7 +65,7 @@ public interface XmlDocumentContext {
 	 * so they must not be package-qualified.
 	 */
 	default String resolveTargetEntityName(String specifiedName) {
-		final var classDetailsRegistry = getModelBuildingContext().getClassDetailsRegistry();
+		final var classDetailsRegistry = getModelsContext().getClassDetailsRegistry();
 		final var classDetails = classDetailsRegistry.findClassDetails( specifiedName );
 		if ( ( classDetails != null && !classDetails.isRealClass() )
 				|| isDynamicManagedTypeName( specifiedName ) ) {

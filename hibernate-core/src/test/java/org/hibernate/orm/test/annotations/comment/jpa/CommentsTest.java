@@ -15,8 +15,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -45,22 +46,27 @@ public class CommentsTest {
 	@JiraKey(value = "HHH-4369")
 	public void testComments() {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
-		Metadata metadata = new MetadataSources(ssr).addAnnotatedClass(TestEntity.class).buildMetadata();
-		org.hibernate.mapping.Table table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
-				.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(TABLE_NAME))
-				.findFirst().orElse(null);
-		assertThat(table.getComment(), is(TABLE_COMMENT));
-		assertThat(table.getColumns().size(), is(6));
-		for (org.hibernate.mapping.Column col : table.getColumns()) {
-			assertThat(col.getComment(), is("I am " + col.getName()));
+		try {
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, TestEntity.class );
+			org.hibernate.mapping.Table table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
+					.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(TABLE_NAME))
+					.findFirst().orElse(null);
+			assertThat(table.getComment(), is(TABLE_COMMENT));
+			assertThat(table.getColumns().size(), is(6));
+			for (org.hibernate.mapping.Column col : table.getColumns()) {
+				assertThat(col.getComment(), is("I am " + col.getName()));
+			}
+			table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
+					.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(SEC_TABLE_NAME))
+					.findFirst().orElse(null);
+			assertThat(table.getComment(), is(SEC_TABLE_COMMENT));
+			assertThat(table.getColumns().size(), is(2));
+			long count = table.getColumns().stream().filter(col -> "This is a date".equalsIgnoreCase(col.getComment())).count();
+			assertThat(count, is(1L));
 		}
-		table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
-				.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(SEC_TABLE_NAME))
-				.findFirst().orElse(null);
-		assertThat(table.getComment(), is(SEC_TABLE_COMMENT));
-		assertThat(table.getColumns().size(), is(2));
-		long count = table.getColumns().stream().filter(col -> "This is a date".equalsIgnoreCase(col.getComment())).count();
-		assertThat(count, is(1L));
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
 	}
 
 	@Entity(name = "Person")

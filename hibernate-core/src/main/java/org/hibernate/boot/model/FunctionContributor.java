@@ -18,7 +18,7 @@ import static org.hibernate.SPI.Role.USE;
 /// [java.util.ServiceLoader] facility. An application may instead supply one
 /// through
 /// [org.hibernate.cfg.Configuration#registerFunctionContributor(FunctionContributor)]
-/// or [org.hibernate.boot.MetadataBuilder#applyFunctions(FunctionContributor)].
+/// directly.
 ///
 /// Complete all registration during [#contributeFunctions]. Do not retain the
 /// supplied [FunctionContributions] or its mutable registry beyond the
@@ -31,7 +31,6 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @see org.hibernate.query.sqm.function.SqmFunctionRegistry
 /// @see org.hibernate.cfg.Configuration#registerFunctionContributor(FunctionContributor)
-/// @see org.hibernate.boot.MetadataBuilder#applyFunctions(FunctionContributor)
 ///
 /// @author Karel Maesen
 @JavaServiceLoadable

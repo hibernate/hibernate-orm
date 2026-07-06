@@ -4,11 +4,9 @@
  */
 package org.hibernate.orm.test.annotations.fkcircularity;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -21,37 +19,15 @@ public class FkCircularityTest {
 
 	@Test
 	public void testJoinedSublcassesInPK() {
-		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-			.addAnnotatedClass(A.class)
-			.addAnnotatedClass(B.class)
-			.addAnnotatedClass(C.class)
-			.addAnnotatedClass(D.class);
-		try {
-			metadataSources.buildMetadata();
-		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataBuildingTestHelper.buildMetadata( serviceRegistry, A.class, B.class, C.class, D.class );
 		}
 	}
 
 	@Test
 	public void testDeepJoinedSuclassesHierachy() {
-		MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addAnnotatedClass(ClassA.class)
-				.addAnnotatedClass(ClassB.class)
-				.addAnnotatedClass(ClassC.class)
-				.addAnnotatedClass(ClassD.class);
-		try {
-			metadataSources.buildMetadata();
-		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry ) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataBuildingTestHelper.buildMetadata( serviceRegistry, ClassA.class, ClassB.class, ClassC.class, ClassD.class );
 		}
 	}
 }

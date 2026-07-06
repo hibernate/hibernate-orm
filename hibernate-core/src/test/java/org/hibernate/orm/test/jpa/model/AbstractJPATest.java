@@ -4,12 +4,14 @@
  */
 package org.hibernate.orm.test.jpa.model;
 
-import org.hibernate.boot.MetadataBuilder;
+import java.sql.Connection;
+
+import org.hibernate.Session;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.cfg.Environment;
 
+import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -45,9 +47,19 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 		} );
 	}
 
-	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		((MetadataBuilderImplementor) metadataBuilder).getBootstrapContext().markAsJpaBootstrap();
-	}
+	// a useful method that doesn't really belong here ~~~~~~~~~~~~~~~~
 
+	protected boolean readCommittedIsolationMaintained(String scenario) {
+		final int isolation;
+		try ( Session testSession = sessionFactory().openSession() ) {
+			isolation = testSession.doReturningWork(Connection::getTransactionIsolation);
+		}
+		if ( isolation < Connection.TRANSACTION_READ_COMMITTED ) {
+			SkipLog.reportSkip( "environment does not support at least read committed isolation", scenario );
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
 }

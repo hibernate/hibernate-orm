@@ -5,13 +5,14 @@
 package org.hibernate.orm.test.namingstrategy.synchronizedTables;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -42,22 +43,26 @@ public class SynchronizeTableNamingTest {
 
 	@Test
 	public void testAnnotationHandling() {
-		final Metadata metadata = new MetadataSources( ssr )
-				.addAnnotatedClass( DynamicEntity.class )
-				.getMetadataBuilder()
-				.applyPhysicalNamingStrategy( TestingPhysicalNamingStrategy.INSTANCE )
-				.build();
+		final Metadata metadata = buildMetadata(
+				new MappingSources().addManagedClass( DynamicEntity.class )
+		);
 		verify( metadata.getEntityBinding( DynamicEntity.class.getName() ) );
 	}
 
 	@Test
 	public void testHbmXmlHandling() {
-		final Metadata metadata = new MetadataSources( ssr )
-				.addResource( "org/hibernate/orm/test/namingstrategy/synchronizedTables/mapping.hbm.xml" )
-				.getMetadataBuilder()
-				.applyPhysicalNamingStrategy( TestingPhysicalNamingStrategy.INSTANCE )
-				.build();
+		final Metadata metadata = buildMetadata(
+				new MappingSources().addMappingResource( "org/hibernate/orm/test/namingstrategy/synchronizedTables/mapping.hbm.xml" )
+		);
 		verify( metadata.getEntityBinding( DynamicEntity.class.getName() ) );
+	}
+
+	private Metadata buildMetadata(MappingSources mappingSources) {
+		return MetadataBuildingTestHelper.buildMetadataWithPhysicalNaming(
+				ssr,
+				mappingSources,
+				TestingPhysicalNamingStrategy.INSTANCE
+		);
 	}
 
 	private void verify(PersistentClass entityBinding) {

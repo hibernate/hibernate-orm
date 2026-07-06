@@ -18,6 +18,7 @@ import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
@@ -219,11 +220,8 @@ class EmbeddableAttributeBinder {
 
 	private CompositeUserType<?> instantiateCompositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
-		return bindingContext.getBootstrapContext().getMetadataBuildingOptions().isAllowExtensionsInCdi()
-				? bindingContext.getBootstrapContext()
-						.getManagedBeanRegistry()
-						.getBean( compositeUserTypeClass )
-						.getBeanInstance()
+		return bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
+				? bindingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 	}
 
@@ -287,9 +285,8 @@ class EmbeddableAttributeBinder {
 			return;
 		}
 
-		final BasicValue discriminator = new BasicValue( bindingState.getMetadataBuildingContext(), componentTable );
+		final BasicValue discriminator = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), componentTable );
 		discriminator.setTable( componentTable );
-		discriminator.setImplicitJavaTypeAccess( typeConfiguration -> String.class );
 		discriminator.setTypeName( String.class.getName() );
 		final ColumnSource overrideColumnSource = componentSource.discriminatorColumnSource();
 		final DiscriminatorColumn discriminatorColumn =
@@ -324,6 +321,9 @@ class EmbeddableAttributeBinder {
 					bindingState
 			);
 		}
+		bindingState.addAttributeValueResolution(
+				AttributeBindingPhase.valueResolution( discriminator, BasicValueSource.discriminator( String.class ) )
+		);
 		component.setDiscriminator( discriminator );
 		component.setDiscriminatorValues( discriminatorValues );
 		component.setSubclassToSuperclass( subclassToSuperclass );

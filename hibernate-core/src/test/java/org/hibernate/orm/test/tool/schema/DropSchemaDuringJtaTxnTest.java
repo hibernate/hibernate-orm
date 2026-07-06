@@ -8,7 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -42,10 +43,12 @@ public class DropSchemaDuringJtaTxnTest {
 	}
 
 	private SessionFactory buildSessionFactory(ServiceRegistryScope registryScope) {
-		return new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata()
-				.buildSessionFactory();
+		return org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata(
+						registryScope.getRegistry(),
+						new MappingSources().addManagedClass( TestEntity.class )
+				)
+		);
 	}
 
 

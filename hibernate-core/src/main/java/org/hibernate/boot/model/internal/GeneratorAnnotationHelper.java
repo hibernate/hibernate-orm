@@ -69,7 +69,7 @@ public class GeneratorAnnotationHelper {
 			@Nullable Function<A,String> nameExtractor,
 			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getModelsContext();
 
 		A possibleMatch = null;
 
@@ -156,7 +156,7 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		return locatePackageInfoDetails( classDetails, buildingContext.getBootstrapContext().getModelsContext() );
+		return locatePackageInfoDetails( classDetails, buildingContext.getModelsContext() );
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {

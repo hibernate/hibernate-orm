@@ -8,9 +8,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -39,9 +40,7 @@ public class MigrationTest {
 		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
 		String resource2 = "org/hibernate/orm/test/schemaupdate/2_Version.hbm.xml";
 
-		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addResource( resource1 )
-				.buildMetadata();
+		MetadataImplementor v1metadata = buildMetadata( registryScope, resource1 );
 
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v1metadata );
 
@@ -57,9 +56,7 @@ public class MigrationTest {
 
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
-		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addResource( resource2 )
-				.buildMetadata();
+		MetadataImplementor v2metadata = buildMetadata( registryScope, resource2 );
 
 		final SchemaUpdate v2schemaUpdate = new SchemaUpdate();
 		v2schemaUpdate.execute(
@@ -83,9 +80,7 @@ public class MigrationTest {
 		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
 		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.hbm.xml";
 
-		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addResource( resource1 )
-				.buildMetadata();
+		MetadataImplementor v1metadata = buildMetadata( registryScope, resource1 );
 
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), v1metadata );
 
@@ -101,9 +96,7 @@ public class MigrationTest {
 
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
 
-		MetadataImplementor v2metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addResource( resource4 )
-				.buildMetadata();
+		MetadataImplementor v2metadata = buildMetadata( registryScope, resource4 );
 
 		final SchemaUpdate v2schemaUpdate = new SchemaUpdate();
 		v2schemaUpdate.execute(
@@ -125,9 +118,7 @@ public class MigrationTest {
 	@Test
 	@JiraKey( value = "HHH-9713" )
 	public void testIndexCreationViaSchemaUpdate(ServiceRegistryScope registryScope) {
-		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( EntityWithIndex.class )
-				.buildMetadata();
+		MetadataImplementor metadata = buildMetadata( registryScope, EntityWithIndex.class );
 
 		// drop and then create the schema
 		new SchemaExport().execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
@@ -153,10 +144,7 @@ public class MigrationTest {
 	@Test
 	@JiraKey( value = "HHH-9550" )
 	public void testSameTableNameDifferentExplicitSchemas(ServiceRegistryScope registryScope) {
-		MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( CustomerInfo.class )
-				.addAnnotatedClass( PersonInfo.class )
-				.buildMetadata();
+		MetadataImplementor metadata = buildMetadata( registryScope, CustomerInfo.class, PersonInfo.class );
 
 		// drop and then create the schema
 		new SchemaExport().execute( EnumSet.of( TargetType.DATABASE ), SchemaExport.Action.BOTH, metadata );
@@ -223,5 +211,16 @@ public class MigrationTest {
 			return identifier.toLowerCase( Locale.ROOT );
 		}
 		return identifier;
+	}
+
+	private static MetadataImplementor buildMetadata(ServiceRegistryScope registryScope, String mappingResource) {
+		return (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				new MappingSources().addMappingResource( mappingResource )
+		);
+	}
+
+	private static MetadataImplementor buildMetadata(ServiceRegistryScope registryScope, Class<?>... managedClasses) {
+		return (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), managedClasses );
 	}
 }

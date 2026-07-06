@@ -317,9 +317,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				this,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationState.getCreationContext()
-						// TODO: FIXME
-						.getSessionFactory(),
+				creationState.getLoadQueryInfluencers().getSessionFactory(),
 				lhs
 		);
 

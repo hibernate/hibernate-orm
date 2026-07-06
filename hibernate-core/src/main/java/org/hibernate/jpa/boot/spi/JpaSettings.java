@@ -5,7 +5,6 @@
 package org.hibernate.jpa.boot.spi;
 
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.spi.MetadataBuilderContributor;
 
 /**
  * Enumerates SPI-related settings that are specific to the use of Hibernate
@@ -35,13 +34,5 @@ public class JpaSettings {
 	 */
 	@Deprecated(forRemoval = true)
 	public static final String TYPE_CONTRIBUTORS = "hibernate.type_contributors";
-
-	/**
-	 * Names a {@link MetadataBuilderContributor}
-	 *
-	 * @deprecated Use {@linkplain java.util.ServiceLoader discovery} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public static final String METADATA_BUILDER_CONTRIBUTOR = "hibernate.metadata_builder_contributor";
 
 }

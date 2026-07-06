@@ -6,11 +6,11 @@ package org.hibernate.orm.test.annotations.id.sequences;
 
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -45,11 +45,12 @@ public class JoinColumnOverrideTest {
 				.applySetting( AvailableSettings.DIALECT, "SQLServer" )
 				.build();
 		try {
-			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Bunny.class )
-					.addAnnotatedClass( PointyTooth.class )
-					.addAnnotatedClass( TwinkleToes.class )
-					.buildMetadata();
+			MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					Bunny.class,
+					PointyTooth.class,
+					TwinkleToes.class
+			);
 			metadata.orderColumns( true );
 			metadata.validate();
 

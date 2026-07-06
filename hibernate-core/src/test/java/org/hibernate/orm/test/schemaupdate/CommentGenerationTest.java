@@ -8,11 +8,12 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
@@ -43,11 +44,10 @@ public class CommentGenerationTest {
 			File output = File.createTempFile( "update_script", ".sql" );
 			output.deleteOnExit();
 
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addResource( resource )
-					.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+					ssr,
+					new MappingSources().addMappingResource( resource )
+			);
 
 			new SchemaUpdate()
 					.setHaltOnError( true )

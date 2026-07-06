@@ -11,8 +11,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.jdbc.JdbcUtils;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -64,10 +65,10 @@ public class MySqlExistingEnumColumnValidationTest {
 
 	@Test
 	public void testSynonymUsingGroupedSchemaValidator(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() );
-		metadataSources.addAnnotatedClass( EntityE.class );
-
-		new SchemaValidator().validate( metadataSources.buildMetadata() );
+		new SchemaValidator().validate( MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				new MappingSources().addManagedClass( EntityE.class )
+		) );
 	}
 
 

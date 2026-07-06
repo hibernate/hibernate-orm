@@ -112,7 +112,7 @@ public record BasicValueSource(
 		/// map key; `@Convert(attributeName = "value")` describes a collection element;
 		/// and embeddable member conversion may be selected by a path override declared on
 		/// the owning component member.  Keeping the selected conversion here lets
-		/// [org.hibernate.boot.mapping.internal.binders.BasicValueBinder] apply
+		/// [org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder] apply
 		/// conversion uniformly instead of having each higher-level binder special-case it.
 		Convert conversion) {
 
@@ -180,7 +180,32 @@ public record BasicValueSource(
 		/// This is the id value used to locate the selected target entity.  The Java type
 		/// is source-level metadata supplied by `@AnyKeyJavaClass` or related Hibernate
 		/// any-key annotations, not the declared Java type of the association member.
-		ANY_KEY
+		ANY_KEY,
+
+		/// A synthetic discriminator value for an entity or embeddable hierarchy.
+		///
+		/// The value has no persistent Java member.  Its Java type is selected from
+		/// discriminator mapping metadata and is carried as an explicit Java type.
+		DISCRIMINATOR,
+
+		/// A synthetic soft-delete indicator value.
+		///
+		/// The value has no persistent Java member.  Its Java type is selected from
+		/// the soft-delete strategy and optional converter metadata.
+		SOFT_DELETE,
+
+		/// A synthetic value contributed by state-management mappings such as audit
+		/// or temporal columns.
+		///
+		/// The value has no persistent Java member.  Its Java type is selected by
+		/// the state-management contributor.
+		STATE_MANAGEMENT,
+
+		/// A synthetic generic declaration value retained for compatibility metadata.
+		///
+		/// The value mirrors a specialized mapping value but intentionally resolves to
+		/// `Object` to represent the declaration-side generic attribute.
+		GENERIC_DECLARATION
 	}
 
 	/// Creates a source for a normal singular basic attribute.
@@ -339,6 +364,27 @@ public record BasicValueSource(
 		return new BasicValueSource( Kind.ANY_KEY, member, null, keyJavaType, null );
 	}
 
+	/// Creates a source for a synthetic discriminator value.
+	public static BasicValueSource discriminator(Class<?> discriminatorJavaType) {
+		return new BasicValueSource( Kind.DISCRIMINATOR, null, null, discriminatorJavaType, null );
+	}
+
+	/// Creates a source for a synthetic soft-delete indicator value whose Java
+	/// type is applied directly to the resolution input.
+	public static BasicValueSource softDelete() {
+		return new BasicValueSource( Kind.SOFT_DELETE, null, null, null, null );
+	}
+
+	/// Creates a source for a synthetic state-management value.
+	public static BasicValueSource stateManagement(Class<?> javaType) {
+		return new BasicValueSource( Kind.STATE_MANAGEMENT, null, null, javaType, null );
+	}
+
+	/// Creates a source for a synthetic generic declaration value.
+	public static BasicValueSource genericDeclaration() {
+		return new BasicValueSource( Kind.GENERIC_DECLARATION, null, null, Object.class, null );
+	}
+
 	/// Resolves the source type to expose to [BasicValue].
 	public BasicValue.SourceJavaType sourceJavaType() {
 		return BasicValue.SourceJavaType.from( type, explicitJavaType );
@@ -355,7 +401,7 @@ public record BasicValueSource(
 	private static Convert attributeConversion(MemberDetails member, BindingContext bindingContext) {
 		final String attributeName = member.resolveAttributeName();
 		if ( bindingContext != null && attributeName != null ) {
-			final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+			final var modelsContext = bindingContext.getModelsContext();
 			for ( Convert conversion : member.getDeclaringType().getRepeatedAnnotationUsages( Convert.class, modelsContext ) ) {
 				if ( attributeName.equals( conversion.attributeName() ) ) {
 					return conversion;
@@ -374,7 +420,7 @@ public record BasicValueSource(
 			String roleName,
 			BindingContext bindingContext) {
 		if ( bindingContext != null ) {
-			final var modelsContext = bindingContext.getBootstrapContext().getModelsContext();
+			final var modelsContext = bindingContext.getModelsContext();
 			for ( Convert conversion : member.getRepeatedAnnotationUsages( Convert.class, modelsContext ) ) {
 				if ( roleName.equals( conversion.attributeName() )
 						|| ( "value".equals( roleName )

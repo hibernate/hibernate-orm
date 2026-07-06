@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.Temporal;
+import org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase;
+import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -53,7 +57,8 @@ public class TemporalHelper {
 			Table table,
 			Temporal.HistoryTable historyTable,
 			Temporal.HistoryPartitioning historyPartitioning,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			BindingState bindingState) {
 		final var collector = context.getMetadataCollector();
 		final boolean partitioned = historyPartitioning != null;
 		final String currentPartitionName =
@@ -71,10 +76,10 @@ public class TemporalHelper {
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
 		final var rowStartColumn =
 				createTemporalColumn( temporal.rowStart(),
-						table, false, precision, context );
+						table, false, precision, context, bindingState );
 		final var rowEndColumn =
 				createTemporalColumn( temporal.rowEnd(),
-						table, true, precision, context );
+						table, true, precision, context, bindingState );
 		handleTemporalColumnGeneration( rowStartColumn, rowEndColumn, context );
 
 		final var temporalTable =
@@ -106,7 +111,7 @@ public class TemporalHelper {
 				historyPartitionName,
 				context
 		);
-		addSecondPass( target, context );
+		addFinalizer( target, context, bindingState );
 	}
 
 	static void enableTemporal(
@@ -133,9 +138,7 @@ public class TemporalHelper {
 	}
 
 	private static Class<?> getChangesetIdType(MetadataBuildingContext context) {
-		return context.getBootstrapContext().getServiceRegistry()
-				.requireService( ChangesetCoordinator.class )
-				.getIdentifierType();
+		return context.getChangesetCoordinator().getIdentifierType();
 	}
 
 	private static String inferredPartitionName(
@@ -145,13 +148,22 @@ public class TemporalHelper {
 				: partitionName;
 	}
 
-	private static void addSecondPass(Stateful target, MetadataBuildingContext context) {
+	private static void addFinalizer(Stateful target, MetadataBuildingContext context, BindingState bindingState) {
 		if ( context.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE ) {
-			context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
-				copyTableColumns( target.getMainTable(), target.getAuxiliaryTable() );
-				createHistoryTablePrimaryKey( target,
-						context.getMetadataCollector().getDatabase().getDialect() );
-			} );
+			bindingState.addStateManagementFinalizer( new HistoryTableFinalizer( target, context ) );
+		}
+	}
+
+	private record HistoryTableFinalizer(
+			Stateful target,
+			MetadataBuildingContext context) implements StateManagementBindingPhase.Finalizer {
+		@Override
+		public void finalizeStateManagement() {
+			copyTableColumns( target.getMainTable(), target.getAuxiliaryTable() );
+			createHistoryTablePrimaryKey(
+					target,
+					context.getMetadataCollector().getDatabase().getDialect()
+			);
 		}
 	}
 
@@ -363,28 +375,50 @@ public class TemporalHelper {
 			Table table,
 			boolean nullable,
 			Integer temporalPrecision,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			BindingState bindingState) {
 		final var database = context.getMetadataCollector().getDatabase();
-		final var basicValue = new BasicValue( context, table );
-		// Defer changeset ID type resolution to BasicValue resolution time,
-		// so that @Changelog entities are fully bound first
-		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> getChangesetIdType( context ) );
+		final var basicValue = BasicValue.unregistered( context, table );
 		final var column = new Column();
 		column.setNullable( nullable );
 		column.setValue( basicValue );
 		basicValue.addColumn( column );
 		setTemporalColumnName( columnName, column, database,
-				context.getBuildingOptions().getPhysicalNamingStrategy() );
-		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
+				context.getBuildingPlan().getPhysicalNamingStrategy() );
+		bindingState.addStateManagementFinalizer(
+				new TemporalColumnFinalizer( column, basicValue, temporalPrecision, database, context )
+		);
+		return column;
+	}
+
+	private record TemporalColumnFinalizer(
+			Column column,
+			BasicValue basicValue,
+			Integer temporalPrecision,
+			Database database,
+			MetadataBuildingContext context) implements StateManagementBindingPhase.Finalizer {
+		@Override
+		public void finalizeStateManagement() {
 			final var changesetIdJavaType = getChangesetIdType( context );
 			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType );
 			if ( Instant.class.equals( changesetIdJavaType ) ) {
 				final int temporalColumnType = database.getDialect().getTemporalTableSupport().getTemporalColumnType();
-				basicValue.setExplicitJdbcTypeAccess( typeConfiguration ->
-						typeConfiguration.getJdbcTypeRegistry().findDescriptor( temporalColumnType ) );
+				final var resolutionInput = BasicValueResolutionBuilder.Input.create(
+						basicValue,
+						BasicValueSource.stateManagement( changesetIdJavaType )
+				);
+				resolutionInput.setConfiguredJdbcTypeCode( temporalColumnType );
+				BasicValueResolutionBuilder.applyResolution( resolutionInput );
 			}
-		} );
-		return column;
+			else {
+				BasicValueResolutionBuilder.applyResolution(
+						BasicValueResolutionBuilder.Input.create(
+								basicValue,
+								BasicValueSource.stateManagement( changesetIdJavaType )
+						)
+				);
+			}
+		}
 	}
 
 	private static void setTemporalColumnType(

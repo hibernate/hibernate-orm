@@ -226,7 +226,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		if ( bootDescriptor.isPolymorphic() ) {
 			final var subclassNames = bootDescriptor.getDiscriminatorValues().values();
 			final Map<String, Class<?>> result = new HashMap<>( subclassNames.size() );
-			final var classLoaderService = creationContext.getBootstrapContext().getClassLoaderService();
+			final var classLoaderService = creationContext.getClassLoaderService();
 			for ( final String subclassName : subclassNames ) {
 				final var embeddableClass =
 						subclassName.equals( bootDescriptor.getComponentClassName() )

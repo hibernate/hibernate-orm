@@ -5,16 +5,19 @@
 package org.hibernate.testing.orm.junit;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -62,7 +65,7 @@ public class DomainModelExtension
 					context
 			);
 			scope = new DomainModelScopeImpl( serviceRegistryScope, serviceRegistry -> {
-				return (MetadataImplementor) new MetadataSources( serviceRegistry ).buildMetadata();
+				return MetadataBuildingHelper.buildMetadata( serviceRegistry, new MappingSources() );
 			} );
 		}
 		return scope;
@@ -188,23 +191,27 @@ public class DomainModelExtension
 
 				final DomainModel domainModelAnnotation = domainModelAnnRef.get();
 
-				final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+				final MappingSources mappingSources = new MappingSources();
 				final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+				final List<MappingCustomizations> descriptorCustomizations = new ArrayList<>();
 
 				for ( String annotatedPackageName : domainModelAnnotation.annotatedPackageNames() ) {
-					metadataSources.addPackage( annotatedPackageName );
+					mappingSources.addPackage( annotatedPackageName );
 				}
 
 				for ( StandardDomainModel standardDomainModel : domainModelAnnotation.standardModels() ) {
-					standardDomainModel.getDescriptor().applyDomainModel( metadataSources );
+					final DomainModelDescriptor descriptor = standardDomainModel.getDescriptor();
+					descriptor.applyDomainModel( mappingSources );
+					descriptorCustomizations.add( descriptor.metadataCustomizations() );
 				}
 
 				for ( Class<? extends DomainModelDescriptor> modelDescriptorClass : domainModelAnnotation.modelDescriptorClasses() ) {
 					try {
 						final DomainModelDescriptor modelDescriptor = modelDescriptorClass.newInstance();
-						modelDescriptor.applyDomainModel( metadataSources );
+						modelDescriptor.applyDomainModel( mappingSources );
+						descriptorCustomizations.add( modelDescriptor.metadataCustomizations() );
 						for ( Class<?> annotatedClass : modelDescriptor.getAnnotatedClasses() ) {
-							metadataSources.addAnnotatedClass( annotatedClass );
+							mappingSources.addManagedClass( annotatedClass );
 						}
 					}
 					catch (IllegalAccessException | InstantiationException e) {
@@ -213,34 +220,34 @@ public class DomainModelExtension
 				}
 
 				for ( Class<?> annotatedClass : domainModelAnnotation.annotatedClasses() ) {
-					metadataSources.addAnnotatedClass( annotatedClass );
+					mappingSources.addManagedClass( annotatedClass );
 				}
 
 				for ( String annotatedClassName : domainModelAnnotation.annotatedClassNames() ) {
-					metadataSources.addAnnotatedClassName( annotatedClassName );
+					mappingSources.addManagedClassName( annotatedClassName );
 				}
 
 				for ( String xmlMapping : domainModelAnnotation.xmlMappings() ) {
-					metadataSources.addResource( xmlMapping );
+					mappingSources.addMappingResource( xmlMapping );
 				}
 
+				final Map<String, Class<?>> queryImports = new LinkedHashMap<>();
 				for ( DomainModel.ExtraQueryImport extraQueryImport : domainModelAnnotation.extraQueryImports() ) {
-					metadataSources.addQueryImport( extraQueryImport.name(), extraQueryImport.importedClass() );
+					queryImports.put( extraQueryImport.name(), extraQueryImport.importedClass() );
 				}
 
-				final MetadataBuilderImpl metadataBuilder = (MetadataBuilderImpl) metadataSources.getMetadataBuilder();
-
+				final List<TypeContributor> typeContributors = new ArrayList<>();
 				for ( Class<? extends TypeContributor> contributorType : domainModelAnnotation.typeContributors() ) {
 					final TypeContributor contributor = managedBeanRegistry.getBean( contributorType ).getBeanInstance();
-					contributor.contribute( metadataBuilder, serviceRegistry );
+					typeContributors.add( contributor );
 				}
 
 				final SharedCacheMode sharedCacheMode = domainModelAnnotation.sharedCacheMode();
-				final AccessType accessType = domainModelAnnotation.accessType();
-				metadataBuilder.applySharedCacheMode( sharedCacheMode );
-				metadataBuilder.applyAccessType( accessType );
-
-				MetadataImplementor metadataImplementor = metadataBuilder.build();
+				MetadataImplementor metadataImplementor = MetadataBuildingHelper.buildMetadata(
+						serviceRegistry,
+						mappingSources,
+						metadataCustomizations( queryImports, typeContributors, sharedCacheMode, descriptorCustomizations )
+				);
 				applyCacheSettings(
 						metadataImplementor,
 						domainModelAnnotation.overrideCacheStrategy(),
@@ -258,6 +265,69 @@ public class DomainModelExtension
 		}
 
 		return scope;
+	}
+
+	private static MappingCustomizations metadataCustomizations(
+			Map<String, Class<?>> queryImports,
+			List<TypeContributor> typeContributors,
+			SharedCacheMode sharedCacheMode,
+			List<MappingCustomizations> descriptorCustomizations) {
+		final var mergedQueryImports = new LinkedHashMap<String, Class<?>>( queryImports );
+		final var mergedTypeContributors = new ArrayList<TypeContributor>( typeContributors );
+		final var functionContributors = new ArrayList<org.hibernate.boot.model.FunctionContributor>();
+		final var cacheRegionDefinitions = new ArrayList<org.hibernate.boot.CacheRegionDefinition>();
+		final var basicTypeRegistrations = new ArrayList<org.hibernate.boot.spi.BasicTypeRegistration>();
+		final var userTypeRegistrations = new ArrayList<MappingCustomizations.UserTypeRegistration>();
+		final var sqlFunctions = new LinkedHashMap<String, org.hibernate.query.sqm.function.SqmFunctionDescriptor>();
+		final var auxiliaryDatabaseObjects = new ArrayList<org.hibernate.boot.model.relational.AuxiliaryDatabaseObject>();
+		final var attributeConverters = new ArrayList<org.hibernate.boot.model.convert.spi.ConverterDescriptor<?, ?>>();
+		var implicitNamingStrategy = (org.hibernate.boot.model.naming.ImplicitNamingStrategy) null;
+		var physicalNamingStrategy = (org.hibernate.boot.model.naming.PhysicalNamingStrategy) null;
+		var columnOrderingStrategy = (org.hibernate.boot.model.relational.ColumnOrderingStrategy) null;
+		var effectiveSharedCacheMode = sharedCacheMode;
+
+		for ( MappingCustomizations customizations : descriptorCustomizations ) {
+			if ( customizations == null ) {
+				continue;
+			}
+			mergedQueryImports.putAll( customizations.queryImports() );
+			mergedTypeContributors.addAll( customizations.typeContributors() );
+			functionContributors.addAll( customizations.functionContributors() );
+			cacheRegionDefinitions.addAll( customizations.cacheRegionDefinitions() );
+			basicTypeRegistrations.addAll( customizations.basicTypeRegistrations() );
+			userTypeRegistrations.addAll( customizations.userTypeRegistrations() );
+			sqlFunctions.putAll( customizations.sqlFunctions() );
+			auxiliaryDatabaseObjects.addAll( customizations.auxiliaryDatabaseObjects() );
+			attributeConverters.addAll( customizations.attributeConverters() );
+			if ( implicitNamingStrategy == null ) {
+				implicitNamingStrategy = customizations.implicitNamingStrategy();
+			}
+			if ( physicalNamingStrategy == null ) {
+				physicalNamingStrategy = customizations.physicalNamingStrategy();
+			}
+			if ( columnOrderingStrategy == null ) {
+				columnOrderingStrategy = customizations.columnOrderingStrategy();
+			}
+			if ( effectiveSharedCacheMode == null ) {
+				effectiveSharedCacheMode = customizations.sharedCacheMode();
+			}
+		}
+
+		return new MappingCustomizations(
+				mergedQueryImports,
+				mergedTypeContributors,
+				functionContributors,
+				cacheRegionDefinitions,
+				basicTypeRegistrations,
+				userTypeRegistrations,
+				sqlFunctions,
+				auxiliaryDatabaseObjects,
+				attributeConverters,
+				implicitNamingStrategy,
+				physicalNamingStrategy,
+				columnOrderingStrategy,
+				effectiveSharedCacheMode
+		);
 	}
 
 	protected static void applyCacheSettings(Metadata metadata, boolean overrideCacheStrategy, String cacheConcurrencyStrategy) {

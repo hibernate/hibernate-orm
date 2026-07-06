@@ -9,8 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -40,9 +40,7 @@ class ImplicitOptionalBooleanBasicTest {
 
 	@Test
 	void testImplicitOptionalBooleanBasic(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( BooleanBasicTest.class );
-		Metadata metadata = metadataSources.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), BooleanBasicTest.class );
 		PersistentClass entityBinding = metadata.getEntityBinding( BooleanBasicTest.class.getName() );
 		assertFalse( entityBinding.getProperty( "booleanWithBasic" ).isOptional(), "primitive property is optional" );
 		assertFalse( entityBinding.getProperty( "booleanWithoutBasic" ).isOptional(), "primitive property is optional" );

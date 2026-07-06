@@ -335,10 +335,7 @@ public class AnnotationCoverageBindingTests {
 
 					assertThat( entityBinding.getProperty( "lazyNotes" ).getLazyGroup() ).isEqualTo( "notes" );
 					assertThat( entityBinding.getProperty( "keyedValues" ).getLazyGroup() ).isEqualTo( "values" );
-					assertThat( ( (BasicValue) keyedValues.getIndex() ).getExplicitMutabilityPlanAccess() )
-							.isNotNull();
-					assertThat( ( (BasicValue) keyedValues.getIndex() ).getExplicitMutabilityPlanAccess()
-							.apply( context.getMetadataCollector().getTypeConfiguration() ) )
+					assertThat( ( (BasicValue) keyedValues.getIndex() ).resolve().getMutabilityPlan() )
 							.isInstanceOf( MutableIntegerMutabilityPlan.class );
 				},
 				scope.getRegistry(),
@@ -382,8 +379,7 @@ public class AnnotationCoverageBindingTests {
 					final CustomType<?> customType = (CustomType<?>) customTyped.resolve().getLegacyResolvedBasicType();
 					assertThat( customType.getUserType() ).isInstanceOf( LocalStringUserType.class );
 					assertThat( ( (LocalStringUserType) customType.getUserType() ).strategy ).isEqualTo( "basic" );
-					assertThat( mutableValue.getExplicitMutabilityPlanAccess()
-							.apply( context.getMetadataCollector().getTypeConfiguration() ) )
+					assertThat( mutableValue.resolve().getMutabilityPlan() )
 							.isInstanceOf( MutableIntegerMutabilityPlan.class );
 
 					assertThat( nationalized.isNationalized() ).isTrue();
@@ -615,7 +611,7 @@ public class AnnotationCoverageBindingTests {
 	void testArrayJsonXmlAggregateRuntimeModel(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
-						try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+						try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 							final var mappingMetamodel = sessionFactory.getMappingMetamodel();
 
 							final var scalarJsonEntity = mappingMetamodel.getEntityDescriptor( JsonAggregateEntity.class );

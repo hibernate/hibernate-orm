@@ -37,8 +37,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @see SqmFunctionRegistry#register(String, SqmFunctionDescriptor)
 /// @see SqmFunctionRegistry#wrapInJdbcEscape(String, SqmFunctionDescriptor)
 /// @see org.hibernate.cfg.Configuration#addSqlFunction(String, SqmFunctionDescriptor)
-/// @see org.hibernate.boot.MetadataBuilder#applySqlFunction(String, SqmFunctionDescriptor)
-/// @see org.hibernate.boot.SessionFactoryBuilder#applySqlFunction(String, SqmFunctionDescriptor)
 /// @see org.hibernate.boot.model.FunctionContributor
 /// @see org.hibernate.dialect.Dialect#initializeFunctionRegistry(org.hibernate.boot.model.FunctionContributions)
 ///

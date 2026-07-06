@@ -6,9 +6,9 @@ package org.hibernate.orm.test.annotations.override.mappedsuperclass;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -27,12 +27,12 @@ public class MappedSuperClassIdPropertyBasicAttributeOverrideTest {
 	public void test() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 
-			MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClasses( MappedSuperClassWithUuidAsBasic.class );
-			metadataSources.addAnnotatedClasses( SubclassWithUuidAsId.class );
-
-			MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-			try(SessionFactory sf = metadata.buildSessionFactory()){
+			MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					MappedSuperClassWithUuidAsBasic.class,
+					SubclassWithUuidAsId.class
+			);
+			try(SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )){
 				fail( "Should throw exception!" );
 			}
 		}

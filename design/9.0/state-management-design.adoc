@@ -171,7 +171,7 @@ Conceptually:
 CategorizedDomainModel
     -> StateManagementContributions
     -> ResolvedStateManagement
-    -> ResolvedMetadata
+    -> ResolvedMapping
     -> RuntimeStateManagementMappings
 ----
 
@@ -196,7 +196,7 @@ CategorizedDomainModel
 * choose changeset identifier Java/JDBC type;
 * decide auxiliary table and column names before table mutation.
 
-`ResolvedMetadata` would then apply the normalized state-management plan to
+`ResolvedMapping` would then apply the normalized state-management plan to
 `org.hibernate.mapping` or its ORM 9 replacement.
 
 == Proposed Boot Model

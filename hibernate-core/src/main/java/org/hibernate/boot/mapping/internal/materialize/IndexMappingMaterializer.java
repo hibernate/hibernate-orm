@@ -57,7 +57,7 @@ public class IndexMappingMaterializer {
 			List<String> columnNames,
 			String userProvidedName,
 			MetadataBuildingContext context) {
-		return context.getBuildingOptions().getImplicitNamingStrategy()
+		return context.getBuildingPlan().getImplicitNamingStrategy()
 				.determineIndexName( new ImplicitIndexNameSource() {
 					@Override
 					public Identifier getTableName() {

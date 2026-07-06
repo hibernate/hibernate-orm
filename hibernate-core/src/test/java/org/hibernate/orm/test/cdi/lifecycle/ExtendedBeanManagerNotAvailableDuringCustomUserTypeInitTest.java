@@ -10,10 +10,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -42,10 +42,9 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 
 		// this will trigger initialization of dynamic parameterized user type bean
 		//noinspection EmptyTryBlock
-		try (var ignored = new MetadataSources(ssr)
-				.addAnnotatedClass(TheEntity.class)
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (var ignored = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( ssr, TheEntity.class )
+		)) {
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy(ssr);

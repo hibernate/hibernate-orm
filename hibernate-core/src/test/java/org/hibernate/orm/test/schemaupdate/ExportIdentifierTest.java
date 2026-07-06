@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.schemaupdate;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
@@ -42,7 +41,7 @@ public class ExportIdentifierTest {
 	@JiraKey( value = "HHH-12935" )
 	public void testUniqueExportableIdentifier(ServiceRegistryScope scope) {
 		final var registry = scope.getRegistry();
-		final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );
+		final var options = new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( registry );
 		options.setBootstrapContext( new BootstrapContextImpl( registry, options ) );
 
 		final var database = new Database( options );

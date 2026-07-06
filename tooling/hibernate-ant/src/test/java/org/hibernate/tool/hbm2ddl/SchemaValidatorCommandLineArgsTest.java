@@ -6,10 +6,12 @@ package org.hibernate.tool.hbm2ddl;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -25,7 +27,6 @@ public class SchemaValidatorCommandLineArgsTest {
 		assertNull(getField(args, "implicitNamingStrategy"));
 		assertNull(getField(args, "physicalNamingStrategy"));
 		assertTrue(((java.util.List<?>) getField(args, "mappingFiles")).isEmpty());
-		assertTrue(((java.util.List<?>) getField(args, "jarFiles")).isEmpty());
 	}
 
 	@Test
@@ -62,10 +63,7 @@ public class SchemaValidatorCommandLineArgsTest {
 
 	@Test
 	public void testParseJarFile() throws Exception {
-		Object args = parseArgs(new String[]{"model.jar"});
-		java.util.List<?> jarFiles = (java.util.List<?>) getField(args, "jarFiles");
-		assertEquals(1, jarFiles.size());
-		assertEquals("model.jar", jarFiles.get(0));
+		assertJarRejected("model.jar");
 	}
 
 	@Test
@@ -78,20 +76,22 @@ public class SchemaValidatorCommandLineArgsTest {
 
 	@Test
 	public void testParseMixed() throws Exception {
-		Object args = parseArgs(new String[]{
+		assertJarRejected(
 				"--properties=/tmp/test.properties",
 				"--config=/tmp/hibernate.cfg.xml",
 				"Person.mapping.xml",
 				"model.jar",
 				"--implicit-naming=org.example.ImplicitStrategy"
-		});
-		assertEquals("/tmp/test.properties", getField(args, "propertiesFile"));
-		assertEquals("/tmp/hibernate.cfg.xml", getField(args, "cfgXmlFile"));
-		assertEquals("org.example.ImplicitStrategy", getField(args, "implicitNamingStrategy"));
-		java.util.List<?> mappingFiles = (java.util.List<?>) getField(args, "mappingFiles");
-		assertEquals(1, mappingFiles.size());
-		java.util.List<?> jarFiles = (java.util.List<?>) getField(args, "jarFiles");
-		assertEquals(1, jarFiles.size());
+		);
+	}
+
+	private void assertJarRejected(String... args) {
+		final InvocationTargetException exception = assertThrows(
+				InvocationTargetException.class,
+				() -> parseArgs(args)
+		);
+		assertTrue(exception.getCause() instanceof IllegalArgumentException);
+		assertTrue(exception.getCause().getMessage().contains("Jar file mapping discovery is no longer supported"));
 	}
 
 	private Object parseArgs(String[] args) throws Exception {

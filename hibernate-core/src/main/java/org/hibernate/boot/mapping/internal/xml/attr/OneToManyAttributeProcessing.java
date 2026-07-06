@@ -90,7 +90,7 @@ public class OneToManyAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		final OneToManyJpaAnnotation oneToManyAnn = (OneToManyJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ONE_TO_MANY,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		if ( jaxbOneToMany != null ) {
@@ -122,7 +122,7 @@ public class OneToManyAttributeProcessing {
 		}
 		final TargetXmlAnnotation annotation = (TargetXmlAnnotation) target.applyAnnotationUsage(
 				XmlAnnotations.TARGET,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		annotation.value( xmlDocumentContext.resolveTargetEntityName( targetEntityName ) );
 	}

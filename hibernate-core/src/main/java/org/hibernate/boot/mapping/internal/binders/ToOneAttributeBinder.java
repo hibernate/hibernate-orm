@@ -122,7 +122,7 @@ class ToOneAttributeBinder {
 				ownerType.getClassDetails().getClassName(),
 				attributeBinding.attributeName(),
 				associationOverride,
-				bindingContext.getBootstrapContext().getModelsContext(),
+				bindingContext.getModelsContext(),
 				attributeBinding.resolvedType()
 		);
 		if ( source.isInverseOneToOne() ) {
@@ -259,7 +259,7 @@ class ToOneAttributeBinder {
 				propertyName,
 				implicitNamingPath,
 				associationOverride,
-				bindingContext.getBootstrapContext().getModelsContext(),
+				bindingContext.getModelsContext(),
 				resolvedType
 		);
 		if ( source.isInverseOneToOne() ) {
@@ -913,7 +913,7 @@ class ToOneAttributeBinder {
 			Database database,
 			BindingState bindingState) {
 		return bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineJoinColumnName( new ImplicitJoinColumnNameSource() {
 					@Override
@@ -1049,7 +1049,7 @@ class ToOneAttributeBinder {
 				.getClassDetails()
 				.getRepeatedAnnotationUsages(
 						SecondaryTable.class,
-						target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+						target.typeBinder().getBindingContext().getModelsContext()
 				);
 		for ( SecondaryTable secondaryTable : secondaryTables ) {
 			if ( referencesPrimaryKeyJoinColumns( joinColumns, secondaryTable.pkJoinColumns(), database ) ) {
@@ -1083,7 +1083,7 @@ class ToOneAttributeBinder {
 				.getClassDetails()
 				.getRepeatedAnnotationUsages(
 						SecondaryTable.class,
-						target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+						target.typeBinder().getBindingContext().getModelsContext()
 				);
 		for ( SecondaryTable secondaryTable : secondaryTables ) {
 			if ( referencesPrimaryKeyJoinColumns( joinColumns, secondaryTable.pkJoinColumns(), database ) ) {
@@ -1103,7 +1103,7 @@ class ToOneAttributeBinder {
 		}
 		return classDetails.getRepeatedAnnotationUsages(
 				PrimaryKeyJoinColumn.class,
-				target.typeBinder().getBindingContext().getBootstrapContext().getModelsContext()
+				target.typeBinder().getBindingContext().getModelsContext()
 		);
 	}
 

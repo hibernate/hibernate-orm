@@ -47,6 +47,7 @@ import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.CacheRegion;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
@@ -86,7 +87,6 @@ import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import java.time.Instant;
 import java.lang.reflect.Method;
@@ -124,18 +124,20 @@ import static org.hibernate.internal.util.StringHelper.coalesce;
 /// are themselves associations.
 /// 8. {@link #bindMembers()} - bind the remaining currently coarse member phase:
 /// discriminator, version, tenant id, and persistent attributes.
-/// 9. {@link #bindCollectionIndexes()} - resolve collection indexes that depend
+/// 9. {@link #bindDiscriminatorValues()} - derive explicit and implicit
+/// discriminator values after discriminator value resolution.
+/// 10. {@link #bindCollectionIndexes()} - resolve collection indexes that depend
 /// on fully-bound member state, such as property-derived map keys.
-/// 10. {@link #bindAssociationTargets()} - resolve association target properties
+/// 11. {@link #bindAssociationTargets()} - resolve association target properties
 /// for non-primary-key references.
-/// 11. {@link #bindDerivedIdentifiers()} - resolve derived identifier
+/// 12. {@link #bindDerivedIdentifiers()} - resolve derived identifier
 /// associations such as {@code @MapsId}.
-/// 12. {@link #bindTableKeys()} - bind joined-subclass, secondary-table, and
+/// 13. {@link #bindTableKeys()} - bind joined-subclass, secondary-table, and
 /// association-table keys that depend on the root identifier shape and on joins
 /// encountered while binding members.
-/// 13. {@link #bindInverseAssociations()} - resolve inverse association values
+/// 14. {@link #bindInverseAssociations()} - resolve inverse association values
 /// from owning-side association mappings whose keys are now available.
-/// 14. {@link #bindForeignKeys()} - create physical foreign-key constraints from
+/// 15. {@link #bindForeignKeys()} - create physical foreign-key constraints from
 /// the association values and table keys prepared by earlier phases.
 ///
 /// The implemented {@link TypeBindingPhase} contracts identify which phases this
@@ -158,6 +160,8 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				TypeBindingPhase.InverseAssociations,
 				TypeBindingPhase.ForeignKeys,
 				TypeBindingPhase.Members,
+				TypeBindingPhase.CustomMapping,
+				TypeBindingPhase.DiscriminatorValues,
 				TypeBindingPhase.Finalization {
 	private final PersistentClass binding;
 
@@ -257,10 +261,10 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		final ClassDetails classDetails = getManagedType().getClassDetails();
 		if ( classDetails.hasAnnotationUsage(
 				PrimaryKeyJoinColumns.class,
-				getBindingContext().getBootstrapContext().getModelsContext()
+				getBindingContext().getModelsContext()
 		) || classDetails.hasAnnotationUsage(
 				PrimaryKeyJoinColumn.class,
-				getBindingContext().getBootstrapContext().getModelsContext()
+				getBindingContext().getModelsContext()
 		) ) {
 			throw new AnnotationException( "Entity class '" + classDetails.getName()
 					+ "' may not specify a '@PrimaryKeyJoinColumn'" );
@@ -340,19 +344,16 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		processCustomSql( classDetails );
 		processSqlRestriction( getManagedType() );
 		processCheckConstraints( classDetails, typeBinding );
-		getBindingState().getMetadataBuildingContext()
-				.getMetadataCollector()
-				.addSecondPass( ignored -> typeBinding.createConstraints( getBindingState().getMetadataBuildingContext() ) );
 		processFilters( getManagedType(), getBindingState(), getBindingContext() );
 		processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
 	}
 
 	@SuppressWarnings("removal")
 	private void processCheckConstraints(ClassDetails classDetails, PersistentClass typeBinding) {
-		if ( classDetails.hasAnnotationUsage( Checks.class, getBindingContext().getBootstrapContext().getModelsContext() ) ) {
+		if ( classDetails.hasAnnotationUsage( Checks.class, getBindingContext().getModelsContext() ) ) {
 			for ( Check check : classDetails.getAnnotationUsage(
 					Checks.class,
-					getBindingContext().getBootstrapContext().getModelsContext()
+					getBindingContext().getModelsContext()
 			).value() ) {
 				addCheckConstraint( check, typeBinding );
 			}
@@ -362,7 +363,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 					classDetails,
 					Check.class,
 					getBindingState().getDatabase().getDialect(),
-					getBindingContext().getBootstrapContext().getModelsContext()
+					getBindingContext().getModelsContext()
 			);
 			if ( check != null ) {
 				addCheckConstraint( check, typeBinding );
@@ -504,9 +505,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		applyResolvedGenericType( value, resolvedType );
 		if ( value instanceof BasicValue basicValue && declaredProperty.getValue() instanceof BasicValue originalBasicValue ) {
 			copyBasicValueDetails( basicValue, originalBasicValue );
-			getBindingState().getMetadataBuildingContext()
-					.getMetadataCollector()
-					.registerValueMappingResolver( basicValue::resolve );
+			getBindingState().addAttributeValueResolution(
+					AttributeBindingPhase.valueResolution(
+							basicValue,
+							BasicValueSource.attribute( attribute.getMember(), resolvedType, getBindingContext() )
+					)
+			);
 		}
 		actualProperty.setValue( value );
 		binding.addProperty( actualProperty );
@@ -547,12 +551,6 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				component.setTypeName( typeName );
 			}
 		}
-		else if ( value instanceof BasicValue basicValue ) {
-			basicValue.setImplicitJavaTypeAccess( (typeConfiguration) ->
-					resolvedType.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE
-							? ParameterizedTypeImpl.from( resolvedType.asParameterizedType() )
-							: resolvedType.determineRawClass().toJavaClass() );
-		}
 		else if ( value instanceof SimpleValue simpleValue ) {
 			simpleValue.setTypeName( typeName );
 		}
@@ -562,20 +560,6 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		target.setExplicitTypeParams( source.getExplicitTypeParams() );
 		target.setTypeParameters( source.getTypeParameters() );
 		target.setJpaAttributeConverterDescriptor( source.getJpaAttributeConverterDescriptor() );
-		target.setExplicitJavaTypeAccess( source.getExplicitJavaTypeAccess() );
-
-		final var explicitJdbcTypeAccess = source.getExplicitJdbcTypeAccess();
-		if ( explicitJdbcTypeAccess != null ) {
-			final var typeConfiguration = getBindingContext().getBootstrapContext().getTypeConfiguration();
-			final var explicitJdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
-			target.setExplicitJdbcTypeAccess( (ignored) ->
-					explicitJdbcType == null ? source.resolve().getJdbcType() : explicitJdbcType );
-		}
-		else {
-			target.setExplicitJdbcTypeAccess( (ignored) -> source.resolve().getJdbcType() );
-		}
-
-		target.setExplicitMutabilityPlanAccess( source.getExplicitMutabilityPlanAccess() );
 		target.setEnumerationStyle( source.getEnumeratedType() );
 		target.setTimeZoneStorageType( source.getTimeZoneStorageType() );
 		target.setTemporalPrecision( source.getTemporalPrecision() );
@@ -587,8 +571,16 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 	}
 
+	private static BasicValue.Resolution<?> requireResolution(BasicValue basicValue) {
+		final BasicValue.Resolution<?> resolution = basicValue.getResolution();
+		if ( resolution == null ) {
+			throw new IllegalStateException( "BasicValue resolution has not been applied: " + basicValue );
+		}
+		return resolution;
+	}
+
 	private void checkOverrides() {
-		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final var modelsContext = getBindingContext().getModelsContext();
 		final ClassDetails classDetails = getManagedType().getClassDetails();
 		classDetails.forEachAnnotationUsage(
 				AttributeOverride.class,
@@ -1020,21 +1012,25 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	protected void prepareBinding(ModelBinders modelBinders) {
 		if ( getHierarchyRelation() == EntityHierarchy.HierarchyRelation.ROOT ) {
 			prepareRootEntityBinding( (RootClass) getTypeBinding(), modelBinders );
-			bindDiscriminatorValue( getManagedType(), getTypeBinding(), modelBinders, getBindingState(), getOptions(), getBindingContext() );
-		}
-		else {
-			bindDiscriminatorValue( getManagedType(), getTypeBinding(), modelBinders, getBindingState(), getOptions(), getBindingContext() );
 		}
 
 		bindCacheable( getManagedType(), getTypeBinding(), modelBinders, getOptions(), getBindingState(), getBindingContext() );
+		super.prepareBinding( modelBinders );
+	}
+
+	@Override
+	public void bindDiscriminatorValues() {
+		bindDiscriminatorValue( getManagedType(), getTypeBinding() );
+	}
+
+	@Override
+	public void bindCustomMapping() {
 		CustomMappingBinder.callTypeBinders(
 				getManagedType().getClassDetails(),
 				binding,
 				getBindingState(),
 				getBindingContext()
 		);
-
-		super.prepareBinding( modelBinders );
 	}
 
 	private static void bindCacheable(
@@ -1093,11 +1089,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	private void bindDiscriminatorValue(
 			EntityTypeMetadata managedType,
-			PersistentClass typeBinding,
-			ModelBinders modelBinders,
-			BindingState bindingState,
-			BindingOptions options,
-			BindingContext bindingContext) {
+			PersistentClass typeBinding) {
 		final BasicValue discriminatorMapping = getDiscriminatorMapping();
 		if ( discriminatorMapping == null ) {
 			return;
@@ -1105,9 +1097,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 		final DiscriminatorValue ann = managedType.getClassDetails().getDirectAnnotationUsage( DiscriminatorValue.class );
 		if ( ann == null ) {
-			final Type resolvedJavaType = discriminatorMapping.resolve().getRelationalJavaType().getJavaType();
+			final Type resolvedJavaType = requireResolution( discriminatorMapping ).getRelationalJavaType().getJavaType();
 			if ( resolvedJavaType == String.class ) {
-				// Match legacy EntityBinder#name for implicit discriminator values:
+				// Match the historical implicit discriminator value:
 				// @Entity(name) when present, otherwise the unqualified class name.
 				typeBinding.setDiscriminatorValue( managedType.getJpaEntityName() );
 			}
@@ -1151,7 +1143,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				managedType.getClassDetails(),
 				DiscriminatorFormula.class,
 				bindingState.getDatabase().getDialect(),
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		);
 
 		if ( inheritanceType == InheritanceType.TABLE_PER_CLASS ) {
@@ -1181,7 +1173,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			}
 		}
 
-		final BasicValue value = new BasicValue( bindingState.getMetadataBuildingContext(), typeBinding.getIdentityTable() );
+		final BasicValue value = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), typeBinding.getIdentityTable() );
 		typeBinding.setDiscriminator( value );
 
 		final DiscriminatorType discriminatorType = ColumnBinder.bindDiscriminatorColumn(
@@ -1201,8 +1193,13 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			default -> throw new IllegalStateException( "Unexpected DiscriminatorType - " + discriminatorType );
 		}
 
-		value.setImplicitJavaTypeAccess( typeConfiguration -> discriminatorJavaType );
+		bindingState.addAttributeValueResolution(
+				AttributeBindingPhase.valueResolution( value, BasicValueSource.discriminator( discriminatorJavaType ) )
+		);
 		if ( bindingOptions.shouldImplicitlyForceDiscriminatorInSelect() ) {
+			typeBinding.setForceDiscriminator( true );
+		}
+		if ( bindingOptions.createImplicitDiscriminatorsForJoinedInheritance() ) {
 			typeBinding.setForceDiscriminator( true );
 		}
 
@@ -1216,6 +1213,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	@Override
 	public void finalizeBinding() {
+		EntityConstraintFinalizer.finalizeConstraints( binding, getBindingState().getMetadataBuildingContext() );
 		if ( binding instanceof RootClass rootClass && rootClass.getDiscriminator() != null ) {
 			DiscriminatorColumnFinalizer.finalizeDiscriminatorColumn( rootClass, getBindingState().getDatabase().getDialect() );
 		}
@@ -1270,23 +1268,29 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			Table table) {
 		assert softDeleteAnn != null;
 
-		final BasicValue softDeleteIndicatorValue = new BasicValue( getBindingState().getMetadataBuildingContext(), table );
+		final BasicValue softDeleteIndicatorValue = BasicValue.unregistered( getBindingState().getMetadataBuildingContext(), table );
 		softDeleteIndicatorValue.makeSoftDelete( softDeleteAnn.strategy() );
+		final java.lang.reflect.Type indicatorJavaType;
 		if ( softDeleteAnn.strategy() == SoftDeleteType.TIMESTAMP ) {
 			if ( softDeleteAnn.converter() != SoftDelete.UnspecifiedConversion.class ) {
 				throw new UnsupportedMappingException(
 						"Specifying SoftDelete#converter in conjunction with SoftDeleteType.TIMESTAMP is not supported"
 				);
 			}
-			softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Instant.class );
+			indicatorJavaType = Instant.class;
 		}
 		else {
 			final ConverterDescriptor<Boolean, ?> converterDescriptor = ConverterDescriptors.of( softDeleteAnn.converter() );
+			indicatorJavaType = converterDescriptor.getRelationalValueResolvedType();
 			softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
-			softDeleteIndicatorValue.setImplicitJavaTypeAccess(
-					(typeConfiguration) -> converterDescriptor.getRelationalValueResolvedType()
-			);
 		}
+		getBindingState().addAttributeValueResolution(
+				AttributeBindingPhase.valueResolution(
+						softDeleteIndicatorValue,
+						BasicValueSource.softDelete(),
+						indicatorJavaType
+				)
+		);
 		return softDeleteIndicatorValue;
 	}
 
@@ -1442,7 +1446,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				classDetails,
 				SQLSelect.class,
 				getBindingState().getDatabase().getDialect(),
-				getBindingContext().getBootstrapContext().getModelsContext()
+				getBindingContext().getModelsContext()
 		);
 		if ( sqlSelect != null ) {
 			final String loaderName = binding.getEntityName() + "$SQLSelect";
@@ -1549,7 +1553,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	private SQLRestriction findSqlRestriction(IdentifiableTypeMetadata type) {
 		final Dialect dialect = getBindingState().getDatabase().getDialect();
-		final var modelsContext = getBindingContext().getBootstrapContext().getModelsContext();
+		final var modelsContext = getBindingContext().getModelsContext();
 		final SQLRestriction restriction = getOverridableAnnotation(
 				type.getClassDetails(),
 				SQLRestriction.class,
@@ -1592,10 +1596,10 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				classDetails,
 				Filters.class,
 				state.getDatabase().getDialect(),
-				context.getBootstrapContext().getModelsContext()
+				context.getModelsContext()
 		);
 		final Filter[] filters = filtersContainer == null
-				? classDetails.getRepeatedAnnotationUsages( Filter.class, context.getBootstrapContext().getModelsContext() )
+				? classDetails.getRepeatedAnnotationUsages( Filter.class, context.getModelsContext() )
 				: filtersContainer.value();
 		if ( filters.length == 0 ) {
 			return;
@@ -1754,7 +1758,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				classDetails,
 				annotationType,
 				dialect,
-				bindingContext.getBootstrapContext().getModelsContext()
+				bindingContext.getModelsContext()
 		) ) {
 			if ( annotation instanceof SQLInsert sqlInsert
 					&& matchesCustomSqlTable( sqlInsert.table(), tableName, alternateTableName ) ) {

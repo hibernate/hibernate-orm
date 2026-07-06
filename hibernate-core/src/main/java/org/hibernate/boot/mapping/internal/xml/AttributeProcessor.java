@@ -80,7 +80,7 @@ public class AttributeProcessor {
 						memberAdjuster.adjust( member, jaxbPersistentAttribute, xmlDocumentContext );
 						var naturalId = (NaturalIdAnnotation) member.applyAnnotationUsage(
 								HibernateAnnotations.NATURAL_ID,
-								xmlDocumentContext.getModelBuildingContext() );
+								xmlDocumentContext.getModelsContext() );
 						naturalId.mutable( jaxbNaturalId.isMutable() );
 					}
 				},

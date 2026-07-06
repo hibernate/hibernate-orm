@@ -14,7 +14,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
@@ -71,7 +71,7 @@ public class MapKeyTypeTest extends EntityManagerFactoryBasedFunctionalTest {
 					AvailableSettings.HBM2DDL_AUTO,
 					"none"
 			);
-			entityManagerFactory =  SessionFactoryBootstrap.build(
+			entityManagerFactory =  BootstrapPipeline.build(
 					new TestingPersistenceUnitDescriptorImpl(
 							getClass().getSimpleName(),
 							List.of( Person.class.getName() ),

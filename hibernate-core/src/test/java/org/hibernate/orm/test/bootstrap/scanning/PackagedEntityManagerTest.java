@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
@@ -72,7 +72,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
 
 	private static EntityManagerFactory buildEntityManagerFactory(ScannedPersistenceUnitInfo unitInfo, Map<?, ?> settings) {
-		return SessionFactoryBootstrap.build( new PersistenceUnitInfoDescriptor( unitInfo ), settings );
+		return BootstrapPipeline.build( new PersistenceUnitInfoDescriptor( unitInfo ), settings );
 	}
 
 	@AfterEach

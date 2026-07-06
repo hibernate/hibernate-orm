@@ -8,9 +8,9 @@ import java.util.Set;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.SortNatural;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -37,10 +37,9 @@ public class SortAndOrderTests {
 	@Test
 	void test(ServiceRegistryScope scope) {
 		final StandardServiceRegistry registry = scope.getRegistry();
-		final MetadataSources sources = new MetadataSources( registry ).addAnnotatedClass( AnEntity.class );
 
 		try {
-			sources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( registry, AnEntity.class );
 			fail( "Expecting to fail" );
 		}
 		catch (AnnotationException expected) {

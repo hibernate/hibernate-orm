@@ -9,8 +9,8 @@ import java.util.List;
 import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceBinding;
@@ -32,14 +32,14 @@ public class SessionFactoryServiceRegistryImpl
 		implements SessionFactoryServiceRegistry, SessionFactoryServiceInitiatorContext {
 
 	private final SessionFactoryOptions sessionFactoryOptions;
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 
 	private SessionFactoryServiceRegistryImpl(
 			ServiceRegistryImplementor parent,
-			SessionFactoryImplementor sessionFactory,
+			SessionFactoryAccess sessionFactoryAccess,
 			SessionFactoryOptions sessionFactoryOptions) {
 		super( parent );
-		this.sessionFactory = sessionFactory;
+		this.sessionFactoryAccess = sessionFactoryAccess;
 		this.sessionFactoryOptions = sessionFactoryOptions;
 	}
 
@@ -47,9 +47,9 @@ public class SessionFactoryServiceRegistryImpl
 			ServiceRegistryImplementor parent,
 			List<SessionFactoryServiceInitiator<?>> initiators,
 			List<ProvidedService<? extends Service>> providedServices,
-			SessionFactoryImplementor sessionFactory,
+			SessionFactoryAccess sessionFactoryAccess,
 			SessionFactoryOptions sessionFactoryOptions) {
-		final var instance = new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions );
+		final var instance = new SessionFactoryServiceRegistryImpl( parent, sessionFactoryAccess, sessionFactoryOptions );
 		instance.initialize( initiators, providedServices );
 		return instance;
 	}
@@ -84,8 +84,8 @@ public class SessionFactoryServiceRegistryImpl
 
 	@Override
 	@Nonnull
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+	public SessionFactoryAccess getSessionFactoryAccess() {
+		return sessionFactoryAccess;
 	}
 
 	@Override
@@ -105,7 +105,7 @@ public class SessionFactoryServiceRegistryImpl
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
 			SERVICE_LOGGER.eventListenerRegistryAccessDeprecated();
 			//noinspection unchecked
-			return (R) sessionFactory.getEventEngine().getListenerRegistry();
+			return (R) sessionFactoryAccess.getSessionFactory().getEventEngine().getListenerRegistry();
 		}
 		else {
 			return super.getService( serviceRole );

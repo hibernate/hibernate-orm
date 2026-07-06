@@ -194,7 +194,7 @@ collect application sources
 apply XML overlays and source interpretation
 categorize primary model
 run BootModelContributor against MappingDiscoveryView
-merge primary AvailableResources with contributed AvailableResources
+merge primary PreparedMappingSources with contributed PreparedMappingSources
 categorize merged model from scratch
 bind/materialize final categorized model
 run legacy AdditionalMappingContributor late

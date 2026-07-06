@@ -5,10 +5,11 @@
 package org.hibernate.orm.test.entitygraph.named.parsed;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.entitygraph.named.parsed.pckgwithgraphnameduplication.Duplicator;
 
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -34,10 +35,12 @@ public abstract class AbstractPackageLevelTests {
 	void testDuplication(ServiceRegistryScope registryScope) {
 		final StandardServiceRegistry serviceRegistry = registryScope.getRegistry();
 		try {
-			new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( Duplicator.class )
-					.addPackage( "org.hibernate.orm.test.entitygraph.named.parsed.pckgwithgraphnameduplication" )
-					.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources()
+							.addManagedClass( Duplicator.class )
+							.addPackage( "org.hibernate.orm.test.entitygraph.named.parsed.pckgwithgraphnameduplication" )
+			);
 			fail( "Expected an exception" );
 		}
 		catch (DuplicateMappingException expected) {

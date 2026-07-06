@@ -6,10 +6,11 @@ package org.hibernate.orm.test.cache.cid;
 
 import jakarta.persistence.SharedCacheMode;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -30,12 +31,13 @@ public class NonAggregatedCompositeIdCachingTest {
 				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, true )
 				.build();
 
-		try (SessionFactory sf = new MetadataSources( ssr )
-				.addAnnotatedClass( It.class )
-				.getMetadataBuilder()
-				.applySharedCacheMode( SharedCacheMode.ENABLE_SELECTIVE )
-				.build()
-				.buildSessionFactory()) {
+		try (SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadataWithSharedCacheMode(
+						ssr,
+						new MappingSources().addManagedClass( It.class ),
+						SharedCacheMode.ENABLE_SELECTIVE
+				)
+				)) {
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -49,12 +51,13 @@ public class NonAggregatedCompositeIdCachingTest {
 		// in org.hibernate.cache.internal.CacheDataDescriptionImpl#decode
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
-		try (SessionFactory sf = new MetadataSources( ssr )
-				.addAnnotatedClass( ItWithPkClass.class )
-				.getMetadataBuilder()
-				.applySharedCacheMode( SharedCacheMode.ENABLE_SELECTIVE )
-				.build()
-				.buildSessionFactory()) {
+		try (SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadataWithSharedCacheMode(
+						ssr,
+						new MappingSources().addManagedClass( ItWithPkClass.class ),
+						SharedCacheMode.ENABLE_SELECTIVE
+				)
+				)) {
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

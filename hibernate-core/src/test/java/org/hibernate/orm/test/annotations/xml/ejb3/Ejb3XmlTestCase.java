@@ -4,8 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
@@ -26,6 +25,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 
 import jakarta.persistence.Transient;
@@ -108,18 +108,19 @@ public abstract class Ejb3XmlTestCase  {
 				modelBuildingContext
 		);
 
-
+		final var serviceRegistry = new StandardServiceRegistryBuilder().build();
 		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
-				new MetadataBuilderImpl.MappingDefaultsImpl( new StandardServiceRegistryBuilder().build() ),
+				new org.hibernate.boot.mapping.internal.context.GlobalMappingDefaultsImpl( serviceRegistry ),
 				persistenceUnitMetadata
 		);
+		final var metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
 				persistenceUnitMetadata,
 				modelCategorizationCollector::apply,
 				modelBuildingContext,
-				bootstrapContext,
+				metadataBuildingContext,
 				rootMappingDefaults
 		);
 

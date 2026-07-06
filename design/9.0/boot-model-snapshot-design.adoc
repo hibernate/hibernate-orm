@@ -21,7 +21,7 @@ The ORM 9 pipeline is moving toward explicit products:
 
 [source]
 ----
-AvailableResources
+PreparedMappingSources
         -> categorized source model
         -> binding model and finalized views
         -> resolved org.hibernate.mapping model

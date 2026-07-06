@@ -4,13 +4,9 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Property;
-import org.hibernate.models.ModelsException;
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /// Materializes simple attribute option facts onto legacy mapping objects.
@@ -34,29 +30,24 @@ public class AttributeOptionsMappingMaterializer {
 	public void materializeBasicValueOptions(
 			AttributeBindingView attributeBinding,
 			BasicValue basicValue) {
+		materializeBasicValueOptions( attributeBinding, basicValue, null );
+	}
+
+	public void materializeBasicValueOptions(
+			AttributeBindingView attributeBinding,
+			BasicValue basicValue,
+			BasicValueResolutionBuilder.Input resolutionInput) {
 		if ( attributeBinding.immutable() ) {
-			basicValue.setExplicitMutabilityPlanAccess( (typeConfiguration) -> ImmutableMutabilityPlan.instance() );
+			if ( resolutionInput != null ) {
+				resolutionInput.markAttributeImmutable();
+			}
 		}
 		final Class<? extends MutabilityPlan<?>> mutabilityPlanClass = attributeBinding.explicitMutabilityPlanClass();
 		if ( mutabilityPlanClass != null ) {
-			basicValue.setExplicitMutabilityPlanAccess(
-					(typeConfiguration) -> instantiateMutabilityPlan( attributeBinding, mutabilityPlanClass )
-			);
+			if ( resolutionInput != null ) {
+				resolutionInput.setAttributeMutabilityPlanClass( mutabilityPlanClass );
+			}
 		}
 	}
 
-	private static MutabilityPlan<?> instantiateMutabilityPlan(
-			AttributeBindingView attributeBinding,
-			Class<? extends MutabilityPlan<?>> mutabilityPlanClass) {
-		try {
-			return mutabilityPlanClass.getConstructor().newInstance();
-		}
-		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-			final ModelsException modelsException = new ModelsException(
-					"Error instantiating local @MutabilityPlan - " + attributeBinding.member().getName()
-			);
-			modelsException.addSuppressed( e );
-			throw modelsException;
-		}
-	}
 }

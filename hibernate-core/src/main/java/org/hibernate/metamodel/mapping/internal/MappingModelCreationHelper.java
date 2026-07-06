@@ -623,13 +623,12 @@ public class MappingModelCreationHelper {
 				cascadeStyle
 		);
 
-		final var sessionFactory = creationContext.getSessionFactory();
 		final var collectionType = collectionDescriptor.getCollectionType();
 
 		final var fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				mappingFetchStyle,
 				collectionType,
-				sessionFactory
+				creationProcess
 		);
 
 		final var fetchTiming = determineFetchTiming(
@@ -637,7 +636,7 @@ public class MappingModelCreationHelper {
 				collectionType,
 				collectionDescriptor.isLazy(),
 				collectionDescriptor.getRole(),
-				sessionFactory
+				creationProcess
 		);
 
 		final var pluralAttributeMapping = mappingConverter.apply( new PluralAttributeMappingImpl(
@@ -2071,18 +2070,17 @@ public class MappingModelCreationHelper {
 					cascadeStyle,
 					creationProcess
 			);
-			final var factory = creationProcess.getCreationContext().getSessionFactory();
 
 			final var type = (AssociationType) bootProperty.getType();
 			final var fetchStyle =
 					FetchOptionsHelper.determineFetchStyleByMetadata(
 							bootProperty.getValue().getFetchStyle(),
 							type,
-							factory
+							creationProcess
 					);
 
 			final var fetchTiming =
-					fetchTiming( bootProperty, declaringType, value, entityPersister, fetchStyle, type, factory );
+					fetchTiming( bootProperty, declaringType, value, entityPersister, fetchStyle, type, creationProcess );
 
 			final var attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(
 					attrName,
@@ -2116,18 +2114,25 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	private static FetchTiming fetchTiming(Property bootProperty, ManagedMappingType declaringType, ToOne value, EntityPersister entityPersister, FetchStyle fetchStyle, AssociationType type, SessionFactoryImplementor sessionFactory) {
+	private static FetchTiming fetchTiming(
+			Property bootProperty,
+			ManagedMappingType declaringType,
+			ToOne value,
+			EntityPersister entityPersister,
+			FetchStyle fetchStyle,
+			AssociationType type,
+			FetchOptionsHelper.AssociationPersisterResolver persisterResolver) {
 		final String role = declaringType.getNavigableRole().toString() + "." + bootProperty.getName();
 		final boolean lazy = value.isLazy();
 		if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 			if ( value.isUnwrapProxy() ) {
-				return determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+				return determineFetchTiming( fetchStyle, type, lazy, role, persisterResolver );
 			}
 			else if ( value instanceof ManyToOne manyToOne && value.isNullable() && manyToOne.isIgnoreNotFound() ) {
 				return FetchTiming.IMMEDIATE;
 			}
 			else {
-				return determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+				return determineFetchTiming( fetchStyle, type, lazy, role, persisterResolver );
 			}
 		}
 		else if ( !lazy
@@ -2145,7 +2150,7 @@ public class MappingModelCreationHelper {
 			return FetchTiming.IMMEDIATE;
 		}
 		else {
-			return determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+			return determineFetchTiming( fetchStyle, type, lazy, role, persisterResolver );
 		}
 	}
 }

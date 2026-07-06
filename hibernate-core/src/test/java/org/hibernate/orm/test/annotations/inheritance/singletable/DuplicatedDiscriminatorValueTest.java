@@ -13,11 +13,11 @@ import jakarta.persistence.Id;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.SessionFactoryRegistry;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -61,13 +61,8 @@ public class DuplicatedDiscriminatorValueTest {
 		SessionFactoryRegistry.INSTANCE.clearRegistrations();
 		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-			for ( Class annotatedClass : annotatedClasses ) {
-				metadataSources.addAnnotatedClass( annotatedClass );
-			}
-
-			final Metadata metadata = metadataSources.buildMetadata();
-			final SessionFactory sessionFactory = metadata.buildSessionFactory();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, annotatedClasses );
+			final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 			sessionFactory.close();
 		}
 		finally {

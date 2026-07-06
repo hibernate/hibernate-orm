@@ -7,8 +7,8 @@ package org.hibernate.orm.test.mapping.mappedBy;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -30,21 +30,26 @@ public class OneToManyMappedByTypeTest {
 	@Test
 	public void testCorrect() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( EntityACorrect.class )
-					.addAnnotatedClass( EntityBCorrect.class );
-			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
+			assertDoesNotThrow( () -> MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					EntityACorrect.class,
+					EntityBCorrect.class
+			) );
 		}
 	}
 
 	@Test
 	public void testWrong() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( EntityAWrong.class )
-					.addAnnotatedClass( EntityBWrong.class )
-					.addAnnotatedClass( EntityC.class );
-			final AnnotationException thrown = assertThrows( AnnotationException.class, metadataSources::buildMetadata );
+			final AnnotationException thrown = assertThrows(
+					AnnotationException.class,
+					() -> MetadataBuildingTestHelper.buildMetadata(
+							ssr,
+							EntityAWrong.class,
+							EntityBWrong.class,
+							EntityC.class
+					)
+			);
 			assertTrue( thrown.getMessage().contains( "'parent' which references the wrong entity type" ) );
 		}
 	}
@@ -52,10 +57,11 @@ public class OneToManyMappedByTypeTest {
 	@Test
 	public void testCorrectSuperclass() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( SuperclassEntity.class )
-					.addAnnotatedClass( SubclassEntity.class );
-			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
+			assertDoesNotThrow( () -> MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					SuperclassEntity.class,
+					SubclassEntity.class
+			) );
 		}
 	}
 
@@ -64,11 +70,12 @@ public class OneToManyMappedByTypeTest {
 		// Allow different entity types which map to the same table since the mappedBy
 		// in that case would still make sense from a database perspective
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( EntityACorrect.class )
-					.addAnnotatedClass( EntityBCorrect.class )
-					.addAnnotatedClass( EntityA2Correct.class );
-			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
+			assertDoesNotThrow( () -> MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					EntityACorrect.class,
+					EntityBCorrect.class,
+					EntityA2Correct.class
+			) );
 		}
 	}
 
@@ -77,12 +84,13 @@ public class OneToManyMappedByTypeTest {
 		// Allow mappedBy subtypes given that users might want to filter the
 		// association with custom @Where annotations and still use a supertype
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( EntityASupertype.class )
-					.addAnnotatedClass( EntityAMappedSuperclass.class )
-					.addAnnotatedClass( EntityASubtype.class )
-					.addAnnotatedClass( EntityBSubtype.class );
-			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
+			assertDoesNotThrow( () -> MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					EntityASupertype.class,
+					EntityAMappedSuperclass.class,
+					EntityASubtype.class,
+					EntityBSubtype.class
+			) );
 		}
 	}
 

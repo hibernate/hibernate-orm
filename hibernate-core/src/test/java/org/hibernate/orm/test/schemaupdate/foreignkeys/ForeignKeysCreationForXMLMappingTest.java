@@ -10,11 +10,12 @@ import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -36,9 +37,10 @@ public class ForeignKeysCreationForXMLMappingTest {
 		output.deleteOnExit();
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/schemaupdate/foreignkeys/customer.orm.xml" )
-					.buildMetadata();
+			final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources().addMappingResource( "org/hibernate/orm/test/schemaupdate/foreignkeys/customer.orm.xml" )
+			);
 			metadata.validate();
 
 			new SchemaExport().setOutputFile( output.getAbsolutePath() ).createOnly(

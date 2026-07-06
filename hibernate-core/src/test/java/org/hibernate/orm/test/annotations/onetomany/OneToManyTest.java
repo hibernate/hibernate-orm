@@ -14,7 +14,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.SpannerDialect;
@@ -22,6 +21,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.annotations.Customer;
 import org.hibernate.orm.test.annotations.Discount;
 import org.hibernate.orm.test.annotations.Passport;
@@ -412,11 +412,11 @@ public class OneToManyTest {
 
 		try {
 			AnnotationException e = assertThrows( AnnotationException.class,
-					() -> new MetadataSources( serviceRegistry )
-							.addAnnotatedClass( OnDeleteUnidirectionalOneToMany.class )
-							.addAnnotatedClass( ParentUnawareChild.class )
-							.getMetadataBuilder()
-							.build()
+					() -> MetadataBuildingTestHelper.buildMetadata(
+							serviceRegistry,
+							OnDeleteUnidirectionalOneToMany.class,
+							ParentUnawareChild.class
+					)
 			);
 			assertThat( e.getMessage() )
 					.contains( "is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );

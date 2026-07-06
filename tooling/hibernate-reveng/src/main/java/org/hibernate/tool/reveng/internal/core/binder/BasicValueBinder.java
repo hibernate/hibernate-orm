@@ -4,9 +4,11 @@
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
+import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.reveng.internal.core.util.EnhancedBasicValue;
+import org.hibernate.type.BasicType;
 
 class BasicValueBinder extends AbstractBinder {
 
@@ -24,16 +26,31 @@ class BasicValueBinder extends AbstractBinder {
 			boolean generatedIdentifier) {
 		EnhancedBasicValue value = new EnhancedBasicValue(getMetadataBuildingContext(), table);
 		value.addColumn(column);
-		value.setTypeName(TypeUtils.determinePreferredType(
+		final TypeUtils.PreferredType preferredType = TypeUtils.determinePreferredTypeDetails(
 				getMetadataCollector(),
 				getRevengStrategy(),
 				table,
 				column,
-				generatedIdentifier));
+				generatedIdentifier);
+		value.setTypeName(preferredType.name());
+		applyResolution(value, preferredType.basicType());
 		if (generatedIdentifier) {
 			value.setNullValue("undefined");
 		}
 		return value;
+	}
+
+	private static <J> void applyResolution(EnhancedBasicValue value, BasicType<J> basicType) {
+		if ( basicType != null ) {
+			value.applyResolution(
+					new NamedBasicTypeResolution<>(
+							basicType.getJavaTypeDescriptor(),
+							basicType,
+							basicType.getValueConverter(),
+							null
+					)
+			);
+		}
 	}
 
 }

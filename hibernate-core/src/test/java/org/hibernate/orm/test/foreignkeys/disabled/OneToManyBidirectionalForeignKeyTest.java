@@ -15,9 +15,9 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -43,9 +43,11 @@ public class OneToManyBidirectionalForeignKeyTest {
 	@Test
 	public void testForeignKeyShouldNotBeCreated() {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( PlainTreeEntity.class ).addAnnotatedClass( TreeEntityWithOnDelete.class )
-					.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					PlainTreeEntity.class,
+					TreeEntityWithOnDelete.class
+			);
 			assertThat( findTable( metadata, TABLE_NAME_PLAIN ).getForeignKeyCollection().isEmpty() )
 					.isTrue();
 			assertThat( findTable( metadata, TABLE_NAME_WITH_ON_DELETE ).getForeignKeyCollection().isEmpty() )

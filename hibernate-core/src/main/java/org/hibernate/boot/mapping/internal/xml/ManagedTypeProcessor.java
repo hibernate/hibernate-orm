@@ -83,7 +83,7 @@ public class ManagedTypeProcessor {
 		final AttributeProcessor.MemberAdjuster memberAdjuster;
 
 		final var classDetailsRegistry =
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 						.getClassDetailsRegistry();
 
 		if ( isEmpty( jaxbEntity.getClazz() ) ) {
@@ -118,7 +118,7 @@ public class ManagedTypeProcessor {
 								jaxbEntity.isAbstract() != null && jaxbEntity.isAbstract(),
 								superClass,
 								superType,
-								xmlDocumentContext.getModelBuildingContext()
+								xmlDocumentContext.getModelsContext()
 						);
 					}
 			);
@@ -188,7 +188,7 @@ public class ManagedTypeProcessor {
 			XmlDocumentContext xmlDocumentContext) {
 		final var annotationUsage = (AttributeAccessorAnnotation)
 				memberDetails.applyAnnotationUsage( HibernateAnnotations.ATTRIBUTE_ACCESSOR,
-						xmlDocumentContext.getModelBuildingContext() );
+						xmlDocumentContext.getModelsContext() );
 		// todo (7.0) : this is the old String-based, deprecated form
 		annotationUsage.strategy( PropertyAccessStrategyMapImpl.class );
 	}
@@ -209,11 +209,11 @@ public class ManagedTypeProcessor {
 
 		if ( jaxbEntity.isAbstract() != null ) {
 			classDetails.applyAnnotationUsage( XmlAnnotations.ABSTRACT,
-					xmlDocumentContext.getModelBuildingContext() );
+					xmlDocumentContext.getModelsContext() );
 		}
 
 		if ( isNotEmpty( jaxbEntity.getExtends() ) ) {
-			XmlAnnotations.EXTENDS.createUsage( xmlDocumentContext.getModelBuildingContext() )
+			XmlAnnotations.EXTENDS.createUsage( xmlDocumentContext.getModelsContext() )
 					.superType( jaxbEntity.getExtends() );
 		}
 
@@ -340,7 +340,7 @@ public class ManagedTypeProcessor {
 			return;
 		}
 
-		final var modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final var modelBuildingContext = xmlDocumentContext.getModelsContext();
 		final FetchProfilesAnnotation fetchProfilesUsage = (FetchProfilesAnnotation) target.replaceAnnotationUsage(
 				HibernateAnnotations.FETCH_PROFILE,
 				HibernateAnnotations.FETCH_PROFILES,
@@ -389,7 +389,7 @@ public class ManagedTypeProcessor {
 		if ( XML_PROCESS_LOGGER.isTraceEnabled() ) {
 			final var collectingTarget = new RenderingTargetCollectingImpl();
 			new SimpleRenderer( collectingTarget )
-					.renderClass( classDetails, xmlDocumentContext.getModelBuildingContext() );
+					.renderClass( classDetails, xmlDocumentContext.getModelsContext() );
 			XML_PROCESS_LOGGER.tracef( "Class annotations from XML for %s:\n%s",
 					classDetails.getName(),
 					collectingTarget.toString() );
@@ -407,7 +407,7 @@ public class ManagedTypeProcessor {
 		final var annotationUsage =
 				(AccessJpaAnnotation)
 						target.applyAnnotationUsage( JpaAnnotations.ACCESS,
-								xmlDocumentContext.getModelBuildingContext() );
+								xmlDocumentContext.getModelsContext() );
 		annotationUsage.value( accessType );
 		target.addAnnotationUsage( annotationUsage );
 	}
@@ -420,7 +420,7 @@ public class ManagedTypeProcessor {
 			final var cacheableUsage =
 					(CacheableJpaAnnotation)
 							classDetails.applyAnnotationUsage( JpaAnnotations.CACHEABLE,
-									xmlDocumentContext.getModelBuildingContext() );
+									xmlDocumentContext.getModelsContext() );
 
 			cacheableUsage.value( jaxbEntity.isCacheable() );
 			classDetails.addAnnotationUsage( cacheableUsage );
@@ -431,7 +431,7 @@ public class ManagedTypeProcessor {
 			final var cacheUsage =
 					(CacheAnnotation)
 							classDetails.replaceAnnotationUsage( HibernateAnnotations.CACHE,
-									xmlDocumentContext.getModelBuildingContext() );
+									xmlDocumentContext.getModelsContext() );
 			if ( isNotEmpty( jaxbCaching.getRegion() ) ) {
 				cacheUsage.region( jaxbCaching.getRegion() );
 			}
@@ -461,7 +461,7 @@ public class ManagedTypeProcessor {
 					classDetails
 			);
 			memberDetails.applyAnnotationUsage( HibernateAnnotations.TENANT_ID,
-					xmlDocumentContext.getModelBuildingContext() );
+					xmlDocumentContext.getModelsContext() );
 			BasicAttributeProcessing.processBasicAttribute(
 					jaxbTenantId,
 					classDetails,
@@ -667,7 +667,7 @@ public class ManagedTypeProcessor {
 			JaxbMappedSuperclassImpl jaxbMappedSuperclass,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final var modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final var modelBuildingContext = xmlDocumentContext.getModelsContext();
 
 		classDetails.applyAnnotationUsage( JpaAnnotations.MAPPED_SUPERCLASS, modelBuildingContext );
 
@@ -729,7 +729,7 @@ public class ManagedTypeProcessor {
 		final AttributeProcessor.MemberAdjuster memberAdjuster;
 
 		final var classDetailsRegistry =
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 						.getClassDetailsRegistry();
 
 		if ( isEmpty( jaxbEmbeddable.getClazz() ) ) {
@@ -742,7 +742,7 @@ public class ManagedTypeProcessor {
 					xmlDocumentContext,
 					classDetailsRegistry,
 					() -> new DynamicClassDetails( jaxbEmbeddable.getName(),
-							xmlDocumentContext.getModelBuildingContext() )
+							xmlDocumentContext.getModelsContext() )
 			);
 			classAccessType = AccessType.FIELD;
 			memberAdjuster = ManagedTypeProcessor::adjustDynamicTypeMember;
@@ -784,12 +784,12 @@ public class ManagedTypeProcessor {
 			AttributeProcessor.MemberAdjuster memberAdjuster,
 			XmlDocumentContext xmlDocumentContext) {
 		classDetails.applyAnnotationUsage( JpaAnnotations.EMBEDDABLE,
-				xmlDocumentContext.getModelBuildingContext() );
+				xmlDocumentContext.getModelsContext() );
 
 		if ( classAccessType != null ) {
 			final var accessUsage = (AccessJpaAnnotation)
 					classDetails.applyAnnotationUsage( JpaAnnotations.ACCESS,
-							xmlDocumentContext.getModelBuildingContext() );
+							xmlDocumentContext.getModelsContext() );
 			accessUsage.value( classAccessType );
 		}
 
@@ -811,7 +811,7 @@ public class ManagedTypeProcessor {
 				);
 				memberDetails.applyAnnotationUsage(
 						HibernateAnnotations.PARENT,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 			}
 		}
@@ -827,7 +827,7 @@ public class ManagedTypeProcessor {
 							XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEmbeddable ) );
 
 			classDetails.applyAnnotationUsage( JpaAnnotations.EMBEDDABLE,
-					xmlDocumentContext.getModelBuildingContext() );
+					xmlDocumentContext.getModelsContext() );
 
 			final var classAccessType = coalesce(
 					jaxbEmbeddable.getAccess(),
@@ -853,7 +853,7 @@ public class ManagedTypeProcessor {
 					);
 					memberDetails.applyAnnotationUsage(
 							HibernateAnnotations.PARENT,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 				}
 			}
@@ -862,7 +862,7 @@ public class ManagedTypeProcessor {
 
 	private static MutableClassDetails getMutableClassDetails(XmlDocumentContext xmlDocumentContext, String className) {
 		return (MutableClassDetails)
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 						.getClassDetailsRegistry()
 						.resolveClassDetails( className );
 	}

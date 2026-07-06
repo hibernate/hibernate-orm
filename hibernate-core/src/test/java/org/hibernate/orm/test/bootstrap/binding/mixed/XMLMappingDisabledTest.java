@@ -4,8 +4,9 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.mixed;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.Setting;
@@ -21,12 +22,13 @@ public class XMLMappingDisabledTest {
 
 	@Test
 	public void xmlMappedEntityIsIgnored(ServiceRegistryScope registryScope) throws Exception {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( AnnotationEntity.class, XmlEntity.class )
-				.addResource( "org/hibernate/orm/test/bootstrap/binding/hbm/BadMapping.xml" );
-
 		// even though BadMapping.xml is invalid, this should be ok
 		// because we disabled XML processing
-		metadataSources.buildMetadata();
+		MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				new MappingSources()
+						.addManagedClasses( AnnotationEntity.class, XmlEntity.class )
+						.addMappingResource( "org/hibernate/orm/test/bootstrap/binding/hbm/BadMapping.xml" )
+		);
 	}
 }

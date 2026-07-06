@@ -8,9 +8,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -77,9 +77,10 @@ public class ImplicitListDefaultSemanticsTests {
 	@Test
 	@ServiceRegistry
 	void orderColumnMayNotBeCombinedWithOrderBy(ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( InvalidOrderedListEntity.class )
-				.buildMetadata() )
+		assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadata(
+				scope.getRegistry(),
+				InvalidOrderedListEntity.class
+		) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( InvalidOrderedListEntity.class.getName() + ".invalidList" )
 				.hasMessageContaining( "@OrderColumn" )

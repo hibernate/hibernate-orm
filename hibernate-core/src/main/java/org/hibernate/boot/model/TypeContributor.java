@@ -19,7 +19,7 @@ import static org.hibernate.SPI.Role.USE;
 /// [java.util.ServiceLoader] service. An application may instead supply one
 /// programmatically through
 /// [org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)]
-/// or [org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)]. JPA
+/// directly. JPA
 /// bootstrap may list contributors using
 /// [org.hibernate.jpa.boot.spi.JpaSettings#TYPE_CONTRIBUTORS].
 ///
@@ -28,7 +28,6 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @see org.hibernate.type.spi.TypeConfiguration
 /// @see org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)
-/// @see org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)
 ///
 /// @author Steve Ebersole
 @JavaServiceLoadable

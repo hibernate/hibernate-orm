@@ -4,18 +4,13 @@
  */
 package org.hibernate.orm.test.boot.models.xml.override;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
-import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.orm.test.jpa.xml.Employee;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -27,8 +22,6 @@ import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.boot.model.process.spi.MetadataBuildingProcess.processManagedResources;
-
 /**
  * @author Steve Ebersole
  */
@@ -38,22 +31,12 @@ public class AttributeOverrideXmlTests {
 	void testBasicHandling(ServiceRegistryScope serviceRegistryScope) {
 		final StandardServiceRegistry registry = serviceRegistryScope.getRegistry();
 
-		final MetadataSources metadataSources = new MetadataSources().addResource( "org/hibernate/orm/test/jpa/xml/orm3.xml" );
-		final MetadataBuildingOptionsImpl options = new MetadataBuildingOptionsImpl( registry );
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( registry, options );
-		options.setBootstrapContext( bootstrapContext );
-
-		final ManagedResources managedResources = MetadataBuildingProcess.prepare( metadataSources, bootstrapContext );
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
-
-		final DomainModelSource domainModelSource = processManagedResources(
-				managedResources,
-				metadataCollector,
-				bootstrapContext,
-				new MetadataBuilderImpl.MappingDefaultsImpl( registry )
-		);
-
-		final ClassDetailsRegistry classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
+			final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder( registry )
+					.addXmlMappings( "org/hibernate/orm/test/jpa/xml/orm3.xml" )
+					.build();
+			final ClassDetailsRegistry classDetailsRegistry =
+					SourceModelTestHelper.createBuildingContext( managedResources, registry )
+							.getClassDetailsRegistry();
 		final ClassDetails employeeClassDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
 		assertThat( employeeClassDetails.getFields() ).hasSize( 4 );
 

@@ -22,7 +22,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.models.internal.ModelsHelper;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
@@ -48,7 +47,6 @@ import java.util.SortedSet;
 
 import static org.hibernate.internal.util.NullnessHelper.nullif;
 import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
@@ -85,7 +83,7 @@ public class DynamicModelHelper {
 								DYNAMIC_ATTRIBUTE_MODIFIERS,
 								false,
 								false,
-								xmlDocumentContext.getModelBuildingContext()
+								xmlDocumentContext.getModelsContext()
 						);
 						classDetails.addField( member );
 					} );
@@ -105,7 +103,7 @@ public class DynamicModelHelper {
 							DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 					classDetails.addField( member );
 				}
@@ -126,7 +124,7 @@ public class DynamicModelHelper {
 								DYNAMIC_ATTRIBUTE_MODIFIERS,
 								false,
 								false,
-								xmlDocumentContext.getModelBuildingContext()
+								xmlDocumentContext.getModelsContext()
 						);
 						classDetails.addField( member );
 					} );
@@ -144,7 +142,7 @@ public class DynamicModelHelper {
 								DYNAMIC_ATTRIBUTE_MODIFIERS,
 								false,
 								false,
-								xmlDocumentContext.getModelBuildingContext()
+								xmlDocumentContext.getModelsContext()
 						);
 						classDetails.addField( member );
 					} );
@@ -161,7 +159,7 @@ public class DynamicModelHelper {
 								DYNAMIC_ATTRIBUTE_MODIFIERS,
 								false,
 								false,
-								xmlDocumentContext.getModelBuildingContext()
+								xmlDocumentContext.getModelsContext()
 						);
 						classDetails.addField( member );
 					} );
@@ -178,7 +176,7 @@ public class DynamicModelHelper {
 								DYNAMIC_ATTRIBUTE_MODIFIERS,
 								false,
 								false,
-								xmlDocumentContext.getModelBuildingContext()
+								xmlDocumentContext.getModelsContext()
 						);
 						classDetails.addField( member );
 					} );
@@ -200,7 +198,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			}
@@ -223,7 +221,7 @@ public class DynamicModelHelper {
 								DYNAMIC_ATTRIBUTE_MODIFIERS,
 								false,
 								false,
-								xmlDocumentContext.getModelBuildingContext()
+								xmlDocumentContext.getModelsContext()
 						);
 						classDetails.addField( member );
 					} );
@@ -243,7 +241,7 @@ public class DynamicModelHelper {
 							DYNAMIC_ATTRIBUTE_MODIFIERS,
 							false,
 							false,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 					classDetails.addField( member );
 				}
@@ -262,7 +260,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -276,7 +274,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -290,7 +288,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -304,7 +302,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -318,7 +316,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						false,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -333,7 +331,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						true,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -350,7 +348,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						true,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -365,7 +363,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						true,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -383,7 +381,7 @@ public class DynamicModelHelper {
 						DYNAMIC_ATTRIBUTE_MODIFIERS,
 						false,
 						true,
-						xmlDocumentContext.getModelBuildingContext()
+						xmlDocumentContext.getModelsContext()
 				);
 				classDetails.addField( member );
 			} );
@@ -403,8 +401,6 @@ public class DynamicModelHelper {
 			TypeDetails elementType,
 			XmlDocumentContext xmlDocumentContext) {
 		final var classDetailsRegistry = xmlDocumentContext
-				.getBootstrapContext()
-				.getModelsContext()
 				.getClassDetailsRegistry()
 				.as( MutableClassDetailsRegistry.class );
 		final ClassDetails collectionClassDetails;
@@ -530,8 +526,7 @@ public class DynamicModelHelper {
 			return resolveBasicMappingTarget( simpleTypeInterpretation, xmlDocumentContext );
 		}
 
-		final BootstrapContext bootstrapContext = xmlDocumentContext.getBootstrapContext();
-		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
+		final ModelsContext modelsContext = xmlDocumentContext.getModelsContext();
 
 		// UserType
 		final var userTypeNode = jaxbBasicMapping.getType();
@@ -565,13 +560,13 @@ public class DynamicModelHelper {
 			jdbcType = createInstance( jdbcTypeImplDetails );
 		}
 		else if ( jdbcTypeCode != null ) {
-			jdbcType = bootstrapContext.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
+			jdbcType = xmlDocumentContext.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
 		}
 		else {
 			jdbcType = null;
 		}
 		if ( jdbcType != null ) {
-			final var javaType = jdbcType.getRecommendedJavaType( 0, 0, bootstrapContext.getTypeConfiguration() );
+			final var javaType = jdbcType.getRecommendedJavaType( 0, 0, xmlDocumentContext.getTypeConfiguration() );
 			final var modelClass = javaType.getJavaTypeClass();
 			return modelsContext.getClassDetailsRegistry().getClassDetails( modelClass.getName() );
 		}
@@ -610,16 +605,14 @@ public class DynamicModelHelper {
 	 * SimpleTypeInterpretation we only care about the wrapper.
 	 */
 	private static ClassDetails resolveBasicMappingTarget(SimpleTypeInterpretation targetInterpretation, XmlDocumentContext xmlDocumentContext) {
-		final var modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
-		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
-		return classDetailsRegistry.resolveClassDetails( targetInterpretation.getJavaType().getName() );
+		return xmlDocumentContext.getClassDetailsRegistry().resolveClassDetails( targetInterpretation.getJavaType().getName() );
 	}
 
 	private static MutableClassDetails resolveTemporalJavaType(
 			TemporalType temporalType,
 			XmlDocumentContext xmlDocumentContext) {
-		final var modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
-		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry().as( MutableClassDetailsRegistry.class );
+		final var modelsContext = xmlDocumentContext.getModelsContext();
+		final var classDetailsRegistry = xmlDocumentContext.getClassDetailsRegistry().as( MutableClassDetailsRegistry.class );
 		switch ( temporalType ) {
 			case DATE -> {
 				return (MutableClassDetails) classDetailsRegistry.resolveClassDetails(
@@ -652,7 +645,7 @@ public class DynamicModelHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final String target = jaxbEmbeddedMapping.getTarget();
 		if ( isNotEmpty( target ) ) {
-			final ModelsContext modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
+			final ModelsContext modelsContext = xmlDocumentContext.getModelsContext();
 			final ClassDetails memberTypeClassDetails = ModelsHelper.resolveClassDetails(
 					target,
 					xmlDocumentContext,
@@ -676,8 +669,8 @@ public class DynamicModelHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		final String target = jaxbAssociationAttribute.getTargetEntity();
 		if ( isNotEmpty( target ) ) {
-			final var modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
-			final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+			final var modelsContext = xmlDocumentContext.getModelsContext();
+			final var classDetailsRegistry = xmlDocumentContext.getClassDetailsRegistry();
 			final String targetEntityName = xmlDocumentContext.resolveTargetEntityName( target );
 			final var existingClassDetails = classDetailsRegistry.findClassDetails( targetEntityName );
 			if ( existingClassDetails != null ) {
@@ -727,8 +720,7 @@ public class DynamicModelHelper {
 			XmlDocumentContext xmlDocumentContext) {
 		// Logically this is Object, which is what we return here for now.
 		// todo : might be nice to allow specifying a "common interface"
-		final var modelsContext = xmlDocumentContext.getBootstrapContext().getModelsContext();
-		final var objectClassDetails = modelsContext.getClassDetailsRegistry().resolveClassDetails( OBJECT_CLASS_NAME );
+		final var objectClassDetails = xmlDocumentContext.getClassDetailsRegistry().resolveClassDetails( OBJECT_CLASS_NAME );
 		return new ClassTypeDetailsImpl( objectClassDetails, TypeDetails.Kind.CLASS );
 	}
 
@@ -750,8 +742,6 @@ public class DynamicModelHelper {
 
 	private static TypeDetails resolveCollectionType(Class<?> collectionType, XmlDocumentContext xmlDocumentContext) {
 		final var classDetails = xmlDocumentContext
-				.getBootstrapContext()
-				.getModelsContext()
 				.getClassDetailsRegistry()
 				.resolveClassDetails( collectionType.getName() );
 		return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );

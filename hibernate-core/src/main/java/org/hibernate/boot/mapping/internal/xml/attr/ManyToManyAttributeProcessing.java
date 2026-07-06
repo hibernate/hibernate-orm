@@ -90,7 +90,7 @@ public class ManyToManyAttributeProcessing {
 		}
 		final TargetXmlAnnotation targetAnn = (TargetXmlAnnotation) memberDetails.applyAnnotationUsage(
 				XmlAnnotations.TARGET,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		targetAnn.value( xmlDocumentContext.resolveTargetEntityName( jaxbManyToMany.getTargetEntity() ) );
 	}
@@ -101,7 +101,7 @@ public class ManyToManyAttributeProcessing {
 			XmlDocumentContext xmlDocumentContext) {
 		final ManyToManyJpaAnnotation manyToManyAnn = (ManyToManyJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.MANY_TO_MANY,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		CommonAttributeProcessing.applyFetching( jaxbManyToMany, memberDetails, manyToManyAnn, xmlDocumentContext );

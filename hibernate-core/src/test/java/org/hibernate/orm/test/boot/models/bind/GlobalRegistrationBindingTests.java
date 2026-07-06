@@ -278,7 +278,7 @@ public class GlobalRegistrationBindingTests {
 									assertThat( fetchProfile.getName() ).isEqualTo( "globalFetchProfile" ) );
 
 					final var bootTypeConfiguration = metadata.getTypeConfiguration();
-					try (var sessionFactory = metadata.buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 						final var runtimeTypeConfiguration = sessionFactory.getMappingMetamodel().getTypeConfiguration();
 						assertThat( runtimeTypeConfiguration ).isSameAs( bootTypeConfiguration );
 						assertThat( runtimeTypeConfiguration.getJavaTypeRegistry().findDescriptor( GlobalJavaTypeDomain.class ) )
@@ -317,7 +317,7 @@ public class GlobalRegistrationBindingTests {
 	void testNamedQueryRegistrationsResolveAtRuntime(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
-					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						final var namedObjectRepository = sessionFactory.getQueryEngine().getNamedObjectRepository();
 
 						assertThat( namedObjectRepository.getSelectionQueryMemento( "globalJpaQuery" ).getSelectionString() )
@@ -394,7 +394,7 @@ public class GlobalRegistrationBindingTests {
 	void testIdentifierGeneratorRegistrationsReachRuntime(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
-					try (var sessionFactory = context.getMetadata().buildSessionFactory()) {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
 						sessionFactory.getSchemaManager().create( true );
 						try {
 							final var sequenceEntity = new GlobalSequenceGeneratedEntity();

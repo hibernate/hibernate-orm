@@ -460,7 +460,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			) );
 			final SqlAstTranslator<JdbcSelect> translator =
 					creationContext.getDialect().getSqlAstTranslatorFactory()
-							.buildTranslator( new SqlAstTranslationRequest.Select( creationContext.getSessionFactory(), new SelectStatement( fakeQuery ) ) );
+							.buildTranslator( new SqlAstTranslationRequest.Select( converter.getLoadQueryInfluencers().getSessionFactory(), new SelectStatement( fakeQuery ) ) );
 			final JdbcSelect operation = translator.translate( null, QueryOptions.NONE );
 			final String sqlString = operation.getSqlString();
 			assert sqlString.startsWith( "select " );

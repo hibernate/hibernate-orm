@@ -216,7 +216,8 @@ public class Cfg2JavaTool {
 			if ( value != null && value.isSimpleValue() ) {
 				String typename = ( (SimpleValue) value ).getTypeName();
 				log.warn( msg + ". Falling back to typename: " + typename );
-				return typename;
+				final String javaTypeName = JavaTypeFromValueVisitor.javaTypeNameForLegacyTypeName( typename );
+				return javaTypeName == null ? typename : javaTypeName;
 			}
 			else {
 				throw new RuntimeException( msg, e );

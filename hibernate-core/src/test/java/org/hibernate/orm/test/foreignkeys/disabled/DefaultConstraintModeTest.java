@@ -14,10 +14,10 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -50,8 +50,7 @@ public class DefaultConstraintModeTest {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_DEFAULT_CONSTRAINT_MODE, created ? "CONSTRAINT" : "NO_CONSTRAINT" )
 				.build()) {
-			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClasses( TestEntity.class, ChildEntity.class )
-					.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, TestEntity.class, ChildEntity.class );
 			assertThat( findTable( metadata, "TestEntity" ).getForeignKeyCollection().isEmpty() )
 					.isEqualTo( !created );
 			assertThat( findTable( metadata, "ChildEntity" ).getForeignKeyCollection().isEmpty() )

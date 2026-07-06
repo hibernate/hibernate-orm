@@ -25,17 +25,31 @@ package org.hibernate.boot.mapping.internal.binders;
 ///    associations, after every root identifier shape is known.
 /// 7. [Members] binds discriminator, version, tenant id, and persistent
 ///    attributes.
-/// 8. [CollectionIndexes] resolves collection index/key values that refer to
+/// 8. [CustomMapping] runs [custom type binders][org.hibernate.binder.TypeBinder]
+///    against structurally complete managed-type mapping objects.
+/// 9. [ComponentBindingPhase.CustomMapping] runs custom component binders
+///    against structurally complete component mapping objects.
+/// 10. [AttributeBindingPhase.CustomMapping] runs custom attribute/value binders
+///    against structurally complete attribute/value mapping objects.
+/// 11. [AttributeBindingPhase.ValueResolution] finalizes materializer-created
+///     basic values after custom mapping binders have had a chance to mutate
+///     them.
+/// 12. [DiscriminatorValues] derives explicit and implicit discriminator values
+///     after discriminator basic values have been resolved.
+/// 13. [CollectionIndexes] resolves collection index/key values that refer to
 ///    element properties, such as `@MapKey(name)`.
-/// 9. [AssociationTargets] resolves non-primary-key association targets.
-/// 10. [DerivedIdentifiers] resolves derived identifier associations such as
+/// 14. [AssociationTargets] resolves non-primary-key association targets.
+/// 15. [DerivedIdentifiers] resolves derived identifier associations such as
 ///     `@MapsId`.
-/// 11. [TableKeys] creates dependent table keys for joined-subclass,
+/// 16. Component, attribute custom-mapping, and value-resolution phases are
+///     drained again for mappings created by the late association/identifier
+///     phases.
+/// 17. [TableKeys] creates dependent table keys for joined-subclass,
 ///     secondary-table, and collection/association-table structures.
-/// 12. [InverseAssociations] copies owning-side key/value state for `mappedBy`
+/// 18. [InverseAssociations] copies owning-side key/value state for `mappedBy`
 ///     associations.
-/// 13. [ForeignKeys] creates and customizes physical foreign-key constraints.
-/// 14. [Finalization] derives final mapping side effects after all boot
+/// 19. [ForeignKeys] creates and customizes physical foreign-key constraints.
+/// 20. [Finalization] derives final mapping side effects after all boot
 ///     model facts for the new pipeline are available.
 ///
 /// Later phases should consume typed state produced by earlier phases rather than
@@ -105,6 +119,17 @@ public interface TypeBindingPhase {
 		void bindMembers();
 	}
 
+	/// Derive entity discriminator values after discriminator value resolution.
+	interface DiscriminatorValues {
+		void bindDiscriminatorValues();
+	}
+
+	/// Apply custom type mapping after the managed-type mapping object is
+	/// structurally available and before attribute/value custom mapping.
+	interface CustomMapping {
+		void bindCustomMapping();
+	}
+
 	/// Resolve collection index values that depend on member bindings from
 	/// another type.
 	///
@@ -128,9 +153,7 @@ public interface TypeBindingPhase {
 	}
 
 	/// Finalize mapping details that need the complete bound model but are not
-	/// unresolved binding work.  Prefer this phase over scheduling legacy
-	/// {@link org.hibernate.boot.spi.SecondPass} callbacks from new-pipeline
-	/// binders.
+	/// unresolved binding work.
 	interface Finalization {
 		void finalizeBinding();
 	}

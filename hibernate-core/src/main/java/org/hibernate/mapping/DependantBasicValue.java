@@ -40,8 +40,9 @@ public class DependantBasicValue extends BasicValue {
 	}
 
 	@Override
-	protected Resolution<?> buildResolution() {
-		return referencedValue.resolve();
+	public Resolution<?> resolve() {
+		applyResolution( referencedValue.resolve() );
+		return super.resolve();
 	}
 
 

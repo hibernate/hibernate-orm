@@ -39,17 +39,39 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-class StateManagementBindingPhase {
+public class StateManagementBindingPhase {
+	public interface RootEntity {
+		void bindRootEntity();
+	}
+
+	public interface PropertyExclusions {
+		void bindPropertyExclusions();
+	}
+
+	public interface CollectionMapping {
+		void bindCollection();
+	}
+
+	public interface OneToManyAuditCollection {
+		void bindOneToManyAuditCollection();
+	}
+
+	public interface Finalizer {
+		void finalizeStateManagement();
+	}
+
 	static void registerRootEntity(ClassDetails classDetails, RootClass rootClass, BindingState bindingState) {
-		bindingState.addStateManagementRootBinding( classDetails, rootClass );
+		bindingState.addStateManagementRootBinding( new RootEntityBinding( classDetails, rootClass, bindingState ) );
 	}
 
 	static void registerProperty(MemberDetails memberDetails, Property property, BindingState bindingState) {
-		bindingState.addStateManagementPropertyBinding( memberDetails, property );
+		bindingState.addStateManagementPropertyBinding(
+				new PropertyExclusionsBinding( memberDetails, property, bindingState )
+		);
 	}
 
 	static void registerCollection(CollectionSource source, Collection collection, BindingState bindingState) {
-		bindingState.addStateManagementCollectionBinding( source, collection );
+		bindingState.addStateManagementCollectionBinding( new CollectionMappingBinding( source, collection, bindingState ) );
 	}
 
 	static void registerOneToManyCollection(
@@ -57,7 +79,9 @@ class StateManagementBindingPhase {
 			Collection collection,
 			String referencedEntityName,
 			BindingState bindingState) {
-		bindingState.addStateManagementOneToManyCollectionBinding( source, collection, referencedEntityName );
+		bindingState.addStateManagementOneToManyCollectionBinding(
+				new OneToManyAuditCollectionBinding( source, collection, referencedEntityName, bindingState )
+		);
 	}
 
 	static void process(BindingState bindingState) {
@@ -66,22 +90,58 @@ class StateManagementBindingPhase {
 	}
 
 	static void processRootEntities(BindingState bindingState) {
-		bindingState.forEachStateManagementRootBinding(
-				(classDetails, rootClass) -> bindRootEntity( classDetails, rootClass, bindingState )
-		);
+		bindingState.runStateManagementRootBindings();
 	}
 
 	static void processPropertiesAndCollections(BindingState bindingState) {
-		bindingState.forEachStateManagementPropertyBinding(
-				(memberDetails, property) -> bindPropertyExclusions( memberDetails, property, bindingState )
-		);
-		bindingState.forEachStateManagementCollectionBinding(
-				(source, collection) -> bindCollection( source, collection, bindingState )
-		);
-		bindingState.forEachStateManagementOneToManyCollectionBinding(
-				(source, collection, referencedEntityName) ->
-						bindOneToManyAuditCollection( source, collection, referencedEntityName, bindingState )
-		);
+		bindingState.runStateManagementPropertyAndCollectionBindings();
+		bindingState.runStateManagementFinalizers();
+	}
+
+	private record RootEntityBinding(
+			ClassDetails classDetails,
+			RootClass rootClass,
+			BindingState bindingState) implements RootEntity {
+		@Override
+		public void bindRootEntity() {
+			StateManagementBindingPhase.bindRootEntity( classDetails, rootClass, bindingState );
+		}
+	}
+
+	private record PropertyExclusionsBinding(
+			MemberDetails memberDetails,
+			Property property,
+			BindingState bindingState) implements PropertyExclusions {
+		@Override
+		public void bindPropertyExclusions() {
+			StateManagementBindingPhase.bindPropertyExclusions( memberDetails, property, bindingState );
+		}
+	}
+
+	private record CollectionMappingBinding(
+			CollectionSource source,
+			Collection collection,
+			BindingState bindingState) implements CollectionMapping {
+		@Override
+		public void bindCollection() {
+			StateManagementBindingPhase.bindCollection( source, collection, bindingState );
+		}
+	}
+
+	private record OneToManyAuditCollectionBinding(
+			CollectionSource source,
+			Collection collection,
+			String referencedEntityName,
+			BindingState bindingState) implements OneToManyAuditCollection {
+		@Override
+		public void bindOneToManyAuditCollection() {
+			StateManagementBindingPhase.bindOneToManyAuditCollection(
+					source,
+					collection,
+					referencedEntityName,
+					bindingState
+			);
+		}
 	}
 
 	private static void bindRootEntity(ClassDetails classDetails, RootClass rootClass, BindingState bindingState) {
@@ -117,7 +177,8 @@ class StateManagementBindingPhase {
 					collection,
 					referencedEntityName,
 					extract( Audited.CollectionTable.class, member, context ),
-					context
+					context,
+					bindingState
 			);
 		}
 	}
@@ -131,7 +192,8 @@ class StateManagementBindingPhase {
 					rootClass.getRootTable(),
 					classDetails.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
 					classDetails.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
-					bindingState.getMetadataBuildingContext()
+					bindingState.getMetadataBuildingContext(),
+					bindingState
 			);
 			applySingleTableTemporalPrimaryKey( rootClass );
 		}
@@ -166,13 +228,14 @@ class StateManagementBindingPhase {
 					extract( Audited.Table.class, classDetails, context ),
 					rootClass,
 					classDetails,
-					context
+					context,
+					bindingState
 			);
 		}
 		else {
 			final Changelog changelog = extract( Changelog.class, classDetails, context );
 			if ( changelog != null ) {
-				AuditHelper.bindChangelog( changelog, rootClass, classDetails, context );
+				AuditHelper.bindChangelog( changelog, rootClass, classDetails, context, bindingState );
 			}
 		}
 	}
@@ -225,7 +288,8 @@ class StateManagementBindingPhase {
 					collection.getCollectionTable(),
 					member.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
 					member.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
-					context
+					context,
+					bindingState
 			);
 			applySingleTableTemporalCollectionKey( collection );
 		}
@@ -276,7 +340,8 @@ class StateManagementBindingPhase {
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, member, context ),
 					collection,
-					context
+					context,
+					bindingState
 			);
 		}
 	}
@@ -285,7 +350,7 @@ class StateManagementBindingPhase {
 			Class<A> annotationClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getModelsContext();
 		final var fromClass = classDetails.getAnnotationUsage( annotationClass, modelsContext );
 		if ( fromClass != null ) {
 			return fromClass;
@@ -312,7 +377,7 @@ class StateManagementBindingPhase {
 			return fromMember;
 		}
 
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var modelsContext = context.getModelsContext();
 		final var declaringType = memberDetails.getDeclaringType();
 		final var fromClass = declaringType.getAnnotationUsage( annotationClass, modelsContext );
 		return fromClass == null

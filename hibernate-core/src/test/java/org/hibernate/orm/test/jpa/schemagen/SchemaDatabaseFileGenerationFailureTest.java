@@ -14,7 +14,7 @@ import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -69,7 +69,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
-			SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
+			BootstrapPipeline.generateSchema( persistenceUnitDescriptor, config );
 			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {

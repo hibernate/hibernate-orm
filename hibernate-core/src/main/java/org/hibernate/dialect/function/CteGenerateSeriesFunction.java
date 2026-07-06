@@ -102,7 +102,7 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 							tableGroup.getPrimaryTableReference().getCompatibleTableExpressions(),
 							lateral,
 							canUseInnerJoins,
-							walker.getCreationContext().getSessionFactory()
+							walker.getLoadQueryInfluencers().getSessionFactory()
 					);
 				}
 				else {

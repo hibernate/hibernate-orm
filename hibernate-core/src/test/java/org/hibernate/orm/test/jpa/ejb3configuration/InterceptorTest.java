@@ -12,11 +12,11 @@ import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
@@ -156,12 +156,10 @@ public class InterceptorTest {
 		SessionFactory sessionFactory = null;
 
 		try {
-			MetadataSources metadataSources = new MetadataSources( standardRegistry );
-			for(Class annotatedClass : getAnnotatedClasses()) {
-				metadataSources.addAnnotatedClass( annotatedClass );
-			}
-
-			Metadata metadata = metadataSources.getMetadataBuilder().build();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					standardRegistry,
+					getAnnotatedClasses()
+			);
 
 			final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
 			optionsCollector.applyStatelessInterceptorSupplier( () -> new LocalExceptionInterceptor() );
@@ -274,7 +272,7 @@ public class InterceptorTest {
 	}
 
 	private void buildEntityManagerFactory(Map<String,Object> settings) {
-		entityManagerFactory = org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
+		entityManagerFactory = org.hibernate.boot.pipeline.internal.BootstrapPipeline
 				.build(
 						new PersistenceUnitDescriptorAdapter() {
 							@Override

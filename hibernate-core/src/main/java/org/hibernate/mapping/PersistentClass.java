@@ -133,7 +133,7 @@ public abstract sealed class PersistentClass
 
 	@Remove
 	public ServiceRegistry getServiceRegistry() {
-		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
+		return metadataBuildingContext.getBuildingPlan().getServiceRegistry();
 	}
 
 	@Internal
@@ -160,7 +160,7 @@ public abstract sealed class PersistentClass
 	}
 
 	private Class<?> getClassForName(String className) {
-		return classForName( className, metadataBuildingContext.getBootstrapContext() );
+		return classForName( className, metadataBuildingContext.getClassLoaderAccess() );
 	}
 
 	public Class<?> getMappedClass() throws MappingException {

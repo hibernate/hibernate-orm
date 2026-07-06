@@ -16,9 +16,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -43,10 +43,11 @@ public class UniqueConstraintUnitTests {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( UniqueNoNameA.class )
-					.addAnnotatedClass( UniqueNoNameB.class )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					UniqueNoNameA.class,
+					UniqueNoNameB.class
+			);
 
 			org.hibernate.mapping.Table tableA = null;
 			org.hibernate.mapping.Table tableB = null;
@@ -82,10 +83,7 @@ public class UniqueConstraintUnitTests {
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( UniqueNoNameA.class )
-					.addAnnotatedClass( UniqueNoNameB.class )
-					.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( ssr, UniqueNoNameA.class, UniqueNoNameB.class );
 		}
 		catch (NullPointerException e) {
 			fail( "The @UniqueConstraint with a non-existent column name should have resulted in an AnnotationException" );

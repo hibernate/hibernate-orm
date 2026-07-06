@@ -5,7 +5,7 @@
 package org.hibernate.boot.mapping.internal.xml;
 
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.AvailableResources;
+import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 
 /**
  * Performs pre-processing across XML mappings to collect data
@@ -29,10 +29,10 @@ public class XmlPreProcessor {
 	}
 
 	public static XmlPreProcessingResult preProcessXmlResources(
-			AvailableResources availableResources,
+			PreparedMappingSources resolvedMappingSources,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
 		final var collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
-		for ( var mappingXmlBinding : availableResources.xmlMappings() ) {
+		for ( var mappingXmlBinding : resolvedMappingSources.xmlMappings() ) {
 			collected.addDocument( mappingXmlBinding );
 		}
 		return collected;

@@ -14,11 +14,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -41,15 +42,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	protected ServiceRegistry serviceRegistry;
+	protected StandardServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
 		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( ApplicationConfigurationHBM2DDL.class )
-				.buildMetadata();
+		metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				serviceRegistry,
+				new MappingSources().addManagedClass( ApplicationConfigurationHBM2DDL.class )
+		);
 
 		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
 		try {

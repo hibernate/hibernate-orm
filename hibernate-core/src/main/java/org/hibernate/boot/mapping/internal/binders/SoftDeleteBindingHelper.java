@@ -58,6 +58,6 @@ final class SoftDeleteBindingHelper {
 	}
 
 	private static ModelsContext modelsContext(BindingState bindingState) {
-		return bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext();
+		return bindingState.getMetadataBuildingContext().getModelsContext();
 	}
 }

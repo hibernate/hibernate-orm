@@ -13,9 +13,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -34,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @BaseUnitTest
 public class LongKeyNamingStrategyTest {
 
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 
 	@BeforeAll
 	public void setUp() {
@@ -50,12 +51,11 @@ public class LongKeyNamingStrategyTest {
 
 	@Test
 	public void testWithCustomNamingStrategy() {
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Address.class )
-				.addAnnotatedClass( Person.class )
-				.getMetadataBuilder()
-				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
-				.build();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+				serviceRegistry,
+				new MappingSources().addManagedClasses( Address.class, Person.class ),
+				new LongIdentifierNamingStrategy()
+		);
 
 		var foreignKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getForeignKeyCollection()
 				.iterator().next();

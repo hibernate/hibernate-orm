@@ -26,7 +26,7 @@ public class MappedSuperclassContribution {
 	private final MappedSuperclassTypeMetadata declaration;
 	private final IdentifiableTypeMetadata consumer;
 	private final EntityTypeMetadata nearestEntityConsumer;
-	private final List<String> appliedAttributeNames = new ArrayList<>();
+	private final List<AttributeUsageBinding> appliedAttributeUsages = new ArrayList<>();
 
 	public MappedSuperclassContribution(
 			MappedSuperclassTypeMetadata declaration,
@@ -49,11 +49,19 @@ public class MappedSuperclassContribution {
 		return nearestEntityConsumer;
 	}
 
-	public void addAppliedAttributeName(String attributeName) {
-		appliedAttributeNames.add( attributeName );
+	/// Should not be called directly.  Instead, use [BootBindingModel#addAppliedMappedSuperclassAttributeUsage]
+	AttributeUsageBinding addAppliedAttributeUsage(AttributeUsageBinding usage) {
+		appliedAttributeUsages.add( usage );
+		return usage;
+	}
+
+	public List<AttributeUsageBinding> appliedAttributeUsages() {
+		return List.copyOf( appliedAttributeUsages );
 	}
 
 	public List<String> appliedAttributeNames() {
-		return List.copyOf( appliedAttributeNames );
+		return appliedAttributeUsages.stream()
+				.map( AttributeUsageBinding::attributeName )
+				.toList();
 	}
 }

@@ -5,10 +5,10 @@
 package org.hibernate.orm.test.annotations.id;
 
 import org.hibernate.annotations.Formula;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.internal.CannotForceNonNullableException;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -49,9 +49,7 @@ public class AndFormulaTest {
 	@Test
 	public void testBindingEntityWithIdAndFormula() {
 		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( EntityWithIdAndFormula.class )
-					.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( ssr, EntityWithIdAndFormula.class );
 			fail( "Expecting failure from invalid mapping" );
 		}
 		catch (CannotForceNonNullableException e) {

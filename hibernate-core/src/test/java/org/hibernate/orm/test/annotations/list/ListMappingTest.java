@@ -15,12 +15,12 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 
@@ -61,10 +61,7 @@ public class ListMappingTest  {
 
 	@Test
 	public void testOrderColumnInNormalBiDirectonalModel() {
-		Metadata metadata = new MetadataSources( ssr )
-				.addAnnotatedClass( Order.class )
-				.addAnnotatedClass( LineItem.class )
-				.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, Order.class, LineItem.class );
 
 		Collection lineItemsBinding = metadata.getCollectionBindings().iterator().next();
 

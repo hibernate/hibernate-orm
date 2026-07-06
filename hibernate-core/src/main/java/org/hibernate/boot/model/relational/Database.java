@@ -15,7 +15,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.internal.PersistenceUnitJdbcEnvironment;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MappingResolutionOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -45,11 +45,11 @@ public class Database {
 	private Namespace.Name physicalImplicitNamespaceName;
 	private List<InitCommand> initCommands;
 
-	public Database(MetadataBuildingOptions buildingOptions) {
-		this( buildingOptions, buildingOptions.getServiceRegistry().getService( JdbcEnvironment.class ) );
+	public Database(MappingResolutionOptions buildingPlan) {
+		this( buildingPlan, buildingPlan.getServiceRegistry().getService( JdbcEnvironment.class ) );
 	}
 
-	public Database(MetadataBuildingOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
+	public Database(MappingResolutionOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
 		serviceRegistry = buildingOptions.getServiceRegistry();
 		this.jdbcEnvironment = jdbcEnvironment == null
 				? null
@@ -63,8 +63,8 @@ public class Database {
 		dialect = determineDialect( buildingOptions );
 
 		setImplicitNamespaceName(
-				toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
-				toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
+				toIdentifier( buildingPlan.getMappingDefaults().getImplicitCatalogName() ),
+				toIdentifier( buildingPlan.getMappingDefaults().getImplicitSchemaName() )
 		);
 	}
 
@@ -90,8 +90,8 @@ public class Database {
 		);
 	}
 
-	private static Dialect determineDialect(MetadataBuildingOptions buildingOptions) {
-		final Dialect dialect = buildingOptions.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
+	private static Dialect determineDialect(MappingResolutionOptions buildingPlan) {
+		final Dialect dialect = buildingPlan.getServiceRegistry().requireService( JdbcServices.class ).getDialect();
 		if ( dialect != null ) {
 			return dialect;
 		}

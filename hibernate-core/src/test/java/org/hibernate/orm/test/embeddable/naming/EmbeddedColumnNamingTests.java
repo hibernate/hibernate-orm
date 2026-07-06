@@ -6,7 +6,6 @@ package org.hibernate.orm.test.embeddable.naming;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedColumnNaming;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 
@@ -14,6 +13,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -125,11 +125,8 @@ public class EmbeddedColumnNamingTests {
 	@Test
 	@ServiceRegistry
 	void testBadNamingPattern1(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Address.class, BadPatternPerson1.class );
-
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), Address.class, BadPatternPerson1.class );
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {
@@ -147,11 +144,8 @@ public class EmbeddedColumnNamingTests {
 	@Test
 	@ServiceRegistry
 	void testBadNamingPattern2(ServiceRegistryScope registryScope) {
-		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Address.class, BadPatternPerson2.class );
-
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), Address.class, BadPatternPerson2.class );
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {

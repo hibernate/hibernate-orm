@@ -7,7 +7,7 @@ package org.hibernate.orm.test.tool.schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -16,6 +16,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
@@ -111,12 +112,7 @@ public class IndividuallySchemaValidatorImplConnectionTest {
 
 	@Test
 	public void testMissingEntityContainsUnqualifiedEntityName() throws Exception {
-		MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
-
-		MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		MetadataImplementor metadata = buildValidatedMetadata();
 
 		Map<String, Object> settings = new HashMap<>(  );
 
@@ -144,12 +140,7 @@ public class IndividuallySchemaValidatorImplConnectionTest {
 					schemaGenerator
 			);
 
-			metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( UnqualifiedMissingEntity.class );
-
-			metadata = (MetadataImplementor) metadataSources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			metadata = buildValidatedMetadata();
 
 			SchemaValidator schemaValidator = new IndividuallySchemaValidatorImpl( tool, DefaultSchemaFilter.INSTANCE );
 			assertFalse( connection.getAutoCommit() );
@@ -173,6 +164,13 @@ public class IndividuallySchemaValidatorImplConnectionTest {
 			throw new IllegalArgumentException( e );
 		}
 		return properties;
+	}
+
+	private MetadataImplementor buildValidatedMetadata() {
+		return MetadataBuildingTestHelper.buildValidatedMetadata(
+				ssr,
+				new MappingSources().addManagedClass( UnqualifiedMissingEntity.class )
+		);
 	}
 
 	@Entity

@@ -16,10 +16,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -144,11 +144,9 @@ public class CachingWithSecondaryTablesTests {
 				.applySettings( settings )
 				.build();
 		try {
-			return (SessionFactoryImplementor) new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( Person.class )
-					.addAnnotatedClass( VersionedPerson.class )
-					.buildMetadata()
-					.buildSessionFactory();
+			return (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Person.class, VersionedPerson.class )
+			);
 		}
 		catch (Throwable t) {
 			serviceRegistry.close();

@@ -4,8 +4,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Collection;
-
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,16 +21,12 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.SPI;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
@@ -49,9 +43,15 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.XmlMappingBinderAccess;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+import org.hibernate.boot.pipeline.internal.BootstrapPipelineRequest;
+import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -63,6 +63,7 @@ import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -128,9 +129,9 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  * Finally, a {@link org.hibernate.SessionFactory} is obtained by calling
  * {@link #buildSessionFactory()}.
  * <p>
- * Ultimately, this class simply delegates to {@link MetadataBuilder} and
- * {@link StandardServiceRegistryBuilder} to actually do the hard work of
- * {@linkplain #buildSessionFactory() building} the {@code SessionFactory}.
+ * Ultimately, this class normalizes its state for Hibernate's bootstrap
+ * pipeline and delegates to {@link StandardServiceRegistryBuilder} to build
+ * the service registry when one is not supplied explicitly.
  * Programs may directly use the APIs defined under {@link org.hibernate.boot},
  * as an alternative to using an instance of this class.
  *
@@ -149,7 +150,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 public class Configuration {
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
-	private final MetadataSources metadataSources;
+	private final MappingSources mappingSources = new MappingSources();
 	final private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
 
 	// used during processing mappings
@@ -184,7 +185,7 @@ public class Configuration {
 
 	/**
 	 * Create a new instance, using a default {@link BootstrapServiceRegistry}
-	 * and a newly instantiated {@link MetadataSources}.
+	 * and a newly instantiated mapping-source accumulator.
 	 * <p>
 	 * This is the usual method of obtaining a {@code Configuration}.
 	 */
@@ -194,44 +195,12 @@ public class Configuration {
 
 	/**
 	 * Create a new instance, using the given {@link BootstrapServiceRegistry}
-	 * and a newly instantiated {@link MetadataSources}.
+	 * and a newly instantiated mapping-source accumulator.
 	 */
 	public Configuration(BootstrapServiceRegistry serviceRegistry) {
 		bootstrapServiceRegistry = serviceRegistry;
-		metadataSources = new MetadataSources( serviceRegistry, createMappingBinderAccess( serviceRegistry ) );
 		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
 		properties.putAll( standardServiceRegistryBuilder.getSettings() );
-	}
-
-	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
-		return new XmlMappingBinderAccess( serviceRegistry,
-				settingName -> properties == null ? null : properties.get( settingName ) );
-	}
-
-	/**
-	 * Create a new instance, using the given {@link MetadataSources}, and a
-	 * {@link BootstrapServiceRegistry} obtained from the {@link MetadataSources}.
-	 */
-	public Configuration(MetadataSources metadataSources) {
-		this.metadataSources = metadataSources;
-		bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
-		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
-		properties.putAll( standardServiceRegistryBuilder.getSettings() );
-	}
-
-	private static BootstrapServiceRegistry getBootstrapRegistry(ServiceRegistry serviceRegistry) {
-		if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
-			return bootstrapServiceRegistry;
-		}
-		else if ( serviceRegistry instanceof StandardServiceRegistry ssr ) {
-			return (BootstrapServiceRegistry) ssr.getParentServiceRegistry();
-		}
-
-		throw new HibernateException(
-				"No ServiceRegistry was passed to Configuration#buildSessionFactory " +
-						"and could not determine how to locate BootstrapServiceRegistry " +
-						"from Configuration instantiation"
-		);
 	}
 
 
@@ -525,7 +494,7 @@ public class Configuration {
 		return this;
 	}
 
-	// MetadataSources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Mapping sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
 	 * Add a {@link TypeContributor} to this configuration.
@@ -562,8 +531,15 @@ public class Configuration {
 		return this;
 	}
 
-	private interface UserTypeRegistration {
-		void registerType(MetadataBuilder metadataBuilder);
+	private record UserTypeRegistration(UserType<?> type, String[] keys) {
+		private UserTypeRegistration {
+			keys = keys == null ? new String[0] : keys.clone();
+		}
+
+		@Override
+		public String[] keys() {
+			return keys.clone();
+		}
 	}
 
 	/**
@@ -579,7 +555,7 @@ public class Configuration {
 		if ( userTypeRegistrations == null ) {
 			userTypeRegistrations = new ArrayList<>();
 		}
-		userTypeRegistrations.add( builder -> builder.applyBasicType( type, keys ) );
+		userTypeRegistrations.add( new UserTypeRegistration( type, keys ) );
 		return this;
 	}
 
@@ -596,7 +572,7 @@ public class Configuration {
 	 * @see #addFile(File)
 	 */
 	public Configuration addFile(String xmlFile) throws MappingException {
-		metadataSources.addFile( xmlFile );
+		mappingSources.addMappingFile( new File( xmlFile ) );
 		return this;
 	}
 
@@ -610,29 +586,7 @@ public class Configuration {
 	 * @throws MappingException Indicates inability to locate the specified mapping file
 	 */
 	public Configuration addFile(File xmlFile) throws MappingException {
-		metadataSources.addFile( xmlFile );
-		return this;
-	}
-
-	/**
-	 * An object capable of parsing XML mapping files that can then be passed
-	 * to {@link #addXmlMapping(Binding)}.
-	 */
-	@Remove
-	public XmlMappingBinderAccess getXmlMappingBinderAccess() {
-		return metadataSources.getXmlMappingBinderAccess();
-	}
-
-	/**
-	 * Read mappings that were parsed using {@link #getXmlMappingBinderAccess()}.
-	 *
-	 * @param binding the parsed mapping
-	 *
-	 * @return {@code this} for method chaining
-	 */
-	@Remove
-	public Configuration addXmlMapping(Binding<JaxbEntityMappingsImpl> binding) {
-		metadataSources.addXmlBinding( binding );
+		mappingSources.addMappingFile( xmlFile );
 		return this;
 	}
 
@@ -656,7 +610,7 @@ public class Configuration {
 	 * processing the non-cached file.
 	 */
 	public Configuration addCacheableFile(File xmlFile) throws MappingException {
-		metadataSources.addCacheableFile( xmlFile );
+		mappingSources.addXmlMappingSource( XmlMappingSource.fromCacheableFile( xmlFile, xmlFile.getParentFile(), false ) );
 		return this;
 	}
 
@@ -674,7 +628,7 @@ public class Configuration {
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
 	 */
 	public Configuration addCacheableFileStrictly(File xmlFile) throws SerializationException {
-		metadataSources.addCacheableFileStrictly( xmlFile );
+		mappingSources.addXmlMappingSource( XmlMappingSource.fromCacheableFile( xmlFile, null, true ) );
 		return this;
 	}
 
@@ -692,7 +646,7 @@ public class Configuration {
 	 * @see #addCacheableFile(File)
 	 */
 	public Configuration addCacheableFile(String xmlFile) throws MappingException {
-		metadataSources.addCacheableFile( xmlFile );
+		addCacheableFile( new File( xmlFile ) );
 		return this;
 	}
 
@@ -707,7 +661,7 @@ public class Configuration {
 	 * the mapping document.
 	 */
 	public Configuration addURL(URL url) throws MappingException {
-		metadataSources.addURL( url );
+		mappingSources.addMappingUrl( url );
 		return this;
 	}
 
@@ -722,7 +676,7 @@ public class Configuration {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addInputStream(InputStream xmlInputStream) throws MappingException {
-		metadataSources.addInputStream( xmlInputStream );
+		mappingSources.addXmlMappingSource( XmlMappingSource.fromInputStream( xmlInputStream ) );
 		return this;
 	}
 
@@ -739,7 +693,7 @@ public class Configuration {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addResource(String resourceName) throws MappingException {
-		metadataSources.addResource( resourceName );
+		mappingSources.addMappingResource( resourceName );
 		return this;
 	}
 
@@ -776,7 +730,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAnnotatedClass(Class<?> annotatedClass) {
-		metadataSources.addAnnotatedClass( annotatedClass );
+		mappingSources.addManagedClass( annotatedClass );
 		return this;
 	}
 
@@ -804,7 +758,7 @@ public class Configuration {
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
 	public Configuration addPackage(String packageName) throws MappingException {
-		metadataSources.addPackageDescriptor( packageName );
+		mappingSources.addPackage( packageName );
 		return this;
 	}
 
@@ -839,11 +793,10 @@ public class Configuration {
 	 *
 	 * @since 7.0
 	 *
-	 * @see org.hibernate.boot.MetadataSources#addModule(Module)
 	 */
 	@Incubating(since = "8.0")
 	public Configuration addModule(Module module) {
-		metadataSources.addModule( module );
+		mappingSources.addModule( module );
 		return this;
 	}
 
@@ -856,30 +809,10 @@ public class Configuration {
 	 *
 	 * @since 7.0
 	 *
-	 * @see org.hibernate.boot.MetadataSources#addModule(String)
 	 */
 	@Incubating(since = "8.0")
 	public Configuration addModule(String moduleName) {
-		metadataSources.addModule( moduleName );
-		return this;
-	}
-
-	/**
-	 * Read all {@code .hbm.xml} mappings from a {@code .jar} file.
-	 * <p>
-	 * Assumes that any file named {@code *.hbm.xml} is a mapping document.
-	 * This method does not support {@code orm.xml} files!
-	 *
-	 * @param jar a jar file
-	 *
-	 * @return {@code this} for method chaining
-	 *
-	 * @throws MappingException Indicates problems reading the jar file or
-	 * processing the contained mapping documents.
-	 */
-	@Remove
-	public Configuration addJar(File jar) throws MappingException {
-		metadataSources.addJar( jar );
+		mappingSources.addModule( moduleName );
 		return this;
 	}
 
@@ -897,7 +830,17 @@ public class Configuration {
 	 * processing the contained mapping documents.
 	 */
 	public Configuration addDirectory(File dir) throws MappingException {
-		metadataSources.addDirectory( dir );
+		final File[] files = dir.listFiles();
+		if ( files != null ) {
+			for ( File file : files ) {
+				if ( file.isDirectory() ) {
+					addDirectory( file );
+				}
+				else if ( file.getName().endsWith( ".hbm.xml" ) ) {
+					addFile( file );
+				}
+			}
+		}
 		return this;
 	}
 
@@ -1077,59 +1020,6 @@ public class Configuration {
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		CORE_LOGGER.buildingFactoryWithProvidedRegistry();
-		final var metadataBuilder =
-				metadataSources.getMetadataBuilder( (StandardServiceRegistry) serviceRegistry );
-
-		if ( implicitNamingStrategy != null ) {
-			metadataBuilder.applyImplicitNamingStrategy( implicitNamingStrategy );
-		}
-
-		if ( physicalNamingStrategy != null ) {
-			metadataBuilder.applyPhysicalNamingStrategy( physicalNamingStrategy );
-		}
-
-		if ( columnOrderingStrategy != null ) {
-			metadataBuilder.applyColumnOrderingStrategy( columnOrderingStrategy );
-		}
-
-		if ( sharedCacheMode != null ) {
-			metadataBuilder.applySharedCacheMode( sharedCacheMode );
-		}
-
-		for ( var typeContributor : typeContributorRegistrations ) {
-			metadataBuilder.applyTypes( typeContributor );
-		}
-
-		for ( var functionContributor : functionContributorRegistrations ) {
-			metadataBuilder.applyFunctions( functionContributor );
-		}
-
-		if ( userTypeRegistrations != null ) {
-			userTypeRegistrations.forEach( registration ->  registration.registerType( metadataBuilder ) );
-		}
-
-		for ( var basicType : basicTypes ) {
-			metadataBuilder.applyBasicType( basicType );
-		}
-
-		if ( customFunctionDescriptors != null ) {
-			for ( var entry : customFunctionDescriptors.entrySet() ) {
-				metadataBuilder.applySqlFunction( entry.getKey(), entry.getValue() );
-			}
-		}
-
-		if ( auxiliaryDatabaseObjectList != null ) {
-			for ( var auxiliaryDatabaseObject : auxiliaryDatabaseObjectList ) {
-				metadataBuilder.applyAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
-			}
-		}
-
-		if ( attributeConverterDescriptorsByClass != null ) {
-			attributeConverterDescriptorsByClass.values()
-					.forEach( metadataBuilder::applyAttributeConverter );
-		}
-
-			final var metadata = metadataBuilder.build();
 		final var optionsCollector = new SessionFactoryOptionsCollector();
 
 		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
@@ -1164,7 +1054,62 @@ public class Configuration {
 			optionsCollector.applyCustomEntityDirtinessStrategy( customEntityDirtinessStrategy );
 		}
 
-		return org.hibernate.boot.pipeline.internal.SessionFactoryPipeline.build( metadata, optionsCollector );
+		final var standardServiceRegistry = (StandardServiceRegistry) serviceRegistry;
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
+				resolveConfigurationValues( standardServiceRegistry ),
+				false
+		);
+		final var mappingSettings = SettingsResolver.resolveMappingSettings( bootstrapSettings, FetchType.EAGER );
+		final var sessionFactorySettings = optionsCollector.applyTo(
+				SettingsResolver.resolveSessionFactorySettings( bootstrapSettings, standardServiceRegistry )
+		);
+		return BootstrapPipeline.build( new BootstrapPipelineRequest(
+				bootstrapSettings,
+				mappingSettings,
+				mappingSources,
+				createMappingCustomizations(),
+				sessionFactorySettings,
+				standardServiceRegistry,
+				null
+		) );
+	}
+
+	private Map<Object, Object> resolveConfigurationValues(StandardServiceRegistry serviceRegistry) {
+		final var configurationValues = new HashMap<>();
+		configurationValues.putAll( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
+		configurationValues.putAll( properties );
+		return configurationValues;
+	}
+
+	private MappingCustomizations createMappingCustomizations() {
+		final var basicTypeRegistrations = basicTypes.stream()
+				.map( BasicTypeRegistration::new )
+				.toList();
+		final var deferredUserTypeRegistrations = userTypeRegistrations == null
+				? List.<MappingCustomizations.UserTypeRegistration>of()
+				: userTypeRegistrations.stream()
+						.map( registration -> new MappingCustomizations.UserTypeRegistration(
+								registration.type(),
+								registration.keys()
+						) )
+						.toList();
+		return new MappingCustomizations(
+				Map.of(),
+				typeContributorRegistrations,
+				functionContributorRegistrations,
+				List.of(),
+				basicTypeRegistrations,
+				deferredUserTypeRegistrations,
+				customFunctionDescriptors,
+				auxiliaryDatabaseObjectList,
+				attributeConverterDescriptorsByClass == null
+						? List.of()
+						: List.copyOf( attributeConverterDescriptorsByClass.values() ),
+				implicitNamingStrategy,
+				physicalNamingStrategy,
+				columnOrderingStrategy,
+				sharedCacheMode
+		);
 	}
 
 
@@ -1338,7 +1283,7 @@ public class Configuration {
 		return sqlResultSetMappings;
 	}
 
-	public Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
+	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return namedEntityGraphMap.values();
 	}
 

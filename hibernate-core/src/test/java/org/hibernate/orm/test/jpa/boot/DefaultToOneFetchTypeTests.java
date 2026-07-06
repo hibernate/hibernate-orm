@@ -12,7 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -54,11 +54,11 @@ public class DefaultToOneFetchTypeTests {
 		final var persistenceUnitDescriptor = PersistenceXmlParser.create( (Map) Environment.getProperties() )
 				.parse( List.of( xml ) )
 				.get( unitName );
-		try (var metadataBootstrap = SessionFactoryBootstrap.resolveMetadata(
+		try (var metadataResolution = BootstrapPipeline.resolveMetadata(
 				persistenceUnitDescriptor,
 				(Map) Environment.getProperties()
 		)) {
-			verify( metadataBootstrap.metadata(), expectation );
+			verify( metadataResolution.metadata(), expectation );
 		}
 	}
 

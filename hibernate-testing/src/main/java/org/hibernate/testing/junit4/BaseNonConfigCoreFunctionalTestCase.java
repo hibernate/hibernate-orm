@@ -18,17 +18,16 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -51,12 +50,12 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
+import org.hibernate.testing.orm.junit.MetadataBuildingHelper;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
 
-import static java.lang.Thread.currentThread;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.testing.util.ServiceRegistryUtil.serviceRegistryBuilder;
 import static org.junit.Assert.fail;
@@ -134,18 +133,19 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void buildResources() {
 		final StandardServiceRegistryBuilder serviceRegistryBuilder = constructStandardServiceRegistryBuilder();
+		serviceRegistryBuilder.applySetting(
+				MappingSettings.IMPLICIT_NAMING_STRATEGY,
+				"legacy-jpa"
+		);
 
 		serviceRegistry = serviceRegistryBuilder.build();
 		afterStandardServiceRegistryBuilt( serviceRegistry );
 
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-		applyMetadataSources( metadataSources );
-		afterMetadataSourcesApplied( metadataSources );
+		final MappingSources mappingSources = new MappingSources();
+		applyMetadataSources( mappingSources );
+		afterMetadataSourcesApplied( mappingSources );
 
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		initialize( metadataBuilder );
-		configureMetadataBuilder( metadataBuilder );
-		metadata = (MetadataImplementor) metadataBuilder.build();
+		metadata = MetadataBuildingHelper.buildMetadata( serviceRegistry, mappingSources );
 		if ( overrideCacheStrategy() && getCacheConcurrencyStrategy() != null ) {
 			applyCacheSettings( metadata );
 		}
@@ -258,18 +258,18 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterStandardServiceRegistryBuilt(StandardServiceRegistry standardServiceRegistry) {
 	}
 
-	protected void applyMetadataSources(MetadataSources sources) {
+	protected void applyMetadataSources(MappingSources sources) {
 		for ( String mapping : getMappings() ) {
-			sources.addResource( getBaseForMappings() + mapping );
+			sources.addMappingResource( getBaseForMappings() + mapping );
 		}
 		for ( Class<?> annotatedClass : getAnnotatedClasses() ) {
-			sources.addAnnotatedClass( annotatedClass );
+			sources.addManagedClass( annotatedClass );
 		}
 		for ( String annotatedPackage : getAnnotatedPackages() ) {
 			sources.addPackage( annotatedPackage );
 		}
 		for ( String ormXmlFile : getXmlFiles() ) {
-			sources.addInputStream( currentThread().getContextClassLoader().getResourceAsStream( ormXmlFile ) );
+			sources.addMappingResource( ormXmlFile );
 		}
 	}
 
@@ -297,14 +297,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		return NO_MAPPINGS;
 	}
 
-	protected void afterMetadataSourcesApplied(MetadataSources metadataSources) {
-	}
-
-	protected void initialize(MetadataBuilder metadataBuilder) {
-		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
-	}
-
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
+	protected void afterMetadataSourcesApplied(MappingSources metadataSources) {
 	}
 
 	protected boolean overrideCacheStrategy() {
@@ -376,9 +369,8 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		//		it reads the class/collection mappings and creates corresponding
 		//		CacheRegionDescription references.
 		//
-		//		Ultimately I want those to go on MetadataBuilder, and in fact MetadataBuilder
-		//		already defines the needed method.  But for the [pattern used by the
-		//		tests we need this as part of SessionFactory options
+		//		For the pattern used by the tests we need this as part of
+		//		SessionFactory options.
 	}
 
 	protected void configureSessionFactoryOptions(SessionFactoryOptionsCollector optionsCollector) {

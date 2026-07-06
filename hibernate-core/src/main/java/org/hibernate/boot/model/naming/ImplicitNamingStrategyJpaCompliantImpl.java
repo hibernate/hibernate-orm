@@ -295,7 +295,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 * Obtain a {@link NamingHelper} for use in constraint name generation.
 	 */
 	protected NamingHelper namingHelper(MetadataBuildingContext context) {
-		return NamingHelper.withCharset( context.getBuildingOptions().getSchemaCharset() );
+		return NamingHelper.withCharset( context.getBuildingPlan().getSchemaCharset() );
 	}
 
 	/**

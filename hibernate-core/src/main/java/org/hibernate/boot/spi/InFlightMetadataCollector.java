@@ -4,17 +4,12 @@
  */
 package org.hibernate.boot.spi;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.function.Function;
-
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
-import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -27,13 +22,12 @@ import org.hibernate.boot.model.internal.AnnotatedClassType;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -55,7 +49,10 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
 
-import jakarta.persistence.AttributeConverter;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * An in-flight representation of {@link org.hibernate.boot.Metadata} while it is being built.
@@ -99,7 +96,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	/**
 	 * A map of {@link PersistentClass} by entity name.
-	 * Needed for {@link SecondPass} handling.
 	 */
 	Map<String, PersistentClass> getEntityBindingMap();
 
@@ -295,16 +291,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// second passes
-
-	@Remove
-	void addSecondPass(SecondPass secondPass);
-
-	@Remove
-	void addSecondPass(SecondPass sp, boolean onTopOfTheQueue);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// stuff needed for annotation binding :(
 
 	void addTableNameBinding(Identifier logicalName, Table table);
@@ -347,14 +333,8 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
 	PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails persistentClassDetails, String propertyName);
 
-	@Remove
-	boolean isInSecondPass();
-
 	NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName);
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
-
-	@Remove
-	void registerValueMappingResolver(Function<MetadataBuildingContext,Boolean> resolver);
 
 	void addJavaTypeRegistration(Class<?> javaType, JavaType<?> jtd);
 	void addJdbcTypeRegistration(int typeCode, JdbcType jdbcType);
@@ -385,8 +365,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	String getFromMappedBy(String ownerEntityName, String propertyName);
 
 	interface EntityTableXref {
-		@Remove
-		void addSecondaryTable(LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin);
 		void addSecondaryTable(QualifiedTableName logicalName, Join secondaryTableJoin);
 		Table resolveTable(Identifier tableName);
 		Table getPrimaryTable();

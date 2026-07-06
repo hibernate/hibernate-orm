@@ -19,7 +19,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
@@ -78,7 +78,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@Before
 	public void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
-		entityManagerFactory = SessionFactoryBootstrap.build( buildPersistenceUnitDescriptor(), buildSettings() )
+		entityManagerFactory = BootstrapPipeline.build( buildPersistenceUnitDescriptor(), buildSettings() )
 				.unwrap( SessionFactoryImplementor.class );
 		serviceRegistry = (StandardServiceRegistryImpl)
 				entityManagerFactory.getServiceRegistry().getParentServiceRegistry();

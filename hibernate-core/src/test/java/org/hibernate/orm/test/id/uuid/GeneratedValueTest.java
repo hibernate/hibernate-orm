@@ -9,12 +9,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -42,12 +41,7 @@ public class GeneratedValueTest {
 				.applySetting( HBM2DDL_AUTO, "create-drop" )
 				.build();
 		try {
-			var metadata = (MetadataImplementor)
-					new MetadataSources( ssr )
-							.addAnnotatedClass( TheEntity.class )
-							.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+			var metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, TheEntity.class );
 
 			var entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
 			assertEquals( UUID.class, entityBinding.getIdentifier().getType().getReturnedClass() );
@@ -59,7 +53,7 @@ public class GeneratedValueTest {
 			assertTyping( UuidGenerator.class, generator );
 
 			// now a functional test
-			try (var sf = metadata.buildSessionFactory()) {
+			try (var sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 				TheEntity theEntity = new TheEntity();
 
 				var s = sf.openSession();

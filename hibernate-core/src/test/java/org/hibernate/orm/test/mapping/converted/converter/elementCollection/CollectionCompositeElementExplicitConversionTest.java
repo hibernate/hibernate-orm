@@ -20,13 +20,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -57,13 +57,11 @@ public class CollectionCompositeElementExplicitConversionTest {
 
 	@Test
 	public void testCollectionOfEmbeddablesWithConvertedAttributes(ServiceRegistryScope scope) throws Exception {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Disguise.class )
-				.addAnnotatedClass( Traits.class )
-				.buildMetadata();
-
-		metadata.orderColumns( false );
-		metadata.validate();
+		final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+				scope.getRegistry(),
+				Disguise.class,
+				Traits.class
+		);
 
 		final PersistentClass entityBinding = metadata.getEntityBinding( Disguise.class.getName() );
 

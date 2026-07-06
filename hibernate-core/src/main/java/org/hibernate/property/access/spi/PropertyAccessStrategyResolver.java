@@ -13,7 +13,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 //TODO: moving forward I'd prefer this not be a service, but instead a
-//      strategy on the MetadataBuildingContext or MetadataBuildingOptions
+//      strategy on the MetadataBuildingContext or MappingResolutionOptions
 public interface PropertyAccessStrategyResolver extends Service {
 	/**
 	 * Resolve the PropertyAccessStrategy to use

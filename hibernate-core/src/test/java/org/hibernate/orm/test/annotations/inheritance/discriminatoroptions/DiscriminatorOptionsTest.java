@@ -5,12 +5,13 @@
 package org.hibernate.orm.test.annotations.inheritance.discriminatoroptions;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -31,10 +32,7 @@ public class DiscriminatorOptionsTest {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( BaseClass.class )
-					.addAnnotatedClass( SubClass.class )
-					.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, BaseClass.class, SubClass.class );
 
 			PersistentClass persistentClass = metadata.getEntityBinding( BaseClass.class.getName() );
 			assertNotNull( persistentClass );
@@ -54,10 +52,7 @@ public class DiscriminatorOptionsTest {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( BaseClass2.class )
-					.addAnnotatedClass( SubClass2.class )
-					.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, BaseClass2.class, SubClass2.class );
 
 			PersistentClass persistentClass = metadata.getEntityBinding( BaseClass2.class.getName() );
 			assertNotNull( persistentClass );
@@ -73,15 +68,12 @@ public class DiscriminatorOptionsTest {
 
 	@Test
 	public void testPropertyBasedDiscriminatorForcing() {
-		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( MappingSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS, true )
+				.build();
 
 		try {
-			Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( BaseClass2.class )
-					.addAnnotatedClass( SubClass2.class )
-					.getMetadataBuilder()
-					.enableImplicitForcingOfDiscriminatorsInSelect( true )
-					.build();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, BaseClass2.class, SubClass2.class );
 
 			PersistentClass persistentClass = metadata.getEntityBinding( BaseClass2.class.getName() );
 			assertNotNull( persistentClass );

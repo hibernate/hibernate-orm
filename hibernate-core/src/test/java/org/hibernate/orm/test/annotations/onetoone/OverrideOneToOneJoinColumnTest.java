@@ -9,12 +9,12 @@ import java.util.Optional;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -45,10 +45,7 @@ public class OverrideOneToOneJoinColumnTest {
 	@Test
 	public void allowIfJoinColumnIsAbsent() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( Person.class )
-					.addAnnotatedClass( State.class )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( ssr, Person.class, State.class );
 
 			final Table personTable = metadata.getDatabase().getDefaultNamespace().locateTable(
 					Identifier.toIdentifier( "PERSON_TABLE" ) );
@@ -69,11 +66,7 @@ public class OverrideOneToOneJoinColumnTest {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final AnnotationException ex = assertThrows(
 					AnnotationException.class, () ->
-							new MetadataSources( ssr )
-									.addAnnotatedClass( Employee.class )
-									.addAnnotatedClass( PartTimeEmployee.class )
-									.addAnnotatedClass( Desk.class )
-									.buildMetadata()
+							MetadataBuildingTestHelper.buildMetadata( ssr, Employee.class, PartTimeEmployee.class, Desk.class )
 			);
 
 			String errorMessage = ex.getMessage();

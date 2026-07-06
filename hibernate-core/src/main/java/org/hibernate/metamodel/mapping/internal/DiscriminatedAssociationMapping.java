@@ -13,7 +13,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Column;
@@ -28,6 +27,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
@@ -77,7 +77,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			MappingModelCreationProcess creationProcess) {
 
 		final var creationContext = creationProcess.getCreationContext();
-		final var sessionFactory = creationContext.getSessionFactory();
+		final var sessionFactoryAccess = creationContext.getSessionFactoryAccess();
 		final var dialect = creationContext.getDialect();
 		final String tableName =
 				getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
@@ -120,7 +120,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				(BasicType<?>) metaType.getBaseType(),
 				metaType.getDiscriminatorValuesToEntityNameMap(),
 				metaType.getImplicitValueStrategy(),
-				sessionFactory.getMappingMetamodel()
+				creationContext.getDomainModel()
 		);
 
 
@@ -154,7 +154,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				bootValueMapping.isLazy()
 						? FetchTiming.DELAYED
 						: FetchTiming.IMMEDIATE,
-				sessionFactory
+				sessionFactoryAccess
 		);
 	}
 
@@ -163,7 +163,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private final BasicValuedModelPart keyPart;
 	private final JavaType<?> baseAssociationJtd;
 	private final FetchTiming fetchTiming;
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 	private AssociationKey associationKey;
 
 	public DiscriminatedAssociationMapping(
@@ -172,13 +172,13 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			BasicValuedModelPart keyPart,
 			JavaType<?> baseAssociationJtd,
 			FetchTiming fetchTiming,
-			SessionFactoryImplementor sessionFactory) {
+			SessionFactoryAccess sessionFactoryAccess) {
 		this.modelPart = modelPart;
 		this.discriminatorPart = discriminatorPart;
 		this.keyPart = keyPart;
 		this.baseAssociationJtd = baseAssociationJtd;
 		this.fetchTiming = fetchTiming;
-		this.sessionFactory = sessionFactory;
+		this.sessionFactoryAccess = sessionFactoryAccess;
 	}
 
 	public DiscriminatedAssociationModelPart getModelPart() {
@@ -259,6 +259,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
+		final var sessionFactory = sessionFactoryAccess.getSessionFactory();
 		final String entityName =
 				session == null
 						? sessionFactory.bestGuessEntityName( entity )

@@ -4,12 +4,12 @@
  */
 package org.hibernate.orm.test.schemavalidation;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 
@@ -94,11 +94,11 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 				)
 				.build();
 		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
-			metadataSources.addAnnotatedClass( TestEntity.class );
-
-			new SchemaValidator().validate( metadataSources.buildMetadata() );
+			new SchemaValidator().validate( MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					TestEntityWithSynonym.class,
+					TestEntity.class
+			) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -114,11 +114,11 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.build();
 		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
-			metadataSources.addAnnotatedClass( TestEntity.class );
-
-			new SchemaValidator().validate( metadataSources.buildMetadata() );
+			new SchemaValidator().validate( MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					TestEntityWithSynonym.class,
+					TestEntity.class
+			) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -141,11 +141,11 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 				)
 				.build();
 		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( TestEntityWithSynonym.class );
-			metadataSources.addAnnotatedClass( TestEntity.class );
-
-			new SchemaValidator().validate( metadataSources.buildMetadata() );
+			new SchemaValidator().validate( MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					TestEntityWithSynonym.class,
+					TestEntity.class
+			) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

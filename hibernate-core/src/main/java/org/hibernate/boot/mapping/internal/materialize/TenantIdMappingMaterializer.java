@@ -98,11 +98,13 @@ public class TenantIdMappingMaterializer {
 		);
 
 		if ( isRowLevelSecurityEnabled( bindingState.getMetadataBuildingContext() ) ) {
-			addRowLevelSecurity(
-					bindingState.getDatabase().getDialect().getRowLevelSecurity(),
-					bindingState.getMetadataBuildingContext().getMetadataCollector(),
-					bindingState.getMetadataBuildingContext(),
-					property
+			bindingState.addPostAttributeValueResolution( () ->
+					addRowLevelSecurity(
+							bindingState.getDatabase().getDialect().getRowLevelSecurity(),
+							bindingState.getMetadataBuildingContext().getMetadataCollector(),
+							bindingState.getMetadataBuildingContext(),
+							property
+					)
 			);
 		}
 
@@ -142,7 +144,7 @@ public class TenantIdMappingMaterializer {
 	private static boolean isRowLevelSecurityEnabled(MetadataBuildingContext buildingContext) {
 		return getBoolean(
 				MULTI_TENANT_RLS_ENABLED,
-				buildingContext.getBootstrapContext().getConfigurationService().getSettings(),
+				buildingContext.getConfigurationService().getSettings(),
 				true
 		);
 	}
@@ -171,10 +173,9 @@ public class TenantIdMappingMaterializer {
 	}
 
 	private static boolean hasTenantCredentialsMapper(MetadataBuildingContext buildingContext) {
-		final var bootstrapContext = buildingContext.getBootstrapContext();
-		final var settings = bootstrapContext.getConfigurationService().getSettings();
+		final var settings = buildingContext.getConfigurationService().getSettings();
 		return settings.get( MULTI_TENANT_CREDENTIALS_MAPPER ) != null
-				|| getTenantCredentialsMapper( settings, bootstrapContext.getServiceRegistry() ) != null;
+				|| getTenantCredentialsMapper( settings, buildingContext.getStandardServiceRegistry() ) != null;
 	}
 
 	private static String columnNameOrFormula(Property property) {

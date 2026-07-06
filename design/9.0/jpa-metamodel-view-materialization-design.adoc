@@ -406,7 +406,7 @@ points are removed or routed through the resolved pipeline.
 == Open Questions
 
 * Which boot product should own the final `JpaStaticMetamodelInjectionPlan`:
-  `ResolvedMetadata`, the mapping materialization result, or a broader
+  `ResolvedMapping`, the mapping materialization result, or a broader
   bootstrap result object?
 * Should view references in the plan be direct internal view instances, stable
   binding-model keys, or JPA-package-owned reference objects?

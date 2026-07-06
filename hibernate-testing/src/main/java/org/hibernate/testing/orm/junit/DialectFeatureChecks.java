@@ -13,7 +13,7 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.pipeline.internal.MappingResolutionServicesImpl;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
@@ -42,10 +42,10 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionServices;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -106,6 +106,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -134,7 +135,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -1669,17 +1669,19 @@ abstract public class DialectFeatureChecks {
 
 		private final TypeConfiguration typeConfiguration;
 		private final SqmFunctionRegistry functionRegistry;
-		private final MetadataBuilderImpl.MetadataBuildingOptionsImpl options;
+		private final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl buildingPlan;
 		private final BootstrapContextImpl bootstrapContext;
+		private final MappingResolutionServices serviceComponents;
 		private final Database database;
 
 		public FakeMetadataBuildingContext(TypeConfiguration typeConfiguration, SqmFunctionRegistry functionRegistry) {
 			this.typeConfiguration = typeConfiguration;
 			this.functionRegistry = functionRegistry;
 			this.bootstrapContext = new BootstrapContextImpl();
-			this.options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( bootstrapContext.getServiceRegistry() );
-			this.options.setBootstrapContext( bootstrapContext );
-			this.database = new Database( options, null );
+			this.serviceComponents = new MappingResolutionServicesImpl( bootstrapContext );
+			this.buildingPlan = new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( bootstrapContext.getServiceRegistry() );
+			this.buildingPlan.setBootstrapContext( bootstrapContext );
+			this.database = new Database( buildingPlan, null );
 		}
 
 		@Override
@@ -1688,8 +1690,18 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public MetadataBuildingOptions getBuildingOptions() {
-			return options;
+		public MappingResolutionServices getServiceComponents() {
+			return serviceComponents;
+		}
+
+		@Override
+		public ModelsContext getModelsContext() {
+			return MetadataBuildingContext.super.getModelsContext();
+		}
+
+		@Override
+		public MappingResolutionOptions getBuildingPlan() {
+			return buildingPlan;
 		}
 
 		@Override
@@ -1698,8 +1710,8 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public MetadataBuildingOptions getMetadataBuildingOptions() {
-			return options;
+		public MappingResolutionOptions getMappingResolutionOptions() {
+			return buildingPlan;
 		}
 
 		@Override
@@ -1891,16 +1903,6 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addSecondPass(SecondPass secondPass) {
-
-		}
-
-		@Override
-		public void addSecondPass(SecondPass sp, boolean onTopOfTheQueue) {
-
-		}
-
-		@Override
 		public void addTableNameBinding(Identifier logicalName, Table table) {
 
 		}
@@ -2030,22 +2032,12 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public boolean isInSecondPass() {
-			return false;
-		}
-
-		@Override
 		public NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName) {
 			return null;
 		}
 
 		@Override
 		public void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder) {
-
-		}
-
-		@Override
-		public void registerValueMappingResolver(Function<MetadataBuildingContext, Boolean> resolver) {
 
 		}
 
@@ -2155,11 +2147,6 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public Map<String, Join> getJoins(String entityName) {
 			return Map.of();
-		}
-
-		@Override
-		public SessionFactoryImplementor buildSessionFactory() {
-			return null;
 		}
 
 		@Override

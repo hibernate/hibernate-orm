@@ -5,7 +5,9 @@
 package org.hibernate.type.format;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 
 
 /**
@@ -15,4 +17,11 @@ import org.hibernate.boot.spi.BootstrapContext;
 public interface FormatMapperCreationContext {
 	BootstrapContext getBootstrapContext();
 
+	default ClassLoaderService getClassLoaderService() {
+		return getBootstrapContext().getClassLoaderService();
+	}
+
+	default MappingResolutionOptions getMappingResolutionOptions() {
+		return getBootstrapContext().getMappingResolutionOptions();
+	}
 }

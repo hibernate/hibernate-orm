@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.tool.schema.scripts;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -139,13 +137,6 @@ public class StatementsWithoutTerminalCharsImportFileTest implements ExecutionOp
 			return null;
 		}
 	}
-
-
-	private Metadata buildMappings(StandardServiceRegistry registry) {
-		return new MetadataSources( registry )
-				.buildMetadata();
-	}
-
 	protected StandardServiceRegistry buildJtaStandardServiceRegistry() {
 		StandardServiceRegistry registry = TestingJtaBootstrap.prepare().build();
 		assertThat(

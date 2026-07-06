@@ -24,7 +24,7 @@ public class InstrumentationDetector extends EntityModelDetector {
 		super.initialize(metadata);
 		if (metadata instanceof MetadataImplementor) {
 			final BytecodeProvider bytecodeProvider =
-					((MetadataImplementor)metadata).getMetadataBuildingOptions().getServiceRegistry()
+					((MetadataImplementor)metadata).getMappingResolutionOptions().getServiceRegistry()
 							.getService( BytecodeProvider.class );
 			if(bytecodeProvider != null
 			&& !(bytecodeProvider instanceof org.hibernate.bytecode.internal.none.BytecodeProviderImpl)) {

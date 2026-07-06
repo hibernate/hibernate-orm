@@ -4,11 +4,9 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.composite;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -25,12 +23,7 @@ public class CompositeNaturalIdMappingTest {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			Metadata meta = new MetadataSources( ssr )
-					.addAnnotatedClass( PostalCarrier.class )
-					.addAnnotatedClass( PostalCode.class )
-					.buildMetadata();
-			( (MetadataImplementor) meta ).orderColumns( false );
-			( (MetadataImplementor) meta ).validate();
+			MetadataBuildingTestHelper.buildValidatedMetadata( ssr, PostalCarrier.class, PostalCode.class );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

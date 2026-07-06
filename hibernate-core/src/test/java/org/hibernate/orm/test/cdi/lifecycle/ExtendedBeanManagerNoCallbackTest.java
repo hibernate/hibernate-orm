@@ -10,10 +10,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -30,10 +30,9 @@ public class ExtendedBeanManagerNoCallbackTest {
 				.build();
 
 		// this will trigger trying to locate IdentifierGeneratorFactory as a managed-bean
-		try (SessionFactory sf = new MetadataSources( ssr )
-				.addAnnotatedClass( TheEntity.class )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( ssr, TheEntity.class )
+		)) {
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

@@ -16,7 +16,7 @@ import org.hibernate.type.SqlTypes;
  * aggregate column storage, the normalized aggregate value JDBC type, and the
  * logical aggregate member container before those facts are projected into
  * {@code Component}, {@code BasicValue}, {@code AggregateColumn}, and
- * {@code AggregateComponentSecondPass}.
+ * aggregate component finalization.
  *
  * @since 9.0
  * @author Steve Ebersole
@@ -81,7 +81,7 @@ public record AggregateValuePlan(
 	}
 
 	private static int getStructPluralSqlTypeCode(BindingState state) {
-		return switch ( state.getMetadataBuildingContext().getPreferredSqlTypeCodeForArray() ) {
+		return switch ( state.getMetadataBuildingContext().getBuildingPlan().getPreferredSqlTypeCodeForArray() ) {
 			case SqlTypes.ARRAY -> SqlTypes.STRUCT_ARRAY;
 			case SqlTypes.TABLE -> SqlTypes.STRUCT_TABLE;
 			default -> throw new UnsupportedOperationException(

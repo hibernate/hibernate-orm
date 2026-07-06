@@ -9,9 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -22,6 +22,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.Jira;
@@ -52,17 +53,20 @@ public class PooledWithCustomNamingStrategyTest {
 	public void testWrongIncrementSize() {
 		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		registryBuilder.applySetting( AvailableSettings.PHYSICAL_NAMING_STRATEGY, MyPhysicalNamingStrategy.INSTANCE );
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClass( WrongEntity.class )
-				.buildMetadata();
-		try (final SessionFactory sf = metadata.buildSessionFactory()) {
-			fail( "Default increment size of [50] should not work with the database sequence increment size [1]." );
-		}
-		catch (Exception e) {
-			assertThat( e.getMessage() ).isEqualTo(
-					"The increment size of the [MY_SEQ] sequence is set to [50] in the entity " +
-							"mapping but the mapped database sequence increment size is [5]"
+		try (StandardServiceRegistry serviceRegistry = registryBuilder.build()) {
+			final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					WrongEntity.class
 			);
+			try (final SessionFactory sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
+				fail( "Default increment size of [50] should not work with the database sequence increment size [1]." );
+			}
+			catch (Exception e) {
+				assertThat( e.getMessage() ).isEqualTo(
+						"The increment size of the [MY_SEQ] sequence is set to [50] in the entity " +
+								"mapping but the mapped database sequence increment size is [5]"
+				);
+			}
 		}
 	}
 
@@ -70,20 +74,23 @@ public class PooledWithCustomNamingStrategyTest {
 	public void testRightIncrementSize() {
 		final StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		registryBuilder.applySetting( AvailableSettings.PHYSICAL_NAMING_STRATEGY, MyPhysicalNamingStrategy.INSTANCE );
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClass( RightEntity.class )
-				.buildMetadata();
-		try (final SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory()) {
-			// session factory should be created correctly
-			inTransaction( sf, session -> session.persist( new RightEntity() ) );
-			inTransaction( sf, session -> {
-				final RightEntity result = session.createQuery( "from RightEntity", RightEntity.class )
-						.getSingleResult();
-				assertThat( result.id ).isNotNull();
-			} );
-		}
-		catch (Exception e) {
-			fail( "Expected configured increment size of [1] to be compatible with the existing sequence" );
+		try (StandardServiceRegistry serviceRegistry = registryBuilder.build()) {
+			final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					RightEntity.class
+			);
+			try (final SessionFactoryImplementor sf = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
+				// session factory should be created correctly
+				inTransaction( sf, session -> session.persist( new RightEntity() ) );
+				inTransaction( sf, session -> {
+					final RightEntity result = session.createQuery( "from RightEntity", RightEntity.class )
+							.getSingleResult();
+					assertThat( result.id ).isNotNull();
+				} );
+			}
+			catch (Exception e) {
+				fail( "Expected configured increment size of [1] to be compatible with the existing sequence" );
+			}
 		}
 	}
 

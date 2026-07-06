@@ -5,22 +5,30 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.internal.RootMappingDefaults;
-import org.hibernate.boot.models.AvailableResources;
+import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
+import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.boot.mapping.internal.xml.XmlProcessor;
 import org.hibernate.boot.mapping.internal.xml.XmlPreProcessor;
 import org.hibernate.boot.mapping.internal.xml.XmlPreProcessingResult;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
+
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Transient;
 
 import static org.hibernate.boot.mapping.internal.categorize.EntityHierarchyBuilder.createEntityHierarchies;
 
-/// Processes {@linkplain AvailableResources available resources} and produces a
+/// Processes {@linkplain PreparedMappingSources resolved mapping sources} and produces a
 /// {@linkplain CategorizedDomainModel categorized domain model}.
 ///
 /// XML mappings are pre-processed first so they can contribute managed class names
@@ -40,18 +48,16 @@ public class DomainModelCategorizer {
 	}
 
 	public static CategorizedDomainModel categorize(
-			AvailableResources availableResources,
+			PreparedMappingSources resolvedMappingSources,
 			MetadataBuildingContext metadataBuildingContext) {
-		final var bootstrapContext = metadataBuildingContext.getBootstrapContext();
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// 	- pre-process the XML
 		// 	- collect all known classes
-		// 	- use the BootstrapContext's ModelsContext
+		// 	- use the MetadataBuildingContext's ModelsContext
 		//
 		// INPUTS:
-		//		- availableResources
-		//		- bootstrapContext
+		//		- resolvedMappingSources
+		//		- metadataBuildingContext
 		//
 		// OUTPUTS:
 		//		- availableXmlMappings
@@ -60,13 +66,13 @@ public class DomainModelCategorizer {
 
 		final var persistenceUnitMetadata = metadataBuildingContext.getMetadataCollector().getPersistenceUnitMetadata();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
-				availableResources,
+				resolvedMappingSources,
 				persistenceUnitMetadata
 		);
 
 		final List<String> allKnownClassNames = new ArrayList<>( xmlPreProcessingResult.getMappedClasses() );
-		availableResources.managedClassDetails().forEach( (classDetails) -> allKnownClassNames.add( classDetails.getName() ) );
-		availableResources.packageDetails().forEach( (packageDetails) -> allKnownClassNames.add( packageDetails.getName() ) );
+		resolvedMappingSources.managedClassDetails().forEach( (classDetails) -> allKnownClassNames.add( classDetails.getName() ) );
+		resolvedMappingSources.packageDetails().forEach( (packageDetails) -> allKnownClassNames.add( packageDetails.getName() ) );
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +93,7 @@ public class DomainModelCategorizer {
 
 		// JPA id generator global-ity thing
 		final boolean areIdGeneratorsGlobal = true;
-		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
+		final ModelsContext modelsContext = metadataBuildingContext.getModelsContext();
 		final ClassDetailsRegistry mutableClassDetailsRegistry = modelsContext.getClassDetailsRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
@@ -101,7 +107,7 @@ public class DomainModelCategorizer {
 				persistenceUnitMetadata,
 				modelCategorizationCollector::apply,
 				modelsContext,
-				bootstrapContext,
+				metadataBuildingContext,
 				mappingDefaults
 		);
 
@@ -134,8 +140,8 @@ public class DomainModelCategorizer {
 				persistenceUnitMetadata,
 				mappingDefaults,
 				mutableClassDetailsRegistry,
-				bootstrapContext.getMetadataBuildingOptions().getSharedCacheMode(),
-				bootstrapContext.getMetadataBuildingOptions().getImplicitCacheAccessType(),
+				metadataBuildingContext.getBuildingPlan().getSharedCacheMode(),
+				metadataBuildingContext.getBuildingPlan().getImplicitCacheAccessType(),
 				modelCategorizationCollector.getGlobalRegistrations(),
 				metadataBuildingContext.getMetadataCollector().getConverterRegistry(),
 				metadataBuildingContext.getMetadataCollector().getDatabase()
@@ -143,12 +149,16 @@ public class DomainModelCategorizer {
 
 		final ManagedTypeInheritanceState inheritanceState = new ManagedTypeInheritanceState(
 				modelCategorizationCollector.getSourcePersistentTypes(),
-				availableResources.includeUnlistedPersistentSuperclasses()
-						? ManagedTypeInheritanceState.MissingPersistentSuperclassHandling.WARN_AND_USE
+				resolvedMappingSources.includeUnlistedStructuralTypes()
+						? ManagedTypeInheritanceState.MissingPersistentSuperclassHandling.INCLUDE
 						: ManagedTypeInheritanceState.MissingPersistentSuperclassHandling.EXCEPTION
 		);
 		inheritanceState.getMappedSuperclasses().forEach(
 				modelCategorizationCollector::applyDiscoveredMappedSuperclass
+		);
+		discoverReachableEmbeddables(
+				modelCategorizationCollector,
+				resolvedMappingSources.includeUnlistedStructuralTypes()
 		);
 		final Set<EntityHierarchy> entityHierarchies = createEntityHierarchies(
 				inheritanceState,
@@ -158,13 +168,125 @@ public class DomainModelCategorizer {
 		return modelCategorizationCollector.createResult( entityHierarchies );
 	}
 
+	private static void discoverReachableEmbeddables(
+			DomainModelCategorizationCollector modelCategorizationCollector,
+			boolean includeUnlistedStructuralTypes) {
+		final Set<String> processedTypeNames = new LinkedHashSet<>();
+		final List<ClassDetails> typesToProcess = new ArrayList<>();
+		typesToProcess.addAll( modelCategorizationCollector.getSourcePersistentTypes() );
+		typesToProcess.addAll( modelCategorizationCollector.getEmbeddables().values() );
+
+		for ( int i = 0; i < typesToProcess.size(); i++ ) {
+			final ClassDetails typeToProcess = typesToProcess.get( i );
+			if ( !processedTypeNames.add( typeKey( typeToProcess ) ) ) {
+				continue;
+			}
+			discoverReachableEmbeddables(
+					typeToProcess,
+					modelCategorizationCollector,
+					includeUnlistedStructuralTypes,
+					typesToProcess
+			);
+		}
+	}
+
+	private static void discoverReachableEmbeddables(
+			ClassDetails declaringType,
+			DomainModelCategorizationCollector modelCategorizationCollector,
+			boolean includeUnlistedStructuralTypes,
+			List<ClassDetails> typesToProcess) {
+		for ( MemberDetails member : persistentMembers( declaringType ) ) {
+			collectReachableEmbeddable(
+					declaringType,
+					member,
+					member.getType().determineRelativeType( declaringType ),
+					modelCategorizationCollector,
+					includeUnlistedStructuralTypes,
+					typesToProcess
+			);
+			if ( member.isPlural() ) {
+				collectReachableEmbeddable(
+						declaringType,
+						member,
+						determineRelativeType( member.getElementType(), declaringType ),
+						modelCategorizationCollector,
+						includeUnlistedStructuralTypes,
+						typesToProcess
+				);
+				collectReachableEmbeddable(
+						declaringType,
+						member,
+						determineRelativeType( member.getMapKeyType(), declaringType ),
+						modelCategorizationCollector,
+						includeUnlistedStructuralTypes,
+						typesToProcess
+				);
+			}
+		}
+	}
+
+	private static Collection<MemberDetails> persistentMembers(ClassDetails declaringType) {
+		final List<MemberDetails> persistentMembers = new ArrayList<>();
+		declaringType.getFields().forEach( (field) -> {
+			if ( field.isPersistable() && !field.hasDirectAnnotationUsage( Transient.class ) ) {
+				persistentMembers.add( field );
+			}
+		} );
+		declaringType.getMethods().forEach( (method) -> {
+			if ( method.isPersistable() && !method.hasDirectAnnotationUsage( Transient.class ) ) {
+				persistentMembers.add( method );
+			}
+		} );
+		return persistentMembers;
+	}
+
+	private static TypeDetails determineRelativeType(TypeDetails typeDetails, ClassDetails declaringType) {
+		return typeDetails == null ? null : typeDetails.determineRelativeType( declaringType );
+	}
+
+	private static void collectReachableEmbeddable(
+			ClassDetails declaringType,
+			MemberDetails member,
+			TypeDetails memberType,
+			DomainModelCategorizationCollector modelCategorizationCollector,
+			boolean includeUnlistedStructuralTypes,
+			List<ClassDetails> typesToProcess) {
+		if ( memberType == null ) {
+			return;
+		}
+		final ClassDetails embeddableType = memberType.determineRawClass();
+		if ( embeddableType == null
+				|| !embeddableType.hasDirectAnnotationUsage( Embeddable.class )
+				|| modelCategorizationCollector.getEmbeddables().containsKey( embeddableType.getClassName() ) ) {
+			return;
+		}
+
+		if ( !includeUnlistedStructuralTypes ) {
+			throw new MappingException(
+					"Embeddable `%s` referenced by `%s#%s` was not included in PreparedMappingSources".formatted(
+							embeddableType.getName(),
+							declaringType.getName(),
+							member.resolveAttributeName()
+					)
+			);
+		}
+
+		modelCategorizationCollector.applyDiscoveredEmbeddable( embeddableType );
+		typesToProcess.add( embeddableType );
+	}
+
+	private static String typeKey(ClassDetails classDetails) {
+		final String className = classDetails.getClassName();
+		return className == null ? classDetails.getName() : className;
+	}
+
 	private static RootMappingDefaults rootMappingDefaults(MetadataBuildingContext metadataBuildingContext) {
 		if ( metadataBuildingContext.getEffectiveDefaults() instanceof RootMappingDefaults rootMappingDefaults ) {
 			return rootMappingDefaults;
 		}
 
 		return new RootMappingDefaults(
-				metadataBuildingContext.getBuildingOptions().getMappingDefaults(),
+				metadataBuildingContext.getBuildingPlan().getMappingDefaults(),
 				metadataBuildingContext.getMetadataCollector().getPersistenceUnitMetadata()
 		);
 	}

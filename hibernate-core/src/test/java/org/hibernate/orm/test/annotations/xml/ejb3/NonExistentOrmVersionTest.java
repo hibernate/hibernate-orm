@@ -5,9 +5,10 @@
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
 import org.hibernate.InvalidMappingException;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKeyGroup;
@@ -25,10 +26,12 @@ public class NonExistentOrmVersionTest {
 
 	@Test
 	public void testNonExistentOrmVersion() {
-		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
-			assertThrows( InvalidMappingException.class, () -> new MetadataSources( serviceRegistry )
-							.addResource( "org/hibernate/orm/test/annotations/xml/ejb3/orm5.xml" )
-							.buildMetadata()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			assertThrows( InvalidMappingException.class, () -> MetadataBuildingTestHelper.buildMetadata(
+							serviceRegistry,
+							new MappingSources()
+									.addMappingResource( "org/hibernate/orm/test/annotations/xml/ejb3/orm5.xml" )
+					)
 					, "Expecting failure due to unsupported xsd version"
 			);
 		}

@@ -15,7 +15,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -34,10 +34,7 @@ public class BidirectionalOneToManyNotNullableColumnTest {
 	public void test(ServiceRegistryScope scope) {
 		final AnnotationException exception = assertThrows(
 				AnnotationException.class,
-				() -> new MetadataSources( scope.getRegistry() )
-						.addAnnotatedClass( ParentData.class )
-						.addAnnotatedClass( ChildData.class )
-						.buildMetadata()
+				() -> MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), ParentData.class, ChildData.class )
 		);
 		assertThat( exception.getMessage() )
 				.contains( "may not specify '@OrderColumn(nullable=false)'" );

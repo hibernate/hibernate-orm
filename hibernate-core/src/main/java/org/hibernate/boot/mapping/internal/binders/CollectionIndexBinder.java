@@ -59,9 +59,9 @@ class CollectionIndexBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final BasicValue index = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		final BasicValue index = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		index.setTable( table );
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.listIndex( source.member() ),
 				null,
 				index,
@@ -69,6 +69,7 @@ class CollectionIndexBinder {
 				bindingState,
 				bindingContext
 		);
+		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.orderColumn() ),
@@ -110,7 +111,7 @@ class CollectionIndexBinder {
 
 	private static String implicitListIndexColumnName(CollectionSource source, BindingState bindingState) {
 		return bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineListIndexColumnName( new ImplicitIndexColumnNameSource() {
 					@Override
@@ -246,11 +247,8 @@ class CollectionIndexBinder {
 	private static CompositeUserType<?> instantiateCompositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			BindingContext bindingContext) {
-		return bindingContext.getBootstrapContext().getMetadataBuildingOptions().isAllowExtensionsInCdi()
-				? bindingContext.getBootstrapContext()
-						.getManagedBeanRegistry()
-						.getBean( compositeUserTypeClass )
-						.getBeanInstance()
+		return bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
+				? bindingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 	}
 
@@ -438,13 +436,10 @@ class CollectionIndexBinder {
 					bindingState.getMetadataBuildingContext(),
 					basicValue.getTable(),
 					basicValue,
-					false,
-					false
-			);
-			index.setImplicitJavaTypeAccess( (typeConfiguration) -> basicValue.resolve()
-					.getDomainJavaType()
-					.getJavaType() );
-			for ( Column column : basicValue.getColumns() ) {
+						false,
+						false
+				);
+				for ( Column column : basicValue.getColumns() ) {
 				index.addColumn( column.clone(), false, false );
 			}
 			return index;
@@ -493,6 +488,14 @@ class CollectionIndexBinder {
 		);
 	}
 
+	private static BasicValue.Resolution<?> requireResolution(BasicValue basicValue) {
+		final BasicValue.Resolution<?> resolution = basicValue.getResolution();
+		if ( resolution == null ) {
+			throw new IllegalStateException( "BasicValue resolution has not been applied: " + basicValue );
+		}
+		return resolution;
+	}
+
 	private static Column copyColumn(Table table, Column source, boolean unique) {
 		final Column result = new Column( source.getName() );
 		result.setLength( source.getLength() );
@@ -517,9 +520,9 @@ class CollectionIndexBinder {
 			BindingState bindingState,
 			BindingContext bindingContext,
 			boolean nullableBasicMapKey) {
-		final BasicValue index = new BasicValue( bindingState.getMetadataBuildingContext(), table );
+		final BasicValue index = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		index.setTable( table );
-		BasicValueBinder.bindBasicValue(
+		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.mapKey( source.member(), source.mapKeyType(), bindingContext ),
 				null,
 				index,
@@ -527,6 +530,7 @@ class CollectionIndexBinder {
 				bindingState,
 				bindingContext
 		);
+		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.mapKeyColumn() ),
@@ -548,7 +552,7 @@ class CollectionIndexBinder {
 
 	private static String implicitMapKeyColumnName(CollectionSource source, BindingState bindingState) {
 		return bindingState.getMetadataBuildingContext()
-				.getBuildingOptions()
+				.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineMapKeyColumnName( new ImplicitMapKeyColumnNameSource() {
 					@Override
@@ -638,7 +642,7 @@ class CollectionIndexBinder {
 				column.setNullable( true );
 			}
 			if ( targetColumn != null ) {
-				applyReferencedColumnMetadata( column, targetColumn, bindingState );
+				applyReferencedColumnMetadata( column, targetColumn );
 			}
 			table.addColumn( column );
 			index.addColumn(
@@ -687,9 +691,9 @@ class CollectionIndexBinder {
 		return result[0];
 	}
 
-	private static void applyReferencedColumnMetadata(Column column, Column targetColumn, BindingState bindingState) {
-		column.setSqlType( targetColumn.getSqlType( bindingState.getMetadataBuildingContext().getMetadataCollector() ) );
-		column.setSqlTypeCode( targetColumn.getSqlTypeCode( bindingState.getMetadataBuildingContext().getMetadataCollector() ) );
+	private static void applyReferencedColumnMetadata(Column column, Column targetColumn) {
+		column.setSqlType( targetColumn.getSqlType() );
+		column.setSqlTypeCode( targetColumn.getSqlTypeCode() );
 		column.setLength( targetColumn.getLength() );
 		column.setPrecision( targetColumn.getPrecision() );
 		column.setScale( targetColumn.getScale() );

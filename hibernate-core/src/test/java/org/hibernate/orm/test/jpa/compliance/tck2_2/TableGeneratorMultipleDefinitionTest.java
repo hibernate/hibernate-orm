@@ -10,8 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -30,10 +30,7 @@ public class TableGeneratorMultipleDefinitionTest {
 	@Test
 	public void testDuplicateGeneratorNamesDefinition(ServiceRegistryScope scope) {
 		Assertions.assertThrows( IllegalArgumentException.class, () -> {
-					new MetadataSources( scope.getRegistry() )
-							.addAnnotatedClass( TestEntity2.class )
-							.addAnnotatedClass( TestEntity1.class )
-							.buildMetadata();
+					MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), TestEntity2.class, TestEntity1.class );
 				}
 		);
 	}

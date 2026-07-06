@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
@@ -30,7 +30,7 @@ public class SessionFactoryObserverTest {
 		settings.put( AvailableSettings.SESSION_FACTORY_OBSERVER, GoofySessionFactoryObserver.class.getName() );
 
 		try {
-			final EntityManagerFactory entityManagerFactory = SessionFactoryBootstrap.build(
+			final EntityManagerFactory entityManagerFactory = BootstrapPipeline.build(
 					new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
 					settings
 			);

@@ -5,16 +5,16 @@
 package org.hibernate.orm.test.namingstrategy.complete;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -30,13 +30,16 @@ public abstract class BaseNamingTests {
 
 	@Test
 	public void doTest() {
-		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() );
+		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
-			applySources( metadataSources );
+			final MappingSources mappingSources = new MappingSources();
+			applySources( mappingSources );
 
-			final Metadata metadata = metadataSources.getMetadataBuilder()
-					.applyImplicitNamingStrategy( getImplicitNamingStrategyToUse() )
-					.build();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+					serviceRegistry,
+					mappingSources,
+					getImplicitNamingStrategyToUse()
+			);
 
 			validateCustomer( metadata );
 			validateOrder( metadata );
@@ -48,14 +51,11 @@ public abstract class BaseNamingTests {
 			validateCustomerIndustries( metadata );
 		}
 		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if ( metaServiceRegistry instanceof BootstrapServiceRegistry ) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
-	protected abstract void applySources(MetadataSources metadataSources);
+	protected abstract void applySources(MappingSources mappingSources);
 
 	protected abstract ImplicitNamingStrategy getImplicitNamingStrategyToUse();
 

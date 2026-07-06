@@ -145,6 +145,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
+import static org.hibernate.boot.model.internal.AuditHelper.findFirstAuditOverrideForProperty;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ELEMENT;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
@@ -1662,7 +1663,8 @@ public abstract class CollectionBinder {
 						collection,
 						oneToMany.getReferencedEntityName(),
 						extract( Audited.CollectionTable.class, property, buildingContext ),
-						buildingContext
+						buildingContext,
+						propertyName
 				);
 			}
 		}
@@ -2548,13 +2550,22 @@ public abstract class CollectionBinder {
 			return;
 		}
 		final var audited = extract( Audited.class, property, buildingContext );
-		if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+		if ( audited != null && !isEffectivelyExcluded() ) {
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
-					buildingContext
+					buildingContext,
+					propertyName
 			);
 		}
+	}
+
+	private boolean isEffectivelyExcluded() {
+		var firstOverride = findFirstAuditOverrideForProperty( propertyHolder.getPersistentClass(), propertyName );
+		if ( firstOverride != null ) {
+			return !firstOverride.isAudited();
+		}
+		return this.property.hasDirectAnnotationUsage( Audited.Excluded.class );
 	}
 
 	private static <T extends Annotation> T extract(

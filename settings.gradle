@@ -5,6 +5,12 @@
 
 pluginManagement {
     repositories {
+        // mavenCentral() is listed explicitly so that mirrors (gradle/mirror.gradle)
+        // can intercept the well-known "MavenRepo" repository name.
+        // It must come before gradlePluginPortal():
+        // the portal redirects to Maven Central with HTTP 303,
+        // which some mirrors don't handle.
+        mavenCentral()
         gradlePluginPortal()
         maven {
             name = 'localPluginRepository'
@@ -13,6 +19,11 @@ pluginManagement {
     }
 
     includeBuild 'local-build-plugins'
+
+    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+    // Applied inside pluginManagement so that repos are rewritten before settings plugins
+    // are resolved at the plugins {} block; lifecycle callbacks handle per-project repos.
+    apply from: 'gradle/mirror.gradle'
 }
 
 plugins {
@@ -24,18 +35,7 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
-        // See MAINTAINERS.md for documentation.
-        // TODO Move to infra overrides instead;
-        //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        if ( System.env['MAVEN_MIRROR'] ) {
-            maven {
-                url System.env['MAVEN_MIRROR']
-                allowInsecureProtocol = true
-            }
-        }
-        else {
-            mavenCentral()
-        }
+        mavenCentral()
 
         if (System.getProperty('JPA_PREVIEW') != null) {
 			maven {
@@ -373,5 +373,4 @@ rootProject.children.each { project ->
     assert project.buildFile.isFile()
 }
 include 'hibernate-platform'
-
 

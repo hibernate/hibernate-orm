@@ -29,20 +29,114 @@ public abstract class AbstractMavenTestIT {
 	public static void initMavenCli() throws Exception {
 		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
 		mavenCli = new MavenCli( classWorld );
-		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
-		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
-			mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
-			Files.writeString( mavenSettingsFile,
-					"<settings>\n" +
-					"  <mirrors>\n" +
-					"    <mirror>\n" +
-					"      <id>ci-mirror</id>\n" +
-					"      <mirrorOf>central</mirrorOf>\n" +
-					"      <url>${env.MAVEN_MIRROR}</url>\n" +
-					"    </mirror>\n" +
-					"  </mirrors>\n" +
-					"</settings>\n" );
+		String centralMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_URL" );
+		String centralMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_USERNAME" );
+		String centralFallback = System.getenv( "MIRROR_MAVEN_CENTRAL_FALLBACK" );
+		String snapshotsMirror = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL" );
+		String snapshotsMirrorUsername = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME" );
+		String snapshotsFallback = System.getenv( "MIRROR_MAVEN_CENTRAL_SNAPSHOTS_FALLBACK" );
+		mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
+		StringBuilder settings = new StringBuilder( "<settings>\n" );
+		boolean hasCentralMirror = centralMirror != null && !centralMirror.isEmpty();
+		boolean hasSnapshotsMirror = snapshotsMirror != null && !snapshotsMirror.isEmpty();
+		if ( hasCentralMirror || hasSnapshotsMirror ) {
+			settings.append( "<mirrors>\n" );
+			if ( hasCentralMirror ) {
+				settings.append( """
+							<mirror>
+							<id>ci-mirror-central</id>
+							<mirrorOf>central</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_URL}</url>
+							</mirror>
+						""" );
+			}
+			if ( hasSnapshotsMirror ) {
+				settings.append( """
+							<mirror>
+							<id>ci-mirror-snapshots</id>
+							<mirrorOf>jakarta-snapshots</mirrorOf>
+							<url>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL}</url>
+							</mirror>
+						""" );
+			}
+			settings.append( "</mirrors>\n" );
 		}
+		boolean hasServers = centralMirrorUsername != null || snapshotsMirrorUsername != null;
+		if ( hasServers ) {
+			settings.append( "<servers>\n" );
+			if ( centralMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-central</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			if ( snapshotsMirrorUsername != null ) {
+				settings.append( """
+							<server>
+							<id>ci-mirror-snapshots</id>
+							<username>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME}</username>
+							<password>${env.MIRROR_MAVEN_CENTRAL_SNAPSHOTS_PASSWORD}</password>
+							</server>
+						""" );
+			}
+			settings.append( "</servers>\n" );
+		}
+		boolean hasCentralFallback = hasCentralMirror && "true".equalsIgnoreCase( centralFallback );
+		boolean hasSnapshotsFallback = hasSnapshotsMirror && "true".equalsIgnoreCase( snapshotsFallback );
+		settings.append( "<profiles>\n" );
+		settings.append( """
+					<profile>
+					<id>jakarta-snapshots</id>
+					<repositories>
+						<repository>
+						<id>jakarta-snapshots</id>
+						<url>https://jakarta.oss.sonatype.org/content/repositories/snapshots/</url>
+						<snapshots>
+							<enabled>true</enabled>
+						</snapshots>
+						<releases>
+							<enabled>false</enabled>
+						</releases>
+						</repository>
+					</repositories>
+					</profile>
+				""" );
+		if ( hasCentralFallback || hasSnapshotsFallback ) {
+			settings.append( "<profile>\n<id>mirror-fallbacks</id>\n<repositories>\n" );
+			if ( hasCentralFallback ) {
+				settings.append( """
+							<repository>
+							<id>central-fallback</id>
+							<url>https://repo.maven.apache.org/maven2/</url>
+							<releases><enabled>true</enabled></releases>
+							<snapshots><enabled>false</enabled></snapshots>
+							</repository>
+						""" );
+			}
+			if ( hasSnapshotsFallback ) {
+				settings.append( """
+							<repository>
+							<id>jakarta-snapshots-fallback</id>
+							<url>https://jakarta.oss.sonatype.org/content/repositories/snapshots/</url>
+							<releases><enabled>false</enabled></releases>
+							<snapshots><enabled>true</enabled></snapshots>
+							</repository>
+						""" );
+			}
+			settings.append( "</repositories>\n</profile>\n" );
+		}
+		settings.append( "</profiles>\n" );
+		settings.append( "<activeProfiles>\n" );
+		settings.append( "<activeProfile>jakarta-snapshots</activeProfile>\n" );
+		if ( hasCentralFallback || hasSnapshotsFallback ) {
+			settings.append( "<activeProfile>mirror-fallbacks</activeProfile>\n" );
+		}
+		settings.append( "</activeProfiles>\n" );
+		settings.append( "</settings>\n" );
+		Files.writeString( mavenSettingsFile, settings.toString() );
 	}
 
 	@AfterAll

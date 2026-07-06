@@ -31,6 +31,7 @@ import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -361,7 +362,18 @@ public class EntityBinder {
 			RootClass rootClass,
 			MetadataBuildingContext context) {
 		final var audited = extract( Audited.class, classDetails, context );
-		if ( audited != null ) {
+		var overrideAnnotationDisablesAuditing = false;
+		final var override = extract( AuditOverrides.class, classDetails, context );
+		if ( override != null ) {
+			if ( override.value().length > 0 ) {
+				var first = override.value()[0]; //check the others aswell
+				if ( !first.isAudited() ) {
+					overrideAnnotationDisablesAuditing = true;
+				}
+			}
+		}
+
+		if ( audited != null && !overrideAnnotationDisablesAuditing) {
 			final var auditTable = extract( Audited.Table.class, classDetails, context );
 			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
 		}

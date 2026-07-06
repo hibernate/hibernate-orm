@@ -264,6 +264,17 @@ public class HbmXmlTransformer {
 
 	private Table currentBaseTable;
 
+	private static final Set<String> IMMUTABLE_TYPE_ALIASES = Set.of(
+			"imm_date",
+			"imm_time",
+			"imm_timestamp",
+			"imm_calendar",
+			"imm_calendar_date",
+			"imm_calendar_time",
+			"imm_binary",
+			"imm_serializable"
+	);
+
 	private HbmXmlTransformer(
 			Binding<JaxbHbmHibernateMapping> hbmXmlBinding,
 			Binding<JaxbEntityMappingsImpl> mappingXmlBinding,
@@ -655,6 +666,13 @@ public class HbmXmlTransformer {
 			jaxbBasicMapping.setJavaType( convertedType.getMappedJavaType().getClass().getName() );
 			jaxbBasicMapping.setJdbcTypeCode( convertedType.getJdbcType().getJdbcTypeCode() );
 			converterConsumer.accept( convertedType.getValueConverter() );
+		}
+
+		// The hbm immutable type aliases register a BasicType with ImmutableMutabilityPlan
+		// for types that are mutable by nature (Date, Calendar, byte[], Serializable).
+		// Mark the property as not mutable so the orm.xml processing applies @Immutable.
+		if ( isNotEmpty( hbmTypeAttribute ) && IMMUTABLE_TYPE_ALIASES.contains( hbmTypeAttribute ) ) {
+			jaxbBasicMapping.setMutable( false );
 		}
 	}
 

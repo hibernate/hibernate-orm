@@ -652,8 +652,6 @@ public class HbmXmlTransformer {
 			if ( converterConsumer == null ) {
 				throw new AssertionFailure( "Unexpected context for converted value" );
 			}
-			jaxbBasicMapping.setJavaType( convertedType.getMappedJavaType().getClass().getName() );
-			jaxbBasicMapping.setJdbcTypeCode( convertedType.getJdbcType().getJdbcTypeCode() );
 			converterConsumer.accept( convertedType.getValueConverter() );
 		}
 	}

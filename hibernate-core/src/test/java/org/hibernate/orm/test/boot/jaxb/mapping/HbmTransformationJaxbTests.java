@@ -935,6 +935,35 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testConverterPropertyNoJavaTypeTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/converter/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			final JaxbBasicImpl balanceAttr = entity.getAttributes().getBasicAttributes().stream()
+					.filter( b -> "balance".equals( b.getName() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( balanceAttr.getConvert() )
+					.as( "converted:: property should generate a <convert> element" )
+					.isNotNull();
+			assertThat( balanceAttr.getConvert().getConverter() )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.MoneyConverter" );
+
+			assertThat( balanceAttr.getJavaType() )
+					.as( "converted:: property should not have a java-type — the converter provides type information" )
+					.isNull();
+			assertThat( balanceAttr.getJdbcType() )
+					.as( "converted:: property should not have a jdbc-type" )
+					.isNull();
+			assertThat( balanceAttr.getJdbcTypeCode() )
+					.as( "converted:: property should not have a jdbc-type-code" )
+					.isNull();
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20640" )
 	public void testInverseManyToManyMappedByTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/many-to-many-inverse/hbm.xml", scope, (transformed) -> {

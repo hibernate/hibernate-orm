@@ -133,7 +133,7 @@ public final class JacksonIntegration {
 				// to the application class loader. Only if it is, we can use the application class loader or rather
 				// our AggregatedClassLoader for loading Jackson Module via ServiceLoader, as otherwise the loaded
 				// Jackson Module instances would have a different class loader, leading to a ClassCastException.
-				if ( ObjectMapper.class == contextClassLoader.loadClass( "com.fasterxml.jackson.databind.ObjectMapper" ) ) {
+				if ( com.fasterxml.jackson.databind.ObjectMapper.class == contextClassLoader.loadClass( "com.fasterxml.jackson.databind.ObjectMapper" ) ) {
 					return creationContext.getBootstrapContext()
 							.getClassLoaderService()
 							.<List<Module>>workWithClassLoader( ObjectMapper::findModules );
@@ -156,7 +156,7 @@ public final class JacksonIntegration {
 				// to the application class loader. Only if it is, we can use the application class loader or rather
 				// our AggregatedClassLoader for loading Jackson Module via ServiceLoader, as otherwise the loaded
 				// Jackson Module instances would have a different class loader, leading to a ClassCastException.
-				if ( ObjectMapper.class == contextClassLoader.loadClass( "tools.jackson.databind.ObjectMapper" ) ) {
+				if ( tools.jackson.databind.ObjectMapper.class == contextClassLoader.loadClass( "tools.jackson.databind.ObjectMapper" ) ) {
 					return creationContext.getBootstrapContext()
 							.getClassLoaderService()
 							.<List<JacksonModule>>workWithClassLoader( MapperBuilder::findModules );

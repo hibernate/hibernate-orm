@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.LockMode;
@@ -18,6 +19,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
@@ -45,6 +47,7 @@ import jakarta.persistence.SqlResultSetMapping;
 
 import static org.hibernate.boot.query.BootQueryLogging.BOOT_QUERY_LOGGER;
 import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -432,39 +435,40 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final var entityMapping =
 					resolutionContext.getMappingMetamodel()
 							.getEntityDescriptor( entityName );
-
-			ModelPart subPart = entityMapping.findSubPart(
-					propertyPathParts[0],
-					null
-			);
-			final NavigablePath parentNavigablePath;
-			if ( !subPart.getNavigableRole().getParent().equals( entityMapping.getNavigableRole() )
-					&& subPart.getNavigableRole().getParent().getLocalName().equals( ID_ROLE_NAME ) ) {
-				// The attribute is defined in an ID class, append {id} to navigable path
-				parentNavigablePath = new EntityIdentifierNavigablePath( this.navigablePath, null );
-			}
-			else {
-				parentNavigablePath = this.navigablePath;
-			}
-
-			NavigablePath navigablePath = subPart.isEntityIdentifierMapping() ?
-					new EntityIdentifierNavigablePath( parentNavigablePath, propertyPathParts[0] ) :
-					parentNavigablePath.append( propertyPathParts[0] );
+			final String rootPropertyPathPart = propertyPathParts[0];
+			var subPart = entityMapping.findSubPart( rootPropertyPathPart, null );
+			var navigablePath = rootNavigablePath( subPart, entityMapping, rootPropertyPathPart );
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
-				if ( !( subPart instanceof ModelPartContainer ) ) {
+				if ( subPart instanceof ModelPartContainer modelPartContainer ) {
+					final String propertyPathPart = propertyPathParts[i];
+					navigablePath = navigablePath.append( propertyPathPart );
+					subPart = modelPartContainer.findSubPart( propertyPathPart, null );
+				}
+				else {
 					throw new MappingException(
-							String.format(
-									Locale.ROOT,
-									"Non-terminal property path did not reference FetchableContainer - %s ",
-									navigablePath
-							)
+							"Non-terminal property path did not reference FetchableContainer: "
+							+ navigablePath
 					);
 				}
-				navigablePath = navigablePath.append( propertyPathParts[i] );
-				subPart = ( (ModelPartContainer) subPart ).findSubPart( propertyPathParts[i], null );
 			}
-
 			return getFetchMemento( navigablePath, subPart );
+		}
+
+		private NavigablePath rootNavigablePath(
+				@Nonnull ModelPart parentSubPart,
+				@Nonnull EntityPersister entityMapping,
+				@Nonnull String rootPropertyPathPart) {
+			final var parentNavigableRole = parentSubPart.getNavigableRole().getParent();
+			final var parentNavigablePath =
+					!Objects.equals( parentNavigableRole, entityMapping.getNavigableRole() )
+						&& parentNavigableRole.getLocalName().equals( ID_ROLE_NAME )
+							// The attribute is defined in an ID class, append {id} to navigable path
+							? new EntityIdentifierNavigablePath( this.navigablePath, null )
+							: this.navigablePath;
+
+			return parentSubPart.isEntityIdentifierMapping()
+					? new EntityIdentifierNavigablePath( parentNavigablePath, rootPropertyPathPart )
+					: parentNavigablePath.append( rootPropertyPathPart );
 		}
 
 		@Nonnull
@@ -478,9 +482,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				return new FetchMementoEntityStandard( navigablePath, entityValuedFetchable, columnNames );
 			}
 			else if( subPart instanceof EmbeddedAttributeMapping embeddedAttributeMapping ){
-				final ModelPart subPart1 = embeddedAttributeMapping.findSubPart( propertyPath.substring(
-						propertyPath.indexOf( '.' ) + 1), null );
-				return getFetchMemento( navigablePath,subPart1 );
+				return getFetchMemento( navigablePath,
+						embeddedAttributeMapping.findSubPart( unroot( propertyPath ), null ) );
 			}
 			else {
 				throw new UnsupportedOperationException(

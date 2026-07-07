@@ -57,7 +57,7 @@ public final class StringHelper {
 			// If strings[0] is null, then its length is defined as 4, since that's the
 			// length of "null".
 			final int firstStringLength = strings[0] != null ? strings[0].length() : 4;
-			final StringBuilder buf =
+			final var buf =
 					new StringBuilder( length * firstStringLength )
 							.append( strings[0] );
 			for ( int i = 1; i < length; i++ ) {
@@ -77,7 +77,7 @@ public final class StringHelper {
 			// If strings[0] is null, then its length is defined as 4, since that's the
 			// length of "null".
 			final int firstStringLength = values[0] != null ? values[0].toString().length() : 4;
-			final StringBuilder buf =
+			final var buf =
 					new StringBuilder( length * firstStringLength )
 							.append( values[0] );
 			for ( int i = 1; i < length; i++ ) {
@@ -92,7 +92,7 @@ public final class StringHelper {
 	}
 
 	public static String join(String separator, Iterator<?> objects) {
-		final StringBuilder buf = new StringBuilder();
+		final var buf = new StringBuilder();
 		if ( objects.hasNext() ) {
 			buf.append( objects.next() );
 		}
@@ -111,7 +111,7 @@ public final class StringHelper {
 		if ( length == 0 ) {
 			return "";
 		}
-		final StringBuilder buf =
+		final var buf =
 				new StringBuilder( length * ( values[0].length() + suffix.length() ) )
 						.append( qualify( qualifier, values[0] ) ).append( suffix );
 		for ( int i = 1; i < length; i++ ) {
@@ -133,7 +133,7 @@ public final class StringHelper {
 	}
 
 	public static String repeat(String string, int times, String deliminator) {
-		final StringBuilder buf =
+		final var buf =
 				new StringBuilder( string.length() * times + deliminator.length() * ( times - 1 ) )
 						.append( string );
 		for ( int i = 1; i < times; i++ ) {
@@ -226,7 +226,7 @@ public final class StringHelper {
 						&& !( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' )
 						&& !( getLastNonWhitespaceCharacter( beforePlaceholder ) == ','
 							&& getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' );
-		final StringBuilder buf = new StringBuilder( beforePlaceholder );
+		final var buf = new StringBuilder( beforePlaceholder );
 		if ( encloseInParens ) {
 			buf.append( '(' );
 		}
@@ -326,7 +326,7 @@ public final class StringHelper {
 	}
 
 	public static String[] split(String separators, String list, boolean include) {
-		final StringTokenizer tokens = new StringTokenizer( list, separators, include );
+		final var tokens = new StringTokenizer( list, separators, include );
 		final String[] result = new String[tokens.countTokens()];
 		int i = 0;
 		while ( tokens.hasMoreTokens() ) {
@@ -336,7 +336,7 @@ public final class StringHelper {
 	}
 
 	public static String[] splitTrimmingTokens(String separators, String list, boolean include) {
-		final StringTokenizer tokens = new StringTokenizer( list, separators, include );
+		final var tokens = new StringTokenizer( list, separators, include );
 		final String[] result = new String[tokens.countTokens()];
 		int i = 0;
 		while ( tokens.hasMoreTokens() ) {
@@ -399,8 +399,8 @@ public final class StringHelper {
 	 * @return The collapsed form.
 	 */
 	public static String collapseQualifier(String qualifier, boolean includeDots) {
-		final StringTokenizer tokenizer = new StringTokenizer( qualifier, "." );
-		final StringBuilder result = new StringBuilder();
+		final var tokenizer = new StringTokenizer( qualifier, "." );
+		final var result = new StringBuilder();
 		result.append( tokenizer.nextToken().charAt( 0 ) );
 		while ( tokenizer.hasMoreTokens() ) {
 			if ( includeDots ) {
@@ -476,7 +476,7 @@ public final class StringHelper {
 			return "";
 		}
 		else {
-			final StringBuilder buf = new StringBuilder( len * 12 );
+			final var buf = new StringBuilder( len * 12 );
 			for ( int i = 0; i < len - 1; i++ ) {
 				buf.append( array[i] ).append( ", " );
 			}

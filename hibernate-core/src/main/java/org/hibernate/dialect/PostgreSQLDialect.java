@@ -127,6 +127,7 @@ import java.util.TimeZone;
 import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -408,7 +409,7 @@ public class PostgreSQLDialect extends Dialect {
 			case STRUCT:
 				final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 						// Skip the schema
-						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+						unroot( columnTypeName )
 				);
 				if ( descriptor != null ) {
 					return descriptor;
@@ -682,8 +683,8 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.jsonValue_postgresql( true );
 			functionFactory.jsonQuery();
 			functionFactory.jsonExists();
-			functionFactory.jsonObject();
-			functionFactory.jsonArray();
+			functionFactory.jsonObject_postgresql( true );
+			functionFactory.jsonArray_postgresql( true );
 			functionFactory.jsonArrayAgg_postgresql( true );
 			functionFactory.jsonObjectAgg_postgresql( true );
 			functionFactory.jsonTable();
@@ -693,14 +694,14 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.jsonQuery_postgresql();
 			functionFactory.jsonExists_postgresql();
 			if ( getVersion().isSameOrAfter( 16 ) ) {
-				functionFactory.jsonObject();
-				functionFactory.jsonArray();
+				functionFactory.jsonObject_postgresql( true );
+				functionFactory.jsonArray_postgresql( true );
 				functionFactory.jsonArrayAgg_postgresql( true );
 				functionFactory.jsonObjectAgg_postgresql( true );
 			}
 			else {
-				functionFactory.jsonObject_postgresql();
-				functionFactory.jsonArray_postgresql();
+				functionFactory.jsonObject_postgresql( false );
+				functionFactory.jsonArray_postgresql( false );
 				functionFactory.jsonArrayAgg_postgresql( false );
 				functionFactory.jsonObjectAgg_postgresql( false );
 			}

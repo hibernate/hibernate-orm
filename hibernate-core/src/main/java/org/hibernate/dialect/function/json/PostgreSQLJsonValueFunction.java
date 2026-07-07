@@ -40,6 +40,10 @@ public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		if ( supportsStandard ) {
+			final boolean isBinary = isBinary( arguments.returningType() );
+			if ( isBinary ) {
+				sqlAppender.appendSql( "decode(" );
+			}
 			super.render( sqlAppender, arguments, returnType, walker );
 			// PostgreSQL unfortunately renders `t`/`f` for JSON booleans instead of `true`/`false` like every other DB.
 			// To work around this, extract the jsonb node directly and then use the `#>>` operator to unquote values
@@ -47,6 +51,9 @@ public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 			if ( isString( arguments.returningType() ) ) {
 				// Unquote the value
 				sqlAppender.appendSql( "#>>'{}'" );
+			}
+			else if ( isBinary ) {
+				sqlAppender.appendSql( ",'hex')" );
 			}
 		}
 		else {
@@ -76,18 +83,31 @@ public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 		if ( supportsStandard && isString( arguments.returningType() ) ) {
 			sqlAppender.appendSql( " returning jsonb" );
 		}
+		else if ( isBinary( arguments.returningType() ) ) {
+			// Skip the returning clause for binary, because we need to unhex it
+		}
 		else {
 			super.renderReturningClause( sqlAppender, arguments, walker );
 		}
 	}
 
-	private boolean isString(@Nullable CastTarget castTarget) {
+	private static boolean isString(@Nullable CastTarget castTarget) {
 		return castTarget == null || castTarget.getJdbcMapping().getJdbcType().isString();
 	}
 
+	private static boolean isBinary(@Nullable CastTarget castTarget) {
+		return castTarget != null && castTarget.getJdbcMapping().getJdbcType().isBinary();
+	}
+
 	static void appendJsonValue(SqlAppender sqlAppender, Expression jsonDocument, SqlAstNode jsonPath, boolean isJsonType, @Nullable CastTarget castTarget, @Nullable JsonPathPassingClause passingClause, SqlAstTranslator<?> walker) {
+		final boolean isBinary = isBinary( castTarget );
 		if ( castTarget != null ) {
-			sqlAppender.appendSql( "cast(" );
+			if ( isBinary ) {
+				sqlAppender.appendSql( "decode(" );
+			}
+			else {
+				sqlAppender.appendSql( "cast(" );
+			}
 		}
 		sqlAppender.appendSql( "jsonb_path_query_first(" );
 		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocument );
@@ -122,9 +142,14 @@ public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 		// Unquote the value
 		sqlAppender.appendSql( ")#>>'{}'" );
 		if ( castTarget != null ) {
-			sqlAppender.appendSql( " as " );
-			castTarget.accept( walker );
-			sqlAppender.appendSql( ')' );
+			if ( isBinary ) {
+				sqlAppender.appendSql( ",'hex')" );
+			}
+			else {
+				sqlAppender.appendSql( " as " );
+				castTarget.accept( walker );
+				sqlAppender.appendSql( ')' );
+			}
 		}
 	}
 }

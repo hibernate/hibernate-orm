@@ -9,8 +9,8 @@ import java.io.InputStream;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
@@ -42,13 +42,12 @@ public class ContributorImpl implements AdditionalMappingContributor {
 				.getServiceRegistry()
 				.getService( ClassLoaderService.class );
 		final InputStream inputStream = classLoaderService.locateResourceStream(
-				"org/hibernate/orm/test/mapping/contributed/BasicContributorTests.hbm.xml" );
+				"org/hibernate/orm/test/mapping/contributed/BasicContributorTests.orm.xml" );
 
 		final MappingBinder mappingBinder = new MappingBinder( buildingContext.getBootstrapContext().getServiceRegistry() );
-		final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( inputStream, origin );
-		final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
+		final Binding<?> jaxbBinding = mappingBinder.bind( inputStream, origin );
 
-		contributions.contributeBinding( jaxbRoot );
+		contributions.contributeBinding( (JaxbEntityMappingsImpl) jaxbBinding.getRoot() );
 	}
 
 }

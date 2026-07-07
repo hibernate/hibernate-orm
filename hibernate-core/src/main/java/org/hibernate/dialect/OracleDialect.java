@@ -108,7 +108,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
-import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
@@ -140,6 +139,7 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.HOUR;
@@ -912,9 +912,9 @@ public class OracleDialect extends Dialect {
 					jdbcTypeCode = GEOMETRY;
 				}
 				else {
-					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+					final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 							// Skip the schema
-							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+							unroot( columnTypeName )
 					);
 					if ( descriptor != null ) {
 						return descriptor;
@@ -930,9 +930,9 @@ public class OracleDialect extends Dialect {
 					);
 				}
 				else {
-					final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+					final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 							// Skip the schema
-							columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+							unroot( columnTypeName )
 					);
 					if ( descriptor != null ) {
 						return descriptor;

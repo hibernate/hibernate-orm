@@ -7,7 +7,6 @@ package org.hibernate.internal.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -848,14 +847,6 @@ public final class StringHelper {
 		return incomingString==null || incomingString.isBlank()
 				? EMPTY_STRINGS
 				: COMMA_SEPARATED_PATTERN.split( incomingString );
-	}
-
-	public static <T> String join(Collection<T> values, Renderer<T> renderer) {
-		final StringBuilder buffer = new StringBuilder();
-		for ( T value : values ) {
-			buffer.append( String.join(", ", renderer.render( value ) ) );
-		}
-		return buffer.toString();
 	}
 
 	public static String coalesce(@Nonnull String fallbackValue, @Nonnull String... values) {

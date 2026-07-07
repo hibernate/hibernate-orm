@@ -127,6 +127,7 @@ import java.util.TimeZone;
 import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -408,7 +409,7 @@ public class PostgreSQLDialect extends Dialect {
 			case STRUCT:
 				final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 						// Skip the schema
-						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+						unroot( columnTypeName )
 				);
 				if ( descriptor != null ) {
 					return descriptor;

@@ -113,6 +113,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -365,9 +366,9 @@ public class GaussDBDialect extends Dialect {
 				}
 				break;
 			case STRUCT:
-				final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+				final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 						// Skip the schema
-						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+						unroot( columnTypeName )
 				);
 				if ( descriptor != null ) {
 					return descriptor;

@@ -45,6 +45,7 @@ import jakarta.persistence.SqlResultSetMapping;
 
 import static org.hibernate.boot.query.BootQueryLogging.BOOT_QUERY_LOGGER;
 import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -478,9 +479,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				return new FetchMementoEntityStandard( navigablePath, entityValuedFetchable, columnNames );
 			}
 			else if( subPart instanceof EmbeddedAttributeMapping embeddedAttributeMapping ){
-				final ModelPart subPart1 = embeddedAttributeMapping.findSubPart( propertyPath.substring(
-						propertyPath.indexOf( '.' ) + 1), null );
-				return getFetchMemento( navigablePath,subPart1 );
+				return getFetchMemento( navigablePath,
+						embeddedAttributeMapping.findSubPart( unroot( propertyPath ), null ) );
 			}
 			else {
 				throw new UnsupportedOperationException(

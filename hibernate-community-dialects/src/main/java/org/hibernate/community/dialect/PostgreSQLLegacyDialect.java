@@ -131,6 +131,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -404,9 +405,9 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				}
 				break;
 			case STRUCT:
-				final SqlTypedJdbcType descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+				final var descriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
 						// Skip the schema
-						columnTypeName.substring( columnTypeName.indexOf( '.' ) + 1 )
+						unroot( columnTypeName )
 				);
 				if ( descriptor != null ) {
 					return descriptor;

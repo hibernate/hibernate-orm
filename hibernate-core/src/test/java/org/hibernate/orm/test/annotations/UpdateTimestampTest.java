@@ -6,6 +6,7 @@ package org.hibernate.orm.test.annotations;
 
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -24,9 +25,11 @@ import java.util.Date;
 import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Borys Piela
+ * @author Yanming Zhou
  */
 @Jpa( annotatedClasses = {UpdateTimestampTest.Event.class} )
 public class UpdateTimestampTest {
@@ -98,6 +101,14 @@ public class UpdateTimestampTest {
 		@UpdateTimestamp
 		private ZonedDateTime zonedDateTime;
 
+		@Column(insertable = false)
+		@UpdateTimestamp
+		private LocalDateTime uninsertableLocalDateTime;
+
+		@Column(insertable = false)
+		@UpdateTimestamp(source = SourceType.DB)
+		private LocalDateTime uninsertableLocalDateTimeWithDB;
+
 		public Event() {
 		}
 
@@ -164,6 +175,14 @@ public class UpdateTimestampTest {
 		public ZonedDateTime getZonedDateTime() {
 			return zonedDateTime;
 		}
+
+		public LocalDateTime getUninsertableLocalDateTime() {
+			return uninsertableLocalDateTime;
+		}
+
+		public LocalDateTime getUninsertableLocalDateTimeWithDB() {
+			return uninsertableLocalDateTimeWithDB;
+		}
 	}
 
 	@Test
@@ -188,6 +207,28 @@ public class UpdateTimestampTest {
 				statelessSession.getTransaction().commit();
 				check( event );
 			}
+		});
+	}
+
+	@Test
+	@JiraKey( value = "HHH-20663")
+	public void uninsertableUpdateTimestamp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Event event = new Event();
+			entityManager.persist( event );
+			entityManager.flush();
+			assertNull( event.getUninsertableLocalDateTime() );
+		});
+	}
+
+	@Test
+	@JiraKey( value = "HHH-20663")
+	public void uninsertableUpdateTimestampWithDB(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			Event event = new Event();
+			entityManager.persist( event );
+			entityManager.flush();
+			assertNull( event.getUninsertableLocalDateTimeWithDB() );
 		});
 	}
 

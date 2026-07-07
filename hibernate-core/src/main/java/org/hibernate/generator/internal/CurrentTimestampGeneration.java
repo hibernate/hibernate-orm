@@ -50,6 +50,7 @@ import static java.sql.Types.TIMESTAMP;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
+import static org.hibernate.generator.EventTypeSets.UPDATE_ONLY;
 import static org.hibernate.generator.EventTypeSets.fromArray;
 
 /**
@@ -72,6 +73,7 @@ import static org.hibernate.generator.EventTypeSets.fromArray;
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Yanming Zhou
  */
 public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnExecutionGenerator {
 
@@ -111,10 +113,12 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	public CurrentTimestampGeneration(UpdateTimestamp annotation, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
-		eventTypes = INSERT_AND_UPDATE;
+		eventTypes = context.getProperty().isInsertable() ? INSERT_AND_UPDATE : UPDATE_ONLY;
 		propertyType = getPropertyType( context );
 		version = isVersion( context );
-		notNull( context );
+		if ( eventTypes.contains( EventType.INSERT ) ) {
+			notNull( context );
+		}
 	}
 
 	private static boolean isVersion(GeneratorCreationContext context) {

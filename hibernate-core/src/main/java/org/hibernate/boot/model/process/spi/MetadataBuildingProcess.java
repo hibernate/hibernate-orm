@@ -16,7 +16,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -524,7 +526,7 @@ public class MetadataBuildingProcess {
 
 		private List<Class<?>> additionalEntityClasses;
 		private List<ClassDetails> additionalClassDetails;
-		private List<JaxbEntityMappingsImpl> additionalJaxbMappings;
+		private Map<String, List<JaxbEntityMappingsImpl>> additionalJaxbMappingsByContributor;
 		private boolean extraHbmXml = false;
 
 		private String currentContributor;
@@ -583,10 +585,12 @@ public class MetadataBuildingProcess {
 		@Override
 		public void contributeBinding(JaxbEntityMappingsImpl mappingJaxbBinding) {
 			if ( options.isXmlMappingEnabled() ) {
-				if ( additionalJaxbMappings == null ) {
-					additionalJaxbMappings = new ArrayList<>();
+				if ( additionalJaxbMappingsByContributor == null ) {
+					additionalJaxbMappingsByContributor = new LinkedHashMap<>();
 				}
-				additionalJaxbMappings.add( mappingJaxbBinding );
+				additionalJaxbMappingsByContributor
+						.computeIfAbsent( currentContributor, k -> new ArrayList<>() )
+						.add( mappingJaxbBinding );
 			}
 		}
 
@@ -631,14 +635,35 @@ public class MetadataBuildingProcess {
 
 		public void complete() {
 			// annotations / orm.xml
-			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappings != null ) {
+			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappingsByContributor != null ) {
+				// Process contributed classes with the default "orm" context
 				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
 						additionalEntityClasses,
 						additionalClassDetails,
-						additionalJaxbMappings,
+						additionalJaxbMappingsByContributor == null
+								? null
+								: additionalJaxbMappingsByContributor.remove( "orm" ),
 						rootMetadataBuildingContext,
 						options
 				);
+				// Process remaining contributors' xml mappings with their contributor context
+				if ( additionalJaxbMappingsByContributor != null ) {
+					for ( var entry : additionalJaxbMappingsByContributor.entrySet() ) {
+						AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
+								null,
+								null,
+								entry.getValue(),
+								new MetadataBuildingContextRootImpl(
+										entry.getKey(),
+										rootMetadataBuildingContext.getBootstrapContext(),
+										options,
+										metadataCollector,
+										rootMetadataBuildingContext.getEffectiveDefaults()
+								),
+								options
+						);
+					}
+				}
 			}
 
 			// hbm.xml

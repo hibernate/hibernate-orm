@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.hbm.inheritance;
+package org.hibernate.orm.test.xml.inheritance;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -19,7 +19,7 @@ public class JoinedSubclassesWithSameFieldNamesButDifferentTypesTest {
 	@JiraKey(value = "HHH-15369")
 	public void testNoExceptionIsThrown(ServiceRegistryScope scope) {
 		try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( scope.getRegistry() )
-				.addResource( "org/hibernate/orm/test/hbm/inheritance/AnimalReport.hbm.xml" )
+				.addResource( "org/hibernate/orm/test/xml/inheritance/AnimalReport.orm.xml" )
 				.buildMetadata()
 				.buildSessionFactory()) {
 		}

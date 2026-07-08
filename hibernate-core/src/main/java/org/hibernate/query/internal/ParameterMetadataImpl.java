@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.ParameterLabelException;
@@ -34,7 +33,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -149,7 +147,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 										"Gap between '?%s' and '?%s' in ordinal parameter labels [%s] (ordinal parameters must be labelled sequentially)",
 										lastPosition,
 										sortedPosition,
-										join( ",", sortedLabels.iterator() )
+										String.join( ",", sortedLabels.stream().map( String::valueOf ).toArray( String[]::new ) )
 								)
 						);
 					}
@@ -301,7 +299,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 					Locale.ROOT,
 					"No parameter labelled '?%s' in query with ordinal parameters [%s]",
 					positionLabel,
-					StringHelper.join( ", ", getOrdinalParameterLabels() )
+					String.join( ", ", getOrdinalParameterLabels().stream().map( String::valueOf ).toArray( String[]::new ) )
 			);
 			throw new IllegalArgumentException(
 					errorMessage,

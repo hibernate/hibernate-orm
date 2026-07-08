@@ -36,7 +36,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
@@ -721,7 +720,7 @@ public class ComponentType extends AbstractType
 		}
 		throw new PropertyNotFoundException(
 				"Could not resolve attribute '" + name + "' of '" + getReturnedClassName() + "'"
-					+ " (must be one of '" + join("', '", names) + "')"
+					+ " (must be one of '" + String.join("', '", names) + "')"
 		);
 	}
 

@@ -10,7 +10,6 @@ import java.util.List;
 import jakarta.persistence.AttributeConverter;
 
 
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
 
 /**
@@ -23,7 +22,7 @@ public class CommaDelimitedStringsConverter implements AttributeConverter<List<S
 		if ( attributeValue == null ) {
 			return null;
 		}
-		return join( ",", attributeValue );
+		return String.join( ",", attributeValue );
 	}
 
 	@Override

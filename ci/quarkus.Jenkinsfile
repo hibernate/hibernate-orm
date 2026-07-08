@@ -95,6 +95,9 @@ def configurations = [
 
 pipeline {
     agent none
+    environment {
+        COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
+    }
     options {
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
@@ -117,7 +120,7 @@ pipeline {
                 script {
                     dir('hibernate') {
                         checkout scm
-                        sh "./gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -Dmaven.repo.local=${env.WORKSPACE_TMP}/.m2repository"
+                        sh "./gradlew \$COMMON_GRADLE_ARGS clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -Dmaven.repo.local=${env.WORKSPACE_TMP}/.m2repository"
                         script {
                             env.HIBERNATE_VERSION = sh (
                                     script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",

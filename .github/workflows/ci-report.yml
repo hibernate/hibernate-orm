@@ -12,6 +12,7 @@ defaults:
 permissions: { } # none, jobs are defining their own if they need any
 
 env:
+  COMMON_GRADLE_ARGS: "-Igradle/init.gradle"
   MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
   MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
 
@@ -79,13 +80,14 @@ jobs:
         if: ${{ steps.downloadBuildScan.outcome != 'failure'}}
         run: |
           shopt -s nullglob # Don't run the loop below if there are no artifacts
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
           status=0
           mkdir -p ~/.gradle/
           for build_scan_data_directory in /tmp/downloaded-build-scan-data/*
           do
             rm -rf ~/.gradle/build-scan-data
             mv "$build_scan_data_directory" ~/.gradle/build-scan-data \
-            && ./gradlew --no-build-cache buildScanPublishPrevious || status=1
+            && ./gradlew "${common_gradle_args[@]}" --no-build-cache buildScanPublishPrevious || status=1
           done
           exit $status
         env:

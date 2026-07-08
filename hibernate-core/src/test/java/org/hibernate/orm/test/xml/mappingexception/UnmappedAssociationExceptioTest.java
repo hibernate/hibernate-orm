@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.hbm.mappingexception;
+package org.hibernate.orm.test.xml.mappingexception;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.MetadataSources;
@@ -23,7 +23,7 @@ public class UnmappedAssociationExceptioTest {
 		try {
 			assertThrows( MappingException.class, () -> {
 				new MetadataSources( ssr )
-						.addResource( "org/hibernate/orm/test/hbm/mappingexception/unmapped_association.hbm.xml" )
+						.addResource( "org/hibernate/orm/test/xml/mappingexception/unmapped_association.orm.xml" )
 						.buildMetadata();
 
 			} );

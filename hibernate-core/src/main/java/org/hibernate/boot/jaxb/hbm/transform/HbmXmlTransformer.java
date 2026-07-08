@@ -1207,10 +1207,12 @@ public class HbmXmlTransformer {
 		}
 		else if ( isNotEmpty( tableName )
 				|| Boolean.FALSE.equals( columnDefaults.isInsertable() )
-				|| Boolean.FALSE.equals( columnDefaults.isUpdatable() ) ) {
+				|| Boolean.FALSE.equals( columnDefaults.isUpdatable() )
+				|| Boolean.TRUE.equals( columnDefaults.isUnique() )
+				|| Boolean.FALSE.equals( columnDefaults.isNullable() ) ) {
 			// No explicit column/formula specified, but we still need to generate a column to carry
 			// the secondary table name (for <join/>) or non-default insertable/updatable settings
-			// (e.g. <property update="false"/> inside a <component/>)
+			// (e.g. <property update="false"/> inside a <component/>) or unique/not-null constraints
 			final var targetColumnAdapter = target.makeColumnAdapter( columnDefaults );
 			targetColumnAdapter.setTable( tableName );
 			target.addColumn( targetColumnAdapter );

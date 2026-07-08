@@ -18,6 +18,9 @@ pipeline {
     tools {
         jdk 'OpenJDK 25 Latest'
     }
+    environment {
+        COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
+    }
     options {
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
@@ -47,11 +50,11 @@ pipeline {
                             withEnv([
                                     "DISABLE_REMOTE_GRADLE_CACHE=true"
                             ]) {
-                                sh './gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace'
+                                sh './gradlew $COMMON_GRADLE_ARGS clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace'
                                 // For some reason, Gradle does not publish hibernate-platform and hibernate-testing
                                 // to the local maven repository with the previous command,
                                 // but requires an extra run instead
-                                sh './gradlew :hibernate-testing:publishToMavenLocal :hibernate-platform:publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace'
+                                sh './gradlew $COMMON_GRADLE_ARGS :hibernate-testing:publishToMavenLocal :hibernate-platform:publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace'
                             }
                             script {
                                 env.HIBERNATE_VERSION = sh (

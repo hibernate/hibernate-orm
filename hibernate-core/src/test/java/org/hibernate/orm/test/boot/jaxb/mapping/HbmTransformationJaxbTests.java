@@ -825,6 +825,36 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	public void testCustomSqlCallableTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/custom-sql/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+
+			assertThat( entity.getSqlInsert() )
+					.as( "sql-insert should be present" )
+					.isNotNull();
+			assertThat( entity.getSqlInsert().isCallable() )
+					.as( "sql-insert should have callable=true" )
+					.isTrue();
+
+			assertThat( entity.getSqlUpdate() )
+					.as( "sql-update should be present" )
+					.isNotNull();
+			assertThat( entity.getSqlUpdate().isCallable() )
+					.as( "sql-update should have callable=true" )
+					.isTrue();
+
+			assertThat( entity.getSqlDelete() )
+					.as( "sql-delete should be present" )
+					.isNotNull();
+			assertThat( entity.getSqlDelete().isCallable() )
+					.as( "sql-delete should have callable=true" )
+					.isTrue();
+		} );
+	}
+
+	@Test
 	public void testPropertyUniqueTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/property-unique/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );

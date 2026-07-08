@@ -47,24 +47,6 @@ public final class StringHelper {
 		return string.length() - 1;
 	}
 
-	public static String joinWithQualifierAndSuffix(
-			String[] values,
-			String qualifier,
-			String suffix,
-			String deliminator) {
-		final int length = values.length;
-		if ( length == 0 ) {
-			return "";
-		}
-		final var buf =
-				new StringBuilder( length * ( values[0].length() + suffix.length() ) )
-						.append( qualify( qualifier, values[0] ) ).append( suffix );
-		for ( int i = 1; i < length; i++ ) {
-			buf.append( deliminator ).append( qualify( qualifier, values[i] ) ).append( suffix );
-		}
-		return buf.toString();
-	}
-
 	public static String[] add(String[] x, String sep, String[] y) {
 		final String[] result = new String[x.length];
 		for ( int i = 0; i < x.length; i++ ) {
@@ -795,9 +777,9 @@ public final class StringHelper {
 	}
 
 	public static String coalesce(@Nonnull String fallbackValue, @Nonnull String... values) {
-		for ( int i = 0; i < values.length; i++ ) {
-			if ( isNotEmpty( values[i] ) ) {
-				return values[i];
+		for ( String value : values ) {
+			if ( isNotEmpty( value ) ) {
+				return value;
 			}
 		}
 		return fallbackValue;
@@ -811,16 +793,12 @@ public final class StringHelper {
 	}
 
 	public static String coalesce(String... values) {
-		for ( int i = 0; i < values.length; i++ ) {
-			if ( isNotEmpty( values[i] ) ) {
-				return values[i];
+		for ( String value : values ) {
+			if ( isNotEmpty( value ) ) {
+				return value;
 			}
 		}
 		return null;
-	}
-
-	public interface Renderer<T> {
-		String render(T value);
 	}
 
 	/**

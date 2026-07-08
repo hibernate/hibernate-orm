@@ -413,21 +413,21 @@ public class HbmXmlTransformer {
 			final var sqlInsert = new JaxbCustomSqlImpl();
 			sqlInsert.setValue( hbmClass.getSqlInsert().getValue() );
 			sqlInsert.setResultCheck( hbmClass.getSqlInsert().getCheck() );
-			sqlInsert.setValue( hbmClass.getSqlInsert().getValue() );
+			sqlInsert.setCallable( hbmClass.getSqlInsert().isCallable() );
 			mappingEntity.setSqlInsert( sqlInsert );
 		}
 		if ( hbmClass.getSqlUpdate() != null ) {
 			final var sqlUpdate = new JaxbCustomSqlImpl();
 			sqlUpdate.setValue( hbmClass.getSqlUpdate().getValue() );
 			sqlUpdate.setResultCheck( hbmClass.getSqlUpdate().getCheck() );
-			sqlUpdate.setValue( hbmClass.getSqlUpdate().getValue() );
+			sqlUpdate.setCallable( hbmClass.getSqlUpdate().isCallable() );
 			mappingEntity.setSqlUpdate( sqlUpdate );
 		}
 		if ( hbmClass.getSqlDelete() != null ) {
 			final var sqlDelete = new JaxbCustomSqlImpl();
 			sqlDelete.setValue( hbmClass.getSqlDelete().getValue() );
 			sqlDelete.setResultCheck( hbmClass.getSqlDelete().getCheck() );
-			sqlDelete.setValue( hbmClass.getSqlDelete().getValue() );
+			sqlDelete.setCallable( hbmClass.getSqlDelete().isCallable() );
 			mappingEntity.setSqlDelete( sqlDelete );
 		}
 		mappingEntity.setRowid( hbmClass.getRowid() );

@@ -20,10 +20,6 @@ pluginManagement {
 
     includeBuild 'local-build-plugins'
 
-    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
-    // Applied inside pluginManagement so that repos are rewritten before settings plugins
-    // are resolved at the plugins {} block; lifecycle callbacks handle per-project repos.
-    apply from: 'gradle/mirror.gradle'
 }
 
 plugins {

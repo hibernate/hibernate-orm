@@ -22,6 +22,8 @@ import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
+env.COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
+
 stage('Configure') {
 	this.environments = [
 		// Minimum supported versions
@@ -210,8 +212,8 @@ stage('Build') {
 							def repo2 = tempDir + '/repo2'
 							// build Hibernate ORM two times without any cache and "publish" the resulting artifacts to different maven repositories
 							// so that we can compare them afterwards:
-							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo1}"
-							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo2}"
+							sh "./gradlew \$COMMON_GRADLE_ARGS --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo1}"
+							sh "./gradlew \$COMMON_GRADLE_ARGS --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo2}"
 
 							sh "sh ci/compare-build-results.sh ${repo1} ${repo2}"
 							sh "cat .buildcompare"
@@ -305,7 +307,7 @@ void ciBuild(String develocityCredentialsId, String args) {
   withCredentials([string(credentialsId: develocityCredentialsId,
       variable: 'DEVELOCITY_ACCESS_KEY')]) {
     withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
-      sh "./ci/build.sh $args"
+      sh "./ci/build.sh \$COMMON_GRADLE_ARGS $args"
     }
   }
 }

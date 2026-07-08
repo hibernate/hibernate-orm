@@ -12,6 +12,7 @@ defaults:
 permissions: { } # none, jobs are defining their own if they need any
 
 env:
+  COMMON_GRADLE_ARGS: "-Igradle/init.gradle"
   MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
   MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
 
@@ -104,6 +105,7 @@ jobs:
         if: ${{ steps.downloadBuildScan.outcome != 'failure'}}
         run: |
           shopt -s nullglob # Don't run the loop below if there are no artifacts
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
           published=0
           failed=0
           mkdir -p ~/.gradle/
@@ -111,7 +113,7 @@ jobs:
           do
             rm -rf ~/.gradle/build-scan-data
             mv "$build_scan_data_directory" ~/.gradle/build-scan-data
-            if ./gradlew --no-build-cache buildScanPublishPrevious; then
+            if ./gradlew "${common_gradle_args[@]}" --no-build-cache buildScanPublishPrevious; then
               published=$((published + 1))
             else
               echo "::warning::Failed to publish build scan from $(basename "$build_scan_data_directory")"

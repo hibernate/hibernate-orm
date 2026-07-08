@@ -14,7 +14,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
  */
 @RequiresDialect(value = OracleDialect.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/sql/check/oracle-mappings.hbm.xml",
+		xmlMappings = "org/hibernate/orm/test/sql/check/oracle-mappings.orm.xml",
 		overrideCacheStrategy = false
 )
 public class OracleCheckStyleTest extends ResultCheckStyleTest {

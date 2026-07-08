@@ -60,7 +60,7 @@ import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 public class HbmTransformationJaxbTests {
 	@Test
 	public void hbmTransformationTest(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/basic/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/basic/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
 			assertThat( transformed.getPackage() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping" );
 
@@ -83,7 +83,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20451" )
 	public void mapKeyManyToManyTransformationTest(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/ternary/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/ternary/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl mapKeyManyToManyEntity = transformed.getEntities().stream()
@@ -104,7 +104,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void manyToOnePropertyRefTransformationTest(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/many-to-one-property-ref/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/many-to-one-property-ref/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl sourceEntity = transformed.getEntities().stream()
@@ -125,7 +125,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testManyToManyOrphanRemovalHbmTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/manytomany/UserGroup.hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/manytomany/UserGroup.hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
@@ -158,7 +158,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20483" )
 	public void testQuotedTableName(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/manytomany/UserGroup.hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/manytomany/UserGroup.hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
@@ -182,7 +182,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20484" )
 	public void testNativeIdGeneratorTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/basic/nativeId.hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/basic/nativeId.hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
 
 			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
@@ -202,7 +202,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20564" )
 	public void testComponentGeneratedPropertyTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/component-generated/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/component-generated/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
@@ -218,7 +218,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20566" )
 	public void testJoinedSubclassInheritanceStrategy(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/joined-subclass/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/joined-subclass/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl baseEntity = transformed.getEntities().stream()
@@ -240,7 +240,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20566" )
 	public void testUnionSubclassInheritanceStrategy(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/union-subclass/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/union-subclass/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl baseEntity = transformed.getEntities().stream()
@@ -292,7 +292,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testUnmappedPropertiesAreTransient(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/unmapped-property/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/unmapped-property/hbm.xml", scope, transformed -> {
 			final JaxbEntityImpl entity = transformed.getEntities().stream()
 					.filter( e -> e.getClazz() != null && e.getClazz().endsWith( "UnmappedPropEntity" ) )
 					.findFirst()
@@ -325,7 +325,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20600" )
 	public void testRecursiveComponentTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/recursive-component/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/recursive-component/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
@@ -341,7 +341,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20600" )
 	public void testComponentPropertyAccessTransientDetection(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/component-access-transient/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/component-access-transient/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
 			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
@@ -361,7 +361,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testCompositeElementParentTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/parent/composite-element-parent.hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/parent/composite-element-parent.hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
 			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
@@ -373,7 +373,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testComponentParentTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/parent/component-parent.hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/parent/component-parent.hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
 			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
@@ -386,7 +386,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20628" )
 	public void testCompositeElementAccessTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
 			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
@@ -399,7 +399,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20599" )
 	public void testCompositeElementColumnTableTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/composite-element/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
 			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
@@ -417,7 +417,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20598" )
 	public void testSortNaturalTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/sort-natural/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/sort-natural/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
 
 			final JaxbEntityImpl personEntity = transformed.getEntities().get( 0 );
@@ -437,7 +437,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20596" )
 	public void testNonAggregatedCompositeIdKeyManyToOneTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/non-aggregate-key-many-to-one/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/non-aggregate-key-many-to-one/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl detailEntity = transformed.getEntities().stream()
@@ -460,7 +460,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20593" )
 	public void testCompositePkPropertyRefOneToOneTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/composite-pk-property-ref/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/composite-pk-property-ref/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl entityA = transformed.getEntities().stream()
@@ -481,7 +481,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20590" )
 	public void testCollectionOptimisticLockTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/collection-optimistic-lock/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/collection-optimistic-lock/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 3 );
 
 			final JaxbEntityImpl ownerEntity = transformed.getEntities().stream()
@@ -512,7 +512,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20591" )
 	public void testCompositeIdKeyManyToOneMappedByTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/composite-key-many-to-one/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/composite-key-many-to-one/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl parentEntity = transformed.getEntities().stream()
@@ -533,7 +533,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-19424" )
 	public void testCompositeUserTypeComponentTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			assertThat( transformed.getCompositeUserTypeRegistrations() )
@@ -571,7 +571,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20627" )
 	public void testSharedEmbeddableAttributeOverrideTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/composite-user-type/hbm.xml", scope, transformed -> {
 			final JaxbEntityImpl mutualFundEntity = transformed.getEntities().stream()
 					.filter( e -> "MutualFund".equals( e.getClazz() ) )
 					.findFirst()
@@ -605,7 +605,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testComponentUpdateFalseTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/component-update-false/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/component-update-false/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
 
 			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
@@ -635,7 +635,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testUnionSubclassNoInheritedTransients(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/union-subclass-transient/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/union-subclass-transient/hbm.xml", scope, transformed -> {
 			final JaxbEntityImpl employeeEntity = transformed.getEntities().stream()
 					.filter( e -> "Employee".equals( e.getClazz() ) )
 					.findFirst()
@@ -662,7 +662,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testPropertyIndexTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/property-index/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/property-index/hbm.xml", scope, transformed -> {
 			final JaxbEntityImpl personEntity = transformed.getEntities().stream()
 					.filter( e -> "Person".equals( e.getClazz() ) )
 					.findFirst()
@@ -733,7 +733,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testElementCollectionNotNullTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/element-not-null/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
 
 			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
@@ -752,7 +752,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testSharedEmbeddableFormulaPropertyTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/shared-embeddable-formula/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/shared-embeddable-formula/hbm.xml", scope, transformed -> {
 			final JaxbEntityImpl formulaUserEntity = transformed.getEntities().stream()
 					.filter( e -> "FormulaUser".equals( e.getClazz() ) )
 					.findFirst()
@@ -824,6 +824,26 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	public void testPropertyUniqueTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/property-unique/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			final JaxbBasicImpl nameAttr = entity.getAttributes().getBasicAttributes().stream()
+					.filter( b -> "name".equals( b.getName() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( nameAttr.getColumn() )
+					.as( "Property with unique='true' should generate a column element" )
+					.isNotNull();
+			assertThat( nameAttr.getColumn().isUnique() )
+					.as( "Column should have unique=true" )
+					.isTrue();
+		} );
+	}
+
 	private void transformAndVerifyMultiple(
 			String[] resourceNames,
 			ServiceRegistryScope scope,
@@ -876,7 +896,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20638" )
 	public void testFilterDefParameterTypeResolution(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/filter-def-types/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/filter-def-types/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getFilterDefinitions() ).hasSize( 3 );
 
 			final var stringFilter = transformed.getFilterDefinitions().stream()
@@ -932,7 +952,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20639" )
 	public void testManyToManyElementFilterTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/many-to-many-element-filter/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/many-to-many-element-filter/hbm.xml", scope, transformed -> {
 			final JaxbEntityImpl productEntity = transformed.getEntities().stream()
 					.filter( e -> "Product".equals( e.getClazz() ) )
 					.findFirst()
@@ -955,7 +975,7 @@ public class HbmTransformationJaxbTests {
 
 	@Test
 	public void testConverterPropertyNoJavaTypeTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/converter/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/converter/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
 
 			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
@@ -985,7 +1005,7 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20640" )
 	public void testInverseManyToManyMappedByTransformation(ServiceRegistryScope scope) {
-		transformAndVerify( "xml/jaxb/mapping/many-to-many-inverse/hbm.xml", scope, (transformed) -> {
+		transformAndVerify( "xml/jaxb/mapping/many-to-many-inverse/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
 			final JaxbEntityImpl productEntity = transformed.getEntities().stream()

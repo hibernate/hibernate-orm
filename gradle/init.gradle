@@ -3,7 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
-// Repository mirror configuration, applied from settings.gradle.
+// Repository mirror configuration, applied as an init script via -Igradle/init.gradle.
 //
 // Mirrors are configured per repository via MIRROR_<REPO>_(URL|USERNAME|PASSWORD|FALLBACK)
 // properties. Resolution order: system property (-D) > environment variable.
@@ -64,6 +64,7 @@ def __mirrors = []
 if (centralMirror) __mirrors << "Maven Central -> ${centralMirror.url}"
 if (snapshotsMirror) __mirrors << "Central Portal Snapshots -> ${snapshotsMirror.url}"
 if (pluginPortalMirror) __mirrors << "Gradle Plugin Portal -> ${pluginPortalMirror.url}"
+println "Repository mirrors active: ${__mirrors.join(', ')}"
 
 def __rewriteRepo(repositories, String repoName, __MirrorConfig mirror) {
     if (!mirror) return
@@ -110,31 +111,16 @@ def __addAllFallbacks(repositories, centralMirror, snapshotsMirror, pluginPortal
     __addFallback(repositories, 'Gradle Central Plugin Repository', 'https://plugins.gradle.org/m2', pluginPortalMirror)
 }
 
-// When applied from an applied script's buildscript block, the caller passes its
-// ScriptHandler via gradle.ext.__mirrorBuildScript so we can rewrite that script's
-// repositories. Lifecycle callbacks only reach project.buildscript, not applied
-// scripts' separate ScriptHandlers.
-def __buildScript = gradle.ext.has('__mirrorBuildScript') ? gradle.ext.__mirrorBuildScript : null
-if (__buildScript != null) {
-    gradle.ext.__mirrorBuildScript = null
-    def __source = __buildScript.sourceFile?.name
-    def __logPrefix = __source ? "${rootProject.getName()}:${__source}" : rootProject.getName()
-    println "${__logPrefix}: Repository mirrors active: ${__mirrors.join(', ')}"
-    __rewriteAll(__buildScript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
-    __addAllFallbacks(__buildScript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
-    return
+gradle.beforeSettings { settings ->
+    __rewriteAll(settings.pluginManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+    __rewriteAll(settings.buildscript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
 }
 
-println "${rootProject.getName()}: Repository mirrors active: ${__mirrors.join(', ')}"
-
-__rewriteAll(buildscript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
-__addAllFallbacks(buildscript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
-
-__rewriteAll(pluginManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
-
-gradle.settingsEvaluated { s ->
-    __rewriteAll(s.dependencyResolutionManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
-    __addAllFallbacks(s.dependencyResolutionManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+gradle.settingsEvaluated { settings ->
+    __addAllFallbacks(settings.pluginManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+    __addAllFallbacks(settings.buildscript.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+    __rewriteAll(settings.dependencyResolutionManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
+    __addAllFallbacks(settings.dependencyResolutionManagement.repositories, centralMirror, snapshotsMirror, pluginPortalMirror)
 }
 
 gradle.beforeProject { p ->

@@ -22,6 +22,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
 
 env:
+  COMMON_GRADLE_ARGS: "-Igradle/init.gradle"
   MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
   MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
 
@@ -115,7 +116,9 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
       - name: Run build script
-        run: ./ci/build-github.sh
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./ci/build-github.sh "${common_gradle_args[@]}"
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
@@ -260,7 +263,9 @@ jobs:
           ORG_GRADLE_PROJECT_toolchain.compiler.jvmargs: "-Dlog4j2.disableJmx=true -Xmx4g -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
           # Gradle workers (Tests...)
           ORG_GRADLE_PROJECT_toolchain.launcher.jvmargs: "-Dlog4j2.disableJmx=true -Xmx3g -XX:MaxMetaspaceSize=448m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
-        run: ./ci/build-github.sh
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./ci/build-github.sh "${common_gradle_args[@]}"
         shell: bash
 
       - uses: oracle-actions/setup-testpilot@f620f11f9f26dacfe80ba1823342e3e92604c55f # v1.0.23
@@ -361,7 +366,9 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-    
 
       - name: Run build script
-        run: ./gradlew formatChecks
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./gradlew "${common_gradle_args[@]}" formatChecks
         env:
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
@@ -450,7 +457,9 @@ jobs:
         continue-on-error: true
 
       - name: Merge Jacoco Reports
-        run: ./gradlew mergeCodeCoverageReport copyDependenciesSonar --no-parallel
+        run: |
+          read -ra common_gradle_args <<< "$COMMON_GRADLE_ARGS"
+          ./gradlew "${common_gradle_args[@]}" mergeCodeCoverageReport copyDependenciesSonar --no-parallel
 
       - name: Store build info for Sonar scanning
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0

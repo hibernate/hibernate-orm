@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.hbm.inheritance;
+package org.hibernate.orm.test.xml.inheritance;
 
-public class DogName {
+public class CatName {
 	private long id;
 
 	private String name;

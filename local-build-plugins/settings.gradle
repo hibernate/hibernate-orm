@@ -9,8 +9,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 
-    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
-    apply from: '../gradle/mirror.gradle'
 }
 
 dependencyResolutionManagement {

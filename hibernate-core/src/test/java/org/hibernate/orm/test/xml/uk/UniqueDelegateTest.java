@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.hbm.uk;
+package org.hibernate.orm.test.xml.uk;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertThat;
 				provider = UniqueDelegateTest.MyDialectConfigurer.class
 		)
 )
-@DomainModel( xmlMappings = "org/hibernate/orm/test/hbm/uk/person_unique.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/xml/uk/person_unique.orm.xml" )
 @RequiresDialect(
 		value = H2Dialect.class,
 		comment = "Even though we use specialized Dialect, we still have calls happening to the "

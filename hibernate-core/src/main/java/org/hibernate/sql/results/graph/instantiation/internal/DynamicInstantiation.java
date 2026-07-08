@@ -136,7 +136,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer<T> {
 //			}
 //			if ( !duplicatedAliases.isEmpty() ) {
 //				throw new IllegalStateException(
-//						"Map dynamic instantiation contained arguments with duplicated aliases [" + StringHelper.join( ",", duplicatedAliases ) + "]"
+//						"Map dynamic instantiation contained arguments with duplicated aliases [" + String.join( ",", duplicatedAliases ) + "]"
 //				);
 //			}
 //			return new DynamicInstantiationMapAssemblerImpl(
@@ -196,7 +196,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer<T> {
 //			if ( !duplicatedAliases.isEmpty() ) {
 //				throw new IllegalStateException(
 //						"Could not determine appropriate instantiation strategy - no matching constructor found and arguments defined duplicated aliases [" +
-//								StringHelper.join( ",", duplicatedAliases ) + "] for bean-injection"
+//								String.join( ",", duplicatedAliases ) + "] for bean-injection"
 //				);
 //			}
 //

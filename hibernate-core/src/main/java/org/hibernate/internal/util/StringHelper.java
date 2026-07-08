@@ -47,61 +47,6 @@ public final class StringHelper {
 		return string.length() - 1;
 	}
 
-	public static String join(String separator, String[] strings) {
-		final int length = strings.length;
-		if ( length == 0 ) {
-			return "";
-		}
-		else {
-			// Allocate space for length * firstStringLength;
-			// If strings[0] is null, then its length is defined as 4, since that's the
-			// length of "null".
-			final int firstStringLength = strings[0] != null ? strings[0].length() : 4;
-			final var buf =
-					new StringBuilder( length * firstStringLength )
-							.append( strings[0] );
-			for ( int i = 1; i < length; i++ ) {
-				buf.append( separator ).append( strings[i] );
-			}
-			return buf.toString();
-		}
-	}
-
-	public static String join(String separator, Object[] values) {
-		final int length = values.length;
-		if ( length == 0 ) {
-			return "";
-		}
-		else {
-			// Allocate space for length * firstStringLength;
-			// If strings[0] is null, then its length is defined as 4, since that's the
-			// length of "null".
-			final int firstStringLength = values[0] != null ? values[0].toString().length() : 4;
-			final var buf =
-					new StringBuilder( length * firstStringLength )
-							.append( values[0] );
-			for ( int i = 1; i < length; i++ ) {
-				buf.append( separator ).append( values[i] );
-			}
-			return buf.toString();
-		}
-	}
-
-	public static String join(String separator, Iterable<?> objects) {
-		return join( separator, objects.iterator() );
-	}
-
-	public static String join(String separator, Iterator<?> objects) {
-		final var buf = new StringBuilder();
-		if ( objects.hasNext() ) {
-			buf.append( objects.next() );
-		}
-		while ( objects.hasNext() ) {
-			buf.append( separator ).append( objects.next() );
-		}
-		return buf.toString();
-	}
-
 	public static String joinWithQualifierAndSuffix(
 			String[] values,
 			String qualifier,

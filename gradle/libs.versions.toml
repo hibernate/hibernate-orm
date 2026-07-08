@@ -74,7 +74,7 @@ persistenceTck="4.0.0-SNAPSHOT"
 dataTck = "1.1.0-SNAPSHOT"
 dataTckArquillian = "1.9.2.Final"
 dataTckShrinkwrap = "1.2.6"
-dataTckServlet = "6.1.0-M2"
+dataTckServlet = "6.1.0"
 dataTckNosql = "1.0.0-b7"
 sigtest = "2.3"
 

@@ -24,6 +24,8 @@ import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
+env.COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
+
 stage('Configure') {
 	this.environments = [
 		new BuildEnvironment( node: 's390x' ),
@@ -116,7 +118,7 @@ stage('Build') {
 							}
 						}
 						stage('Test') {
-							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							String cmd = "./ci/build.sh \$COMMON_GRADLE_ARGS ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
 								try {
 									if (buildEnv.dbLockableResource == null) {

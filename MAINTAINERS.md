@@ -18,7 +18,7 @@ Continuous integration is split across two platforms:
 ### Tips
 
 The Hibernate ORM build can use mirrors instead of public repositories.
-The mirror configuration is in `gradle/mirror.gradle`, auto-activated from `settings.gradle`.
+The mirror configuration is in `gradle/init.gradle`, applied as an init script via `-Igradle/init.gradle`.
 Each mirror is activated independently when its `MIRROR_*_URL` property is set.
 
 Supported mirrors (each with `_URL`, `_USERNAME`, `_PASSWORD`, `_FALLBACK` suffixes):

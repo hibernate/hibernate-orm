@@ -24,6 +24,8 @@ import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
+env.COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
+
 stage('Configure') {
 	requireApprovalForPullRequest 'hibernate'
 
@@ -220,7 +222,7 @@ void ciBuild(buildEnv, String args) {
 		withCredentials([string(credentialsId: develocityCredentialsId,
 				variable: 'DEVELOCITY_ACCESS_KEY')]) {
 			withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
-				sh "./ci/build.sh $args"
+				sh "./ci/build.sh \$COMMON_GRADLE_ARGS $args"
 			}
 		}
 	}
@@ -228,20 +230,20 @@ void ciBuild(buildEnv, String args) {
 		// Pull request: we can't pass credentials to the build, since we'd be exposing secrets to e.g. tests.
 		// We do the build first, then publish the build scan separately.
 		tryFinally({
-			sh "./ci/build.sh $args"
+			sh "./ci/build.sh \$COMMON_GRADLE_ARGS $args"
 		}, { // Finally
 			withCredentials([string(credentialsId: 'develocity.commonhaus.dev-access-key-pr',
 					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 					// Don't fail a build if publishing fails
-					sh './gradlew buildScanPublishPrevious || true'
+					sh "./gradlew \$COMMON_GRADLE_ARGS buildScanPublishPrevious || true"
 				}
 			}
 		})
 	}
 	else {
 		// Don't do build scans
-		sh "./ci/build.sh $args"
+		sh "./ci/build.sh \$COMMON_GRADLE_ARGS $args"
 	}
 }
 

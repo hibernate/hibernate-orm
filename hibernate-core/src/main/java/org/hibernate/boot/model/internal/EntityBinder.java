@@ -31,7 +31,6 @@ import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -258,7 +257,7 @@ public class EntityBinder {
 				inheritanceStates
 		);
 		entityBinder.handleInheritance( inheritanceState, superEntity, holder );
-		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState );
+		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState ); //"handleIdentifier" ???
 
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
@@ -362,7 +361,7 @@ public class EntityBinder {
 			RootClass rootClass,
 			MetadataBuildingContext context) {
 		final var audited = extract( Audited.class, classDetails, context );
-		var overrideAnnotationDisablesAuditing = false;
+/*		var overrideAnnotationDisablesAuditing = false;
 		final var override = extract( AuditOverrides.class, classDetails, context );
 		if ( override != null ) {
 			if ( override.value().length > 0 ) {
@@ -371,9 +370,9 @@ public class EntityBinder {
 					overrideAnnotationDisablesAuditing = true;
 				}
 			}
-		}
+		}*/
 
-		if ( audited != null && !overrideAnnotationDisablesAuditing) {
+		if ( audited != null /*&& !overrideAnnotationDisablesAuditing*/) {
 			final var auditTable = extract( Audited.Table.class, classDetails, context );
 			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
 		}

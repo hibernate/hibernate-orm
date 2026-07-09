@@ -15,6 +15,7 @@ import java.util.Set;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.AuditOverride;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditStrategy;
@@ -245,7 +246,7 @@ public final class AuditHelper {
 			String modTypeColumnName,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		for ( var subclass : parent.getDirectSubclasses() ) {
+		for ( var subclass : parent.getDirectSubclasses() ) { //here!?
 			if ( subclass instanceof TableOwner ) {
 				// Check if the subclass has its own @Audited.Table for table name/schema/catalog override
 				final var subclassDetails = modelsContext.getClassDetailsRegistry()
@@ -648,8 +649,8 @@ public final class AuditHelper {
 	private static Column copyColumn(Table targetTable, Column column) {
 		final var targetColumn = targetTable.getColumn( column );
 		if ( targetColumn == null ) {
-			final var columnCopy = column.clone();
-			columnCopy.copy( column );
+			final var columnCopy = column.clone(); 	//
+			columnCopy.copy( column );				// ?
 			targetTable.addColumn( columnCopy );
 			return columnCopy;
 		}
@@ -801,6 +802,23 @@ public final class AuditHelper {
 		if ( rootClass.getDiscriminator() != null ) {
 			for ( var column : rootClass.getDiscriminator().getColumns() ) {
 				mappedColumns.add( column.getCanonicalName() );
+			}
+		}
+		// This class might disable auditing (@AuditOverride) of a property of a super @MappedSuperClass
+		// In this case, we have to exclude the property from the AUD table
+		//TODO handle @AuditOverrideS
+		var auditOverride = rootClass.getMappedClass().getAnnotation( AuditOverride.class );
+		if ( auditOverride != null ) {
+			var name = auditOverride.name();
+			var superMappedSuperclass = rootClass.getSuperMappedSuperclass();
+			while ( superMappedSuperclass != null ) {
+				if ( superMappedSuperclass.hasProperty( name ) ) { // with the forClass feature, the condition just has to be extended to match the class
+					excluded.add( name );
+					break;
+				}
+				else {
+					superMappedSuperclass = superMappedSuperclass.getSuperMappedSuperclass();
+				}
 			}
 		}
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)

@@ -10,6 +10,12 @@
  */
 
 buildscript {
+	// Applied scripts' buildscript blocks use a separate ScriptHandler whose
+	// repositories are not rewritten by the lifecycle callbacks registered when
+	// mirror.gradle is applied from settings.gradle. Apply it explicitly here,
+	// passing this ScriptHandler so mirror.gradle can rewrite its repositories.
+	gradle.ext.__mirrorBuildScript = delegate
+	apply from: rootProject.file('gradle/mirror.gradle')
 	repositories {
 		mavenCentral()
 	}

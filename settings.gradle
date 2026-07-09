@@ -7,6 +7,11 @@
 
 pluginManagement {
     repositories {
+        // mavenCentral before gradlePluginPortal: the plugin portal redirects transitive
+        // deps to Maven Central via HTTP 303 — with a mirror, those redirects would fail.
+        // Listing mavenCentral first lets Gradle resolve transitive deps directly
+        // (or from the mirror when MIRROR_MAVEN_CENTRAL_URL is set; see gradle/mirror.gradle).
+        mavenCentral()
         gradlePluginPortal()
         maven {
             name = 'localPluginRepository'
@@ -15,6 +20,11 @@ pluginManagement {
     }
 
     includeBuild 'local-build-plugins'
+
+    // Repository mirrors: rewrites repository URLs when MIRROR_*_URL is set (see MAINTAINERS.md).
+    // Applied inside pluginManagement so that repos are rewritten before settings plugins
+    // are resolved at the plugins {} block; lifecycle callbacks handle per-project repos.
+    apply from: 'gradle/mirror.gradle'
 }
 
 plugins {
@@ -27,35 +37,7 @@ plugins {
 dependencyResolutionManagement {
     repositories {
         // See MAINTAINERS.md for documentation.
-        // TODO Move to infra overrides instead;
-        //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        if ( System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR'] ) {
-            maven {
-                url System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR']
-                if ( System.getProperty( 'MAVEN_MIRROR_USERNAME' ) || System.env['MAVEN_MIRROR_USERNAME'] ) {
-                    credentials {
-                        username = System.getProperty( 'MAVEN_MIRROR_USERNAME' ) ?: System.env['MAVEN_MIRROR_USERNAME']
-                        if ( System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) || System.env['MAVEN_MIRROR_PASSWORD'] ) {
-                            password = System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) ?: System.env['MAVEN_MIRROR_PASSWORD']
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            mavenCentral()
-
-            if (System.getProperty('JPA_PREVIEW') != null) {
-                // Needed for the RC versions of Jakarta Persistencemaven
-                maven {
-                    url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
-                }
-                // Needed for the SNAPSHOT versions of Jakarta Persistence
-                maven {
-                    url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/"
-                }
-            }
-        }
+        mavenCentral()
 
         //Allow loading additional dependencies from a local path;
         //useful to load JDBC drivers which can not be distributed in public.

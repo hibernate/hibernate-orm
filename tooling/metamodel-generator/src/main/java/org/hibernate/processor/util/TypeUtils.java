@@ -285,6 +285,23 @@ public final class TypeUtils {
 		return getAnnotationMirror( element, qualifiedName ) != null;
 	}
 
+	private static final Set<String> SECURITY_ANNOTATIONS = Set.of(
+		"jakarta.annotation.security.DenyAll",
+		"jakarta.annotation.security.PermitAll",
+		"jakarta.annotation.security.RolesAllowed"
+	);
+
+	public static boolean isInheritedAnnotation(AnnotationMirror annotationMirror) {
+		final Element annotationType = annotationMirror.getAnnotationType().asElement();
+		return hasAnnotation( annotationType, "jakarta.interceptor.InterceptorBinding" )
+			|| isSecurityAnnotation( annotationType );
+	}
+
+	private static boolean isSecurityAnnotation(Element annotationType) {
+		return annotationType instanceof TypeElement typeElement
+			&& SECURITY_ANNOTATIONS.contains( typeElement.getQualifiedName().toString() );
+	}
+
 	public static boolean hasAnnotation(Element element, String... qualifiedNames) {
 		for ( var qualifiedName : qualifiedNames ) {
 			if ( hasAnnotation( element, qualifiedName ) ) {

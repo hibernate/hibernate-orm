@@ -155,9 +155,10 @@ This is useful for testing, or for executing in an environment with no support f
 
 Jakarta Data specifies that methods of a repository interface may be annotated with:
 
-- Jakarta Bean Validation constraint annotations, and
+- Jakarta Bean Validation constraint annotations,
 - Jakarta Interceptors interceptor binding types, including,
-- in particular, the `@Transactional` interceptor binding defined by Jakarta Transactions.
+  in particular, the `@Transactional` interceptor binding defined by Jakarta Transactions, and
+- security annotations from the `jakarta.annotation.security` package: `@DenyAll`, `@PermitAll`, and `@RolesAllowed`.
 
 Note that these annotations are usually applied to a CDI bean implementation class, not to an interface,footnote:[`@Inherited` annotations are inherited from superclass to subclass, but not from interface to implementing class.] but a special exception is made for repository interfaces.
 

@@ -225,6 +225,11 @@ public final class ClassWriter {
 			}
 			pw.print('}');
 		}
+		else if (argument instanceof String string) {
+			pw.print('"');
+			pw.print( string.replace( "\\", "\\\\" ).replace( "\"", "\\\"" ) );
+			pw.print('"');
+		}
 		else {
 			pw.print( argument );
 		}

@@ -808,11 +808,11 @@ public final class AuditHelper {
 		// In this case, we have to exclude the property from the AUD table
 		//TODO handle @AuditOverrideS
 		var auditOverride = rootClass.getMappedClass().getAnnotation( AuditOverride.class );
-		if ( auditOverride != null ) {
+		if ( auditOverride != null && !auditOverride.isAudited() ) {
 			var name = auditOverride.name();
 			var superMappedSuperclass = rootClass.getSuperMappedSuperclass();
 			while ( superMappedSuperclass != null ) {
-				if ( superMappedSuperclass.hasProperty( name ) ) { // with the forClass feature, the condition just has to be extended to match the class
+				if ( superMappedSuperclass.hasProperty( name )) { // with the forClass feature, the condition just has to be extended to match the class
 					excluded.add( name );
 					break;
 				}

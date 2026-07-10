@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,11 +31,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 //@AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		AuditOverrideTableConstructionTest.RootEntity.class,
-		AuditOverrideTableConstructionTest.SubClass.class,
-		AuditOverrideTableConstructionTest.MSC.class,
-		AuditOverrideTableConstructionTest.SubClassOfMSC.class,
-		AuditOverrideTableConstructionTest.ClassUnderTwoMSCes.class,
+//		AuditOverrideTableConstructionTest.RootEntity.class,
+//		AuditOverrideTableConstructionTest.SubClass.class,
+//		AuditOverrideTableConstructionTest.MSC.class,
+//		AuditOverrideTableConstructionTest.SubClassOfMSC.class,
+//		AuditOverrideTableConstructionTest.ClassUnderTwoMSCes.class,
+//		AuditOverrideTableConstructionTest.MSCWithoutAuditing.class,
+//		AuditOverrideTableConstructionTest.EnablesAuditingOfMSC.class,
+		AuditOverrideTableConstructionTest.NotAuditedRootEntity.class,
+		AuditOverrideTableConstructionTest.AuditedSubEntity.class,
 
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
@@ -62,7 +65,7 @@ public class AuditOverrideTableConstructionTest {
 	}
 
 	@Entity
-	@AuditOverride(name = "str1") //TODO with AuditOverrideS aswell
+	@AuditOverride(name = "str1", isAudited = false) //TODO with AuditOverrideS aswell
 	static class SubClass extends RootEntity {
 		String str2;
 	}
@@ -114,7 +117,7 @@ public class AuditOverrideTableConstructionTest {
 
 
 	@MappedSuperclass
-	static class MSCChild extends MSC{
+	static class MSCChild extends MSC {
 		String str2;
 	}
 
@@ -134,5 +137,60 @@ public class AuditOverrideTableConstructionTest {
 			assertTrue( table.containsColumn( new Column( "str3" ) ) );
 		} );
 	}
+
+	@MappedSuperclass
+	static class MSCWithoutAuditing {
+		@Id
+		long id;
+
+		String str1;
+	}
+
+	@Entity
+	@Table(name = "EnablesAuditingOfMSC")
+	@AuditOverride(name = "str1", isAudited = true)
+	//TODO add an exception when there is an @AuditOverride enabling auditing on a @MappedSuperClass that isn't audited? But what if it was inherited?
+	@Audited
+	static class EnablesAuditingOfMSC extends MSCWithoutAuditing {
+
+	}
+
+	@Test
+	public void enableAuditingOfPropertyInheritedFromAMSC(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "EnablesAuditingOfMSC_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+		} );
+	}
+
+	@Entity
+	@Table(name = "NotAuditedRootEntity")
+	static class NotAuditedRootEntity {
+		@Id
+		long id;
+
+		String str1;
+	}
+
+	//	@AuditOverride(name = "str1")
+	@Audited
+	@Entity
+	static class AuditedSubEntity extends NotAuditedRootEntity { //Looks like Hibernate assumes that the parent class provides the AUD table. Bug?
+		String str2;
+	}
+
+	@Test //NotAuditedRootEntity has no AUD table
+	public void auditedSubEntity(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "NotAuditedRootEntity_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertTrue( table.containsColumn( new Column( "str2" ) ) );
+		} );
+	}
+
+
+	//
+	//
+	// Parent @Entity has an Audit Exclude, will we allow enabling it?
 
 }

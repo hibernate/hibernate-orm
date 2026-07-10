@@ -6,6 +6,7 @@ package org.hibernate.temporal.audit.inheritance;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
@@ -15,12 +16,14 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
@@ -46,7 +49,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 		AuditSingleTableInheritanceTest.SportsCar.class,
 		AuditSingleTableInheritanceTest.Truck.class,
 		AuditSingleTableInheritanceTest.Driver.class,
-		AuditSingleTableInheritanceTest.Team.class
+		AuditSingleTableInheritanceTest.Team.class,
+		AuditSingleTableInheritanceTest.NotAuditedParent.class,
+		AuditSingleTableInheritanceTest.AuditedChild.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.inheritance.AuditSingleTableInheritanceTest$TxIdSupplier"))
@@ -390,5 +395,31 @@ class AuditSingleTableInheritanceTest {
 			this.id = id;
 			this.teamName = teamName;
 		}
+	}
+
+	/**
+	 * Tests where just the Subclass is @Audited but not the parent class
+	 */
+
+	@Entity
+	@Table(name = "NotAuditedParent")
+	static class NotAuditedParent {
+		@Id
+		long id;
+	}
+
+	@Audited
+	@Entity
+	static class AuditedChild extends NotAuditedParent {
+		String str1;
+	}
+
+	@Test
+	@Order(6)
+	void notAuditedParent(DomainModelScope scope) {
+		var tables = scope.getDomainModel().collectTableMappings();
+		var tableNames = tables.stream().map( org.hibernate.mapping.Table::getName ).collect( Collectors.toSet());
+		assertThat( tableNames ).contains( "NotAuditedParent" );
+		assertThat( tableNames ).contains( "NotAuditedParent_AUD" );
 	}
 }

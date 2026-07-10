@@ -101,6 +101,7 @@ import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.getInheritedAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
+import static org.hibernate.processor.util.TypeUtils.isInheritedAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
 import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
@@ -5910,8 +5911,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( jakartaDataRepository ) {
 			List<AnnotationMirror> list = new ArrayList<>();
 			for ( var annotationMirror : element.getAnnotationMirrors() ) {
-				if ( hasAnnotation( annotationMirror.getAnnotationType().asElement(),
-						"jakarta.interceptor.InterceptorBinding" ) ) {
+				if ( isInheritedAnnotation( annotationMirror ) ) {
 					list.add( annotationMirror );
 				}
 			}

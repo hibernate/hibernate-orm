@@ -7,6 +7,7 @@ package org.hibernate.processor.annotation;
 import jakarta.annotation.Nullable;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
+import org.hibernate.processor.util.TypeUtils;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -104,8 +105,7 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	public List<AnnotationMirror> inheritedAnnotations() {
 		if ( annotationMetaEntity.isJakartaDataRepository() ) {
 			return method.getAnnotationMirrors().stream()
-					.filter(annotationMirror -> hasAnnotation(annotationMirror.getAnnotationType().asElement(),
-							"jakarta.interceptor.InterceptorBinding"))
+					.filter(TypeUtils::isInheritedAnnotation)
 					.collect(toList());
 		}
 		else {

@@ -296,7 +296,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			case "enhanced-table", "table" -> org.hibernate.id.enhanced.TableGenerator.class.getName();
 			case "identity" -> org.hibernate.id.IdentityGenerator.class.getName();
 			case "increment" -> org.hibernate.id.IncrementGenerator.class.getName();
-			case "foreign" -> org.hibernate.id.ForeignGenerator.class.getName();
 			case "uuid", "uuid.hex" -> org.hibernate.id.UUIDHexGenerator.class.getName();
 			case "uuid2" -> org.hibernate.id.UUIDGenerator.class.getName();
 			case "select" -> org.hibernate.id.SelectGenerator.class.getName();
@@ -490,8 +489,21 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		StringBuilder buffer = new StringBuilder(ab.getResult());
 
 		if ( pkIsAlsoFk && oneToOne.getForeignKeyType().equals(ForeignKeyDirection.FROM_PARENT) ){
-			AnnotationBuilder ab1 = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.PrimaryKeyJoinColumn") );
-			buffer.append(ab1.getResult());
+			if ( clazz.getIdentifier() instanceof Component ) {
+				// composite PK: @PrimaryKeyJoinColumn maps the join to the composite PK columns
+				buffer.append( AnnotationBuilder.createAnnotation( importType("jakarta.persistence.PrimaryKeyJoinColumn") ).getResult() );
+			}
+			else {
+				// simple shared PK: @MapsId drives ID derivation from the association;
+				// explicit @JoinColumn needed since @MapsId alone uses default naming (wrong column)
+				Selectable pkCol = clazz.getIdentifierProperty().getSelectables().iterator().next();
+				if ( pkCol instanceof Column col ) {
+					buffer.append( AnnotationBuilder.createAnnotation( importType("jakarta.persistence.JoinColumn") )
+							.addQuotedAttribute( "name", col.getName() )
+							.getResult() );
+				}
+				buffer.insert( 0, AnnotationBuilder.createAnnotation( importType("jakarta.persistence.MapsId") ).getResult() );
+			}
 		}
 
 		return buffer.toString();

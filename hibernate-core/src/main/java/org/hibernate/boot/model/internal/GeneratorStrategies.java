@@ -9,7 +9,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
@@ -89,8 +88,6 @@ public class GeneratorStrategies {
 				return IdentityGenerator.class;
 			case "increment":
 				return IncrementGenerator.class;
-			case "foreign":
-				return ForeignGenerator.class;
 			case "uuid":
 			case "uuid.hex":
 				return UUIDHexGenerator.class;
@@ -130,8 +127,6 @@ public class GeneratorStrategies {
 				return IdentityGenerator.class;
 			case "increment":
 				return IncrementGenerator.class;
-			case "foreign":
-				return ForeignGenerator.class;
 			case "uuid":
 			case "uuid.hex":
 				return UUIDHexGenerator.class;

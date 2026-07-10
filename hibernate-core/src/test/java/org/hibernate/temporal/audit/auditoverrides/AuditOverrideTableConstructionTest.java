@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -172,14 +173,15 @@ public class AuditOverrideTableConstructionTest {
 		String str1;
 	}
 
-	//	@AuditOverride(name = "str1")
-	@Audited
 	@Entity
-	static class AuditedSubEntity extends NotAuditedRootEntity { //Looks like Hibernate assumes that the parent class provides the AUD table. Bug?
+	@Audited
+	@AuditOverride(name = "str1")
+	static class AuditedSubEntity extends NotAuditedRootEntity {
 		String str2;
 	}
 
-	@Test //NotAuditedRootEntity has no AUD table
+	@Test
+	@Disabled(value = "AUD tables are missing completely, due to a bug: https://github.com/hibernate/hibernate-orm/pull/13047")
 	public void auditedSubEntity(DomainModelScope domainModelScope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		assertTable( tables, "NotAuditedRootEntity_AUD", table -> {

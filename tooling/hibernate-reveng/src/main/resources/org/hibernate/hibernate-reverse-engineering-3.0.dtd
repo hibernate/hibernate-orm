@@ -1,0 +1,138 @@
+<!-- Hibernate Reverse Engineering DTD.
+
+<!DOCTYPE hibernate-reverse-engineering PUBLIC 
+    "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd">
+
+An instance of this XML document may contain misc. overrides used
+when hibernate tools perform reverse engineering.
+
+TODO: document the tags in the DTD
+
+-->
+
+<!--
+	The document root.
+ -->
+
+<!ELEMENT hibernate-reverse-engineering (
+	(schema-selection)*, type-mapping?,
+	(table-filter)*, table*)>
+
+<!ELEMENT type-mapping ( sql-type+ ) >
+
+<!-- Defines a sql-type mapping. Will match on any combination of jdbc-type, length, precision and/or scale - first match will win. -->
+<!ELEMENT sql-type (hibernate-type?) >
+<!ATTLIST sql-type name CDATA #IMPLIED >
+<!ATTLIST sql-type jdbc-type CDATA #IMPLIED >
+<!ATTLIST sql-type length CDATA #IMPLIED >
+<!ATTLIST sql-type precision CDATA #IMPLIED >
+<!ATTLIST sql-type scale CDATA #IMPLIED >
+<!ATTLIST sql-type not-null (true|false) #IMPLIED >
+<!ATTLIST sql-type hibernate-type CDATA #IMPLIED >
+
+<!ELEMENT hibernate-type EMPTY>
+<!ATTLIST hibernate-type name CDATA #REQUIRED >
+
+<!-- Used to target the selection from the database schema. 
+Each schema-selection can be viewed as a "call" to DatabaseMetaData.getTables(). -->
+<!ELEMENT schema-selection EMPTY>
+<!-- Catalog pattern for the selection -->
+<!ATTLIST schema-selection match-catalog CDATA #IMPLIED >
+<!-- Schema for the for the selection -->
+<!ATTLIST schema-selection match-schema  CDATA #IMPLIED >
+<!-- Table pattern for the selection -->
+<!ATTLIST schema-selection match-table    CDATA #IMPLIED >
+
+<!ELEMENT table (meta*, primary-key?, column*, foreign-key*) >
+<!-- Catalog for the table -->
+<!ATTLIST table catalog CDATA #IMPLIED >
+<!-- Schema for the table -->
+<!ATTLIST table schema  CDATA #IMPLIED >
+<!-- Name of the table -->
+<!ATTLIST table name    CDATA #REQUIRED >
+<!-- The class name to use for the table -->
+<!ATTLIST table class   CDATA #IMPLIED >
+
+<!ELEMENT column (meta*) >
+<!ATTLIST column name           CDATA        #REQUIRED >
+<!ATTLIST column jdbc-type      CDATA        #IMPLIED >
+<!ATTLIST column type           CDATA        #IMPLIED >
+<!ATTLIST column property       CDATA        #IMPLIED >
+<!ATTLIST column exclude        (true|false) "false" >
+
+<!ELEMENT key-column EMPTY >
+<!ATTLIST key-column name           CDATA        #REQUIRED >
+<!ATTLIST key-column jdbc-type      CDATA        #IMPLIED >
+<!ATTLIST key-column type           CDATA        #IMPLIED >
+<!ATTLIST key-column property       CDATA        #IMPLIED >
+
+<!ELEMENT primary-key (generator?, key-column*) >
+<!-- Property name to use for this primary key -->
+<!ATTLIST primary-key property        CDATA        #IMPLIED >
+<!-- Class to use for representing the id -->
+<!ATTLIST primary-key id-class CDATA        #IMPLIED >
+
+<!ELEMENT generator (param*)>
+<!ATTLIST generator class CDATA #REQUIRED>
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param name CDATA #REQUIRED>
+
+<!-- A foreign-key has to have at least a constraint-name AND/OR foreign-table+column-ref's -->
+<!ELEMENT foreign-key (column-ref*,many-to-one?,(set)?,one-to-one?,(inverse-one-to-one)?) >
+<!ATTLIST foreign-key constraint-name        CDATA    #IMPLIED >
+<!ATTLIST foreign-key foreign-catalog CDATA  #IMPLIED >
+<!ATTLIST foreign-key foreign-schema CDATA   #IMPLIED >
+<!ATTLIST foreign-key foreign-table CDATA    #IMPLIED >
+
+<!ELEMENT column-ref EMPTY >
+<!ATTLIST column-ref local-column   CDATA    #REQUIRED >
+<!ATTLIST column-ref foreign-column CDATA    #IMPLIED >
+
+<!ELEMENT many-to-one EMPTY >
+<!ATTLIST many-to-one property CDATA #IMPLIED>
+<!ATTLIST many-to-one exclude (true|false) #IMPLIED>
+<!ATTLIST many-to-one cascade CDATA #IMPLIED>
+<!ATTLIST many-to-one fetch (join|select) #IMPLIED>
+<!ATTLIST many-to-one update (true|false) "true">
+<!ATTLIST many-to-one insert (true|false) "true">
+
+<!-- pure one to one (shared pk) are managed) -->
+<!ELEMENT one-to-one EMPTY >
+<!ATTLIST one-to-one property CDATA #IMPLIED>
+<!ATTLIST one-to-one exclude (true|false) #IMPLIED>
+<!ATTLIST one-to-one cascade CDATA #IMPLIED>
+<!ATTLIST one-to-one fetch (join|select) #IMPLIED>
+
+
+<!ELEMENT inverse-one-to-one EMPTY >
+<!ATTLIST inverse-one-to-one property CDATA #IMPLIED>
+<!ATTLIST inverse-one-to-one exclude (true|false) #IMPLIED>
+<!ATTLIST inverse-one-to-one cascade CDATA #IMPLIED>
+<!ATTLIST inverse-one-to-one fetch (join|select) #IMPLIED>
+
+<!ELEMENT set EMPTY >
+<!ATTLIST set property CDATA #IMPLIED>
+<!ATTLIST set exclude (true|false) #IMPLIED>
+<!ATTLIST set cascade CDATA #IMPLIED>
+
+
+<!-- <!ELEMENT bag EMPTY >
+<!ATTLIST bag property CDATA #REQUIRED> -->
+
+<!-- a table-filter allows to explicitly exclude or include tables or complete catalog/schemas into the reverse engineering -->
+<!ELEMENT table-filter (meta)* >
+<!ATTLIST table-filter match-catalog CDATA ".*" >  
+<!ATTLIST table-filter match-schema CDATA ".*" >
+<!ATTLIST table-filter match-name CDATA #REQUIRED >
+<!ATTLIST table-filter exclude (true|false) "false" >
+<!ATTLIST table-filter package CDATA #IMPLIED >
+
+<!--
+	META element definition; used to assign meta-level attributes.
+-->
+<!ELEMENT meta (#PCDATA)>
+	<!ATTLIST meta attribute CDATA #REQUIRED>
+
+
+

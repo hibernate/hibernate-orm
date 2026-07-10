@@ -32,13 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 //@AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-//		AuditOverrideTableConstructionTest.RootEntity.class,
-//		AuditOverrideTableConstructionTest.SubClass.class,
-//		AuditOverrideTableConstructionTest.MSC.class,
-//		AuditOverrideTableConstructionTest.SubClassOfMSC.class,
-//		AuditOverrideTableConstructionTest.ClassUnderTwoMSCes.class,
-//		AuditOverrideTableConstructionTest.MSCWithoutAuditing.class,
-//		AuditOverrideTableConstructionTest.EnablesAuditingOfMSC.class,
+		AuditOverrideTableConstructionTest.RootEntity.class,
+		AuditOverrideTableConstructionTest.SubClass.class,
+		AuditOverrideTableConstructionTest.MSC.class,
+		AuditOverrideTableConstructionTest.SubClassOfMSC.class,
+		AuditOverrideTableConstructionTest.ClassUnderTwoMSCes.class,
+		AuditOverrideTableConstructionTest.MSCWithoutAuditing.class,
+		AuditOverrideTableConstructionTest.EnablesAuditingOfMSC.class,
 		AuditOverrideTableConstructionTest.NotAuditedRootEntity.class,
 		AuditOverrideTableConstructionTest.AuditedSubEntity.class,
 
@@ -189,6 +189,8 @@ public class AuditOverrideTableConstructionTest {
 			assertTrue( table.containsColumn( new Column( "str2" ) ) );
 		} );
 	}
+
+
 
 
 	//

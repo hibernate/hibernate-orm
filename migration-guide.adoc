@@ -255,6 +255,12 @@ Library library = new _Library(entityAgent);
 
 This change does not affect code which obtains a repository by injection.
 
+[[security-annotations]]
+=== Security annotations on Jakarta Data repositories
+
+The annotation processor now propagates `@DenyAll`, `@PermitAll`, and `@RolesAllowed` (`jakarta.annotation.security`) from repository interfaces to generated implementations. Previously, only `@InterceptorBinding` annotations were propagated.
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes

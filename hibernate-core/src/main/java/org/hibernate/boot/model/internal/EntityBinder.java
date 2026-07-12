@@ -360,7 +360,7 @@ public class EntityBinder {
 			ClassDetails classDetails,
 			RootClass rootClass,
 			MetadataBuildingContext context) {
-		final var audited = extract( Audited.class, classDetails, context );
+		final var audited = extract( Audited.class, classDetails, context ); //if the class or a mappedsuperclass is audited, we treat this class that it should be audited. (on property level, this has to be implemented aswell)
 /*		var overrideAnnotationDisablesAuditing = false;
 		final var override = extract( AuditOverrides.class, classDetails, context );
 		if ( override != null ) {

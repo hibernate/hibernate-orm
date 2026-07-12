@@ -63,6 +63,10 @@ public class UnparsedNumericLiteral<N extends Number> implements Literal, Domain
 		return literalValue;
 	}
 
+	public NumericTypeCategory getTypeCategory() {
+		return typeCategory;
+	}
+
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
 	}

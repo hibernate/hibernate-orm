@@ -1,6 +1,24 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.5.Final (July 12, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40032
+
+
+** Bug
+    * HHH-20665 In loadJackson3Modules, the ObjectMapper check incorrectly compares against a Jackson 2 instead of a Jackson 3 mapper class
+    * HHH-20650 CTE names/columns and generated recursive search/cycle columns are not quoted when they are reserved words
+    * HHH-20583 Spurious HHH90010101 / HHH90010108 warnings on every bulk operation under container-managed JTA (Hibernate 7.3 / WildFly)
+    * HHH-20522 Json array and object construction doesn't handle values of type UUID, timestamp, binary well
+    * HHH-20511 Oracle JSON value handling of UUID broken
+    * HHH-20509 Hibernate Data Repositories generates a BasicRepository impl that can't 'saveAll' entities with null ids
+    * HHH-20223 DB2 Json value handling of UUID, binary and timestamp with time zone broken
+    * HHH-19566 EntityFilterException not thrown (due to filter not applied)
+    * HHH-13010 Metamodel Generator chooses wrong default access type when child entity in hierarchy hasn't own access type annotation
+    * HHH-4451 StatefulPersistenceContext.deserialize must re-inject field interceptors after reading the entities from the input stream
+
 Changes in 7.4.4.Final (July 05, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

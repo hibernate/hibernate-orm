@@ -117,8 +117,7 @@ public class AuditOverrideTableConstructionTest {
 
 	@MappedSuperclass
 	@AuditOverride(name = "str1", isAudited = false)
-	static class MSCChildWithDisablingAuditOverride
-			extends AuditedMSC { //TODO also with enabling override = true which has to enable auditing
+	static class MSCChildWithDisablingAuditOverride extends AuditedMSC {
 		String str2;
 	}
 
@@ -138,12 +137,6 @@ public class AuditOverrideTableConstructionTest {
 
 	//TODO add Non-Effective exclusions within a group in order to prove that inter-group exclusions are calculated correctly
 
-
-	//TODO add more effective exclusions with hierarchies > 1
-	// Root Group with exclude
-	// a subgroup exists and also excludes it
-	// a subgroup exists and doesn't care --> the exclusion is effectively inherited
-
 	private static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {
 		var tableFound = false;
 		for ( var table : tables ) {
@@ -157,7 +150,7 @@ public class AuditOverrideTableConstructionTest {
 
 	/**
 	 * Transitive Exclusion: str1 is excluded somewhere in the hierarchy, but the exclusion does not become effective,
-	 * because another layer (RootEntity) audits the property.
+	 * because another layer (RootEntity) includes the property into the AUD table
 	 */
 
 
@@ -186,29 +179,24 @@ public class AuditOverrideTableConstructionTest {
 		} );
 	}
 
-	// TODO add more non-effective- exclusions:
-
-	// TODO Revoked: a subgroup revokes the exclusion ( @AuditOverride true)
 	/**
 	 * Revocation:
-	 * MSC audits str1 and str2
-	 * ExcludingEntity excludes str2 (this is group jiggle joggle, refactor to make it simpler, could have been a declared exclusion
+	 * ExcludingEntity declares and excludes str1 from auditing
 	 * RevokingEntity revokes ExcludingEntity's exclusion
 	 */
 
-	@Audited
-	@MappedSuperclass
-	static class AuditedRootEntity {
-		@Id
-		long id;
-		String str1;
-		String str2;
-	}
 
+	@Audited
 	@Entity
 	@AuditOverride(name = "str2", isAudited = false)
 	@Table(name = "ExcludingEntity")
-	static class ExcludingEntity extends AuditedRootEntity {
+	static class ExcludingEntity {
+		@Id
+		long id;
+
+		@Audited.Excluded
+		String str2;
+		String str1;
 
 	}
 

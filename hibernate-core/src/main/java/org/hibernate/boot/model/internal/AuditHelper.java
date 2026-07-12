@@ -817,7 +817,7 @@ public final class AuditHelper {
 
 		//maybe just search for revocations at the very end. This makes processing order irrelevant ==> yes
 
-		// Analyze a group: find the lowest excluding override for property x
+		// Find excludes in a group: find the lowest excluding override for property x
 		var auditOverrideOfRootClass = findFirstAuditOverride( rootClass );
 
 		//if excluding override,
@@ -840,8 +840,9 @@ public final class AuditHelper {
 		for ( var subclass : rootClass.getSubclasses() ) {
 			collectPropertyColumns( subclass, mappedColumns, excluded );
 		}
+
+		//find and apply revocations
 		for ( var subclass : rootClass.getSubclasses() ) {
-			//findRevokes, TODO check @MappedSuperClasses of the subclass
 			var auditOverrideOfSubClass = findFirstAuditOverride( subclass );
 			if ( auditOverrideOfSubClass != null && auditOverrideOfSubClass.isAudited() ) {
 				var revokedProperty = auditOverrideOfSubClass.name();

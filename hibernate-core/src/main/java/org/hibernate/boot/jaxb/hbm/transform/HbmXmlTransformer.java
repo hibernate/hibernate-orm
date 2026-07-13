@@ -1171,6 +1171,7 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferColumnsAndFormulas(
+			PropertyInfo propertyInfo,
 			ColumnAndFormulaSource source,
 			ColumnAndFormulaTarget target,
 			ColumnDefaults columnDefaults,
@@ -1209,10 +1210,11 @@ public class HbmXmlTransformer {
 				|| Boolean.FALSE.equals( columnDefaults.isInsertable() )
 				|| Boolean.FALSE.equals( columnDefaults.isUpdatable() )
 				|| Boolean.TRUE.equals( columnDefaults.isUnique() )
-				|| Boolean.FALSE.equals( columnDefaults.isNullable() ) ) {
+				|| propertyInfo != null && propertyInfo.bootModelProperty().isNaturalIdentifier() ) {
 			// No explicit column/formula specified, but we still need to generate a column to carry
 			// the secondary table name (for <join/>) or non-default insertable/updatable settings
 			// (e.g. <property update="false"/> inside a <component/>) or unique/not-null constraints
+			// or explicit nullable override (e.g. natural-id properties with not-null="false")
 			final var targetColumnAdapter = target.makeColumnAdapter( columnDefaults );
 			targetColumnAdapter.setTable( tableName );
 			target.addColumn( targetColumnAdapter );
@@ -1621,6 +1623,7 @@ public class HbmXmlTransformer {
 		);
 
 		transferColumnsAndFormulas(
+				propertyInfo,
 				new ColumnAndFormulaSource() {
 					@Override
 					public String getColumnAttribute() {
@@ -1661,6 +1664,7 @@ public class HbmXmlTransformer {
 				new ColumnDefaults() {
 					@Override
 					public Boolean isNullable() {
+						final boolean optional = propertyInfo.bootModelProperty().isOptional();
 						return propertyInfo.bootModelProperty().isOptional();
 					}
 
@@ -1972,6 +1976,7 @@ public class HbmXmlTransformer {
 		if ( key != null ) {
 			collectionTable.setForeignKeys( transformForeignKey( key.getForeignKey() ) );
 			transferColumnsAndFormulas(
+					null,
 					new ColumnAndFormulaSource() {
 						@Override
 						public String getColumnAttribute() {
@@ -2285,6 +2290,7 @@ public class HbmXmlTransformer {
 		transferElementTypeInfo( hbmCollection, element, propertyInfo, target );
 
 		transferColumnsAndFormulas(
+				propertyInfo,
 				new ColumnAndFormulaSource() {
 					@Override
 					public String getColumnAttribute() {
@@ -2481,6 +2487,7 @@ public class HbmXmlTransformer {
 			if ( key != null ) {
 				target.setForeignKey( transformForeignKey( key.getForeignKey() ) );
 				transferColumnsAndFormulas(
+						propertyInfo,
 						new ColumnAndFormulaSource() {
 							@Override
 							public String getColumnAttribute() {
@@ -2729,6 +2736,7 @@ public class HbmXmlTransformer {
 
 		if ( key != null ) {
 			transferColumnsAndFormulas(
+					propertyInfo,
 					new ColumnAndFormulaSource() {
 						@Override
 						public String getColumnAttribute() {
@@ -2772,6 +2780,7 @@ public class HbmXmlTransformer {
 		}
 
 		transferColumnsAndFormulas(
+				propertyInfo,
 				new ColumnAndFormulaSource() {
 					@Override
 					public String getColumnAttribute() {
@@ -3109,6 +3118,7 @@ public class HbmXmlTransformer {
 		);
 
 		transferColumnsAndFormulas(
+				keyPropertyInfo,
 				new ColumnAndFormulaSource() {
 					@Override
 					public String getColumnAttribute() {
@@ -3213,6 +3223,7 @@ public class HbmXmlTransformer {
 		);
 
 		transferColumnsAndFormulas(
+				keyManyToOneInfo,
 				new ColumnAndFormulaSource() {
 					@Override
 					public String getColumnAttribute() {
@@ -3341,6 +3352,7 @@ public class HbmXmlTransformer {
 		);
 
 		transferColumnsAndFormulas(
+				idPropertyInfo,
 				new ColumnAndFormulaSource() {
 					@Override
 					public String getColumnAttribute() {

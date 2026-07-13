@@ -524,7 +524,7 @@ public class HbmXmlTransformer {
 			JaxbEntityImpl subclassEntity,
 			EntityTypeInfo subclassEntityInfo) {
 		transferBaseEntityInformation( hbmSubclass, subclassEntity, subclassEntityInfo );
-		transferBaseEntityAttributes( hbmSubclass, subclassEntity, subclassEntityInfo );
+		transferEntityAttributes( hbmSubclass, subclassEntity, subclassEntityInfo );
 
 		if ( !hbmSubclass.getSubclass().isEmpty() ) {
 			for ( var nestedHbmSubclass : hbmSubclass.getSubclass() ) {

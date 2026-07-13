@@ -21,7 +21,7 @@ import static org.hibernate.metamodel.internal.AbstractDynamicMapInstantiator.TY
 /**
  * @author Steve Ebersole
  */
-@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/inheritance/dynamic/JoinedMappings.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/inheritance/dynamic/JoinedMappings.orm.xml" )
 @SessionFactory
 public class DynamicJoinedInheritanceTests {
 	@Test

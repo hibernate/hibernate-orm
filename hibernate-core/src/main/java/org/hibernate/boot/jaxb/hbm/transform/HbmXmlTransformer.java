@@ -2922,7 +2922,7 @@ public class HbmXmlTransformer {
 			JaxbIdImpl target,
 			Property identifierProperty,
 			BasicValue basicValue) {
-		target.setName( source.getName() );
+		target.setName( isNotEmpty( source.getName() ) ? source.getName() : identifierProperty.getName() );
 		transferAccess(
 				source.getAccess(),
 				target::setAccess,
@@ -2933,7 +2933,7 @@ public class HbmXmlTransformer {
 
 		final var hbmGenerator = source.getGenerator();
 		if ( hbmGenerator != null && !"assigned".equals( hbmGenerator.getClazz() ) ) {
-			final var generatorName = source.getName() + "-id-generator";
+			final var generatorName = target.getName() + "-id-generator";
 			final var jaxbGeneratedValue = new JaxbGeneratedValueImpl();
 			jaxbGeneratedValue.setGenerator( generatorName );
 			target.setGeneratedValue( jaxbGeneratedValue );

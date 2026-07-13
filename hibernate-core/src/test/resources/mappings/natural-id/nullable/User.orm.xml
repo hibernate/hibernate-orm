@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.mapping.naturalid.nullable</package>
+    <attribute-accessor>field</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="User" metadata-complete="true">
+        <table name="SystemUserInfo"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <natural-id mutable="true">
+                <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                    <column unique="false" nullable="true"/>
+                    <generated>NEVER</generated>
+                    <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                    <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+                </basic>
+                <basic name="org" fetch="EAGER" optional="true" optimistic-lock="true">
+                    <column unique="false" nullable="true"/>
+                    <generated>NEVER</generated>
+                    <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                    <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+                </basic>
+                <basic name="intVal" fetch="EAGER" optional="true" optimistic-lock="true">
+                    <column unique="false" nullable="true"/>
+                    <generated>NEVER</generated>
+                    <java-type>org.hibernate.type.descriptor.java.IntegerJavaType</java-type>
+                    <jdbc-type>org.hibernate.type.descriptor.jdbc.IntegerJdbcType</jdbc-type>
+                </basic>
+            </natural-id>
+            <basic name="password" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="`password`" unique="false"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

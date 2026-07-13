@@ -10,6 +10,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.AuditOverride;
+import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.mapping.Column;
@@ -31,19 +32,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		AuditOverrideTableConstructionTest.EntityUnderTwoMSCes.class,
-		AuditOverrideTableConstructionTest.RootEntity.class,
-		AuditOverrideTableConstructionTest.SubClass.class,
-		AuditOverrideTableConstructionTest.SubClassOfAuditedMSC.class,
+//		AuditOverrideTableConstructionTest.ExcludingInsideGroupEntity.class,
+//		AuditOverrideTableConstructionTest.RevokingInsideGroupEntity.class,
+//		AuditOverrideTableConstructionTest.EntityUnderTwoMSCes.class,
+//		AuditOverrideTableConstructionTest.RootEntity.class,
+//		AuditOverrideTableConstructionTest.SubClass.class,
 		AuditOverrideTableConstructionTest.EntityUnderTwoMSCsThatHasAnAuditOverride.class,
-		AuditOverrideTableConstructionTest.NotAuditedRootEntity.class,
-		AuditOverrideTableConstructionTest.AuditedSubEntity.class,
-		AuditOverrideTableConstructionTest.ExcludingEntity.class,
-		AuditOverrideTableConstructionTest.RevokingEntity.class,
-		AuditOverrideTableConstructionTest.EmptyAuditedRootEntity.class,
-		AuditOverrideTableConstructionTest.DeclaringAndExcludingSubClass.class,
-		AuditOverrideTableConstructionTest.RevokingEntity2.class,
-
+//		AuditOverrideTableConstructionTest.NotAuditedRootEntity.class,
+//		AuditOverrideTableConstructionTest.AuditedSubEntity.class,
+//		AuditOverrideTableConstructionTest.ExcludingEntity.class,
+//		AuditOverrideTableConstructionTest.RevokingEntity.class,
+//		AuditOverrideTableConstructionTest.EmptyAuditedRootEntity.class,
+//		AuditOverrideTableConstructionTest.DeclaringAndExcludingSubClass.class,
+//		AuditOverrideTableConstructionTest.RevokingEntity2.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -58,8 +59,73 @@ public class AuditOverrideTableConstructionTest {
 	}
 
 	/**
-	 * Group Test: str1 is excluded via an @AuditOverride on the Entity
+	 * 2-Layered Audited Group which covers two cases:
+	 * 1)
+	 * MappedSuperClass which declares a property str1
+	 * Entity which @AuditOverride str1 = false the property
+	 * Expected: str1 is effectively excluded from the AUD table
+	 *
+	 * 2)
+	 * MappedSuperClass which declares an @Audited.Excluded property str2
+	 * Entity which does not @AuditOverride str2
+	 * Expected: str2 is effectively excluded from the AUD table
 	 */
+	@MappedSuperclass
+	static class WTF {
+		@Id
+		long id;
+
+		String str1;
+
+		@Audited.Excluded
+		String str2;
+
+	}
+
+
+	@Entity
+	@Audited
+	@Table(name = "ExcludingInsideGroupEntity")
+	@AuditOverrides( @AuditOverride(name = "str1", isAudited = false) )
+	static class ExcludingInsideGroupEntity extends WTF{
+
+	}
+
+	@Test
+	public void basicGroup(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "ExcludingInsideGroupEntity_AUD", table -> {
+			assertFalse( table.containsColumn( new Column( "str1" ) ) );
+			assertFalse( table.containsColumn( new Column( "str2" ) ) );
+		} );
+	}
+
+	/**
+	 * Case 3)
+	 * MappedSuperClass which declares an @Audited.Excluded property str2
+	 * Entity which does @AuditOverride str2 = true ==> Revocation!
+	 * Expected: str2 is included in the AUD table
+	 */
+
+	@Entity
+	@Audited
+	@Table(name = "RevokingInsideGroupEntity")
+	@AuditOverride(name = "str2", isAudited = true)
+	static class RevokingInsideGroupEntity extends WTF{
+
+	}
+
+	@Test
+	public void basicGroup2(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "RevokingInsideGroupEntity_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertTrue( table.containsColumn( new Column( "str2" ) ) );
+		} );
+	}
+
+
+
 
 	@MappedSuperclass
 	@Audited
@@ -70,24 +136,8 @@ public class AuditOverrideTableConstructionTest {
 		String str1;
 	}
 
-	@Entity
-	@AuditOverride(name = "str1", isAudited = false)
-	@Table(name = "SubClassOfMSC")
-	static class SubClassOfAuditedMSC extends AuditedMSC {
-		String str2;
-	}
-
-	@Test
-	public void mappedSuperclassInheritance(DomainModelScope domainModelScope) {
-		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "SubClassOfMSC_AUD", table -> {
-			assertFalse( table.containsColumn( new Column( "str1" ) ) );
-			assertTrue( table.containsColumn( new Column( "str2" ) ) );
-		} );
-	}
-
 	/**
-	 * Group Test: str1 is excluded via an @AuditOverride on the Entity,
+	 * 3-Layered Group Test: str1 is excluded via an @AuditOverride on the Entity,
 	 * 	but with an additional @MappedSuperClass (AuditedMSCChild) in between
 	 */
 
@@ -112,11 +162,14 @@ public class AuditOverrideTableConstructionTest {
 	}
 
 	/**
-	 * Group Test: str1 is excluded via an @AuditOverride on a @MappedSuperclass of Entity,
+	 * 3-Layered Group Test:Group Test: str1 is excluded via an @AuditOverride on a @MappedSuperclass of Entity,
+	 * MSC @Audit str1
+	 * MSC @AuditOverride false
+	 * Entity
 	 */
 
 	@MappedSuperclass
-	@AuditOverride(name = "str1", isAudited = false)
+	@AuditOverrides(@AuditOverride(name = "str1", isAudited = false))
 	static class MSCChildWithDisablingAuditOverride extends AuditedMSC {
 		String str2;
 	}

@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.lang.annotation.Annotation;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Set;
 import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AuditOverride;
+import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditStrategy;
@@ -806,8 +808,6 @@ public final class AuditHelper {
 		}
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
 
-		// Finally excluded:
-
 		// Excluded Properties during Group analysis are temporarily excluded
 
 		// Algorithmus: excluded at declaration are transitionally excluded
@@ -818,23 +818,6 @@ public final class AuditHelper {
 		//maybe just search for revocations at the very end. This makes processing order irrelevant ==> yes
 
 		// Find excludes in a group: find the lowest excluding override for property x
-		var auditOverrideOfRootClass = findFirstAuditOverride( rootClass );
-
-		//if excluding override,
-		if ( auditOverrideOfRootClass != null && !auditOverrideOfRootClass.isAudited() ) { // the current class has an exclusion via AuditOverride
-			var name = auditOverrideOfRootClass.name();
-			// check if it is effective = declared within the upper hierarchy of @MappedSuperClasses
-			var superMappedSuperclass = rootClass.getSuperMappedSuperclass();
-			while ( superMappedSuperclass != null ) {
-				if ( superMappedSuperclass.hasProperty( name ) ) { // with the forClass feature, the condition just has to be extended to match the class
-					excluded.add( name ); //TODO add all columns of the property instead of the property name
-					break;
-				}
-				else {
-					superMappedSuperclass = superMappedSuperclass.getSuperMappedSuperclass(); //TODO refactor to for loop
-				}
-			}
-		}
 
 		collectPropertyColumns( rootClass, mappedColumns, excluded );
 		for ( var subclass : rootClass.getSubclasses() ) {
@@ -844,7 +827,7 @@ public final class AuditHelper {
 		//find and apply revocations
 		for ( var subclass : rootClass.getSubclasses() ) {
 			var auditOverrideOfSubClass = findFirstAuditOverride( subclass );
-			if ( auditOverrideOfSubClass != null && auditOverrideOfSubClass.isAudited() ) {
+			if ( auditOverrideOfSubClass != null && isRevocation( auditOverrideOfSubClass ) ) {
 				var revokedProperty = auditOverrideOfSubClass.name();
 				mappedColumns.add( revokedProperty );
 				excluded.remove( revokedProperty );
@@ -859,7 +842,7 @@ public final class AuditHelper {
 		return excluded;
 	}
 
-	private static @org.jetbrains.annotations.Nullable AuditOverride findFirstAuditOverride(PersistentClass rootClass) {
+	private static AuditOverride findFirstAuditOverride(PersistentClass rootClass) {
 		var auditOverride = rootClass.getMappedClass().getAnnotation( AuditOverride.class );
 
 		// if not, traverse up the hierarchy and find the first override.
@@ -873,14 +856,44 @@ public final class AuditHelper {
 		return auditOverride;
 	}
 
+	private static AuditOverride findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {
+		var auditOverride = getAuditOverrideForProperty( rootClass.getMappedClass(), name );
+
+		// if not, traverse up the hierarchy and find the first override.
+		if ( auditOverride == null ) {	//find first override in @MappedSuperClasses
+			var mappedSuperClass = rootClass.getSuperMappedSuperclass();
+			while ( mappedSuperClass != null && auditOverride == null) {
+				auditOverride = getAuditOverrideForProperty( mappedSuperClass.getMappedClass(), name );
+				mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();  //TODO ensure the stop condition works correctly (MSC under Entity)
+			}
+		}
+		if ( auditOverride == null ) {
+			return null;
+		}
+		return auditOverride.name().equals( name ) ? auditOverride : null;
+	}
+
+	private static AuditOverride getAuditOverrideForProperty(Class<?> mappedClass, String name) {
+		var override = mappedClass.getAnnotation( AuditOverride.class );
+		if ( override == null ) {
+			var auditOverrides = mappedClass.getAnnotation( AuditOverrides.class );
+			if ( auditOverrides != null ) {
+				override = Arrays.stream( auditOverrides.value() )
+						.filter( ao -> ao.name().equals( name ) ).findAny().orElse( null );
+			}
+		}
+		return override;
+	}
+
+
 	private static void collectPropertyColumns(
 			PersistentClass persistentClass,
 			Set<String> mappedColumns,
 			Set<String> excluded) {
 
 		for ( var property : persistentClass.getProperties() ) {
-			if ( property.isAuditedExcluded() || property instanceof Backref ) {
-				for ( var column : property.getColumns() ) {
+			if ( isReallyExcluded( property , persistentClass) || property instanceof Backref ) { //here we have to check more conditions
+				for ( var column : property.getColumns() ) { // here, the analysis of the full group is missing
 					excluded.add( column.getCanonicalName() );
 				}
 			}
@@ -890,6 +903,24 @@ public final class AuditHelper {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Primarily, `isAuditExcluded` would lead to an exclusion of a property from the AUD table. However, an
+	 * `@AuditOverride(isAudited = true)` could revoke this exclusion. Therefore, the hierarchy has to be scanned for
+	 * these kind of revocations.
+	 */
+
+	private static boolean isReallyExcluded(Property property, PersistentClass persistentClass) {
+		var firstAuditOverride = findFirstAuditOverrideForProperty( persistentClass, property.getName() );
+		if ( firstAuditOverride == null ) { //no overrides
+			return property.isAuditedExcluded();
+		}
+		return !isRevocation( firstAuditOverride );
+	}
+
+	private static boolean isRevocation(AuditOverride firstAuditOverride) {
+		return firstAuditOverride.isAudited();
 	}
 
 	// --- Runtime helpers ---

@@ -892,8 +892,8 @@ public final class AuditHelper {
 			Set<String> excluded) {
 
 		for ( var property : persistentClass.getProperties() ) {
-			if ( isReallyExcluded( property , persistentClass) || property instanceof Backref ) { //here we have to check more conditions
-				for ( var column : property.getColumns() ) { // here, the analysis of the full group is missing
+			if ( isReallyExcluded( property , persistentClass) || property instanceof Backref ) {
+				for ( var column : property.getColumns() ) {
 					excluded.add( column.getCanonicalName() );
 				}
 			}

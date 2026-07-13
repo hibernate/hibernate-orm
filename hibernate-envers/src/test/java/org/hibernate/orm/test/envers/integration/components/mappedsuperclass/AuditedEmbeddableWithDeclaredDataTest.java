@@ -11,6 +11,7 @@ import org.hibernate.envers.AuditReaderFactory;
 
 import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -45,7 +46,8 @@ public class AuditedEmbeddableWithDeclaredDataTest {
 	}
 
 	@Test
-	public void testEmbeddableThatExtendsAuditedMappedSuperclass(EntityManagerFactoryScope scope) {
+	public void testEmbeddableThatExtendsAuditedMappedSuperclass(EntityManagerFactoryScope scope, DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		scope.inEntityManager( entityManager -> {
 			final EntityWithAuditedEmbeddableWithDeclaredData entity = entityManager.find(
 					EntityWithAuditedEmbeddableWithDeclaredData.class,

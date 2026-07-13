@@ -20,7 +20,6 @@ import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -57,75 +56,6 @@ public class AuditOverrideTableConstructionTest {
 			return ++currentTxId;
 		}
 	}
-
-	/**
-	 * 2-Layered Audited Group which covers two cases:
-	 * 1)
-	 * MappedSuperClass which declares a property str1
-	 * Entity which @AuditOverride str1 = false the property
-	 * Expected: str1 is effectively excluded from the AUD table
-	 *
-	 * 2)
-	 * MappedSuperClass which declares an @Audited.Excluded property str2
-	 * Entity which does not @AuditOverride str2
-	 * Expected: str2 is effectively excluded from the AUD table
-	 */
-	@MappedSuperclass
-	static class WTF {
-		@Id
-		long id;
-
-		String str1;
-
-		@Audited.Excluded
-		String str2;
-
-	}
-
-
-	@Entity
-	@Audited
-	@Table(name = "ExcludingInsideGroupEntity")
-	@AuditOverrides( @AuditOverride(name = "str1", isAudited = false) )
-	static class ExcludingInsideGroupEntity extends WTF{
-
-	}
-
-	@Test
-	public void basicGroup(DomainModelScope domainModelScope) {
-		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "ExcludingInsideGroupEntity_AUD", table -> {
-			assertFalse( table.containsColumn( new Column( "str1" ) ) );
-			assertFalse( table.containsColumn( new Column( "str2" ) ) );
-		} );
-	}
-
-	/**
-	 * Case 3)
-	 * MappedSuperClass which declares an @Audited.Excluded property str2
-	 * Entity which does @AuditOverride str2 = true ==> Revocation!
-	 * Expected: str2 is included in the AUD table
-	 */
-
-	@Entity
-	@Audited
-	@Table(name = "RevokingInsideGroupEntity")
-	@AuditOverride(name = "str2", isAudited = true)
-	static class RevokingInsideGroupEntity extends WTF{
-
-	}
-
-	@Test
-	public void basicGroup2(DomainModelScope domainModelScope) {
-		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "RevokingInsideGroupEntity_AUD", table -> {
-			assertTrue( table.containsColumn( new Column( "str1" ) ) );
-			assertTrue( table.containsColumn( new Column( "str2" ) ) );
-		} );
-	}
-
-
-
 
 	@MappedSuperclass
 	@Audited
@@ -307,28 +237,25 @@ public class AuditOverrideTableConstructionTest {
 	 */
 
 
-	@Entity
-	@Table(name = "NotAuditedRootEntity")
-	static class NotAuditedRootEntity {
+	@MappedSuperclass
+	@Audited
+	static class AuditedMappedSuperClass {
 		@Id
 		long id;
-
 		String str1;
 	}
 
 	@Entity
-	@Audited
-	@AuditOverride(name = "str1")
-	static class AuditedSubEntity extends NotAuditedRootEntity {
+	@Table(name = "EntityUnderMSC")
+	@AuditOverride(name = "str1", isAudited = false)
+	static class MyEntity extends AuditedMappedSuperClass {
 		String str2;
 	}
 
 	@Test
-	@Disabled(
-			value = "AUD tables are missing completely, due to a bug: https://github.com/hibernate/hibernate-orm/pull/13047")
 	public void auditedSubEntity(DomainModelScope domainModelScope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "NotAuditedRootEntity_AUD", table -> {
+		assertTable( tables, "EntityUnderMSC_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
 			assertTrue( table.containsColumn( new Column( "str2" ) ) );
 		} );

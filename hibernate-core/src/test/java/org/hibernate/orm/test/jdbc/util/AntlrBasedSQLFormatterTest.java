@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -102,7 +103,11 @@ public class AntlrBasedSQLFormatterTest {
 
 	private Map<String, SqlFixture> parseFixtures(String input) {
 		final Map<String, SqlFixture> testFixtures = new HashMap<>(20);
-		String[] fixtures = input.split( FIXTURE_SEP );
+		// Remove comments
+		final String filtered = input.lines()
+				.filter(line -> !line.stripLeading().startsWith("#"))
+				.collect(Collectors.joining("\n"));
+		String[] fixtures = filtered.split( FIXTURE_SEP );
 		// Ignore the header above the first fixture
 		for ( int i = 1; i < fixtures.length; i++ ) {
 			final String[] fixtureContents = fixtures[i].split(EXPECTED_SEP);

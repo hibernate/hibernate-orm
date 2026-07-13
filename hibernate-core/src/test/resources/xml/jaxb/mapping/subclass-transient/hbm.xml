@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+    package="org.hibernate.orm.test.mapping.inheritance.discriminator"
+    default-access="field">
+
+    <class name="Person"
+        discriminator-value="P">
+
+        <id name="id"
+            column="person_id">
+            <generator class="assigned"/>
+        </id>
+
+        <discriminator column="`TYPE`" type="character"/>
+
+        <property name="name"
+            not-null="true"
+            length="80"/>
+
+        <property name="sex"
+            not-null="true"
+            update="false"/>
+
+        <subclass name="Employee"
+            discriminator-value="E">
+                <property name="title" length="20"/>
+                <property name="salary" />
+        </subclass>
+
+        <subclass name="Customer"
+            discriminator-value="C">
+                <property name="comments"/>
+        </subclass>
+
+    </class>
+
+</hibernate-mapping>

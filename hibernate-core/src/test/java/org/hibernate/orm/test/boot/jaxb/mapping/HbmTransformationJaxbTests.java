@@ -1114,4 +1114,22 @@ public class HbmTransformationJaxbTests {
 					.isNotNull();
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20684" )
+	public void testDiscriminatorSubclassTransientGeneration(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/subclass-transient/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 3 );
+
+			final JaxbEntityImpl employeeEntity = transformed.getEntities().stream()
+					.filter( e -> "Employee".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( employeeEntity.getAttributes().getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.as( "Unmapped field 'manager' on discriminator subclass Employee should be marked transient" )
+					.contains( "manager" );
+		} );
+	}
 }

@@ -125,8 +125,10 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					// Preserve quoted literals as-is
 					writeToken( token, false );
 					break;
+				case SqlFormatterLexer.ORDER:
+					processOrder(token);
+					break;
 				case SqlFormatterLexer.WITH,
-					SqlFormatterLexer.ORDER,
 					SqlFormatterLexer.GROUP,
 					SqlFormatterLexer.OFFSET,
 					SqlFormatterLexer.FETCH,
@@ -142,6 +144,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					SqlFormatterLexer.OUTER,
 					SqlFormatterLexer.FULL,
 					SqlFormatterLexer.CROSS,
+					SqlFormatterLexer.ABSENT,
 					SqlFormatterLexer.WINDOW:
 					newLine(true);
 					baseIndent = currentContext().indent;
@@ -198,17 +201,13 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				case SqlFormatterLexer.JOIN:
 					// Check if this is part of "LEFT JOIN" etc.
 					Token prev = peekBack(1);
-					if (prev != null && (prev.getType() == SqlFormatterLexer.LEFT ||
-										prev.getType() == SqlFormatterLexer.RIGHT ||
-										prev.getType() == SqlFormatterLexer.INNER ||
-										prev.getType() == SqlFormatterLexer.OUTER ||
-										prev.getType() == SqlFormatterLexer.FULL ||
-										prev.getType() == SqlFormatterLexer.CROSS)) {
-						space();
-					}
-					else {
-						newLine(true);
-						baseIndent = currentContext().indent;
+					switch (prev == null ? SqlFormatterLexer.IDENTIFIER : prev.getType() ) {
+						case SqlFormatterLexer.LEFT, SqlFormatterLexer.RIGHT, SqlFormatterLexer.INNER,
+							SqlFormatterLexer.OUTER, SqlFormatterLexer.FULL, SqlFormatterLexer.CROSS -> space();
+						default -> {
+							newLine(true);
+							baseIndent = currentContext().indent;
+						}
 					}
 					writeToken(token);
 					break;
@@ -253,6 +252,14 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					writeToken(token);
 					break;
 			}
+		}
+
+		private void processOrder(Token token) {
+			if (!ContextType.FUNCTION.isCurrent(currentContext()) ) {
+				newLine(true);
+				baseIndent = currentContext().indent;
+			}
+			writeToken(token);
 		}
 
 		private void processRows(Token token) {
@@ -337,7 +344,8 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					terminators = new int[]{
 							SqlFormatterLexer.OFFSET,
 							SqlFormatterLexer.FETCH,
-							SqlFormatterLexer.LIMIT
+							SqlFormatterLexer.LIMIT,
+							SqlFormatterLexer.SEMICOLON
 					};
 				}
 			}
@@ -346,10 +354,11 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				terminators = new int[]{
 						SqlFormatterLexer.HAVING,
 						SqlFormatterLexer.ORDER,
-						SqlFormatterLexer.OFFSET
+						SqlFormatterLexer.OFFSET,
+						SqlFormatterLexer.SEMICOLON
 				};
 			}
-			if (shouldListBeMultiline(terminators)) {
+			if (shouldListBeMultiline(terminators) && !ContextType.FUNCTION.isCurrent(currentContext())) {
 				newLine(false);
 				baseIndent = currentContext().indent + 1;
 				currentContext().firstClauseElement = true;
@@ -564,8 +573,8 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					// MERGE ... ON (condition) - newline and indent, but keep content inline
 					isParenthesizedList = true;
 				}
-				// CTE when encountering WITH and/or when encountering as ... doesn't sound right!
-				else if (prevType == SqlFormatterLexer.AS || (next != null && next.getType() == SqlFormatterLexer.WITH)) {
+				// CTE when encountering WITH and/or when encountering AS
+				else if ( prevType == SqlFormatterLexer.AS || (next != null && next.getType() == SqlFormatterLexer.WITH) && isWithPartOfCte(peekAhead(2)) ) {
 					// CTE or subquery after AS
 					newContextType = ContextType.CTE;
 				}
@@ -696,14 +705,17 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			// 3. ON DUPLICATE KEY (MySQL - major clause)
 			// 4. MERGE ... ON ... (MERGE condition - at MERGE level)
 			// 5. ON CONSTRAINT (after ON CONFLICT - inline)
+			// 6. NULL/ABSENT ON NULL
 
 			Token prev = peekBack(1);
 			Token next = peekAhead(1);
 
-			// Check if this is "ON CONSTRAINT" after "ON CONFLICT"
-			if (prev != null && prev.getType() == SqlFormatterLexer.CONFLICT &&
-					next != null && next.getType() == SqlFormatterLexer.CONSTRAINT) {
-				// ON CONSTRAINT after ON CONFLICT - just add space
+			// Check if this is "ON CONSTRAINT" after "ON CONFLICT" or NULL/ABSENT ON NULL
+			if (prev != null && next != null &&
+				(prev.getType() == SqlFormatterLexer.CONFLICT && next.getType() == SqlFormatterLexer.CONSTRAINT ||
+				next.getType() == SqlFormatterLexer.NULL && (prev.getType() == SqlFormatterLexer.NULL || prev.getType() == SqlFormatterLexer.ABSENT))
+			) {
+				// just add space
 				space();
 				writeToken(token);
 			}
@@ -902,26 +914,21 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			if (type == SqlFormatterLexer.LPAREN && prev != null) {
 				int prevType = prev.getType();
 				// These keywords need space before (: clause keywords, operators, etc.
-				if (
-						prevType == SqlFormatterLexer.SELECT || prevType == SqlFormatterLexer.LATERAL ||
-						prevType == SqlFormatterLexer.FROM || prevType == SqlFormatterLexer.JOIN ||
-						prevType == SqlFormatterLexer.EXISTS || prevType == SqlFormatterLexer.IN ||
-						prevType == SqlFormatterLexer.ALL || prevType == SqlFormatterLexer.ANY ||
-						prevType == SqlFormatterLexer.CONFLICT || prevType == SqlFormatterLexer.ON ||
-						prevType == SqlFormatterLexer.INSERT || prevType == SqlFormatterLexer.BETWEEN ||
-						prevType == SqlFormatterLexer.AND || prevType == SqlFormatterLexer.OVER
-				) {
-					return true;
-				}
-				// All other identifiers/keywords don't need space
-				return prevType != SqlFormatterLexer.IDENTIFIER && !isKeyword( prevType );
+				return switch (prevType) {
+					case SqlFormatterLexer.SELECT, SqlFormatterLexer.LATERAL, SqlFormatterLexer.FROM,
+						SqlFormatterLexer.JOIN, SqlFormatterLexer.EXISTS, SqlFormatterLexer.IN,
+						SqlFormatterLexer.ALL, SqlFormatterLexer.ANY, SqlFormatterLexer.CONFLICT,
+						SqlFormatterLexer.ON, SqlFormatterLexer.INSERT, SqlFormatterLexer.BETWEEN,
+						SqlFormatterLexer.AND, SqlFormatterLexer.OVER -> true;
+					default -> prevType != SqlFormatterLexer.IDENTIFIER && !isKeyword( prevType );
+				};
 			}
 
 			return true;
 		}
 
 		private boolean isKeyword(int type) {
-			return type >= SqlFormatterLexer.ALL && type <= SqlFormatterLexer.WITH;
+			return type >= SqlFormatterLexer.ABSENT && type <= SqlFormatterLexer.WITHOUT;
 		}
 
 		private boolean isLogical(int type) {
@@ -930,6 +937,11 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 
 		private boolean isBetweenAnd() {
 			return currentContext().type == ContextType.BETWEEN_EXPR;
+		}
+
+		private boolean isWithPartOfCte(Token withFollowing) {
+			return withFollowing != null && !(withFollowing.getType() == SqlFormatterLexer.UNIQUE ||
+											withFollowing.getType() == SqlFormatterLexer.TIES);
 		}
 
 		private Context findContext(ContextType type) {
@@ -972,7 +984,10 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 
 				// if the operator list contains a CTE make it always multiline
 				if (type == SqlFormatterLexer.WITH) {
-					return true;
+					// no newline if with is part of Postgresql's 'with unique keys' construct
+					if ( isWithPartOfCte(peekAhead(i + 1)) ) {
+						return true;
+					}
 				}
 				else if (type == SqlFormatterLexer.LPAREN) {
 					parenDepth++;
@@ -1001,7 +1016,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				}
 			}
 
-			return commaCount > 3;
+			return commaCount >= 3;
 		}
 
 		private boolean shouldOperatorListBeMultiline() {

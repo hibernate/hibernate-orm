@@ -1,4 +1,6 @@
--- NOTE: if you edit this file, make sure to use the right indentation (check TokenBasedSQLFormatterImpl)
+# NOTE: if you edit this file, make sure to use the right indentation (check TokenBasedSQLFormatterImpl)
+# NOTE: none of the sql statements below necessarily make sense, they're only for formatting purposes
+# NOTE: To prevent a test from running, prefix its ID with '--'
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -11,6 +13,51 @@ select name,dept,salary from empl e where e.salary >= 50000;
 select name, dept, salary
 from empl e
 where e.salary >= 50000;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+order_by_multiline
+
+=== SQL ===
+select order_id,customer_id,store_location,order_date,total_amount from orders where status = 'completed' order by
+store_location asc,order_date desc,total_amount desc,order_id asc;
+
+=== EXPECTED ===
+select
+    order_id,
+    customer_id,
+    store_location,
+    order_date,
+    total_amount
+from orders
+where status = 'completed'
+order by
+    store_location asc,
+    order_date desc,
+    total_amount desc,
+    order_id asc;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+group_by_multiline
+
+=== SQL ===
+select store_location,order_date,total_amount,order_id,count(*) from orders group by
+store_location,order_date,total_amount,order_id;
+
+=== EXPECTED ===
+select
+    store_location,
+    order_date,
+    total_amount,
+    order_id,
+    count(*)
+from orders
+group by
+    store_location,
+    order_date,
+    total_amount,
+    order_id;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -656,3 +703,94 @@ order by 1, 2
 offset 1 rows
 fetch first 1 rows only
 with ties
+
+@@@@ FIXTURE @@@@
+=== ID ===
+function_args_inline
+
+=== SQL ===
+select coalesce(a, b, c, d, e), greatest(x, y, z, w, v, u), trim(both ' ' from col) from some_table;
+
+=== EXPECTED ===
+select coalesce(a, b, c, d, e), greatest(x, y, z, w, v, u), trim(both ' ' from col)
+from some_table;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+--json_objectagg_orderby
+
+=== SQL ===
+# @todo At the moment this does not format according to the constraint rules (function args should stay on the same line)
+select json_objectagg(name value nickname absent on null with unique keys returning jsonb) from employee;
+
+=== EXPECTED ===
+select json_objectagg(
+    name value nickname
+    absent on null
+    with unique keys
+    returning jsonb
+)
+from employee;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+string_agg_orderby
+
+=== SQL ===
+select department,string_agg(name,', ' order by salary desc, name, surname, address) as employees_by_salary from employee group by department;
+
+=== EXPECTED ===
+select department, string_agg(name, ', ' order by salary desc, name, surname, address) as employees_by_salary
+from employee
+group by department;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+over_partition_by
+
+=== SQL ===
+select depname, empno, salary, enroll_date from (select depname, empno, salary, enroll_date, row_number() over
+(partition by depname,b,c,d order by salary desc, empno, depname, enroll_date) as pos from empsalary ) as ss where pos < 3;
+
+=== EXPECTED ===
+select
+    depname,
+    empno,
+    salary,
+    enroll_date
+from (
+    select
+        depname,
+        empno,
+        salary,
+        enroll_date,
+        row_number() over (
+            partition by
+                depname,
+                b,
+                c,
+                d
+            order by
+                salary desc,
+                empno,
+                depname,
+                enroll_date
+        ) as pos
+    from empsalary
+) as ss
+where pos < 3;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+over_partition_by_named_window
+
+=== SQL ===
+select sum(salary) over w, avg(salary) over w from empsalary window w as (partition by depname order by salary desc);
+
+=== EXPECTED ===
+select sum(salary) over w, avg(salary) over w
+from empsalary
+window w as (
+    partition by depname
+    order by salary desc
+);

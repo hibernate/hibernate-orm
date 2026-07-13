@@ -18,6 +18,7 @@ BLOCK_COMMENT
     ;
 
 // Keywords (alphabetically ordered)
+ABSENT      : [aA][bB][sS][eE][nN][tT];
 ALL         : [aA][lL][lL];
 ALTER       : [aA][lL][tT][eE][rR];
 ALWAYS      : [aA][lL][wW][aA][yY][sS];
@@ -143,6 +144,8 @@ WHEN        : [wW][hH][eE][nN];
 WHERE       : [wW][hH][eE][rR][eE];
 WINDOW      : [wW][iI][nN][dD][oO][wW];
 WITH        : [wW][iI][tT][hH];
+WITHIN      : [wW][iI][tT][hH][iI][nN];
+WITHOUT     : [wW][iI][tT][hH][oO][uU][tT];
 
 // Quoted identifiers - preserve exact quoting style
 DOUBLE_QUOTED_IDENTIFIER

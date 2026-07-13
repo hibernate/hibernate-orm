@@ -131,10 +131,9 @@
 * GROUP BY lists
 * ORDER BY lists
 * SET assignment lists (UPDATE/MERGE statements)
-* Function argument lists (when >3 args)
 * Operator value lists: `IN (...)`, `ALL (...)`, `ANY (...)` value lists
 
-*Note:* Parenthesized lists (INSERT column lists, VALUES tuples) stay on single line regardless of item count - they are treated as atomic units.
+*Note:* Parenthesized lists (INSERT column lists, VALUES tuples), function argument lists) stay on a single line regardless of item count - they are treated as atomic units.
 
 '''
 

@@ -1070,4 +1070,29 @@ public class HbmTransformationJaxbTests {
 					.isNull();
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20682" )
+	public void testNaturalIdNullablePropertyTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/natural-id-nullable/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl userEntity = transformed.getEntities().get( 0 );
+			assertThat( userEntity.getAttributes().getNaturalId() ).isNotNull();
+			assertThat( userEntity.getAttributes().getNaturalId().isMutable() ).isTrue();
+
+			final var naturalIdBasics = userEntity.getAttributes().getNaturalId().getBasicAttributes();
+			assertThat( naturalIdBasics ).hasSize( 3 );
+
+			for ( JaxbBasicImpl basic : naturalIdBasics ) {
+				assertThat( basic.getColumn() )
+						.as( "Natural-id property '%s' with not-null='false' should generate a column element",
+								basic.getName() )
+						.isNotNull();
+				assertThat( basic.getColumn().isNullable() )
+						.as( "Natural-id property '%s' should have nullable=true", basic.getName() )
+						.isTrue();
+			}
+		} );
+	}
 }

@@ -826,7 +826,7 @@ public final class AuditHelper {
 
 		//find and apply revocations
 		for ( var subclass : rootClass.getSubclasses() ) {
-			var auditOverrideOfSubClass = findFirstAuditOverride( subclass );
+			var auditOverrideOfSubClass = findFirstAuditOverride( subclass ); //TODO match correct property, not just any @AuditOverride
 			if ( auditOverrideOfSubClass != null && isRevocation( auditOverrideOfSubClass ) ) {
 				var revokedProperty = auditOverrideOfSubClass.name();
 				mappedColumns.add( revokedProperty );
@@ -843,17 +843,18 @@ public final class AuditHelper {
 	}
 
 	private static AuditOverride findFirstAuditOverride(PersistentClass rootClass) {
-		var auditOverride = rootClass.getMappedClass().getAnnotation( AuditOverride.class );
-
-		// if not, traverse up the hierarchy and find the first override.
-		if ( auditOverride == null ) {	//find first override in @MappedSuperClasses
-			var mappedSuperClass = rootClass.getSuperMappedSuperclass();
-			while ( mappedSuperClass != null && auditOverride == null) {
-				auditOverride = mappedSuperClass.getMappedClass().getAnnotation( AuditOverride.class );
-				mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();  //TODO ensure the stop condition works correctly (MSC under Entity)
-			}
+		var overrides = getAuditOverrides( rootClass.getMappedClass() );
+		if (! overrides.isEmpty() ) {
+			return overrides.stream().findFirst().orElse( null );
 		}
-		return auditOverride;
+
+		var mappedSuperClass = rootClass.getSuperMappedSuperclass();
+		while ( mappedSuperClass != null && overrides.isEmpty()) {
+			overrides = getAuditOverrides( mappedSuperClass.getMappedClass() );
+			mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();
+		}
+
+		return overrides.stream().findFirst().orElse( null );
 	}
 
 	private static AuditOverride findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {
@@ -872,16 +873,24 @@ public final class AuditHelper {
 		return auditOverride.name().equals( name ) ? auditOverride : null;
 	}
 
-	private static AuditOverride getAuditOverrideForProperty(Class<?> mappedClass, String name) {
+	private static java.util.Collection<AuditOverride> getAuditOverrides(Class<?> mappedClass) {
 		var override = mappedClass.getAnnotation( AuditOverride.class );
-		if ( override == null ) {
-			var auditOverrides = mappedClass.getAnnotation( AuditOverrides.class );
-			if ( auditOverrides != null ) {
-				override = Arrays.stream( auditOverrides.value() )
-						.filter( ao -> ao.name().equals( name ) ).findAny().orElse( null );
-			}
+		if ( override != null ) {
+			return Set.of( override );
 		}
-		return override;
+		var overrides = mappedClass.getAnnotation( AuditOverrides.class );
+		if ( overrides != null ) {
+			return new HashSet<>( Arrays.stream( overrides.value() ).toList() );
+		}
+		return Set.of();
+	}
+
+	private static AuditOverride getAuditOverrideForProperty(Class<?> mappedClass, String name) {
+		var overrides = getAuditOverrides( mappedClass );
+		if ( overrides.isEmpty() ) {
+			return null;
+		}
+		return overrides.stream().filter( ao -> ao.name().equals( name ) ).findAny().orElse( null );
 	}
 
 

@@ -10,6 +10,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.AuditOverride;
+import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.mapping.Column;
@@ -32,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatRevokesTheProperty.class,
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatRevokesTheProperty2.class,
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatInherits.class,
+		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatInheritsAnExcludedProperty.class,
+		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatInheritesTheRevokedProperty.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -154,5 +157,61 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 		}
 		assertTrue( tableFound, () -> "Table %s not found. Available tables: %s".formatted( tableName, tables ) );
 	}
+
+	/**
+	 * Case 4: Two Groups in a hierarchy
+	 * MSC: @Audited
+	 * MSC: @Audited.Excluded
+	 * Entity: -
+	 *
+	 * MSC: @Audited
+	 * MSC: -
+	 * Entity: -
+	 *
+	 */
+
+	@MappedSuperclass
+	@Audited
+	static class UpperMSCThatAuditsAProperty {
+		@Id
+		long id;
+
+		@Audited.Excluded
+		String str1;
+	}
+
+	@MappedSuperclass
+	@AuditOverrides( @AuditOverride(name = "str1", isAudited = false) )
+	static class LowerMSCThatExcludesTheProperty extends UpperMSCThatAuditsAProperty {
+
+	}
+
+	@Entity
+	@Table(name = "EntityThatInheritsAnExcludedProperty")
+	static class EntityThatInheritsAnExcludedProperty extends LowerMSCThatExcludesTheProperty {
+	}
+
+	@MappedSuperclass
+	@AuditOverrides(@AuditOverride(name = "str1", isAudited = true)) // <-- revocation of str1
+	static class UpperSecondMSCThatRevokesTheExclusion extends EntityThatInheritsAnExcludedProperty {
+	}
+
+	@MappedSuperclass
+	static class LowerSecondMSCThatDoesNothing extends UpperSecondMSCThatRevokesTheExclusion{
+	}
+
+	@Entity
+	static class EntityThatInheritesTheRevokedProperty extends LowerSecondMSCThatDoesNothing {
+	}
+
+	@Test
+	public void twoGroups(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "EntityThatInheritsAnExcludedProperty_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+		} );
+	}
+
+
 
 }

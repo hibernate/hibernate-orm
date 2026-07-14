@@ -1781,6 +1781,12 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
+		if ( oneToOne.getMappedBy() == null && hbmOneToOne.getFormula().isEmpty() ) {
+			final Value value = propertyInfo.bootModelProperty().getValue();
+			if ( value instanceof OneToOne oneToOneValue && !oneToOneValue.isConstrained() ) {
+				oneToOne.getPrimaryKeyJoinColumn().add( new JaxbPrimaryKeyJoinColumnImpl() );
+			}
+		}
 		for ( String formula : hbmOneToOne.getFormula() ) {
 			oneToOne.getJoinColumnOrJoinFormula().add( formula );
 		}

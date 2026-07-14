@@ -790,7 +790,7 @@ public sealed class Column
 		copy.precision = precision;
 		copy.scale = scale;
 		copy.arrayLength = arrayLength;
-		copy.value = value; //the javadoc says the value is not copied
+		copy.value = value;
 		copy.typeIndex = typeIndex;
 		copy.name = name;
 		copy.quoted = quoted;

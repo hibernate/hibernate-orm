@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.mapping.inheritance.discriminator</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>false</default-lazy>
+    <entity class="NullDiscSubclassCheckBase" metadata-complete="true">
+        <table name="null_disc_check"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-value>-1</discriminator-value>
+        <discriminator-column name="disc_type" discriminator-type="STRING" force-selection="false"/>
+        <attributes>
+            <id name="id">
+                <column name="id" />
+            </id>
+            <basic name="name" />
+        </attributes>
+    </entity>
+    <entity class="NullDiscSubclassCheckChild" metadata-complete="true">
+        <extends>org.hibernate.orm.test.mapping.inheritance.discriminator.NullDiscSubclassCheckBase</extends>
+        <discriminator-value>null</discriminator-value>
+        <attributes>
+            <basic name="requiredProp" optional="false"/>
+        </attributes>
+    </entity>
+    <entity class="NullDiscSubclassCheckOther" metadata-complete="true">
+        <extends>org.hibernate.orm.test.mapping.inheritance.discriminator.NullDiscSubclassCheckChild</extends>
+        <discriminator-value>1</discriminator-value>
+        <attributes>
+            <basic name="otherProp" />
+        </attributes>
+    </entity>
+</entity-mappings>

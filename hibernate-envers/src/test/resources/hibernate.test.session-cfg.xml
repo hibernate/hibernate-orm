@@ -11,8 +11,8 @@
     <session-factory>
         <property name="hbm2ddl.auto">create-drop</property>
 
-        <property name="show_sql">false</property>
-        <property name="format_sql">false</property>
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
 
         <property name="dialect">org.hibernate.dialect.H2Dialect</property>
         <property name="connection.url">jdbc:h2:mem:envers;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE</property>

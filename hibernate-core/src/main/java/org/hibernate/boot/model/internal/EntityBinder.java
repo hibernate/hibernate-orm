@@ -361,7 +361,6 @@ public class EntityBinder {
 			RootClass rootClass,
 			MetadataBuildingContext context) {
 		final var audited = extract( Audited.class, classDetails, context );
-
 		if ( audited != null ) {
 			final var auditTable = extract( Audited.Table.class, classDetails, context );
 			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );

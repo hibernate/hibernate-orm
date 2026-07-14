@@ -104,7 +104,11 @@ public class TestCase {
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		exporter.start();
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "hibernate.cfg.xml"));
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(
+				"com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
+				Thread.currentThread().getContextClassLoader());
+		dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(new File(outputDir, "hibernate.cfg.xml"));
 		XPath xpath = XPathFactory.newInstance().newXPath();
@@ -131,7 +135,11 @@ public class TestCase {
 		exporter.getProperties().setProperty("ejb3", "true");
 		exporter.start();
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "hibernate.cfg.xml"));
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(
+				"com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
+				Thread.currentThread().getContextClassLoader());
+		dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(new File(outputDir, "hibernate.cfg.xml"));
 		XPath xpath = XPathFactory.newInstance().newXPath();

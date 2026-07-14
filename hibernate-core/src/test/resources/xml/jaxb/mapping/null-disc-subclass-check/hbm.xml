@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false"
+    package="org.hibernate.orm.test.boot.jaxb.mapping">
+
+    <class name="NullDiscSubclassCheckBase" discriminator-value="B" table="null_disc_check">
+        <id name="id" column="id">
+            <generator class="assigned"/>
+        </id>
+        <discriminator column="disc_type" type="string" not-null="false"/>
+        <property name="name"/>
+
+        <subclass name="NullDiscSubclassCheckChild" discriminator-value="null">
+            <property name="requiredProp" not-null="true"/>
+        </subclass>
+    </class>
+</hibernate-mapping>

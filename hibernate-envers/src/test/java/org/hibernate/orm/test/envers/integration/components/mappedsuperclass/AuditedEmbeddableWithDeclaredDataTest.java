@@ -46,8 +46,7 @@ public class AuditedEmbeddableWithDeclaredDataTest {
 	}
 
 	@Test
-	public void testEmbeddableThatExtendsAuditedMappedSuperclass(EntityManagerFactoryScope scope, DomainModelScope domainModelScope) {
-		var tables = domainModelScope.getDomainModel().collectTableMappings();
+	public void testEmbeddableThatExtendsAuditedMappedSuperclass(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( entityManager -> {
 			final EntityWithAuditedEmbeddableWithDeclaredData entity = entityManager.find(
 					EntityWithAuditedEmbeddableWithDeclaredData.class,

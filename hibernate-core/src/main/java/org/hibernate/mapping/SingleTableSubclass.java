@@ -55,7 +55,7 @@ public final class SingleTableSubclass extends Subclass {
 					final var check = new StringBuilder();
 					check.append( selectables.get( 0 ).getText( dialect ) );
 					if ( isDiscriminatorValueNull() ) {
-						check.append( " is " );
+						check.append( " is not " );
 					}
 					else if ( isDiscriminatorValueNotNull() ) {
 						check.append( " is " );

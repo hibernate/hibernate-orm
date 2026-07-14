@@ -348,7 +348,7 @@ public class AttributeFactory {
 			// Special BasicDomainType necessary for primitive types in the JPA metamodel.
 			// When a converted is applied to the attribute we already resolve to the correct type
 			final var type = typeContext.getJpaBindableType();
-			return context.resolveBasicType( type );
+			return context.getTypeConfiguration().standardBasicTypeForPrimitiveJavaType( type );
 		}
 		else {
 			final var type = hibernateValue.getType();

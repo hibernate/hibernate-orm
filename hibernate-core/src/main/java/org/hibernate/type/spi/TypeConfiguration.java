@@ -766,6 +766,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return basicType;
 	}
 
+	private static <J> BasicType<J> checkExistingExact(Class<J> javaClass, BasicType<?> existing) {
+		if ( existing.getJavaType() != javaClass ) {
+			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
+		}
+		@SuppressWarnings("unchecked") // safe, we just checked
+		final var basicType = (BasicType<J>) existing;
+		return basicType;
+	}
+
 	@Deprecated(since = "7.2", forRemoval = true) // no longer used
 	public <J> @Nullable BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
 		//noinspection unchecked
@@ -821,6 +830,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 						descriptor -> new BasicTypeImpl<>( descriptor,
 								descriptor.getRecommendedJdbcType(
 										getCurrentBaseSqlTypeIndicators() ) ) );
+	}
+
+	public <J> BasicType<J> standardBasicTypeForPrimitiveJavaType(Class<J> javaClass) {
+		assert javaClass != null && javaClass.isPrimitive();
+		return basicTypeRegistry.getRegisteredPrimitiveType( javaClass );
 	}
 
 	private <J> BasicType<J> standardBasicTypeForJavaType(

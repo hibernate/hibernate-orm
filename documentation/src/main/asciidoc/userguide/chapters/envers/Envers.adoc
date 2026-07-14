@@ -480,7 +480,7 @@ An integral value (`int/Integer` or `long/Long`). Essentially, the primary key o
 A revision number value should **always** be increasing and never overflows.
 
 The default implementations provided by Envers use an `int` data type which has an upper bounds of `Integer.MAX_VALUE`.
-It is critical that users consider whether this upper bounds is feasible for your application.  If a large range is needed, consider using a custom revision entity mapping using a `long` data type.
+It is critical that users consider whether this upper bounds is feasible for your application.  If a large range is needed, consider using a custom revision entity mapping using a `long` data type, for example by extending the `org.hibernate.envers.LongRevisionMapping` mapped superclass.
 
 In the event that the revision number reaches its upper bounds wrapping around becoming negative, an `AuditException` will be thrown causing the current transaction to be rolled back.
 This guarantees that the audit history remains in a valid state that can be queried by the Envers Query API.
@@ -525,6 +525,7 @@ It must define the two attributes described above annotated with `@org.hibernate
 You can extend from any of the revision mapped superclass types, if you wish, to inherit all these required behaviors:
 
     org.hibernate.envers.RevisionMapping
+    org.hibernate.envers.LongRevisionMapping
     org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping
     org.hibernate.envers.enhanced.SequenceIdRevisionMapping
     org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionMapping

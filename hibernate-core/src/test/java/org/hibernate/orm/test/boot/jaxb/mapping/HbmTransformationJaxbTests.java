@@ -1156,4 +1156,24 @@ public class HbmTransformationJaxbTests {
 					.contains( "BName" );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20687" )
+	public void testSharedPkOneToOneTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/one-to-one-shared-pk/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl parentEntity = transformed.getEntities().stream()
+					.filter( e -> "C1".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( parentEntity.getAttributes().getOneToOneAttributes() ).hasSize( 1 );
+			final JaxbOneToOneImpl oneToOne = parentEntity.getAttributes().getOneToOneAttributes().get( 0 );
+			assertThat( oneToOne.getName() ).isEqualTo( "d" );
+			assertThat( oneToOne.getPrimaryKeyJoinColumn() )
+					.as( "Shared PK one-to-one should produce <primary-key-join-column/>" )
+					.isNotEmpty();
+		} );
+	}
 }

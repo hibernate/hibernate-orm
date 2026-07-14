@@ -60,6 +60,13 @@ public class TransformationHelper {
 			}
 		}
 		else {
+			// with property access, the mapped property name from the boot model (e.g. "C1Name")
+			// may differ from the decapitalized getter name (e.g. "c1Name") — build a lookup
+			// that includes both forms
+			final Set<String> effectiveMappedNames = new HashSet<>( mappedPropertyNames );
+			for ( String name : mappedPropertyNames ) {
+				effectiveMappedNames.add( StringHelper.decapitalize( name ) );
+			}
 			for ( var method : javaClass.getMethods() ) {
 				if ( method.getParameterCount() != 0 ) {
 					continue;
@@ -74,7 +81,7 @@ public class TransformationHelper {
 					propertyName = StringHelper.decapitalize( methodName.substring( 2 ) );
 				}
 				if ( propertyName != null
-						&& !mappedPropertyNames.contains( propertyName )
+						&& !effectiveMappedNames.contains( propertyName )
 						&& !propertyName.equals( "class" ) ) {
 					transientNames.add( propertyName );
 				}

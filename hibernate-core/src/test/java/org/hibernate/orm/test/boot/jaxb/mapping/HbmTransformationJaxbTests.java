@@ -1072,7 +1072,7 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
-	@JiraKey( "HHH-20682" )
+	@JiraKey( "HHH-20686" )
 	public void testNaturalIdNullablePropertyTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/natural-id-nullable/hbm.xml", scope, transformed -> {
 			assertThat( transformed.getEntities() ).hasSize( 1 );
@@ -1130,6 +1130,30 @@ public class HbmTransformationJaxbTests {
 					.extracting( JaxbTransientImpl::getName )
 					.as( "Unmapped field 'manager' on discriminator subclass Employee should be marked transient" )
 					.contains( "manager" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20680" )
+	public void testDiscriminatorSubclassJoinTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/subclass-join/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl subclassEntity = transformed.getEntities().stream()
+					.filter( e -> e.getClazz() != null && e.getClazz().endsWith( ".B" ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( subclassEntity.getSecondaryTables() )
+					.as( "<join> on discriminator subclass should produce a secondary table" )
+					.hasSize( 1 );
+			assertThat( subclassEntity.getSecondaryTables().get( 0 ).getName() )
+					.isEqualTo( "B2" );
+
+			assertThat( subclassEntity.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.as( "Properties from <join> should be transferred" )
+					.contains( "BName" );
 		} );
 	}
 }

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false">
+
+    <class name="org.hibernate.orm.test.legacy.A" discriminator-value="0" lazy="true" table="TA">
+        <id name="id" column="identifier_column" unsaved-value="null">
+            <generator class="increment"/>
+        </id>
+        <discriminator column="clazz_discriminata" type="integer" not-null="false"/>
+
+        <property name="name"/>
+
+        <subclass name="org.hibernate.orm.test.legacy.B" discriminator-value="-1" lazy="true">
+            <property name="count" column="count_"/>
+            <join fetch="select" table="B2">
+                <key column="bid"/>
+                <property name="BName" not-null="true"/>
+            </join>
+        </subclass>
+    </class>
+</hibernate-mapping>

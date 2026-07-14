@@ -248,7 +248,7 @@ public final class AuditHelper {
 			String modTypeColumnName,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		for ( var subclass : parent.getDirectSubclasses() ) { //here!?
+		for ( var subclass : parent.getDirectSubclasses() ) {
 			if ( subclass instanceof TableOwner ) {
 				// Check if the subclass has its own @Audited.Table for table name/schema/catalog override
 				final var subclassDetails = modelsContext.getClassDetailsRegistry()
@@ -807,18 +807,6 @@ public final class AuditHelper {
 			}
 		}
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
-
-		// Excluded Properties during Group analysis are temporarily excluded
-
-		// Algorithmus: excluded at declaration are transitionally excluded
-		// If they are still excluded after applying revocations, they are effectively excluded
-
-		// Exclusions become transitionally when they are applied at declaration
-
-		//maybe just search for revocations at the very end. This makes processing order irrelevant ==> yes
-
-		// Find excludes in a group: find the lowest excluding override for property x
-
 		collectPropertyColumns( rootClass, mappedColumns, excluded );
 		for ( var subclass : rootClass.getSubclasses() ) {
 			collectPropertyColumns( subclass, mappedColumns, excluded );

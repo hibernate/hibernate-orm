@@ -11,7 +11,6 @@ import org.hibernate.envers.AuditReaderFactory;
 
 import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
-import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;

@@ -4195,8 +4195,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( typeArgument.getKind() == TypeKind.WILDCARD ) {
 			final var wildcardType = (WildcardType) typeArgument;
 			final var superBound = wildcardType.getSuperBound();
-			return superBound != null
-				&& types.isAssignable( attributeType, boxedType( superBound ) );
+			if ( superBound != null ) {
+				return types.isAssignable( attributeType, boxedType( superBound ) );
+			}
+			else {
+				final var extendsBound = wildcardType.getExtendsBound();
+				return extendsBound != null
+					&& types.isAssignable( boxedType( extendsBound ), attributeType );
+			}
 		}
 		else {
 			return types.isSameType( boxedType( typeArgument ), attributeType );

@@ -1176,4 +1176,23 @@ public class HbmTransformationJaxbTests {
 					.isNotEmpty();
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20690" )
+	public void testPropertyCaseNotMarkedTransient(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/property-case-transient/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+
+			assertThat( entity.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.contains( "C1Name" );
+
+			assertThat( entity.getAttributes().getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.as( "Mapped property 'C1Name' should not have its backing field 'c1Name' marked transient" )
+					.doesNotContain( "c1Name" );
+		} );
+	}
 }

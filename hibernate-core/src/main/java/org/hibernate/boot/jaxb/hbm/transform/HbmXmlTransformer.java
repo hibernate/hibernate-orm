@@ -38,6 +38,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmConfigParameterContainer;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDiscriminatorSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDynamicComponentType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDiscriminatorSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityBaseDefinition;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchProfileType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleEnum;
@@ -81,6 +82,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeSpecificationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
+import org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer;
 import org.hibernate.boot.jaxb.hbm.spi.PluralAttributeInfo;
 import org.hibernate.boot.jaxb.hbm.spi.ResultSetMappingContainer;
 import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
@@ -1337,8 +1339,9 @@ public class HbmXmlTransformer {
 			transferIdentifier( (JaxbHbmRootEntityType) hbmEntity, mappingEntity, bootEntityInfo, rootClass );
 			transferNaturalIdentifiers( (JaxbHbmRootEntityType) hbmEntity, mappingEntity, bootEntityInfo, rootClass );
 			transferVersion( (JaxbHbmRootEntityType) hbmEntity, mappingEntity, bootEntityInfo, rootClass );
-
-			transferJoins( (JaxbHbmRootEntityType) hbmEntity, mappingEntity, bootEntityInfo );
+		}
+		if ( hbmEntity instanceof SecondaryTableContainer hbmSubclass ) {
+			transferJoins( hbmSubclass, mappingEntity, bootEntityInfo );
 		}
 		transferTransients( bootEntityInfo, mappingEntity );
 		transferPropertyIndexes( hbmEntity, mappingEntity );
@@ -3537,7 +3540,7 @@ public class HbmXmlTransformer {
 	}
 
 	private void transferJoins(
-			JaxbHbmRootEntityType hbmEntity,
+			SecondaryTableContainer hbmEntity,
 			JaxbEntityImpl mappingEntity,
 			EntityTypeInfo bootEntityInfo) {
 		for ( var hbmJoin : hbmEntity.getJoin() ) {

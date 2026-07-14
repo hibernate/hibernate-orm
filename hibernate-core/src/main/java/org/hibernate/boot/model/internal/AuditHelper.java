@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
@@ -814,9 +815,9 @@ public final class AuditHelper {
 
 		//find and apply revocations
 		for ( var subclass : rootClass.getSubclasses() ) {
-			var auditOverrideOfSubClass = findFirstAuditOverride( subclass ); //TODO match correct property, not just any @AuditOverride
-			if ( auditOverrideOfSubClass != null && isRevocation( auditOverrideOfSubClass ) ) {
-				var revokedProperty = auditOverrideOfSubClass.name();
+			var revocations = findRevocations( subclass );
+			for ( var revocation : revocations ) {
+				var revokedProperty = revocation.name();
 				mappedColumns.add( revokedProperty );
 				excluded.remove( revokedProperty );
 			}
@@ -830,19 +831,21 @@ public final class AuditHelper {
 		return excluded;
 	}
 
-	private static AuditOverride findFirstAuditOverride(PersistentClass rootClass) {
-		var overrides = getAuditOverrides( rootClass.getMappedClass() );
-		if (! overrides.isEmpty() ) {
-			return overrides.stream().findFirst().orElse( null );
-		}
+	private static Set<AuditOverride> findRevocations(PersistentClass rootClass) {
+		var revocations = getRevocations( rootClass.getMappedClass() );
 
 		var mappedSuperClass = rootClass.getSuperMappedSuperclass();
-		while ( mappedSuperClass != null && overrides.isEmpty()) {
-			overrides = getAuditOverrides( mappedSuperClass.getMappedClass() );
+		while ( mappedSuperClass != null ) {
+			revocations.addAll( getRevocations( mappedSuperClass.getMappedClass() ) );
 			mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();
 		}
 
-		return overrides.stream().findFirst().orElse( null );
+		return revocations;
+	}
+
+	private static Set<AuditOverride> getRevocations(Class<?> mappedClass) {
+		return getAuditOverrides( mappedClass ).stream()
+				.filter( AuditOverride::isAudited ).collect( Collectors.toSet() );
 	}
 
 	private static AuditOverride findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {

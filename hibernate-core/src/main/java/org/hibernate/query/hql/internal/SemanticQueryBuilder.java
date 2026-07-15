@@ -1445,7 +1445,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return new SqmPluralPartSelectionPath<>( pluralPath, null );
 		}
 		else if ( selectableNode instanceof SqmPath<?> sqmPath
-				&& sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+				&& (sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute
+					|| sqmPath.getReferencedPathSource() instanceof AnonymousTupleType<?> tupleType
+					&& tupleType.findSubPathSource( CollectionPart.Nature.ELEMENT.getName() ) != null ) ) {
 			// for plural-join selections, use the element path as the selection
 			//		- this is not strictly JPA compliant
 			if ( creationOptions.useStrictJpaCompliance() ) {

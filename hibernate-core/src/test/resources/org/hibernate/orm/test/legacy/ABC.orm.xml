@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>false</default-lazy>
+    <named-native-query name="propertyResultDiscriminator">
+        <query>select identifier_column, clazz_discriminata as clazz, name, count_ from TA s</query>
+        <cacheable>false</cacheable>
+        <read-only>false</read-only>
+    </named-native-query>
+    <sql-result-set-mapping name="propertyResultDiscriminator-implicitResultSetMapping">
+        <description>ResultSet mapping implicitly created for named native query `propertyResultDiscriminator` during hbm.xml transformation</description>
+        <entity-result entity-class="org.hibernate.orm.test.legacy.A">
+            <field-result name="id" column="identifier_column"/>
+            <field-result name="name" column="name"/>
+            <field-result name="count" column="count_"/>
+        </entity-result>
+    </sql-result-set-mapping>
+    <entity class="org.hibernate.orm.test.legacy.A" metadata-complete="true">
+        <table name="TA">
+            <index name="indx_a_name" column-list="name"/>
+            <index name="indx_a_name2" column-list="name"/>
+        </table>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <lazy>true</lazy>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-value>0</discriminator-value>
+        <discriminator-column name="clazz_discriminata" discriminator-type="INTEGER" force-selection="false"/>
+        <attributes>
+            <id name="id">
+                <column name="identifier_column" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+                <unsaved-value>null</unsaved-value>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="name" unique="false" nullable="true"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <transient name="forward"/>
+        </attributes>
+    </entity>
+    <entity class="org.hibernate.orm.test.legacy.B" metadata-complete="true">
+        <extends>org.hibernate.orm.test.legacy.A</extends>
+        <secondary-table name="B2" optional="false" owned="true">
+            <primary-key-join-column name="bid"/>
+        </secondary-table>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <lazy>true</lazy>
+        <discriminator-value>-1</discriminator-value>
+        <attributes>
+            <basic name="count" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="count_" unique="false" nullable="true"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.IntegerJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.IntegerJdbcType</jdbc-type>
+            </basic>
+            <basic name="BName" fetch="EAGER" optional="false" optimistic-lock="true">
+                <column unique="false" nullable="false" table="B2"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <transient name="map"/>
+        </attributes>
+    </entity>
+    <entity class="org.hibernate.orm.test.legacy.C1" metadata-complete="true">
+        <extends>org.hibernate.orm.test.legacy.B</extends>
+        <secondary-table name="cmore" optional="false" owned="true">
+            <primary-key-join-column name="c1"/>
+        </secondary-table>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <lazy>true</lazy>
+        <discriminator-value>null</discriminator-value>
+        <attributes>
+            <basic name="address" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="c1" unique="false" nullable="true"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <basic name="C1Name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column unique="false" nullable="true" table="cmore"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <one-to-one name="d" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
+                <primary-key-join-column/>
+                <foreign-key/>
+                <cascade/>
+            </one-to-one>
+            <transient name="c2s"/>
+            <transient name="c2"/>
+        </attributes>
+    </entity>
+    <entity class="org.hibernate.orm.test.legacy.D" metadata-complete="true">
+        <table name="TD"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <discriminator-value>0</discriminator-value>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <unsaved-value>undefined</unsaved-value>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="amount" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.FloatJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.FloatJdbcType</jdbc-type>
+            </basic>
+            <many-to-one name="reverse" fetch="EAGER" fetch-mode="JOIN" optional="true" not-found="EXCEPTION">
+                <join-column name="rev_a_id" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <cascade/>
+            </many-to-one>
+            <many-to-one name="inverse" fetch="EAGER" fetch-mode="JOIN" optional="true" access="FIELD" not-found="EXCEPTION">
+                <join-column name="inv_a_id" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

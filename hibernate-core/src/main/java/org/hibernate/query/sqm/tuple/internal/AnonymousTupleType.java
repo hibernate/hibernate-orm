@@ -303,4 +303,18 @@ public class AnonymousTupleType<T>
 		return "AnonymousTupleType" + Arrays.toString( expressibles );
 	}
 
+	@Override
+	public boolean equals(@Nullable Object o) {
+		return o instanceof AnonymousTupleType<?> that
+				&& Arrays.equals( componentNames, that.componentNames )
+				&& Arrays.equals( expressibles, that.expressibles );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Arrays.hashCode( componentNames );
+		result = 31 * result + Arrays.hashCode( expressibles );
+		return result;
+	}
+
 }

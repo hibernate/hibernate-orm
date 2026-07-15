@@ -10,7 +10,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = { "/org/hibernate/orm/test/mapping/collections/custom/parameterized/Mapping.hbm.xml" }
+		xmlMappings = { "/org/hibernate/orm/test/mapping/collections/custom/parameterized/Mapping.orm.xml" }
 )
-public class ParameterizedUserCollectionTypeHbmVariantTest extends ParameterizedUserCollectionTypeTest {
+public class ParameterizedUserCollectionTypeXmlVariantTest extends ParameterizedUserCollectionTypeTest {
 }

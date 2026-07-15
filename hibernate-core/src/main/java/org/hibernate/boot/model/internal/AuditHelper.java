@@ -53,7 +53,6 @@ import org.hibernate.temporal.spi.ChangesetCoordinator;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.annotations.Audited.Table.DEFAULT_CHANGESET_ID_COLUMN_NAME;
-import static org.hibernate.annotations.Audited.Table.DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME;
 import static org.hibernate.annotations.Audited.Table.DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.cfg.StateManagementSettings.AUDIT_STRATEGY;
@@ -78,7 +77,7 @@ public final class AuditHelper {
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, rootClass, context );
+		bindAuditTable( AuditTableConfig.fromAuditedTableAnnotation( auditTable ), rootClass, context );
 		bindSecondaryAuditTables( auditTable, rootClass, classDetails, context );
 		bindSubclassAuditTables( auditTable, rootClass, context );
 	}
@@ -86,36 +85,25 @@ public final class AuditHelper {
 	static void bindAuditTable(
 			@Nullable Audited.Table auditTable,
 			Collection collection,
-			MetadataBuildingContext context) {
-		bindAuditTable( auditTable, (Stateful) collection, context );
+			MetadataBuildingContext context,
+			String propertyName) {
+		bindAuditTable( AuditTableConfig.fromAnnotationOverrides( collection.getOwner(), propertyName ), (Stateful) collection, context
+		);
 	}
-
+	// called when audited collection and when audited entity
 	private static void bindAuditTable(
-			@Nullable Audited.Table auditTable,
+			AuditTableConfig auditTable,
 			Stateful auditable,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context
+	) {
 		final var collector = context.getMetadataCollector();
 		final var table = auditable.getMainTable();
-		final String explicitAuditTableName;
-		final String auditSchema;
-		final String auditCatalog;
-		final String csIdColumnName;
-		final String modTypeColumnName;
-		if ( auditTable != null ) {
-			explicitAuditTableName = auditTable.name();
-			auditSchema = auditTable.schema();
-			auditCatalog = auditTable.catalog();
-			csIdColumnName = auditTable.changesetIdColumn();
-			modTypeColumnName = auditTable.modificationTypeColumn();
-		}
-		else {
-			explicitAuditTableName = "";
-			auditSchema = "";
-			auditCatalog = "";
-			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
-			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
-		}
-		final boolean hasExplicitAuditTableName = !isBlank( explicitAuditTableName );
+		final String explicitAuditTableName = auditTable.name();
+		final String auditSchema = auditTable.schema();
+		final String auditCatalog = auditTable.catalog();
+		final String csIdColumnName = auditTable.changesetIdColumn();
+		final String modTypeColumnName = auditTable.modificationTypeColumn();
+		final boolean hasExplicitAuditTableName = !isBlank( explicitAuditTableName ); //search overrides
 		final var auditLogTable = collector.addTable(
 				isBlank( auditSchema ) ? table.getSchema() : auditSchema,
 				isBlank( auditCatalog ) ? table.getCatalog() : auditCatalog,
@@ -230,7 +218,7 @@ public final class AuditHelper {
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored ->
 				bindSubclassAuditTables(
 						rootClass,
-						auditTable,
+						AuditTableConfig.fromAuditedTableAnnotation( auditTable ),
 						csIdColumnName,
 						modTypeColumnName,
 						context
@@ -244,7 +232,7 @@ public final class AuditHelper {
 	 */
 	private static void bindSubclassAuditTables(
 			PersistentClass parent,
-			@Nullable Audited.Table auditTable,
+			AuditTableConfig auditTable,
 			String csIdColumnName,
 			String modTypeColumnName,
 			MetadataBuildingContext context) {
@@ -255,7 +243,7 @@ public final class AuditHelper {
 				final var subclassDetails = modelsContext.getClassDetailsRegistry()
 						.getClassDetails( subclass.getClassName() );
 				final var subclassTable = subclassDetails.getDirectAnnotationUsage( Audited.Table.class );
-				final var effective = subclassTable != null ? subclassTable : auditTable;
+				final var effective = subclassTable != null ? AuditTableConfig.fromAuditedTableAnnotation( subclassTable ) : auditTable;
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
 						csIdColumnName,
@@ -381,7 +369,7 @@ public final class AuditHelper {
 			createAuditPrimaryKey( middleAuditTable, changesetIdColumn, keyColumns );
 			createChangesetForeignKey( middleAuditTable, changesetIdColumn, context );
 			enableAudit( collection, middleAuditTable, changesetIdColumn, modificationTypeColumn );
-			addTransactionEndColumns( auditTable, collection, middleAuditTable, context );
+			addTransactionEndColumns( AuditTableConfig.fromAuditedTableAnnotation( auditTable ), collection, middleAuditTable, context );
 		} );
 	}
 
@@ -719,16 +707,14 @@ public final class AuditHelper {
 	}
 
 	private static void addTransactionEndColumns(
-			@Nullable Audited.Table auditTableAnnotation,
+			AuditTableConfig auditTableAnnotation,
 			AuxiliaryTableHolder holder,
 			Table auditTable,
 			MetadataBuildingContext context) {
 		if ( isValidityStrategy( context ) ) {
 			final var revEndColumn =
 					createAuditColumn(
-							auditTableAnnotation == null
-									? DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME
-									: auditTableAnnotation.invalidatingChangesetIdColumn(),
+							auditTableAnnotation.invalidatingChangesetIdColumn(),
 							getChangesetIdType( context ), auditTable, context );
 			revEndColumn.setNullable( true );
 			auditTable.addColumn( revEndColumn );

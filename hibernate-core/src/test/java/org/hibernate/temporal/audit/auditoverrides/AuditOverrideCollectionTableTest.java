@@ -14,7 +14,6 @@ import org.hibernate.annotations.AuditOverride;
 import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.mapping.Column;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -52,8 +51,8 @@ public class AuditOverrideCollectionTableTest {
 	/**
 	 * Case 1:
 	 * MSC: -
-	 * MSC: @Audited.Excluded
-	 * Entity: @Audited
+	 * MSC: @Audited.Excluded @ElementCollection + @Audited @ElementCollection
+	 * Entity: AuditOverrides that invert both
 	 *
 	 */
 
@@ -69,13 +68,18 @@ public class AuditOverrideCollectionTableTest {
 
 		@ElementCollection
 		List<String> secondCollection;
+
+		@ElementCollection
+		List<String> thirdCollection;
 	}
 
 	@Entity
 	@Table(name = "EntityWithOverrides")
 	@AuditOverrides(
 			{@AuditOverride(name = "firstCollection", isAudited = true),
-					@AuditOverride(name = "secondCollection", isAudited = false)})
+					@AuditOverride(name = "secondCollection", isAudited = false),
+			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( name = "custom_audited_join_table_name" ))}
+	)
 	static class EntityWithOverrides extends MSCWithExcludedCollectionProperty{
 	}
 
@@ -87,6 +91,7 @@ public class AuditOverrideCollectionTableTest {
 		assertTrue( tableNames.contains( "AuditOverrideCollectionTableTest$EntityWithOverrides_firstCollection_AUD" ) );
 		assertTrue( tableNames.contains( "AuditOverrideCollectionTableTest$EntityWithOverrides_secondCollection" ) );
 		assertFalse( tableNames.contains( "AuditOverrideCollectionTableTest$EntityWithOverrides_secondCollection_AUD" ) );
+		assertTrue( tableNames.contains( "custom_audited_join_table_name" ) );
 	}
 
 	private static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {

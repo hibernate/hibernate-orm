@@ -45,15 +45,15 @@ public @interface AuditOverride {
 	boolean isAudited() default true;
 
 	/**
-	 * New {@link AuditJoinTable} used for this field (or property). Its value
+	 * New {@link Audited.CollectionTable} used for this field (or property). Its value
 	 * is ignored if {@link #isAudited()} equals to {@code false}.
 	 */
-//	AuditJoinTable auditJoinTable() default @AuditJoinTable;
+	Audited.CollectionTable collectionTable() default @Audited.CollectionTable( name = "");
 
 	/**
 	 * Specifies class which field (or property) mapping is being overridden. <strong>Required</strong> if
 	 * {@link AuditOverride} is used to change auditing behavior of attributes inherited from
 	 * {@link jakarta.persistence.MappedSuperclass} type.
 	 */
-	Class forClass() default void.class;
+	Class forClassMaybeToDo() default void.class;
 }

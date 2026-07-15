@@ -848,7 +848,7 @@ public final class AuditHelper {
 				.filter( AuditOverride::isAudited ).collect( Collectors.toSet() );
 	}
 
-	private static AuditOverride findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {
+	static AuditOverride findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {
 		var auditOverride = getAuditOverrideForProperty( rootClass.getMappedClass(), name );
 		// if not, traverse up the hierarchy and find the first override.
 		if ( auditOverride == null ) {	//find first override in @MappedSuperClasses

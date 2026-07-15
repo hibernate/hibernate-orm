@@ -2586,20 +2586,54 @@ public class HbmXmlTransformer {
 		}
 
 		final var element = (OneToMany) bootModelValue.getElement();
-		final String referencedEntityName = element.getReferencedEntityName();
-		final var attributeMap = transformationState.getMappableAttributesByColumns( referencedEntityName );
-		return resolveMappedBy( bootModelProperty, bootModelValue, attributeMap );
+		final var referencedEntityName = element.getReferencedEntityName();
+		return resolveMappedBy(
+				bootModelProperty,
+				bootModelValue,
+				transformationState.getMappableAttributesByColumns( referencedEntityName ),
+				referencedEntityName,
+				bootModelProperty.getPersistentClass().getEntityName() );
 	}
 
 	private String resolveMappedBy(
 			Property bootModelProperty,
 			Collection bootModelValue,
-			Map<List<Selectable>, String> attributeMap) {
+			Map<List<Selectable>, String> attributeMap,
+			String referencedEntityName,
+			String ownerEntityName) {
+		// first, try to find the owning many-to-one on the target entity by matching key columns
 		if ( attributeMap != null ) {
 			final KeyValue collectionKey = bootModelValue.getKey();
+			final var targetEntity = transformationState.getEntityInfoByName().get( referencedEntityName );
 			for ( var attributeEntry : attributeMap.entrySet() ) {
 				if ( matches( collectionKey, attributeEntry.getKey() ) ) {
+					// verify the candidate many-to-one actually points back to the owning entity;
+					// skip self-referential associations that happen to share the same column
+					if ( targetEntity != null ) {
+						final var candidateProp = targetEntity.getPersistentClass()
+								.getProperty( attributeEntry.getValue() );
+						if ( candidateProp.getValue() instanceof ToOne toOne
+								&& !ownerEntityName.equals( toOne.getReferencedEntityName() ) ) {
+							continue;
+						}
+					}
 					return attributeEntry.getValue();
+				}
+			}
+		}
+
+		// the FK may map to a composite-id key-property (basic, not many-to-one) on the
+		// target entity — these are not registered in the attributeMap, so search directly
+		final var targetEntity = transformationState.getEntityInfoByName().get( referencedEntityName );
+		if ( targetEntity != null ) {
+			final var targetClass = targetEntity.getPersistentClass();
+			if ( targetClass instanceof RootClass rootClass
+					&& rootClass.getIdentifier() instanceof Component compositeId ) {
+				final var collectionKey = bootModelValue.getKey();
+				for ( Property idProp : compositeId.getProperties() ) {
+					if ( matches( collectionKey, idProp.getValue().getSelectables() ) ) {
+						return idProp.getName();
+					}
 				}
 			}
 		}

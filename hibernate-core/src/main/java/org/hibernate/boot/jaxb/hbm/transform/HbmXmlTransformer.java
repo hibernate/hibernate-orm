@@ -3457,7 +3457,7 @@ public class HbmXmlTransformer {
 
 					@Override
 					public Boolean isUnique() {
-						return true;
+						return null;
 					}
 
 					@Override

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/join/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/join/Person.orm.xml"
 )
 @SessionFactory
 public class JoinTest {

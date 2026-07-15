@@ -49,17 +49,17 @@ public class H2ArrayIntersectsFunction extends AbstractArrayIntersectsFunction {
 			needleExpression.accept( walker );
 			sqlAppender.append( ",null) and " );
 		}
-		sqlAppender.append( "exists(select array_get(" );
+		sqlAppender.append( "exists(select " );
 		needleExpression.accept( walker );
-		sqlAppender.append( ",t.i) from system_range(1," );
+		sqlAppender.append( "[t.i] from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") t(i) where array_length(" );
 		needleExpression.accept( walker );
 		sqlAppender.append( ")>=t.i" );
 		sqlAppender.append( " intersect " );
-		sqlAppender.append( "select array_get(" );
+		sqlAppender.append( "select " );
 		haystackExpression.accept( walker );
-		sqlAppender.append( ",t.i) from system_range(1," );
+		sqlAppender.append( "[t.i] from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") t(i) where array_length(" );
 		haystackExpression.accept( walker );

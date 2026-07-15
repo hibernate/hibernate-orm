@@ -109,6 +109,7 @@ public class TestCase {
 				Thread.currentThread().getContextClassLoader());
 		dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
 		dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+		dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(new File(outputDir, "hibernate.cfg.xml"));
 		XPath xpath = XPathFactory.newInstance().newXPath();
@@ -140,6 +141,7 @@ public class TestCase {
 				Thread.currentThread().getContextClassLoader());
 		dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
 		dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+		dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(new File(outputDir, "hibernate.cfg.xml"));
 		XPath xpath = XPathFactory.newInstance().newXPath();

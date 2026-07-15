@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.lazyonetoone">
+
+    <class name="Employee">
+        <id name="personName"/>
+        <bag name="employments"
+                inverse="true"
+                fetch="join"
+                lazy="false"
+                cascade="persist,delete">
+            <key column="personName"/>
+            <one-to-many class="Employment"/>
+        </bag>
+    </class>
+
+    <class name="Employment">
+        <composite-id>
+            <key-property name="personName"/>
+            <key-property name="organizationName"/>
+        </composite-id>
+        <property name="startDate" update="false"/>
+        <property name="endDate"/>
+    </class>
+
+</hibernate-mapping>

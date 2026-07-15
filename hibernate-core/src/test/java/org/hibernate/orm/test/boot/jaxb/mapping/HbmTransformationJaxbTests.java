@@ -1215,4 +1215,25 @@ public class HbmTransformationJaxbTests {
 					.isEqualTo( "personName" );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20697" )
+	public void testNonAggregatedCompositeIdColumnsNotUnique(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/inverse-composite-key/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl employmentEntity = transformed.getEntities().stream()
+					.filter( e -> "Employment".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			for ( JaxbIdImpl id : employmentEntity.getAttributes().getIdAttributes() ) {
+				if ( id.getColumn() != null ) {
+					assertThat( id.getColumn().isUnique() )
+							.as( "Composite-id key-property '%s' should not have unique=true — " +
+									"uniqueness is guaranteed by the composite PK, not individual columns",
+									id.getName() )
+							.isNotEqualTo( true );
+				}
+			}
+		} );
+	}
 }

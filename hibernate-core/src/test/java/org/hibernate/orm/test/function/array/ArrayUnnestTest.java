@@ -17,6 +17,7 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -174,6 +175,58 @@ public class ArrayUnnestTest {
 			assertEquals( 3L, results.get( 4 ).get( 0 ) );
 			assertNull( results.get( 4 ).get( 1 ) );
 			assertNull( results.get( 4 ).get( 2 ) );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-20438")
+	public void testSugarJoinWithBodyPredicate(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Long> results = em.createQuery(
+							"select e.id from EntityWithArrays e join e.theArray t where t = 'abc'",
+							Long.class
+					)
+					.getResultList();
+			assertEquals( 1, results.size() );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-20438")
+	public void testExistsSubqueryWithBodyPredicate(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Long> results = em.createQuery(
+							"select e.id from EntityWithArrays e where exists (select 1 from e.theArray t where t = 'abc')",
+							Long.class
+					)
+					.getResultList();
+			assertEquals( 1, results.size() );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-20438")
+	public void testInSubqueryWithBodyPredicate(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Long> results = em.createQuery(
+							"select e.id from EntityWithArrays e where 'abc' in (select t from e.theArray t)",
+							Long.class
+					)
+					.getResultList();
+			assertEquals( 1, results.size() );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-20438")
+	public void testExplicitLateralUnnestWithBodyPredicate(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Long> results = em.createQuery(
+							"select e.id from EntityWithArrays e join lateral unnest(e.theArray) t where t = 'abc'",
+							Long.class
+					)
+					.getResultList();
+			assertEquals( 1, results.size() );
 		} );
 	}
 

@@ -1376,8 +1376,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( expressionOrPredicate != null ) {
 			final var sqmExpression = (SqmExpression<?>) expressionOrPredicate.accept( this );
 			if ( sqmExpression instanceof SqmPath<?> sqmPath
-					&& sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
-				// for plural-attribute selections, use the element path as the selection
+					&& (sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute
+				|| sqmPath.getReferencedPathSource() instanceof AnonymousTupleType<?> tupleType
+					&& tupleType.findSubPathSource( CollectionPart.Nature.ELEMENT.getName() ) != null ) ) {
+			// for plural-attribute selections, use the element path as the selection
 				//		- this is not strictly JPA compliant
 				if ( creationOptions.useStrictJpaCompliance() ) {
 					SqmTreeCreationLogger.LOGGER.debugf(

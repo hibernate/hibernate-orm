@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/lazyonetoone/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/lazyonetoone/Person.orm.xml"
 )
 @SessionFactory
 @ServiceRegistry(

@@ -106,6 +106,21 @@ entity.getData().getBinaryStream(); // works — connection held by the transact
 session.getTransaction().commit();
 ----
 
+[[inverse-list-null-elements]]
+=== Null elements of inverse indexed lists
+
+A null element of an inverse `@OneToMany` list mapped with `@OrderColumn` again leaves a gap in the order
+column, so that the element is read back as null and the elements after it keep their list positions.
+
+Since 6.2 the order column was instead written compacted, and a list persisted as `[a, null, b]` was stored
+with the index values `0,1` rather than `0,2` and loaded back as `[a, b]`, silently shifting the elements
+after the null. Applications that came to rely on that compaction — for example by treating the reloaded list
+size as the number of non-null elements — will now see the null elements preserved across a round-trip, as
+they were through 5.x and 6.1.
+
+Element collections are unaffected: a null element of an `@ElementCollection` list has never been persisted,
+and such lists still load back without it.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes

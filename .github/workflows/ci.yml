@@ -71,7 +71,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 25
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -196,7 +196,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Java 25
-        uses: graalvm/setup-graalvm@6f3fa030c4b8f77c1f554a860f593a654538fa38 # v1.5.6
+        uses: graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd # v1.6.3
         with:
           distribution: 'graalvm'
           java-version: '25'
@@ -249,7 +249,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
       - id: create_database
-        uses: oracle-actions/setup-testpilot@37676e7f43dabdebb120915f2862f6ddd55d28d6 # v1.0.25
+        uses: oracle-actions/setup-testpilot@0e9d9b877bb35f65e3f1f1c54c6a425329dd7ece # v1.0.27
         with:
           oci-service: ${{ matrix.rdbms }}
           action: create
@@ -282,7 +282,7 @@ jobs:
           ./ci/build-github.sh "${common_gradle_args[@]}"
         shell: bash
 
-      - uses: oracle-actions/setup-testpilot@37676e7f43dabdebb120915f2862f6ddd55d28d6 # v1.0.25
+      - uses: oracle-actions/setup-testpilot@0e9d9b877bb35f65e3f1f1c54c6a425329dd7ece # v1.0.27
         if: always()
         with:
           oci-service: ${{ matrix.rdbms }}
@@ -341,7 +341,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 25
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -455,7 +455,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 25
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -559,7 +559,7 @@ jobs:
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
       - name: Set up Java 25
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -658,7 +658,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Set up JDK 25
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           java-version: '25'
           distribution: 'temurin'

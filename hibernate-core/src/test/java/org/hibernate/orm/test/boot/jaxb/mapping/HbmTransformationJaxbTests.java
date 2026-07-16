@@ -1257,4 +1257,25 @@ public class HbmTransformationJaxbTests {
 					.isEqualTo( jakarta.persistence.FetchType.LAZY );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20703" )
+	public void testCollectionTypeTypedefResolution(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-type-typedef/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+
+			assertThat( entity.getAttributes().getElementCollectionAttributes() ).hasSize( 1 );
+			final var elementCollection = entity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( elementCollection.getName() ).isEqualTo( "values" );
+			assertThat( elementCollection.getCollectionType() )
+					.as( "collection-type referencing a typedef should be resolved" )
+					.isNotNull();
+			assertThat( elementCollection.getCollectionType().getType() )
+					.as( "collection-type should use the typedef class, not the typedef name" )
+					.isEqualTo( "org.hibernate.orm.test.mapping.collections.custom.parameterized.DefaultableListType" );
+			assertThat( elementCollection.getCollectionType().getParameters() )
+					.as( "collection-type should include typedef parameters" )
+					.hasSize( 1 );
+		} );
+	}
 }

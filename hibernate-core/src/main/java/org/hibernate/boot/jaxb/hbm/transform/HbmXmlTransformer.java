@@ -3255,7 +3255,7 @@ public class HbmXmlTransformer {
 		}
 
 		jaxbKyManyToOne.setOptional( false );
-		jaxbKyManyToOne.setFetch( FetchType.EAGER );
+		jaxbKyManyToOne.setFetch( FetchType.LAZY );
 		jaxbKyManyToOne.setFetchMode( JaxbSingularFetchModeImpl.SELECT );
 		jaxbKyManyToOne.setNotFound( NotFoundAction.EXCEPTION );
 

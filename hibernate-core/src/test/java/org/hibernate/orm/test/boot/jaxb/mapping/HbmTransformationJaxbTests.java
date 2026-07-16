@@ -1236,4 +1236,25 @@ public class HbmTransformationJaxbTests {
 			}
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20699" )
+	public void testCompositeKeyManyToOneFetchLazy(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-key-many-to-one-fetch/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl addressEntity = transformed.getEntities().stream()
+					.filter( e -> "Address".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( addressEntity.getAttributes().getManyToOneAttributes() )
+					.hasSize( 1 );
+
+			final JaxbManyToOneImpl personManyToOne = addressEntity.getAttributes().getManyToOneAttributes().get( 0 );
+			assertThat( personManyToOne.getName() ).isEqualTo( "person" );
+			assertThat( personManyToOne.isId() ).isTrue();
+			assertThat( personManyToOne.getFetch() )
+					.as( "Composite-id key-many-to-one should have fetch=LAZY" )
+					.isEqualTo( jakarta.persistence.FetchType.LAZY );
+		} );
+	}
 }

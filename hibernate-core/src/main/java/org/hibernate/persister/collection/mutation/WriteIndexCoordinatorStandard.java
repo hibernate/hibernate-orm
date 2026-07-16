@@ -107,8 +107,9 @@ public class WriteIndexCoordinatorStandard implements WriteIndexCoordinator {
 							jdbcValueBindings
 					);
 					mutationExecutor.execute( collection, null, null, null, session );
-					nextIndex++;
 				}
+				// a null element occupies its position, leaving a gap in the order column
+				nextIndex++;
 			}
 		}
 		finally {

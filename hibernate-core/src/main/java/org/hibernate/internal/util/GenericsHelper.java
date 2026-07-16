@@ -247,6 +247,10 @@ public final class GenericsHelper {
 			return null;
 		}
 
+		if ( clazz != typeVariable.getGenericDeclaration() ) {
+			return typeVariable;
+		}
+
 		final var typeArguments = context.getActualTypeArguments();
 		final var typeParameters = clazz.getTypeParameters();
 		for ( int idx = 0; idx < typeParameters.length; idx++ ) {

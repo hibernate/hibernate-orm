@@ -2058,7 +2058,20 @@ public class HbmXmlTransformer {
 		if ( isNotEmpty( source.getCollectionType() ) ) {
 			final var jaxbCollectionUserType = new JaxbCollectionUserTypeImpl();
 			target.setCollectionType( jaxbCollectionUserType );
-			jaxbCollectionUserType.setType( source.getCollectionType() );
+			// resolve typedef alias to the actual implementation class and transfer parameters
+			final var typeDef = transformationState.getTypeDefMap().get( source.getCollectionType() );
+			if ( typeDef != null ) {
+				jaxbCollectionUserType.setType( typeDef.getClazz() );
+				for ( var param : typeDef.getConfigParameters() ) {
+					final var jaxbParam = new JaxbConfigurationParameterImpl();
+					jaxbParam.setName( param.getName() );
+					jaxbParam.setValue( param.getValue() );
+					jaxbCollectionUserType.getParameters().add( jaxbParam );
+				}
+			}
+			else {
+				jaxbCollectionUserType.setType( source.getCollectionType() );
+			}
 		}
 
 		if ( source instanceof JaxbHbmSetType set ) {

@@ -12,7 +12,7 @@
 		<!--  properties inherited from Adapter -->
 		<id name="id" >
 			<column name="TSGID" length="32" />
-			<generator class="uuid.hex" />
+			<generator class="uuid" />
 		</id>	
 				
 		<map name="children" lazy="extra" inverse="true" cascade="persist, merge">

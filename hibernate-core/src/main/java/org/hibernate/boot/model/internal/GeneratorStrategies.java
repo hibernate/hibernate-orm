@@ -14,7 +14,6 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.SelectGenerator;
 import org.hibernate.id.UUIDGenerator;
-import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.TypeDetails;
@@ -89,9 +88,6 @@ public class GeneratorStrategies {
 			case "increment":
 				return IncrementGenerator.class;
 			case "uuid":
-			case "uuid.hex":
-				return UUIDHexGenerator.class;
-			case "uuid2":
 				return UUIDGenerator.class;
 			case "select":
 				return SelectGenerator.class;
@@ -128,9 +124,6 @@ public class GeneratorStrategies {
 			case "increment":
 				return IncrementGenerator.class;
 			case "uuid":
-			case "uuid.hex":
-				return UUIDHexGenerator.class;
-			case "uuid2":
 				return UUIDGenerator.class;
 			case "select":
 				return SelectGenerator.class;

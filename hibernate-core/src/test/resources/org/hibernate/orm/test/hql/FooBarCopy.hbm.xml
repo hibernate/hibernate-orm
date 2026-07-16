@@ -22,7 +22,7 @@
 
 		<id name="key" type="string">
 			<column name="`foo_idcolumnname123`" length="36"/>
-			<generator class="uuid.hex">
+			<generator class="uuid">
 				<param name="seperator">:</param>
 			</generator>
 		</id>

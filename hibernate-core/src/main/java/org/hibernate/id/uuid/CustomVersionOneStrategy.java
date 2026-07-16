@@ -19,8 +19,7 @@ import static org.hibernate.id.uuid.Helper.getJvmIdentifierBytes;
 
 /**
  * Applies a version 1 (time-based) generation strategy (using ip address rather than mac address) but applies them in a
- * different layout.  The strategy is very similar to the legacy {@link org.hibernate.id.UUIDHexGenerator} id generator
- * but uses a RFC 4122 compliant layout (variant 2).
+ * different layout.  The strategy uses an RFC 4122 compliant layout (variant 2).
  *
  * @implNote Can be a bottleneck due to the need to synchronize in order to increment an internal count as part of the
  *           algorithm.

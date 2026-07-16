@@ -13,7 +13,7 @@
 		check="count_count > -666">
 		<id name="code" type="string">
 			<column name="baz_id_column_" length="32"/>
-			<generator class="uuid.hex"/>
+			<generator class="uuid"/>
 		</id>
 		<property name="count" column="count_count"/>
 		<property name="name" column="name_b"/>

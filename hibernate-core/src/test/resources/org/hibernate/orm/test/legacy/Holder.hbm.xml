@@ -9,7 +9,7 @@
 <hibernate-mapping default-lazy="false">
 	<class name="org.hibernate.orm.test.legacy.Holder">
 		<id name="id" column="id_" type="string" length="32" unsaved-value="null">
-			<generator class="uuid.hex"/>
+			<generator class="uuid"/>
 		</id>
 		<property name="name" unique="true" not-null="true" length="36"/>
 		<list name="ones">

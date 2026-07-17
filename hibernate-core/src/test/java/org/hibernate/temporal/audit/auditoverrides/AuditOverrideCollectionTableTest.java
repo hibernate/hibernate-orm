@@ -156,8 +156,6 @@ public class AuditOverrideCollectionTableTest {
 		return table;
 	}
 
-	//TODO also override auditSchema and auditCatalog
-
 	private static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {
 		var tableFound = false;
 		for ( var table : tables ) {

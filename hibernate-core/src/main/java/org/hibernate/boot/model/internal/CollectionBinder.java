@@ -1663,7 +1663,8 @@ public abstract class CollectionBinder {
 						collection,
 						oneToMany.getReferencedEntityName(),
 						extract( Audited.CollectionTable.class, property, buildingContext ),
-						buildingContext
+						buildingContext,
+						propertyName
 				);
 			}
 		}

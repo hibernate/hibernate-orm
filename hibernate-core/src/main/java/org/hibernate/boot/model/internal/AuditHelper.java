@@ -299,14 +299,15 @@ public final class AuditHelper {
 			Collection collection,
 			String referencedEntityName,
 			@Nullable Audited.CollectionTable collectionAuditTable,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			String propertyName) {
 		final var collector = context.getMetadataCollector();
 		final var ownerTable = collection.getOwner().getTable();
 
 		// Table name: @Audited.CollectionTable name, or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
 		final String auditTableName =
-				auditTableName( collection, collectionAuditTable, referencedEntity );
+				auditTableName( collection, collectionAuditTable, referencedEntity, propertyName );
 
 		final String auditSchema;
 		final String auditCatalog;
@@ -377,8 +378,22 @@ public final class AuditHelper {
 	private static String auditTableName(
 			Collection collection,
 			@Nullable Audited.CollectionTable collectionAuditTable,
-			PersistentClass referencedEntity) {
-		if ( collectionAuditTable != null && !isBlank( collectionAuditTable.name() ) ) {
+			PersistentClass referencedEntity,
+			String propertyName) {
+		//find the effective auditOverride
+		AuditOverride effectiveOverride = null;
+		for ( var subclass : collection.getOwner().getSubclasses() ) {
+			var ofSubClass = findFirstAuditOverrideForProperty( subclass, propertyName );
+			if ( ofSubClass != null && !ofSubClass.collectionTable().name().isBlank()) {
+				return ofSubClass.collectionTable().name();
+			}
+		}
+		effectiveOverride = findFirstAuditOverrideForProperty( collection.getOwner(), propertyName );
+		if ( effectiveOverride != null && !effectiveOverride.collectionTable().name().isBlank()) {
+			return effectiveOverride.collectionTable().name();
+		}
+
+		if ( collectionAuditTable != null && !isBlank( collectionAuditTable.name() ) ) { //collection declares its AUD table
 			return collectionAuditTable.name();
 		}
 		else {

@@ -7,7 +7,9 @@ package org.hibernate.temporal.audit.auditoverrides;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.AuditOverride;
@@ -34,6 +36,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 @DomainModel(annotatedClasses = {
 		AuditOverrideCollectionTableTest.EntityWithOverrides.class,
+
+		AuditOverrideCollectionTableTest.Other.class,
+		AuditOverrideCollectionTableTest.EntityWithCollection.class,
+
+		AuditOverrideCollectionTableTest.SubEntity.class,
 
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
@@ -78,7 +85,7 @@ public class AuditOverrideCollectionTableTest {
 	@AuditOverrides(
 			{@AuditOverride(name = "firstCollection", isAudited = true),
 					@AuditOverride(name = "secondCollection", isAudited = false),
-			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( name = "custom_audited_join_table_name" ))}
+			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( name = "custom_audited_join_table_name" ))} //TODO Case: es kann nur eine AUD tabelle geben. Was wenn die weiter unten nochemal überschrieben wird?
 	)
 	static class EntityWithOverrides extends MSCWithExcludedCollectionProperty{
 	}
@@ -93,6 +100,55 @@ public class AuditOverrideCollectionTableTest {
 		assertFalse( tableNames.contains( "AuditOverrideCollectionTableTest$EntityWithOverrides_secondCollection_AUD" ) );
 		assertTrue( tableNames.contains( "custom_audited_join_table_name" ) );
 	}
+
+	/**
+	 * Case 2: @AuditOverride on owning entity
+	 *
+	 */
+
+	@Entity
+	static class Other {
+		@Id
+		long id;
+
+		String otherProp;
+	}
+
+	@MappedSuperclass
+	@Audited
+	@Audited.Table(name = "EO_AUD")
+	static class MSCWithCollection {
+		@Id
+		long id;
+
+		@OneToMany //TODO @Elementcollection, manyToOne ?, ManyToMany ?
+		@JoinColumn(name = "department_id")
+		@Audited.CollectionTable( name = "custom_audit_collection_table" )
+		List<Other> auditedCollection;
+	}
+
+	@Entity
+	@Table(name = "EntityWithOverrides")
+	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "overridden_aud" )))
+	static class EntityWithCollection extends MSCWithCollection{
+
+	}
+
+	@Entity
+	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "double_overridden_aud" )))
+	static class SubEntity extends EntityWithCollection{
+
+	}
+
+	@Test
+	public void elementCollection2(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		var tableNames = tables.stream().map( org.hibernate.mapping.Table::getName ).collect( Collectors.toSet() );
+		assertFalse( tableNames.contains( "overridden_aud" ) );
+		assertTrue( tableNames.contains( "double_overridden_aud" ) );
+	}
+
+	//TODO also override auditSchema and auditCatalog
 
 	private static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {
 		var tableFound = false;

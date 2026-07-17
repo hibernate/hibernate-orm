@@ -122,24 +122,30 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 		else {
 			addAuxiliaryObjects = true;
 		}
-		final String aggregateReadTemplate = aggregateColumn.getAggregateReadExpressionTemplate( dialect );
+		final String aggregateReadTemplate =
+				aggregateColumn.getAggregateReadExpressionTemplate( dialect, metadataCollector, typeConfiguration );
 		final String aggregateReadExpression =
 				aggregateReadTemplate.replace( Template.TEMPLATE + ".", "" );
 		final String aggregateAssignmentExpression =
-				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect )
+				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect, metadataCollector )
 						.replace( Template.TEMPLATE + ".", "" );
 		if ( addAuxiliaryObjects ) {
 			aggregateSupport.aggregateAuxiliaryDatabaseObjects(
 					database.getDefaultNamespace(),
 					aggregateReadExpression,
 					aggregateColumn,
-					aggregatedColumns
+					aggregatedColumns,
+					metadataCollector,
+					typeConfiguration,
+					context.getBootstrapContext().getMappingResolutionOptions()
 			).forEach( database::addAuxiliaryDatabaseObject );
 		}
 		aggregateColumn.setCustomWrite(
 				aggregateSupport.aggregateCustomWriteExpression(
 						aggregateColumn,
-						aggregatedColumns
+						aggregatedColumns,
+						metadataCollector,
+						typeConfiguration
 				)
 		);
 
@@ -150,7 +156,8 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 					aggregateAssignmentExpression,
 					selectableExpression,
 					aggregateColumn,
-					subColumn
+					subColumn,
+					metadataCollector
 			);
 
 			if ( subColumn.getCustomReadExpression() == null ) {
@@ -161,7 +168,9 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 							aggregateReadTemplate,
 							"",
 							aggregateColumn,
-							subColumn
+							subColumn,
+							metadataCollector,
+							typeConfiguration
 					);
 				}
 				else {
@@ -171,7 +180,9 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 							aggregateReadTemplate,
 							selectableExpression,
 							aggregateColumn,
-							subColumn
+							subColumn,
+							metadataCollector,
+							typeConfiguration
 					);
 				}
 			}
@@ -182,7 +193,9 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 						aggregateReadTemplate,
 						"",
 						aggregateColumn,
-						subColumn
+						subColumn,
+						metadataCollector,
+						typeConfiguration
 				);
 			}
 			subColumn.setAssignmentExpression( assignmentExpression );

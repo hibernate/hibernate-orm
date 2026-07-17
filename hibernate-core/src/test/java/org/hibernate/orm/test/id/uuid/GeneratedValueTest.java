@@ -48,8 +48,7 @@ public class GeneratedValueTest {
 			var keyValue = entityBinding.getIdentifier();
 			var database = metadata.getDatabase();
 			final var generator =
-					keyValue.createGenerator( database.getDialect(), (RootClass) entityBinding,
-							entityBinding.getIdentifierProperty(), new GeneratorSettingsImpl( metadata ) );
+					GeneratorSettingsImpl.createIdentifierGenerator( keyValue, database.getDialect(), (RootClass) entityBinding, entityBinding.getIdentifierProperty(), metadata );
 			assertTyping( UuidGenerator.class, generator );
 
 			// now a functional test

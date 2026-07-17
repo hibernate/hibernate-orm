@@ -59,12 +59,7 @@ public class AutoGenerationTypeTests {
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity1.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = metadata.getDatabase().getDialect();
-			final SequenceStyleGenerator generator = (SequenceStyleGenerator) idMapping.createGenerator(
-					dialect,
-					entityBinding.getRootClass(),
-					entityBinding.getIdentifierProperty(),
-					new GeneratorSettingsImpl( metadata )
-			);
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) GeneratorSettingsImpl.createIdentifierGenerator( idMapping, dialect, entityBinding.getRootClass(), entityBinding.getIdentifierProperty(), metadata );
 			final DatabaseStructure database1Structure = generator.getDatabaseStructure();
 
 			// implicit name : `${entity-name}_seq`
@@ -83,12 +78,7 @@ public class AutoGenerationTypeTests {
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity2.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = metadata.getDatabase().getDialect();
-			final SequenceStyleGenerator generator = (SequenceStyleGenerator) idMapping.createGenerator(
-					dialect,
-					entityBinding.getRootClass(),
-					entityBinding.getIdentifierProperty(),
-					new GeneratorSettingsImpl( metadata )
-			);
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) GeneratorSettingsImpl.createIdentifierGenerator( idMapping, dialect, entityBinding.getRootClass(), entityBinding.getIdentifierProperty(), metadata );
 			final DatabaseStructure database2Structure = generator.getDatabaseStructure();
 
 			// GeneratedValue#generator value
@@ -112,12 +102,7 @@ public class AutoGenerationTypeTests {
 			final IdentifierBag idBagMapping = (IdentifierBag) theTwos.getValue();
 			final KeyValue collectionIdMapping = idBagMapping.getIdentifier();
 			Dialect dialect = metadata.getDatabase().getDialect();
-			final SequenceStyleGenerator generator = (SequenceStyleGenerator) collectionIdMapping.createGenerator(
-					dialect,
-					null,
-					null,
-					new GeneratorSettingsImpl( metadata )
-			);
+			final SequenceStyleGenerator generator = (SequenceStyleGenerator) GeneratorSettingsImpl.createIdentifierGenerator( collectionIdMapping, dialect, null, null, metadata );
 			final DatabaseStructure idBagIdGeneratorDbStructure = generator.getDatabaseStructure();
 
 			assertThat( idBagIdGeneratorDbStructure.getPhysicalName().render() ).isEqualToIgnoringCase( "tbl_2_seq" );
@@ -134,12 +119,7 @@ public class AutoGenerationTypeTests {
 			final Property identifierProperty = entityBinding.getRootClass().getIdentifierProperty();
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final Generator generator = idMapping.createGenerator(
-					dialect,
-					entityBinding.getRootClass(),
-					identifierProperty,
-					new GeneratorSettingsImpl( metadata )
-			);
+			final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator( idMapping, dialect, entityBinding.getRootClass(), identifierProperty, metadata );
 			assertThat( generator ).isInstanceOf( UuidGenerator.class );
 		}
 	}
@@ -152,12 +132,7 @@ public class AutoGenerationTypeTests {
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity3.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
 			Dialect dialect = new H2Dialect();
-			final IdentifierGenerator generator = (IdentifierGenerator) idMapping.createGenerator(
-					dialect,
-					entityBinding.getRootClass(),
-					entityBinding.getIdentifierProperty(),
-					new GeneratorSettingsImpl( metadata )
-			);
+			final IdentifierGenerator generator = (IdentifierGenerator) GeneratorSettingsImpl.createIdentifierGenerator( idMapping, dialect, entityBinding.getRootClass(), entityBinding.getIdentifierProperty(), metadata );
 			assertThat( generator ).isInstanceOf( IncrementGenerator.class );
 		}
 	}

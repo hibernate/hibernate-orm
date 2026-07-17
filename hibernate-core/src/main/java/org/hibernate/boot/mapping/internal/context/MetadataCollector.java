@@ -158,6 +158,9 @@ public interface MetadataCollector {
 			Class<?> embeddableClass,
 			Class<? extends EmbeddableInstantiator> instantiatorClass);
 
+	/// Resolve a registered embeddable instantiator.
+	Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableClass);
+
 	/// Resolve a filter definition already published to the metadata collector.
 	FilterDefinition getFilterDefinition(String name);
 

@@ -236,21 +236,6 @@ public sealed class Subclass extends PersistentClass
 		return getTable() != getRootTable();
 	}
 
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createForeignKey() {
-		if ( isJoinedSubclass() ) {
-			getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
-		}
-	}
-
-
 	@Override
 	public int getJoinClosureSpan() {
 		return getSuperclass().getJoinClosureSpan() + super.getJoinClosureSpan();

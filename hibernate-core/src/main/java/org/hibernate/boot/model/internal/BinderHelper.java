@@ -7,7 +7,6 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.CascadeType;
 import org.hibernate.MappingException;
-import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
@@ -32,10 +31,6 @@ import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
  * @author Emmanuel Bernard
  */
 public class BinderHelper {
-	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
-			new UniqueKeyMappingMaterializer();
-
-
 	private BinderHelper() {
 	}
 

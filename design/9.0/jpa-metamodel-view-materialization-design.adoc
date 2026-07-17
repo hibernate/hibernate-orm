@@ -5,8 +5,9 @@ This document captures the longer-term direction for deriving JPA static
 metamodel injection work while building the boot/mapping model from finalized
 binding views.
 
-It complements link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`].
-That proposal describes the broader binding/view/materialization model; this
+It complements
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].
+That design describes the broader binding/view/materialization model; this
 document focuses on static metamodel injection as a side product of
 boot/mapping-model materialization, not as a separate runtime-model traversal.
 
@@ -255,6 +256,55 @@ eventual embeddable path therefore needs to distinguish:
 Until that settles, embeddable static metamodel injection can stay on the
 runtime-domain fallback.
 
+== Inherited Generic Attributes And Field Hiding
+
+Generic mapped-superclass attributes expose a second static-metamodel question:
+should the generated metamodel represent only the declaration attribute, or also
+represent concrete resolved usages through field hiding?
+
+The current canonical metamodel contract exposes an inherited generic attribute
+as one field declared by the superclass metamodel.  A generic mapped superclass
+such as `AbstractValueObject<V>` contributes
+`AbstractValueObject_.value : SingularAttribute<AbstractValueObject, Comparable>`.
+Concrete subtypes such as `SomeString extends AbstractValueObject<String>` and
+`SomeNumber extends AbstractValueObject<Integer>` inherit that same JVM static
+field from `AbstractValueObject_`.
+
+That means runtime injection must currently populate the superclass-declared
+field with the declaration attribute.  It must not repeatedly overwrite the
+same inherited field with each concrete resolved usage.
+
+A better future metamodel may intentionally generate subtype fields that hide
+the superclass field:
+
+[source,java]
+----
+public class SomeString_ extends AbstractValueObject_ {
+    public static volatile SingularAttribute<SomeString, String> value;
+}
+
+public class SomeNumber_ extends AbstractValueObject_ {
+    public static volatile SingularAttribute<SomeNumber, Integer> value;
+}
+----
+
+If ORM and the annotation processor adopt that contract, the injection plan
+must model both references:
+
+* the declaration field on `AbstractValueObject_`, resolved from the
+  mapped-superclass attribute declaration; and
+* the hidden concrete field on each subtype metamodel class, resolved from the
+  concrete attribute usage/contribution where generic substitution is known.
+
+The boot-time plan therefore cannot treat field name plus inherited lookup as
+the semantic identity of a generated field.  It needs an explicit
+declaration-versus-usage role, an owning metamodel class, and field-hiding
+semantics so runtime injection can prefer a declared subtype field when one
+exists while still populating the superclass declaration field correctly.
+
+This is the same design pressure described in
+link:generic-inheritance-model-design.adoc#_static_metamodel_follow_up[`generic-inheritance-model-design.adoc`].
+
 == Relationship To `MetadataContext`
 
 `MetadataContext` should not rediscover source field selection by independently
@@ -393,6 +443,9 @@ Expected behavior:
   materialization;
 * generic and mapped-superclass inherited embeddable members are represented
   without pretending one global member selection applies to every usage.
+* inherited generic mapped-superclass attributes can later expose subtype
+  field-hiding references when the annotation processor and runtime injection
+  agree on that contract.
 
 === Slice 7: Retire Separate Runtime-Domain Static Traversal
 
@@ -416,6 +469,12 @@ points are removed or routed through the resolved pipeline.
   creation skip them?
 * How should embeddable declaration fields be selected when effective member
   access is usage-site dependent?
+* Should inherited generic attributes remain declaration-only static metamodel
+  fields, or should the annotation processor and runtime injection support
+  subtype field-hiding fields for concrete resolved usages?
+* If field-hiding generic metamodel fields are supported, should the injection
+  plan represent declaration fields and concrete usage fields as distinct field
+  roles, or as one role with an explicit declaration/usage target?
 * Should id-class static fields be modeled as identifier contribution facts, or
   as a separate JPA metamodel projection over identifier contributions?
 

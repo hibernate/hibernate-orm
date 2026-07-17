@@ -29,9 +29,7 @@ pipeline:
 Key orientation documents:
 
 * link:boot-model-terminology.adoc[`boot-model-terminology.adoc`]
-* link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`]
 * link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
-* link:applied-contribution-model-design.adoc[`applied-contribution-model-design.adoc`]
 * link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
 * link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
 * link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
@@ -43,21 +41,49 @@ Key orientation documents:
 * link:state-management-design.adoc[`state-management-design.adoc`]
 * link:additional-mapping-contributor-design.adoc[`additional-mapping-contributor-design.adoc`]
 * link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
+* link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
+* link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
 
 == Current Status
 
-The current worktree is past the old green-suite closeout and is now in a
-large design-led cleanup.  The previous complete-suite green point was
+The current worktree is past the old green-suite closeout and is now in the
+post-bootstrap-API-removal cleanup.  The previous complete-suite green point was
 2026-07-02, after the final `LazyOneToOneRemoveFlushAccessTest` fix, but that
 is historical context rather than the current verification state.
 
-The active work is retiring legacy annotation binding and second-pass style
-finalization in favor of the new binding/materialization pipeline:
+The large squashed bootstrap commit is
+`514b824c9db2574442e6dfc9f4f54a9df41d546c`
+(`HHH-20497 - Improve bootstrap`, plus `HHH-20667`).  Its main effect is that
+the old native bootstrap builder stack is gone and the new explicit bootstrap
+pipeline is the center of gravity:
+
+* `MetadataSources`, `MetadataBuilder`, `MetadataBuilderImpl`,
+  `HibernateBootstrap`, `MetadataBuilderContributor`,
+  `MetadataBuilderInitializer`, `MetadataSourcesContributor`,
+  `XmlMappingBinderAccess`, and the old `MetadataBuildingProcess` path have
+  been removed.
+* `Configuration` is now a compatibility facade over the new pipeline rather
+  than a wrapper around `MetadataSources` / `MetadataBuilder`.
+* `SessionFactoryBootstrap` / `SessionFactoryBootstrapRequest` were renamed to
+  `BootstrapPipeline` / `BootstrapPipelineRequest`.
+* `MetadataResolver` / `ResolvedMetadata` /
+  `ResolvedMetadataImplementor` were renamed to
+  `MappingResolutionPipeline` / `ResolvedMapping` /
+  `ResolvedMappingImplementor`.
+* `MetadataCustomizations`, `MetadataBuildingPlan`, and
+  `MetadataBuildingServiceComponents` were renamed to
+  `MappingCustomizations`, `MappingResolutionOptions`, and
+  `MappingResolutionServices`.
+* Source aggregation now flows through the new mapping-source/prepared-source
+  model rather than through the old public `MetadataSources` surface.
+
+The active mapping work is retiring legacy annotation binding and second-pass
+style finalization in favor of the new binding/materialization pipeline:
 
 * `MetadataBuildingProcess`, `ManagedResourcesBinder`, `AnnotationBinder`, the
   legacy `org.hibernate.boot.model.internal.BasicValueBinder`, and most of the
   old `org.hibernate.boot.model.internal` binder/property-holder classes have
-  been removed or are being removed.
+  been removed.
 * The new `org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder`
   is the active basic-value binding entry point.
 * Legacy `SecondPass` implementations have been converted into explicit
@@ -70,13 +96,11 @@ finalization in favor of the new binding/materialization pipeline:
 
 Current verification:
 
-* `./gradlew :hibernate-core:compileJava --console=plain` passes as of
-  2026-07-08.
-* Focused `:hibernate-core:test` runs currently stop before executing the
-  selected tests because `:hibernate-testing:compileJava` fails in
-  `DialectFeatureChecks` at the two `@Override` methods around lines 1953 and
-  1968.  Treat that as the current test-execution blocker, not as a
-  boot-model/runtime failure.
+* The full test suite is currently passing after the bootstrap/API removal
+  work and the follow-up ant/reveng fixes.
+* The old ant/reveng failures around ad-hoc basic-type movement and bootstrap
+  timing are historical context only.  Do not reopen them unless a fresh run
+  reproduces a current failure.
 
 There is no active failure bucket selected from the old binding-gap tracker or
 the 2026-06-30 full-suite census.  Those files were removed after the suite
@@ -131,12 +155,19 @@ Remaining compatibility island:
   `Function<TypeConfiguration, MutabilityPlan<?>>` parameters internally.
   Those are local resolver mechanics, not stored `BasicValue` state.
 
+Current status:
+
+* Basic-value resolution determination is considered externalized.  Do not
+  treat this as an open design bucket unless a concrete call path is found that
+  still asks `BasicValue` to determine its own resolution.
+* `BasicValue#resolve()` is now an enforcement/finalization bridge: it requires
+  an already-applied `BasicValue.Resolution` and fails if one was not provided.
+
 Suggested next step in this area:
 
-* Continue retiring legacy basic-value/binder compatibility paths and move any
-  remaining type-resolution decisions into `BasicValueResolutionBuilder` input
-  facts or role methods.  Avoid adding new `BasicValue` setters that encode
-  resolution behavior.
+* Avoid adding new `BasicValue` setters that encode resolution behavior.  New
+  resolution decisions should be represented as
+  `BasicValueResolutionBuilder.Input` facts or role-specific builder logic.
 
 == Current Bootstrap / SessionFactory Construction State
 
@@ -180,6 +211,125 @@ Suggested next step in this area:
   service-registry usage where the needed capability is obvious, but avoid a
   broad rename/delete pass until the current mapping-object simplification work
   has settled.
+
+== Next Fresh-Chat Focus: `MetadataBuildingContext`
+
+The next design pass should shift back to `MetadataBuildingContext`.  The
+current mapping-layer audit is captured in
+link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`].
+
+That audit intentionally separates binder/helper uses from mapping objects that
+store or expose the full context.  The main stored-context families are:
+
+* `PersistentClass` / subclass mappings;
+* `SimpleValue` and descendants, including `BasicValue`, `ToOne`, `Any`, and
+  `Component`;
+* `Collection` and collection subclasses;
+* `OneToMany`.
+
+The useful classification remains: identify the real capability needed
+(`Database`, `TypeConfiguration`, mapping options/preferences, class loading,
+bean creation, metadata collector compatibility, service access, or contributor
+name) before adding a replacement contract.
+
+Suggested first implementation slice:
+
+* start with `PersistentClass`: store contributor directly and audit the
+  remaining `getServiceRegistry()` callers before trying a broader value or
+  collection constructor change;
+* continue hidden key/constraint helper cleanup in parallel where transient
+  `MetadataBuildingContext` parameters are only supporting old side effects;
+* keep tests focused on the constructor family touched, plus a small
+  bootstrap/mapping smoke run.
+
+=== Context Taxonomy
+
+Use this taxonomy when deciding whether a remaining dependency should stay,
+move, or become a phase-specific contract:
+
+`BootstrapContext`::
+Compatibility root and temporary bootstrap resource holder.  It should own JPA
+temporary class-loader lifecycle, bootstrap release hooks, and extension-facing
+compatibility state until those contracts have replacements.
+
+`MappingResolutionOptions`::
+Resolved instructions for metadata building: mapping defaults, model
+preferences, XML enablement, CDI-extension policy, naming/cache choices, and
+other plan inputs.
+
+`MappingResolutionServices`::
+Named service access needed while building metadata: standard service registry
+bridge, configuration service, class loading, temp-class-loader-aware
+`ClassLoaderAccess`, managed beans, custom type production, `ModelsContext`,
+`TypeConfiguration`, JDBC services, changeset coordination, and strategy
+selection.
+
+`MetadataBuildingContext`::
+Current metadata-build operation state: contributor, effective defaults,
+metadata collector, object-name normalizer, type-definition registry, JPA
+compliance, and current build decisions such as audit and temporal-table
+strategy.
+
+Phase-specific contexts::
+Narrow adapters for one phase, such as `BindingContext`,
+`XmlDocumentContext`, discovery contexts, materialization contexts, and
+runtime-model creation contexts.  These should expose only the inputs their
+phase naturally consumes.
+
+The intent is not to move `BootstrapContext`'s broad surface onto
+`MetadataBuildingContext`.  If a dependency is only needed by XML, source
+discovery, binding, materialization, or runtime-model creation, prefer a phase
+context.  If it is a service needed across metadata building, prefer
+`MappingResolutionServices`.  If it is current build state or a resolved build
+decision, prefer `MetadataBuildingContext` or `MappingResolutionOptions`.
+
+== Hidden Mapping Side-Effect Hook Audit
+
+The focused design source for this topic is
+link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
+Its current status is: materializer bridge drain complete; deprecated
+compatibility helpers retained.
+
+The phrase "hidden side-effect hook" should mean concrete mapping-object
+methods that create or mutate relational products indirectly from mutable
+`org.hibernate.mapping` state.  It should not be used as vague shorthand for
+unfinished bootstrap work.
+
+Current retained candidates:
+
+* `Collection#createPrimaryKeyIfNeeded()`;
+* `Collection#createForeignKeys()`;
+* `PersistentClass#createPrimaryKey()`;
+* `Value#createForeignKey()`;
+* `Value#createUniqueKey(MetadataBuildingContext)`;
+* `KeyValue#createForeignKeyOfEntity(...)`;
+* `Join#createForeignKey()`.
+
+Related low-level table registry methods:
+
+* `Table#createForeignKey(...)` remains the primitive used by
+  `ForeignKeyMappingMaterializer` and should not be deleted as part of hidden
+  helper cleanup.
+* `Table#createUniqueKey(...)` is still a compatibility helper around naming
+  and table unique-key registration; audit callers before deciding whether to
+  delete, narrow, or keep it.
+* `DenormalizedTable#createForeignKeys(...)` still copies included-table
+  foreign keys during metadata finalization and should be evaluated separately
+  from boot hidden-helper cleanup.
+* `InFlightMetadataCollectorImpl` still calls `Table#createForeignKeys(...)`
+  while finalizing table foreign keys.  That makes table-level FK finalization a
+  live metadata-finalization concern, not the same thing as the deprecated
+  value/collection/join helper hooks.
+
+Next implementation direction:
+
+* delete or sharply narrow deprecated hidden helpers whose ORM boot callers have
+  been drained;
+* keep low-level table registry primitives only where explicit materializers
+  still need them;
+* if a helper remains for external compatibility, mark the reason and verify it
+  delegates to explicit materializer products rather than re-deriving mapping
+  facts.
 
 == Current Mapped-Superclass Handoff State
 
@@ -444,19 +594,23 @@ git diff --check
 
 [source,text]
 ----
-Please read design/9.0/current-work-handoff.adoc first.  The complete
-hibernate-orm suite was green on 2026-07-02, and the old binding-gap tracker
-and full-suite census were removed so they do not drive stale bucket selection.
-The next phase is design-led work from the 9.0 design docs, especially the
-applied/resolved contribution model, mapped-superclass/generic/embeddable
-modeling, aggregate/state-management/additional-contributor handoffs, and
-explicit finalization/correspondence products.  Choose the next highest-signal
-design slice, add or update focused guardrails for the intended behavior, keep
-implementation scoped to source/categorization/binding/materialization/settings
-or documented compatibility handoff metadata, and finish with the focused
-guardrails, generics guardrails when relevant, and git diff --check.  If a fresh
-regression appears, reproduce it directly, fix the boot/model or settings
-handoff deviation, then return to the design-led queue.
+Please read design/9.0/current-work-handoff.adoc first.  The old complete-suite
+green point was 2026-07-02, but the current branch is after the large
+bootstrap/API removal commit 514b824c9db2574442e6dfc9f4f54a9df41d546c, so do
+not use the old binding-gap tracker or full-suite census as the work queue.
+The next design focus is MetadataBuildingContext cleanup: audit its contract,
+remaining getBootstrapContext()/service-registry paths, and the mapping-object
+constructor/materializer call sites that still receive the broad context.
+Classify each use as true mapping-resolution state, service access, legacy
+mapping-object construction context, transient binder/materializer input, or
+documented compatibility bridge.  Start with one narrow implementation slice,
+preferring explicit small dependencies over moving BootstrapContext's grab-bag
+shape into MetadataBuildingContext.  The full test suite is currently passing;
+use fresh test reports rather than stale failure buckets.  Also audit the
+deprecated hidden mapping side-effect hooks documented in
+mapping-key-creation-design.adoc and delete or narrow the retained helpers whose
+ORM boot callers have been drained.  Run focused guardrails for the touched
+area, and finish with git diff --check.
 ----
 
 == Fresh-Context Cautions

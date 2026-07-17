@@ -95,6 +95,32 @@ The exact APIs do not need to be public.  They should express that the caller
 has already resolved source metadata, local columns, referenced columns, and
 ordering.
 
+== Durable Integration Rules
+
+The retired `orm-integration-notes.adoc` was written when this work still lived
+outside `hibernate-orm`.  Most of its prototype touchpoints are now stale, but
+the mapping-layer rules behind them remain part of this design:
+
+* collection owner keys, collection-table row keys, join-table inverse keys,
+  joined-subclass keys, and secondary-table keys are distinct products even when
+  they share columns;
+* table-key foreign keys are first-class resolved foreign-key products, not
+  hidden side effects of `Join`, `Collection`, or `KeyValue`;
+* source foreign-key metadata, including names, definitions, options,
+  constraint modes, referenced columns, and disabled constraints, must be
+  captured before physical key materialization;
+* property-ref associations, unique property references, association-valued
+  identifiers, and `@MapsId` derived identifiers should feed explicit
+  association-target, correspondence, and key products rather than asking
+  mutable mapping helpers to infer the target late;
+* low-level `Table` registry methods remain implementation primitives for
+  materializers, not the semantic owner of source interpretation.
+
+Source descriptor and phase-ordering guidance from the old integration notes is
+now covered by
+link:new-contributor-model-binding-guide.adoc#_source_descriptors[`new-contributor-model-binding-guide.adoc`]
+and the fixed binding phase contract described there.
+
 == Relationship To Correspondence
 
 Foreign-key creation should consume selectable correspondence directly.

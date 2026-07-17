@@ -312,7 +312,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			if ( arrayConstructor == null ) {
 				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes." + JdbcTypeNameMapper.getTypeName( aggregateColumnSqlTypeCode ) );
 			}
-			final var arrayJavaType = resolveAggregateArrayJavaType( basicValue, resolution, typeConfiguration );
+			final var arrayJavaType = resolveAggregateArrayJavaType( basicValue, resolution, creationContext );
 			if ( !( arrayJavaType instanceof BasicPluralJavaType<?> pluralJavaType ) ) {
 				throw new MappingException(
 						"Unable to determine aggregate array JavaType for " + aggregateColumn.getName()
@@ -340,12 +340,16 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	private static JavaType<?> resolveAggregateArrayJavaType(
 			BasicValue basicValue,
 			BasicValue.Resolution<?> resolution,
-			org.hibernate.type.spi.TypeConfiguration typeConfiguration) {
+			RuntimeModelCreationContext creationContext) {
+		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var domainJavaType = resolution.getDomainJavaType();
 		if ( domainJavaType instanceof BasicPluralJavaType<?> ) {
 			return domainJavaType;
 		}
-		final var impliedJavaType = basicValue.impliedJavaType( typeConfiguration );
+		final var impliedJavaType = basicValue.impliedJavaType(
+				typeConfiguration,
+				creationContext.getClassLoaderService()
+		);
 		if ( impliedJavaType instanceof Class<?> javaClass && javaClass.isArray() ) {
 			final var elementJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor( javaClass.getComponentType() );
 			final var arrayJavaType = new ArrayJavaType<>( elementJavaType );

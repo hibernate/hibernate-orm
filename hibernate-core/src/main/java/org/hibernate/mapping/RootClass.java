@@ -448,6 +448,10 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 		this.auxiliaryColumnInPrimaryKey = key;
 	}
 
+	public String getAuxiliaryColumnInPrimaryKey() {
+		return auxiliaryColumnInPrimaryKey;
+	}
+
 	@Override
 	public boolean isPrimaryKeyDisabled() {
 		return primaryKeyDisabled;
@@ -461,25 +465,6 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
-	}
-
-	@Override
-	public PrimaryKey makePrimaryKey(Table table) {
-		if ( isPrimaryKeyDisabled() ) {
-			return null;
-		}
-		else {
-			final var primaryKey = super.makePrimaryKey( table );
-			if ( isAuxiliaryColumnInPrimaryKey() ) {
-				if ( isVersioned() ) {
-					primaryKey.addColumns( getVersion().getValue() );
-				}
-				else {
-					primaryKey.addColumn( getAuxiliaryColumn( auxiliaryColumnInPrimaryKey ) );
-				}
-			}
-			return primaryKey;
-		}
 	}
 
 	public void setStateManagementType(Class<? extends StateManagement> stateManagementType) {

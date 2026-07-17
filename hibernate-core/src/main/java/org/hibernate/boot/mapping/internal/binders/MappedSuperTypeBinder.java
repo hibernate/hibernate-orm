@@ -13,6 +13,7 @@ import org.hibernate.boot.mapping.internal.context.MappedSuperclassPropertyHando
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassContribution;
@@ -34,6 +35,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 
 import static org.hibernate.boot.mapping.internal.binders.GenericComponentHelper.genericComponentCopy;
 
@@ -310,16 +312,18 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 		final Value declaredValue = identifierProperty.getValue().copy();
 		if ( declaredValue instanceof Component component ) {
-			component.setComponentClassName( member.getType().determineRawClass().getClassName() );
+			component.setComponentClassDetails( member.getType().determineRawClass() );
 			final Class<?> componentClass = component.getComponentClass();
 			if ( componentClass == Object.class ) {
 				component.clearProperties();
 			}
 			else {
 				final var propertyIterator = component.getProperties().iterator();
+				final var propertyAccessStrategyResolver =
+						getBindingContext().getServiceRegistry().requireService( PropertyAccessStrategyResolver.class );
 				while ( propertyIterator.hasNext() ) {
 					try {
-						propertyIterator.next().getGetter( componentClass );
+						propertyIterator.next().getGetter( componentClass, propertyAccessStrategyResolver );
 					}
 					catch (PropertyNotFoundException e) {
 						propertyIterator.remove();
@@ -420,7 +424,16 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		}
 		final BasicValueSource valueSource = BasicValueSource.genericDeclaration();
 		basicValue.setImplicitSourceJavaType( valueSource.sourceJavaType() );
-		BasicValueResolutionBuilder.applyResolution( BasicValueResolutionBuilder.Input.create( basicValue, valueSource ) );
+		final var details = BasicValueResolutionDetails.create(
+				basicValue,
+				valueSource
+		);
+		BasicValueResolutionBuilder.applyResolution(
+				details,
+				getBindingState().getMetadataBuildingContext().getServiceComponents(),
+				getBindingState().getMappingResolutionState(),
+				getBindingState().getMetadataBuildingContext()
+		);
 		return basicValue;
 	}
 

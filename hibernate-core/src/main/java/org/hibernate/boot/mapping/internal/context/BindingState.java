@@ -88,6 +88,9 @@ public interface BindingState {
 	/// Metadata building context for the current boot run.
 	MetadataBuildingContext getMetadataBuildingContext();
 
+	/// Stable resolution state for the current boot run.
+	@Nonnull MappingResolutionState getMappingResolutionState();
+
 	/// Database model being populated during binding.
 	@Nonnull Database getDatabase();
 
@@ -209,6 +212,9 @@ public interface BindingState {
 	void registerEmbeddableInstantiator(
 			Class<?> embeddableClass,
 			Class<? extends EmbeddableInstantiator> instantiatorClass);
+
+	/// Resolve a registered embeddable instantiator.
+	Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableClass);
 
 	/// Resolve a filter definition already published to, or pending for, the metadata collector.
 	FilterDefinition getFilterDefinition(String name);

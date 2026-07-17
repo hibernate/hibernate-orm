@@ -22,6 +22,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.usertype.CompositeUserType;
 
 import static org.hibernate.internal.util.StringHelper.count;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -60,7 +62,7 @@ public class EmbeddableMappingMaterializer {
 		applyComponentType( component, source.componentType() );
 		applyComponentMappedSuperclass( component, source.componentType() );
 		component.setTable( table );
-		component.setTypeUsingReflection( ownerClassName, attributeName );
+		component.setTypeUsingReflection( ownerClassName, attributeName, state.getMetadataBuildingContext() );
 		return component;
 	}
 
@@ -74,7 +76,7 @@ public class EmbeddableMappingMaterializer {
 		applyComponentType( component, source.componentType() );
 		applyComponentMappedSuperclass( component, source.componentType() );
 		component.setTable( table );
-		component.setTypeUsingReflection( ownerClassName, attributeName );
+		component.setTypeUsingReflection( ownerClassName, attributeName, state.getMetadataBuildingContext() );
 		return component;
 	}
 
@@ -99,13 +101,7 @@ public class EmbeddableMappingMaterializer {
 	}
 
 	public static void applyComponentType(Component component, ClassDetails componentType) {
-		if ( componentType.isRealClass() ) {
-			component.setComponentClassName( componentType.getClassName() );
-		}
-		else {
-			component.setDynamic( true );
-			component.setRoleName( componentType.getName() );
-		}
+		component.setComponentClassDetails( componentType );
 	}
 
 	public static void applyComponentMappedSuperclass(
@@ -140,7 +136,7 @@ public class EmbeddableMappingMaterializer {
 		applyColumnNamingPattern( component, source.sourceMember() );
 	}
 
-	private static void applyComponentCustomizations(
+	private void applyComponentCustomizations(
 			Component component,
 			MemberDetails sourceMember,
 			ClassDetails componentType) {
@@ -148,7 +144,7 @@ public class EmbeddableMappingMaterializer {
 				? null
 				: sourceMember.getDirectAnnotationUsage( org.hibernate.annotations.CompositeType.class );
 		if ( compositeType != null ) {
-			component.setTypeName( compositeType.value().getName() );
+			component.setCompositeUserType( instantiateCompositeUserType( compositeType.value() ) );
 		}
 
 		final org.hibernate.annotations.EmbeddableInstantiator memberInstantiator = sourceMember == null
@@ -168,8 +164,7 @@ public class EmbeddableMappingMaterializer {
 		}
 
 		final Class<? extends EmbeddableInstantiator> registeredInstantiator =
-				component.getBuildingContext().getMetadataCollector()
-						.findRegisteredEmbeddableInstantiator( componentType.toJavaClass() );
+				state.findRegisteredEmbeddableInstantiator( componentType.toJavaClass() );
 		if ( registeredInstantiator != null ) {
 			component.setCustomInstantiator( registeredInstantiator );
 		}
@@ -200,5 +195,13 @@ public class EmbeddableMappingMaterializer {
 			) );
 		}
 		component.setColumnNamingPattern( pattern );
+	}
+
+	private CompositeUserType<?> instantiateCompositeUserType(
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+		final var buildingContext = state.getMetadataBuildingContext();
+		return buildingContext.getBuildingPlan().isAllowExtensionsInCdi()
+				? buildingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 	}
 }

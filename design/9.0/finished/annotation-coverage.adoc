@@ -1091,7 +1091,7 @@ are sourced through hibernate-models rather than reflection/ad hoc lookup.
 aggregate column and UDT metadata in the new pipeline.  Plural, array, and
 deeper nested aggregate parity is intentionally deferred until the aggregate
 mapping model, runtime model, binder, and extractor design is revisited; see
-link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`].
+link:../aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`].
 
 | State management
 | `@Audited`, `@Audited.Excluded`, `@Audited.Table`,
@@ -2801,6 +2801,6 @@ are verified through the matching singular override.
    instantiation metadata is sourced consistently through hibernate-models.
 2. Revisit plural, array, and deeper nested `@Struct` / aggregate parity after
    the aggregate mapping design direction is settled; see
-   link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`].
+   link:../aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`].
 3. Revisit audit/changelog and temporal annotations as part of a dedicated
    state-management slice.

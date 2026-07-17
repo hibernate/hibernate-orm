@@ -330,7 +330,7 @@ class ToOneAttributeBinder {
 		value.setPropertyName( propertyName );
 		value.setReferencedEntityName( target.entityName() );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName );
+		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getMetadataBuildingContext() );
 		final FetchType fetchType = effectiveFetchType( source, bindingOptions );
 		applyLazy( source, value, ownerBinding, fetchType );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
@@ -410,7 +410,7 @@ class ToOneAttributeBinder {
 		value.setReferencedEntityName( target.entityName() );
 		value.setReferenceToPrimaryKey( referenceToPrimaryKey );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName );
+		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getMetadataBuildingContext() );
 		final FetchType fetchType = effectiveFetchType( source, bindingOptions );
 		applyLazy( source, value, ownerBinding, fetchType );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
@@ -652,7 +652,7 @@ class ToOneAttributeBinder {
 		value.setPropertyName( propertyName );
 		value.setReferencedEntityName( target.entityName() );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName );
+		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getMetadataBuildingContext() );
 		final FetchType fetchType = effectiveFetchType( source, bindingOptions );
 		applyLazy( source, value, ownerBinding, fetchType );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
@@ -1429,7 +1429,7 @@ class ToOneAttributeBinder {
 		@Override
 		public List<Column> identifierColumns() {
 			if ( entityIdentifierBinding.value() instanceof SortableValue sortableValue ) {
-				sortableValue.sortProperties();
+				sortableValue.sortProperties( typeBinder.getBindingState()::getEntityBinding );
 				return entityIdentifierBinding.value().getColumns();
 			}
 			if ( primaryTable.getPrimaryKey() != null

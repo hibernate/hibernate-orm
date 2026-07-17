@@ -6,7 +6,9 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -51,7 +53,7 @@ public class SoftDeleteHelper {
 				createSoftDeleteIndicatorValue( softDeleteConfig, table, context ),
 				context
 		);
-		applyResolution( softDeleteConfig, softDeleteIndicatorColumn );
+		applyResolution( softDeleteConfig, softDeleteIndicatorColumn, context );
 		table.addColumn( softDeleteIndicatorColumn );
 		target.enableSoftDelete( softDeleteIndicatorColumn, softDeleteConfig.strategy() );
 	}
@@ -79,9 +81,12 @@ public class SoftDeleteHelper {
 		return softDeleteIndicatorValue;
 	}
 
-	private static void applyResolution(SoftDelete softDeleteConfig, Column softDeleteIndicatorColumn) {
+	private static void applyResolution(
+			SoftDelete softDeleteConfig,
+			Column softDeleteIndicatorColumn,
+			MetadataBuildingContext context) {
 		final var softDeleteIndicatorValue = (BasicValue) softDeleteIndicatorColumn.getValue();
-		final var resolutionInput = BasicValueResolutionBuilder.Input.create(
+		final var resolutionInput = BasicValueResolutionDetails.create(
 				softDeleteIndicatorValue,
 				BasicValueSource.softDelete()
 		);
@@ -90,7 +95,12 @@ public class SoftDeleteHelper {
 						? Instant.class
 						: softDeleteIndicatorValue.getJpaAttributeConverterDescriptor().getRelationalValueResolvedType()
 		);
-		BasicValueResolutionBuilder.applyResolution( resolutionInput );
+		BasicValueResolutionBuilder.applyResolution(
+				resolutionInput,
+				context.getServiceComponents(),
+				MappingResolutionState.from( context ),
+				context
+		);
 	}
 
 	private static Column createSoftDeleteIndicatorColumn(

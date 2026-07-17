@@ -12,7 +12,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.Configurable;
@@ -25,7 +24,6 @@ import org.hibernate.mapping.RootClass;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
-import org.hibernate.mapping.Value;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.cfg.MappingSettings.PREFERRED_POOLED_OPTIMIZER;
@@ -69,13 +67,12 @@ public class GeneratorParameters {
 	 * {@link Configurable#configure(GeneratorCreationContext, Properties)}.
 	 */
 	public static Properties collectParameters(
-			Value identifierValue,
-			Dialect dialect,
-			RootClass rootClass,
+			GeneratorCreationContext context,
 			Map<String, Object> configuration,
 			ConfigurationService configService) {
+		final var dialect = context.getDatabase().getDialect();
 		final var params = new Properties( dialect.getDefaultProperties() );
-		collectParameters( identifierValue, dialect, rootClass, params::put, configService );
+		collectParameters( context, params::put, configService );
 		if ( configuration != null ) {
 			params.putAll( configuration );
 		}
@@ -83,19 +80,17 @@ public class GeneratorParameters {
 	}
 
 	public static void collectParameters(
-			Value identifierValue,
-			Dialect dialect,
-			RootClass rootClass,
+			GeneratorCreationContext context,
 			BiConsumer<String, String> parameterCollector,
 			ConfigurationService configService) {
 		// default initial value and allocation size per-JPA defaults
 		parameterCollector.accept( INITIAL_PARAM, String.valueOf( DEFAULT_INITIAL_VALUE ) );
 		parameterCollector.accept( INCREMENT_PARAM,	String.valueOf( defaultIncrement( configService ) ) );
 
-		collectBaselineProperties( identifierValue, dialect, rootClass, parameterCollector, configService );
+		collectBaselineProperties( context, parameterCollector, configService );
 	}
 
-	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
+	static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
 		if ( generatorAnnotation == null ) {
 			final var configService = buildingContext.getConfigurationService();
 			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, STRING );
@@ -111,20 +106,22 @@ public class GeneratorParameters {
 	}
 
 	static void collectBaselineProperties(
-			Value identifierValue,
-			Dialect dialect,
-			RootClass rootClass,
+			GeneratorCreationContext context,
 			BiConsumer<String,String> parameterCollector,
 			ConfigurationService configService) {
+		final var identifierValue = context.getValue();
+		final var dialect = context.getDatabase().getDialect();
+		final var rootClass = context.getRootClass();
+
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name,
 		//      instead of splitting it up into schema/catalog/table names
 		parameterCollector.accept( TABLE, identifierValue.getTable().getQuotedName( dialect ) );
-		final String catalog = catalog( identifierValue );
+		final String catalog = catalog( context );
 		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( catalog ) ) {
 			parameterCollector.accept( CATALOG, catalog );
 		}
-		final String schema = schema( identifierValue );
+		final String schema = schema( context );
 		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( schema ) ) {
 			parameterCollector.accept( SCHEMA, schema );
 		}
@@ -155,8 +152,7 @@ public class GeneratorParameters {
 			parameterCollector.accept( IMPLICIT_NAME_BASE, identifierValue.getTable().getQuotedName( dialect ) );
 		}
 
-		parameterCollector.accept( CONTRIBUTOR_NAME,
-				identifierValue.getBuildingContext().getCurrentContributorName() );
+		parameterCollector.accept( CONTRIBUTOR_NAME, context.getContributorName() );
 
 		final var settings = configService.getSettings();
 		if ( settings.containsKey( PREFERRED_POOLED_OPTIMIZER ) ) {
@@ -165,102 +161,66 @@ public class GeneratorParameters {
 		}
 	}
 
-	private static String catalog(Value identifierValue) {
+	private static String catalog(GeneratorCreationContext context) {
+		final var identifierValue = context.getValue();
 		final String tableCatalog = identifierValue.getTable().getCatalog();
-		return isImplicitNamespaceCatalog( identifierValue, tableCatalog ) ? defaultCatalog( identifierValue ) : tableCatalog;
+		return isImplicitNamespaceCatalog( context, tableCatalog ) ? defaultCatalog( context ) : tableCatalog;
 	}
 
-	private static String schema(Value identifierValue) {
+	private static String schema(GeneratorCreationContext context) {
+		final var identifierValue = context.getValue();
 		final String tableSchema = identifierValue.getTable().getSchema();
-		return isImplicitNamespaceSchema( identifierValue, tableSchema ) ? defaultSchema( identifierValue ) : tableSchema;
+		return isImplicitNamespaceSchema( context, tableSchema ) ? defaultSchema( context ) : tableSchema;
 	}
 
-	private static boolean isImplicitNamespaceCatalog(Value identifierValue, String catalog) {
+	private static boolean isImplicitNamespaceCatalog(GeneratorCreationContext context, String catalog) {
 		if ( org.hibernate.internal.util.StringHelper.isEmpty( catalog ) ) {
 			return true;
 		}
-		final String defaultCatalog = defaultCatalog( identifierValue );
+		final String defaultCatalog = defaultCatalog( context );
 		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( defaultCatalog ) ) {
 			if ( catalog.equalsIgnoreCase( defaultCatalog ) ) {
 				return true;
 			}
-			final var physicalCatalog = identifierValue.getBuildingContext()
-					.getBuildingPlan()
-					.getPhysicalNamingStrategy()
-					.toPhysicalCatalogName(
-							org.hibernate.boot.model.naming.Identifier.toIdentifier( defaultCatalog ),
-							identifierValue.getBuildingContext()
-									.getMetadataCollector()
-									.getDatabase()
-									.getJdbcEnvironment()
-					);
+			final var physicalCatalog = context.getSqlStringGenerationContext().getDefaultCatalog();
 			if ( physicalCatalog != null && catalog.equals( physicalCatalog.getText() ) ) {
 				return true;
 			}
 		}
-		final var implicitCatalog = identifierValue.getBuildingContext()
-				.getMetadataCollector()
+		final var implicitCatalog = context
 				.getDatabase()
 				.getPhysicalImplicitNamespaceName()
 				.catalog();
 		return implicitCatalog != null && catalog.equals( implicitCatalog.getText() );
 	}
 
-	private static boolean isImplicitNamespaceSchema(Value identifierValue, String schema) {
+	private static boolean isImplicitNamespaceSchema(GeneratorCreationContext context, String schema) {
 		if ( org.hibernate.internal.util.StringHelper.isEmpty( schema ) ) {
 			return true;
 		}
-		final String defaultSchema = defaultSchema( identifierValue );
+		final String defaultSchema = defaultSchema( context );
 		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( defaultSchema ) ) {
 			if ( schema.equalsIgnoreCase( defaultSchema ) ) {
 				return true;
 			}
-			final var physicalSchema = identifierValue.getBuildingContext()
-					.getBuildingPlan()
-					.getPhysicalNamingStrategy()
-					.toPhysicalSchemaName(
-							org.hibernate.boot.model.naming.Identifier.toIdentifier( defaultSchema ),
-							identifierValue.getBuildingContext()
-									.getMetadataCollector()
-									.getDatabase()
-									.getJdbcEnvironment()
-					);
+			final var physicalSchema = context.getSqlStringGenerationContext().getDefaultSchema();
 			if ( physicalSchema != null && schema.equals( physicalSchema.getText() ) ) {
 				return true;
 			}
 		}
-		final var implicitSchema = identifierValue.getBuildingContext()
-				.getMetadataCollector()
+		final var implicitSchema = context
 				.getDatabase()
 				.getPhysicalImplicitNamespaceName()
 				.schema();
 		return implicitSchema != null && schema.equals( implicitSchema.getText() );
 	}
 
-	private static String defaultCatalog(Value identifierValue) {
-		final String mappingDefault = identifierValue.getBuildingContext()
-				.getBuildingPlan()
-				.getMappingDefaults()
-				.getImplicitCatalogName();
-		return org.hibernate.internal.util.StringHelper.isNotEmpty( mappingDefault )
-				? mappingDefault
-				: identifierValue.getBuildingContext()
-						.getMetadataCollector()
-						.getPersistenceUnitMetadata()
-						.getDefaultCatalog();
+	private static String defaultCatalog(GeneratorCreationContext context) {
+		return context.getDefaultCatalog();
 	}
 
-	private static String defaultSchema(Value identifierValue) {
-		final String mappingDefault = identifierValue.getBuildingContext()
-				.getBuildingPlan()
-				.getMappingDefaults()
-				.getImplicitSchemaName();
-		return org.hibernate.internal.util.StringHelper.isNotEmpty( mappingDefault )
-				? mappingDefault
-				: identifierValue.getBuildingContext()
-						.getMetadataCollector()
-						.getPersistenceUnitMetadata()
-						.getDefaultSchema();
+	private static String defaultSchema(GeneratorCreationContext context) {
+		return context.getDefaultSchema();
 	}
 
 	private static String optimizerClassName(Object optimizerSetting) {
@@ -275,7 +235,7 @@ public class GeneratorParameters {
 		}
 	}
 
-	public static String identityTablesString(Dialect dialect, RootClass rootClass) {
+	static String identityTablesString(org.hibernate.dialect.Dialect dialect, RootClass rootClass) {
 		final var tables = new StringBuilder();
 		for ( var table : rootClass.getIdentityTables() ) {
 			tables.append( table.getQuotedName( dialect ) );
@@ -286,7 +246,7 @@ public class GeneratorParameters {
 		return tables.toString();
 	}
 
-	public static int defaultIncrement(ConfigurationService configService) {
+	private static int defaultIncrement(ConfigurationService configService) {
 		final String idNamingStrategy =
 				configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, STRING );
 		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )

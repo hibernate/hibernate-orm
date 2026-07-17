@@ -326,11 +326,7 @@ public class GeneratorAnnotationHelper {
 			configBaseline.accept( properties );
 		}
 		collectBaselineProperties(
-				creationContext.getProperty() != null
-						? creationContext.getProperty().getValue()
-						: creationContext.getPersistentClass().getIdentifierProperty().getValue(),
-				creationContext.getDatabase().getDialect(),
-				creationContext.getRootClass(),
+				creationContext,
 				properties::setProperty,
 				creationContext.getServiceRegistry().requireService( ConfigurationService.class )
 		);

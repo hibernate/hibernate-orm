@@ -328,6 +328,37 @@ hooks.  Its current signature is one of the remaining reasons the old
 Should become a compatibility adapter or a view over resolved factory settings,
 not the main pipeline product.
 
+== Runtime Construction Context Direction
+
+The construction cleanup should reduce callbacks through an incomplete
+`SessionFactoryImpl` without pretending that completed runtime products never
+need a factory owner.
+
+Use this split when deciding whether a dependency should be narrowed:
+
+* runtime owners such as persisters may legitimately retain a completed factory
+  reference, or a `SessionFactoryAccess` handle that is completed during
+  construction;
+* construction-time helpers should prefer narrow accessors such as wrapper
+  options, SQL string generation context, domain model, mapping metamodel,
+  changeset coordinator, representation strategy selection, and class/model/bean
+  services;
+* SQL translation should depend on `SqlTranslationContext` rather than
+  `SqlAstCreationContext#getSessionFactory()`;
+* proxy factory creation still needs a deliberate decision: either it remains a
+  factory-aware runtime contract or it receives a smaller proxy/bytecode
+  creation context;
+* legacy `Integrator` callbacks remain a compatibility bridge because the
+  current SPI receives both `BootstrapContext` and the factory.
+
+The service-registry creation path should also stay explicit.  Standard-service
+backed constructor inputs belong in `StandardServiceComponents`; the
+`SessionFactoryServiceRegistry` remains factory-scoped and is still created with
+a completed-safe factory access handle.
+
+The point is not to remove every factory reference.  The point is to stop using
+an incomplete factory as a general construction context.
+
 == Suggested Migration Steps
 
 1. [x] Audit the current `SessionFactoryImpl` constructor and classify each block as

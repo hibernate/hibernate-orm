@@ -25,9 +25,6 @@ For the focused designs, see:
 * link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
 * link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
 
-For a concrete exploratory shape of the possible boot-time resolved model, see
-link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`].
-
 == Core Rule
 
 Binding should preserve source and application correspondence.  Legacy
@@ -62,6 +59,12 @@ source annotations / XML
         -> compatibility views
         -> runtime model
 ----
+
+The long-term target is not a permanent second mapping model beside
+`org.hibernate.mapping`.  Binding/source objects capture facts while cross-type
+decisions are still deferred, finalized views provide stable answers for
+materialization, and `org.hibernate.mapping` should gradually become a more
+honest resolved boot mapping model where doing so removes real ambiguity.
 
 == Why Now
 
@@ -319,6 +322,40 @@ compatibility property-closure APIs should prefer these views.  Raw contribution
 traversal should be concentrated in resolver/finalizer code that builds the
 views.
 
+== Binding Model And Materialization Rule
+
+The source-to-mapping pipeline lives under `org.hibernate.boot.mapping`.  Its
+internal phases are source/XML interpretation, categorization, binding-model
+population, finalized views, and materialization to `org.hibernate.mapping`.
+
+Use this rule when adding new products:
+
+* binding objects are created from categorization/source facts;
+* binding objects may preserve explicit unresolved or deferred references;
+* finalized views are the stable read boundary over binding state;
+* materializers consume finalized views and produce/populate
+  `org.hibernate.mapping` compatibility objects;
+* new binding-model contracts must not hold `PersistentClass`,
+  `MappedSuperclass`, `Component`, `Property`, `Value`, or `Column` references.
+
+Existing binder-local products may temporarily carry mapping objects as
+compatibility materialization state.  Those products are bridge state, not the
+semantic binding model.
+
+Do not add an intermediate object merely because it looks cleaner.  Add a
+binding-model node only when it preserves source, application, or
+correspondence information that `org.hibernate.mapping` currently destroys,
+guesses, or encodes through premature sorting/copying.  If a fact can be
+represented cleanly and safely in `org.hibernate.mapping` without timing
+ambiguity, it probably does not need a separate binding node.
+
+Package placement should follow Hibernate's API/SPI/internal taxonomy.  The
+current `org.hibernate.boot.mapping.internal.*` packages are rehearsal space.
+When a contract becomes a supported user/integrator SPI, move the stable SPI
+contracts to supported packages such as `org.hibernate.boot.mapping.context.spi`
+or `org.hibernate.boot.mapping.extension.spi`, while implementations and
+mutable working state remain internal.
+
 == Sorting Policy
 
 Early destructive sorting is the design smell this model is meant to remove.
@@ -463,6 +500,22 @@ materialization:
 
 == Migration Slices
 
+=== Slice 0: Bridge Discipline
+
+Stop adding unstructured generic/contribution shortcuts.
+
+Implementation rules:
+
+* use hibernate-models for new generic/type decisions;
+* document every new compatibility slot as declaration, usage, contribution, or
+  correspondence state;
+* keep copied `Property`, `Value`, `Component`, and side-registry facts as
+  compatibility projections, not semantic owners;
+* populate sidecars only when a focused consumer needs a fact that cannot be
+  represented cleanly on existing mapping objects;
+* keep legacy fallbacks explicit while any supported boot path cannot populate
+  the same contribution/correspondence facts.
+
 === Slice 1: Shared Guardrails And Vocabulary
 
 Add boot-model tests that assert mapping shape before runtime behavior:
@@ -532,6 +585,18 @@ This step should centralize:
 The goal is not to remove every existing `sortProperties()` call immediately.
 The goal is to make those calls implementation details of a named projection,
 then reduce them as compatibility views improve.
+
+=== Slice 6: Runtime Handoff And Mapping Model Reshape
+
+Move touched runtime/domain/schema consumers from reverse-engineering source
+facts out of flattened mapping objects to contribution-aware views or adapters.
+
+Do this only when a concrete consumer needs declaration/application information
+that cannot be safely represented by another compatibility field.
+
+Once all supported boot paths produce the relevant contribution/correspondence
+facts, reshape `org.hibernate.mapping` for that area so compatibility APIs
+become derived views rather than the primary semantic source.
 
 == Open Questions
 

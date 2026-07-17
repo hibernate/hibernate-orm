@@ -19,12 +19,15 @@ import org.hibernate.mapping.UniqueKey;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class UniqueKeyMappingMaterializer {
-	public UniqueKey materializeUniqueKey(ResolvedUniqueKey uniqueKey) {
+public final class UniqueKeyMappingMaterializer {
+	private UniqueKeyMappingMaterializer() {
+	}
+
+	public static UniqueKey materializeUniqueKey(ResolvedUniqueKey uniqueKey) {
 		final List<Column> keyColumns = uniqueKey.columns();
 		if ( keyColumns.size() == 1 ) {
 			if ( uniqueKey.tableUniqueKey() ) {
-				return materializeExplicitUniqueKey( uniqueKey );
+				return materializeTableUniqueKey( uniqueKey );
 			}
 			return materializeSingleColumnUniqueKey(
 					uniqueKey.table(),
@@ -32,26 +35,20 @@ public class UniqueKeyMappingMaterializer {
 					uniqueKey.metadataBuildingContext()
 			);
 		}
-		return materializeMultiColumnUniqueKey(
-				uniqueKey
-		);
+		return materializeTableUniqueKey( uniqueKey );
 	}
 
-	private UniqueKey materializeSingleColumnUniqueKey(
+	private static UniqueKey materializeSingleColumnUniqueKey(
 			Table table,
 			Column column,
 			MetadataBuildingContext context) {
 		final String keyName = implicitUniqueKeyName( table, List.of( column ), null, context );
-		column.setUniqueKeyName( keyName );
-		column.setUnique( true );
+		table.markColumnUnique( keyName, column );
 		return null;
 	}
 
-	private UniqueKey materializeMultiColumnUniqueKey(
-			ResolvedUniqueKey resolvedUniqueKey) {
-		final Table table = resolvedUniqueKey.table();
-		final String keyName = keyName( resolvedUniqueKey );
-		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
+	private static UniqueKey materializeTableUniqueKey(ResolvedUniqueKey resolvedUniqueKey) {
+		final UniqueKey uniqueKey = resolvedUniqueKey.table().getOrCreateUniqueKey( keyName( resolvedUniqueKey ) );
 		applyMetadata( uniqueKey, resolvedUniqueKey );
 		final List<Column> keyColumns = resolvedUniqueKey.columns();
 		for ( int i = 0; i < keyColumns.size(); i++ ) {
@@ -60,18 +57,7 @@ public class UniqueKeyMappingMaterializer {
 		return uniqueKey;
 	}
 
-	private UniqueKey materializeExplicitUniqueKey(ResolvedUniqueKey resolvedUniqueKey) {
-		final Table table = resolvedUniqueKey.table();
-		final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName( resolvedUniqueKey ) );
-		applyMetadata( uniqueKey, resolvedUniqueKey );
-		final List<Column> keyColumns = resolvedUniqueKey.columns();
-		for ( int i = 0; i < keyColumns.size(); i++ ) {
-			uniqueKey.addColumn( keyColumns.get( i ), columnOrdering( resolvedUniqueKey, i ) );
-		}
-		return uniqueKey;
-	}
-
-	private void applyMetadata(UniqueKey uniqueKey, ResolvedUniqueKey resolvedUniqueKey) {
+	private static void applyMetadata(UniqueKey uniqueKey, ResolvedUniqueKey resolvedUniqueKey) {
 		uniqueKey.setExplicit( resolvedUniqueKey.explicit() );
 		uniqueKey.setNameExplicit( resolvedUniqueKey.nameExplicit() );
 		uniqueKey.setNullsNotDistinct( resolvedUniqueKey.nullsNotDistinct() );
@@ -80,7 +66,7 @@ public class UniqueKeyMappingMaterializer {
 		}
 	}
 
-	private String keyName(ResolvedUniqueKey uniqueKey) {
+	private static String keyName(ResolvedUniqueKey uniqueKey) {
 		return implicitUniqueKeyName(
 				uniqueKey.table(),
 				uniqueKey.columns(),
@@ -89,11 +75,11 @@ public class UniqueKeyMappingMaterializer {
 		);
 	}
 
-	private String columnOrdering(ResolvedUniqueKey uniqueKey, int position) {
+	private static String columnOrdering(ResolvedUniqueKey uniqueKey, int position) {
 		return uniqueKey.columnOrderings() == null ? null : uniqueKey.columnOrderings().get( position );
 	}
 
-	private String implicitUniqueKeyName(
+	private static String implicitUniqueKeyName(
 			Table table,
 			List<Column> keyColumns,
 			String userProvidedName,
@@ -127,7 +113,7 @@ public class UniqueKeyMappingMaterializer {
 				.render( context.getMetadataCollector().getDatabase().getDialect() );
 	}
 
-	private Identifier logicalTableName(Table table, MetadataBuildingContext context) {
+	private static Identifier logicalTableName(Table table, MetadataBuildingContext context) {
 		try {
 			return context.getMetadataCollector()
 					.getDatabase()

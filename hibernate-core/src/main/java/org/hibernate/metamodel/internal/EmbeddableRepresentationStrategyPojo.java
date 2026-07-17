@@ -23,6 +23,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
 import org.hibernate.usertype.CompositeUserType;
@@ -59,6 +60,9 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		final var strategySelector =
 				creationContext.getServiceRegistry()
 						.getService( StrategySelector.class );
+		final var propertyAccessStrategyResolver =
+				creationContext.getServiceRegistry()
+						.requireService( PropertyAccessStrategyResolver.class );
 
 		// We need access to the Class objects, used only during initialization
 		final var subclassesByName = getSubclassesByName( bootDescriptor, creationContext );
@@ -71,7 +75,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 							property,
 							embeddableClass,
 							customInstantiator == null,
-							strategySelector
+							strategySelector,
+							propertyAccessStrategyResolver
 					);
 			attributeNameToPositionMap.put( property.getName(), i );
 
@@ -180,8 +185,14 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			Property property,
 			Class<?> embeddableClass,
 			boolean requireSetters,
-			StrategySelector strategySelector) {
-		final var strategy = propertyAccessStrategy( property, embeddableClass, strategySelector );
+			StrategySelector strategySelector,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
+		final var strategy = propertyAccessStrategy(
+				property,
+				embeddableClass,
+				strategySelector,
+				propertyAccessStrategyResolver
+		);
 		if ( strategy == null ) {
 			throw new HibernateException(
 					String.format(

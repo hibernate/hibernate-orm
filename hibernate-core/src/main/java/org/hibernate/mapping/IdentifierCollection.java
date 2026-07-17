@@ -7,9 +7,9 @@ package org.hibernate.mapping;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -71,15 +71,12 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
-		if ( !isOneToMany() ) {
-			final var primaryKey = new PrimaryKey( getCollectionTable() );
-			primaryKey.addColumns( getIdentifier() );
-			getCollectionTable().setPrimaryKey( primaryKey );
-		}
-		// create an index on the key columns??
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
-	public void validate(MappingContext mappingContext) throws MappingException {
+	public void validate(Metadata mappingContext) throws MappingException {
 		super.validate( mappingContext );
 
 		assert getElement() != null : "IdentifierCollection identifier not bound : " + getRole();

@@ -51,6 +51,7 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.query.sqm.tree.spi.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.spi.domain.SqmMappedSuperclassDomainType;
 import org.hibernate.type.AnyType;
@@ -809,7 +810,7 @@ public class AttributeFactory {
 			Property property,
 			MappedSuperclassDomainType<?> ownerType,
 			MetadataContext context) {
-		return property.getGetter( ownerType.getJavaType() ).getMember();
+		return property.getGetter( ownerType.getJavaType(), propertyAccessStrategyResolver( context ) ).getMember();
 //		final EntityPersister declaringEntity =
 //				getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, context );
 //		if ( declaringEntity != null ) {
@@ -835,7 +836,7 @@ public class AttributeFactory {
 		final var identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
 		if ( identifiableType instanceof SqmMappedSuperclassDomainType<?> ) {
 			return attributeContext.getPropertyMapping()
-					.getGetter( identifiableType.getJavaType() )
+					.getGetter( identifiableType.getJavaType(), propertyAccessStrategyResolver( metadataContext ) )
 					.getMember();
 		}
 		else {
@@ -859,7 +860,7 @@ public class AttributeFactory {
 		final var identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
 		if ( identifiableType instanceof SqmMappedSuperclassDomainType<?> ) {
 			return attributeContext.getPropertyMapping()
-					.getGetter( identifiableType.getJavaType() )
+					.getGetter( identifiableType.getJavaType(), propertyAccessStrategyResolver( metadataContext ) )
 					.getMember();
 		}
 		else {
@@ -889,5 +890,11 @@ public class AttributeFactory {
 		return persister.getRepresentationStrategy()
 				.resolvePropertyAccess( property )
 				.getGetter();
+	}
+
+	private static PropertyAccessStrategyResolver propertyAccessStrategyResolver(MetadataContext context) {
+		return context.getRuntimeModelCreationContext()
+				.getServiceRegistry()
+				.requireService( PropertyAccessStrategyResolver.class );
 	}
 }

@@ -31,6 +31,8 @@ import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.mapping.BasicValue;
@@ -99,7 +101,12 @@ public class BasicValueMappingMaterializer {
 		);
 
 		new AttributeOptionsMappingMaterializer().materializeBasicValueOptions( attributeBinding, basicValue, resolutionInput );
-		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding(
+				resolutionInput,
+				bindingState.getMetadataBuildingContext().getServiceComponents(),
+				bindingState.getMappingResolutionState(),
+				bindingState.getMetadataBuildingContext()
+		) );
 		bindingState.addPostAttributeValueResolution(
 				new FinalFieldMutabilityBinding( member, property, basicValue, false )
 		);
@@ -131,7 +138,12 @@ public class BasicValueMappingMaterializer {
 		final Column column = processSelectable( basicValueIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext )
 				.requireColumn( property.getName() );
 		column.setNullable( false );
-		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding(
+				resolutionInput,
+				bindingState.getMetadataBuildingContext().getServiceComponents(),
+				bindingState.getMappingResolutionState(),
+				bindingState.getMetadataBuildingContext()
+		) );
 	}
 
 	public void materializeTenantIdBasicValue(
@@ -154,7 +166,12 @@ public class BasicValueMappingMaterializer {
 				bindingState,
 				bindingContext
 		);
-		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding(
+				resolutionInput,
+				bindingState.getMetadataBuildingContext().getServiceComponents(),
+				bindingState.getMappingResolutionState(),
+				bindingState.getMetadataBuildingContext()
+		) );
 	}
 
 	public MaterializedBasicValue createComponentMemberBasicValue(
@@ -193,7 +210,12 @@ public class BasicValueMappingMaterializer {
 					bindingState,
 					bindingContext
 			);
-			bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
+			bindingState.addAttributeValueResolution( new BasicValueResolutionBinding(
+					resolutionInput,
+					bindingState.getMetadataBuildingContext().getServiceComponents(),
+					bindingState.getMappingResolutionState(),
+					bindingState.getMetadataBuildingContext()
+			) );
 			return new MaterializedBasicValue( basicValue, null );
 		}
 
@@ -223,7 +245,12 @@ public class BasicValueMappingMaterializer {
 		if ( source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
 			applyGeneratedIdentifierMember( basicValue, member, bindingState );
 		}
-		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding( resolutionInput ) );
+		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding(
+				resolutionInput,
+				bindingState.getMetadataBuildingContext().getServiceComponents(),
+				bindingState.getMappingResolutionState(),
+				bindingState.getMetadataBuildingContext()
+		) );
 		bindingState.addPostAttributeValueResolution(
 				new FinalFieldMutabilityBinding(
 						member,
@@ -236,10 +263,13 @@ public class BasicValueMappingMaterializer {
 	}
 
 	private record BasicValueResolutionBinding(
-			BasicValueResolutionBuilder.Input input) implements AttributeBindingPhase.ValueResolution {
+			BasicValueResolutionDetails input,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext) implements AttributeBindingPhase.ValueResolution {
 		@Override
 		public void resolveValue() {
-			applyResolution( input );
+			applyResolution( input, services, state, buildingContext );
 		}
 	}
 
@@ -254,8 +284,12 @@ public class BasicValueMappingMaterializer {
 		}
 	}
 
-	static void applyResolution(BasicValueResolutionBuilder.Input input) {
-		BasicValueResolutionBuilder.applyResolution( input );
+	static void applyResolution(
+			BasicValueResolutionDetails input,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext) {
+		BasicValueResolutionBuilder.applyResolution( input, services, state, buildingContext );
 	}
 
 	private static void applyGeneratedIdentifierMember(

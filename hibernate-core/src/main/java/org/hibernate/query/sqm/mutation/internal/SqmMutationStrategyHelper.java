@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Any;
@@ -321,7 +322,7 @@ public class SqmMutationStrategyHelper {
 		}
 	}
 
-	public static void forEachSelectableMapping(String prefix, Value value, BiConsumer<String, Column> consumer) {
+	public static void forEachSelectableMapping(String prefix, Value value, Metadata metadata, BiConsumer<String, Column> consumer) {
 		if ( value instanceof BasicValue || value instanceof Any.MetaValue || value instanceof Any.KeyValue ) {
 			assert value.getSelectables().size() == 1;
 			final Selectable selectable = value.getSelectables().get( 0 );
@@ -330,15 +331,14 @@ public class SqmMutationStrategyHelper {
 			}
 		}
 		else if ( value instanceof DependantValue dependantValue ) {
-			forEachSelectableMapping( prefix, dependantValue.getWrappedValue(), consumer );
+			forEachSelectableMapping( prefix, dependantValue.getWrappedValue(), metadata, consumer );
 		}
 		else if ( value instanceof ToOne toOne ) {
 			if ( toOne instanceof OneToOne oneToOne && oneToOne.getMappedByProperty() != null ) {
 				// Inverse to-one receives no column
 				return;
 			}
-			final PersistentClass targetEntity = toOne.getBuildingContext().getMetadataCollector()
-					.getEntityBinding( toOne.getReferencedEntityName() );
+			final PersistentClass targetEntity = metadata.getEntityBinding( toOne.getReferencedEntityName() );
 			final String targetAttributeName;
 			final Value targetValue;
 			if ( toOne.isReferenceToPrimaryKey() ) {
@@ -353,6 +353,7 @@ public class SqmMutationStrategyHelper {
 			forEachSelectableMapping(
 					prefix + "_" + targetAttributeName,
 					targetValue,
+					metadata,
 					consumer
 			);
 		}
@@ -360,20 +361,22 @@ public class SqmMutationStrategyHelper {
 			forEachSelectableMapping(
 					prefix + "_discriminator",
 					any.getDiscriminatorDescriptor() != null ? any.getDiscriminatorDescriptor() : any.getMetaMapping(),
+					metadata,
 					consumer
 			);
 			forEachSelectableMapping(
 					prefix + "_key",
 					any.getKeyDescriptor() != null ? any.getKeyDescriptor() : any.getKeyMapping(),
+					metadata,
 					consumer
 			);
 		}
-		else if ( value instanceof Component component) {
+		else if ( value instanceof Component component ) {
 			final int propertySpan = component.getPropertySpan();
 			for ( int i = 0; i < propertySpan; i++ ) {
 				final Property property = component.getProperty( i );
 				final String newPrefix = component.isEmbedded() ? property.getName() : prefix + "_" + property.getName();
-				forEachSelectableMapping( newPrefix, property.getValue(), consumer );
+				forEachSelectableMapping( newPrefix, property.getValue(), metadata, consumer );
 			}
 		}
 		else if ( value instanceof OneToMany || value instanceof Collection ) {

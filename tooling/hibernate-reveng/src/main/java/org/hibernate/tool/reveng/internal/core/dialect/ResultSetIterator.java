@@ -73,7 +73,11 @@ public abstract class ResultSetIterator implements Iterator<Map<String, Object>>
 	protected void advance() throws SQLException {
 
 		if ( !current && !endOfRows ) {
-			if ( rs.next() ) {
+			if ( rs == null ) {
+				current = false;
+				endOfRows = true;
+			}
+			else if ( rs.next() ) {
 				current = true;
 				endOfRows = false;
 			}
@@ -86,7 +90,9 @@ public abstract class ResultSetIterator implements Iterator<Map<String, Object>>
 
 	public void close() {
 		try {
-			rs.close();
+			if ( rs != null ) {
+				rs.close();
+			}
 			if(statement!=null) {
 				statement.close();
 			}

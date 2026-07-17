@@ -5,8 +5,7 @@ This note captures the ORM 9 direction for replacing early alphabetical
 attribute ordering with explicit deterministic ordering products.
 
 It is motivated by the same family of problems described in
-link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
-and link:applied-contribution-model-design.adoc[`applied-contribution-model-design.adoc`]:
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]:
 ordering is real metadata, but one sorted list is not a semantic model.
 
 == Problem Statement

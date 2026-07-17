@@ -85,8 +85,9 @@ then those targets, facets, source views, diagnostics objects, command objects,
 and any value objects they expose must also live in supported packages and obey
 the API/SPI/internal taxonomy.
 
-See link:resolved-model-proposal.adoc#_deferred_spi_package_inversion[`resolved-model-proposal.adoc`
-Deferred SPI Package Inversion] for the broader package-topology rule.  The
+See
+link:resolved-contribution-model-design.adoc#_binding_model_and_materialization_rule[`resolved-contribution-model-design.adoc`]
+for the broader package-topology rule.  The
 current `org.hibernate.boot.mapping.internal.*` packages are rehearsal space;
 when a binding extension contract becomes supported, the SPI contracts should
 move to packages such as `org.hibernate.boot.mapping.context.spi` or

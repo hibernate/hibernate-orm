@@ -7,8 +7,8 @@ package org.hibernate.tool.reveng.internal.export.lint;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -24,6 +24,7 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.reveng.api.core.RevengDialect;
 import org.hibernate.tool.reveng.api.core.RevengDialectFactory;
@@ -54,9 +55,9 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	DatabaseReader reader;
 
 	private SequenceCollector sequenceCollector;
-
 	private TableSelectorStrategy tableSelector;
 
+	private ServiceRegistry serviceRegistry;
 	private Dialect dialect;
 
 	private MappingContext mapping;
@@ -66,13 +67,15 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	public void initialize(Metadata metadata) {
 		super.initialize( metadata);
-		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
-		ServiceRegistry serviceRegistry = builder.build();
+		serviceRegistry = metadata.getDatabase().getServiceRegistry();
 
 		Properties properties = Environment.getProperties();
 		JdbcServices jdbcServices = serviceRegistry.getService(JdbcServices.class);
 		if (jdbcServices != null) {
 			dialect = jdbcServices.getDialect();
+		}
+		else {
+			dialect = metadata.getDatabase().getDialect();
 		}
 
 		tableSelector = new TableSelectorStrategy(
@@ -85,7 +88,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				properties,
 				tableSelector,
 				metadataDialect,
-				serviceRegistry);
+				serviceRegistry );
 		ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
 		sequenceCollector = SequenceCollector.create(connectionProvider);
 	}
@@ -257,14 +260,16 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 		for ( PersistentClass pc : getMetadata().getEntityBindings() ) {
 			if ( !pc.isInherited() ) {
-
-				Generator ig = pc.getIdentifier()
-						.createGenerator(
-								dialect,
-								(RootClass) pc,
-								pc.getIdentifierProperty(),
-								generatorSettings
-						);
+				Generator ig = GeneratorBinder.createIdentifierGenerator(
+						pc.getIdentifier(),
+						dialect,
+						(RootClass) pc,
+						pc.getIdentifierProperty(),
+						generatorSettings,
+						getMetadata().getDatabase(),
+						serviceRegistry,
+						serviceRegistry.requireService( PropertyAccessStrategyResolver.class )
+				);
 
 				if ( ig instanceof PersistentIdentifierGenerator pig ) {
 					generators.put( getGeneratorKey( pig ), ig );
@@ -276,13 +281,16 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		for ( org.hibernate.mapping.Collection collection : getMetadata().getCollectionBindings() ) {
 			if ( collection.isIdentified() ) {
 
-				Generator ig = ((IdentifierCollection) collection).getIdentifier()
-						.createGenerator(
-								dialect,
-								null,
-								null,
-								generatorSettings
-						);
+				Generator ig = GeneratorBinder.createIdentifierGenerator(
+						((IdentifierCollection) collection).getIdentifier(),
+						dialect,
+						null,
+						null,
+						generatorSettings,
+						getMetadata().getDatabase(),
+						serviceRegistry,
+						serviceRegistry.requireService( PropertyAccessStrategyResolver.class )
+				);
 
 				if ( ig instanceof PersistentIdentifierGenerator pig ) {
 					generators.put( getGeneratorKey( pig ), ig );

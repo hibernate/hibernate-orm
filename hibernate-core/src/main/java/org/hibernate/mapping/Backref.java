@@ -7,6 +7,7 @@ package org.hibernate.mapping;
 import org.hibernate.MappingException;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 
 /**
  * @author Gavin King
@@ -41,7 +42,9 @@ public class Backref extends Property {
 	private PropertyAccessStrategy propertyAccessStrategy;
 
 	@Override
-	public PropertyAccessStrategy getPropertyAccessStrategy(Class clazz) throws MappingException {
+	public PropertyAccessStrategy getPropertyAccessStrategy(
+			Class clazz,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
 		if ( propertyAccessStrategy == null ) {
 			propertyAccessStrategy = new PropertyAccessStrategyBackRefImpl( collectionRole, entityName );
 		}

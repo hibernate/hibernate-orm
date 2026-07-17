@@ -12,6 +12,7 @@ import java.util.Set;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -106,10 +107,11 @@ public final class MappingHelper {
 	public static void checkPropertyColumnDuplication(
 			Set<QualifiedColumnName> distinctColumns,
 			List<Property> properties,
-			String owner) throws MappingException {
+			String owner,
+			Database database) throws MappingException {
 		for ( var property : properties ) {
 			if ( ( property.isUpdatable() || property.isInsertable() ) && !property.isGenericSpecialization() ) {
-				property.getValue().checkColumnDuplication( distinctColumns, owner );
+				property.getValue().checkColumnDuplication( distinctColumns, owner, database );
 			}
 		}
 	}

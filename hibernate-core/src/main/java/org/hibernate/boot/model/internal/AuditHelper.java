@@ -304,7 +304,7 @@ public final class AuditHelper {
 		final var collector = context.getMetadataCollector();
 		final var ownerTable = collection.getOwner().getTable();
 
-		// Table name: @Audited.CollectionTable name, or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
+		// Table name: @Audited.CollectionTable name (if applicable, taken from @AuditOverride), or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
 		final String auditTableName =
 				auditTableName( collection, collectionAuditTable, referencedEntity, propertyName );
@@ -819,8 +819,8 @@ public final class AuditHelper {
 			var revocations = findRevocations( subclass );
 			for ( var revocation : revocations ) {
 				var revokedProperty = revocation.name();
-				mappedColumns.add( revokedProperty );
-				excluded.remove( revokedProperty );
+				mappedColumns.add( revokedProperty ); //TODO column names, not the name of the property!
+				excluded.remove( revokedProperty ); //TODO column names, not the name of the property!
 			}
 		}
 		// Exclude unmapped columns (e.g. FK from unidirectional @OneToMany @JoinColumn)

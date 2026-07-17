@@ -222,4 +222,10 @@ public interface PluralAttributeMapping
 		return true;
 	}
 
+	@Override
+	default boolean isReadOnly() {
+		return getCollectionDescriptor().getMappedByProperty() != null
+				|| getKeyDescriptor().getKeyPart().isReadOnly();
+	}
+
 }

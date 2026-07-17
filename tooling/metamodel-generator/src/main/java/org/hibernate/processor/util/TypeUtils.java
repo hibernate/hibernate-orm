@@ -286,9 +286,11 @@ public final class TypeUtils {
 	}
 
 	private static final Set<String> SECURITY_ANNOTATIONS = Set.of(
+		"jakarta.annotation.security.DeclareRoles",
 		"jakarta.annotation.security.DenyAll",
 		"jakarta.annotation.security.PermitAll",
-		"jakarta.annotation.security.RolesAllowed"
+		"jakarta.annotation.security.RolesAllowed",
+		"jakarta.annotation.security.RunAs"
 	);
 
 	public static boolean isInheritedAnnotation(AnnotationMirror annotationMirror) {

@@ -56,10 +56,10 @@ public class AuditOverrideCollectionTableTest {
 	}
 
 	/**
-	 * Case 1:
-	 * MSC: -
-	 * MSC: @Audited.Excluded @ElementCollection + @Audited @ElementCollection
-	 * Entity: AuditOverrides that invert both
+	 * Multiple cases within a hierarchy of an entity and a @MappedSuperClass
+	 * Case 1: firstCollection is initially excluded and then included again via an @AuditOverride
+	 * Case 2: secondCollection is initially included and then excluded via an @AuditOverride
+	 * Case 3 thirdCollection is initially included and then the audit table name is overridden via an @AuditOverride
 	 *
 	 */
 
@@ -85,7 +85,7 @@ public class AuditOverrideCollectionTableTest {
 	@AuditOverrides(
 			{@AuditOverride(name = "firstCollection", isAudited = true),
 					@AuditOverride(name = "secondCollection", isAudited = false),
-			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( name = "custom_audited_join_table_name" ))} //TODO Case: es kann nur eine AUD tabelle geben. Was wenn die weiter unten nochemal überschrieben wird?
+			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( name = "custom_audited_join_table_name" ))}
 	)
 	static class EntityWithOverrides extends MSCWithExcludedCollectionProperty{
 	}
@@ -102,7 +102,7 @@ public class AuditOverrideCollectionTableTest {
 	}
 
 	/**
-	 * Case 2: @AuditOverride on owning entity
+	 * Hierarchy with multiple Entities and multiple overrides of the audited join table
 	 *
 	 */
 

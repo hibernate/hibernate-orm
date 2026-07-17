@@ -2554,7 +2554,8 @@ public abstract class CollectionBinder {
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
-					buildingContext, propertyName
+					buildingContext,
+					propertyName
 			);
 		}
 	}

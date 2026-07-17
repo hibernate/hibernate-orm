@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -380,20 +381,19 @@ public final class AuditHelper {
 			@Nullable Audited.CollectionTable collectionAuditTable,
 			PersistentClass referencedEntity,
 			String propertyName) {
-		//find the effective auditOverride
-		AuditOverride effectiveOverride = null;
-		for ( var subclass : collection.getOwner().getSubclasses() ) {
-			var ofSubClass = findFirstAuditOverrideForProperty( subclass, propertyName );
-			if ( ofSubClass != null && !ofSubClass.collectionTable().name().isBlank()) {
-				return ofSubClass.collectionTable().name();
+
+		//search name in @AuditOverrides
+		var fullHierarchy = new LinkedList<PersistentClass>( collection.getOwner().getSubclasses() );
+		fullHierarchy.add( collection.getOwner() );
+		for ( var persistentClass : fullHierarchy ) {
+			var auditOverride = findFirstAuditOverrideForProperty( persistentClass, propertyName );
+			if ( auditOverride != null && !auditOverride.collectionTable().name().isBlank()) {
+				return auditOverride.collectionTable().name();
 			}
 		}
-		effectiveOverride = findFirstAuditOverrideForProperty( collection.getOwner(), propertyName );
-		if ( effectiveOverride != null && !effectiveOverride.collectionTable().name().isBlank()) {
-			return effectiveOverride.collectionTable().name();
-		}
 
-		if ( collectionAuditTable != null && !isBlank( collectionAuditTable.name() ) ) { //collection declares its AUD table
+		// search name in Audited.CollectionTable
+		if ( collectionAuditTable != null && !isBlank( collectionAuditTable.name() ) ) {
 			return collectionAuditTable.name();
 		}
 		else {

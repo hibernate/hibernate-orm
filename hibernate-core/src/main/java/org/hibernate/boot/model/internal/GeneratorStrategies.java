@@ -9,7 +9,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.SelectGenerator;
@@ -91,8 +90,6 @@ public class GeneratorStrategies {
 				return UUIDGenerator.class;
 			case "select":
 				return SelectGenerator.class;
-			case "guid":
-				return GUIDGenerator.class;
 		}
 		final Class<? extends Generator> clazz =
 				idValue.getBuildingContext().getBootstrapContext()
@@ -127,8 +124,6 @@ public class GeneratorStrategies {
 				return UUIDGenerator.class;
 			case "select":
 				return SelectGenerator.class;
-			case "guid":
-				return GUIDGenerator.class;
 		}
 
 		return null;

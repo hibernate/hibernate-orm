@@ -4,17 +4,21 @@
  */
 package org.hibernate.processor.test.data.securityannotation;
 
+import jakarta.annotation.security.DeclareRoles;
 import jakarta.annotation.security.DenyAll;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.data.repository.Delete;
+import jakarta.annotation.security.RunAs;
 import jakarta.data.repository.Find;
+import jakarta.data.repository.Insert;
 import jakarta.data.repository.Repository;
 
 import java.util.List;
 
 @Repository
+@DeclareRoles({"admin", "manager", "editor"})
 @RolesAllowed("admin")
+@RunAs("admin")
 public interface SecuredBookRepository {
 	@Find
 	@DenyAll
@@ -24,7 +28,7 @@ public interface SecuredBookRepository {
 	@PermitAll
 	List<SecuredBook> findAll();
 
-	@Delete
+	@Insert
 	@RolesAllowed({"manager", "editor"})
-	void remove(SecuredBook book);
+	void add(SecuredBook book);
 }

@@ -191,6 +191,7 @@ jobs:
           - rdbms: base-database-service-19c
           - rdbms: base-database-service-21c
           - rdbms: base-database-service-26ai
+          - rdbms: base-database-service-26ai-rac
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:

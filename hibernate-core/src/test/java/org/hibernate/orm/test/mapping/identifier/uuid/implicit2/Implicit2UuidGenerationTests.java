@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.identifier.uuid.implicit2;
 
-import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.id.uuid.UuidVersion7Strategy;
 import org.hibernate.orm.test.mapping.identifier.uuid.Helper;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -25,7 +25,7 @@ public class Implicit2UuidGenerationTests {
 	@DomainModel(annotatedClasses = Book.class)
 	void verifyModel(ServiceRegistryScope registryScope, DomainModelScope domainModelScope) {
 		domainModelScope.withHierarchy( Book.class, (descriptor) -> {
-			Helper.verifyAlgorithm( registryScope, domainModelScope, descriptor, StandardRandomStrategy.class );
+			Helper.verifyAlgorithm( registryScope, domainModelScope, descriptor, UuidVersion7Strategy.class );
 		} );
 	}
 

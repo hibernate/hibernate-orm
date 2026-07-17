@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -46,13 +46,13 @@ public class GenericGeneratorOverrideTest {
 		Generator generator1 = p1.getGenerator();
 		Generator generator2 = p2.getGenerator();
 		assertThat( generator1 ).isInstanceOf( GenericGeneratorGeneration.class );
-		assertThat( ( (GenericGeneratorGeneration) generator1 ).getDelegate() ).isInstanceOf( UUIDGenerator.class );
+		assertThat( ( (GenericGeneratorGeneration) generator1 ).getDelegate() ).isInstanceOf( SequenceStyleGenerator.class );
 		assertThat( generator2 ).isInstanceOf( GenericGeneratorGeneration.class );
 		assertThat( ( (GenericGeneratorGeneration) generator2 ).getDelegate() ).isInstanceOf( IncrementGenerator.class );
 	}
 
 	@MappedSuperclass
-	@GenericGenerator(type = UUIDGenerator.class)
+	@GenericGenerator(type = SequenceStyleGenerator.class)
 	public static abstract class BaseEntity {
 		@Id
 		@GeneratedValue

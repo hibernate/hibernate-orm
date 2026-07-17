@@ -296,7 +296,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			case "enhanced-table", "table" -> org.hibernate.id.enhanced.TableGenerator.class.getName();
 			case "identity" -> org.hibernate.id.IdentityGenerator.class.getName();
 			case "increment" -> org.hibernate.id.IncrementGenerator.class.getName();
-			case "uuid" -> org.hibernate.id.UUIDGenerator.class.getName();
 			case "select" -> org.hibernate.id.SelectGenerator.class.getName();
 			default -> strategy;
 		};

@@ -521,19 +521,16 @@ include::{extrasdir}/id/identifiers-generators-table-configured-persist-example.
 
 Hibernate offers 2 flavors of support for UUID generation -
 
-1. using `org.hibernate.id.uuid.UuidGenerator`, which can be configured using the `org.hibernate.annotations.UuidGenerator` annotation.
-2. using `org.hibernate.id.UUIDGenerator`, which can be configured using the `@GenericGenerator` annotation.  Note that this approach is deprecated.
+1.  using `org.hibernate.id.uuid.UuidGenerator`, which can be configured using the `org.hibernate.annotations.UuidGenerator` annotation. It builds on top of the <<identifiers-generators-IdGeneratorType,@IdGeneratorType>> support.
+2.  using `@jakarta.persistence.GeneratedValue(strategy = GenerationType.UUID)`, on a String or UUID typed attribute, or also
+`@jakarta.persistence.GeneratedValue(strategy = GenerationType.AUTO)` on a UUID typed attribute.
 
-For legacy reasons, `org.hibernate.id.UUIDGenerator` is used when the generator is implicit (or explicitly requested via `@GenericGenerator`).
+By default, Hibernate uses a random (IETF RFC 4122 version 4) generation.
 
-[NOTE]
-====
-Future versions of Hibernate will drop support for `org.hibernate.id.UUIDGenerator` and the following 3 examples
-will then use `org.hibernate.id.uuid.UuidGenerator`.
-====
+The following examples illustrate these.
 
 [[example-identifiers-generators-uuid-implicit]]
-.Implicit UUID generation
+.UUID generation
 ====
 [source,java]
 ----
@@ -542,29 +539,13 @@ include::{example-dir-identifier}/uuid/implicit/Book.java[tag=example-identifier
 ====
 
 [[example-identifiers-generators-uuid-implicit2]]
-.Another example of implicit UUID generation
+.UUID generation with explicit UUID Version 7 generation strategy
 ====
 [source,java]
 ----
 include::{example-dir-identifier}/uuid/implicit2/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
 ----
 ====
-
-[[example-identifiers-generators-uuid-implicit3]]
-.Implicit UUID generation with String
-====
-[source,java]
-----
-include::{example-dir-identifier}/uuid/implicit3/Book.java[tag=example-identifiers-generators-uuid-implicit, indent=0]
-----
-====
-
-The second approach, using `org.hibernate.id.uuid.UuidGenerator`, is much more flexible and usable
-because it builds on top of the <<identifiers-generators-IdGeneratorType,@IdGeneratorType>> support.
-
-To use (and optionally configure) this strategy, use the `org.hibernate.annotations.UuidGenerator` annotation.
-
-By default, Hibernate uses a random (IETF RFC 4122 version 4) generation.
 
 [[example-identifiers-generators-uuid-random]]
 .Random UUID generation

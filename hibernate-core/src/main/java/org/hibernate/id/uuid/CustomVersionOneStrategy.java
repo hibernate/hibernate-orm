@@ -7,7 +7,6 @@ package org.hibernate.id.uuid;
 import java.util.UUID;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.UUIDGenerationStrategy;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.BytesHelper;
 
@@ -26,11 +25,7 @@ import static org.hibernate.id.uuid.Helper.getJvmIdentifierBytes;
  *
  * @author Steve Ebersole
  */
-public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidValueGenerator {
-	@Override
-	public int getGeneratedVersion() {
-		return 1;
-	}
+public class CustomVersionOneStrategy implements UuidValueGenerator {
 
 	private final long mostSignificantBits;
 
@@ -51,11 +46,6 @@ public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidVal
 	public UUID generateUuid(SharedSessionContractImplementor session) {
 		return new UUID( mostSignificantBits,
 				generateLeastSignificantBits( currentTimeMillis() ) );
-	}
-
-	@Override
-	public UUID generateUUID(SharedSessionContractImplementor session) {
-		return generateUuid( session );
 	}
 
 	public long getMostSignificantBits() {

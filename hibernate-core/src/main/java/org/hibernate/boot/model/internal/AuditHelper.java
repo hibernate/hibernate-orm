@@ -707,14 +707,14 @@ public final class AuditHelper {
 	}
 
 	private static void addTransactionEndColumns(
-			AuditTableConfig auditTableAnnotation,
+			AuditTableConfig auditTableConfig,
 			AuxiliaryTableHolder holder,
 			Table auditTable,
 			MetadataBuildingContext context) {
 		if ( isValidityStrategy( context ) ) {
 			final var revEndColumn =
 					createAuditColumn(
-							auditTableAnnotation.invalidatingChangesetIdColumn(),
+							auditTableConfig.invalidatingChangesetIdColumn(),
 							getChangesetIdType( context ), auditTable, context );
 			revEndColumn.setNullable( true );
 			auditTable.addColumn( revEndColumn );

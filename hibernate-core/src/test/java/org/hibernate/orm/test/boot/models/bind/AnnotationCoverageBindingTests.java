@@ -1246,11 +1246,12 @@ public class AnnotationCoverageBindingTests {
 					assertThat( notes.getValue().getTable() ).isSameAs( secondaryTable.getTable() );
 					assertThat( column( notes ).getName() ).isEqualTo( "notes" );
 
-					assertThat( entityBinding.getIdentifier().createGenerator(
+					assertThat( GeneratorSettingsImpl.createIdentifierGenerator(
+							entityBinding.getIdentifier(),
 							context.getMetadata().getDatabase().getDialect(),
 							entityBinding,
 							entityBinding.getIdentifierProperty(),
-							new GeneratorSettingsImpl( context.getMetadata() )
+							context.getMetadata()
 					) ).isInstanceOf( SequenceStyleGenerator.class );
 				},
 				scope.getRegistry(),
@@ -2390,7 +2391,10 @@ public class AnnotationCoverageBindingTests {
 					CustomComponentBinding annotation,
 					MetadataBuildingContext buildingContext,
 					Component embeddableClass) {
-				embeddableClass.setDynamic( true );
+				final var name = embeddableClass.getRoleName() == null
+						? embeddableClass.getComponentClassName()
+						: embeddableClass.getRoleName();
+				embeddableClass.setComponentClassDetails( name, true, buildingContext );
 			}
 		}
 	}

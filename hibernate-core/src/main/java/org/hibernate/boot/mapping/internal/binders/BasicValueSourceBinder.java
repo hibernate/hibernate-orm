@@ -63,7 +63,7 @@ import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.Property;
 import org.hibernate.models.ModelsException;
@@ -110,14 +110,17 @@ import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper
 /// @author Steve Ebersole
 public class BasicValueSourceBinder {
 
-	public static BasicValueResolutionBuilder.Input bindBasicValue(
+	public static BasicValueResolutionDetails bindBasicValue(
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final var resolutionInput = BasicValueResolutionBuilder.Input.create( basicValue, source );
+		final var resolutionInput = BasicValueResolutionDetails.create(
+				basicValue,
+				source
+		);
 		basicValue.setMemberDetails( source.member() );
 		basicValue.setImplicitSourceJavaType( source.sourceJavaType() );
 		registerPluralAggregateElementJavaType( source, bindingState );
@@ -132,10 +135,10 @@ public class BasicValueSourceBinder {
 		bindTemporalPrecision( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
 		bindTimeZoneStorage( source.member(), property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
 		bindCustomType( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
-		bindColumnDefault( source, basicValue );
+		bindColumnDefault( source, basicValue, bindingState, bindingContext );
 		bindCollation( source, basicValue );
 		bindFractionalSeconds( source, basicValue );
-		bindGeneratedColumn( source, basicValue );
+		bindGeneratedColumn( source, basicValue, bindingState, bindingContext );
 		bindValueGeneration( source, property, basicValue, bindingContext );
 		return resolutionInput;
 	}
@@ -183,7 +186,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -297,7 +300,11 @@ public class BasicValueSourceBinder {
 		return attributeConverterDomainType( typeDetails.determineRawClass() );
 	}
 
-	private static void bindGeneratedColumn(BasicValueSource source, BasicValue basicValue) {
+	private static void bindGeneratedColumn(
+			BasicValueSource source,
+			BasicValue basicValue,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
 			return;
 		}
@@ -305,8 +312,8 @@ public class BasicValueSourceBinder {
 		final GeneratedColumn generatedColumn = getOverridableAnnotation(
 				source.member(),
 				GeneratedColumn.class,
-				basicValue.getBuildingContext().getMetadataCollector().getDatabase().getDialect(),
-				basicValue.getBuildingContext().getModelsContext()
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getModelsContext()
 		);
 		if ( generatedColumn == null ) {
 			return;
@@ -331,7 +338,11 @@ public class BasicValueSourceBinder {
 		}
 	}
 
-	private static void bindColumnDefault(BasicValueSource source, BasicValue basicValue) {
+	private static void bindColumnDefault(
+			BasicValueSource source,
+			BasicValue basicValue,
+			BindingState bindingState,
+			BindingContext bindingContext) {
 		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
 			return;
 		}
@@ -339,8 +350,8 @@ public class BasicValueSourceBinder {
 		final ColumnDefault columnDefault = getOverridableAnnotation(
 				source.member(),
 				ColumnDefault.class,
-				basicValue.getBuildingContext().getMetadataCollector().getDatabase().getDialect(),
-				basicValue.getBuildingContext().getModelsContext()
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getModelsContext()
 		);
 		if ( columnDefault == null ) {
 			return;
@@ -638,7 +649,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -663,10 +674,10 @@ public class BasicValueSourceBinder {
 						applyJavaType( resolutionInput, javaTypeAnn.value(), bindingState );
 					}
 					else {
-						final var typeAnn = member.locateAnnotationUsage( AnyKeyType.class, modelsContext );
-						if ( typeAnn != null ) {
-							applyAnyKeyType( member, resolutionInput, typeAnn.value() );
-						}
+							final var typeAnn = member.locateAnnotationUsage( AnyKeyType.class, modelsContext );
+							if ( typeAnn != null ) {
+								applyAnyKeyType( member, resolutionInput, typeAnn.value(), bindingState );
+							}
 					}
 				}
 				case COLLECTION_ID -> {
@@ -683,7 +694,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -692,28 +703,63 @@ public class BasicValueSourceBinder {
 			case MAP_KEY -> {
 				final var jdbcTypeAnn = member.getDirectAnnotationUsage( MapKeyJdbcType.class );
 				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( MapKeyJdbcTypeCode.class );
-				bindExplicitJdbcType( member, basicValue, resolutionInput, jdbcTypeAnn == null ? null : jdbcTypeAnn.value(), jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value() );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
 			}
 			case LIST_INDEX -> {
 				final var jdbcTypeAnn = member.getDirectAnnotationUsage( ListIndexJdbcType.class );
 				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( ListIndexJdbcTypeCode.class );
-				bindExplicitJdbcType( member, basicValue, resolutionInput, jdbcTypeAnn == null ? null : jdbcTypeAnn.value(), jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value() );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
 			}
 			case ANY_KEY -> {
 				final var modelsContext = bindingContext.getModelsContext();
 				final var jdbcTypeAnn = member.locateAnnotationUsage( AnyKeyJdbcType.class, modelsContext );
 				final var jdbcTypeCodeAnn = member.locateAnnotationUsage( AnyKeyJdbcTypeCode.class, modelsContext );
-				bindExplicitJdbcType( member, basicValue, resolutionInput, jdbcTypeAnn == null ? null : jdbcTypeAnn.value(), jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value() );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
 			}
 			case COLLECTION_ID -> {
 				final var jdbcTypeAnn = member.getDirectAnnotationUsage( CollectionIdJdbcType.class );
 				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( CollectionIdJdbcTypeCode.class );
-				bindExplicitJdbcType( member, basicValue, resolutionInput, jdbcTypeAnn == null ? null : jdbcTypeAnn.value(), jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value() );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
 			}
 			case ANY_DISCRIMINATOR -> {
 				final var jdbcTypeAnn = member.getDirectAnnotationUsage( JdbcType.class );
 				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( JdbcTypeCode.class );
-				bindExplicitJdbcType( member, basicValue, resolutionInput, jdbcTypeAnn == null ? null : jdbcTypeAnn.value(), jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value() );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
 			}
 			default -> bindJdbcType( member, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
 		}
@@ -733,7 +779,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -759,7 +805,7 @@ public class BasicValueSourceBinder {
 
 	private static void setEnumerationStyle(
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			jakarta.persistence.EnumType enumerationStyle) {
 		basicValue.setEnumerationStyle( enumerationStyle );
 		if ( resolutionInput != null ) {
@@ -802,7 +848,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -831,7 +877,7 @@ public class BasicValueSourceBinder {
 			MemberDetails member,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -845,7 +891,7 @@ public class BasicValueSourceBinder {
 	}
 
 	private static void applyJavaType(
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			Class<? extends BasicJavaType<?>> javaTypeClass,
 			BindingState bindingState) {
 		@SuppressWarnings("unchecked")
@@ -860,9 +906,13 @@ public class BasicValueSourceBinder {
 
 	private static void applyAnyKeyType(
 			MemberDetails member,
-			BasicValueResolutionBuilder.Input resolutionInput,
-			String typeName) {
-		final var registeredType = resolutionInput.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( typeName );
+			BasicValueResolutionDetails resolutionInput,
+			String typeName,
+			BindingState bindingState) {
+		final var registeredType = bindingState.getMetadataBuildingContext()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( typeName );
 		if ( registeredType == null ) {
 			throw new MappingException( "Unrecognized @AnyKeyType value - " + typeName + " - " + member.getName() );
 		}
@@ -873,7 +923,7 @@ public class BasicValueSourceBinder {
 			MemberDetails member,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -883,18 +933,20 @@ public class BasicValueSourceBinder {
 		bindExplicitJdbcType(
 				member,
 				basicValue,
-				resolutionInput,
-				jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
-				jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value()
-		);
+					resolutionInput,
+					jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+					jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+					bindingState
+			);
 	}
 
 	private static void bindExplicitJdbcType(
 			MemberDetails member,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
-			Class<? extends org.hibernate.type.descriptor.jdbc.JdbcType> jdbcTypeClass,
-			Integer jdbcTypeCode) {
+				BasicValueResolutionDetails resolutionInput,
+				Class<? extends org.hibernate.type.descriptor.jdbc.JdbcType> jdbcTypeClass,
+				Integer jdbcTypeCode,
+				BindingState bindingState) {
 		if ( jdbcTypeClass != null ) {
 			if ( jdbcTypeCode != null ) {
 				throw new AnnotationPlacementException(
@@ -910,7 +962,9 @@ public class BasicValueSourceBinder {
 		else if ( jdbcTypeCode != null ) {
 			basicValue.setExplicitJdbcTypeCode( jdbcTypeCode );
 			resolutionInput.setConfiguredJdbcTypeCode( jdbcTypeCode );
-			final var jdbcTypeRegistry = resolutionInput.getTypeConfiguration().getJdbcTypeRegistry();
+			final var jdbcTypeRegistry = bindingState.getMetadataBuildingContext()
+					.getTypeConfiguration()
+					.getJdbcTypeRegistry();
 			if ( jdbcTypeRegistry.getConstructor( jdbcTypeCode ) == null ) {
 				resolutionInput.setExplicitJdbcType( jdbcTypeRegistry.getDescriptor( jdbcTypeCode ) );
 			}
@@ -921,7 +975,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -985,7 +1039,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -1066,7 +1120,7 @@ public class BasicValueSourceBinder {
 			BasicValueSource source,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			Class<? extends UserType<?>> customType,
 			Map<String, String> explicitParameters) {
 		if ( !DynamicParameterizedType.class.isAssignableFrom( customType ) ) {
@@ -1177,7 +1231,7 @@ public class BasicValueSourceBinder {
 			MemberDetails member,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -1203,7 +1257,7 @@ public class BasicValueSourceBinder {
 			MemberDetails member,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -1219,7 +1273,7 @@ public class BasicValueSourceBinder {
 
 	private static void setTemporalPrecision(
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			TemporalType precision) {
 		basicValue.setTemporalPrecision( precision );
 		if ( resolutionInput != null ) {
@@ -1241,7 +1295,7 @@ public class BasicValueSourceBinder {
 			MemberDetails member,
 			Property property,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput,
+			BasicValueResolutionDetails resolutionInput,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {

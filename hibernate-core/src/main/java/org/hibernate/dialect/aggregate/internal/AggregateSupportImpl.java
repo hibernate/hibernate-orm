@@ -126,7 +126,9 @@ public class AggregateSupportImpl extends StandardAggregateSupport {
 
 	public String aggregateCustomWriteExpression(
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration) {
 		return null;
 	}
 
@@ -158,7 +160,10 @@ public class AggregateSupportImpl extends StandardAggregateSupport {
 			Namespace namespace,
 			String aggregatePath,
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			MappingResolutionOptions mappingResolutionOptions) {
 		return Collections.emptyList();
 	}
 

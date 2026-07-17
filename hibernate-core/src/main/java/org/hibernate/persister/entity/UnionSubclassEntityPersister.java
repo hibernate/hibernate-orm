@@ -619,7 +619,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						size.getPrecision(),
 						size.getScale(),
 						column.getTemporalPrecision(),
-						column.getType()
+						column.getType( mappingContext )
 				),
 				getFactory().getTypeConfiguration()
 		);

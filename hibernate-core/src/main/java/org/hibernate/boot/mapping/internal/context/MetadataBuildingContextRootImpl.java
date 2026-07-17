@@ -15,7 +15,6 @@ import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
-import org.hibernate.boot.pipeline.internal.MappingResolutionServices;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;

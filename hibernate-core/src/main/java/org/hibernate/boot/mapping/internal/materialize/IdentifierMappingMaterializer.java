@@ -43,6 +43,8 @@ import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.binders.IdentifierGeneratorBindingPhase;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -179,7 +181,11 @@ public class IdentifierMappingMaterializer {
 		EmbeddableMappingMaterializer.applyComponentType( idValue, keyType );
 		EmbeddableMappingMaterializer.applyComponentMappedSuperclass( idValue, keyType, state );
 		idValue.setTable( table );
-		idValue.setTypeUsingReflection( type.getClassDetails().getClassName(), aggregatedKeyMapping.getAttributeName() );
+		idValue.setTypeUsingReflection(
+				type.getClassDetails().getClassName(),
+				aggregatedKeyMapping.getAttributeName(),
+				state.getMetadataBuildingContext()
+		);
 		applyIdGeneratorType( idValue, aggregatedKeyMapping.getAttribute().getMember() );
 		typeBinding.setIdentifier( idValue );
 		typeBinding.setEmbeddedIdentifier( true );
@@ -240,7 +246,7 @@ public class IdentifierMappingMaterializer {
 		final Component identifierMapper = new Component( state.getMetadataBuildingContext(), typeBinding );
 		identifierMapper.setFlattened( true );
 		identifierMapper.setPreservePropertyOrder( true );
-		identifierMapper.setComponentClassName( typeBinding.getClassName() );
+		identifierMapper.setComponentClassDetails( typeBinding.getClassName(), false, state.getMetadataBuildingContext() );
 		EmbeddableMappingMaterializer.applyComponentMappedSuperclass(
 				identifierMapper,
 				idMapping.getIdClassType(),
@@ -459,7 +465,7 @@ public class IdentifierMappingMaterializer {
 			EmbeddableMappingMaterializer.applyComponentMappedSuperclass( idValue, idMapping.getIdClassType(), state );
 		}
 		else {
-			idValue.setComponentClassName( typeBinding.getClassName() );
+			idValue.setComponentClassDetails( type.getClassDetails() );
 		}
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
@@ -470,7 +476,7 @@ public class IdentifierMappingMaterializer {
 				: idValue;
 		if ( separateIdentifierMapper ) {
 			identifierMapper.setFlattened( true );
-			identifierMapper.setComponentClassName( typeBinding.getClassName() );
+			identifierMapper.setComponentClassDetails( type.getClassDetails() );
 			if ( hasIdClass && !wholeDerivedIdClass ) {
 				EmbeddableMappingMaterializer.applyComponentMappedSuperclass(
 						identifierMapper,
@@ -703,7 +709,7 @@ public class IdentifierMappingMaterializer {
 		final Component identifierMapper = new Component( state.getMetadataBuildingContext(), typeBinding );
 		identifierMapper.setFlattened( true );
 		identifierMapper.setPreservePropertyOrder( true );
-		identifierMapper.setComponentClassName( typeBinding.getClassName() );
+		identifierMapper.setComponentClassDetails( typeBinding.getClassName(), false, state.getMetadataBuildingContext() );
 		EmbeddableMappingMaterializer.applyComponentMappedSuperclass(
 				identifierMapper,
 				idMapping.getIdClassType(),
@@ -855,7 +861,11 @@ public class IdentifierMappingMaterializer {
 		component.setFlattened( true );
 		EmbeddableMappingMaterializer.applyComponentType( component, componentType );
 		component.setTable( table );
-		component.setTypeUsingReflection( type.getClassDetails().getClassName(), idAttribute.getName() );
+		component.setTypeUsingReflection(
+				type.getClassDetails().getClassName(),
+				idAttribute.getName(),
+				state.getMetadataBuildingContext()
+		);
 		bindComponentIdentifierProperties(
 				type,
 				typeBinding,
@@ -1074,7 +1084,11 @@ public class IdentifierMappingMaterializer {
 		manyToOne.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		manyToOne.setReferenceToPrimaryKey( true );
 		manyToOne.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		manyToOne.setTypeUsingReflection( type.getClassDetails().getClassName(), idAttribute.getName() );
+		manyToOne.setTypeUsingReflection(
+				type.getClassDetails().getClassName(),
+				idAttribute.getName(),
+				state.getMetadataBuildingContext()
+		);
 		final FetchType fetchType = effectiveFetchType( source );
 		manyToOne.setLazy( fetchType == FetchType.LAZY );
 		ToOneMaterializationHelper.applyFetchMode( source, manyToOne, typeBinding, fetchType );
@@ -1118,7 +1132,11 @@ public class IdentifierMappingMaterializer {
 		oneToOne.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		oneToOne.setReferenceToPrimaryKey( true );
 		oneToOne.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		oneToOne.setTypeUsingReflection( type.getClassDetails().getClassName(), idAttribute.getName() );
+		oneToOne.setTypeUsingReflection(
+				type.getClassDetails().getClassName(),
+				idAttribute.getName(),
+				state.getMetadataBuildingContext()
+		);
 		oneToOne.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
 		oneToOne.setConstrained( true );
 		oneToOne.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
@@ -1261,16 +1279,24 @@ public class IdentifierMappingMaterializer {
 				state,
 				context
 		);
-		state.addAttributeValueResolution( new BasicIdValueResolutionBinding( resolutionInput ) );
+		state.addAttributeValueResolution( new BasicIdValueResolutionBinding(
+				resolutionInput,
+				state.getMetadataBuildingContext().getServiceComponents(),
+				state.getMappingResolutionState(),
+				state.getMetadataBuildingContext()
+		) );
 		validateIdentifierSelectable( basicValue, member );
 		return basicValue;
 	}
 
 	private record BasicIdValueResolutionBinding(
-			BasicValueResolutionBuilder.Input input) implements AttributeBindingPhase.ValueResolution {
+			BasicValueResolutionDetails input,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext) implements AttributeBindingPhase.ValueResolution {
 		@Override
 		public void resolveValue() {
-			BasicValueMappingMaterializer.applyResolution( input );
+			BasicValueMappingMaterializer.applyResolution( input, services, state, buildingContext );
 		}
 	}
 

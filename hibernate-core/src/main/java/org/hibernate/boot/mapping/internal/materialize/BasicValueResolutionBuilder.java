@@ -4,11 +4,18 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.TemporalType;
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.annotations.AnyKeyJavaType;
@@ -29,6 +36,7 @@ import org.hibernate.annotations.MapKeyMutability;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.internal.Constructors;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
@@ -38,19 +46,23 @@ import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
+import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.model.process.internal.VersionResolution;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.type.TrueFalseConverter;
@@ -68,88 +80,314 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.AnnotationBasedUserType;
 import org.hibernate.usertype.DynamicParameterizedType;
+import org.hibernate.usertype.UserType;
+import org.hibernate.usertype.UserTypeCreationContext;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 
 import jakarta.persistence.AttributeConverter;
 
 import static java.lang.Boolean.parseBoolean;
-import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 import static org.hibernate.internal.util.GenericAssignability.isAssignableFrom;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyType;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /// Builds [BasicValue.Resolution] instances for explicit materialization paths.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public final class BasicValueResolutionBuilder {
+	private static int userTypeBeanCounter;
+
 	private BasicValueResolutionBuilder() {
 	}
 
-	public static BasicValue.Resolution<?> buildResolution(Input input) {
-		final var typeParameters = input.getTypeParameters();
+	public static void applyResolution(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext) {
+		if ( details.value().getResolution() != null ) {
+			details.value().applyResolution( details.value().getResolution(), state );
+			return;
+		}
+		final BasicValue.Resolution<?> resolution = buildResolution( details, services, state, buildingContext );
+		if ( resolution == null ) {
+			throw new IllegalStateException( "Unable to resolve BasicValue: " + details.value() );
+		}
+		details.value().applyResolution( resolution, state );
+	}
+
+	private static BasicValue.Resolution<?> buildResolution(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext) {
+		final var typeParameters = details.getTypeParameters();
 		if ( typeParameters != null
 				&& parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
 				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-			input.getTypeParameters().put( DynamicParameterizedType.PARAMETER_TYPE, input.createParameterType() );
+			details.getTypeParameters().put(
+					DynamicParameterizedType.PARAMETER_TYPE,
+					details.createParameterType( services.getClassLoaderService() )
+			);
 		}
-		return buildResolution( input, typeParameters );
+		return buildResolution( details, services, state, buildingContext, typeParameters );
 	}
 
-	public static void applyResolution(Input input) {
-		if ( input.value().getResolution() != null ) {
-			input.value().applyResolution( input.value().getResolution() );
-			return;
+	private static BasicValue.Resolution<?> buildResolution(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext,
+			Properties typeParameters) {
+		if ( details.getExplicitCustomType() != null ) {
+			return explicitCustomTypeResolution( details, services, state, buildingContext );
 		}
-		final BasicValue.Resolution<?> resolution = buildResolution( input );
-		if ( resolution == null ) {
-			throw new IllegalStateException( "Unable to resolve BasicValue: " + input.value() );
-		}
-		input.value().applyResolution( resolution );
-	}
 
-	private static BasicValue.Resolution<?> buildResolution(Input input, Properties typeParameters) {
-		final var explicitJavaType = input.role().determineExplicitJavaType( input );
-		final var explicitJdbcType = input.role().determineExplicitJdbcType( input );
-		final var explicitMutabilityPlan = input.role().determineExplicitMutabilityPlan( input );
-		if ( input.getExplicitTypeName() != null ) {
+		final var explicitJavaType = details.role().determineExplicitJavaType( details, services, state );
+		final var explicitJdbcType = details.role().determineExplicitJdbcType( details, services, state );
+		final var explicitMutabilityPlan = details.role().determineExplicitMutabilityPlan( details, services, state );
+		if ( details.getExplicitTypeName() != null ) {
 			return interpretExplicitlyNamedType(
-					input.getExplicitTypeName(),
+					details.getExplicitTypeName(),
 					explicitJavaType,
 					explicitJdbcType,
 					explicitMutabilityPlan,
-					input.getAttributeConverterDescriptor(),
+					details.getAttributeConverterDescriptor(),
 					typeParameters,
-					input::setTypeParameters,
-					input,
-					input.getBuildingContext()
+					details::setTypeParameters,
+					new BasicValueJdbcTypeIndicators( details, services, state ),
+					services,
+					state
 			);
 		}
-		else if ( input.isVersion() ) {
-			return VersionResolution.from( input.value(), input.getTimeZoneStorageType(), input.getBuildingContext() );
+		else if ( details.isVersion() ) {
+			return VersionResolution.from( details.value(), details.getTimeZoneStorageType(), services, state );
 		}
 		else {
-			final var javaType = determineJavaType( input, explicitJavaType );
-			final var converterDescriptor = getConverterDescriptor( input, javaType );
+			final var javaType = determineJavaType( details, services, state, explicitJavaType );
+			final var converterDescriptor = getConverterDescriptor( details, services, state, javaType );
 			return converterDescriptor != null
-					? converterResolution( input, javaType, converterDescriptor, explicitJavaType, explicitJdbcType, explicitMutabilityPlan )
-					: resolution( input, explicitJavaType, explicitJdbcType, explicitMutabilityPlan, javaType );
+					? converterResolution( details, services, state, javaType, converterDescriptor, explicitJavaType, explicitJdbcType, explicitMutabilityPlan )
+					: resolution( details, services, state, explicitJavaType, explicitJdbcType, explicitMutabilityPlan, javaType );
 		}
 	}
 
-	private static ConverterDescriptor<?,?> getConverterDescriptor(Input input, JavaType<?> javaType) {
-		final var converterDescriptor = input.getAttributeConverterDescriptor();
-		if ( input.isSoftDelete() && input.getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP ) {
+	private static BasicValue.Resolution<?> explicitCustomTypeResolution(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext) {
+		final var parameters = details.buildCustomTypeProperties();
+		final var customType = new CustomType<>(
+				getConfiguredUserTypeBean(
+						details,
+						services,
+						state,
+						buildingContext,
+						details.getExplicitCustomType(),
+						details.value().getTypeAnnotation(),
+						parameters
+				),
+				services.getTypeConfiguration()
+		);
+		// envers - grr
+		details.value().setTypeParameters( parameters );
+		return new UserTypeResolution<>( customType, null, parameters );
+	}
+
+	private static UserType<?> getConfiguredUserTypeBean(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext,
+			Class<? extends UserType<?>> explicitCustomType,
+			Annotation typeAnnotation,
+			Properties parameters) {
+		final var typeInstance = createUserTypeInstance(
+				details,
+				services,
+				state,
+				buildingContext,
+				explicitCustomType,
+				parameters,
+				typeAnnotation
+		);
+		if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
+			configurationAware.setTypeConfiguration( services.getTypeConfiguration() );
+		}
+		addParameterType( details, services, parameters, typeInstance );
+		injectParameters( typeInstance, parameters );
+		return typeInstance;
+	}
+
+	private static UserType<?> createUserTypeInstance(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			MetadataBuildingContext buildingContext,
+			Class<? extends UserType<?>> customType,
+			Properties parameters,
+			Annotation typeAnnotation) {
+		final var creationContext = new UserTypeCreationContextImpl( details, services, buildingContext, parameters );
+		final var typeInstance = instantiateUserType( services, state, customType, typeAnnotation, creationContext );
+		if ( typeInstance instanceof AnnotationBasedUserType<?, ?> annotationBased ) {
+			initializeAnnotationBasedUserType( typeAnnotation, annotationBased, creationContext );
+		}
+		return typeInstance;
+	}
+
+	private static void addParameterType(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			Properties properties,
+			UserType<?> typeInstance) {
+		if ( typeInstance instanceof DynamicParameterizedType
+				&& parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
+				&& properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+			properties.put(
+					DynamicParameterizedType.PARAMETER_TYPE,
+					details.createParameterType( services.getClassLoaderService() )
+			);
+		}
+	}
+
+	private static <A extends Annotation> void initializeAnnotationBasedUserType(
+			Annotation typeAnnotation,
+			AnnotationBasedUserType<A, ?> annotationBased,
+			UserTypeCreationContext creationContext) {
+		if ( typeAnnotation == null ) {
+			throw new AnnotationException( String.format(
+					"Custom type '%s' implements 'AnnotationBasedUserType' but no custom type annotation is present",
+					annotationBased.getClass().getName() ) );
+		}
+		annotationBased.initialize( castAnnotationType( typeAnnotation, annotationBased ), creationContext );
+	}
+
+	private static <A extends Annotation> A castAnnotationType(
+			Annotation typeAnnotation,
+			AnnotationBasedUserType<A, ?> annotationBased ) {
+		final var annotationType = annotationBased.getClass();
+		final var typeArguments = typeArguments( AnnotationBasedUserType.class, annotationType );
+		if ( typeArguments.length > 0
+				&& typeArguments[0] instanceof Class<?> annotationClass ) {
+			if ( !annotationClass.isInstance( typeAnnotation ) ) {
+				throw new AnnotationException( String.format( "Annotation '%s' is not assignable to '%s'",
+						annotationType.getName(), annotationClass.getName() ) );
+			}
+			@SuppressWarnings("unchecked") // safe, we just checked it
+			final var castAnnotation = (A) typeAnnotation;
+			return castAnnotation;
+		}
+		throw new AssertionFailure( "Could not find implementing interface" );
+	}
+
+	private static <T extends UserType<?>, A extends Annotation> T instantiateUserType(
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			Class<T> customType,
+			A typeAnnotation,
+			UserTypeCreationContext creationContext) {
+		try {
+			T userType;
+			if ( typeAnnotation != null ) {
+				@SuppressWarnings("unchecked") // totally safe
+				final var annotationType = (Class<A>) typeAnnotation.annotationType();
+				// attempt to instantiate it with the annotation and context object as constructor arguments
+				userType =
+						Constructors.construct( customType,
+								annotationType, typeAnnotation,
+								UserTypeCreationContext.class, creationContext );
+				if ( userType != null ) {
+					return userType;
+				}
+				// attempt to instantiate it with the annotation as a constructor argument
+				userType = Constructors.construct( customType, annotationType, typeAnnotation );
+				if ( userType != null ) {
+					return userType;
+				}
+			}
+
+			// attempt to instantiate it with the context object as a constructor argument
+			userType = Constructors.construct( customType, UserTypeCreationContext.class, creationContext );
+			if ( userType != null ) {
+				return userType;
+			}
+		}
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+			throw new org.hibernate.InstantiationException( "Could not instantiate custom type", customType, e );
+		}
+
+		return state.options().isAllowExtensionsInCdi()
+				? getUserTypeBean( services, customType, creationContext.getParameters() ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customType );
+	}
+
+	private static <T> ManagedBean<? extends T> getUserTypeBean(
+			MappingResolutionServices services,
+			Class<T> explicitCustomType,
+			Properties properties) {
+		final var producer = services.getCustomTypeProducer();
+		final var managedBeanRegistry = services.getManagedBeanRegistry();
+		if ( isNotEmpty( properties ) ) {
+			final String name = explicitCustomType.getName() + userTypeBeanCounter++;
+			return managedBeanRegistry.getBean( name, explicitCustomType, producer );
+		}
+		else {
+			return managedBeanRegistry.getBean( explicitCustomType, producer );
+		}
+	}
+
+	private record UserTypeCreationContextImpl(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MetadataBuildingContext buildingContext,
+			Properties parameters) implements UserTypeCreationContext {
+
+		@Override
+		public MetadataBuildingContext getBuildingContext() {
+			return buildingContext;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return services.getServiceRegistry();
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return details.member();
+		}
+
+		@Override
+		public Properties getParameters() {
+			return parameters;
+		}
+	}
+
+	private static ConverterDescriptor<?,?> getConverterDescriptor(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			JavaType<?> javaType) {
+		final var converterDescriptor = details.getAttributeConverterDescriptor();
+		if ( details.isSoftDelete() && details.getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP ) {
 			assert converterDescriptor != null;
 			@SuppressWarnings("unchecked")
 			final var booleanConverterDescriptor =
 					(ConverterDescriptor<Boolean, ?>) converterDescriptor;
 			final var softDeleteConverterDescriptor =
-					getSoftDeleteConverterDescriptor( input, booleanConverterDescriptor, javaType );
-			return input.getSoftDeleteStrategy() == SoftDeleteType.ACTIVE
+					getSoftDeleteConverterDescriptor( details, services, state, booleanConverterDescriptor, javaType );
+			return details.getSoftDeleteStrategy() == SoftDeleteType.ACTIVE
 					? new ReversedConverterDescriptor<>( softDeleteConverterDescriptor )
 					: softDeleteConverterDescriptor;
 		}
@@ -159,13 +397,18 @@ public final class BasicValueResolutionBuilder {
 	}
 
 	private static ConverterDescriptor<Boolean,?> getSoftDeleteConverterDescriptor(
-			Input input,
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
 			ConverterDescriptor<Boolean,?> attributeConverterDescriptor,
 			JavaType<?> javaType) {
 		final boolean conversionWasUnspecified =
 				SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
 		if ( conversionWasUnspecified ) {
-			final var jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( input, javaType );
+			final var jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType(
+					new BasicValueJdbcTypeIndicators( details, services, state ),
+					javaType
+			);
 			if ( jdbcType.isNumber() ) {
 				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE );
 			}
@@ -185,15 +428,18 @@ public final class BasicValueResolutionBuilder {
 	}
 
 	private static BasicValue.Resolution<?> resolution(
-			Input input,
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
 			BasicJavaType explicitJavaType,
 			JdbcType explicitJdbcType,
 			MutabilityPlan<?> explicitMutabilityPlan,
 			JavaType<?> javaType) {
+		final var indicators = new BasicValueJdbcTypeIndicators( details, services, state );
 		final JavaType<?> basicJavaType;
 		final JdbcType jdbcType;
 		if ( explicitJdbcType != null ) {
-			final var typeConfiguration = input.getTypeConfiguration();
+			final var typeConfiguration = services.getTypeConfiguration();
 			jdbcType = explicitJdbcType;
 			basicJavaType = javaType == null && jdbcType != null
 					? jdbcType.getRecommendedJavaType( null, null, typeConfiguration )
@@ -204,50 +450,54 @@ public final class BasicValueResolutionBuilder {
 			basicJavaType = javaType;
 		}
 		if ( basicJavaType == null ) {
-			throw new MappingException( "Unable to determine JavaType to use : " + input.value() );
+			throw new MappingException( "Unable to determine JavaType to use : " + details.value() );
 		}
 
 		if ( basicJavaType instanceof BasicJavaType<?> castType
-				&& ( !basicJavaType.getJavaTypeClass().isEnum() || input.getEnumerationStyle() == null ) ) {
-			final var context = input.getBuildingContext();
-			final var autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
+				&& ( !basicJavaType.getJavaTypeClass().isEnum() || details.getEnumerationStyle() == null ) ) {
+			final var autoAppliedTypeDef = state.typeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
 				CORE_LOGGER.trace( "BasicValue resolution matched auto-applied type definition" );
-				return autoAppliedTypeDef.resolve( input.getTypeParameters(), context, input );
+				return autoAppliedTypeDef.resolve( details.getTypeParameters(), services, state, indicators );
 			}
 		}
 
 		return InferredBasicValueResolver.from(
 				explicitJavaType,
 				jdbcType,
-				input.getResolvedJavaType(),
-				() -> determineReflectedJavaType( input ),
+				details.getResolvedJavaType(),
+				() -> determineReflectedJavaType( details, services, state ),
 				mutabilityPlanAccess( explicitMutabilityPlan ),
-				input,
-				input.getTable(),
-				input.getColumn(),
-				input.getOwnerName(),
-				input.getPropertyName(),
-				input.getBuildingContext()
+				indicators,
+				details.getTable(),
+				details.getColumn(),
+				details.getOwnerName(),
+				details.getPropertyName(),
+				services,
+				state
 		);
 	}
 
 	private static BasicValue.Resolution<?> converterResolution(
-			Input input,
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
 			JavaType<?> javaType,
 			ConverterDescriptor<?,?> attributeConverterDescriptor,
 			BasicJavaType<?> explicitJavaType,
 			JdbcType explicitJdbcType,
 			MutabilityPlan<?> explicitMutabilityPlan) {
+		final var indicators = new BasicValueJdbcTypeIndicators( details, services, state );
+		final var converterCreationContext = new BasicValueConverterCreationContext( services );
 		final var converterResolution = NamedConverterResolution.from(
 				attributeConverterDescriptor,
 				explicitJavaType,
 				explicitJdbcType,
 				explicitMutabilityPlan,
-				input.getResolvedJavaType(),
-				input,
-				input,
-				input.getBuildingContext()
+				details.getResolvedJavaType(),
+				indicators,
+				converterCreationContext,
+				services
 		);
 
 		if ( javaType instanceof BasicPluralJavaType<?> pluralJavaType
@@ -256,14 +506,14 @@ public final class BasicValueResolutionBuilder {
 			final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
 			final BasicType<?> registeredType = registeredElementType == null ? null
 					: pluralJavaType.resolveType(
-							input.getTypeConfiguration(),
-							input.getDialect(),
+							services.getTypeConfiguration(),
+							state.database().getDialect(),
 							registeredElementType,
-							input.getColumn() instanceof ColumnTypeInformation information ? information : null,
-							input
-			);
+							details.getColumn() instanceof ColumnTypeInformation information ? information : null,
+							indicators
+					);
 			if ( registeredType != null ) {
-				input.getTypeConfiguration().getBasicTypeRegistry().register( registeredType );
+				services.getTypeConfiguration().getBasicTypeRegistry().register( registeredType );
 				return new InferredBasicValueResolution(
 						registeredType,
 						registeredType.getJavaTypeDescriptor(),
@@ -278,9 +528,13 @@ public final class BasicValueResolutionBuilder {
 		return converterResolution;
 	}
 
-	private static JavaType<?> determineJavaType(Input input, BasicJavaType<?> explicitJavaType) {
+	private static JavaType<?> determineJavaType(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			BasicJavaType<?> explicitJavaType) {
 		if ( explicitJavaType == null ) {
-			final var reflectedJtd = determineReflectedJavaType( input );
+			final var reflectedJtd = determineReflectedJavaType( details, services, state );
 			if ( reflectedJtd != null ) {
 				return reflectedJtd;
 			}
@@ -289,27 +543,32 @@ public final class BasicValueResolutionBuilder {
 		return explicitJavaType;
 	}
 
-	private static JavaType<?> determineReflectedJavaType(Input input) {
-		final var typeConfiguration = input.getTypeConfiguration();
-		final var impliedJavaType = impliedJavaType( input, typeConfiguration );
+	private static JavaType<?> determineReflectedJavaType(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state) {
+		final var typeConfiguration = services.getTypeConfiguration();
+		final var impliedJavaType = impliedJavaType( details, services );
 		if ( impliedJavaType == null ) {
 			return null;
 		}
 		else {
-			input.setResolvedJavaType( impliedJavaType );
-			return javaType( input, typeConfiguration, impliedJavaType );
+			details.setResolvedJavaType( impliedJavaType );
+			return javaType( details, services, state, typeConfiguration, impliedJavaType );
 		}
 	}
 
-	private static java.lang.reflect.Type impliedJavaType(Input input, TypeConfiguration typeConfiguration) {
-		if ( input.getResolvedJavaType() != null ) {
-			return input.getResolvedJavaType();
+	private static Type impliedJavaType(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services) {
+		if ( details.getResolvedJavaType() != null ) {
+			return details.getResolvedJavaType();
 		}
-		else if ( input.getSourceJavaType() != null ) {
-			return input.getSourceJavaType().asReflectType();
+		else if ( details.getSourceJavaType() != null ) {
+			return details.getSourceJavaType().asReflectType();
 		}
-		else if ( input.getOwnerName() != null && input.getPropertyName() != null ) {
-			return reflectedPropertyType( input.getOwnerName(), input.getPropertyName(), input.classLoaderService() );
+		else if ( details.getOwnerName() != null && details.getPropertyName() != null ) {
+			return reflectedPropertyType( details.getOwnerName(), details.getPropertyName(), services.getClassLoaderService() );
 		}
 		else {
 			return null;
@@ -317,21 +576,25 @@ public final class BasicValueResolutionBuilder {
 	}
 
 	private static JavaType<?> javaType(
-			Input input,
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
 			TypeConfiguration typeConfiguration,
-			java.lang.reflect.Type impliedJavaType) {
+			Type impliedJavaType) {
 		final var javaType = typeConfiguration.getJavaTypeRegistry().findDescriptor( impliedJavaType );
-		return javaType == null ? specialJavaType( input, typeConfiguration, impliedJavaType ) : javaType;
+		return javaType == null ? specialJavaType( details, services, state, typeConfiguration, impliedJavaType ) : javaType;
 	}
 
 	private static JavaType<?> specialJavaType(
-			Input input,
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state,
 			TypeConfiguration typeConfiguration,
-			java.lang.reflect.Type impliedJavaType) {
+			Type impliedJavaType) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final var jdbcTypeCode = input.getConfiguredJdbcTypeCode();
+		final var jdbcTypeCode = details.getConfiguredJdbcTypeCode();
 		if ( jdbcTypeCode != null ) {
-			final var explicitMutabilityPlan = input.role().determineExplicitMutabilityPlan( input );
+			final var explicitMutabilityPlan = details.role().determineExplicitMutabilityPlan( details, services, state );
 			switch ( jdbcTypeCode ) {
 				case org.hibernate.type.SqlTypes.JSON:
 					final var jsonJavaType =
@@ -355,7 +618,7 @@ public final class BasicValueResolutionBuilder {
 	private static MutabilityPlan<?> mutabilityPlan(
 			MutabilityPlan<?> explicitMutabilityPlan,
 			TypeConfiguration typeConfiguration,
-			java.lang.reflect.Type impliedJavaType) {
+			Type impliedJavaType) {
 		return explicitMutabilityPlan != null
 				? explicitMutabilityPlan
 				: RegistryHelper.INSTANCE.determineMutabilityPlan( impliedJavaType, typeConfiguration );
@@ -370,40 +633,16 @@ public final class BasicValueResolutionBuilder {
 			Map<Object,Object> localTypeParams,
 			Consumer<Properties> combinedParameterConsumer,
 			JdbcTypeIndicators stdIndicators,
-			MetadataBuildingContext context) {
+			MappingResolutionServices services,
+			MappingResolutionState state) {
 
-		final var managedBeanRegistry = context.getManagedBeanRegistry();
-		final var typeConfiguration = context.getTypeConfiguration();
-
-		final var converterCreationContext =
-				new JpaAttributeConverterCreationContext() {
-					@Override
-					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return managedBeanRegistry;
-					}
-
-					@Override
-					public TypeConfiguration getTypeConfiguration() {
-						return typeConfiguration;
-					}
-				};
-
-		if ( name.startsWith( TYPE_NAME_PREFIX  ) ) {
-			return NamedConverterResolution.from(
-					name,
-					explicitJavaType,
-					explicitJdbcType,
-					explicitMutabilityPlan,
-					stdIndicators,
-					converterCreationContext,
-					context
-			);
-		}
+		final var typeConfiguration = services.getTypeConfiguration();
+		final var converterCreationContext = new BasicValueConverterCreationContext( services );
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX )
 			|| name.startsWith( ConvertedBasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
 			return getNamedBasicTypeResolution(
-					context.resolveAdHocBasicType( name ),
+					state.resolveAdHocBasicType( name ),
 					explicitMutabilityPlan
 			);
 		}
@@ -421,13 +660,14 @@ public final class BasicValueResolutionBuilder {
 		}
 
 		final var typeDefinition =
-				context.getTypeDefinitionRegistry()
+				state.typeDefinitionRegistry()
 						.resolve( name );
 		if ( typeDefinition != null ) {
 			final var resolution = typeDefinition.resolve(
 					localTypeParams,
 					explicitMutabilityPlan,
-					context,
+					services,
+					state,
 					stdIndicators
 			);
 			combinedParameterConsumer.accept( resolution.getCombinedTypeParameters() );
@@ -435,20 +675,21 @@ public final class BasicValueResolutionBuilder {
 		}
 
 		try {
-			final var typeNamedClass = context.getClassLoaderAccess().classForName( name );
+			final var typeNamedClass = services.getClassLoaderAccess().classForName( name );
 			if ( isEmpty( localTypeParams ) ) {
 				final var implicitDefinition =
 						new TypeDefinition( name, typeNamedClass, null, null );
-				context.getTypeDefinitionRegistry().register( implicitDefinition );
+				state.typeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
 						localTypeParams,
 						explicitMutabilityPlan,
-						context,
+						services,
+						state,
 						stdIndicators
 				);
 			}
 
-			return TypeDefinition.createLocalResolution( name, typeNamedClass, localTypeParams, context );
+			return TypeDefinition.createLocalResolution( name, typeNamedClass, localTypeParams, services, state );
 		}
 		catch (ClassLoadingException e) {
 			CORE_LOGGER.couldNotResolveTypeName( name, e );
@@ -528,7 +769,7 @@ public final class BasicValueResolutionBuilder {
 	 * and ordinary attributes use the standard basic-value annotations.
 	 * <p>
 	 * Keeping these choices here avoids reintroducing deferred callback state
-	 * on {@link BasicValue}.  The binder/materializer supplies an {@link Input},
+	 * on {@link BasicValue}.  The binder/materializer supplies an {@link BasicValueResolutionDetails},
 	 * and the role interprets that input at resolution time.
 	 */
 	public enum BasicValueRole {
@@ -565,12 +806,15 @@ public final class BasicValueResolutionBuilder {
 			};
 		}
 
-		@Nullable BasicJavaType<?> determineExplicitJavaType(Input input) {
-			if ( input.explicitJavaType() != null ) {
-				return input.explicitJavaType();
+		@Nullable BasicJavaType<?> determineExplicitJavaType(
+				BasicValueResolutionDetails details,
+				MappingResolutionServices services,
+				MappingResolutionState state) {
+			if ( details.explicitJavaType() != null ) {
+				return details.explicitJavaType();
 			}
 
-			final var member = input.member();
+			final var member = details.member();
 			if ( member == null ) {
 				return null;
 			}
@@ -591,7 +835,7 @@ public final class BasicValueResolutionBuilder {
 				case ANY_KEY -> {
 					final var javaTypeAnn = member.locateAnnotationUsage(
 							AnyKeyJavaType.class,
-							input.getBuildingContext().getModelsContext()
+							services.getModelsContext()
 					);
 					yield javaTypeAnn == null ? null : javaTypeAnn.value();
 				}
@@ -604,8 +848,7 @@ public final class BasicValueResolutionBuilder {
 			if ( javaTypeClass != null ) {
 				@SuppressWarnings("unchecked")
 				final Class<BasicJavaType<?>> javaClass = (Class<BasicJavaType<?>>) javaTypeClass;
-				return input.getBuildingContext()
-						.getManagedBeanRegistry()
+				return services.getManagedBeanRegistry()
 						.getBean( javaClass )
 						.getBeanInstance();
 			}
@@ -613,10 +856,10 @@ public final class BasicValueResolutionBuilder {
 			if ( this == ANY_KEY ) {
 				final var typeAnn = member.locateAnnotationUsage(
 						AnyKeyType.class,
-						input.getBuildingContext().getModelsContext()
+						services.getModelsContext()
 				);
 				if ( typeAnn != null ) {
-					final var registeredType = input.getTypeConfiguration()
+					final var registeredType = services.getTypeConfiguration()
 							.getBasicTypeRegistry()
 							.getRegisteredType( typeAnn.value() );
 					if ( registeredType == null ) {
@@ -629,12 +872,15 @@ public final class BasicValueResolutionBuilder {
 			return null;
 		}
 
-		@Nullable JdbcType determineExplicitJdbcType(Input input) {
-			if ( input.explicitJdbcType() != null ) {
-				return input.explicitJdbcType();
+		@Nullable JdbcType determineExplicitJdbcType(
+				BasicValueResolutionDetails details,
+				MappingResolutionServices services,
+				MappingResolutionState state) {
+			if ( details.explicitJdbcType() != null ) {
+				return details.explicitJdbcType();
 			}
 
-			final var member = input.member();
+			final var member = details.member();
 			if ( member == null ) {
 				return null;
 			}
@@ -644,7 +890,7 @@ public final class BasicValueResolutionBuilder {
 				case LIST_INDEX -> listIndexJdbcTypeSelection( member );
 				case COLLECTION_ID -> collectionIdJdbcTypeSelection( member );
 				case ANY_KEY -> {
-					final var modelsContext = input.getBuildingContext().getModelsContext();
+					final var modelsContext = services.getModelsContext();
 					final var jdbcTypeAnn = member.locateAnnotationUsage( AnyKeyJdbcType.class, modelsContext );
 					final var jdbcTypeCodeAnn = member.locateAnnotationUsage( AnyKeyJdbcTypeCode.class, modelsContext );
 					yield new JdbcTypeSelection(
@@ -662,8 +908,8 @@ public final class BasicValueResolutionBuilder {
 				return instantiateJdbcType( member, selection.jdbcTypeClass() );
 			}
 			else if ( selection.jdbcTypeCode() != null ) {
-				input.setConfiguredJdbcTypeCode( selection.jdbcTypeCode() );
-				final var jdbcTypeRegistry = input.getTypeConfiguration().getJdbcTypeRegistry();
+				details.setConfiguredJdbcTypeCode( selection.jdbcTypeCode() );
+				final var jdbcTypeRegistry = services.getTypeConfiguration().getJdbcTypeRegistry();
 				return jdbcTypeRegistry.getConstructor( selection.jdbcTypeCode() ) == null
 						? jdbcTypeRegistry.getDescriptor( selection.jdbcTypeCode() )
 						: null;
@@ -672,18 +918,21 @@ public final class BasicValueResolutionBuilder {
 			return null;
 		}
 
-		@Nullable MutabilityPlan<?> determineExplicitMutabilityPlan(Input input) {
-			if ( input.explicitMutabilityPlan() != null ) {
-				return input.explicitMutabilityPlan();
+		@Nullable MutabilityPlan<?> determineExplicitMutabilityPlan(
+				BasicValueResolutionDetails details,
+				MappingResolutionServices services,
+				MappingResolutionState state) {
+			if ( details.explicitMutabilityPlan() != null ) {
+				return details.explicitMutabilityPlan();
 			}
-			if ( input.attributeMutabilityPlanClass() != null ) {
-				return instantiateMutabilityPlan( input.member(), input.attributeMutabilityPlanClass() );
+			if ( details.attributeMutabilityPlanClass() != null ) {
+				return instantiateMutabilityPlan( details.member(), details.attributeMutabilityPlanClass() );
 			}
-			if ( input.attributeImmutable() ) {
+			if ( details.attributeImmutable() ) {
 				return org.hibernate.type.descriptor.java.ImmutableMutabilityPlan.instance();
 			}
 
-			final var member = input.member();
+			final var member = details.member();
 			if ( member == null ) {
 				return null;
 			}
@@ -783,316 +1032,6 @@ public final class BasicValueResolutionBuilder {
 				modelsException.addSuppressed( e );
 				throw modelsException;
 			}
-		}
-	}
-
-	/**
-	 * Mutable input used to build and apply a {@link BasicValue.Resolution}.
-	 * <p>
-	 * The input bridges the simple mapping object and the richer binding or
-	 * materialization state.  It wraps the target {@link BasicValue}, the
-	 * declarative {@link BasicValueSource}, and any facts already discovered by
-	 * the binder/materializer, such as an explicit Java type, explicit JDBC
-	 * type, converter, mutability plan, temporal precision, or configured JDBC
-	 * type code.
-	 * <p>
-	 * It also implements {@link JdbcTypeIndicators} and
-	 * {@link JpaAttributeConverterCreationContext} because the lower-level type
-	 * resolution helpers still expect those views.  That keeps the compatibility
-	 * surface localized here while {@link BasicValue} itself remains a simpler
-	 * holder of mapping state plus an applied resolution.
-	 */
-	public static class Input implements JdbcTypeIndicators, JpaAttributeConverterCreationContext {
-		private final BasicValue value;
-		private final BasicValueSource source;
-		private final BasicValueRole role;
-		private final String ownerName;
-		private final String propertyName;
-		private final boolean softDelete;
-		private final SoftDeleteType softDeleteStrategy;
-		private Properties typeParameters;
-		private String explicitTypeName;
-		private ConverterDescriptor<?,?> attributeConverterDescriptor;
-		private org.hibernate.annotations.TimeZoneStorageType timeZoneStorageType;
-		private jakarta.persistence.EnumType enumerationStyle;
-		private jakarta.persistence.TemporalType temporalPrecision;
-		private java.lang.reflect.Type resolvedJavaType;
-		private BasicJavaType<?> explicitJavaType;
-		private JdbcType explicitJdbcType;
-		private MutabilityPlan<?> explicitMutabilityPlan;
-		private Integer jdbcTypeCode;
-		private boolean attributeImmutable;
-		private Class<? extends MutabilityPlan<?>> attributeMutabilityPlanClass;
-
-		private Input(BasicValue value, BasicValueSource source) {
-			this.value = value;
-			this.source = source;
-			this.role = value.isVersion() ? BasicValueRole.VERSION : BasicValueRole.from( source.kind() );
-			this.softDelete = value.isSoftDelete();
-			this.softDeleteStrategy = value.getSoftDeleteStrategy();
-			this.ownerName = value.getOwnerName();
-			this.propertyName = value.getPropertyName();
-		}
-
-		public static Input create(BasicValue value, BasicValueSource source) {
-			return new Input( value, source );
-		}
-
-		public BasicValue value() {
-			return value;
-		}
-
-		public BasicValueSource source() {
-			return source;
-		}
-
-		public MemberDetails member() {
-			return source.member();
-		}
-
-		public BasicValueRole role() {
-			return role;
-		}
-
-		public BasicValueSource.Kind kind() {
-			return source.kind();
-		}
-
-		public BasicValue.SourceJavaType getSourceJavaType() {
-			return source.sourceJavaType();
-		}
-
-		public Properties getTypeParameters() {
-			return typeParameters;
-		}
-
-		public void setTypeParameters(Properties typeParameters) {
-			this.typeParameters = typeParameters;
-		}
-
-		public void setTypeParameters(Map<String, ?> typeParameters) {
-			final var properties = new Properties();
-			properties.putAll( typeParameters );
-			setTypeParameters( properties );
-		}
-
-		public DynamicParameterizedType.ParameterType createParameterType() {
-			return value.createResolutionParameterType();
-		}
-
-		public String getExplicitTypeName() {
-			return explicitTypeName;
-		}
-
-		public void setExplicitTypeName(String explicitTypeName) {
-			this.explicitTypeName = explicitTypeName;
-		}
-
-		public ConverterDescriptor<?, ?> getAttributeConverterDescriptor() {
-			return attributeConverterDescriptor == null
-					? value.getJpaAttributeConverterDescriptor()
-					: attributeConverterDescriptor;
-		}
-
-		public void setAttributeConverterDescriptor(ConverterDescriptor<?, ?> attributeConverterDescriptor) {
-			this.attributeConverterDescriptor = attributeConverterDescriptor;
-		}
-
-		public MetadataBuildingContext getBuildingContext() {
-			return value.getBuildingContext();
-		}
-
-		@Override
-		public TypeConfiguration getTypeConfiguration() {
-			return value.getTypeConfiguration();
-		}
-
-		public boolean isVersion() {
-			return role == BasicValueRole.VERSION;
-		}
-
-		public org.hibernate.annotations.TimeZoneStorageType getTimeZoneStorageType() {
-			return timeZoneStorageType;
-		}
-
-		public void setTimeZoneStorageType(org.hibernate.annotations.TimeZoneStorageType timeZoneStorageType) {
-			this.timeZoneStorageType = timeZoneStorageType;
-		}
-
-		public boolean isSoftDelete() {
-			return softDelete;
-		}
-
-		public SoftDeleteType getSoftDeleteStrategy() {
-			return softDeleteStrategy;
-		}
-
-		public jakarta.persistence.EnumType getEnumerationStyle() {
-			return enumerationStyle;
-		}
-
-		public void setEnumerationStyle(jakarta.persistence.EnumType enumerationStyle) {
-			this.enumerationStyle = enumerationStyle;
-		}
-
-		public java.lang.reflect.Type getResolvedJavaType() {
-			return resolvedJavaType;
-		}
-
-		public void setResolvedJavaType(java.lang.reflect.Type resolvedJavaType) {
-			this.resolvedJavaType = resolvedJavaType;
-		}
-
-		public BasicJavaType<?> explicitJavaType() {
-			return explicitJavaType;
-		}
-
-		public void setExplicitJavaType(BasicJavaType<?> explicitJavaType) {
-			this.explicitJavaType = explicitJavaType;
-		}
-
-		public JdbcType explicitJdbcType() {
-			return explicitJdbcType;
-		}
-
-		public void setExplicitJdbcType(JdbcType explicitJdbcType) {
-			this.explicitJdbcType = explicitJdbcType;
-		}
-
-		public MutabilityPlan<?> explicitMutabilityPlan() {
-			return explicitMutabilityPlan;
-		}
-
-		public void setExplicitMutabilityPlan(MutabilityPlan<?> explicitMutabilityPlan) {
-			this.explicitMutabilityPlan = explicitMutabilityPlan;
-		}
-
-		public Table getTable() {
-			return value.getTable();
-		}
-
-		public Selectable getColumn() {
-			return value.getColumn();
-		}
-
-		public String getOwnerName() {
-			return ownerName;
-		}
-
-		public String getPropertyName() {
-			return propertyName;
-		}
-
-		public org.hibernate.boot.registry.classloading.spi.ClassLoaderService classLoaderService() {
-			return value.classLoaderService();
-		}
-
-		public Integer getConfiguredJdbcTypeCode() {
-			return jdbcTypeCode;
-		}
-
-		public void setConfiguredJdbcTypeCode(Integer jdbcTypeCode) {
-			this.jdbcTypeCode = jdbcTypeCode;
-		}
-
-		public boolean attributeImmutable() {
-			return attributeImmutable;
-		}
-
-		public void markAttributeImmutable() {
-			this.attributeImmutable = true;
-		}
-
-		public Class<? extends MutabilityPlan<?>> attributeMutabilityPlanClass() {
-			return attributeMutabilityPlanClass;
-		}
-
-		public void setAttributeMutabilityPlanClass(Class<? extends MutabilityPlan<?>> attributeMutabilityPlanClass) {
-			this.attributeMutabilityPlanClass = attributeMutabilityPlanClass;
-		}
-
-		@Override
-		public org.hibernate.dialect.Dialect getDialect() {
-			return value.getDialect();
-		}
-
-		@Override
-		public jakarta.persistence.EnumType getEnumeratedType() {
-			return enumerationStyle;
-		}
-
-		@Override
-		public jakarta.persistence.TemporalType getTemporalPrecision() {
-			return temporalPrecision;
-		}
-
-		public void setTemporalPrecision(jakarta.persistence.TemporalType temporalPrecision) {
-			this.temporalPrecision = temporalPrecision;
-		}
-
-		@Override
-		public boolean isNationalized() {
-			return value.isNationalized();
-		}
-
-			@Override
-			public boolean isLob() {
-				return value.isLob();
-			}
-
-			@Override
-			public long getColumnLength() {
-				return value.getColumnLength();
-			}
-
-			@Override
-			public int getColumnPrecision() {
-				return value.getColumnPrecision();
-			}
-
-			@Override
-			public int getColumnScale() {
-				return value.getColumnScale();
-			}
-
-			@Override
-			public int getPreferredSqlTypeCodeForBoolean() {
-				return value.getPreferredSqlTypeCodeForBoolean();
-			}
-
-		@Override
-		public int getPreferredSqlTypeCodeForDuration() {
-			return value.getPreferredSqlTypeCodeForDuration();
-		}
-
-		@Override
-		public int getPreferredSqlTypeCodeForUuid() {
-			return value.getPreferredSqlTypeCodeForUuid();
-		}
-
-		@Override
-		public int getPreferredSqlTypeCodeForInstant() {
-			return value.getPreferredSqlTypeCodeForInstant();
-		}
-
-		@Override
-		public int getPreferredSqlTypeCodeForArray() {
-			return value.getPreferredSqlTypeCodeForArray();
-		}
-
-		@Override
-		public int resolveJdbcTypeCode(int jdbcTypeCode) {
-			return value.resolveJdbcTypeCode( jdbcTypeCode );
-		}
-
-		@Override
-		public ManagedBeanRegistry getManagedBeanRegistry() {
-			return value.getManagedBeanRegistry();
-		}
-
-		@Override
-		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-			return value.getDefaultTimeZoneStorageStrategy();
 		}
 	}
 
@@ -1230,6 +1169,138 @@ public final class BasicValueResolutionBuilder {
 		@Override
 		public Boolean convertToEntityAttribute(Boolean relationalValue) {
 			return relationalValue;
+		}
+	}
+
+	private record BasicValueConverterCreationContext(
+			MappingResolutionServices services) implements JpaAttributeConverterCreationContext {
+
+		@Override
+		public ManagedBeanRegistry getManagedBeanRegistry() {
+			return services.getManagedBeanRegistry();
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return services.getTypeConfiguration();
+		}
+	}
+
+	private record BasicValueJdbcTypeIndicators(
+			BasicValueResolutionDetails details,
+			MappingResolutionServices services,
+			MappingResolutionState state) implements JdbcTypeIndicators {
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return services.getTypeConfiguration();
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return state.database().getDialect();
+		}
+
+		@Override
+		public EnumType getEnumeratedType() {
+			return details.getEnumeratedType();
+		}
+
+		@Override
+		public TemporalType getTemporalPrecision() {
+			return details.getTemporalPrecision();
+		}
+
+		@Override
+		public boolean isNationalized() {
+			return details.isNationalized();
+		}
+
+		@Override
+		public boolean isLob() {
+			return details.isLob();
+		}
+
+		@Override
+		public long getColumnLength() {
+			return details.getColumnLength();
+		}
+
+		@Override
+		public int getColumnPrecision() {
+			return details.getColumnPrecision();
+		}
+
+		@Override
+		public int getColumnScale() {
+			return details.getColumnScale();
+		}
+
+		@Override
+		public boolean isPreferJavaTimeJdbcTypesEnabled() {
+			return state.options().isPreferJavaTimeJdbcTypesEnabled();
+		}
+
+		@Override
+		public boolean isPreferNativeEnumTypesEnabled() {
+			return state.options().isPreferNativeEnumTypesEnabled();
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return resolveJdbcTypeCode( state.options().getPreferredSqlTypeCodeForBoolean() );
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForDuration() {
+			return resolveJdbcTypeCode( state.options().getPreferredSqlTypeCodeForDuration() );
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForUuid() {
+			return resolveJdbcTypeCode( state.options().getPreferredSqlTypeCodeForUuid() );
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForInstant() {
+			return resolveJdbcTypeCode( state.options().getPreferredSqlTypeCodeForInstant() );
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForArray() {
+			return resolveJdbcTypeCode( state.options().getPreferredSqlTypeCodeForArray() );
+		}
+
+		@Override
+		public int resolveJdbcTypeCode(int jdbcTypeCode) {
+			final var aggregateColumn = details.value().getAggregateColumn();
+			return aggregateColumn == null
+					? jdbcTypeCode
+					: getDialect().getAggregateSupport()
+							.aggregateComponentSqlTypeCode(
+									aggregateColumn.getJdbcType( state.metadataCollector() )
+											.getDefaultSqlTypeCode(),
+									jdbcTypeCode
+							);
+		}
+
+		@Override
+		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+			return details.getTimeZoneStorageType() == null
+					? state.options().getDefaultTimeZoneStorage()
+					: switch ( details.getTimeZoneStorageType() ) {
+						case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+						case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+						case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+						case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+						case AUTO, DEFAULT -> state.options().getDefaultTimeZoneStorage();
+					};
+		}
+
+		@Override
+		public Integer getExplicitJdbcTypeCode() {
+			return details.getConfiguredJdbcTypeCode() == null ? getPreferredSqlTypeCodeForArray()
+					: details.getConfiguredJdbcTypeCode();
 		}
 	}
 }

@@ -7,6 +7,8 @@ import java.time.Instant;
 
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
@@ -107,8 +109,8 @@ public class AttributeConverterTest {
 			basicValue.setJpaAttributeConverterDescriptor(
 					ConverterDescriptors.of( new StringClobConverter() )
 			);
-			basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
-			BasicValueResolutionBuilder.applyResolution( BasicValueResolutionBuilder.Input.create(
+			basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name", buildingContext );
+			final var details = BasicValueResolutionDetails.create(
 					basicValue,
 					BasicValueSource.attribute(
 							buildingContext.getModelsContext()
@@ -116,7 +118,13 @@ public class AttributeConverterTest {
 									.resolveClassDetails( IrrelevantEntity.class.getName() )
 									.findFieldByName( "name" )
 					)
-			) );
+			);
+			BasicValueResolutionBuilder.applyResolution(
+					details,
+					buildingContext.getServiceComponents(),
+					MappingResolutionState.from( buildingContext ),
+					buildingContext
+			);
 
 			final var type = basicValue.getType();
 			assertNotNull( type );

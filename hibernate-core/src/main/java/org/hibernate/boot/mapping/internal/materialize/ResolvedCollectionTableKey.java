@@ -7,6 +7,7 @@ package org.hibernate.boot.mapping.internal.materialize;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
@@ -24,13 +25,15 @@ public class ResolvedCollectionTableKey {
 	private final Collection collection;
 	private final Table table;
 	private final List<Column> keyColumns;
+	private final MetadataBuildingContext metadataBuildingContext;
 
-	public ResolvedCollectionTableKey(Collection collection) {
+	public ResolvedCollectionTableKey(Collection collection, MetadataBuildingContext metadataBuildingContext) {
 		this(
 				collection.getRole(),
 				collection,
 				collection.getCollectionTable(),
-				collection.getKey() == null ? List.of() : collection.getKey().getColumns()
+				collection.getKey() == null ? List.of() : collection.getKey().getColumns(),
+				metadataBuildingContext
 		);
 	}
 
@@ -38,11 +41,13 @@ public class ResolvedCollectionTableKey {
 			String collectionRole,
 			Collection collection,
 			Table table,
-			List<Column> keyColumns) {
+			List<Column> keyColumns,
+			MetadataBuildingContext metadataBuildingContext) {
 		this.collectionRole = collectionRole;
 		this.collection = collection;
 		this.table = table;
 		this.keyColumns = new ArrayList<>( keyColumns );
+		this.metadataBuildingContext = metadataBuildingContext;
 	}
 
 	public String collectionRole() {
@@ -59,5 +64,9 @@ public class ResolvedCollectionTableKey {
 
 	public List<Column> keyColumns() {
 		return keyColumns;
+	}
+
+	public MetadataBuildingContext metadataBuildingContext() {
+		return metadataBuildingContext;
 	}
 }

@@ -28,6 +28,7 @@ import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
@@ -35,8 +36,11 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.usertype.CompositeUserType;
@@ -45,6 +49,8 @@ import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /// Binds component-valued singular attributes.
 ///
@@ -160,7 +166,7 @@ class EmbeddableAttributeBinder {
 				? null
 				: instantiateCompositeUserType( compositeUserTypeClass );
 		if ( compositeUserType != null ) {
-			component.setTypeName( compositeUserTypeClass.getName() );
+			component.setCompositeUserType( compositeUserType );
 		}
 		bindDiscriminator( component, componentTable );
 
@@ -322,11 +328,40 @@ class EmbeddableAttributeBinder {
 			);
 		}
 		bindingState.addAttributeValueResolution(
-				AttributeBindingPhase.valueResolution( discriminator, BasicValueSource.discriminator( String.class ) )
-		);
+				AttributeBindingPhase.valueResolution(
+							discriminator,
+							BasicValueSource.discriminator( String.class ),
+							bindingState.getMetadataBuildingContext(),
+							bindingState.getMetadataBuildingContext().getServiceComponents(),
+							bindingState.getMappingResolutionState()
+					)
+			);
+		bindingState.addPostAttributeValueResolution( () ->
+				resolveDiscriminatorType( component, bindingState.getMetadataBuildingContext() ) );
 		component.setDiscriminator( discriminator );
 		component.setDiscriminatorValues( discriminatorValues );
 		component.setSubclassToSuperclass( subclassToSuperclass );
+	}
+
+	private static void resolveDiscriminatorType(
+			Component component,
+			MetadataBuildingContext metadataBuildingContext) {
+		final var metadataCollector = metadataBuildingContext.getMetadataCollector();
+		component.setDiscriminatorType(
+				metadataCollector.resolveEmbeddableDiscriminatorType( component.getComponentClass(), () -> {
+					final var javaTypeRegistry = metadataBuildingContext.getTypeConfiguration().getJavaTypeRegistry();
+					final var domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+					final var discriminatorType = DiscriminatorHelper.getDiscriminatorType( component );
+					final var converter = EmbeddableDiscriminatorConverter.fromValueMappings(
+							qualify( component.getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
+							domainJavaType,
+							discriminatorType,
+							component.getDiscriminatorValues(),
+							metadataBuildingContext.getServiceRegistry()
+					);
+					return new DiscriminatorTypeImpl<>( discriminatorType, converter );
+				} )
+		);
 	}
 
 	private static List<ClassDetails> collectConcreteComponentSubtypes(

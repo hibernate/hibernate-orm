@@ -52,7 +52,7 @@ public class Array extends List {
 		}
 		else {
 			try {
-				return classForName( elementClassName, getBuildingContext().getClassLoaderAccess() );
+				return classForName( elementClassName, getClassLoaderAccess() );
 			}
 			catch (ClassLoadingException e) {
 				throw new MappingException( e );

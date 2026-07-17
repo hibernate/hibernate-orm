@@ -83,15 +83,10 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
 public class TableKeyBinder {
 	private final EntityTypeBinder entityBinder;
 	private final BindingState bindingState;
-	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer;
-	private final DependentTableKeyMappingMaterializer dependentTableKeyMappingMaterializer = new DependentTableKeyMappingMaterializer();
-	private final IndexMappingMaterializer indexMappingMaterializer = new IndexMappingMaterializer();
-	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	public TableKeyBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
 		this.bindingState = entityBinder.getBindingState();
-		this.collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer( bindingState::getEntityBinding );
 	}
 
 	public void bindTableKeys() {
@@ -116,8 +111,8 @@ public class TableKeyBinder {
 		);
 		applyJoinedSubclassOnDelete( key );
 		joinedSubclass.setKey( key );
-		dependentTableKeyMappingMaterializer.materializePrimaryKey(
-				dependentTableKeyMappingMaterializer.resolvePrimaryKey(
+		DependentTableKeyMappingMaterializer.materializePrimaryKey(
+				DependentTableKeyMappingMaterializer.resolvePrimaryKey(
 						entityBinder.getTypeBinding(),
 						joinedSubclass.getEntityName(),
 						joinedSubclass.getTable(),
@@ -158,8 +153,8 @@ public class TableKeyBinder {
 				)
 				: createDependentKeyValue( join.getTable(), rootIdentifierBinding, associationTableBinding );
 		join.setKey( key );
-		dependentTableKeyMappingMaterializer.materializePrimaryKey(
-				dependentTableKeyMappingMaterializer.resolvePrimaryKey(
+		DependentTableKeyMappingMaterializer.materializePrimaryKey(
+				DependentTableKeyMappingMaterializer.resolvePrimaryKey(
 						entityBinder.getTypeBinding(),
 						entityBinder.getTypeBinding().getEntityName() + "." + join.getTable().getName(),
 						join.getTable(),
@@ -199,7 +194,7 @@ public class TableKeyBinder {
 					column.setUnique( false );
 				}
 				if ( !elementPrimaryKey ) {
-					uniqueKeyMappingMaterializer.materializeUniqueKey(
+					UniqueKeyMappingMaterializer.materializeUniqueKey(
 							ResolvedUniqueKey.from(
 									(SimpleValue) collectionTableBinding.collection().getElement(),
 									metadataBuildingContext(),
@@ -210,8 +205,11 @@ public class TableKeyBinder {
 				applyInverseJoinColumnUniqueKeys( collectionTableBinding );
 			}
 			else {
-				collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
-						collectionKeyMappingMaterializer.resolveTableKey( collectionTableBinding.collection() )
+				CollectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
+						CollectionKeyMappingMaterializer.resolveTableKey(
+								collectionTableBinding.collection(),
+								metadataBuildingContext()
+						)
 				);
 			}
 		}
@@ -244,7 +242,7 @@ public class TableKeyBinder {
 			return false;
 		}
 
-		collectionKeyMappingMaterializer.materializeValuePrimaryKey(
+		CollectionKeyMappingMaterializer.materializeValuePrimaryKey(
 				collectionTableBinding.collection().getCollectionTable(),
 				collectionTableBinding.collection().getElement(),
 				collectionTableBinding.collection().getRole() + ".element"
@@ -321,7 +319,7 @@ public class TableKeyBinder {
 			for ( String columnName : uniqueConstraint.columnNames() ) {
 				uniqueKeyColumns.add( resolveColumn( table, columnName ) );
 			}
-			uniqueKeyMappingMaterializer.materializeUniqueKey(
+			UniqueKeyMappingMaterializer.materializeUniqueKey(
 					ResolvedUniqueKey.explicit(
 							table,
 							uniqueKeyColumns,
@@ -352,7 +350,7 @@ public class TableKeyBinder {
 			final Column column = StringHelper.isNotEmpty( inverseJoinColumn.name() )
 					? resolveColumn( table, inverseJoinColumn.name() )
 					: elementColumns.get( i );
-			uniqueKeyMappingMaterializer.materializeUniqueKey(
+			UniqueKeyMappingMaterializer.materializeUniqueKey(
 					ResolvedUniqueKey.from( column, table, metadataBuildingContext() )
 			);
 		}
@@ -388,7 +386,7 @@ public class TableKeyBinder {
 				columnNames.add( trimmedColumnName );
 				indexColumns.add( resolveColumn( table, trimmedColumnName ) );
 			}
-			indexMappingMaterializer.materializeIndex(
+			IndexMappingMaterializer.materializeIndex(
 					ResolvedIndex.explicit(
 							table,
 							indexColumns,
@@ -455,7 +453,7 @@ public class TableKeyBinder {
 			String referencedEntityName,
 			String sourceRole) {
 		if ( key.getWrappedValue() instanceof SortableValue sortableValue ) {
-			sortableValue.sortProperties();
+			sortableValue.sortProperties( bindingState::getEntityBinding );
 		}
 		return ResolvedForeignKey.from(
 				key,
@@ -470,7 +468,7 @@ public class TableKeyBinder {
 
 	private List<Column> targetIdentifierColumns(IdentifierBinding entityIdentifierBinding) {
 		if ( entityIdentifierBinding.value() instanceof SortableValue sortableValue ) {
-			sortableValue.sortProperties();
+			sortableValue.sortProperties( bindingState::getEntityBinding );
 		}
 		return entityIdentifierBinding.value().getColumns();
 	}
@@ -998,8 +996,8 @@ public class TableKeyBinder {
 			String syntheticPropertyName,
 			String sourceRole) {
 		final Component component = new Component( metadataBuildingContext(), ownerBinding );
-		component.setComponentClassName( ownerBinding.getClassName() );
-		component.setEmbedded( true );
+		component.setComponentClassDetails( ownerBinding.getClassName(), false, metadataBuildingContext() );
+		component.setFlattened( true );
 		component.setPreservePropertyOrder( true );
 		for ( Property property : properties ) {
 			component.addProperty( cloneProperty( ownerBinding, property ) );
@@ -1021,8 +1019,8 @@ public class TableKeyBinder {
 		if ( property.isComposite() ) {
 			final Component component = (Component) property.getValue();
 			final Component copy = new Component( metadataBuildingContext(), component );
-			copy.setComponentClassName( component.getComponentClassName() );
-			copy.setEmbedded( component.isEmbedded() );
+			copy.setComponentClassDetails( component.getComponentClassDetails() );
+			copy.setFlattened( component.isFlattened() );
 			for ( Property subProperty : component.getProperties() ) {
 				copy.addProperty( cloneProperty( ownerBinding, subProperty ) );
 			}
@@ -1057,7 +1055,7 @@ public class TableKeyBinder {
 	}
 
 	private void materializeUniqueKey(SimpleValue value, String sourceRole) {
-		uniqueKeyMappingMaterializer.materializeUniqueKey(
+		UniqueKeyMappingMaterializer.materializeUniqueKey(
 				ResolvedUniqueKey.from( value, metadataBuildingContext(), sourceRole )
 		);
 	}

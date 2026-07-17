@@ -5,7 +5,9 @@
 package org.hibernate.boot.mapping.internal.binders;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -51,9 +53,9 @@ public final class GenericComponentHelper {
 			Component component,
 			MemberDetails memberDetails,
 			MetadataBuildingContext context,
-			boolean includeUndeclaredProperties) {
+		boolean includeUndeclaredProperties) {
 		final Component copy = component.copy();
-		copy.setComponentClassName( memberDetails.getType().determineRawClass().getName() );
+		copy.setComponentClassDetails( memberDetails.getType().determineRawClass() );
 		copy.setGeneric( false );
 		if ( !includeUndeclaredProperties ) {
 			copy.getProperties().clear();
@@ -68,13 +70,17 @@ public final class GenericComponentHelper {
 		final Property copy = property.copy();
 		final var value = property.getValue().copy();
 		if ( value instanceof BasicValue basicValue ) {
+			final var details = BasicValueResolutionDetails.create(
+					basicValue,
+					property.isGenericSpecialization() || property.getMemberDetails() == null
+							? BasicValueSource.genericDeclaration()
+							: BasicValueSource.embeddableMember( property.getMemberDetails() )
+			);
 			BasicValueResolutionBuilder.applyResolution(
-					BasicValueResolutionBuilder.Input.create(
-							basicValue,
-							property.isGenericSpecialization() || property.getMemberDetails() == null
-									? BasicValueSource.genericDeclaration()
-									: BasicValueSource.embeddableMember( property.getMemberDetails() )
-					)
+					details,
+					context.getServiceComponents(),
+					MappingResolutionState.from( context ),
+					context
 			);
 		}
 		copy.setValue( value );

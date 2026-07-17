@@ -95,7 +95,11 @@ class AnyValueBinder {
 		final BasicValue key = bindKey( source, propertyName, table );
 		any.setKey( key );
 		addAdditionalKeySelectables( any, key );
-		any.setTypeUsingReflection( source.member().getDeclaringType().getName(), propertyName );
+		any.setTypeUsingReflection(
+				source.member().getDeclaringType().getName(),
+				propertyName,
+				bindingState.getMetadataBuildingContext()
+		);
 		return any;
 	}
 
@@ -133,7 +137,12 @@ class AnyValueBinder {
 				bindingState,
 				bindingContext
 		);
-		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
+			bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution(
+					resolutionInput,
+					bindingState.getMetadataBuildingContext().getServiceComponents(),
+					bindingState.getMappingResolutionState(),
+					bindingState.getMetadataBuildingContext()
+			) );
 		return discriminator;
 	}
 
@@ -180,7 +189,12 @@ class AnyValueBinder {
 				bindingState,
 				bindingContext
 		);
-		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
+			bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution(
+					resolutionInput,
+					bindingState.getMetadataBuildingContext().getServiceComponents(),
+					bindingState.getMappingResolutionState(),
+					bindingState.getMetadataBuildingContext()
+			) );
 		return key;
 	}
 

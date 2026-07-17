@@ -1,6 +1,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 
 /**
  * @author Steve Ebersole
@@ -37,8 +38,11 @@ public class DependantBasicValue extends BasicValue {
 
 	@Override
 	public Resolution<?> resolve() {
-		applyResolution( referencedValue.resolve() );
-		return super.resolve();
+		return requireResolution();
+	}
+
+	public void applyReferencedResolution(MappingResolutionState state) {
+		applyResolution( referencedValue.requireResolution(), state );
 	}
 
 

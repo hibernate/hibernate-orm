@@ -51,6 +51,7 @@ import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
@@ -231,6 +232,7 @@ public class ToOneAttributeMapping
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
+			RuntimeModelCreationContext creationContext,
 			PropertyAccess propertyAccess) {
 		this(
 				name,
@@ -244,6 +246,7 @@ public class ToOneAttributeMapping
 				entityMappingType,
 				declaringType,
 				declaringEntityPersister,
+				creationContext,
 				propertyAccess
 		);
 	}
@@ -260,6 +263,7 @@ public class ToOneAttributeMapping
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
+			RuntimeModelCreationContext creationContext,
 			PropertyAccess propertyAccess) {
 		super(
 				name,
@@ -321,7 +325,7 @@ public class ToOneAttributeMapping
 							? LOGICAL_ONE_TO_ONE
 							: MANY_TO_ONE;
 			final var entityBinding =
-					manyToOne.getMetadata()
+					creationContext.getBootModel()
 							.getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
 				SelectablePath bidirectionalAttributeName = null;
@@ -488,7 +492,7 @@ public class ToOneAttributeMapping
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 			final var entityBinding =
-					bootValue.getBuildingContext().getMetadataCollector()
+					creationContext.getBootModel()
 							.getEntityBinding( entityMappingType.getEntityName() );
 			final var identifierMapper = entityBinding.getIdentifierMapper();
 			final var propertyType =
@@ -536,7 +540,7 @@ public class ToOneAttributeMapping
 		}
 		else {
 			final var entityBinding =
-					bootValue.getBuildingContext().getMetadataCollector()
+					creationContext.getBootModel()
 							.getEntityBinding( entityMappingType.getEntityName() );
 			final var propertyType =
 					entityBinding.getRecursiveProperty( referencedPropertyName )

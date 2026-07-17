@@ -507,10 +507,13 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			copyBasicValueDetails( basicValue, originalBasicValue );
 			getBindingState().addAttributeValueResolution(
 					AttributeBindingPhase.valueResolution(
-							basicValue,
-							BasicValueSource.attribute( attribute.getMember(), resolvedType, getBindingContext() )
-					)
-			);
+								basicValue,
+								BasicValueSource.attribute( attribute.getMember(), resolvedType, getBindingContext() ),
+								getBindingState().getMetadataBuildingContext(),
+								getBindingState().getMetadataBuildingContext().getServiceComponents(),
+								getBindingState().getMappingResolutionState()
+						)
+				);
 		}
 		actualProperty.setValue( value );
 		binding.addProperty( actualProperty );
@@ -545,7 +548,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 		else if ( value instanceof Component component ) {
 			if ( !component.isGeneric() ) {
-				component.setComponentClassName( typeName );
+				component.setComponentClassDetails( resolvedType.determineRawClass() );
 			}
 			if ( component.getTypeName() != null ) {
 				component.setTypeName( typeName );
@@ -1194,8 +1197,14 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 
 		bindingState.addAttributeValueResolution(
-				AttributeBindingPhase.valueResolution( value, BasicValueSource.discriminator( discriminatorJavaType ) )
-		);
+				AttributeBindingPhase.valueResolution(
+							value,
+							BasicValueSource.discriminator( discriminatorJavaType ),
+							bindingState.getMetadataBuildingContext(),
+							bindingState.getMetadataBuildingContext().getServiceComponents(),
+							bindingState.getMappingResolutionState()
+					)
+			);
 		if ( bindingOptions.shouldImplicitlyForceDiscriminatorInSelect() ) {
 			typeBinding.setForceDiscriminator( true );
 		}
@@ -1215,7 +1224,11 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	public void finalizeBinding() {
 		EntityConstraintFinalizer.finalizeConstraints( binding, getBindingState().getMetadataBuildingContext() );
 		if ( binding instanceof RootClass rootClass && rootClass.getDiscriminator() != null ) {
-			DiscriminatorColumnFinalizer.finalizeDiscriminatorColumn( rootClass, getBindingState().getDatabase().getDialect() );
+			DiscriminatorColumnFinalizer.finalizeDiscriminatorColumn(
+					rootClass,
+					getBindingState().getDatabase().getDialect(),
+					getBindingState().getMetadataBuildingContext().getMetadataCollector()
+			);
 		}
 	}
 
@@ -1286,11 +1299,14 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 		getBindingState().addAttributeValueResolution(
 				AttributeBindingPhase.valueResolution(
-						softDeleteIndicatorValue,
-						BasicValueSource.softDelete(),
-						indicatorJavaType
-				)
-		);
+							softDeleteIndicatorValue,
+							BasicValueSource.softDelete(),
+							indicatorJavaType,
+							getBindingState().getMetadataBuildingContext(),
+							getBindingState().getMetadataBuildingContext().getServiceComponents(),
+							getBindingState().getMappingResolutionState()
+					)
+			);
 		return softDeleteIndicatorValue;
 	}
 

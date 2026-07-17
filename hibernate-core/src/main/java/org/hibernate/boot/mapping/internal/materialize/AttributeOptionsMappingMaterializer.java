@@ -36,7 +36,7 @@ public class AttributeOptionsMappingMaterializer {
 	public void materializeBasicValueOptions(
 			AttributeBindingView attributeBinding,
 			BasicValue basicValue,
-			BasicValueResolutionBuilder.Input resolutionInput) {
+			BasicValueResolutionDetails resolutionInput) {
 		if ( attributeBinding.immutable() ) {
 			if ( resolutionInput != null ) {
 				resolutionInput.markAttributeImmutable();

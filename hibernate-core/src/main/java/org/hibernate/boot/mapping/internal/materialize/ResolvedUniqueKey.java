@@ -17,9 +17,14 @@ import org.hibernate.mapping.Table;
 /// Resolved unique-key materialization input.
 ///
 /// @param table The table that owns the unique key.
-/// @param columns The ordered key columns.
+/// @param columns The key columns, in the sequence they should appear in the
+/// 		unique-key definition.
 /// @param metadataBuildingContext The metadata-building context used for
 /// 		implicit key naming.
+/// @param columnOrderings Optional per-column SQL ordering fragments, such as
+/// 		{@code asc} or {@code desc}, aligned by position with {@code columns}.
+/// 		A {@code null} list, or a {@code null} entry, means no ordering fragment
+/// 		was specified for that column.
 /// @param sourceRole Human-readable role used in diagnostics.
 ///
 /// @since 9.0

@@ -69,7 +69,12 @@ class CollectionIndexBinder {
 				bindingState,
 				bindingContext
 		);
-		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
+			bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution(
+					resolutionInput,
+					bindingState.getMetadataBuildingContext().getServiceComponents(),
+					bindingState.getMappingResolutionState(),
+					bindingState.getMetadataBuildingContext()
+			) );
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.orderColumn() ),
@@ -196,7 +201,8 @@ class CollectionIndexBinder {
 
 	private record ComponentMapKey(
 			ClassDetails componentType,
-			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
+			CompositeUserType<?> compositeUserType) {
 	}
 
 	private static ComponentMapKey resolveComponentMapKey(
@@ -217,7 +223,8 @@ class CollectionIndexBinder {
 			return new ComponentMapKey(
 					bindingContext.getClassDetailsRegistry()
 							.resolveClassDetails( compositeUserType.embeddable().getName() ),
-					mapKeyCompositeType.value()
+					mapKeyCompositeType.value(),
+					compositeUserType
 			);
 		}
 
@@ -232,13 +239,14 @@ class CollectionIndexBinder {
 			return new ComponentMapKey(
 					bindingContext.getClassDetailsRegistry()
 							.resolveClassDetails( compositeUserType.embeddable().getName() ),
-					registeredCompositeUserType
+					registeredCompositeUserType,
+					compositeUserType
 			);
 		}
 
 		final ClassDetails mapKeyType = source.mapKeyType().determineRawClass();
 		if ( mapKeyType.hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
-			return new ComponentMapKey( mapKeyType, null );
+			return new ComponentMapKey( mapKeyType, null, null );
 		}
 
 		return null;
@@ -276,7 +284,7 @@ class CollectionIndexBinder {
 						table
 				);
 		if ( componentMapKey.compositeUserTypeClass() != null ) {
-			component.setTypeName( componentMapKey.compositeUserTypeClass().getName() );
+			component.setCompositeUserType( componentMapKey.compositeUserType() );
 		}
 
 		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
@@ -439,9 +447,12 @@ class CollectionIndexBinder {
 						false,
 						false
 				);
-				for ( Column column : basicValue.getColumns() ) {
+			for ( Column column : basicValue.getColumns() ) {
 				index.addColumn( column.clone(), false, false );
 			}
+			bindingState.addPostAttributeValueResolution(
+					() -> index.applyReferencedResolution( bindingState.getMappingResolutionState() )
+			);
 			return index;
 		}
 		if ( targetPropertyValue instanceof ManyToOne manyToOne ) {
@@ -455,7 +466,8 @@ class CollectionIndexBinder {
 			index.setTypeName( manyToOne.getTypeName() );
 			index.setTypeUsingReflection(
 					collection.getOwner().getClassName(),
-					collection.getRole().substring( collection.getRole().lastIndexOf( '.' ) + 1 )
+					collection.getRole().substring( collection.getRole().lastIndexOf( '.' ) + 1 ),
+					bindingState.getMetadataBuildingContext()
 			);
 			if ( manyToOne.isLogicalOneToOne() ) {
 				index.markAsLogicalOneToOne();
@@ -467,9 +479,8 @@ class CollectionIndexBinder {
 		}
 		if ( targetPropertyValue instanceof Component component ) {
 			final Component index = new Component( bindingState.getMetadataBuildingContext(), collection );
-			index.setComponentClassName( component.getComponentClassName() );
-			index.setEmbedded( component.isEmbedded() );
-			index.setDynamic( component.isDynamic() );
+			index.setComponentClassDetails( component.getComponentClassDetails() );
+			index.setFlattened( component.isFlattened() );
 			index.setRoleName( component.getRoleName() );
 			for ( Property property : component.getProperties() ) {
 				final Property copy = property.copy();
@@ -530,7 +541,12 @@ class CollectionIndexBinder {
 				bindingState,
 				bindingContext
 		);
-		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
+			bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution(
+					resolutionInput,
+					bindingState.getMetadataBuildingContext().getServiceComponents(),
+					bindingState.getMappingResolutionState(),
+					bindingState.getMetadataBuildingContext()
+			) );
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.mapKeyColumn() ),
@@ -616,7 +632,11 @@ class CollectionIndexBinder {
 		);
 		index.setReferenceToPrimaryKey( referenceToPrimaryKey );
 		index.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		index.setTypeUsingReflection( collection.getOwner().getClassName(), source.member().resolveAttributeName() );
+		index.setTypeUsingReflection(
+				collection.getOwner().getClassName(),
+				source.member().resolveAttributeName(),
+				bindingState.getMetadataBuildingContext()
+		);
 
 		final List<MapKeyJoinColumn> orderedJoinColumns = referenceToPrimaryKey
 				? orderMapKeyJoinColumns(

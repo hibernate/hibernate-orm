@@ -5,13 +5,13 @@ import org.hibernate.Internal;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.MappingContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 
@@ -128,10 +128,16 @@ public abstract sealed class ToOne
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final var classLoaderService = getBuildingContext().getClassLoaderService();
-			referencedEntityName = reflectedPropertyClass( className, propertyName, classLoaderService ).getName();
+			referencedEntityName = reflectedPropertyClass(
+					className,
+					propertyName,
+					buildingContext.getClassLoaderService()
+			).getName();
 		}
 	}
 
@@ -215,8 +221,8 @@ public abstract sealed class ToOne
 	}
 
 	@Override
-	public int[] sortProperties() {
-		final var entityBinding = getMetadata().getEntityBinding( referencedEntityName );
+	public int[] sortProperties(Function<String, PersistentClass> entityBindingResolver) {
+		final var entityBinding = entityBindingResolver == null ? null : entityBindingResolver.apply( referencedEntityName );
 		if ( entityBinding != null ) {
 			final var value =
 					referencedPropertyName == null
@@ -243,27 +249,4 @@ public abstract sealed class ToOne
 		return isConstrained();
 	}
 
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Override
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createForeignKey() {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		// A non-null referencedPropertyName tells us that the foreign key
-		// does not reference the primary key, but some other unique key of
-		// the referenced table. We do not handle this case here:
-		// - For ManyToOne, the case of a foreign key to something other than
-		//   the primary key is handled in createPropertyRefConstraints()
-		// - For OneToOne, we still need to add some similar logic somewhere
-		//   (for now, no foreign key constraint is created)
-		if ( isForeignKeyEnabled() && referencedPropertyName==null && !hasFormula() ) {
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
-		}
-	}
 }

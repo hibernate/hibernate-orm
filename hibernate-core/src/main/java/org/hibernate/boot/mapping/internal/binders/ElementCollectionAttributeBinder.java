@@ -75,7 +75,6 @@ class ElementCollectionAttributeBinder {
 	private final String collectionRolePath;
 	private final CollectionValueIntent collectionValueIntent;
 	private final boolean registerCollectionBindings;
-	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	ElementCollectionAttributeBinder(
 			IdentifiableTypeMetadata ownerType,
@@ -188,7 +187,8 @@ class ElementCollectionAttributeBinder {
 		collection.setOptimisticLocked( true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 
@@ -339,7 +339,7 @@ class ElementCollectionAttributeBinder {
 						table
 				);
 		if ( componentElement.compositeUserTypeClass() != null ) {
-			component.setTypeName( componentElement.compositeUserTypeClass().getName() );
+			component.setCompositeUserType( componentElement.compositeUserType() );
 		}
 		EmbeddableAttributeBinder.bindDiscriminator(
 				component,
@@ -365,7 +365,7 @@ class ElementCollectionAttributeBinder {
 		if ( componentElement.compositeUserTypeClass() != null ) {
 			EmbeddableAttributeBinder.processCompositeUserType(
 					component,
-					instantiateCompositeUserType( componentElement.compositeUserTypeClass() )
+					componentElement.compositeUserType()
 			);
 		}
 		return component;
@@ -373,7 +373,8 @@ class ElementCollectionAttributeBinder {
 
 	private record ComponentElement(
 			ClassDetails componentType,
-			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
+			CompositeUserType<?> compositeUserType) {
 	}
 
 	private ComponentElement resolveComponentElement(CollectionSource source) {
@@ -383,7 +384,8 @@ class ElementCollectionAttributeBinder {
 			return new ComponentElement(
 					bindingContext.getClassDetailsRegistry()
 							.resolveClassDetails( compositeUserType.embeddable().getName() ),
-					compositeType.value()
+					compositeType.value(),
+					compositeUserType
 			);
 		}
 
@@ -397,12 +399,13 @@ class ElementCollectionAttributeBinder {
 				return new ComponentElement(
 						bindingContext.getClassDetailsRegistry()
 								.resolveClassDetails( compositeUserType.embeddable().getName() ),
-						registeredCompositeUserType
+						registeredCompositeUserType,
+						compositeUserType
 				);
 			}
 		}
 
-		return source.hasEmbeddableElement() ? new ComponentElement( elementType, null ) : null;
+		return source.hasEmbeddableElement() ? new ComponentElement( elementType, null, null ) : null;
 	}
 
 	private CompositeUserType<?> instantiateCompositeUserType(
@@ -424,7 +427,12 @@ class ElementCollectionAttributeBinder {
 				bindingState,
 				bindingContext
 		);
-		bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution( resolutionInput ) );
+			bindingState.addAttributeValueResolution( AttributeBindingPhase.valueResolution(
+					resolutionInput,
+					bindingState.getMetadataBuildingContext().getServiceComponents(),
+					bindingState.getMappingResolutionState(),
+					bindingState.getMetadataBuildingContext()
+			) );
 
 		final jakarta.persistence.Column column = source.elementColumn();
 		final org.hibernate.mapping.Column elementColumn = ColumnBinder.bindColumn(
@@ -438,7 +446,7 @@ class ElementCollectionAttributeBinder {
 		table.addColumn( elementColumn );
 		element.addColumn( elementColumn );
 		if ( elementColumn.isUnique() ) {
-			uniqueKeyMappingMaterializer.materializeUniqueKey(
+			UniqueKeyMappingMaterializer.materializeUniqueKey(
 					ResolvedUniqueKey.from( elementColumn, table, bindingState.getMetadataBuildingContext() )
 			);
 		}

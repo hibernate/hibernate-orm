@@ -1,0 +1,600 @@
+= MetadataBuildingContext Mapping-Layer Audit
+:toc:
+
+This note tracks the remaining `MetadataBuildingContext` pressure points in
+the `org.hibernate.mapping` compatibility layer for the ORM 9 boot-model
+branch.
+
+The goal is not to remove every `MetadataBuildingContext` parameter.  Binder,
+resolver, materializer, and naming code may legitimately need a broad boot
+context while mapping products are being constructed.  The smell is narrower:
+`org.hibernate.mapping` compatibility objects should not store or expose the
+full context when they only need one smaller capability.
+
+The current priority is therefore stored context and context recovery from
+mapping objects.  Transient context parameters are less concerning when they
+represent centralized binding, materialization, naming, validation, or runtime
+model construction code operating on the mapping model.
+
+== Scope
+
+This audit focuses on `org.hibernate.mapping` objects and direct consumers of
+those objects.  Broad `MetadataBuildingContext` usage under
+`org.hibernate.boot.mapping.internal`, `org.hibernate.boot.model.internal`, and
+the naming SPI is expected and is not the first cleanup target.
+
+The mapping-layer uses now fall into four groups:
+
+* mapping objects that still store `MetadataBuildingContext`;
+* mapping objects that have already been narrowed to smaller stored
+  capabilities;
+* compatibility APIs that accept `MetadataBuildingContext` as a transient
+  method parameter;
+* compatibility interfaces/default methods that still let old code recover
+  context or services from a mapping object.
+
+== Completed Slices
+
+These slices have already been handled and should not be reopened unless a new
+caller appears:
+
+* `PersistentClass` no longer stores `MetadataBuildingContext`; construction
+  captures contributor name and class-loader access directly.
+* `PersistentClass#getServiceRegistry()` was removed.  `Property` now resolves
+  property-access services from an explicitly supplied
+  `PropertyAccessStrategyResolver`.
+* `Value#checkColumnDuplication(...)` no longer recovers
+  `MetadataBuildingContext` from the `Value`; duplicate-column validation
+  receives `Database` explicitly.
+* `Any.MetaValue` no longer uses `getBuildingContext()` to render its
+  discriminator column name; it uses the metadata `Database`.
+* `ToOne#setTypeUsingReflection(...)` no longer uses `getBuildingContext()` for
+  class loading; it uses `SimpleValue#classLoaderService()`.
+* `Component` no longer uses `getBuildingContext()` for component class loading
+  or composite-user-type instantiation; it uses narrower `SimpleValue`
+  helpers.
+* `Component` no longer resolves embeddable discriminator types itself.
+  `EmbeddableAttributeBinder` injects the resolved discriminator type after
+  the discriminator value has been resolved.
+* `Component` no longer overrides `createGenerator(...)` or resolves
+  `PropertyAccessStrategyResolver` from its stored services.  Composite-id
+  generator creation is coordinated externally through `GeneratorBinder`.
+* `SimpleValue#createGenerator(...)` and `KeyValue#createGenerator(...)` were
+  removed.  Identifier generator creation, including the
+  `GeneratorCreationContext`, is now coordinated externally through
+  `GeneratorBinder`.
+* `Property#createGenerator(...)` was removed.  `Property` still exposes the
+  bound value-generator recipe via `getValueGeneratorCreator()`, but runtime
+  entity-persister construction now owns the value-generator
+  `GeneratorCreationContext` and instantiation.
+* `Value#getServiceRegistry()` was removed.  Service access that is still
+  needed by generator/user-type creation contexts is now implementation-local
+  rather than a `Value` contract.
+* Explicit custom `UserType` creation was moved into
+  `BasicValueResolutionBuilder`.  `BasicValue#setExplicitCustomType(...)` now
+  records the source fact, and the resolution builder creates the
+  `UserTypeResolution` during value resolution.
+* Legacy attribute-converter type-adapter creation was removed from
+  `SimpleValue#setTypeUsingReflection(...)`.  `SimpleValue` still records the
+  converter descriptor as a mapping source fact, but
+  `BasicValueResolutionBuilder` now owns `AttributeConverter` instantiation and
+  `ConvertedBasicTypeImpl` adapter creation during value resolution.
+* `SimpleValue#serviceRegistry()` was removed.  There are no raw
+  `getServiceRegistry()` / `requireService(...)` paths left under
+  `org.hibernate.mapping`.
+* `ToOneAttributeMapping` no longer recovers boot metadata through
+  `bootValue.getBuildingContext()` or `ManyToOne#getMetadata()`.  Runtime
+  to-one mapping construction now receives `RuntimeModelCreationContext` and
+  uses `creationContext.getBootModel()` for the target binding lookups.
+* The old `Resolvable` compatibility interface was removed.
+* `Value#createUniqueKey(MetadataBuildingContext)` was removed.  Unique-key
+  creation now goes through explicit `ResolvedUniqueKey` products and
+  `UniqueKeyMappingMaterializer` call sites.
+* `Table#createUniqueKey(...)` was removed.  Table-level unique-key creation
+  now goes through explicit resolved unique-key products and
+  `UniqueKeyMappingMaterializer` call sites.
+* The nullable convenience overload
+  `Table#createForeignKey(String, List<Column>, String, String, String)` was
+  removed.  Callers now use either the referenced-column overload or the
+  explicit `ForeignKeyColumnMappings` overload.
+* Column-level unique-key mutation was centralized on the context-free
+  `Table#markColumnUnique(...)` helper.  Table-level unique keys continue to
+  use `Table#getOrCreateUniqueKey(...)`, with ordered-column application owned
+  by `UniqueKey` / `UniqueKeyMappingMaterializer`.
+* The hidden foreign-key creation callbacks
+  `Value#createForeignKey()` and `KeyValue#createForeignKeyOfEntity(...)` were
+  removed.  Foreign-key materialization now routes through explicit
+  `ResolvedForeignKey` products and `ForeignKeyMappingMaterializer` call sites,
+  with low-level table mutation kept on `Table#createForeignKey(...)`.
+* `ManyToOne#createPropertyRefConstraints(...)` was removed.  Property-ref
+  foreign-key materialization is binder-owned and routed through
+  `ForeignKeyMappingMaterializer`.
+* The polymorphic `Table#createForeignKeys(MetadataBuildingContext)` hook was
+  removed.  Denormalized-table foreign-key propagation is now an explicit
+  `DenormalizedTable#createDenormalizedForeignKeys(...)` call from metadata
+  second-pass processing.
+
+== Fresh Audit: 2026-07-14
+
+The current code has a much smaller mapping-layer context surface than earlier
+notes implied.
+
+Stored broad context::
+`SimpleValue` is the remaining mapping object that stores
+`MetadataBuildingContext` directly.  This affects `BasicValue`, `ToOne`,
+`ManyToOne`, `OneToOne`, `Any`, `Component`, and dependent simple values
+through inheritance.
+
+Narrowed stored capabilities::
+`PersistentClass` stores contributor and class-loader access, not the full
+context.  `Collection` stores class-loader access, managed-bean registry, CDI
+extension allowance, and owner.  `OneToMany` stores `TypeConfiguration` and the
+referencing table, and deliberately throws from `getBuildingContext()`.
+
+Service registry::
+There are no `getServiceRegistry()` / `requireService(...)` paths under
+`org.hibernate.mapping`.
+
+Runtime context recovery::
+The previously noted runtime `ToOneAttributeMapping` reach-through has been
+removed.  Runtime to-one mapping construction now uses
+`RuntimeModelCreationContext#getBootModel()` instead of recovering boot
+metadata from the `ToOne` mapping object.
+
+`UserTypeCreationContext`::
+Explicit custom `UserType` construction is no longer performed by mapping
+objects.  `UserTypeCreationContext` still exposes `MetadataBuildingContext` and
+`ServiceRegistry`.  That exposure is now localized in value-resolution code
+rather than forced into `org.hibernate.mapping` state, so it is no longer a
+primary blocker for dropping `MetadataBuildingContext` references from mapping
+objects.  The intended path is to deprecate those broad methods on `main` and
+let that deprecation rebase into this branch.
+
+== Fresh Audit: 2026-07-15
+
+The hidden FK/UK side-effect hooks have been removed, so the remaining
+`SimpleValue` context pressure is easier to classify.
+
+`SimpleValue` stored context::
+`SimpleValue` still stores `MetadataBuildingContext` directly.  Direct uses are
+now concentrated in narrow convenience accessors:
+
+* `getMetadataCollector()` / `getMetadata()` for metadata collector and
+  database access;
+* `getTypeConfiguration()`;
+* `classLoaderService()` and `classLoaderAccess()`;
+* `managedBeanRegistry()`;
+* `allowExtensionsInCdi()`;
+* legacy type-name reflection and dynamic-parameterized-type support.
+
+Broad bridge methods::
+`Value#getBuildingContext()` is still the broadest surface.  It is a default
+method that throws for most values, implemented by `SimpleValue` and as a
+tripwire by `OneToMany`.  Several callers use it because they are typed to
+`Value`, `BasicValue`, `Component`, `ToOne`, or generator helper parameters
+rather than to a narrower boot service contract.
+
+Phase-owned reach-through::
+Most remaining call sites are in phase-owned code rather than arbitrary
+mapping-object logic:
+
+* `BasicValueResolutionDetails` is now a top-level value-resolution descriptor,
+  and `BasicValueResolutionBuilder` exposes an explicit
+  details/services/state resolution boundary using `MappingResolutionServices`
+  and `MappingResolutionState`.  Direct reads for
+  value-resolution preferences, dialect/database access, managed beans, custom
+  type production, class loading, models context, and type-definition lookup
+  have been moved to those narrower collaborators.  The former combined
+  `BasicValueResolutionContext` adapter has been split into separate
+  `JdbcTypeIndicators` and `JpaAttributeConverterCreationContext` adapters.
+  The remaining bridge to `BasicValue#getBuildingContext()` is limited to the
+  `UserTypeCreationContext` compatibility method exposed to custom user types.
+  The main binder/finalizer call sites now create context-free details and pass
+  the phase-owned services/state explicitly to the builder.
+* `BasicValueSourceBinder` receives its phase-owned binding state context
+  explicitly while binding generated/default column annotations, instead of
+  recovering context from the `BasicValue`.
+* `GeneratorBinder` now threads its existing `MetadataBuildingContext` through
+  private table/default helpers instead of recovering it from `Value`.
+  `GeneratorStrategies` has a context-taking overload for custom generator
+  class loading; the old value-only overload has been removed.
+* `GeneratorParameters` now assembles runtime `Configurable` generator
+  parameters from `GeneratorCreationContext`, including contributor name,
+  database defaults, SQL string defaults, root entity information, and value
+  table/column facts.  It no longer reaches through `Value#getBuildingContext()`.
+* Derived-identifier binding no longer instantiates the legacy
+  `ForeignGenerator`.  It installs an internal insert-only generator which
+  calls `IdentifierGeneratorHelper#getForeignId(...)`, matching the conceptual
+  approach already present on `main`.
+* Naming/materializer code still creates `ImplicitNameSource` implementations
+  whose SPI requires `MetadataBuildingContext`.
+
+Runtime/tooling stragglers::
+A smaller set of usages were audited separately because they were not
+obviously source-binding conveniences.  The initial runtime/tooling stragglers
+have been cleared:
+
+* `SqmMutationStrategyHelper` now receives `Metadata` explicitly from CTE and
+  temporary-table construction rather than reaching through `ToOne`;
+* `ComponentType` reads dialect support through the component metadata rather
+  than through `MetadataBuildingContext`;
+* `DB2AggregateSupport` reads XML-format mapping options through metadata;
+* tooling reveng no longer has the `ValueUtil` `BasicValue` subclass used only
+  to bridge back to `SimpleValue#getBuildingContext()`.
+
+== Fresh Audit: 2026-07-16
+
+The current `getBuildingContext()` scan has fewer true mapping-object
+reach-throughs than the raw result suggests.
+
+Mapping-object API surface::
+`Value#getBuildingContext()` remains as an incubating default method that
+throws.  `SimpleValue` implements it by returning its stored
+`MetadataBuildingContext`; `OneToMany` implements it as an explicit tripwire
+because it deliberately does not retain the context.  No other mapping object
+implements it.
+
+True mapping-object reach-throughs::
+Only one current production path recovers broad context from a mapping object:
+
+* `BasicValueResolutionBuilder.UserTypeCreationContextImpl#getBuildingContext()`
+  returns `details.value().getBuildingContext()` for the incubating
+  `UserTypeCreationContext` compatibility contract.
+
+This is an SPI compatibility exposure localized to custom user-type creation.
+The former `EmbeddableMappingMaterializer` reach-through was removed by adding
+an explicit registered-embeddable-instantiator lookup to `BindingState`.
+The broad `UserTypeCreationContext` accessors are intentionally retained for
+compatibility in this branch; they should be deprecated on `main` as an
+invitation for extension feedback.
+
+Naming SPI usages::
+Most remaining `getBuildingContext()` calls are not `Value` reach-through.
+They are `ImplicitNameSource#getBuildingContext()` calls from built-in naming
+strategies, test naming strategies, and anonymous naming-source adapters in
+binders/materializers.  This is the naming SPI shape: implicit naming sources
+must provide a `MetadataBuildingContext` to strategies.  These should be
+handled as a separate naming-SPI narrowing discussion, not as
+`Value#getBuildingContext()` cleanup.
+
+Other non-Value usages::
+`ObjectNameNormalizer#getBuildingContext()` is its own protected helper.
+`ForeignKeyNameSource#getBuildingContext()` and the anonymous
+`ImplicitNameSource` implementations are naming-source implementations.
+These are not evidence that mapping values need to expose broad context.
+
+Audit conclusion::
+Before trying to remove `SimpleValue`'s stored context, treat the incubating
+`UserTypeCreationContext` bridge as an explicit compatibility boundary.  The
+broad accessors remain for now in this branch, with deprecation expected to
+arrive from `main`.  With that understood, `Value#getBuildingContext()` should
+be either removable or limited to `SimpleValue` internals while the broader
+`SimpleValue` stored-context split is designed.
+
+== Current State
+
+[cols="2,3,3", options="header"]
+|===
+| Class family
+| Current need
+| Cleanup direction
+
+| `PersistentClass`, `RootClass`, `Subclass`,
+  `SingleTableSubclass`, `JoinedSubclass`, `UnionSubclass`
+| No longer stores the full context.  Constructor signatures still accept
+  `MetadataBuildingContext`, but the stored state is narrowed to contributor
+  and class loading.
+| Keep this boundary.  Do not reintroduce service-registry exposure or broad
+  context storage.  If constructors are revisited later, pass explicit
+  contributor/class-loading inputs.
+
+| `SimpleValue` and descendants:
+  `BasicValue`, `DependantValue`, `DependantBasicValue`, `ToOne`,
+  `ManyToOne`, `OneToOne`, `Any`, `Component`
+| Still stores `MetadataBuildingContext`.  Remaining uses include metadata
+  collector/database access, type configuration, managed-bean registry, class
+  loading, mapping options/preferences, custom type producer, converter
+  descriptor compatibility, generator/naming helper bridges, and legacy
+  reflection/dynamic-type support.  Attribute-converter
+  instance creation and legacy converted-type adapter creation no longer depend
+  on `SimpleValue`.  Identifier generator creation no longer depends on a
+  `SimpleValue` method or nested context.
+  Custom `UserType` creation no longer depends on `SimpleValue`
+  service-registry access.
+| Main remaining design target.  Avoid a blind constructor rename.  Split by
+  capability: value resolution/options, custom type instantiation, class
+  loading, metadata collector/database access, generator defaults, and naming
+  inputs.
+
+| `BasicValue`
+| No longer implements `JdbcTypeIndicators` or
+  `JpaAttributeConverterCreationContext` for value resolution.  Those views now
+  live inside `BasicValueResolutionBuilder`, which combines
+  `BasicValueResolutionDetails` with explicit `MappingResolutionServices` and
+  `MappingResolutionState` arguments.  Mapping preferences such as preferred
+  SQL type codes, time-zone storage, CDI extension handling,
+  Java-time/native-enum preferences, managed-bean access, converter creation,
+  and custom user-type creation are builder-owned during resolution.
+  Wrapper-array validation no longer asks `BasicValue` for mapping options;
+  `Property` now uses the
+  validation `MetadataImplementor` to read wrapper-array policy and the applied
+  `BasicValue` resolution to inspect the Java type.  The remaining direct
+  finalization-only `JdbcTypeIndicators` view was removed by narrowing
+  `JdbcType#addAuxiliaryDatabaseObjects(...)`; JDBC types now use the supplied
+  `Database`, which already exposes `TypeConfiguration`.
+| Continue splitting remaining concerns by phase.  The largest remaining
+  pressure is no longer value-resolution options, but compatibility access to
+  metadata/database state through `SimpleValue`.
+
+| `Component`
+| Does not use `getBuildingContext()` directly.  Embeddable discriminator type
+  resolution is externalized to binding post-value-resolution and injected
+  through `setDiscriminatorType(...)`.  Composite-id generator creation is
+  externalized to `GeneratorBinder`.
+| Keep future generator cleanup outside `Component`; remaining pressure belongs
+  to central generator/value-resolution coordination rather than the component
+  mapping object.
+
+| `Collection` and descendants:
+  `Set`, `Bag`, `IndexedCollection`, `List`, `Map`, `Array`,
+  `PrimitiveArray`, `IdentifierCollection`, `IdentifierBag`
+| No longer stores the full context.  It stores class-loader access,
+  managed-bean registry, CDI extension flag, and owner.  Constructors still
+  accept `MetadataBuildingContext`.
+| Narrowed.  Custom collection type creation uses class loading, managed beans,
+  and the CDI extension flag.  The former generic `Property` property-access
+  fallback now receives `PropertyAccessStrategyResolver` explicitly instead of
+  asking `property.getValue().getServiceRegistry()`.
+
+| `OneToMany`
+| Does not retain `MetadataBuildingContext`; `getBuildingContext()` is a
+  tripwire.  It stores `TypeConfiguration` and the referencing table.
+| Narrowed.  The audit found no direct `OneToMany#getServiceRegistry()`
+  consumers, and collection properties resolve services from the owning
+  `Collection`, not from the `OneToMany` element.
+
+| `Table`, `DenormalizedTable`, `Column`
+| `Table` and `DenormalizedTable` no longer expose transient
+  `MetadataBuildingContext` key/foreign-key hooks.  `Column` still exposes a
+  transient context parameter for name identifier resolution.
+| Keep low-level table mutation APIs where materializers need them, but avoid
+  hidden key creation rediscovering source facts through broad context.
+|===
+
+== Transient Context Parameters
+
+These are less concerning than stored fields, but they show where legacy
+side-effect hooks still reach broad context:
+
+* `Column#getNameIdentifier(MetadataBuildingContext)`, still used by table
+  naming helpers and explicit key materializers;
+* `BasicValue#resolve(MetadataBuildingContext)`, now mostly an
+  enforcement/finalization bridge because the resolution is built externally.
+
+These should be handled alongside the hidden key/constraint materializer work.
+The useful direction is explicit resolved key products and explicit naming
+inputs, not another general-purpose context on mapping objects.
+
+== Recommended Next Slices
+
+1. Treat `UserTypeCreationContext` as the remaining compatibility bridge.
++
+`EmbeddableMappingMaterializer` no longer reaches through `Component`.  The
+remaining production `Value#getBuildingContext()` use is
+`UserTypeCreationContextImpl#getBuildingContext()`.  The corresponding public
+method should be deprecated on `main` and rebased into this branch later.
+
+2. Treat naming `getBuildingContext()` usage as a separate SPI question.
++
+Built-in naming strategies and anonymous naming-source adapters call
+`ImplicitNameSource#getBuildingContext()`.  That is not `Value` reach-through.
+If we want to narrow it, the work belongs to the implicit-naming SPI and its
+source contracts.
+
+3. Split `SimpleValue` stored `MetadataBuildingContext` by capability.
++
+The first useful split is likely a value-resolution support object covering
+`TypeConfiguration`, mapping preferences/options, `Database`, managed beans,
+class loading, and custom type production.  This should be done by actual
+call-site need, not by introducing another broad context with a new name.
+
+4. Continue narrowing hidden key/constraint helpers.
++
+The broad mapping-model FK/UK callbacks are gone.  Remaining work should focus
+on whether low-level table mutation APIs have the narrowest useful signatures
+and whether any remaining context-taking naming helpers can be replaced by
+explicit resolved inputs.
+
+== Capability Breakdown
+
+When replacing stored `MetadataBuildingContext`, classify the actual need
+before introducing a new abstraction.
+
+`Database` / dialect::
+Used for identifier rendering, SQL type decisions, and low-level table/column
+operations.  Prefer passing `Database` or dialect where that is truly all that
+is needed.
+
+`TypeConfiguration`::
+Needed by values and associations for type resolution and runtime type
+construction.  This is a plausible stored or passed capability for values.
+
+Mapping options / preferences::
+Preferred SQL type codes, default time-zone storage, wrapper-array handling,
+native enum preference, Java-time preference, no-constraint defaults, naming
+strategy, and CDI extension behavior.  These should not require full
+`MetadataBuildingContext` on every mapping object.
+
+Class loading and bean creation::
+Collections, components, and values use class loading and managed beans for
+comparators, custom collection types, composite user types, user types, and
+annotation-based user types.  This likely wants a narrow instantiation/service
+contract rather than ad hoc context access.
+
+Metadata collector compatibility::
+Still used for embeddable discriminator type resolution, table finalization,
+and old compatibility registries.  Treat this as transitional: prefer resolved
+products and binding-state correspondence when available.
+
+Service registry::
+There are no raw `getServiceRegistry()` / `requireService(...)` paths left under
+`org.hibernate.mapping`.  The remaining broad exposures are the incubating
+`UserTypeCreationContext#getBuildingContext()` and
+`UserTypeCreationContext#getServiceRegistry()` methods, now implemented by the
+resolution builder's custom user-type creation context.  These are planned
+for deprecation on `main` as for-removal compatibility hooks.  This is an
+extension/SPI compatibility surface for custom user-type creation, not a
+mapping-object requirement.
+
+== Service Registry Audit
+
+Current scan:
+
+* There are no `getServiceRegistry()` / `requireService(...)` paths under
+  `org.hibernate.mapping`.
+* `BasicValueResolutionBuilder.UserTypeCreationContextImpl` implements
+  `org.hibernate.usertype.UserTypeCreationContext`, an incubating public
+  contract used by `UserType` constructors and
+  `AnnotationBasedUserType#initialize(...)`.
+* `UserTypeCreationContext` also exposes `MetadataBuildingContext` directly.
+  This is now localized in resolution code and is not forcing
+  `MetadataBuildingContext` into mapping objects.
+
+Conclusion:
+
+The remaining service-registry pressure is not a generic mapping-model need.
+It is specifically custom user-type creation.  The broad
+`UserTypeCreationContext` accessors are retained in this branch as
+compatibility hooks.  The intended path is to deprecate them on `main`, let that
+deprecation rebase into this branch, and use that period to discover whether
+extensions depend on them before committing to a narrower replacement surface.
+
+Likely replacement capabilities:
+
+* parameters;
+* member details;
+* type configuration;
+* managed-bean access or bean-container access, if custom types should see it;
+* class loading;
+* selected configuration settings if real custom-type use cases require them.
+
+Open question:
+
+Because `UserTypeCreationContext` is incubating, ORM 9 can still change it.
+In-tree tests and documented custom-type examples do not use
+`getBuildingContext()` or `getServiceRegistry()` from the custom type side, but
+the methods remain for now so external usage can be identified after the
+planned `main` deprecation lands here.
+
+=== UserType Creation Timing
+
+`UserTypeCreationContext` is used while the boot mapping model is being
+materialized/resolved, not while the runtime model or `SessionFactory` is being
+created.
+
+Current creation path:
+
+* binders/materializers call `BasicValue#setExplicitCustomType(...)` for
+  `@Type`, registered user types, collection id types, map-key types, and
+  similar explicit custom-type declarations;
+* `BasicValue` records the explicit custom type class as a source fact;
+* `BasicValueResolutionBuilder` merges global/local type parameters and creates
+  `UserTypeCreationContextImpl`;
+* user type construction is attempted in this order:
+  annotation plus `UserTypeCreationContext`, annotation only,
+  `UserTypeCreationContext` only, then default/CDI bean creation;
+* `AnnotationBasedUserType#initialize(...)` receives the same context after
+  construction;
+* `TypeConfigurationAware`, `DynamicParameterizedType`, and legacy
+  `ParameterizedType` handling run after instantiation.
+
+Available facts at this point:
+
+* explicit type parameters from `@Type#parameters`, XML, typedefs, and local
+  custom-type parameters;
+* the source `MemberDetails`, when the custom type is associated with a mapped
+  member;
+* the configured custom type class and optional custom type annotation;
+* `TypeConfiguration`;
+* class loading;
+* managed-bean access and the custom type bean producer;
+* CDI-extension allowance;
+* mapping preferences/options such as default time-zone storage and preferred
+  SQL type codes;
+* metadata collector/database/dialect, though these are broader phase products
+  and should not be exposed casually;
+* table/column context indirectly through `DynamicParameterizedType` parameter
+  construction.
+
+Not available or not appropriate:
+
+* a built `SessionFactory`;
+* runtime entity persisters or runtime attribute mappings;
+* runtime model creation context;
+* arbitrary mutation access to `InFlightMetadataCollector`.
+
+In-tree/documented usage:
+
+* ORM tests and docs use `UserTypeCreationContext#getParameters()` and
+  `getMemberDetails()`;
+* no in-tree custom `UserType` uses `getBuildingContext()` or
+  `getServiceRegistry()`;
+* this absence is not conclusive for extensions, so the broad exposures should
+  be deprecated rather than removed immediately.
+
+Candidate narrowed `UserTypeCreationContext` surface:
+
+* `Properties getParameters()`;
+* `MemberDetails getMemberDetails()`;
+* `TypeConfiguration getTypeConfiguration()`;
+* `ClassLoaderService getClassLoaderService()` or a narrower class-loading
+  facade;
+* `ManagedBeanRegistry getManagedBeanRegistry()` or a custom-type bean access
+  facade, if custom types should be able to resolve companion beans;
+* selected read-only configuration/preferences if concrete extension use cases
+  require them.
+
+Current compatibility hooks planned for deprecation on `main`:
+
+* `MetadataBuildingContext getBuildingContext()`;
+* `ServiceRegistry getServiceRegistry()`;
+
+Avoid adding:
+
+* metadata collector or bootstrap context exposure.
+
+== Remaining Suggested Slices
+
+1. `UserTypeCreationContext` feedback:
+   keep the broad `MetadataBuildingContext` / `ServiceRegistry` exposure
+   localized, let the planned `main` deprecation rebase into this branch, and
+   watch for external usage before removing or replacing it.
+2. `BasicValue` option/preference access:
+   design a narrow value-resolution/options capability before removing its
+   stored `MetadataBuildingContext`.
+3. Naming SPI context:
+   audit whether `ImplicitNameSource#getBuildingContext()` should remain the
+   naming-strategy contract or be narrowed separately.
+4. Hidden key/constraint helpers:
+   audit the remaining low-level `Table#createForeignKey(...)` overloads and
+   `Column#getNameIdentifier(MetadataBuildingContext)` naming path for further
+   narrowing.
+
+Generator-specific follow-up is tracked separately in
+link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`].
+In particular, value-generator creation belongs to runtime-model construction
+rather than mapping-model binding.
+
+== Guardrails
+
+* Do not move broad `BootstrapContext` or raw `ServiceRegistry` exposure into
+  mapping objects just to remove `MetadataBuildingContext`.
+* Do not invent one new mega-context with a different name.
+* Prefer materializer inputs and resolved products for phase-owned work.
+* Keep `org.hibernate.mapping` objects compatibility-focused: store stable
+  mapping facts, not source interpretation services.
+* Passing context into a mapping-model method is acceptable when centralized
+  phase logic needs it; storing broad context on the mapping object is the
+  smell.
+* When a compatibility method remains, document the specific legacy caller or
+  extension surface that still needs it.

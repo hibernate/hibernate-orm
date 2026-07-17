@@ -46,7 +46,6 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
 /// @author Steve Ebersole
 class AssociationTargetBinder {
 	private final EntityTypeBinder entityBinder;
-	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	AssociationTargetBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
@@ -267,6 +266,7 @@ class AssociationTargetBinder {
 		final Component copy = component.copy();
 		copy.clearProperties();
 		copy.setDiscriminator( null );
+		copy.setDiscriminatorType( null );
 		copy.setDiscriminatorValues( null );
 		copy.setPreservePropertyOrder( true );
 		for ( Property subProperty : component.getProperties() ) {
@@ -385,8 +385,8 @@ class AssociationTargetBinder {
 				metadataBuildingContext(),
 				targetBinding
 		);
-		component.setComponentClassName( targetBinding.getClassName() );
-		component.setEmbedded( true );
+		component.setComponentClassDetails( targetBinding.getClassName(), false, metadataBuildingContext() );
+		component.setFlattened( true );
 		component.setPreservePropertyOrder( true );
 		for ( Property property : properties ) {
 			component.addProperty( cloneProperty( targetBinding, property ) );
@@ -413,8 +413,8 @@ class AssociationTargetBinder {
 			}
 			else {
 				copy = new Component( metadataBuildingContext(), component );
-				copy.setComponentClassName( component.getComponentClassName() );
-				copy.setEmbedded( component.isEmbedded() );
+				copy.setComponentClassDetails( component.getComponentClassDetails() );
+				copy.setFlattened( component.isFlattened() );
 				for ( Property subProperty : component.getProperties() ) {
 					copy.addProperty( cloneProperty( ownerBinding, subProperty ) );
 				}
@@ -451,7 +451,7 @@ class AssociationTargetBinder {
 	}
 
 	private void materializeUniqueKey(SimpleValue value, String sourceRole) {
-		uniqueKeyMappingMaterializer.materializeUniqueKey(
+		UniqueKeyMappingMaterializer.materializeUniqueKey(
 				ResolvedUniqueKey.from( value, metadataBuildingContext(), sourceRole )
 		);
 	}

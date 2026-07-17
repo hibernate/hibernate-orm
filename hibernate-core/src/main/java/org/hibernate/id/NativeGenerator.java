@@ -155,9 +155,7 @@ public class NativeGenerator
 			Properties properties,
 			GeneratorCreationContext context) {
 		collectParameters(
-				context.getProperty().getValue(),
-				context.getDatabase().getDialect(),
-				context.getRootClass(),
+				context,
 				properties::put,
 				context.getServiceRegistry()
 						.requireService( ConfigurationService.class )

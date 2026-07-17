@@ -35,10 +35,6 @@ interface NaturalNumbers$ extends NaturalNumbers {
 	public java.util.stream.Stream<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByIdBetweenOrderByNumTypeOrdinalAsc(long minimum, long maximum, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.NaturalNumber> sorts);
 
 	@Override
-	@Query("where id >= ?1")
-	public java.util.List<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByIdGreaterThanEqual(long minimum, jakarta.data.Limit limit, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.NaturalNumber> sorts);
-
-	@Override
 	@Query("where id < ?1")
 	public ee.jakarta.tck.data.framework.read.only.NaturalNumber[] findByIdLessThan(long exclusiveMax, jakarta.data.Sort<ee.jakarta.tck.data.framework.read.only.NaturalNumber> primarySort, jakarta.data.Sort<ee.jakarta.tck.data.framework.read.only.NaturalNumber> secondarySort);
 

@@ -491,6 +491,27 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsDropSchemaIfExists implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof PostgreSQLDialect
+					|| dialect instanceof H2Dialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof HSQLDialect
+					|| dialect instanceof HANADialect
+					|| dialect instanceof SQLServerDialect && dialect.getVersion().isSameOrAfter( 13 );
+		}
+	}
+
+	public static class SupportsCreateSchemaIfNotExists implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof PostgreSQLDialect
+					|| dialect instanceof H2Dialect
+					|| dialect instanceof CockroachDialect
+					|| dialect instanceof HSQLDialect
+					|| dialect instanceof HANADialect;
+		}
+	}
+
 	public static class SupportAlterColumnType implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsAlterColumnType();

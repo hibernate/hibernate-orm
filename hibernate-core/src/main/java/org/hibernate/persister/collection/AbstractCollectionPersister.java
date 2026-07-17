@@ -19,6 +19,7 @@ import org.hibernate.action.queue.spi.meta.ColumnDescriptor;
 import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
 import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.annotations.CacheLayout;
+import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
@@ -80,6 +81,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
@@ -365,7 +367,7 @@ public abstract class AbstractCollectionPersister
 			else if ( selectable instanceof Column column ) {
 				elementColumnNames[j] = column.getQuotedName( dialect );
 				elementColumnWriters[j] = column.getWriteExpr(
-						elementBootDescriptor.getSelectableType( factory.getRuntimeMetamodels(), j ),
+						elementBootDescriptor.getSelectableType( creationContext.getMetadata(), j ),
 						dialect,
 						creationContext.getBootModel()
 				);
@@ -500,7 +502,7 @@ public abstract class AbstractCollectionPersister
 		// "mapping model"
 
 		if ( hasNamedQueryLoader() ) {
-			getNamedQueryMemento( collectionBootDescriptor.getMetadata() );
+			getNamedQueryMemento( creationContext.getMetadata() );
 		}
 
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
@@ -681,8 +683,16 @@ public abstract class AbstractCollectionPersister
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
 		final Generator generator =
-				collection.getIdentifier()
-						.createGenerator( context.getDialect(), null, null, context.getGeneratorSettings() );
+				GeneratorBinder.createIdentifierGenerator(
+						collection.getIdentifier(),
+						context.getDialect(),
+						null,
+						null,
+						context.getGeneratorSettings(),
+						context.getBootModel().getDatabase(),
+						context.getServiceRegistry(),
+						context.getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
+				);
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}

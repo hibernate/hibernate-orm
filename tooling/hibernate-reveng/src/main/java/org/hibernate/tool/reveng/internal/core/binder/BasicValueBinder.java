@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.core.binder;
 
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.reveng.internal.core.util.EnhancedBasicValue;
@@ -40,7 +41,7 @@ class BasicValueBinder extends AbstractBinder {
 		return value;
 	}
 
-	private static <J> void applyResolution(EnhancedBasicValue value, BasicType<J> basicType) {
+	private <J> void applyResolution(EnhancedBasicValue value, BasicType<J> basicType) {
 		if ( basicType != null ) {
 			value.applyResolution(
 					new NamedBasicTypeResolution<>(
@@ -48,7 +49,8 @@ class BasicValueBinder extends AbstractBinder {
 							basicType,
 							basicType.getValueConverter(),
 							null
-					)
+					),
+					MappingResolutionState.from( getMetadataBuildingContext() )
 			);
 		}
 	}

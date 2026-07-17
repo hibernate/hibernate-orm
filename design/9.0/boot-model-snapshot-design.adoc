@@ -11,7 +11,7 @@ actually mean?
 
 Related documents:
 
-* link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`]
+* link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
 * link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
 * link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
 

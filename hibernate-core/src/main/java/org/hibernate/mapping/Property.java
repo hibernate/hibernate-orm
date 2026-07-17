@@ -4,28 +4,21 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.generator.internal.GeneratorTypeHelper;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -330,7 +323,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
-		if ( value instanceof BasicValue basicValue && basicValue.isDisallowedWrapperArray() ) {
+		if ( value instanceof BasicValue basicValue && isDisallowedWrapperArray( basicValue, mappingContext ) ) {
 			throw new MappingException(
 					"""
 					The property %s.%s uses a wrapper type Byte[]/Character[] which indicates an issue in your domain model. \
@@ -347,6 +340,18 @@ public class Property implements Serializable, MetaAttributable {
 			);
 		}
 		return value.isValid( mappingContext );
+	}
+
+	private boolean isDisallowedWrapperArray(BasicValue basicValue, MappingContext mappingContext) {
+		return mappingContext instanceof MetadataImplementor metadata
+			&& metadata.getMappingResolutionOptions().getWrapperArrayHandling() == WrapperArrayHandling.DISALLOW
+			&& !basicValue.isLob()
+			&& isWrapperByteOrCharacterArray( basicValue );
+	}
+
+	private boolean isWrapperByteOrCharacterArray(BasicValue basicValue) {
+		final var javaTypeClass = basicValue.requireResolution().getDomainJavaType().getJavaTypeClass();
+		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
 	}
 
 	public String toString() {
@@ -418,44 +423,44 @@ public class Property implements Serializable, MetaAttributable {
 		this.selectable = selectable;
 	}
 
-	private PropertyAccess buildPropertyAccess(Class<?> clazz) {
-		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true );
+	private PropertyAccess buildPropertyAccess(Class<?> clazz, PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
+		return getPropertyAccessStrategy( clazz, propertyAccessStrategyResolver ).buildPropertyAccess( clazz, name, true );
 	}
 
 	// todo : remove
 	@Internal
-	public Getter getGetter(Class<?> clazz) throws MappingException {
-		return buildPropertyAccess( clazz ).getGetter();
+	public Getter getGetter(
+			Class<?> clazz,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
+		return buildPropertyAccess( clazz, propertyAccessStrategyResolver ).getGetter();
 	}
 
 	// todo : remove
 	@Internal
-	public Setter getSetter(Class<?> clazz) throws MappingException {
-		return buildPropertyAccess( clazz ).getSetter();
+	public Setter getSetter(
+			Class<?> clazz,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
+		return buildPropertyAccess( clazz, propertyAccessStrategyResolver ).getSetter();
 	}
 
 	// todo : remove
 	@Internal
-	public PropertyAccessStrategy getPropertyAccessStrategy(Class<?> clazz) throws MappingException {
+	public PropertyAccessStrategy getPropertyAccessStrategy(
+			Class<?> clazz,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
 		final var propertyAccessStrategy = getPropertyAccessStrategy();
 		if ( propertyAccessStrategy != null ) {
 			return propertyAccessStrategy;
 		}
 		else {
-			return getPropertyAccessStrategyResolver()
-					.resolvePropertyAccessStrategy(
-							clazz,
-							propertyAccessorName( clazz ),
-							isMapEntity( clazz )
-									? RepresentationMode.MAP
-									: RepresentationMode.POJO
-					);
+			return propertyAccessStrategyResolver.resolvePropertyAccessStrategy(
+					clazz,
+					propertyAccessorName( clazz ),
+					isMapEntity( clazz )
+							? RepresentationMode.MAP
+							: RepresentationMode.POJO
+			);
 		}
-	}
-
-	private PropertyAccessStrategyResolver getPropertyAccessStrategyResolver() {
-		return resolveServiceRegistry()
-				.requireService( PropertyAccessStrategyResolver.class );
 	}
 
 	private String propertyAccessorName(Class<?> clazz) {
@@ -472,18 +477,6 @@ public class Property implements Serializable, MetaAttributable {
 
 	private static boolean isMapEntity(Class<?> clazz) {
 		return clazz == null || Map.class.equals( clazz );
-	}
-
-	private ServiceRegistry resolveServiceRegistry() {
-		if ( getPersistentClass() != null ) {
-			return getPersistentClass().getServiceRegistry();
-		}
-		else if ( getValue() != null ) {
-			return getValue().getServiceRegistry();
-		}
-		else {
-			throw new HibernateException( "Could not resolve ServiceRegistry" );
-		}
 	}
 
 	public boolean isNaturalIdentifier() {
@@ -572,18 +565,6 @@ public class Property implements Serializable, MetaAttributable {
 		this.returnedClassName = returnedClassName;
 	}
 
-	public Generator createGenerator(RuntimeModelCreationContext context) {
-		if ( generatorCreator == null ) {
-			return null;
-		}
-		else {
-			final var creationContext = new PropertyGeneratorCreationContext( context );
-			final var generator = generatorCreator.createGenerator( creationContext );
-			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, creationContext );
-			return generator;
-		}
-	}
-
 	public Property copy() {
 		final var property =
 				this instanceof SyntheticProperty
@@ -634,61 +615,4 @@ public class Property implements Serializable, MetaAttributable {
 		return mutable;
 	}
 
-	private class PropertyGeneratorCreationContext implements GeneratorCreationContext {
-		private final RuntimeModelCreationContext context;
-
-		public PropertyGeneratorCreationContext(RuntimeModelCreationContext context) {
-			this.context = context;
-		}
-
-		@Override
-		public Database getDatabase() {
-			return context.getMetadata().getDatabase();
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return context.getServiceRegistry();
-		}
-
-		@Override
-		public String getDefaultCatalog() {
-			return context.getSessionFactoryOptions().getDefaultCatalog();
-		}
-
-		@Override
-		public String getDefaultSchema() {
-			return context.getSessionFactoryOptions().getDefaultSchema();
-		}
-
-		@Override
-		public PersistentClass getPersistentClass() {
-			return persistentClass;
-		}
-
-		@Override
-		public RootClass getRootClass() {
-			return persistentClass.getRootClass();
-		}
-
-		@Override
-		public Property getProperty() {
-			return Property.this;
-		}
-
-		@Override
-		public Value getValue() {
-			return value;
-		}
-
-		@Override
-		public MemberDetails getMemberDetails() {
-			return Property.this.getMemberDetails();
-		}
-
-		@Override
-		public SqlStringGenerationContext getSqlStringGenerationContext() {
-			return context.getSqlStringGenerationContext();
-		}
-	}
 }

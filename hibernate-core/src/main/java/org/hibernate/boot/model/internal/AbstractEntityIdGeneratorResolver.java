@@ -172,7 +172,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdentifierGen
 		final String nameFromGeneratedValue = generatedValue.generator();
 		if ( !nameFromGeneratedValue.isBlank() ) {
 			final var legacyNamedGenerator =
-					mapLegacyNamedGenerator( nameFromGeneratedValue, idValue );
+					mapLegacyNamedGenerator( nameFromGeneratedValue, buildingContext );
 			if ( legacyNamedGenerator != null ) {
 				final var configuration = buildLegacyGeneratorConfig();
 				//noinspection unchecked,rawtypes

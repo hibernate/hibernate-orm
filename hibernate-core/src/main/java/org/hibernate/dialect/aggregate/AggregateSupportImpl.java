@@ -9,10 +9,12 @@ import java.util.List;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -49,7 +51,9 @@ public class AggregateSupportImpl implements AggregateSupport {
 	@Override
 	public String aggregateCustomWriteExpression(
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration) {
 		return null;
 	}
 
@@ -83,7 +87,10 @@ public class AggregateSupportImpl implements AggregateSupport {
 			Namespace namespace,
 			String aggregatePath,
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			MappingResolutionOptions mappingResolutionOptions) {
 		return Collections.emptyList();
 	}
 

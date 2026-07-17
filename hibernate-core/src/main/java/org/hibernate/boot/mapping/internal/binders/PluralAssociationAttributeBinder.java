@@ -260,7 +260,8 @@ class PluralAssociationAttributeBinder {
 		bindOptimisticLock( collection, property, true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -294,7 +295,8 @@ class PluralAssociationAttributeBinder {
 		bindOptimisticLock( collection, property, true );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -332,7 +334,8 @@ class PluralAssociationAttributeBinder {
 		bindOptimisticLock( collection, property, false );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -406,7 +409,8 @@ class PluralAssociationAttributeBinder {
 		bindOptimisticLock( collection, property, false );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -419,7 +423,8 @@ class PluralAssociationAttributeBinder {
 		element.setReferencedEntityName( target.entityName() );
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		collection.setElement( element );
 		StateManagementBindingPhase.registerOneToManyCollection(
@@ -498,7 +503,8 @@ class PluralAssociationAttributeBinder {
 		bindOptimisticLock( collection, property, false );
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 
@@ -682,7 +688,8 @@ class PluralAssociationAttributeBinder {
 		element.setTypeName( target.entityName() );
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		applyOnDelete( element );
 
@@ -787,7 +794,8 @@ class PluralAssociationAttributeBinder {
 		element.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		return element;
 	}
@@ -802,7 +810,8 @@ class PluralAssociationAttributeBinder {
 		element.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
-				attributeMetadata.getName()
+				attributeMetadata.getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		return element;
 	}
@@ -1120,7 +1129,7 @@ class PluralAssociationAttributeBinder {
 		@Override
 		public List<org.hibernate.mapping.Column> identifierColumns() {
 			if ( entityIdentifierBinding.value() instanceof SortableValue sortableValue ) {
-				sortableValue.sortProperties();
+				sortableValue.sortProperties( typeBinder.getBindingState()::getEntityBinding );
 				return entityIdentifierBinding.value().getColumns();
 			}
 			if ( primaryTable.getPrimaryKey() != null

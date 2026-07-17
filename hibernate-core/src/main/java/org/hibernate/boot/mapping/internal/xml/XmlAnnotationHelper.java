@@ -697,22 +697,11 @@ public class XmlAnnotationHelper {
 	private static Class<? extends Generator> generatorClass(
 			JaxbGenericIdGeneratorImpl jaxbGenerator,
 			XmlDocumentContext xmlDocumentContext) {
-		final Class<? extends Generator> legacyGeneratorClass = GeneratorStrategies.mapLegacyNamedGenerator(
+		return GeneratorStrategies.generatorClass(
 				jaxbGenerator.getClazz(),
-				xmlDocumentContext.getJdbcServices().getDialect()
+				xmlDocumentContext.getJdbcServices().getDialect(),
+				xmlDocumentContext.getClassLoaderService()
 		);
-		if ( legacyGeneratorClass != null ) {
-			return legacyGeneratorClass;
-		}
-
-		final Class<?> generatorClass = xmlDocumentContext.getClassLoaderService()
-				.classForName( jaxbGenerator.getClazz() );
-		if ( !Generator.class.isAssignableFrom( generatorClass ) ) {
-			throw new AnnotationException(
-					"Generic generator class '" + generatorClass.getName() + "' does not implement 'Generator'"
-			);
-		}
-		return (Class<? extends Generator>) generatorClass;
 	}
 
 	public static void applyAttributeOverrides(

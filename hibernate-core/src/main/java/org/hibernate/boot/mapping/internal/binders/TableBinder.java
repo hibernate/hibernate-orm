@@ -82,9 +82,7 @@ public class TableBinder {
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
 	private final BindingContext bindingContext;
-	private final IndexMappingMaterializer indexMappingMaterializer = new IndexMappingMaterializer();
 	private final PrimaryTableKeyMappingMaterializer primaryTableKeyMappingMaterializer;
-	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	private final ImplicitNamingStrategy implicitNamingStrategy;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
@@ -817,7 +815,7 @@ public class TableBinder {
 			for ( String columnName : uniqueConstraint.columnNames() ) {
 				uniqueKeyColumns.add( createColumn( columnName ) );
 			}
-			uniqueKeyMappingMaterializer.materializeUniqueKey(
+			UniqueKeyMappingMaterializer.materializeUniqueKey(
 					ResolvedUniqueKey.explicit(
 							table,
 							uniqueKeyColumns,
@@ -877,7 +875,7 @@ public class TableBinder {
 				for ( Selectable selectable : selectables ) {
 					uniqueKeyColumns.add( (Column) selectable );
 				}
-				uniqueKeyMappingMaterializer.materializeUniqueKey(
+				UniqueKeyMappingMaterializer.materializeUniqueKey(
 						ResolvedUniqueKey.explicit(
 								table,
 								uniqueKeyColumns,
@@ -891,7 +889,7 @@ public class TableBinder {
 				);
 			}
 			else {
-				indexMappingMaterializer.materializeIndex(
+				IndexMappingMaterializer.materializeIndex(
 						ResolvedIndex.explicit(
 								table,
 								Arrays.asList( selectables ),

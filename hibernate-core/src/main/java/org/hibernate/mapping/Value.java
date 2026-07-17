@@ -12,10 +12,10 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MetaType;
@@ -89,7 +89,7 @@ public interface Value extends Serializable {
 			for ( final var subtype : compositeType.getSubtypes() ) {
 				final int columnSpan =
 						subtype instanceof EntityType entityType
-								? getIdType( entityType ).getColumnSpan( factory )
+								? getIdType( factory, entityType ).getColumnSpan( factory )
 								: subtype.getColumnSpan( factory );
 				if ( columnSpan < index ) {
 					index -= columnSpan;
@@ -102,7 +102,7 @@ public interface Value extends Serializable {
 			throw new IllegalStateException( "Type index is past the types column span!" );
 		}
 		else if ( elementType instanceof EntityType entityType ) {
-			return getType( factory, getIdType( entityType ), index );
+			return getType( factory, getIdType( factory, entityType ), index );
 		}
 		else if ( elementType instanceof MetaType metaType ) {
 			return (JdbcMapping) metaType.getBaseType();
@@ -112,13 +112,13 @@ public interface Value extends Serializable {
 		}
 	}
 
-	private Type getIdType(EntityType entityType) {
-		final var entityBinding =
-				getBuildingContext().getMetadataCollector()
-						.getEntityBinding( entityType.getAssociatedEntityName() );
+	private Type getIdType(MappingContext mappingContext, EntityType entityType) {
 		return entityType.isReferenceToPrimaryKey()
-				? entityBinding.getIdentifier().getType()
-				: entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
+				? mappingContext.getIdentifierType( entityType.getAssociatedEntityName() )
+				: mappingContext.getReferencedPropertyType(
+						entityType.getAssociatedEntityName(),
+						entityType.getRHSUniqueKeyPropertyName()
+				);
 	}
 
 	/**
@@ -139,34 +139,14 @@ public interface Value extends Serializable {
 
 	boolean isNullable();
 
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	void createForeignKey();
-
-	// called when this is the foreign key of a
-	// @OneToOne with a FK, or a @OneToMany with
-	// a join table
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
-	 * with an explicit resolved unique-key product instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	void createUniqueKey(MetadataBuildingContext context);
-
 	boolean isSimpleValue();
 
 	boolean isValid(MappingContext mappingContext) throws MappingException;
 
-	void setTypeUsingReflection(String className, String propertyName) throws MappingException;
+	void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) throws MappingException;
 
 	Object accept(ValueVisitor visitor);
 
@@ -183,13 +163,6 @@ public interface Value extends Serializable {
 	void setNonUpdatable();
 	void setNonInsertable();
 
-	@Incubating
-	default MetadataBuildingContext getBuildingContext() {
-		throw new UnsupportedOperationException( "Value#getBuildingContext is not implemented by: " + getClass().getName() );
-	}
-
-	ServiceRegistry getServiceRegistry();
-
 	Value copy();
 
 	boolean isColumnInsertable(int index);
@@ -197,7 +170,7 @@ public interface Value extends Serializable {
 	boolean isColumnUpdateable(int index);
 
 	@Incubating
-	default String getExtraCreateTableInfo() {
+	default String getExtraCreateTableInfo(Database database) {
 		return "";
 	}
 
@@ -212,7 +185,7 @@ public interface Value extends Serializable {
 	 * @param owner the owner of this value, used just for error reporting
 	 */
 	@Internal
-	default void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner) {
+	default void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner, Database database) {
 		for ( int i = 0; i < getSelectables().size(); i++ ) {
 			if ( getSelectables().get( i ) instanceof Column column
 					&& ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) ) {
@@ -230,7 +203,7 @@ public interface Value extends Serializable {
 					schema = null;
 					table = null;
 				}
-				final var columnName = column.getNameIdentifier( getBuildingContext() );
+				final var columnName = column.getNameIdentifier( database );
 				if ( !distinctColumns.add( new QualifiedColumnName( catalog, schema, table, columnName ) ) ){
 					throw new MappingException(
 							"Column '" + column.getName()

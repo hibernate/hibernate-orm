@@ -24,6 +24,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.addAll;
 import static java.util.Comparator.comparing;
@@ -98,7 +99,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 			appendColumn( createTable, column, table, metadata, dialect, context );
 
-			extra.append( column.getValue().getExtraCreateTableInfo() );
+			extra.append( column.getValue().getExtraCreateTableInfo( metadata.getDatabase() ) );
 		}
 		if ( table.getRowId() != null ) {
 			final String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
@@ -112,7 +113,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
 
-		applyTableCheck( table, createTable );
+		applyTableCheck( table, createTable, metadata );
 
 		if ( isNotEmpty( table.getExtraDeclarations() ) ) {
 			createTable.append( ", " ).append( table.getExtraDeclarations() );
@@ -211,7 +212,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		buf.append( dialect.getTableTypeString() );
 	}
 
-	protected void applyTableCheck(Table table, StringBuilder buf) {
+	protected void applyTableCheck(Table table, StringBuilder buf, Metadata metadata) {
 		if ( dialect.supportsTableCheck() ) {
 			for ( var column : table.getColumns() ) {
 				final var checkConstraints = column.getCheckConstraints();
@@ -262,7 +263,7 @@ public class StandardTableExporter implements Exporter<Table> {
 				for ( var column : table.getColumns() ) {
 					if ( column instanceof AggregateColumn aggregateColumn ) {
 						if ( !aggregateColumn.isAggregateArray() ) {
-							applyAggregateColumnCheck( buf, aggregateColumn );
+							applyAggregateColumnCheck( buf, aggregateColumn, metadata );
 						}
 					}
 				}
@@ -270,8 +271,9 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+	protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn, Metadata metadata) {
 		final var aggregateSupport = dialect.getAggregateSupport();
+		final var typeConfiguration = metadata.getDatabase().getTypeConfiguration();
 		final int checkStart = buf.length();
 		buf.append( ", check (" );
 		final int start = buf.length();
@@ -283,6 +285,8 @@ public class StandardTableExporter implements Exporter<Table> {
 				aggregateColumn,
 				null,
 				aggregateSupport,
+				metadata,
+				typeConfiguration,
 				aggregateColumn.getComponent()
 		);
 
@@ -300,12 +304,18 @@ public class StandardTableExporter implements Exporter<Table> {
 			AggregateColumn aggregateColumn,
 			String aggregatePath,
 			AggregateSupport aggregateSupport,
+			Metadata metadata,
+			TypeConfiguration typeConfiguration,
 			Value value) {
 		if ( value instanceof Component component ) {
 			final var subAggregateColumn = component.getAggregateColumn();
 			if ( subAggregateColumn != null && !subAggregateColumn.isAggregateArray()  ) {
 				final String subAggregatePath =
-						subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
+						subAggregateColumn.getAggregateReadExpressionTemplate(
+								dialect,
+								metadata,
+								typeConfiguration
+						)
 								.replace( Template.TEMPLATE + ".", "" );
 				final int checkStart = buf.length();
 				if ( subAggregateColumn.isNullable() ) {
@@ -321,6 +331,8 @@ public class StandardTableExporter implements Exporter<Table> {
 							subAggregateColumn,
 							subAggregatePath,
 							aggregateSupport,
+							metadata,
+							typeConfiguration,
 							property.getValue()
 					);
 				}
@@ -345,7 +357,9 @@ public class StandardTableExporter implements Exporter<Table> {
 									aggregatePath,
 									subColumnName,
 									aggregateColumn,
-									subColumn
+									subColumn,
+									metadata,
+									typeConfiguration
 							);
 					if ( !subColumn.isNullable() ) {
 						buf.append( separator );

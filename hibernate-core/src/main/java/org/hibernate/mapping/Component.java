@@ -13,20 +13,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.internal.GeneratorBinder;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.generator.Generator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
@@ -34,13 +33,11 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
-import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.persister.entity.DiscriminatorHelper;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.jdk.JdkBuilders;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -50,10 +47,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
-import static org.hibernate.mapping.MappingHelper.classForName;
-import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -66,13 +60,13 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  */
 public class Component extends SimpleValue implements AttributeContainer, MetaAttributable, SortableValue {
 
-	private String componentClassName;
+	private ClassDetails componentClassDetails;
 	private boolean flattened;
 	private String parentProperty;
 	private PersistentClass owner;
-	private boolean dynamic;
 	private boolean isKey;
 	private transient Boolean isGeneric;
+	private CompositeUserType<?> compositeUserType;
 	private String roleName;
 	private MappedSuperclass mappedSuperclass;
 	private Value discriminator;
@@ -96,7 +90,6 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	private AggregateColumn parentAggregateColumn;
 	private QualifiedName structName;
 	private String[] structColumnNames;
-	private transient Class<?> componentClass;
 	private transient Boolean simpleRecord;
 	private boolean preservePropertyOrder;
 	private String columnNamingPattern;
@@ -130,17 +123,17 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		this.properties.addAll( original.properties );
 		this.originalPropertyOrder = original.originalPropertyOrder == null ? null : original.originalPropertyOrder.clone();
 		this.propertyDeclaringClasses = original.propertyDeclaringClasses;
-		this.componentClassName = original.componentClassName;
-		this.componentClass = original.componentClass;
+		this.componentClassDetails = original.componentClassDetails;
 		this.flattened = original.flattened;
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
-		this.dynamic = original.dynamic;
 		this.isGeneric = original.isGeneric;
+		this.compositeUserType = original.compositeUserType;
 		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>( original.metaAttributes );
 		this.isKey = original.isKey;
 		this.roleName = original.roleName;
 		this.discriminator = original.discriminator;
+		this.discriminatorType = original.discriminatorType;
 		this.discriminatorValues = original.discriminatorValues;
 		this.subclassToSuperclass = original.subclassToSuperclass;
 		this.customInstantiator = original.customInstantiator;
@@ -343,7 +336,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
-	public void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner) {
+	public void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner, Database database) {
 		if ( aggregateColumn == null ) {
 			if ( isPolymorphic() ) {
 				// We can allow different subtypes reusing the same columns
@@ -356,7 +349,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 								declaringClass,
 								k -> new HashSet<>( distinctColumns )
 						);
-						prop.getValue().checkColumnDuplication( set, owner );
+						prop.getValue().checkColumnDuplication( set, owner, database );
 					}
 				}
 				for ( var columns : distinctColumnsByClass.values() ) {
@@ -364,37 +357,37 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 				}
 			}
 			else {
-				checkPropertyColumnDuplication( distinctColumns, getProperties(), owner );
+				checkPropertyColumnDuplication( distinctColumns, getProperties(), owner, database );
 			}
 		}
 		else {
-			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'" );
-			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner );
+			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'", database );
+			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner, database );
 		}
 	}
 
 	public String getComponentClassName() {
-		return componentClassName;
+		if ( componentClassDetails == null ) {
+			return null;
+		}
+		final String className = componentClassDetails.getClassName();
+		return className == null ? componentClassDetails.getName() : className;
+	}
+
+	public ClassDetails getComponentClassDetails() {
+		return componentClassDetails;
 	}
 
 	public Class<?> getComponentClass() throws MappingException {
-		if ( componentClass == null ) {
-			if ( componentClassName == null ) {
-				return null;
-			}
-			else {
-				if ( dynamic ) {
-					return null;
-				}
-				try {
-					componentClass = classForName( componentClassName, getBuildingContext().getClassLoaderAccess() );
-				}
-				catch (ClassLoadingException e) {
-					throw new MappingException( "Embeddable class not found: " + componentClassName, e );
-				}
-			}
+		if ( componentClassDetails == null || !componentClassDetails.isRealClass() ) {
+			return null;
 		}
-		return componentClass;
+		try {
+			return componentClassDetails.toJavaClass();
+		}
+		catch (ClassLoadingException e) {
+			throw new MappingException( "Embeddable class not found: " + getComponentClassName(), e );
+		}
 	}
 
 	public PersistentClass getOwner() {
@@ -405,13 +398,23 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return parentProperty;
 	}
 
-	public void setComponentClassName(String componentClass) {
-		this.componentClassName = componentClass;
-		if ( this.dynamic ) {
-			this.roleName = componentClassName;
-		}
-		this.componentClass = null;
+	public void setComponentClassDetails(ClassDetails componentClassDetails) {
+		this.componentClassDetails = componentClassDetails;
 		this.simpleRecord = null;
+		if ( componentClassDetails != null && !componentClassDetails.isRealClass() ) {
+			this.isGeneric = false;
+			this.roleName = componentClassDetails.getName();
+		}
+	}
+
+	public void setComponentClassDetails(String name, boolean dynamic, MetadataBuildingContext buildingContext) {
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var deets = ModelsHelper.resolveClassDetails(
+				name,
+				modelsContext.getClassDetailsRegistry(),
+				() -> dynamic ? new DynamicClassDetails( name, modelsContext ) : JdkBuilders.buildClassDetailsStatic( name, modelsContext )
+		);
+		setComponentClassDetails( deets );
 	}
 
 	public void setFlattened(boolean flattened) {
@@ -423,7 +426,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	 * historical Hibernate terminology and does not mean "mapped by
 	 * {@code @Embedded}".
 	 */
-	@Deprecated(since = "9.0")
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void setEmbedded(boolean flattened) {
 		setFlattened( flattened );
 	}
@@ -437,22 +440,17 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public boolean isDynamic() {
-		return dynamic;
+		return componentClassDetails != null && !componentClassDetails.isRealClass();
 	}
 
-	public void setDynamic(boolean dynamic) {
-		this.dynamic = dynamic;
-		if ( dynamic ) {
-			isGeneric = false;
-		}
+	public CompositeUserType<?> getCompositeUserType() {
+		return compositeUserType;
 	}
 
-	private CompositeUserType<?> createCompositeUserType(Component component) {
-		final var buildingContext = getBuildingContext();
-		final var clazz = classForName( CompositeUserType.class, component.getTypeName(), buildingContext.getClassLoaderAccess() );
-		return buildingContext.getBuildingPlan().isAllowExtensionsInCdi()
-				? buildingContext.getManagedBeanRegistry().getBean( clazz ).getBeanInstance()
-				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( clazz );
+	public void setCompositeUserType(CompositeUserType<?> compositeUserType) {
+		this.compositeUserType = compositeUserType;
+		setTypeName( compositeUserType == null ? null : compositeUserType.getClass().getName() );
+		this.type = null;
 	}
 
 	@Override
@@ -476,14 +474,12 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 					// Other components should be sorted already
 					sortProperties( true );
 
-					final String typeName = getTypeName();
-					if ( typeName == null ) {
+					if ( compositeUserType == null ) {
 						localType = isFlattened()
 								? new EmbeddedComponentType( this, originalPropertyOrder )
 								: new ComponentType( this, originalPropertyOrder );
 					}
 					else {
-						final CompositeUserType<?> compositeUserType = createCompositeUserType( this );
 						localType = new UserComponentType<>( this, originalPropertyOrder, compositeUserType );
 					}
 
@@ -496,8 +492,11 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName)
-		throws MappingException {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext)
+			throws MappingException {
 	}
 
 	@Override
@@ -528,7 +527,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	public boolean isSame(Component other) {
 		return super.isSame( other )
 			&& Objects.equals( properties, other.properties )
-			&& Objects.equals( componentClassName, other.componentClassName )
+			&& Objects.equals( getComponentClassName(), other.getComponentClassName() )
 			&& flattened == other.flattened
 			&& Objects.equals( aggregateColumn, other.aggregateColumn )
 			&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
@@ -640,7 +639,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 				return property;
 			}
 		}
-		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
+		throw new MappingException("component: " + getComponentClassName() + " property not found: " + propertyName);
 	}
 
 	public boolean matchesAllProperties(String... propertyNames) {
@@ -684,27 +683,11 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public DiscriminatorType<?> getDiscriminatorType() {
-		final var type = discriminatorType;
-		if ( type == null ) {
-			return discriminatorType = buildDiscriminatorType();
-		}
-		return type;
+		return discriminatorType;
 	}
 
-	private DiscriminatorType<?> buildDiscriminatorType() {
-		return getBuildingContext().getMetadataCollector().resolveEmbeddableDiscriminatorType( getComponentClass(), () -> {
-			final var javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
-			final var domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
-			final var discriminatorType = DiscriminatorHelper.getDiscriminatorType( this );
-			final var converter = EmbeddableDiscriminatorConverter.fromValueMappings(
-					qualify( getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
-					domainJavaType,
-					discriminatorType,
-					getDiscriminatorValues(),
-					getServiceRegistry()
-			);
-			return new DiscriminatorTypeImpl<>( discriminatorType, converter );
-		} );
+	public void setDiscriminatorType(DiscriminatorType<?> discriminatorType) {
+		this.discriminatorType = discriminatorType;
 	}
 
 	public boolean isPolymorphic() {
@@ -733,14 +716,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + '(' + componentClassName + ')';
-	}
-
-	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
-		return getCustomIdGeneratorCreator().isAssigned()
-				? GeneratorBinder.buildIdentifierGenerator( this, dialect, rootClass, defaults )
-				: super.createGenerator( dialect, rootClass, property, defaults );
+		return getClass().getSimpleName() + '(' + getComponentClassName() + ')';
 	}
 
 	@Internal
@@ -841,12 +817,12 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		}
 		if ( instantiatorPropertyNames != null ) {
 			if ( instantiatorPropertyNames.length < properties.size() ) {
-				throw new MappingException( "component type [" + componentClassName + "] specifies " + instantiatorPropertyNames.length + " properties for the instantiator but has " + properties.size() + " properties" );
+				throw new MappingException( "component type [" + getComponentClassName() + "] specifies " + instantiatorPropertyNames.length + " properties for the instantiator but has " + properties.size() + " properties" );
 			}
 			final HashSet<String> assignedPropertyNames = CollectionHelper.setOfSize( properties.size() );
 			for ( String instantiatorPropertyName : instantiatorPropertyNames ) {
 				if ( getProperty( instantiatorPropertyName ) == null ) {
-					throw new MappingException( "could not find property [" + instantiatorPropertyName + "] defined in the @Instantiator withing component [" + componentClassName + "]" );
+					throw new MappingException( "could not find property [" + instantiatorPropertyName + "] defined in the @Instantiator withing component [" + getComponentClassName() + "]" );
 				}
 				assignedPropertyNames.add( instantiatorPropertyName );
 			}
@@ -858,7 +834,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 						missingProperties.add( propertyName );
 					}
 				}
-				throw new MappingException( "component type [" + componentClassName + "] has " + properties.size() + " properties but the instantiator only assigns " + assignedPropertyNames.size() + " properties. missing properties: " + missingProperties );
+				throw new MappingException( "component type [" + getComponentClassName() + "] has " + properties.size() + " properties but the instantiator only assigns " + assignedPropertyNames.size() + " properties. missing properties: " + missingProperties );
 			}
 		}
 		return true;
@@ -870,7 +846,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
-	public int[] sortProperties() {
+	public int[] sortProperties(Function<String, PersistentClass> entityBindingResolver) {
 		return sortProperties( false );
 	}
 
@@ -982,8 +958,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public boolean isGeneric() {
 		if ( isGeneric == null ) {
-			isGeneric = getComponentClassName() != null
-					&& getComponentClass().getTypeParameters().length > 0;
+			final Class<?> componentClass = getComponentClass();
+			isGeneric = componentClass != null && componentClass.getTypeParameters().length > 0;
 		}
 		return isGeneric;
 	}

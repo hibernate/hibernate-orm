@@ -5,8 +5,8 @@
 package org.hibernate.testing.boot;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.pipeline.internal.MappingResolutionServicesImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServicesImpl;
 import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.mapping.internal.context.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
@@ -17,7 +17,7 @@ import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
-import org.hibernate.boot.pipeline.internal.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 
 /**
 * @author Steve Ebersole

@@ -19,8 +19,11 @@ import org.hibernate.mapping.Table;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class IndexMappingMaterializer {
-	public Index materializeIndex(ResolvedIndex resolvedIndex) {
+public final class IndexMappingMaterializer {
+	private IndexMappingMaterializer() {
+	}
+
+	public static Index materializeIndex(ResolvedIndex resolvedIndex) {
 		final Index index = resolvedIndex.table().getOrCreateIndex( indexName( resolvedIndex ) );
 		index.setUnique( resolvedIndex.unique() );
 		if ( StringHelper.isNotEmpty( resolvedIndex.type() ) ) {
@@ -39,7 +42,7 @@ public class IndexMappingMaterializer {
 		return index;
 	}
 
-	private String indexName(ResolvedIndex resolvedIndex) {
+	private static String indexName(ResolvedIndex resolvedIndex) {
 		return implicitIndexName(
 				resolvedIndex.table(),
 				resolvedIndex.columnNames(),
@@ -48,11 +51,11 @@ public class IndexMappingMaterializer {
 		);
 	}
 
-	private String columnOrdering(ResolvedIndex resolvedIndex, int position) {
+	private static String columnOrdering(ResolvedIndex resolvedIndex, int position) {
 		return resolvedIndex.columnOrderings() == null ? null : resolvedIndex.columnOrderings().get( position );
 	}
 
-	private String implicitIndexName(
+	private static String implicitIndexName(
 			Table table,
 			List<String> columnNames,
 			String userProvidedName,
@@ -86,7 +89,7 @@ public class IndexMappingMaterializer {
 				.render( context.getMetadataCollector().getDatabase().getDialect() );
 	}
 
-	private Identifier logicalTableName(Table table, MetadataBuildingContext context) {
+	private static Identifier logicalTableName(Table table, MetadataBuildingContext context) {
 		try {
 			return context.getMetadataCollector()
 					.getDatabase()

@@ -4,9 +4,15 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Function;
+
 public interface SortableValue {
 
 	boolean isSorted();
 
-	int[] sortProperties();
+	default int[] sortProperties() {
+		return sortProperties( null );
+	}
+
+	int[] sortProperties(Function<String, PersistentClass> entityBindingResolver);
 }

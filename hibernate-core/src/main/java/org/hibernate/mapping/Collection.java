@@ -7,8 +7,10 @@ package org.hibernate.mapping;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchStyle;
@@ -17,7 +19,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.MappingContext;
@@ -53,7 +55,9 @@ public abstract sealed class Collection
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final MetadataBuildingContext buildingContext;
+	private final ClassLoaderAccess classLoaderAccess;
+	private final ManagedBeanRegistry managedBeanRegistry;
+	private final boolean allowExtensionsInCdi;
 	private final PersistentClass owner;
 
 	private KeyValue key;
@@ -116,7 +120,9 @@ public abstract sealed class Collection
 	 * hbm.xml binding
 	 */
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
-		this.buildingContext = buildingContext;
+		this.classLoaderAccess = buildingContext.getClassLoaderAccess();
+		this.managedBeanRegistry = buildingContext.getManagedBeanRegistry();
+		this.allowExtensionsInCdi = buildingContext.getBuildingPlan().isAllowExtensionsInCdi();
 		this.owner = owner;
 	}
 
@@ -129,11 +135,15 @@ public abstract sealed class Collection
 			MetadataBuildingContext buildingContext) {
 		this.customTypeBeanResolver = customTypeBeanResolver;
 		this.owner = owner;
-		this.buildingContext = buildingContext;
+		this.classLoaderAccess = buildingContext.getClassLoaderAccess();
+		this.managedBeanRegistry = buildingContext.getManagedBeanRegistry();
+		this.allowExtensionsInCdi = buildingContext.getBuildingPlan().isAllowExtensionsInCdi();
 	}
 
 	protected Collection(Collection original) {
-		this.buildingContext = original.buildingContext;
+		this.classLoaderAccess = original.classLoaderAccess;
+		this.managedBeanRegistry = original.managedBeanRegistry;
+		this.allowExtensionsInCdi = original.allowExtensionsInCdi;
 		this.owner = original.owner;
 		this.key = original.key == null ? null : (KeyValue) original.key.copy();
 		this.element = original.element == null ? null : original.element.copy();
@@ -186,18 +196,8 @@ public abstract sealed class Collection
 		this.cachedCollectionSemantics = original.cachedCollectionSemantics;
 	}
 
-	@Override
-	public MetadataBuildingContext getBuildingContext() {
-		return buildingContext;
-	}
-
-	public MetadataImplementor getMetadata() {
-		return getBuildingContext().getMetadataCollector();
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return getMetadata().getMappingResolutionOptions().getServiceRegistry();
+	protected ClassLoaderAccess getClassLoaderAccess() {
+		return classLoaderAccess;
 	}
 
 	public boolean isSet() {
@@ -230,7 +230,7 @@ public abstract sealed class Collection
 
 	public Comparator<?> getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
-			final var clazz = classForName( Comparator.class, comparatorClassName, buildingContext.getClassLoaderAccess() );
+			final var clazz = classForName( Comparator.class, comparatorClassName, classLoaderAccess );
 			try {
 				comparator = clazz.getConstructor().newInstance();
 			}
@@ -409,7 +409,7 @@ public abstract sealed class Collection
 		this.fetchStyle = fetchStyle;
 	}
 
-	public void validate(MappingContext mappingContext) throws MappingException {
+	public void validate(Metadata mappingContext) throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
 
@@ -430,21 +430,21 @@ public abstract sealed class Collection
 			);
 		}
 
-		checkColumnDuplication();
+		checkColumnDuplication( mappingContext.getDatabase() );
 	}
 
-	private void checkColumnDuplication() throws MappingException {
+	private void checkColumnDuplication(Database database) throws MappingException {
 		final String owner = "collection '" + getReferencedPropertyName() + "'";
 		final HashSet<QualifiedColumnName> cols = new HashSet<>();
-		getKey().checkColumnDuplication( cols, owner );
+		getKey().checkColumnDuplication( cols, owner, database );
 		if ( isIndexed() ) {
-			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner );
+			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner, database );
 		}
 		if ( isIdentified() ) {
-			( (IdentifierCollection) this ).getIdentifier().checkColumnDuplication( cols, owner );
+			( (IdentifierCollection) this ).getIdentifier().checkColumnDuplication( cols, owner, database );
 		}
 		if ( !isOneToMany() ) {
-			getElement().checkColumnDuplication( cols, owner );
+			getElement().checkColumnDuplication( cols, owner, database );
 		}
 	}
 
@@ -511,10 +511,10 @@ public abstract sealed class Collection
 	private ManagedBean<? extends UserCollectionType> userTypeBean() {
 		return createUserTypeBean(
 				role,
-				classForName( UserCollectionType.class, typeName, buildingContext.getClassLoaderAccess() ),
+				classForName( UserCollectionType.class, typeName, classLoaderAccess ),
 				PropertiesHelper.map( typeParameters ),
-				buildingContext.getManagedBeanRegistry(),
-				getMetadata().getMappingResolutionOptions().isAllowExtensionsInCdi()
+				managedBeanRegistry,
+				allowExtensionsInCdi
 		);
 	}
 
@@ -538,30 +538,6 @@ public abstract sealed class Collection
 	@Override
 	public Table getTable() {
 		return owner.getTable();
-	}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Override
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createForeignKey() {
-	}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
-	 * with an explicit resolved unique-key product instead.
-	 */
-	@Override
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
 	@Override
@@ -599,34 +575,14 @@ public abstract sealed class Collection
 	/**
 	 * @deprecated ORM boot code should use
 	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
-	 * and
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with explicit resolved key products instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	private void createForeignKeys() throws MappingException {
-		// if ( !isInverse() ) { // for inverse collections, let the "other end" handle it
-		final String entityName = getOwner().getEntityName();
-		if ( referencedPropertyName == null ) {
-			getElement().createForeignKey();
-			key.createForeignKeyOfEntity( entityName );
-		}
-		else {
-			final var property = owner.getProperty( referencedPropertyName );
-			assert property != null;
-			key.createForeignKeyOfEntity( entityName,
-					property.getValue().getConstraintColumns() );
-		}
-		// }
-	}
-
-	/**
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
 	 * with an explicit resolved collection-table key product instead.
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
-	abstract void createPrimaryKey();
+	void createPrimaryKey() {
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
+	}
 
 	/**
 	 * Compatibility-only hidden key creation hook.
@@ -637,10 +593,9 @@ public abstract sealed class Collection
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKeyIfNeeded() {
-		if ( !isInverse() && !isPrimaryKeyDisabled() ) {
-			createPrimaryKey();
-			adjustTemporalPrimaryKey();
-		}
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
 	/**
@@ -652,8 +607,9 @@ public abstract sealed class Collection
 	 */
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createAllKeys() throws MappingException {
-		createForeignKeys();
-		createPrimaryKeyIfNeeded();
+		throw new UnsupportedOperationException(
+				"Collection key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
 	private void adjustTemporalPrimaryKey() {
@@ -712,7 +668,10 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
 	}
 
 	public String getCacheRegionName() {

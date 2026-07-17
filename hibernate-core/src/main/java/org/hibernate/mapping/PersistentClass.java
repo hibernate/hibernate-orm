@@ -8,7 +8,9 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -16,8 +18,6 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.Alias;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -52,8 +52,6 @@ public abstract sealed class PersistentClass
 				Filterable, MetaAttributable, Contributable, Serializable
 		permits RootClass, Subclass {
 
-	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
-
 	/**
 	 * The magic value of {@link jakarta.persistence.DiscriminatorValue#value}
 	 * which indicates that the subclass is distinguished by a null value of the
@@ -67,8 +65,8 @@ public abstract sealed class PersistentClass
 	 */
 	public static final String NOT_NULL_DISCRIMINATOR_MAPPING = "not null";
 
-	private final MetadataBuildingContext metadataBuildingContext;
 	private final String contributor;
+	private final ClassLoaderAccess classLoaderAccess;
 	private final List<IdentifiableTypeClass> subTypes = new ArrayList<>();
 
 	private String entityName;
@@ -122,21 +120,12 @@ public abstract sealed class PersistentClass
 	private CacheLayout queryCacheLayout;
 
 	public PersistentClass(MetadataBuildingContext buildingContext) {
-		this.metadataBuildingContext = buildingContext;
 		this.contributor = buildingContext.getCurrentContributorName();
+		this.classLoaderAccess = buildingContext.getClassLoaderAccess();
 	}
 
 	public String getContributor() {
 		return contributor;
-	}
-
-	public ServiceRegistry getServiceRegistry() {
-		return metadataBuildingContext.getBuildingPlan().getServiceRegistry();
-	}
-
-	@Internal
-	public MetadataBuildingContext getMetadataBuildingContext() {
-		return metadataBuildingContext;
 	}
 
 	public String getClassName() {
@@ -158,7 +147,7 @@ public abstract sealed class PersistentClass
 	}
 
 	private Class<?> getClassForName(String className) {
-		return classForName( className, metadataBuildingContext.getClassLoaderAccess() );
+		return classForName( className, classLoaderAccess );
 	}
 
 	public Class<?> getMappedClass() throws MappingException {
@@ -498,45 +487,6 @@ public abstract sealed class PersistentClass
 		this.entityName = entityName == null ? null : entityName.intern();
 	}
 
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer}
-	 * with an explicit resolved primary-table key product instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createPrimaryKey() {
-		final var table = getTable();
-		// Never overwrite the primary key if there already is an existing one,
-		// because previously created ForeignKey might depend on the order of columns,
-		// which the new PrimaryKey might not have
-		if ( table.getPrimaryKey() == null ) {
-			final var primaryKey = makePrimaryKey( table );
-			table.setPrimaryKey( primaryKey );
-		}
-	}
-
-	PrimaryKey makePrimaryKey(Table table) {
-		final var primaryKey = new PrimaryKey( table );
-		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
-		primaryKey.addColumns( getKey() );
-		if ( addPartitionKeyToPrimaryKey() ) {
-			for ( var property : getProperties() ) {
-				if ( property.getValue().isPartitionKey() ) {
-					primaryKey.addColumns( property.getValue() );
-				}
-			}
-		}
-		return primaryKey;
-	}
-
-	private boolean addPartitionKeyToPrimaryKey() {
-		return metadataBuildingContext.getMetadataCollector()
-				.getDatabase().getDialect()
-				.addPartitionKeyToPrimaryKey();
-	}
-
 	public abstract String getWhere();
 
 	public int getBatchSize() {
@@ -750,7 +700,7 @@ public abstract sealed class PersistentClass
 			}
 		}
 		checkPropertyDuplication();
-		checkColumnDuplication();
+		checkColumnDuplication( mapping.getDatabase() );
 	}
 
 	private void checkPropertyDuplication() throws MappingException {
@@ -994,26 +944,26 @@ public abstract sealed class PersistentClass
 		return getUnjoinedProperties();
 	}
 
-	protected void checkColumnDuplication() {
+	protected void checkColumnDuplication(Database database) {
 		final String owner = "entity '" + getEntityName() + "'";
 		final HashSet<QualifiedColumnName> cols = new HashSet<>();
 		if ( getIdentifierMapper() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded
-			getKey().checkColumnDuplication( cols, owner );
+			getKey().checkColumnDuplication( cols, owner, database );
 		}
 		if ( isDiscriminatorInsertable() && getDiscriminator() != null ) {
-			getDiscriminator().checkColumnDuplication( cols, owner );
+			getDiscriminator().checkColumnDuplication( cols, owner, database );
 		}
 		final var softDeleteColumn = getRootClass().getSoftDeleteColumn();
 		if ( softDeleteColumn != null ) {
-			softDeleteColumn.getValue().checkColumnDuplication( cols, owner );
+			softDeleteColumn.getValue().checkColumnDuplication( cols, owner, database );
 		}
-		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner );
+		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner, database );
 		for ( var join : getJoins() ) {
 			cols.clear();
-			join.getKey().checkColumnDuplication( cols, owner );
-			checkPropertyColumnDuplication( cols, join.getProperties(), owner );
+			join.getKey().checkColumnDuplication( cols, owner, database );
+			checkPropertyColumnDuplication( cols, join.getProperties(), owner, database );
 		}
 	}
 
@@ -1403,8 +1353,5 @@ public abstract sealed class PersistentClass
 			throw new IllegalArgumentException( "Property not among declared properties: " + property.getName() );
 		}
 		properties.remove( property );
-	}
-
-	public void createConstraints(MetadataBuildingContext context) {
 	}
 }

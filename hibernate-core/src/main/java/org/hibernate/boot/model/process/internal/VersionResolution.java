@@ -9,7 +9,8 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -31,19 +32,21 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	public static VersionResolution<?> from(
 			BasicValue basicValue,
 			TimeZoneStorageType timeZoneStorageType,
-			MetadataBuildingContext context) {
-		final var typeConfiguration = context.getTypeConfiguration();
-		final var implicitJavaType = basicValue.impliedJavaType( typeConfiguration );
+			MappingResolutionServices services,
+		MappingResolutionState state) {
+		final var typeConfiguration = services.getTypeConfiguration();
+		final var implicitJavaType = basicValue.impliedJavaType( typeConfiguration, services.getClassLoaderService() );
 		final var registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
-		return resolve( timeZoneStorageType, context, (BasicJavaType<?>) registered );
+		return resolve( timeZoneStorageType, services, state, (BasicJavaType<?>) registered );
 	}
 
 	private static <E> VersionResolution<E> resolve(
 			TimeZoneStorageType timeZoneStorageType,
-			MetadataBuildingContext context,
+			MappingResolutionServices services,
+			MappingResolutionState state,
 			BasicJavaType<E> basicJavaType) {
-		final var typeConfiguration = context.getTypeConfiguration();
-		final var mappingPreferences = context.getBuildingPlan().getMappingPreferences();
+		final var typeConfiguration = services.getTypeConfiguration();
+		final var mappingPreferences = state.options().getMappingPreferences();
 		final var recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
@@ -71,7 +74,15 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					@Override
 					@Nonnull
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-						return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, context );
+						return timeZoneStorageType == null
+								? state.options().getDefaultTimeZoneStorage()
+								: switch ( timeZoneStorageType ) {
+									case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+									case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+									case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+									case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+									case AUTO, DEFAULT -> state.options().getDefaultTimeZoneStorage();
+								};
 					}
 
 					@Override
@@ -101,7 +112,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 					@Override
 					public Dialect getDialect() {
-						return context.getMetadataCollector().getDatabase().getDialect();
+						return state.database().getDialect();
 					}
 				}
 		);

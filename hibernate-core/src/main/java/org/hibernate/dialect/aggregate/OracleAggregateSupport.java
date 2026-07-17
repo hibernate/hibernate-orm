@@ -8,6 +8,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
@@ -29,6 +30,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
@@ -544,7 +546,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			Namespace namespace,
 			String aggregatePath,
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			MappingResolutionOptions mappingResolutionOptions) {
 		final int typeCode = aggregateColumn.getTypeCode();
 		if ( typeCode == STRUCT_ARRAY || typeCode == STRUCT_TABLE ) {
 			final UserDefinedArrayType arrayType = namespace.createUserDefinedArrayType(
@@ -568,7 +573,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				namespace,
 				aggregatePath,
 				aggregateColumn,
-				aggregatedColumns
+				aggregatedColumns,
+				mappingContext,
+				typeConfiguration,
+				mappingResolutionOptions
 		);
 	}
 

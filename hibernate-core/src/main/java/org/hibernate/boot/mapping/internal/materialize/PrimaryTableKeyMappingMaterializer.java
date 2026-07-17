@@ -8,6 +8,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.sql.Alias;
 
@@ -15,8 +16,8 @@ import org.hibernate.sql.Alias;
 ///
 /// This is the primary-table half of the ORM 9 key-creation design.  New
 /// boot-model binding paths should initialize and finalize root table primary
-/// keys through this materializer instead of relying on
-/// [PersistentClass#createPrimaryKey()] as a hidden mapping-object side effect.
+/// keys through this materializer instead of relying on hidden mapping-object
+/// side effects.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -46,6 +47,21 @@ public class PrimaryTableKeyMappingMaterializer {
 		return primaryKey;
 	}
 
+	public void finalizeRootPrimaryKey(RootClass rootClass) {
+		final Table table = rootClass.getRootTable();
+		if ( rootClass.isPrimaryKeyDisabled() ) {
+			table.setPrimaryKey( null );
+			return;
+		}
+
+		final PrimaryKey primaryKey = table.getPrimaryKey();
+		if ( primaryKey == null ) {
+			return;
+		}
+
+		addAuxiliaryPrimaryKeyColumn( rootClass, primaryKey );
+	}
+
 	public void addIdentifierColumn(ResolvedPrimaryTableKey primaryTableKey, Column column) {
 		column.setNullable( false );
 		primaryTableKey.addIdentifierColumn( column );
@@ -67,6 +83,28 @@ public class PrimaryTableKeyMappingMaterializer {
 				if ( property.getValue().isPartitionKey() ) {
 					primaryKey.addColumns( property.getValue() );
 				}
+			}
+		}
+		if ( primaryTableKey.entityBinding() instanceof RootClass rootClass ) {
+			addAuxiliaryPrimaryKeyColumn( rootClass, primaryKey );
+		}
+	}
+
+	private void addAuxiliaryPrimaryKeyColumn(RootClass rootClass, PrimaryKey primaryKey) {
+		if ( !rootClass.isAuxiliaryColumnInPrimaryKey() ) {
+			return;
+		}
+
+		if ( rootClass.isVersioned() ) {
+			final var version = rootClass.getVersion();
+			if ( version != null ) {
+				primaryKey.addColumns( version.getValue() );
+			}
+		}
+		else {
+			final Column auxiliaryColumn = rootClass.getAuxiliaryColumn( rootClass.getAuxiliaryColumnInPrimaryKey() );
+			if ( auxiliaryColumn != null ) {
+				primaryKey.addColumn( auxiliaryColumn );
 			}
 		}
 	}

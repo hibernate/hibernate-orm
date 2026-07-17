@@ -9,8 +9,6 @@ import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
-import org.hibernate.boot.pipeline.internal.MappingResolutionServices;
-import org.hibernate.boot.pipeline.internal.MappingResolutionServicesImpl;
 
 /// Constructor input for [MetadataBuildingContextRootImpl].
 ///

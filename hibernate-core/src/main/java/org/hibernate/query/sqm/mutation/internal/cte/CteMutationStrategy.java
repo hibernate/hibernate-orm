@@ -75,8 +75,11 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			);
 		}
 
-		this.idCteTable = CteTable.createIdTable( ID_TABLE_NAME,
-				runtimeModelCreationContext.getMetadata().getEntityBinding( rootDescriptor.getEntityName() ) );
+		this.idCteTable = CteTable.createIdTable(
+				ID_TABLE_NAME,
+				runtimeModelCreationContext.getMetadata().getEntityBinding( rootDescriptor.getEntityName() ),
+				runtimeModelCreationContext.getMetadata()
+		);
 	}
 
 	@Override

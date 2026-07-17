@@ -108,6 +108,7 @@ import jakarta.persistence.AttributeConverter;
 /// @author Steve Ebersole
 public class BindingStateImpl implements BindingState {
 	private MetadataBuildingContext metadataBuildingContext;
+	private final MappingResolutionState mappingResolutionState;
 	private final MetadataCollector metadataCollector;
 	private final BootBindingModel bootBindingModel = new BootBindingModel();
 	private final RelationalModelCorrespondences relationalModelCorrespondences;
@@ -184,6 +185,7 @@ public class BindingStateImpl implements BindingState {
 
 	public BindingStateImpl(MetadataBuildingContext metadataBuildingContext, MetadataCollector metadataCollector) {
 		this.metadataBuildingContext = metadataBuildingContext;
+		this.mappingResolutionState = MappingResolutionState.from( metadataBuildingContext );
 		this.metadataCollector = metadataCollector;
 		this.database = metadataCollector.getDatabase();
 		this.relationalModelCorrespondences = new RelationalModelCorrespondences( database );
@@ -199,6 +201,11 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public MetadataBuildingContext getMetadataBuildingContext() {
 		return metadataBuildingContext;
+	}
+
+	@Override
+	public MappingResolutionState getMappingResolutionState() {
+		return mappingResolutionState;
 	}
 
 	@Override @Nonnull
@@ -407,6 +414,11 @@ public class BindingStateImpl implements BindingState {
 			Class<?> embeddableClass,
 			Class<? extends EmbeddableInstantiator> instantiatorClass) {
 		metadataCollector.registerEmbeddableInstantiator( embeddableClass, instantiatorClass );
+	}
+
+	@Override
+	public Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableClass) {
+		return metadataCollector.findRegisteredEmbeddableInstantiator( embeddableClass );
 	}
 
 	@Override

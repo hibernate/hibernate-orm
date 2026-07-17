@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -71,7 +72,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		representationStrategy = new IdClassRepresentationStrategy(
 				this,
 				idClassSource.sortProperties() == null,
-				idClassSource::getPropertyNames
+				idClassSource::getPropertyNames,
+				propertyAccessStrategyResolver( creationProcess )
 		);
 
 		final var propertyAccess =
@@ -135,7 +137,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				attributeNames[i] = inverseMappingType.getAttributeMapping( i ).getAttributeName();
 			}
 			return attributeNames;
-		} );
+		}, propertyAccessStrategyResolver( creationProcess ) );
 		this.embedded = valueMapping;
 		this.selectableMappings = selectableMappings;
 		creationProcess.registerInitializationCallback(
@@ -150,6 +152,12 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						this
 				)
 		);
+	}
+
+	private static PropertyAccessStrategyResolver propertyAccessStrategyResolver(MappingModelCreationProcess creationProcess) {
+		return creationProcess.getCreationContext()
+				.getServiceRegistry()
+				.requireService( PropertyAccessStrategyResolver.class );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

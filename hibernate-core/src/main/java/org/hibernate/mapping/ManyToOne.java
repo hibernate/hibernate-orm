@@ -4,15 +4,11 @@
  */
 package org.hibernate.mapping;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import org.hibernate.MappingException;
-import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
-import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.ManyToOne many-to-one association}.
@@ -20,21 +16,21 @@ import org.hibernate.type.ManyToOneType;
  * @author Gavin King
  */
 public final class ManyToOne extends ToOne {
-	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
-			new UniqueKeyMappingMaterializer();
-
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
 	private Boolean nullable;
+	private final TypeConfiguration typeConfiguration;
 
 	private transient ManyToOneType resolvedType;
 
 	public ManyToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
+		this.typeConfiguration = buildingContext.getTypeConfiguration();
 	}
 
 	private ManyToOne(ManyToOne original) {
 		super( original );
+		this.typeConfiguration = original.typeConfiguration;
 		this.notFoundAction = original.notFoundAction;
 		this.isLogicalOneToOne = original.isLogicalOneToOne;
 		this.nullable = original.nullable;
@@ -48,7 +44,7 @@ public final class ManyToOne extends ToOne {
 	public ManyToOneType getType() throws MappingException {
 		if ( resolvedType == null ) {
 			resolvedType = new ManyToOneType(
-					getTypeConfiguration(),
+					typeConfiguration,
 					getReferencedEntityName(),
 					isReferenceToPrimaryKey(),
 					getReferencedPropertyName(),
@@ -60,77 +56,6 @@ public final class ManyToOne extends ToOne {
 			);
 		}
 		return resolvedType;
-	}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
-	 * with an explicit resolved unique-key product instead.
-	 */
-	@Override
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createUniqueKey(MetadataBuildingContext context) {
-		if ( !hasFormula() ) {
-			UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
-					ResolvedUniqueKey.from( this, context, getPropertyName() )
-			);
-		}
-	}
-
-	/**
-	 * Creates a {@linkplain ForeignKey foreign key constraint} in the
-	 * case that the foreign key of this association does not reference
-	 * the primary key of the referenced table, but instead some other
-	 * unique key.
-	 * <p>
-	 * We depend here on having a property of the referenced entity
-	 * that does hold the referenced unique key. We might have created
-	 * a "synthetic" composite property for this purpose.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
-		if ( referencedPropertyName != null ) {
-			// Ensure properties are sorted before we create a foreign key
-			sortProperties();
-
-			final String referencedEntityName = getReferencedEntityName();
-			final String referencedPropertyName = getReferencedPropertyName();
-			final var referencedClass = persistentClasses.get( referencedEntityName );
-			if ( referencedClass == null ) {
-				throw new MappingException( "Referenced entity '" + referencedEntityName + "' does not exist" );
-
-			}
-			final var property = referencedClass.getReferencedProperty( referencedPropertyName );
-			if ( property==null ) {
-				throw new MappingException( "Referenced entity '" + referencedEntityName
-						+ "' has no property named '" + referencedPropertyName + "'" );
-			}
-			else {
-				// Make sure synthetic properties are sorted
-				if ( property.getValue() instanceof Component component ) {
-					component.sortProperties();
-				}
-				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
-				if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( referencedClass ) ) {
-					final var foreignKey = getTable().createForeignKey(
-							getForeignKeyName(),
-							getConstraintColumns(),
-							getType().getAssociatedEntityName(),
-							getForeignKeyDefinition(),
-							getForeignKeyOptions(),
-							new ArrayList<>( property.getColumns() )
-					);
-					foreignKey.setReferencedTable( property.getValue().getTable() );
-					foreignKey.setOnDeleteAction( getOnDeleteAction() );
-				}
-			}
-		}
 	}
 
 	public Object accept(ValueVisitor visitor) {

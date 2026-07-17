@@ -33,36 +33,34 @@ import org.hibernate.mapping.Value;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class CollectionKeyMappingMaterializer {
-	private final ForeignKeyMappingMaterializer foreignKeyMappingMaterializer = new ForeignKeyMappingMaterializer();
-	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
-	private final Function<String, PersistentClass> entityBindingResolver;
-
-	public CollectionKeyMappingMaterializer() {
-		this( (entityName) -> {
-			throw new IllegalStateException(
-					"Collection foreign-key materialization requires an entity-binding resolver"
-			);
-		} );
+public final class CollectionKeyMappingMaterializer {
+	private CollectionKeyMappingMaterializer() {
 	}
 
-	public CollectionKeyMappingMaterializer(Function<String, PersistentClass> entityBindingResolver) {
-		this.entityBindingResolver = entityBindingResolver;
+	public static ResolvedCollectionTableKey resolveTableKey(
+			Collection collection,
+			MetadataBuildingContext metadataBuildingContext) {
+		return new ResolvedCollectionTableKey( collection, metadataBuildingContext );
 	}
 
-	public ResolvedCollectionTableKey resolveTableKey(Collection collection) {
-		return new ResolvedCollectionTableKey( collection );
-	}
-
-	public void materializeAllKeys(ResolvedCollectionTableKey collectionTableKey) {
-		materializeForeignKeys( collectionTableKey.collection() );
+	public static void materializeAllKeys(
+			ResolvedCollectionTableKey collectionTableKey,
+			Function<String, PersistentClass> entityBindingResolver) {
+		materializeForeignKeys( collectionTableKey.collection(), entityBindingResolver );
 		materializePrimaryKeyIfNeeded( collectionTableKey );
 	}
 
-	private void materializeForeignKeys(Collection collection) {
+	private static void materializeForeignKeys(
+			Collection collection,
+			Function<String, PersistentClass> entityBindingResolver) {
 		if ( collection.getReferencedPropertyName() == null ) {
-			materializeValueForeignKey( collection, collection.getElement(), collection.getRole() + ".element" );
-			foreignKeyMappingMaterializer.materializeForeignKey(
+			materializeValueForeignKey(
+					collection,
+					collection.getElement(),
+					collection.getRole() + ".element",
+					entityBindingResolver
+			);
+			ForeignKeyMappingMaterializer.materializeForeignKey(
 					collection.getKey(),
 					collection.getOwner(),
 					collection.getRole() + ".key"
@@ -71,7 +69,7 @@ public class CollectionKeyMappingMaterializer {
 		else {
 			final var property = collection.getOwner().getProperty( collection.getReferencedPropertyName() );
 			assert property != null;
-			foreignKeyMappingMaterializer.materializeForeignKey(
+			ForeignKeyMappingMaterializer.materializeForeignKey(
 					collection.getKey(),
 					collection.getOwner(),
 					collection.getRole() + ".key",
@@ -80,37 +78,47 @@ public class CollectionKeyMappingMaterializer {
 		}
 
 		if ( collection instanceof org.hibernate.mapping.Map map && !collection.isInverse() ) {
-			materializeValueForeignKey( collection, map.getIndex(), collection.getRole() + ".index" );
+			materializeValueForeignKey(
+					collection,
+					map.getIndex(),
+					collection.getRole() + ".index",
+					entityBindingResolver
+			);
 		}
 	}
 
-	private void materializeValueForeignKey(Collection collection, Value value, String sourceRole) {
+	private static void materializeValueForeignKey(
+			Collection collection,
+			Value value,
+			String sourceRole,
+			Function<String, PersistentClass> entityBindingResolver) {
 		if ( value instanceof ToOne toOne ) {
 			final PersistentClass referencedEntity = entityBindingResolver.apply( toOne.getReferencedEntityName() );
 			if ( referencedEntity != null ) {
-				foreignKeyMappingMaterializer.materializeForeignKey( toOne, referencedEntity, sourceRole );
+				ForeignKeyMappingMaterializer.materializeForeignKey( toOne, referencedEntity, sourceRole );
 			}
 		}
 	}
 
-	public void materializePrimaryKeyIfNeeded(ResolvedCollectionTableKey collectionTableKey) {
+	public static void materializePrimaryKeyIfNeeded(ResolvedCollectionTableKey collectionTableKey) {
 		final Collection collection = collectionTableKey.collection();
 		if ( collection.isInverse() || collection.isPrimaryKeyDisabled() ) {
 			return;
 		}
 
-		createPrimaryKey( collection );
+		createPrimaryKey( collectionTableKey );
 		adjustTemporalPrimaryKey( collection );
 	}
 
-	public PrimaryKey materializeValuePrimaryKey(Table table, Value value, String sourceRole) {
+	public static PrimaryKey materializeValuePrimaryKey(Table table, Value value, String sourceRole) {
 		final PrimaryKey primaryKey = new PrimaryKey( table );
 		primaryKey.addColumns( value );
 		table.setPrimaryKey( primaryKey );
 		return primaryKey;
 	}
 
-	private void createPrimaryKey(Collection collection) {
+	private static void createPrimaryKey(ResolvedCollectionTableKey collectionTableKey) {
+		final Collection collection = collectionTableKey.collection();
 		if ( collection.isOneToMany() ) {
 			return;
 		}
@@ -121,17 +129,17 @@ public class CollectionKeyMappingMaterializer {
 			createIndexedCollectionPrimaryKey( indexedCollection );
 		}
 		else if ( collection.isSet() ) {
-			createSetKey( collection );
+			createSetKey( collectionTableKey );
 		}
 	}
 
-	private void createIdentifierCollectionPrimaryKey(IdentifierCollection collection) {
+	private static void createIdentifierCollectionPrimaryKey(IdentifierCollection collection) {
 		final PrimaryKey primaryKey = new PrimaryKey( collection.getCollectionTable() );
 		primaryKey.addColumns( collection.getIdentifier() );
 		collection.getCollectionTable().setPrimaryKey( primaryKey );
 	}
 
-	private void createIndexedCollectionPrimaryKey(IndexedCollection collection) {
+	private static void createIndexedCollectionPrimaryKey(IndexedCollection collection) {
 		final PrimaryKey primaryKey = new PrimaryKey( collection.getCollectionTable() );
 		primaryKey.addColumns( collection.getKey() );
 
@@ -144,7 +152,7 @@ public class CollectionKeyMappingMaterializer {
 		collection.getCollectionTable().setPrimaryKey( primaryKey );
 	}
 
-	private boolean indexIsPartOfElement(IndexedCollection collection) {
+	private static boolean indexIsPartOfElement(IndexedCollection collection) {
 		for ( var selectable : collection.getIndex().getSelectables() ) {
 			if ( selectable.isFormula() || !collection.getCollectionTable().containsColumn( (Column) selectable ) ) {
 				return true;
@@ -153,7 +161,9 @@ public class CollectionKeyMappingMaterializer {
 		return false;
 	}
 
-	private void createSetKey(Collection collection) {
+	private static void createSetKey(ResolvedCollectionTableKey collectionTableKey) {
+		final Collection collection = collectionTableKey.collection();
+		final var metadata = collectionTableKey.metadataBuildingContext().getMetadataCollector();
 		final Table collectionTable = collection.getCollectionTable();
 		if ( collectionTable.hasPrimaryKey() || !collectionTable.getUniqueKeys().isEmpty() ) {
 			return;
@@ -163,7 +173,7 @@ public class CollectionKeyMappingMaterializer {
 		for ( var selectable : collection.getElement().getSelectables() ) {
 			if ( selectable instanceof Column column ) {
 				try {
-					if ( column.isSqlTypeLob( collection.getMetadata() ) ) {
+					if ( column.isSqlTypeLob( metadata ) ) {
 						return;
 					}
 				}
@@ -184,11 +194,11 @@ public class CollectionKeyMappingMaterializer {
 				}
 			}
 			if ( uniqueKeyColumns.size() > collection.getKey().getColumnSpan() ) {
-				uniqueKeyMappingMaterializer.materializeUniqueKey(
+				UniqueKeyMappingMaterializer.materializeUniqueKey(
 						ResolvedUniqueKey.internal(
 								collectionTable,
 								uniqueKeyColumns,
-								collection.getBuildingContext(),
+								collectionTableKey.metadataBuildingContext(),
 								true,
 								collection.getRole()
 						)
@@ -204,14 +214,15 @@ public class CollectionKeyMappingMaterializer {
 				key.addColumn( column );
 			}
 		}
-		key.setName( implicitKeyName( collection, key ) );
+		key.setName( implicitKeyName( collectionTableKey, key ) );
 		if ( key.getColumnSpan() > collection.getKey().getColumnSpan() ) {
 			collectionTable.setPrimaryKey( (PrimaryKey) key );
 		}
 	}
 
-	private String implicitKeyName(Collection collection, Constraint key) {
-		final MetadataBuildingContext buildingContext = collection.getBuildingContext();
+	private static String implicitKeyName(ResolvedCollectionTableKey collectionTableKey, Constraint key) {
+		final Collection collection = collectionTableKey.collection();
+		final MetadataBuildingContext buildingContext = collectionTableKey.metadataBuildingContext();
 		return buildingContext.getBuildingPlan()
 				.getImplicitNamingStrategy()
 				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
@@ -239,10 +250,10 @@ public class CollectionKeyMappingMaterializer {
 						return buildingContext;
 					}
 				} )
-				.render( collection.getMetadata().getDatabase().getDialect() );
+				.render( buildingContext.getMetadataCollector().getDatabase().getDialect() );
 	}
 
-	private void adjustTemporalPrimaryKey(Collection collection) {
+	private static void adjustTemporalPrimaryKey(Collection collection) {
 		if ( collection.isAuxiliaryColumnInPrimaryKey() ) {
 			final var startingColumn = collection.getAuxiliaryColumn( collection.getAuxiliaryColumnInPrimaryKey() );
 			if ( startingColumn != null ) {

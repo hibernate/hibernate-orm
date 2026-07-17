@@ -5,10 +5,18 @@
 package org.hibernate.orm.test.idgen;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.mapping.GeneratorSettings;
+import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.Generator;
 
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 
@@ -37,6 +45,43 @@ public class GeneratorSettingsImpl implements GeneratorSettings {
 				database,
 				defaultCatalog,
 				defaultSchema
+		);
+	}
+
+	public static Generator createIdentifierGenerator(
+			KeyValue identifierValue,
+			Dialect dialect,
+			RootClass rootClass,
+			Property property,
+			Metadata domainModel) {
+		return createIdentifierGenerator(
+				identifierValue,
+				dialect,
+				rootClass,
+				property,
+				new GeneratorSettingsImpl( domainModel ),
+				domainModel
+		);
+	}
+
+	public static Generator createIdentifierGenerator(
+			KeyValue identifierValue,
+			Dialect dialect,
+			RootClass rootClass,
+			Property property,
+			GeneratorSettings defaults,
+			Metadata domainModel) {
+		final Database database = domainModel.getDatabase();
+		final ServiceRegistry serviceRegistry = database.getServiceRegistry();
+		return GeneratorBinder.createIdentifierGenerator(
+				identifierValue,
+				dialect,
+				rootClass,
+				property,
+				defaults,
+				database,
+				serviceRegistry,
+				serviceRegistry.requireService( PropertyAccessStrategyResolver.class )
 		);
 	}
 

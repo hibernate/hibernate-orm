@@ -28,6 +28,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.internal.AnnotatedClassType;
+import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
@@ -73,6 +74,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -1525,7 +1527,9 @@ public class InFlightMetadataCollectorImpl
 
 	protected void secondPassCompileForeignKeys(Table table, Set<ForeignKey> done, MetadataBuildingContext buildingContext)
 			throws MappingException {
-		table.createForeignKeys( buildingContext );
+		if ( table instanceof DenormalizedTable denormalizedTable ) {
+			denormalizedTable.createDenormalizedForeignKeys( buildingContext );
+		}
 		final var dialect = getDialect();
 		for ( var foreignKey : table.getForeignKeyCollection() ) {
 			if ( !done.contains( foreignKey ) ) {
@@ -1690,7 +1694,16 @@ public class InFlightMetadataCollectorImpl
 	private void handleIdentifierValueBinding(
 			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
 		try {
-			identifierValueBinding.createGenerator( dialect, entityBinding, identifierProperty, this );
+			GeneratorBinder.createIdentifierGenerator(
+					identifierValueBinding,
+					dialect,
+					entityBinding,
+					identifierProperty,
+					this,
+					getDatabase(),
+					bootstrapContext.getServiceRegistry(),
+					bootstrapContext.getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
+			);
 		}
 		catch (MappingException e) {
 			// Ignore this for now, the reasoning being "non-reflective" binding as needed

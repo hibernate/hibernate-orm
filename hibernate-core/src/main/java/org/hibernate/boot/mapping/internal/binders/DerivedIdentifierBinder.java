@@ -5,15 +5,17 @@
 package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.List;
-import java.util.Properties;
 import java.util.Comparator;
+import java.util.EnumSet;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.EventTypeSets;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.id.ForeignGenerator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -24,6 +26,8 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
 import jakarta.persistence.JoinColumn;
+
+import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
 
 /// Resolves derived identifier to-one columns after identifiers and members exist.
 ///
@@ -324,7 +328,6 @@ class DerivedIdentifierBinder {
 		}
 	}
 
-	@SuppressWarnings("removal")
 	private void applyDerivedIdentifierGenerator(
 			DerivedIdentifierBinding derivedIdentifierBinding,
 			Value identifierValue) {
@@ -332,15 +335,30 @@ class DerivedIdentifierBinder {
 			return;
 		}
 
-		simpleIdentifierValue.setCustomIdGeneratorCreator( creationContext -> {
-			final ForeignGenerator generator = new ForeignGenerator();
-			final Properties parameters = new Properties();
-			parameters.setProperty( ForeignGenerator.PROPERTY, derivedIdentifierBinding.property().getName() );
-			parameters.setProperty( IdentifierGenerator.ENTITY_NAME, derivedIdentifierBinding.ownerBinding().getEntityName() );
-			parameters.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, derivedIdentifierBinding.ownerBinding().getJpaEntityName() );
-			generator.configure( creationContext, parameters );
-			return generator;
-		} );
+		final String entityName = derivedIdentifierBinding.ownerBinding().getEntityName();
+		final String propertyName = derivedIdentifierBinding.property().getName();
+		simpleIdentifierValue.setCustomIdGeneratorCreator( creationContext ->
+				new BeforeExecutionGenerator() {
+				@Override
+				public Object generate(
+						SharedSessionContractImplementor session,
+						Object owner,
+						Object currentValue,
+						EventType eventType) {
+					return getForeignId( entityName, propertyName, session, owner );
+				}
+
+				@Override
+				public EnumSet<EventType> getEventTypes() {
+					return EventTypeSets.INSERT_ONLY;
+				}
+
+				@Override
+				public boolean allowAssignedIdentifiers() {
+					return true;
+				}
+			}
+		);
 	}
 
 	private List<Column> resolveTargetIdentifierColumns(DerivedIdentifierBinding derivedIdentifierBinding) {

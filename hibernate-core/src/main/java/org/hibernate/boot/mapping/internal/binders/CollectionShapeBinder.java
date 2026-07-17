@@ -500,7 +500,7 @@ class CollectionShapeBinder {
 			return "";
 		}
 		if ( identifierBinding.value() instanceof SortableValue sortableValue ) {
-			sortableValue.sortProperties();
+			sortableValue.sortProperties( bindingState::getEntityBinding );
 		}
 		final StringBuilder result = new StringBuilder();
 		for ( Selectable selectable : identifierBinding.value().getSelectables() ) {

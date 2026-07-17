@@ -11,10 +11,10 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 
@@ -24,7 +24,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_
  * @author Gavin King
  */
 public class OneToMany implements Value {
-	private final MetadataBuildingContext buildingContext;
+	private final TypeConfiguration typeConfiguration;
 	private final Table referencingTable;
 
 	private String referencedEntityName;
@@ -32,12 +32,12 @@ public class OneToMany implements Value {
 	private NotFoundAction notFoundAction;
 
 	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
-		this.buildingContext = buildingContext;
+		this.typeConfiguration = buildingContext.getTypeConfiguration();
 		this.referencingTable = owner == null ? null : owner.getTable();
 	}
 
 	private OneToMany(OneToMany original) {
-		this.buildingContext = original.buildingContext;
+		this.typeConfiguration = original.typeConfiguration;
 		this.referencingTable = original.referencingTable;
 		this.referencedEntityName = original.referencedEntityName;
 		this.associatedClass = original.associatedClass;
@@ -49,16 +49,6 @@ public class OneToMany implements Value {
 		return new OneToMany( this );
 	}
 
-	@Override
-	public MetadataBuildingContext getBuildingContext() {
-		return buildingContext;
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return buildingContext.getBuildingPlan().getServiceRegistry();
-	}
-
 	public PersistentClass getAssociatedClass() {
 		return associatedClass;
 	}
@@ -68,30 +58,6 @@ public class OneToMany implements Value {
 	 */
 	public void setAssociatedClass(PersistentClass associatedClass) {
 		this.associatedClass = associatedClass;
-	}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
-	 * with an explicit resolved foreign-key product instead.
-	 */
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createForeignKey() {
-		// no foreign key element for a one-to-many
-	}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
-	 * with an explicit resolved unique-key product instead.
-	 */
-	@Override
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
 	@Override
@@ -130,7 +96,7 @@ public class OneToMany implements Value {
 	@Override
 	public Type getType() {
 		return new ManyToOneType(
-				buildingContext.getTypeConfiguration(),
+				typeConfiguration,
 				getReferencedEntityName(),
 				true,
 				null,
@@ -182,7 +148,10 @@ public class OneToMany implements Value {
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
 	}
 
 	@Override

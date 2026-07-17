@@ -137,12 +137,7 @@ public class TableNamingStrategyTest {
 
 	private IdentifierGenerator extractGenerator(PersistentClass entityBinding, MetadataImplementor metadata) {
 		KeyValue keyValue = entityBinding.getIdentifier();
-		final Generator generator = keyValue.createGenerator(
-				metadata.getDatabase().getDialect(),
-				entityBinding.getRootClass(),
-				entityBinding.getIdentifierProperty(),
-				new GeneratorSettingsImpl( metadata )
-		);
+		final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, metadata.getDatabase().getDialect(), entityBinding.getRootClass(), entityBinding.getIdentifierProperty(), metadata );
 		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 

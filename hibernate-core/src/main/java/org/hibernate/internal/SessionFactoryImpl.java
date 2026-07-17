@@ -46,6 +46,7 @@ import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.mapping.internal.model.BootBindingModel;
+import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -88,6 +89,7 @@ import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.RuntimeModelHandoffResolvers;
@@ -1641,15 +1643,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				return existing;
 			}
 			else {
-				final var idGenerator =
-						persistentClass.getIdentifier()
-								// returns the cached Generator if it was already created
-								.createGenerator(
-										getDialect(),
-										persistentClass.getRootClass(),
-										persistentClass.getIdentifierProperty(),
-										getGeneratorSettings()
-								);
+				final var idGenerator = GeneratorBinder.createIdentifierGenerator(
+						persistentClass.getIdentifier(),
+						getDialect(),
+						persistentClass.getRootClass(),
+						persistentClass.getIdentifierProperty(),
+						getGeneratorSettings(),
+						getBootModel().getDatabase(),
+						getServiceRegistry(),
+						getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
+				);
 				getGenerators().put( rootName, idGenerator );
 				return idGenerator;
 			}

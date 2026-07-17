@@ -13,6 +13,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Subclass;
+import org.hibernate.type.MappingContext;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorValue;
 
@@ -28,7 +29,7 @@ final class DiscriminatorColumnFinalizer {
 	private DiscriminatorColumnFinalizer() {
 	}
 
-	static void finalizeDiscriminatorColumn(RootClass rootClass, Dialect dialect) {
+	static void finalizeDiscriminatorColumn(RootClass rootClass, Dialect dialect, MappingContext mappingContext) {
 		if ( hasNullDiscriminatorValue( rootClass ) ) {
 			for ( var selectable : rootClass.getDiscriminator().getSelectables() ) {
 				if ( selectable instanceof Column column ) {
@@ -40,7 +41,7 @@ final class DiscriminatorColumnFinalizer {
 				&& !rootClass.getDiscriminator().hasFormula()
 				&& !rootClass.isForceDiscriminator() ) {
 			final var column = rootClass.getDiscriminator().getColumns().get( 0 );
-			column.addCheckConstraint( new CheckConstraint( checkConstraint( rootClass, column, dialect ) ) );
+			column.addCheckConstraint( new CheckConstraint( checkConstraint( rootClass, column, dialect, mappingContext ) ) );
 		}
 	}
 
@@ -68,11 +69,11 @@ final class DiscriminatorColumnFinalizer {
 		return false;
 	}
 
-	private static String checkConstraint(RootClass rootClass, Column column, Dialect dialect) {
+	private static String checkConstraint(RootClass rootClass, Column column, Dialect dialect, MappingContext mappingContext) {
 		return dialect.getCheckCondition(
 				column.getQuotedName( dialect ),
 				discriminatorValues( rootClass ),
-				column.getType().getJdbcType()
+				column.getType( mappingContext ).getJdbcType()
 		);
 	}
 

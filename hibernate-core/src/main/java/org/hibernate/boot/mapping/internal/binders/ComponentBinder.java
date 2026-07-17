@@ -14,9 +14,11 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer.MaterializedBasicValue;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
@@ -39,6 +41,7 @@ import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
@@ -210,7 +213,7 @@ public class ComponentBinder {
 				);
 				property.setValue( collection );
 				property.setOptional( true );
-				applyGenericPropertyMarkers( source, component, componentMember, property );
+				applyGenericPropertyMarkers( source, component, componentMember, property, state );
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
@@ -252,7 +255,7 @@ public class ComponentBinder {
 				if ( !hasJoinTable( member, toOneValueIntent ) ) {
 					alignComponentTable( component, property );
 				}
-				applyGenericPropertyMarkers( source, component, componentMember, property );
+				applyGenericPropertyMarkers( source, component, componentMember, property, state );
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
@@ -278,7 +281,7 @@ public class ComponentBinder {
 				property.setCascade( anySource.cascades() );
 				property.setLazy( anySource.lazy() );
 				alignComponentTable( component, property );
-				applyGenericPropertyMarkers( source, component, componentMember, property );
+				applyGenericPropertyMarkers( source, component, componentMember, property, state );
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
@@ -344,7 +347,7 @@ public class ComponentBinder {
 				}
 				columns.addAll( nestedColumns );
 				alignComponentTable( component, property );
-				applyGenericPropertyMarkers( source, component, componentMember, property );
+				applyGenericPropertyMarkers( source, component, componentMember, property, state );
 				component.addProperty( property, componentMember.declaringType() );
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
@@ -374,7 +377,7 @@ public class ComponentBinder {
 				}
 			}
 			alignComponentTable( component, property );
-			applyGenericPropertyMarkers( source, component, componentMember, property );
+			applyGenericPropertyMarkers( source, component, componentMember, property, state );
 			component.addProperty( property, componentMember.declaringType() );
 			applyCollation( ownerType, componentMember, property );
 			applyTenantId( member, ownerBinding, property );
@@ -412,7 +415,8 @@ public class ComponentBinder {
 			ComponentSource source,
 			Component component,
 			ComponentMemberBinding componentMember,
-			Property property) {
+			Property property,
+			BindingState state) {
 		final MemberDetails member = componentMember.member();
 		final TypeDetails declaredType = member.getType();
 		if ( !typeUsesTypeVariable( declaredType ) ) {
@@ -428,14 +432,15 @@ public class ComponentBinder {
 			property.setGeneric( false );
 			property.setGenericSpecialization( true );
 			property.setReturnedClassName( resolvedType.getName() );
-			addGenericMappedSuperclassDeclaration( component, componentMember, property );
+			addGenericMappedSuperclassDeclaration( component, componentMember, property, state );
 		}
 	}
 
 	private static void addGenericMappedSuperclassDeclaration(
 			Component component,
 			ComponentMemberBinding componentMember,
-			Property specializedProperty) {
+			Property specializedProperty,
+			BindingState state) {
 		final MappedSuperclass mappedSuperclass = component.getMappedSuperclass();
 		if ( mappedSuperclass == null || hasDeclaredProperty( mappedSuperclass, specializedProperty.getName() ) ) {
 			return;
@@ -446,7 +451,7 @@ public class ComponentBinder {
 		genericProperty.setGenericSpecialization( false );
 		genericProperty.setReturnedClassName( componentMember.member().getType().getName() );
 		if ( specializedProperty.getValue() instanceof BasicValue basicValue ) {
-			genericProperty.setValue( genericBasicValue( basicValue ) );
+			genericProperty.setValue( genericBasicValue( basicValue, state.getMetadataBuildingContext() ) );
 		}
 		else {
 			genericProperty.setValue( specializedProperty.getValue().copy() );
@@ -463,8 +468,8 @@ public class ComponentBinder {
 		return false;
 	}
 
-	private static BasicValue genericBasicValue(BasicValue source) {
-		final BasicValue basicValue = BasicValue.unregistered( source.getBuildingContext(), source.getTable() );
+	private static BasicValue genericBasicValue(BasicValue source, MetadataBuildingContext context) {
+		final BasicValue basicValue = BasicValue.unregistered( context, source.getTable() );
 		basicValue.setTable( source.getTable() );
 		basicValue.setTypeName( Object.class.getName() );
 		for ( int i = 0; i < source.getSelectables().size(); i++ ) {
@@ -478,7 +483,13 @@ public class ComponentBinder {
 		}
 		final BasicValueSource valueSource = BasicValueSource.genericDeclaration();
 		basicValue.setImplicitSourceJavaType( valueSource.sourceJavaType() );
-		BasicValueResolutionBuilder.applyResolution( BasicValueResolutionBuilder.Input.create( basicValue, valueSource ) );
+		final var details = BasicValueResolutionDetails.create( basicValue, valueSource );
+		BasicValueResolutionBuilder.applyResolution(
+				details,
+				context.getServiceComponents(),
+				MappingResolutionState.from( context ),
+				context
+		);
 		return basicValue;
 	}
 
@@ -583,7 +594,7 @@ public class ComponentBinder {
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setReferenceToPrimaryKey( true );
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
+		value.setTypeUsingReflection( componentType.getClassName(), attributeName, state.getMetadataBuildingContext() );
 		final FetchType fetchType = effectiveFetchType( source );
 		value.setLazy( fetchType == FetchType.LAZY );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
@@ -626,7 +637,7 @@ public class ComponentBinder {
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setReferenceToPrimaryKey( true );
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
+		value.setTypeUsingReflection( componentType.getClassName(), attributeName, state.getMetadataBuildingContext() );
 		final FetchType fetchType = effectiveFetchType( source );
 		value.setLazy( fetchType == FetchType.LAZY );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );

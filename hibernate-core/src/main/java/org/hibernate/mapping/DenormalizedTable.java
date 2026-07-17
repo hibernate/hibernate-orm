@@ -57,9 +57,10 @@ public class DenormalizedTable extends Table {
 		includedTable.setHasDenormalizedTables();
 	}
 
-	@Override
-	public void createForeignKeys(MetadataBuildingContext context) {
-		includedTable.createForeignKeys( context );
+	public void createDenormalizedForeignKeys(MetadataBuildingContext context) {
+		if ( includedTable instanceof DenormalizedTable denormalizedTable ) {
+			denormalizedTable.createDenormalizedForeignKeys( context );
+		}
 		for ( var foreignKey : includedTable.getForeignKeyCollection() ) {
 			final var referencedClass =
 					foreignKey.resolveReferencedClass( context.getMetadataCollector() );

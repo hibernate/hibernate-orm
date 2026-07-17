@@ -42,11 +42,12 @@ public class NativeGeneratorClassTest {
 		final Property idProperty = entityBinding.getIdentifierProperty();
 		final KeyValue identifier = entityBinding.getIdentifier();
 
-		final Generator generator = identifier.createGenerator(
+		final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator(
+				identifier,
 				domainModelScope.getDomainModel().getDatabase().getDialect(),
 				entityBinding.getRootClass(),
 				idProperty,
-				new GeneratorSettingsImpl( domainModelScope.getDomainModel() )
+				domainModelScope.getDomainModel()
 		);
 		assertThat( generator ).isInstanceOf( NativeGenerator.class );
 	}

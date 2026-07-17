@@ -11,7 +11,7 @@ import org.hibernate.service.JavaServiceLoadable;
 /**
  * Contract allowing pluggable contributions of additional mapping objects.
  *
- * Resolvable as a {@linkplain java.util.ServiceLoader Java service}.
+ * Discoverable as a {@linkplain java.util.ServiceLoader Java service}.
  *
  * @author Steve Ebersole
  */

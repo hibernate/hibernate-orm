@@ -8,7 +8,7 @@ import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
-import org.hibernate.boot.pipeline.internal.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;

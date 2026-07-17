@@ -11,7 +11,9 @@ import java.util.Map;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -343,19 +345,28 @@ public class TemporalHelper {
 			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType );
 			if ( Instant.class.equals( changesetIdJavaType ) ) {
 				final int temporalColumnType = database.getDialect().getTemporalTableSupport().getTemporalColumnType();
-				final var resolutionInput = BasicValueResolutionBuilder.Input.create(
+				final var resolutionInput = BasicValueResolutionDetails.create(
 						basicValue,
 						BasicValueSource.stateManagement( changesetIdJavaType )
 				);
 				resolutionInput.setConfiguredJdbcTypeCode( temporalColumnType );
-				BasicValueResolutionBuilder.applyResolution( resolutionInput );
+				BasicValueResolutionBuilder.applyResolution(
+						resolutionInput,
+						context.getServiceComponents(),
+						MappingResolutionState.from( context ),
+						context
+				);
 			}
 			else {
+				final var details = BasicValueResolutionDetails.create(
+						basicValue,
+						BasicValueSource.stateManagement( changesetIdJavaType )
+				);
 				BasicValueResolutionBuilder.applyResolution(
-						BasicValueResolutionBuilder.Input.create(
-								basicValue,
-								BasicValueSource.stateManagement( changesetIdJavaType )
-						)
+						details,
+						context.getServiceComponents(),
+						MappingResolutionState.from( context ),
+						context
 				);
 			}
 		}

@@ -85,7 +85,7 @@ public class AuditOverrideCollectionTableTest {
 	@AuditOverrides(
 			{@AuditOverride(name = "firstCollection", isAudited = true),
 					@AuditOverride(name = "secondCollection", isAudited = false),
-			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( name = "custom_audited_join_table_name" ))}
+			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( catalog = "cat", schema = "schema", name = "custom_audited_join_table_name" ))} //TODO schema and catalog?
 	)
 	static class EntityWithOverrides extends MSCWithExcludedCollectionProperty{
 	}
@@ -98,7 +98,7 @@ public class AuditOverrideCollectionTableTest {
 		assertTrue( tableNames.contains( "AuditOverrideCollectionTableTest$EntityWithOverrides_firstCollection_AUD" ) );
 		assertTrue( tableNames.contains( "AuditOverrideCollectionTableTest$EntityWithOverrides_secondCollection" ) );
 		assertFalse( tableNames.contains( "AuditOverrideCollectionTableTest$EntityWithOverrides_secondCollection_AUD" ) );
-		assertTrue( tableNames.contains( "custom_audited_join_table_name" ) );
+		assertTrue( tables.contains( createTableObject( "cat", "schema", "custom_audited_join_table_name" ) ) );
 	}
 
 	/**
@@ -145,14 +145,14 @@ public class AuditOverrideCollectionTableTest {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		var tableNames = tables.stream().map( org.hibernate.mapping.Table::getName ).collect( Collectors.toSet() );
 		assertFalse( tableNames.contains( "overridden_aud" ) );
-		assertTrue( tables.contains( createTableObject() ) );
+		assertTrue( tables.contains( createTableObject( "mycatalog", "myschema", "double_overridden_aud" ) ) );
 	}
 
-	private static org.hibernate.mapping.Table createTableObject() {
+	private static org.hibernate.mapping.Table createTableObject(String catalog, String schema, String tableName) {
 		var table = new org.hibernate.mapping.Table();
-		table.setCatalog( "mycatalog" );
-		table.setSchema( "myschema" );
-		table.setName( "double_overridden_aud" );
+		table.setCatalog( catalog );
+		table.setSchema( schema );
+		table.setName( tableName );
 		return table;
 	}
 

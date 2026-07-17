@@ -307,8 +307,10 @@ public final class AuditHelper {
 
 		// Table name: @Audited.CollectionTable name (if applicable, taken from @AuditOverride), or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
+		var auditOverride = findEffectiveAuditOverrideInHierarchy( collection.getOwner(), propertyName );
+
 		final String auditTableName =
-				auditTableName( collection, collectionAuditTable, referencedEntity, propertyName );
+				auditTableName( collection, collectionAuditTable, referencedEntity, auditOverride );
 
 		final String auditSchema;
 		final String auditCatalog;
@@ -327,10 +329,14 @@ public final class AuditHelper {
 			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		final String schema =
-				collectionAuditTable != null && !isBlank( collectionAuditTable.schema() )
-						? collectionAuditTable.schema()
-						: !isBlank( auditSchema ) ? auditSchema : ownerTable.getSchema();
+				auditOverride != null && !isBlank( auditOverride.collectionTable().schema() )
+						? auditOverride.collectionTable().schema() :
+						collectionAuditTable != null && !isBlank( collectionAuditTable.schema() )
+								? collectionAuditTable.schema()
+								: !isBlank( auditSchema ) ? auditSchema : ownerTable.getSchema();
 		final String catalog =
+				auditOverride != null && !isBlank( auditOverride.collectionTable().catalog() )
+						? auditOverride.collectionTable().catalog() :
 				collectionAuditTable != null && !isBlank( collectionAuditTable.catalog() )
 						? collectionAuditTable.catalog()
 						: !isBlank( auditCatalog ) ? auditCatalog : ownerTable.getCatalog();
@@ -375,21 +381,27 @@ public final class AuditHelper {
 		} );
 	}
 
+	private static AuditOverride findEffectiveAuditOverrideInHierarchy(PersistentClass rootClass, String propertyName) {
+		var fullHierarchy = new LinkedList<PersistentClass>( rootClass.getSubclasses() );
+		fullHierarchy.add( rootClass );
+		for ( var persistentClass : fullHierarchy ) {
+			var auditOverride = findFirstAuditOverrideForProperty( persistentClass, propertyName );
+			if ( auditOverride != null) {
+				return auditOverride;
+			}
+		}
+		return null;
+	}
+
 	@Nonnull
 	private static String auditTableName(
 			Collection collection,
 			@Nullable Audited.CollectionTable collectionAuditTable,
 			PersistentClass referencedEntity,
-			String propertyName) {
+			AuditOverride auditOverride) {
 
-		//search name in @AuditOverrides
-		var fullHierarchy = new LinkedList<PersistentClass>( collection.getOwner().getSubclasses() );
-		fullHierarchy.add( collection.getOwner() );
-		for ( var persistentClass : fullHierarchy ) {
-			var auditOverride = findFirstAuditOverrideForProperty( persistentClass, propertyName );
-			if ( auditOverride != null && !auditOverride.collectionTable().name().isBlank()) {
-				return auditOverride.collectionTable().name();
-			}
+		if ( auditOverride != null && !auditOverride.collectionTable().name().isBlank()) {
+			return auditOverride.collectionTable().name();
 		}
 
 		// search name in Audited.CollectionTable

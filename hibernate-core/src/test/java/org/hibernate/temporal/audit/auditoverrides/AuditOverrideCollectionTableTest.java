@@ -129,13 +129,13 @@ public class AuditOverrideCollectionTableTest {
 
 	@Entity
 	@Table(name = "EntityWithOverrides")
-	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "overridden_aud" )))
+	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "overridden_aud")))
 	static class EntityWithCollection extends MSCWithCollection{
 
 	}
 
 	@Entity
-	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "double_overridden_aud" )))
+	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "double_overridden_aud", catalog = "mycatalog", schema = "myschema"  )))
 	static class SubEntity extends EntityWithCollection{
 
 	}
@@ -145,7 +145,15 @@ public class AuditOverrideCollectionTableTest {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		var tableNames = tables.stream().map( org.hibernate.mapping.Table::getName ).collect( Collectors.toSet() );
 		assertFalse( tableNames.contains( "overridden_aud" ) );
-		assertTrue( tableNames.contains( "double_overridden_aud" ) );
+		assertTrue( tables.contains( createTableObject() ) );
+	}
+
+	private static org.hibernate.mapping.Table createTableObject() {
+		var table = new org.hibernate.mapping.Table();
+		table.setCatalog( "mycatalog" );
+		table.setSchema( "myschema" );
+		table.setName( "double_overridden_aud" );
+		return table;
 	}
 
 	//TODO also override auditSchema and auditCatalog

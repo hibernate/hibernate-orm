@@ -19,9 +19,17 @@ class SecurityAnnotationTest {
 		final String source = getMetaModelSourceAsString( SecuredBookRepository.class, true );
 		System.out.println( source );
 
+		// class-level @DeclareRoles
+		assertTrue( source.contains( "@DeclareRoles(value={\"admin\",\"manager\",\"editor\"})" ),
+				"class-level @DeclareRoles should be copied" );
+
 		// class-level @RolesAllowed
 		assertTrue( source.contains( "@RolesAllowed(value={\"admin\"})" ),
 				"class-level @RolesAllowed should be copied" );
+
+		// class-level @RunAs
+		assertTrue( source.contains( "@RunAs(value=\"admin\")" ),
+				"class-level @RunAs should be copied" );
 
 		// method-level @DenyAll
 		assertTrue( source.contains( "@Override\n\t@DenyAll" ),
@@ -31,7 +39,7 @@ class SecurityAnnotationTest {
 		assertTrue( source.contains( "@Override\n\t@PermitAll" ),
 				"method-level @PermitAll should be copied after @Override" );
 
-		// method-level @RolesAllowed with multiple roles on delete method
+		// method-level @RolesAllowed with multiple roles on insert method
 		assertTrue( source.contains( "@Override\n\t@RolesAllowed(value={\"manager\",\"editor\"})" ),
 				"method-level @RolesAllowed with multiple roles should be copied after @Override" );
 	}

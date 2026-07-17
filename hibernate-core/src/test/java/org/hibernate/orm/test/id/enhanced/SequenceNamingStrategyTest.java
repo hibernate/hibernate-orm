@@ -156,12 +156,7 @@ public class SequenceNamingStrategyTest {
 
 	private IdentifierGenerator extractGenerator(MetadataImplementor metadataImplementor, PersistentClass entityBinding) {
 		KeyValue keyValue = entityBinding.getIdentifier();
-		final Generator generator = keyValue.createGenerator(
-				metadataImplementor.getDatabase().getDialect(),
-				entityBinding.getRootClass(),
-				entityBinding.getIdentifierProperty(),
-				new GeneratorSettingsImpl( metadataImplementor )
-		);
+		final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, metadataImplementor.getDatabase().getDialect(), entityBinding.getRootClass(), entityBinding.getIdentifierProperty(), metadataImplementor );
 		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 

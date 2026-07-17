@@ -6,6 +6,20 @@ It is intentionally example-driven because many of the names describe adjacent
 parts of one concept: source metadata interpreted, applied, projected, and
 handed off to legacy compatibility objects.
 
+The current implementation uses these names mainly under:
+
+* `org.hibernate.boot.mapping.internal.model` for mutable boot binding
+  products such as `BootBindingModel`, `ManagedTypeBinding`,
+  `AttributeDeclarationBinding`, `AttributeUsageBinding`,
+  `MappedSuperclassContribution`, `EmbeddableContribution`, identifier,
+  version, tenant-id, natural-id, and collation products;
+* `org.hibernate.boot.mapping.internal.view` for read views over those products;
+* `org.hibernate.boot.mapping.internal.context` for handoff records that link
+  semantic boot products to materialized `org.hibernate.mapping`
+  compatibility objects;
+* `org.hibernate.boot.mapping.internal.relational` and selected runtime
+  metamodel bridges for correspondence products.
+
 == Example Model
 
 Use this small model as the running example:
@@ -52,7 +66,8 @@ runtime, schema, and integration consumers.
 | `*Binding`
 | A boot-time semantic model object produced by binding source metadata.
 | `ManagedTypeBinding` for `Audited`; `AttributeDeclarationBinding` for
-  `Audited#code`; `AttributeUsageBinding` for `Customer#code`.
+  `Audited#code`; `AttributeUsageBinding` for `Customer#code`;
+  `EntityIdentifierBinding` for a root identifier.
 
 | `*Declaration`
 | A source-level fact that is true before choosing a concrete consumer.
@@ -78,13 +93,17 @@ runtime, schema, and integration consumers.
 | A bridge from boot-model semantic facts to a compatibility object or later
   phase.
 | `MappedSuperclassPropertyHandoff` links the copied legacy `Property` for
-  `Customer#code` to its `AttributeUsageBinding` and owning contribution.
+  `Customer#code` to its `AttributeUsageBinding` and owning contribution;
+  `EntityIdentifierHandoff` links an identifier view to its materialized
+  `IdentifierBinding`.
 
 | `*Correspondence`
 | A product that relates two model parts that should not be matched by object
   identity or list position.
 | `AttributeTypeCorrespondence` relates the public declaration type `T` to the
-  concrete usage type `String` for `Customer#code`.
+  concrete usage type `String` for runtime JPA metamodel creation;
+  `ColumnNameCorrespondence` relates table-local logical column names to
+  materialized `Column` objects.
 
 | `*View`
 | A read-only projection over mutable/internal binding state.
@@ -115,6 +134,11 @@ as:
 * an `AttributeDeclarationBinding` for `Audited#code`;
 * an `AttributeDeclarationBinding` for `Customer#name`;
 * an `AttributeDeclarationBinding` for `Order#total`.
+
+As binding proceeds, the model also records narrower semantic products such as
+`EntityIdentifierBinding`, `VersionBinding`, `TenantIdBinding`,
+`NaturalIdContribution`, `CollationContribution`, `MappedSuperclassContribution`,
+and `EmbeddableContribution`.
 
 The key rule is that a binding object should describe what ORM has understood,
 not merely mirror a Java reflection object or a legacy mapping object.
@@ -213,12 +237,26 @@ The handoff is deliberately not the semantic model itself.  It is the bridge
 that lets old consumers keep receiving `Property` while new consumers can find
 the declaration/usage facts that produced that property.
 
+The current code uses the same pattern for several materialized compatibility
+objects:
+
+* `EntityIdentifierHandoff` links `EntityIdentifierBindingView` to the
+  materialized identifier value/property/table state;
+* `NaturalIdPropertyHandoff`, `CollationPropertyHandoff`,
+  `TenantIdPropertyHandoff`, and `VersionPropertyHandoff` link source
+  contribution/binding views to the materialized `Property`;
+* `EmbeddableComponentHandoff` links an embeddable contribution to the
+  materialized `Component`;
+* `MappedSuperclassPropertyHandoff` links mapped-superclass usage metadata to
+  the copied compatibility `Property`.
+
 === Correspondence
 
 Correspondence objects keep related facts together when identity or position is
 not reliable enough.
 
-For `Customer#code`, `AttributeTypeCorrespondence` can carry:
+For `Customer#code`, the runtime JPA metamodel bridge
+`AttributeTypeCorrespondence` can carry:
 
 * the compatibility `Property`;
 * the owning runtime/domain type;
@@ -229,6 +267,15 @@ For `Customer#code`, `AttributeTypeCorrespondence` can carry:
 This avoids treating the copied `Property` as if it alone can answer both
 "what did the mapped superclass declare?" and "what does this entity actually
 use?"
+
+Other current correspondence products are more relational:
+
+* `ColumnNameCorrespondence` records the table-local logical column identifier
+  and materialized `Column` so later phases can recover logical source names
+  without treating `InFlightMetadataCollector` as the primary store;
+* `SelectableCorrespondence` and `SelectableOrderResolution` track
+  local-to-referenced selectable relationships where positional matching would
+  be ambiguous.
 
 === View
 
@@ -241,6 +288,12 @@ inspect a contribution without mutating the underlying
 
 Views are useful during the transition because the boot model is still being
 populated and projected into legacy mapping objects in phases.
+
+Current views include managed-type views such as `EntityHierarchyView`,
+`EntityView`, `MappedSuperclassView`, and `EmbeddableView`, plus focused views
+such as `EntityIdentifierBindingView`, `VersionBindingView`,
+`TenantIdBindingView`, `NaturalIdContributionView`,
+`CollationContributionView`, and `EmbeddableContributionView`.
 
 == Naming Rules Of Thumb
 

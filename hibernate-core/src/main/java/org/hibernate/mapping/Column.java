@@ -17,7 +17,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.internal.AggregateCastTypeSizingSupport;
@@ -118,12 +117,8 @@ public sealed class Column
 	}
 
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	public JdbcMapping getType() {
-		return getValue().getSelectableType( getMetadataCollector(), getTypeIndex() );
-	}
-
-	private InFlightMetadataCollector getMetadataCollector() {
-		return getValue().getBuildingContext().getMetadataCollector();
+	public JdbcMapping getType(MappingContext mappingContext) {
+		return getValue().getSelectableType( mappingContext, getTypeIndex() );
 	}
 
 	public String getName() {
@@ -429,6 +424,13 @@ public sealed class Column
 	public Size getColumnSize(Dialect dialect, MappingContext mappingContext) {
 		if ( columnSize == null ) {
 			columnSize = calculateColumnSize( dialect, mappingContext );
+		}
+		return columnSize;
+	}
+
+	public Size getColumnSizeForType(Dialect dialect, Type type) {
+		if ( columnSize == null ) {
+			columnSize = calculateColumnSize( dialect, null, type );
 		}
 		return columnSize;
 	}

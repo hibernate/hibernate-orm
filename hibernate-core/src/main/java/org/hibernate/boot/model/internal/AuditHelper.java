@@ -22,7 +22,9 @@ import org.hibernate.audit.ChangesetListener;
 import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -766,11 +768,15 @@ public final class AuditHelper {
 				context.getBuildingPlan().getPhysicalNamingStrategy() );
 		setTemporalColumnType( column, database, javaType );
 
+		final var details = BasicValueResolutionDetails.create(
+				basicValue,
+				BasicValueSource.stateManagement( javaType )
+		);
 		BasicValueResolutionBuilder.applyResolution(
-				BasicValueResolutionBuilder.Input.create(
-						basicValue,
-						BasicValueSource.stateManagement( javaType )
-				)
+				details,
+				context.getServiceComponents(),
+				MappingResolutionState.from( context ),
+				context
 		);
 
 		return column;
@@ -839,6 +845,7 @@ public final class AuditHelper {
 					List.of( revColumn ),
 					changelogName,
 					null,
+					null,
 					null
 			);
 		}
@@ -857,6 +864,7 @@ public final class AuditHelper {
 				null,
 				new ArrayList<>( sourceAuditTable.getPrimaryKey().getColumns() ),
 				rootEntityName,
+				null,
 				null,
 				null
 		);

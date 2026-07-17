@@ -12,6 +12,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -19,8 +20,12 @@ class PropertyAccessHelper {
 	static PropertyAccessStrategy propertyAccessStrategy(
 			Property bootAttributeDescriptor,
 			Class<?> mappedClass,
-			StrategySelector strategySelector) {
-		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedClass );
+			StrategySelector strategySelector,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
+		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy(
+				mappedClass,
+				propertyAccessStrategyResolver
+		);
 		if ( strategy != null ) {
 			return strategy;
 		}

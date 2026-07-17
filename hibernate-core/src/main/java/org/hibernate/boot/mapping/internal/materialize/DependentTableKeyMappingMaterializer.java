@@ -20,10 +20,13 @@ import org.hibernate.sql.Alias;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class DependentTableKeyMappingMaterializer {
+public final class DependentTableKeyMappingMaterializer {
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
-	public ResolvedDependentTableKey resolvePrimaryKey(
+	private DependentTableKeyMappingMaterializer() {
+	}
+
+	public static ResolvedDependentTableKey resolvePrimaryKey(
 			PersistentClass ownerBinding,
 			String sourceRole,
 			Table table,
@@ -31,7 +34,7 @@ public class DependentTableKeyMappingMaterializer {
 		return new ResolvedDependentTableKey( ownerBinding, sourceRole, table, key );
 	}
 
-	public PrimaryKey materializePrimaryKey(ResolvedDependentTableKey dependentTableKey) {
+	public static PrimaryKey materializePrimaryKey(ResolvedDependentTableKey dependentTableKey) {
 		final Table table = dependentTableKey.table();
 		final PrimaryKey primaryKey = new PrimaryKey( table );
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );

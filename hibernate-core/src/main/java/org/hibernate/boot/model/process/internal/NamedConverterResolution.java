@@ -10,13 +10,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
-import jakarta.persistence.AttributeConverter;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
-import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.ModelsException;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -47,16 +45,15 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			JpaAttributeConverterCreationContext converterCreationContext,
-			MetadataBuildingContext context) {
-		final var typeConfiguration = context.getTypeConfiguration();
+			MappingResolutionServices services) {
+		final var typeConfiguration = services.getTypeConfiguration();
 		return fromInternal(
 				explicitJtdAccess == null ? null : explicitJtdAccess.apply( typeConfiguration ),
 				explicitStdAccess == null ? null : explicitStdAccess.apply( typeConfiguration ),
 				explicitMutabilityPlanAccess == null ? null : explicitMutabilityPlanAccess.apply( typeConfiguration ),
 				converter( converterCreationContext, converterDescriptor ),
 				resolvedJavaType,
-				sqlTypeIndicators,
-				context
+				sqlTypeIndicators
 		);
 	}
 
@@ -68,64 +65,14 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			JpaAttributeConverterCreationContext converterCreationContext,
-			MetadataBuildingContext context) {
+			MappingResolutionServices services) {
 		return fromInternal(
 				explicitJtd,
 				explicitStd,
 				explicitMutabilityPlan,
 				converter( converterCreationContext, converterDescriptor ),
 				resolvedJavaType,
-				sqlTypeIndicators,
-				context
-		);
-	}
-
-	public static <T> NamedConverterResolution<T> from(
-			String name,
-			Function<TypeConfiguration, BasicJavaType<?>> explicitJtdAccess,
-			Function<TypeConfiguration, JdbcType> explicitStdAccess,
-			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			JdbcTypeIndicators sqlTypeIndicators,
-			JpaAttributeConverterCreationContext converterCreationContext,
-			MetadataBuildingContext context) {
-		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
-		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
-		final Class<? extends AttributeConverter<T, ?>> converterClass =
-				context.getClassLoaderService().classForName( converterClassName );
-		final var converterDescriptor = ConverterDescriptors.of( converterClass );
-		final var typeConfiguration = context.getTypeConfiguration();
-		return fromInternal(
-				explicitJtdAccess == null ? null : explicitJtdAccess.apply( typeConfiguration ),
-				explicitStdAccess == null ? null : explicitStdAccess.apply( typeConfiguration ),
-				explicitMutabilityPlanAccess == null ? null : explicitMutabilityPlanAccess.apply( typeConfiguration ),
-				converter( converterCreationContext, converterDescriptor ),
-				null,
-				sqlTypeIndicators,
-				context
-		);
-	}
-
-	public static <T> NamedConverterResolution<T> from(
-			String name,
-			BasicJavaType<?> explicitJtd,
-			JdbcType explicitStd,
-			MutabilityPlan<?> explicitMutabilityPlan,
-			JdbcTypeIndicators sqlTypeIndicators,
-			JpaAttributeConverterCreationContext converterCreationContext,
-			MetadataBuildingContext context) {
-		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
-		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
-		final Class<? extends AttributeConverter<T, ?>> converterClass =
-				context.getClassLoaderService().classForName( converterClassName );
-		final var converterDescriptor = ConverterDescriptors.of( converterClass );
-		return fromInternal(
-				explicitJtd,
-				explicitStd,
-				explicitMutabilityPlan,
-				converter( converterCreationContext, converterDescriptor ),
-				null,
-				sqlTypeIndicators,
-				context
+				sqlTypeIndicators
 		);
 	}
 
@@ -141,8 +88,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			MutabilityPlan<?> explicitMutabilityPlan,
 			JpaAttributeConverter<T,S> converter,
 			Type resolvedJavaType,
-			JdbcTypeIndicators sqlTypeIndicators,
-			MetadataBuildingContext context) {
+			JdbcTypeIndicators sqlTypeIndicators) {
 		//noinspection unchecked
 		final var explicitJavaType = (JavaType<T>) explicitJtd;
 

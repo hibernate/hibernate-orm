@@ -78,10 +78,9 @@ public non-sealed class Map extends IndexedCollection {
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	public void createAllKeys() throws MappingException {
-		super.createAllKeys();
-		if ( !isInverse() ) {
-			getIndex().createForeignKey();
-		}
+		throw new UnsupportedOperationException(
+				"Map key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
 	public Object accept(ValueVisitor visitor) {

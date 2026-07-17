@@ -51,6 +51,8 @@ import jakarta.persistence.TemporalType;
 import jakarta.annotation.Nullable;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.internal.GaussDBRefCursorSupportFactory;
@@ -244,13 +246,13 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	private final UniqueDelegate uniqueDelegate = UniqueDelegates.createTable( this );
 	private final StandardTableExporter gaussDBTableExporter = new StandardTableExporter( this ) {
 		@Override
-		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
-			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn, Metadata metadata) {
+			final JdbcType jdbcType = aggregateColumn.getJdbcType( metadata );
 			if ( jdbcType.isXml() ) {
 				// Requires the use of xmltable which is not supported in check constraints
 				return;
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
+			super.applyAggregateColumnCheck( buf, aggregateColumn, metadata );
 		}
 	};
 	private final Exporter<UserDefinedType> userDefinedTypeExporter = new StandardUserDefinedTypeExporter(

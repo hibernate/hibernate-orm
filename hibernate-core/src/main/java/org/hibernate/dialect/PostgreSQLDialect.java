@@ -71,6 +71,8 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.SPI;
+import org.hibernate.Timeouts;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
@@ -281,10 +283,10 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	};
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
 		@Override
-		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
-			final var jdbcType = aggregateColumn.getType().getJdbcType();
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn, Metadata metadata) {
+			final var jdbcType = aggregateColumn.getJdbcType( metadata );
 			if ( !jdbcType.isXml() ) {
-				super.applyAggregateColumnCheck( buf, aggregateColumn );
+				super.applyAggregateColumnCheck( buf, aggregateColumn, metadata );
 			}
 			// Otherwise requires the use of XMLTABLE which is not supported in check constraints
 		}

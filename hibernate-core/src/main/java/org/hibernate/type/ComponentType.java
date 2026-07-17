@@ -90,11 +90,6 @@ public class ComponentType extends AbstractType
 		this.onDeleteAction = new OnDeleteAction[length];
 		this.joinedFetch = new FetchStyle[length];
 
-		final boolean supportsCascadeDelete =
-				component.getBuildingContext().getMetadataCollector()
-						.getDatabase().getDialect()
-						.getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
-
 		int i = 0;
 		for ( var property : component.getProperties() ) {
 			this.propertyNames[i] = property.getName();
@@ -102,7 +97,7 @@ public class ComponentType extends AbstractType
 			this.propertyNullability[i] = property.isOptional();
 			this.cascade[i] = property.getCascadeStyle();
 			this.joinedFetch[i] = property.getValue().getFetchStyle();
-			onDeleteAction[i] = supportsCascadeDelete ? property.getOnDeleteAction() : null;
+			onDeleteAction[i] = property.getOnDeleteAction();
 			if ( !property.isOptional() ) {
 				hasNotNullProperty = true;
 			}

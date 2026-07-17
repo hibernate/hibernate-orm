@@ -43,13 +43,10 @@ import jakarta.persistence.MapKey;
 class InversePluralAssociationBinder {
 	private final EntityTypeBinder entityBinder;
 	private final BindingState bindingState;
-	private final CollectionKeyMappingMaterializer collectionKeyMappingMaterializer;
-	private final ForeignKeyMappingMaterializer foreignKeyMappingMaterializer = new ForeignKeyMappingMaterializer();
 
 	InversePluralAssociationBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
 		this.bindingState = entityBinder.getBindingState();
-		this.collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer( bindingState::getEntityBinding );
 	}
 
 	void bindInverseAssociations() {
@@ -351,7 +348,8 @@ class InversePluralAssociationBinder {
 		element.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		element.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
-				inverseBinding.attributeMetadata().getName()
+				inverseBinding.attributeMetadata().getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		for ( Column owningKeyColumn : owningCollection.getKey().getColumns() ) {
 			element.addColumn( copyColumn( collectionTable, owningKeyColumn, owningKeyColumn.isUnique() ) );
@@ -370,7 +368,8 @@ class InversePluralAssociationBinder {
 		element.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		element.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
-				inverseBinding.attributeMetadata().getName()
+				inverseBinding.attributeMetadata().getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		for ( Column owningKeyColumn : owningJoin.getKey().getColumns() ) {
 			element.addColumn( copyColumn( collectionTable, owningKeyColumn, owningKeyColumn.isUnique() ) );
@@ -477,7 +476,7 @@ class InversePluralAssociationBinder {
 			inverseIndex.addColumn( copyColumn( inverseMap.getCollectionTable(), column, column.isUnique() ) );
 		}
 		bindingState.addPostAttributeValueResolution( () ->
-				inverseIndex.applyResolution( owningIndex.resolve() )
+				inverseIndex.applyResolution( owningIndex.requireResolution(), bindingState.getMappingResolutionState() )
 		);
 		return inverseIndex;
 	}
@@ -514,9 +513,8 @@ class InversePluralAssociationBinder {
 			org.hibernate.mapping.Map inverseMap,
 			Component owningIndex) {
 		final Component inverseIndex = new Component( bindingState.getMetadataBuildingContext(), inverseMap );
-		inverseIndex.setComponentClassName( owningIndex.getComponentClassName() );
-		inverseIndex.setEmbedded( owningIndex.isEmbedded() );
-		inverseIndex.setDynamic( owningIndex.isDynamic() );
+		inverseIndex.setComponentClassDetails( owningIndex.getComponentClassDetails() );
+		inverseIndex.setFlattened( owningIndex.isFlattened() );
 		inverseIndex.setRoleName( owningIndex.getRoleName() );
 		for ( Property property : owningIndex.getProperties() ) {
 			final Property copy = property.copy();
@@ -544,7 +542,8 @@ class InversePluralAssociationBinder {
 		inverseIndex.setTypeName( owningIndex.getTypeName() );
 		inverseIndex.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
-				inverseBinding.attributeMetadata().getName()
+				inverseBinding.attributeMetadata().getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		if ( owningIndex.isLogicalOneToOne() ) {
 			inverseIndex.markAsLogicalOneToOne();
@@ -566,7 +565,8 @@ class InversePluralAssociationBinder {
 		element.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		element.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
-				inverseBinding.attributeMetadata().getName()
+				inverseBinding.attributeMetadata().getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		return element;
 	}
@@ -595,8 +595,11 @@ class InversePluralAssociationBinder {
 
 	private void materializePrimaryKeyIfNeeded(Collection inverseCollection) {
 		if ( !inverseCollection.getKey().hasFormula() ) {
-			collectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
-					collectionKeyMappingMaterializer.resolveTableKey( inverseCollection )
+			CollectionKeyMappingMaterializer.materializePrimaryKeyIfNeeded(
+					CollectionKeyMappingMaterializer.resolveTableKey(
+							inverseCollection,
+							bindingState.getMetadataBuildingContext()
+					)
 			);
 		}
 	}
@@ -618,7 +621,7 @@ class InversePluralAssociationBinder {
 			return;
 		}
 		if ( inverseCollection.getReferencedPropertyName() == null ) {
-			foreignKeyMappingMaterializer.materializeForeignKey(
+			ForeignKeyMappingMaterializer.materializeForeignKey(
 					inverseCollection.getKey(),
 					inverseBinding.ownerBinding(),
 					inverseCollection.getRole()
@@ -628,7 +631,7 @@ class InversePluralAssociationBinder {
 			final Property referencedProperty = inverseBinding.ownerBinding().getReferencedProperty(
 					inverseCollection.getReferencedPropertyName()
 			);
-			foreignKeyMappingMaterializer.materializeForeignKey(
+			ForeignKeyMappingMaterializer.materializeForeignKey(
 					inverseCollection.getKey(),
 					inverseBinding.ownerBinding(),
 					inverseCollection.getRole(),

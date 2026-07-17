@@ -8,12 +8,11 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
-import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.SpecialOneToOneType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.OneToOne many-to-one association}.
@@ -21,24 +20,24 @@ import org.hibernate.type.SpecialOneToOneType;
  * @author Gavin King
  */
 public final class OneToOne extends ToOne {
-	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
-			new UniqueKeyMappingMaterializer();
-
 	private boolean constrained;
 	private ForeignKeyDirection foreignKeyType;
 	private KeyValue identifier;
 	private String propertyName;
 	private final String entityName;
 	private String mappedByProperty;
+	private final TypeConfiguration typeConfiguration;
 
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();
+		this.typeConfiguration = buildingContext.getTypeConfiguration();
 	}
 
 	private OneToOne(OneToOne original) {
 		super( original );
+		this.typeConfiguration = original.typeConfiguration;
 		this.constrained = original.constrained;
 		this.foreignKeyType = original.foreignKeyType;
 		this.identifier = original.identifier == null ? null : (KeyValue) original.identifier.copy();
@@ -67,7 +66,7 @@ public final class OneToOne extends ToOne {
 	public OneToOneType getType() throws MappingException {
 		if ( hasColumns() ) {
 			return new SpecialOneToOneType(
-					getTypeConfiguration(),
+					typeConfiguration,
 					getReferencedEntityName(),
 					getForeignKeyType(),
 					isReferenceToPrimaryKey(),
@@ -81,7 +80,7 @@ public final class OneToOne extends ToOne {
 		}
 		else {
 			return new OneToOneType(
-					getTypeConfiguration(),
+					typeConfiguration,
 					getReferencedEntityName(),
 					getForeignKeyType(),
 					isReferenceToPrimaryKey(),
@@ -91,23 +90,6 @@ public final class OneToOne extends ToOne {
 					entityName,
 					propertyName,
 					isConstrained()
-			);
-		}
-	}
-
-	/**
-	 * Compatibility-only hidden key creation hook.
-	 *
-	 * @deprecated ORM boot code should use
-	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
-	 * with an explicit resolved unique-key product instead.
-	 */
-	@Override
-	@Deprecated(since = "9.0", forRemoval = true)
-	public void createUniqueKey(MetadataBuildingContext context) {
-		if ( !hasFormula() && hasColumns()  ) {
-			UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
-					ResolvedUniqueKey.from( this, context, getPropertyName() )
 			);
 		}
 	}

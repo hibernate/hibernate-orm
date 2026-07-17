@@ -13,6 +13,7 @@ import org.hibernate.boot.model.internal.AuditHelper;
 import org.hibernate.boot.model.internal.BinderHelper;
 import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.materialize.PrimaryTableKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Column;
@@ -194,31 +195,11 @@ public class StateManagementBindingPhase {
 					classDetails.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
 					bindingState.getMetadataBuildingContext(),
 					bindingState
-			);
-			applySingleTableTemporalPrimaryKey( rootClass );
-		}
-	}
-
-	private static void applySingleTableTemporalPrimaryKey(RootClass rootClass) {
-		if ( rootClass.isPrimaryKeyDisabled() || !rootClass.isAuxiliaryColumnInPrimaryKey() ) {
-			return;
-		}
-
-		final var primaryKey = rootClass.getRootTable().getPrimaryKey();
-		if ( primaryKey == null ) {
-			return;
-		}
-
-		if ( rootClass.isVersioned() ) {
-			final var version = rootClass.getVersion();
-			if ( version != null ) {
-				primaryKey.addColumns( version.getValue() );
+				);
+				new PrimaryTableKeyMappingMaterializer( bindingState.getMetadataBuildingContext() )
+						.finalizeRootPrimaryKey( rootClass );
 			}
 		}
-		else {
-			primaryKey.addColumn( rootClass.getAuxiliaryColumn( TemporalHelper.ROW_START ) );
-		}
-	}
 
 	private static void bindAudited(ClassDetails classDetails, RootClass rootClass, BindingState bindingState) {
 		final var context = bindingState.getMetadataBuildingContext();

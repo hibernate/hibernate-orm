@@ -293,10 +293,12 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 	@Override
 	public String aggregateCustomWriteExpression(
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration) {
 		// We need to know what array this is STRUCT_ARRAY/JSON_ARRAY/XML_ARRAY,
 		// which we can easily get from the type code of the aggregate column
-		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		final int sqlTypeCode = aggregateColumn.getJdbcType( mappingContext ).getDefaultSqlTypeCode();
 		switch ( sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:

@@ -29,8 +29,11 @@ import org.hibernate.mapping.ToOne;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class ForeignKeyMappingMaterializer {
-	public ForeignKey materializeForeignKey(
+public final class ForeignKeyMappingMaterializer {
+	private ForeignKeyMappingMaterializer() {
+	}
+
+	public static ForeignKey materializeForeignKey(
 			ManyToOne value,
 			PersistentClass referencedClass,
 			String sourceRole) {
@@ -38,7 +41,7 @@ public class ForeignKeyMappingMaterializer {
 			return null;
 		}
 
-		value.sortProperties();
+		value.sortProperties( entityName -> referencedClass.getEntityName().equals( entityName ) ? referencedClass : null );
 
 		final String referencedPropertyName = value.getReferencedPropertyName();
 		final Property property = referencedClass.getReferencedProperty( referencedPropertyName );
@@ -74,7 +77,7 @@ public class ForeignKeyMappingMaterializer {
 		return null;
 	}
 
-	public ForeignKey materializeForeignKey(
+	public static ForeignKey materializeForeignKey(
 			KeyValue key,
 			PersistentClass referencedEntity,
 			String sourceRole) {
@@ -94,7 +97,7 @@ public class ForeignKeyMappingMaterializer {
 		return null;
 	}
 
-	public ForeignKey materializeForeignKey(
+	public static ForeignKey materializeForeignKey(
 			KeyValue key,
 			PersistentClass referencedEntity,
 			String sourceRole,
@@ -115,7 +118,7 @@ public class ForeignKeyMappingMaterializer {
 		return null;
 	}
 
-	public ForeignKey materializeForeignKey(ResolvedForeignKey foreignKey, PersistentClass referencedEntity) {
+	public static ForeignKey materializeForeignKey(ResolvedForeignKey foreignKey, PersistentClass referencedEntity) {
 		if ( foreignKey.selectableOrder().isEmpty()
 				|| referencedEntity.getRootClass().isAuxiliaryColumnInPrimaryKey() ) {
 			return null;
@@ -135,7 +138,7 @@ public class ForeignKeyMappingMaterializer {
 		return mappingForeignKey;
 	}
 
-	private ForeignKeyColumnMappings foreignKeyColumnMappings(
+	private static ForeignKeyColumnMappings foreignKeyColumnMappings(
 			ResolvedForeignKey foreignKey,
 			PersistentClass referencedEntity) {
 		final SelectableOrderResolution selectableOrder = foreignKey.selectableOrder();
@@ -151,15 +154,15 @@ public class ForeignKeyMappingMaterializer {
 		);
 	}
 
-	private boolean referencesPrimaryKey(
+	private static boolean referencesPrimaryKey(
 			SelectableOrderResolution selectableOrder,
 			PersistentClass referencedEntity) {
 		final var primaryKey = referencedEntity.getTable().getPrimaryKey();
 		return primaryKey != null && primaryKey.getColumns().equals( selectableOrder.referencedColumns() );
 	}
 
-	public ForeignKey materializeForeignKey(ToOne value, PersistentClass referencedEntity, String sourceRole) {
-		value.sortProperties();
+	public static ForeignKey materializeForeignKey(ToOne value, PersistentClass referencedEntity, String sourceRole) {
+		value.sortProperties( entityName -> referencedEntity.getEntityName().equals( entityName ) ? referencedEntity : null );
 		if ( !value.isForeignKeyEnabled()
 				|| !value.isReferenceToPrimaryKey()
 				|| value.getReferencedPropertyName() != null
@@ -176,7 +179,7 @@ public class ForeignKeyMappingMaterializer {
 		);
 	}
 
-	private SelectableOrderResolution columnMappings(
+	private static SelectableOrderResolution columnMappings(
 			SimpleValue value,
 			List<Column> referencedColumns,
 			String sourceRole) {

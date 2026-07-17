@@ -108,7 +108,7 @@ class InverseToOneAssociationBinder {
 				inverseBinding.value(),
 				inverseBinding.mappedBy()
 		);
-		inverseBinding.value().sortProperties();
+		inverseBinding.value().sortProperties( bindingState::getEntityBinding );
 	}
 
 	private boolean isCompatibleMappedByType(PersistentClass ownerBinding, String referencedEntityName) {
@@ -190,7 +190,8 @@ class InverseToOneAssociationBinder {
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
-				inverseBinding.attributeMetadata().getName()
+				inverseBinding.attributeMetadata().getName(),
+				bindingState.getMetadataBuildingContext()
 		);
 		value.setFetchStyle( inverseBinding.value().getFetchStyle() );
 		value.setLazy( inverseBinding.value().isLazy() );

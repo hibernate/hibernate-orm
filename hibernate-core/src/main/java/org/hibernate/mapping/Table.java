@@ -19,24 +19,20 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 
 /**
@@ -485,80 +481,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueKey;
 	}
 
-	/**
-	 * Mark the given column unique and assign a name to the unique key.
-	 * <p>
-	 * This method does not add a {@link UniqueKey} to the table itself!
-	 */
-	public void createUniqueKey(Column column, MetadataBuildingContext context) {
-		final String keyName = context.getBuildingPlan().getImplicitNamingStrategy()
-				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-					@Override
-					public Identifier getTableName() {
-						return name;
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						return singletonList( column.getNameIdentifier( context ) );
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return null;
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return context;
-					}
-				} )
-				.render( context.getMetadataCollector().getDatabase().getDialect() );
-		column.setUniqueKeyName( keyName );
-		column.setUnique( true );
-	}
-
-	/**
-	 * If there is one given column, mark it unique, otherwise
-	 * create a {@link UniqueKey} comprising the given columns.
-	 */
-	public void createUniqueKey(List<Column> keyColumns, MetadataBuildingContext context) {
-		if ( keyColumns.size() == 1 ) {
-			createUniqueKey( keyColumns.get(0), context );
-		}
-		else {
-			final String keyName = context.getBuildingPlan().getImplicitNamingStrategy()
-					.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-						@Override
-						public Identifier getTableName() {
-							return name;
-						}
-
-						@Override
-						public List<Identifier> getColumnNames() {
-							return keyColumns.stream()
-									.map( column -> column.getNameIdentifier( context ) )
-									.collect(toList());
-						}
-
-						@Override
-						public Identifier getUserProvidedIdentifier() {
-							return null;
-						}
-
-						@Override
-						public MetadataBuildingContext getBuildingContext() {
-							return context;
-						}
-					} )
-					.render( context.getMetadataCollector().getDatabase().getDialect() );
-			final var uniqueKey = getOrCreateUniqueKey( keyName );
-			for ( var keyColumn : keyColumns ) {
-				uniqueKey.addColumn( keyColumn );
-			}
-		}
-	}
-
 	public UniqueKey getUniqueKey(String keyName) {
 		return uniqueKeys.get( keyName );
 	}
@@ -573,11 +495,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueKey;
 	}
 
-	public void createForeignKeys(MetadataBuildingContext context) {
-	}
-
-	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition, String options) {
-		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, options, null );
+	public void markColumnUnique(String keyName, Column column) {
+		column.setUniqueKeyName( keyName );
+		column.setUnique( true );
 	}
 
 	public ForeignKey createForeignKey(

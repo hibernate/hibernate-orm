@@ -56,7 +56,9 @@ public non-sealed class Bag extends Collection {
 	@Override
 	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
-		//create an index on the key columns??
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
 	public Object accept(ValueVisitor visitor) {

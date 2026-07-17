@@ -16,7 +16,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.mapping.ValueVisitor;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.MappingContext;
 import org.hibernate.type.Type;
 
@@ -110,14 +109,6 @@ public class ColumnValue implements Value {
 	}
 
 	@Override
-	public void createForeignKey() {
-	}
-
-	@Override
-	public void createUniqueKey(MetadataBuildingContext context) {
-	}
-
-	@Override
 	public boolean isSimpleValue() {
 		return true;
 	}
@@ -128,7 +119,10 @@ public class ColumnValue implements Value {
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
 	}
 
 	@Override
@@ -139,11 +133,6 @@ public class ColumnValue implements Value {
 	@Override
 	public boolean isSame(Value value) {
 		return this == value;
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return database.getServiceRegistry();
 	}
 
 	@Override

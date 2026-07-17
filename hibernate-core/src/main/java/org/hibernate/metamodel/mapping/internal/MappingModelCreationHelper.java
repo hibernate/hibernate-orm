@@ -42,7 +42,6 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Resolvable;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
@@ -217,7 +216,7 @@ public class MappingModelCreationHelper {
 			boolean updateable,
 			PropertyAccess propertyAccess) {
 		final var value = (SimpleValue) bootProperty.getValue();
-		final var resolution = ( (Resolvable) value ).resolve();
+		final var resolution = resolveBasicValue( value );
 		final var attributeMetadata =
 				new SimpleAttributeMetadata( propertyAccess, resolution.getMutabilityPlan(), bootProperty, value );
 
@@ -272,6 +271,16 @@ public class MappingModelCreationHelper {
 				declaringType,
 				propertyAccess
 		);
+	}
+
+	private static BasicValue.Resolution<?> resolveBasicValue(SimpleValue value) {
+		if ( value instanceof BasicValue basicValue ) {
+			return basicValue.requireResolution();
+		}
+		if ( value instanceof DependantValue dependantValue ) {
+			return dependantValue.resolve();
+		}
+		throw new MappingException( "Expected a basic value, but found " + value );
 	}
 
 	public static EmbeddedAttributeMapping buildEmbeddedAttributeMapping(
@@ -1567,7 +1576,7 @@ public class MappingModelCreationHelper {
 					getCollectionPropertyPath( collectionDescriptor )
 							+ "." + CollectionPart.Nature.INDEX.getName(),
 					null,
-					basicValue.resolve().getJdbcMapping(),
+					basicValue.requireResolution().getJdbcMapping(),
 					insertable,
 					updatable,
 					false,
@@ -2094,6 +2103,7 @@ public class MappingModelCreationHelper {
 					entityPersister,
 					declaringType,
 					declaringEntityPersister,
+					creationProcess.getCreationContext(),
 					propertyAccess
 			) );
 

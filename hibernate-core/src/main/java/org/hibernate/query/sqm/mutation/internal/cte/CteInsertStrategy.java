@@ -137,7 +137,11 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 				cteName.substring( 0, Math.min( dialect.getIdentifierSupport().getMaxIdentifierLength(), cteName.length() ) ),
 				tableNameIdentifier.isQuoted()
 		).render( dialect );
-		this.entityCteTable = CteTable.createEntityTable( qualifiedCteName, persistentClass );
+		this.entityCteTable = CteTable.createEntityTable(
+				qualifiedCteName,
+				persistentClass,
+				runtimeModelCreationContext.getMetadata()
+		);
 	}
 
 	@Override

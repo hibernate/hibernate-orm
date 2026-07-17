@@ -53,6 +53,8 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Length;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.PostgreSQLLegacySequenceSupport;
@@ -242,13 +244,13 @@ public class PostgreSQLLegacyDialect extends Dialect implements CurrentTemporalS
 	};
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
 		@Override
-		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
-			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn, Metadata metadata) {
+			final JdbcType jdbcType = aggregateColumn.getJdbcType( metadata );
 			if ( jdbcType.isXml() ) {
 				// Requires the use of xmltable which is not supported in check constraints
 				return;
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
+			super.applyAggregateColumnCheck( buf, aggregateColumn, metadata );
 		}
 	};
 	private final Exporter<UserDefinedType> userDefinedTypeExporter = new StandardUserDefinedTypeExporter(

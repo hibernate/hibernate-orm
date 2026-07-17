@@ -173,7 +173,7 @@ class AssociationIdentifierBinder {
 		normalizePrimaryKeyColumnOrder( associationIdentifierBinding );
 		associationIdentifierBinding.value().setNonUpdatable();
 		associationIdentifierBinding.value().setSorted( true );
-		( (SortableValue) associationIdentifierBinding.value() ).sortProperties();
+		( (SortableValue) associationIdentifierBinding.value() ).sortProperties( bindingState::getEntityBinding );
 		associationIdentifierBinding.processed().set( true );
 		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 				associationIdentifierBinding.ownerBinding(),
@@ -370,7 +370,7 @@ class AssociationIdentifierBinder {
 
 	private List<Column> sortedTargetIdentifierColumns(IdentifierBinding targetIdentifierBinding) {
 		if ( targetIdentifierBinding.value() instanceof SortableValue sortableValue ) {
-			sortableValue.sortProperties();
+			sortableValue.sortProperties( bindingState::getEntityBinding );
 		}
 		return targetIdentifierBinding.value().getColumns();
 	}

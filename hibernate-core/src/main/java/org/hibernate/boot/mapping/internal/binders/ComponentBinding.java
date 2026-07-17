@@ -131,11 +131,12 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 		else {
 			addAuxiliaryObjects = true;
 		}
-		final String aggregateReadTemplate = aggregateColumn.getAggregateReadExpressionTemplate( dialect );
+		final String aggregateReadTemplate =
+				aggregateColumn.getAggregateReadExpressionTemplate( dialect, metadataCollector, typeConfiguration );
 		final String aggregateReadExpression =
 				aggregateReadTemplate.replace( Template.TEMPLATE + ".", "" );
 		final String aggregateAssignmentExpression =
-				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect )
+				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect, metadataCollector )
 						.replace( Template.TEMPLATE + ".", "" );
 		final Namespace auxiliaryNamespace = database.getDefaultNamespace();
 		final var aggregateDescriptor = AggregateColumnDescriptorAdapter.aggregate(

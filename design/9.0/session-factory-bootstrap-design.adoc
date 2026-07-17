@@ -4,9 +4,10 @@
 This note describes the intended end-state design for building a
 `SessionFactory` / `EntityManagerFactory` with the boot-model pipeline.
 
-It is deliberately separate from
-link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`],
-which tracks current implementation status and next slices.
+Current branch status and next-work guidance belong in
+link:current-work-handoff.adoc[`current-work-handoff.adoc`].  The
+classification of active, resolved, historical, and archive-candidate design
+notes is tracked in link:design-doc-audit.adoc[`design-doc-audit.adoc`].
 
 == Design Goal
 
@@ -28,8 +29,7 @@ The design goal is not necessarily to preserve these constructor inputs forever.
 The goal is to make the products represented by these inputs explicit, testable,
 and replaceable one slice at a time.
 
-Current implementation progress and follow-up work are tracked in
-link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`].
+Use this document for durable target shape and rationale, not as a work log.
 
 
 == Top-Level Flow
@@ -295,24 +295,19 @@ building the specific product under test, such as metadata, source
 contributions, or resolved settings, instead of preserving a general two-phase
 SessionFactory bootstrap.
 
-=== Current Test Signal
-
-The complete `hibernate-orm` suite is green in the current worktree as of
-2026-07-02.  Representative native bootstrap tests through `Configuration`,
-`HibernatePersistenceConfiguration`, metadata inspection, and the pipeline
-construction path remain the useful control signal for future changes.
+=== Follow-Up Areas
 
 Longer-term bootstrap cleanup is concentrated in the JPA provider paths that
-now route through `BootstrapPipeline`:
+route through `BootstrapPipeline` and in the native compatibility adapters:
 
 * provider exception wrapping parity;
 * persistence-unit setting precedence parity;
 * descriptor-backed source contribution parity now that legacy `cfg.xml` support
   has been removed;
 * schema-generation script handling.
-
-Those follow-up areas are tracked in
-link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`].
+* the deliberate long-term story for `Configuration`;
+* preserving `Metadata` as the resolved-model inspection view unless that role
+  proves insufficient.
 
 == Settings Model
 
@@ -355,6 +350,14 @@ product, not the public collector API.
 Programmatic metadata customizations such as query imports are intentionally
 not part of `PreparedMappingSources`; they flow through `MappingCustomizations`
 and later binding/customization state.
+
+`PreparedMappingSources` is not a clone of the historical `ManagedResources`
+bundle.  `ManagedResources` mixed raw source declarations, resolved class
+details, package names, XML bindings, converter descriptors, query imports, and
+other bootstrap-side facts.  `PreparedMappingSources` should stay source-model
+oriented and normalized for categorization: classes and packages are represented
+as model details, XML is already bound, and settings/customizations flow through
+their own products.
 
 Scanning belongs before or inside source-contribution creation, depending on the
 entry point.  Categorization should receive available source material, not an

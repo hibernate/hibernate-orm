@@ -1,0 +1,12 @@
+= Finished ORM 9 Design References
+:toc:
+
+This directory holds completed reference and audit artifacts that remain useful
+but are not active design notes and should not carry current branch status.
+
+== Finished References
+
+link:annotation-coverage.adoc[`annotation-coverage.adoc`]::
+Completed runtime annotation coverage audit for the ORM 9 boot-model pipeline.
+Remaining entries are pointers to active design areas, not current failure
+buckets.

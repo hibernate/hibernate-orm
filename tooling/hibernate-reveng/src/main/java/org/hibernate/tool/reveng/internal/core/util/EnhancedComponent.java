@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.core.util;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -14,11 +15,13 @@ import java.util.Properties;
 @SuppressWarnings("serial")
 public class EnhancedComponent extends Component implements EnhancedValue {
 
+	private final MetadataBuildingContext metadataBuildingContext;
 	private Properties idGenProps = new Properties();
 	private String genStrategy = null;
 
 	public EnhancedComponent(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		super(metadata, owner);
+		this.metadataBuildingContext = metadata;
 	}
 
 	@Override
@@ -40,6 +43,15 @@ public class EnhancedComponent extends Component implements EnhancedValue {
 	@Override
 	public String getIdentifierGeneratorStrategy() {
 		return genStrategy;
+	}
+
+	public void setGeneratedComponentClassName(String componentClassName) {
+		final var modelsContext = metadataBuildingContext.getModelsContext();
+		setComponentClassDetails( ModelsHelper.resolveClassDetails(
+				componentClassName,
+				modelsContext.getClassDetailsRegistry(),
+				() -> new GeneratedComponentClassDetails( componentClassName, modelsContext )
+		) );
 	}
 
 	@Override

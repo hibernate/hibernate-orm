@@ -7,7 +7,7 @@ attribute declaration involves generics.
 
 It is a focused companion to
 link:boot-model-terminology.adoc[`boot-model-terminology.adoc`],
-link:applied-contribution-model-design.adoc[`applied-contribution-model-design.adoc`],
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`],
 link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`],
 and link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`].
 

@@ -8,7 +8,7 @@ hierarchies.
 It is intentionally tied to
 link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`],
 link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`],
-and link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`].  The
+and link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].  The
 same declaration-versus-usage distinction that motivates mapped-superclass and
 embeddable contributions is also the right model for generic type-variable
 resolution.

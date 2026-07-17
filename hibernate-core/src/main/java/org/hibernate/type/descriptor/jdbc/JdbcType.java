@@ -395,8 +395,7 @@ public interface JdbcType extends Serializable {
 			JavaType<?> javaType,
 			BasicValueConverter<?, ?> valueConverter,
 			Size columnSize,
-			Database database,
-			JdbcTypeIndicators context) {
+			Database database) {
 	}
 
 	@Incubating(since = "6.3")

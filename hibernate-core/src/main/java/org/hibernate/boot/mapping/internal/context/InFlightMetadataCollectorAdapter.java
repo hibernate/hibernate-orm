@@ -238,6 +238,11 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	}
 
 	@Override
+	public Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableClass) {
+		return metadataCollector.findRegisteredEmbeddableInstantiator( embeddableClass );
+	}
+
+	@Override
 	public FilterDefinition getFilterDefinition(String name) {
 		return metadataCollector.getFilterDefinition( name );
 	}

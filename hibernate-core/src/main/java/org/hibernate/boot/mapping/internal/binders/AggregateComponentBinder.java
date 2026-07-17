@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import org.hibernate.annotations.Struct;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.AggregateValuePlan;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -55,9 +56,10 @@ final class AggregateComponentBinder {
 		aggregateValue.setTable( memberTarget.table() );
 		aggregateValue.setTypeUsingReflection(
 				source.sourceMember().getDeclaringType().getName(),
-				source.sourceMember().resolveAttributeName()
+				source.sourceMember().resolveAttributeName(),
+				state.getMetadataBuildingContext()
 		);
-		final var resolutionInput = BasicValueResolutionBuilder.Input.create(
+		final var resolutionInput = BasicValueResolutionDetails.create(
 				aggregateValue,
 				BasicValueSource.attribute( source.sourceMember() )
 		);
@@ -84,7 +86,12 @@ final class AggregateComponentBinder {
 			aggregateColumn.setSqlTypeCode( plan.aggregateColumnSqlTypeCode() );
 		}
 		aggregateValue.addColumn( aggregateColumn );
-		BasicValueResolutionBuilder.applyResolution( resolutionInput );
+		BasicValueResolutionBuilder.applyResolution(
+				resolutionInput,
+				state.getMetadataBuildingContext().getServiceComponents(),
+				state.getMappingResolutionState(),
+				state.getMetadataBuildingContext()
+		);
 		if ( !source.isNested() ) {
 			memberTarget.table().addColumn( aggregateColumn );
 		}

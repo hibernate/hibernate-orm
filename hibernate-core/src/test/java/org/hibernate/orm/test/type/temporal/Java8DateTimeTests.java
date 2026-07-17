@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -54,21 +55,30 @@ public class Java8DateTimeTests {
 
 		factoryScope.inTransaction( (session) -> {
 			var theEntity = session.find( TheEntity.class, 1 );
-			dump( entityBinding, theEntity );
+			dump(
+					entityBinding,
+					theEntity,
+					factoryScope.getSessionFactory()
+							.getServiceRegistry()
+							.requireService( PropertyAccessStrategyResolver.class )
+			);
 			assertNotNull( theEntity );
 			session.remove( theEntity );
 		} );
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private void dump(PersistentClass entityBinding, TheEntity theEntity) {
+	private void dump(
+			PersistentClass entityBinding,
+			TheEntity theEntity,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
 		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
 			final JavaType javaType = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
 			System.out.printf(
 					"%s (%s) -> %s%n",
 					propertyBinding.getName(),
 					javaType.getJavaTypeClass().getSimpleName(),
-					javaType.toString(propertyBinding.getGetter(TheEntity.class).get(theEntity))
+					javaType.toString( propertyBinding.getGetter( TheEntity.class, propertyAccessStrategyResolver ).get( theEntity ) )
 			);
 		}
 	}

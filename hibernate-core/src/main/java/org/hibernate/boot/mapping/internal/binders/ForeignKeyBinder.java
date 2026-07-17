@@ -26,7 +26,6 @@ import org.hibernate.mapping.ToOne;
 /// @author Steve Ebersole
 class ForeignKeyBinder {
 	private final EntityTypeBinder entityBinder;
-	private final ForeignKeyMappingMaterializer foreignKeyMappingMaterializer = new ForeignKeyMappingMaterializer();
 
 	ForeignKeyBinder(EntityTypeBinder entityBinder) {
 		this.entityBinder = entityBinder;
@@ -69,7 +68,7 @@ class ForeignKeyBinder {
 					.getEntityBinding( value.getReferencedEntityName() );
 			foreignKey = referencedEntity == null
 					? null
-					: foreignKeyMappingMaterializer.materializeForeignKey(
+					: ForeignKeyMappingMaterializer.materializeForeignKey(
 							value,
 							referencedEntity,
 							foreignKeyBinding.ownerBinding().getEntityName() + "." + value.getTable().getName()
@@ -97,14 +96,14 @@ class ForeignKeyBinder {
 		}
 		final String sourceRole = foreignKeyBinding.ownerBinding().getEntityName() + "." + manyToOne.getTable().getName();
 		if ( foreignKeyBinding.referencedColumnNames().isEmpty() ) {
-			return foreignKeyMappingMaterializer.materializeForeignKey( manyToOne, referencedEntity, sourceRole );
+			return ForeignKeyMappingMaterializer.materializeForeignKey( manyToOne, referencedEntity, sourceRole );
 		}
 		final org.hibernate.mapping.Property referencedProperty =
 				referencedEntity.getReferencedProperty( manyToOne.getReferencedPropertyName() );
 		if ( referencedProperty == null ) {
-			return foreignKeyMappingMaterializer.materializeForeignKey( manyToOne, referencedEntity, sourceRole );
+			return ForeignKeyMappingMaterializer.materializeForeignKey( manyToOne, referencedEntity, sourceRole );
 		}
-		return foreignKeyMappingMaterializer.materializeForeignKey(
+		return ForeignKeyMappingMaterializer.materializeForeignKey(
 				ResolvedForeignKey.from(
 						manyToOne,
 						manyToOne.getReferencedEntityName(),
@@ -140,7 +139,7 @@ class ForeignKeyBinder {
 				.getEntityBinding( tableForeignKeyBinding.referencedEntityName() );
 		final ForeignKey foreignKey = referencedEntity == null
 				? null
-				: foreignKeyMappingMaterializer.materializeForeignKey(
+				: ForeignKeyMappingMaterializer.materializeForeignKey(
 						tableForeignKeyBinding.key(),
 						referencedEntity,
 						tableForeignKeyBinding.ownerBinding().getEntityName()
@@ -158,7 +157,7 @@ class ForeignKeyBinder {
 		if ( referencedEntity == null ) {
 			return null;
 		}
-		return foreignKeyMappingMaterializer.materializeForeignKey( resolvedForeignKey, referencedEntity );
+		return ForeignKeyMappingMaterializer.materializeForeignKey( resolvedForeignKey, referencedEntity );
 	}
 
 	private ResolvedForeignKey applyLateOnDeleteAction(ResolvedForeignKey resolvedForeignKey, ToOne value) {

@@ -95,9 +95,7 @@ public class GenericGeneratorGeneration
 			configuration.put( parameter.name(), parameter.value() );
 		}
 		return GeneratorParameters.collectParameters(
-				context.getValue(),
-				context.getDatabase().getDialect(),
-				context.getRootClass(),
+				context,
 				configuration,
 				context.getServiceRegistry().requireService( ConfigurationService.class )
 		);

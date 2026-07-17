@@ -86,6 +86,9 @@ elif [ "$RDBMS" == "base-database-service-21c" ]; then
 elif [ "$RDBMS" == "base-database-service-26ai" ]; then
   echo "Managing OTP Database..."
   goal="-Pdb=oracle_test_pilot_database -PdbVersion=26 -DrunID=$RUNID -DdbPassword=$TESTPILOT_PASSWORD -DdbConnectionStringSuffix=$TESTPILOT_CONNECTION_STRING_SUFFIX"
+elif [ "$RDBMS" == "base-database-service-26ai-rac" ]; then
+  echo "Managing OTP Database..."
+  goal="-Pdb=oracle_test_pilot_database -PdbVersion=26 -DrunID=$RUNID -DdbPassword=$TESTPILOT_PASSWORD -DdbConnectionStringSuffix=$TESTPILOT_CONNECTION_STRING_SUFFIX"
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2"
 elif [ "$RDBMS" == "db2_11_5" ]; then

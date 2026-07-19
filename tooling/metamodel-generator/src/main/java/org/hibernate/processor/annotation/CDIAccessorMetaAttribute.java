@@ -44,7 +44,7 @@ public class CDIAccessorMetaAttribute implements MetaAttribute {
 		annotationMetaEntity.importType("jakarta.enterprise.inject.spi.CDI");
 		declaration
 		.append("\treturn CDI.current().select(")
-		.append(typeName)
+		.append(annotationMetaEntity.importType(typeName))
 		.append(".class).get();\n");
 	}
 
@@ -54,7 +54,7 @@ public class CDIAccessorMetaAttribute implements MetaAttribute {
 
 	void preamble(StringBuilder declaration) {
 		declaration
-		.append(typeName)
+		.append(annotationMetaEntity.importType(typeName))
 				.append(" ")
 				.append( getPropertyName() );
 		declaration

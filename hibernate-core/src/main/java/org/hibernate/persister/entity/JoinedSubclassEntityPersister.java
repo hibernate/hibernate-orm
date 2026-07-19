@@ -1313,8 +1313,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			JoinedSubclassEntityPersister persister,
 			Set<String> tablesToInnerJoin,
 			Set<TableReference> retainedTableReferences) {
+		final var subclassTableNames = persister.getSubclassTableNames();
 		if ( useKind == EntityNameUse.UseKind.TREAT || useKind == EntityNameUse.UseKind.FILTER ) {
-			final var subclassTableNames = persister.getSubclassTableNames();
 			// Build the intersection of all tables names that are of the class or super class
 			// These are the tables that can be safely inner joined
 			final Set<String> classOrSuperclassTables = new HashSet<>( subclassTableNames.length );
@@ -1343,6 +1343,21 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 									"Couldn't find table reference"
 							);
 						}
+						retainedTableReferences.add( mainTableReference );
+					}
+				}
+			}
+		}
+		else if ( useKind == EntityNameUse.UseKind.EXPRESSION
+				&& explicitDiscriminatorColumnName == null ) {
+			// Without a physical discriminator, keep subclass table joins that were already
+			// created for a join fetch / projection. Otherwise pruneForSubclasses may drop
+			// them while their columns remain in the select list (HHH-20675).
+			for ( int i = 0; i < subclassTableNames.length; i++ ) {
+				if ( !persister.isClassOrSuperclassTable[i] ) {
+					final var mainTableReference =
+							tableGroup.getTableReference( null, subclassTableNames[i], false );
+					if ( mainTableReference != null ) {
 						retainedTableReferences.add( mainTableReference );
 					}
 				}

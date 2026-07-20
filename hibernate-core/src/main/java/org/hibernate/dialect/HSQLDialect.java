@@ -784,4 +784,14 @@ public class HSQLDialect extends Dialect {
 				.createMergeOperation( optionalTableUpdate );
 	}
 
+	@Override
+	public String[] getCreateSchemaCommand(String schemaName) {
+		return new String[] { "create schema if not exists " + schemaName };
+	}
+
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] { "drop schema if exists " + schemaName };
+	}
+
 }

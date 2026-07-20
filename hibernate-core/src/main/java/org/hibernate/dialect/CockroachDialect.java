@@ -1271,4 +1271,14 @@ public class CockroachDialect extends Dialect {
 	public boolean causesRollback(SQLException sqlException) {
 		return true;
 	}
+
+	@Override
+	public String[] getCreateSchemaCommand(String schemaName) {
+		return new String[] { "create schema if not exists " + schemaName };
+	}
+
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] { "drop schema if exists " + schemaName };
+	}
 }

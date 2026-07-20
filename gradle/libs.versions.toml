@@ -121,6 +121,7 @@ asciidoctorj = "3.0.0"
 
 # Compilation (static checks)
 jetbrainsAnnotations = "26.1.0"
+jspecify = "1.0.0"
 errorprone = "2.50.0"
 nullaway = "0.14.1"
 ## For custom NullAway LibraryModels
@@ -178,6 +179,7 @@ oracleucp = { group = "com.oracle.database.jdbc", name = "ucp17", version.ref = 
 
 # Compilation (static checks)
 compilation-jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrainsAnnotations" }
+compilation-jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
 compilation-errorprone = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorprone" }
 compilation-nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "nullaway" }
 ## For custom NullAway LibraryModels

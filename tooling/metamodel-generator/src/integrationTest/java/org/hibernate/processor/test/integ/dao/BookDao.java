@@ -41,6 +41,9 @@ public interface BookDao {
 	@HQL("from Book where isbn = :isbn")
 	Book findByIsbnNullable(String isbn);
 
+	@HQL("from Book where isbn = :isbn")
+	@org.jspecify.annotations.Nullable Book findByIsbnNullableJspecify(String isbn);
+
 	@HQL("delete from Book where isbn = :isbn")
 	int deleteByIsbn(String isbn);
 

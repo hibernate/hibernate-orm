@@ -2050,8 +2050,17 @@ public class HbmXmlTransformer {
 				target::setAccess,
 				target::setAttributeAccessor
 		);
-		target.setFetchMode( convert( source.getFetch(), source.getOuterJoin() ) );
-		target.setFetch( convert( source.getLazy() ) );
+		final var fetchMode = convert( source.getFetch(), source.getOuterJoin() );
+		final var fetchType = convert( source.getLazy() );
+		// In hbm.xml, fetch="join" and lazy="true" are independent: the collection stays lazy
+		// and uses join fetching only when initialized. In orm.xml, fetch-mode="JOIN" maps to
+		// @Fetch(FetchMode.JOIN) which forces eager loading (CollectionBinder overrides lazy to
+		// false for JOIN). Since a lazy collection uses a separate SELECT regardless of fetch
+		// style, we drop fetch-mode="JOIN" for lazy collections to preserve the lazy semantics.
+		if ( fetchMode != JaxbPluralFetchModeImpl.JOIN || fetchType != FetchType.LAZY ) {
+			target.setFetchMode( fetchMode );
+		}
+		target.setFetch( fetchType );
 		target.setOptimisticLock( source.isOptimisticLock() );
 		target.setMutable( source.isMutable() );
 

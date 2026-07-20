@@ -777,6 +777,50 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-20709" )
+	public void testCollectionFetchJoinLazyTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-fetch-join-lazy/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
+					.filter( e -> "User".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( userEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
+
+			final JaxbOneToManyImpl emailAddresses = userEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( emailAddresses.getName() ).isEqualTo( "emailAddresses" );
+			assertThat( emailAddresses.getFetchMode() )
+					.as( "Lazy collection with fetch='join' should not have fetch-mode=JOIN" )
+					.isNotEqualTo( org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl.JOIN );
+			assertThat( emailAddresses.getFetch() )
+					.as( "Collection with default lazy='true' should have fetch=LAZY" )
+					.isEqualTo( jakarta.persistence.FetchType.LAZY );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20709" )
+	public void testCollectionFetchJoinEagerTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-fetch-join-eager/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
+					.filter( e -> "User".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( userEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
+
+			final JaxbOneToManyImpl emailAddresses = userEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( emailAddresses.getName() ).isEqualTo( "emailAddresses" );
+			assertThat( emailAddresses.getFetchMode() )
+					.as( "Eager collection with fetch='join' should have fetch-mode=JOIN" )
+					.isEqualTo( org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl.JOIN );
+			assertThat( emailAddresses.getFetch() )
+					.as( "Collection with lazy='false' should have fetch=EAGER" )
+					.isEqualTo( jakarta.persistence.FetchType.EAGER );
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

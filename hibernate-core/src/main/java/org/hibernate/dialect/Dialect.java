@@ -4137,6 +4137,28 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * For creating a schema, can the phrase {@code if not exists}
+	 * be applied before the schema name?
+	 *
+	 * @return {@code true} if {@code if not exists} can be applied
+	 *         before the schema name
+	 */
+	public boolean supportsSchemaIfNotExists() {
+		return false;
+	}
+
+	/**
+	 * For dropping a schema, can the phrase {@code if exists}
+	 * be applied before the schema name?
+	 *
+	 * @return {@code true} if {@code if exists} can be applied
+	 *         before the schema name
+	 */
+	public boolean supportsSchemaIfExists() {
+		return false;
+	}
+
+	/**
 	 * Get the SQL command used to create the named schema.
 	 *
 	 * @param schemaName The name of the schema to be created.
@@ -4144,7 +4166,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The creation commands
 	 */
 	public String[] getCreateSchemaCommand(String schemaName) {
-		return new String[] {"create schema " + schemaName};
+		return supportsSchemaIfNotExists()
+				? new String[] { "create schema if not exists " + schemaName }
+				: new String[] { "create schema " + schemaName };
 	}
 
 	/**
@@ -4155,7 +4179,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The drop commands
 	 */
 	public String[] getDropSchemaCommand(String schemaName) {
-		return new String[] {"drop schema " + schemaName};
+		return supportsSchemaIfExists()
+				? new String[] { "drop schema if exists " + schemaName }
+				: new String[] { "drop schema " + schemaName };
 	}
 
 	/**

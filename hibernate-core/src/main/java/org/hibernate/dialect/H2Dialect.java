@@ -1195,4 +1195,14 @@ public class H2Dialect extends Dialect {
 		return new String[] { "drop domain if exists " + name };
 	}
 
+	@Override
+	public String[] getCreateSchemaCommand(String schemaName) {
+		return new String[] { "create schema if not exists " + schemaName };
+	}
+
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] { "drop schema if exists " + schemaName };
+	}
+
 }

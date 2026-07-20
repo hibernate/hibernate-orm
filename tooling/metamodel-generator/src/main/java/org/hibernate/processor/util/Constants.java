@@ -226,6 +226,7 @@ public final class Constants {
 	public static final String NONNULL = "jakarta.annotation.Nonnull";
 	public static final String NOT_NULL = "jakarta.validation.constraints.NotNull";
 	public static final String JETBRAINS_NULLABLE = "org.jetbrains.annotations.Nullable";
+	public static final String JSPECIFY_NULLABLE = "org.jspecify.annotations.Nullable";
 
 	public static final String PANACHE_ORM_REPOSITORY_BASE = "io.quarkus.hibernate.orm.panache.PanacheRepositoryBase";
 	public static final String PANACHE_ORM_ENTITY_BASE = "io.quarkus.hibernate.orm.panache.PanacheEntityBase";

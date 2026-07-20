@@ -165,6 +165,21 @@ class BookDaoTest {
 	}
 
 	@Test
+	void testHqlFindByIsbnNullableJspecify(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			session.insert( new Book( "isbn-jspecify", "JSpecify Programming", "Author J", 100 ) );
+		} );
+		scope.inStatelessTransaction( session -> {
+			var dao = new _BookDao( session );
+			Book found = dao.findByIsbnNullableJspecify( "isbn-jspecify" );
+			assertNotNull( found );
+			assertEquals( "JSpecify Programming", found.getTitle() );
+			Book notFound = dao.findByIsbnNullableJspecify( "nonexistent" );
+			assertNull( notFound );
+		} );
+	}
+
+	@Test
 	void testSqlFindByIsbn(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( session -> {
 			session.insert( new Book( "isbn-native", "Native Title", "Author", 100 ) );

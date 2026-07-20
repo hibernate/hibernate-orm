@@ -720,8 +720,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		// turn the name into lowercase
 		// FIXME: this is wrong for types like STEFQueries
 		final var propertyName = decapitalize( name );
+		final var qualifiedName = ((TypeElement) enclosedElement).getQualifiedName().toString();
 		members.put( propertyName,
-				new CDIAccessorMetaAttribute( this, propertyName, name ) );
+				new CDIAccessorMetaAttribute( this, propertyName, qualifiedName ) );
 		// keep it
 		return true;
 	}
@@ -864,7 +865,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final var finalPrimaryEntity = primaryEntity;
 		if ( repositoryType != null ) {
 			addRepositoryAccessor( repositoryAccessor,
-					repositoryType.getSimpleName().toString() );
+					((TypeElement) repositoryType).getQualifiedName().toString() );
 		}
 		else if ( idType != null && finalPrimaryEntity != null ) {
 			final var repositoryTypeName =

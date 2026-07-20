@@ -1196,13 +1196,13 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String[] getCreateSchemaCommand(String schemaName) {
-		return new String[] { "create schema if not exists " + schemaName };
+	public boolean supportsSchemaIfNotExists() {
+		return true;
 	}
 
 	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		return new String[] { "drop schema if exists " + schemaName };
+	public boolean supportsSchemaIfExists() {
+		return true;
 	}
 
 }

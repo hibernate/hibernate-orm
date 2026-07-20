@@ -1117,10 +1117,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		return getVersion().isSameOrAfter( 13 )
-				? new String[] { "drop schema if exists " + schemaName }
-				: super.getDropSchemaCommand( schemaName );
+	public boolean supportsSchemaIfExists() {
+		return getVersion().isSameOrAfter( 13 );
 	}
 
 	@Override

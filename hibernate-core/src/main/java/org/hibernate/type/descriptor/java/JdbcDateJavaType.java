@@ -23,6 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
+import static org.hibernate.type.descriptor.java.SqlDateTimeHelper.toLocalDate;
 
 /**
  * Descriptor for {@link java.sql.Date} handling.
@@ -170,8 +171,8 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 	private LocalDate unwrapLocalDate(java.util.Date value) {
 		return value instanceof java.sql.Date date
-				? date.toLocalDate()
-				: new java.sql.Date( toDateEpoch( value ) ).toLocalDate();
+				? toLocalDate( date )
+				: toLocalDate( new java.sql.Date( toDateEpoch( value ) ) );
 	}
 
 	@Override
@@ -237,7 +238,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 
 	private static TemporalAccessor fromDate(java.util.Date value) {
 		return value instanceof java.sql.Date date
-				? date.toLocalDate()
+				? toLocalDate( date )
 				: LocalDate.ofInstant( value.toInstant(), ZoneOffset.systemDefault() );
 	}
 

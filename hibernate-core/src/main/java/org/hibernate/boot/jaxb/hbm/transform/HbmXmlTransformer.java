@@ -126,6 +126,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritanceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
@@ -3391,7 +3392,9 @@ public class HbmXmlTransformer {
 			JaxbHbmCompositeIdType hbmCompositeId,
 			Component idClassMapping,
 			JaxbEntityImpl mappingXmlEntity) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		final var idClass = new JaxbIdClassImpl();
+		idClass.setClazz( getFullyQualifiedClassName( hbmCompositeId.getClazz() ) );
+		mappingXmlEntity.setIdClass( idClass );
 	}
 
 	private JaxbIdImpl transformNonAggregatedKeyProperty(

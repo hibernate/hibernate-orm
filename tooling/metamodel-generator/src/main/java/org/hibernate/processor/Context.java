@@ -97,6 +97,7 @@ public final class Context {
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean jakartaDataSortCompliance;
+	private boolean propagateSecurityAnnotations = true;
 	private boolean quarkusInjection;
 	private boolean springInjection;
 	private boolean dataEventPackageAvailable;
@@ -174,6 +175,14 @@ public final class Context {
 
 	public void setJakartaDataSortCompliance(boolean jakartaDataSortCompliance) {
 		this.jakartaDataSortCompliance = jakartaDataSortCompliance;
+	}
+
+	public boolean propagateSecurityAnnotations() {
+		return propagateSecurityAnnotations;
+	}
+
+	public void setPropagateSecurityAnnotations(boolean propagateSecurityAnnotations) {
+		this.propagateSecurityAnnotations = propagateSecurityAnnotations;
 	}
 
 	public boolean addInjectAnnotation() {

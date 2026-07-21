@@ -103,8 +103,9 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	@Override
 	public List<AnnotationMirror> inheritedAnnotations() {
 		if ( annotationMetaEntity.isJakartaDataRepository() ) {
+			final var context = annotationMetaEntity.getContext();
 			return method.getAnnotationMirrors().stream()
-					.filter(TypeUtils::isInheritedAnnotation)
+					.filter( a -> TypeUtils.isInheritedAnnotation( a, context ) )
 					.collect(toList());
 		}
 		else {

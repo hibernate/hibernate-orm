@@ -256,5 +256,6 @@ were removed.
 == Security annotations on Jakarta Data repositories
 
 The annotation processor now propagates security annotations from the `jakarta.annotation.security` package (`@DeclareRoles`, `@DenyAll`, `@PermitAll`, `@RolesAllowed`, `@RunAs`) from repository interfaces to generated implementations, allowing Jakarta EE containers to enforce role-based access control on repositories.
+This behavior may be disabled by passing `-AsuppressJakartaDataSecurityAnnotations=true` to the annotation processor.
 
 See https://github.com/jakartaee/data/issues/1293[jakartaee/data#1293].

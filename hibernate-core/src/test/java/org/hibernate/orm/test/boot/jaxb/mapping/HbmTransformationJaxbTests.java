@@ -821,6 +821,28 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-20711" )
+	public void testIdClassTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/id-class/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl customerEntity = transformed.getEntities().stream()
+					.filter( e -> "Customer".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( customerEntity.getIdClass() )
+					.as( "Entity with composite-id class should have id-class" )
+					.isNotNull();
+			assertThat( customerEntity.getIdClass().getClazz() )
+					.as( "id-class should reference the fully qualified CustomerId class" )
+					.isEqualTo( "org.hibernate.orm.test.idclass.CustomerId" );
+
+			assertThat( customerEntity.getAttributes().getIdAttributes() )
+					.as( "Entity should have 2 id attributes" )
+					.hasSize( 2 );
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

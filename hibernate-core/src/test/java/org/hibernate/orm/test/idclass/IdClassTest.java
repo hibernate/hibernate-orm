@@ -12,6 +12,7 @@ import jakarta.persistence.IdClass;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -60,6 +61,36 @@ public class IdClassTest {
 					assertThat( systemUser.getSubsystem(), is( "Linux" ) );
 					assertThat( systemUser.getUsername(), is( "admin" ) );
 					assertThat( systemUser.getRegistrationId(), is( 1 ) );
+
+					statementInspector.assertExecutedCount( 1 );
+					statementInspector.assertNumberOfOccurrenceInQuery(
+							0,
+							"join",
+							0
+					);
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-20288")
+	public void testGetReference(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				session -> {
+					PK pk = new PK( "Linux", "admin", 1 );
+					SystemUser systemUser = session.getReference( SystemUser.class, pk );
+
+					statementInspector.assertExecutedCount( 0 );
+
+					assertThat( systemUser.getSubsystem(), is( "Linux" ) );
+					assertThat( systemUser.getUsername(), is( "admin" ) );
+					assertThat( systemUser.getRegistrationId(), is( 1 ) );
+
+					statementInspector.assertExecutedCount( 0 );
+
+					assertThat( systemUser.getName(), is( "Andrea" ) );
 
 					statementInspector.assertExecutedCount( 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery(

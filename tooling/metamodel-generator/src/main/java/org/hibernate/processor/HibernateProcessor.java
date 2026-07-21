@@ -60,6 +60,7 @@ import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
+import static org.hibernate.processor.HibernateProcessor.SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS;
 import static org.hibernate.processor.util.Constants.COLUMN_RESULT;
 import static org.hibernate.processor.util.Constants.COLUMN_RESULTS;
 import static org.hibernate.processor.util.Constants.CONSTRUCTOR_RESULT;
@@ -147,7 +148,8 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		SUPPRESS_JAKARTA_DATA_METAMODEL,
 		INCLUDE, EXCLUDE,
 		INDEX,
-		JAKARTA_DATA_SORT_COMPLIANCE
+		JAKARTA_DATA_SORT_COMPLIANCE,
+		SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -207,6 +209,13 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * the Jakarta Data specification allows.
 	 */
 	public static final String JAKARTA_DATA_SORT_COMPLIANCE = "jakartaDataSortCompliance";
+
+	/**
+	 * Option to suppress propagation of {@code jakarta.annotation.security}
+	 * annotations from repository interfaces to generated implementations.
+	 * By default, security annotations are propagated.
+	 */
+	public static final String SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS = "suppressJakartaDataSecurityAnnotations";
 
 
 	/**
@@ -337,6 +346,9 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setGenerateJakartaDataStaticMetamodel( !suppressJakartaData && packagePresent(jakartaDataPackage) );
 
 		context.setJakartaDataSortCompliance( parseBoolean( options.get( JAKARTA_DATA_SORT_COMPLIANCE ) ) );
+
+		context.setPropagateSecurityAnnotations(
+				!parseBoolean( options.get( SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS ) ) );
 
 		final var setting = options.get( ADD_GENERATED_ANNOTATION );
 		if ( setting != null ) {

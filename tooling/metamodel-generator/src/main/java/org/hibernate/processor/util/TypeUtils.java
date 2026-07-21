@@ -293,10 +293,10 @@ public final class TypeUtils {
 		"jakarta.annotation.security.RunAs"
 	);
 
-	public static boolean isInheritedAnnotation(AnnotationMirror annotationMirror) {
+	public static boolean isInheritedAnnotation(AnnotationMirror annotationMirror, Context context) {
 		final Element annotationType = annotationMirror.getAnnotationType().asElement();
 		return hasAnnotation( annotationType, "jakarta.interceptor.InterceptorBinding" )
-			|| isSecurityAnnotation( annotationType );
+			|| context.propagateSecurityAnnotations() && isSecurityAnnotation( annotationType );
 	}
 
 	private static boolean isSecurityAnnotation(Element annotationType) {

@@ -5911,7 +5911,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( jakartaDataRepository ) {
 			List<AnnotationMirror> list = new ArrayList<>();
 			for ( var annotationMirror : element.getAnnotationMirrors() ) {
-				if ( isInheritedAnnotation( annotationMirror ) ) {
+				if ( isInheritedAnnotation( annotationMirror, context ) ) {
 					list.add( annotationMirror );
 				}
 			}

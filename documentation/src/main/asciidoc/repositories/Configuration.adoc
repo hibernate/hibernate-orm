@@ -153,12 +153,13 @@ This is useful for testing, or for executing in an environment with no support f
 
 === Integration with Jakarta EE
 
-Jakarta Data specifies that methods of a repository interface may be annotated with:
+Methods of a repository interface may be annotated with:
 
-- Jakarta Bean Validation constraint annotations,
-- Jakarta Interceptors interceptor binding types, including,
-  in particular, the `@Transactional` interceptor binding defined by Jakarta Transactions, and
+- Jakarta Bean Validation constraint annotations (per Jakarta Data specification),
+- Jakarta Interceptors interceptor binding types (per Jakarta Data specification), including,
+  in particular, the `@Transactional` interceptor binding defined by Jakarta Transactions , and
 - security annotations from the `jakarta.annotation.security` package: `@DeclareRoles`, `@DenyAll`, `@PermitAll`, `@RolesAllowed`, and `@RunAs`.
+  This is Hibernate ORM specific behavior and can be disabled by passing `-AsuppressJakartaDataSecurityAnnotations=true` to the annotation processor.
 
 Note that these annotations are usually applied to a CDI bean implementation class, not to an interface,footnote:[`@Inherited` annotations are inherited from superclass to subclass, but not from interface to implementing class.] but a special exception is made for repository interfaces.
 

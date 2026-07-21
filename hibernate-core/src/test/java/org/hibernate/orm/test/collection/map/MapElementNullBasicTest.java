@@ -15,12 +15,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Gail Badner
@@ -148,6 +150,22 @@ public class MapElementNullBasicTest {
 					session.remove( e );
 				}
 		);
+	}
+
+	@Test void testSchemaNullGeneration(SessionFactoryScope scope) {
+		int entityId = scope.fromTransaction( session -> {
+			AnEntity entity = new AnEntity();
+			session.persist( entity );
+			return entity.id;
+		} );
+
+		assertThrows( ConstraintViolationException.class, () -> scope.inTransaction( session ->
+			session.createNativeQuery( "INSERT INTO AnEntity_aCollection( AnEntity_id, aCollection, aCollection_KEY) VALUES( ?, ?, ? )" )
+				.setParameter( 1, entityId )
+				.setParameter( 2, null )
+				.setParameter( 3, "KEY" )
+				.executeUpdate()
+		) );
 	}
 
 	private List<?> getCollectionElementRows(int id, SessionFactoryScope scope) {

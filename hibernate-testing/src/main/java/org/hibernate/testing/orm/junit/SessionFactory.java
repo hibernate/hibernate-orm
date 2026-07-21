@@ -38,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /// @see SessionFactoryScope
 ///
 /// @author Steve Ebersole
+/// @author inpink
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention( RetentionPolicy.RUNTIME )
@@ -81,4 +82,12 @@ public @interface SessionFactory {
 		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
 		}
 	}
+
+	/**
+	 * When to automatically drop test data. Multiple timing values can be specified
+	 * to drop data at different points in the test lifecycle.
+	 *
+	 * @return the timing(s) for dropping test data
+	 */
+	DropDataTiming[] dropTestData() default {};
 }

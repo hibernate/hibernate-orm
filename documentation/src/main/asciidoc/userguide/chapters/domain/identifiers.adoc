@@ -99,8 +99,7 @@ Here are the rules governing composite identifiers, as defined by the Jakarta Pe
 * The composite identifier must be represented by a "primary key class".
 The primary key class may be defined using the `jakarta.persistence.EmbeddedId` annotation (see <<identifiers-composite-aggregated>>),
 or defined using the `jakarta.persistence.IdClass` annotation (see <<identifiers-composite-nonaggregated>>).
-* The primary key class must be public and must have a public no-arg constructor.
-* The primary key class must be serializable.
+* The primary key must have a public or protected no-arg constructor. The primary key class may be a Java record type, in which case it does not need a no-arg constructor. 
 * The primary key class must define equals and hashCode methods, consistent with equality for the underlying database types to which the primary key is mapped.
 
 [NOTE]

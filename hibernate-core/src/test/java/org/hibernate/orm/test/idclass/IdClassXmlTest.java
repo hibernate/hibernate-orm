@@ -20,10 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Gavin King
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "/org/hibernate/orm/test/idclass/Customer.hbm.xml")
+@DomainModel(xmlMappings = "/org/hibernate/orm/test/idclass/Customer.orm.xml")
 @ServiceRegistry(settings = @Setting(name=JPA_METAMODEL_POPULATION, value = "disabled"))
 @SessionFactory
-public class IdClassHbmTest {
+public class IdClassXmlTest {
 	@AfterEach
 	void dropTestData(SessionFactoryScope factoryScope) {
 		factoryScope.dropData();

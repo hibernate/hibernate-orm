@@ -6,11 +6,8 @@ package org.hibernate.orm.test.annotations.onetoone;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.id.ForeignGenerator;
 
 /**
  * @author Emmanuel Bernard
@@ -18,9 +15,9 @@ import org.hibernate.id.ForeignGenerator;
 @Entity
 public class OwnerAddress {
 	@Id
-	@GenericGenerator(type = ForeignGenerator.class, parameters = @Parameter(name="property", value="owner"))
 	private Integer id;
 
+	@MapsId
 	@OneToOne(mappedBy="address")
 	private Owner owner;
 

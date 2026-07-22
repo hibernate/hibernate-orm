@@ -26,7 +26,7 @@ import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handle
  * SecondPass implementing delayed resolution of id-generators associated with an entity
  * using strict JPA resolution - based mainly on global resolution of generator names,
  * along with support for UUID and String member types with AUTO.  We also account for
- * legacy (un-configurable) named generators ({@code increment}, {@code uuid.hex}, etc.).
+ * legacy (un-configurable) named generators ({@code increment}, etc.).
  *
  * @implNote For unnamed generators defined on the entity class or on the id member, this
  * strategy will register a global registration using the entity's name and later look it

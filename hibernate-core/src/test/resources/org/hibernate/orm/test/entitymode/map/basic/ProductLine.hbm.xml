@@ -15,7 +15,7 @@
 
 	<class entity-name="ProductLine">
     	<id name="id" column="productId" length="32" type="string">
-    		<generator class="uuid.hex"/>
+    		<generator class="uuid"/>
     	</id>
 
     	<property name="description" not-null="true" length="200" type="string"/>
@@ -30,7 +30,7 @@
 
     <class entity-name="Model">
     	<id name="id" column="modelId" length="32" type="string">
-    		<generator class="uuid.hex"/>
+    		<generator class="uuid"/>
     	</id>
     	
     	<property name="name" not-null="true" length="25" type="string"/>

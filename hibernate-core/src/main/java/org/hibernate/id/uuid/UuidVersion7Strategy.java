@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.UUIDGenerationStrategy;
 
 
 /**
@@ -33,7 +32,7 @@ import org.hibernate.id.UUIDGenerationStrategy;
  * well-known Unix Epoch timestamp source, the number of milliseconds since midnight 1 Jan 1970 UTC,
  * leap seconds excluded.
  */
-public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
+public class UuidVersion7Strategy implements UuidValueGenerator {
 
 	private static final long MAX_RANDOM_SEQUENCE = 0x3FFF_FFFF_FFFF_FFFFL;
 
@@ -106,19 +105,6 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 	@Internal
 	public UuidVersion7Strategy(final Instant initialTimestamp, final long initialSequence) {
 		this.lastState = new AtomicReference<>( new State( initialTimestamp, initialSequence ) );
-	}
-
-	/**
-	 * Version 7
-	 */
-	@Override
-	public int getGeneratedVersion() {
-		return 7;
-	}
-
-	@Override
-	public UUID generateUUID(final SharedSessionContractImplementor session) {
-		return generateUuid( session );
 	}
 
 	@Override

@@ -8,11 +8,10 @@ import java.util.UUID;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.dialect.SybaseDialect;
 
+import org.hibernate.id.uuid.CustomVersionOneStrategy;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -49,14 +48,7 @@ public class UuidCustomGeneratedValueTest {
 	public static class Book {
 
 		@Id
-		@GenericGenerator(type = UUIDGenerator.class,
-			parameters = {
-				@Parameter(
-					name = "uuid_gen_strategy_class",
-					value = "org.hibernate.id.uuid.CustomVersionOneStrategy"
-				)
-			}
-		)
+		@UuidGenerator(algorithm = CustomVersionOneStrategy.class)
 		private UUID id;
 
 		private String title;

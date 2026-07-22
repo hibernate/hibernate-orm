@@ -4,14 +4,11 @@
  */
 package org.hibernate.orm.test.boot.models.foreigngenerator;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.id.ForeignGenerator;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 
 /**
  * @author Steve Ebersole
@@ -19,13 +16,11 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Info {
 	@Id
-	@GenericGenerator(type = ForeignGenerator.class,
-			parameters = @Parameter( name = "property", value = "owner" )
-	)
 	private Integer id;
 	@Basic
 	private String name;
 
+	@MapsId
 	@ManyToOne
 	private Thing owner;
 

@@ -1006,7 +1006,7 @@ abstract class AbstractSharedSessionContract
 	public final UUID getSessionIdentifier() {
 		if ( sessionIdentifier == null ) {
 			//Lazily initialized: otherwise all the UUID generations will cause significant amount of contention.
-			sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
+			sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUuid( null );
 		}
 		return sessionIdentifier;
 	}

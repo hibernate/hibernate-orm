@@ -178,6 +178,8 @@ public class OptionalOneToOneMappedByTest {
 //					.add( Restrictions.eq( "personAddress", personAddress ) )
 //					.uniqueResult();
 
+			// @MapsId generates an FK constraint, so Person needs to be removed first in order to avoid a ConstraintViolationException
+			session.remove( personAddress.getPerson() );
 			session.remove( personAddress );
 			assertThat( personAddress.getPerson() ).isNotSameAs( person );
 			personAddress.getPerson().setPersonAddress( null );

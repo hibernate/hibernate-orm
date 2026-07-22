@@ -6,15 +6,14 @@ package org.hibernate.orm.test.annotations.id.entities;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 /**
  * @author Paul Cowan
  */
 @Entity
-@GenericGenerator(type = UUIDHexGenerator.class)
 public class Monkey {
+	@UuidGenerator
 	private String id;
 
 	@Id

@@ -9,8 +9,8 @@ import java.util.UUID;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.UuidGenerator;
 
 /**
  * @author Steve Ebersole
@@ -19,7 +19,8 @@ import jakarta.persistence.Id;
 @Entity
 public class Book {
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
+	@GeneratedValue
+	@UuidGenerator(style = UuidGenerator.Style.VERSION_7)
 	private UUID id;
 	@Basic
 	private String name;

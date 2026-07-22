@@ -48,7 +48,7 @@
 	
 	<class name="Resource" table="ecruoser">
 		<id name="id" type="string">
-			<generator class="uuid.hex"/>
+			<generator class="uuid"/>
 		</id>
 		
 		<discriminator column="discriminator" type="string"/>
@@ -63,7 +63,7 @@
 	
 	<class name="Party">
 		<id name="id" type="string">
-			<generator class="uuid.hex"/>
+			<generator class="uuid"/>
 		</id>
 		<discriminator column="discriminator" type="string"/>
 		<join table="partyjointable">
@@ -88,7 +88,7 @@
 	
 	<class name="Intervention">
 		<id name="id" type="string">
-			<generator class="uuid.hex"/>
+			<generator class="uuid"/>
 		</id>
 		
 		<version name="version" type="long"/>

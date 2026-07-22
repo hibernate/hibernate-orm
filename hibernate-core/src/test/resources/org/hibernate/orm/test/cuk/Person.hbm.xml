@@ -55,7 +55,7 @@
 	
 	<class name="Account" table="`Account`">
 		<id name="accountId" length="32">
-			<generator class="uuid.hex"/>
+			<generator class="uuid"/>
 		</id>
 		<many-to-one name="user" property-ref="userIdAndDeleted">
 			<column name="userId"/>

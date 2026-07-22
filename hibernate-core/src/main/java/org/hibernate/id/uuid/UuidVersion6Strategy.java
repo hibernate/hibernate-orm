@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.UUIDGenerationStrategy;
 
 /**
  * Implements UUID Version 6 generation strategy as defined by the <a href="https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-6">RFC 9562</a>.
@@ -31,7 +30,7 @@ import org.hibernate.id.UUIDGenerationStrategy;
  * @author Cedomir Igaly
  * @apiNote This strategy is field-compatible with Version 1, with the time bits reordered for improved DB locality.
  */
-public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
+public class UuidVersion6Strategy implements UuidValueGenerator {
 	public static final UuidVersion6Strategy INSTANCE = new UuidVersion6Strategy();
 
 	@Internal
@@ -77,19 +76,6 @@ public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGe
 	@Internal
 	public UuidVersion6Strategy(final long initialTimestamp, final int initialSequence) {
 		this.lastState = new AtomicReference<>( new State( initialTimestamp, initialSequence ) );
-	}
-
-	/**
-	 * Version 6
-	 */
-	@Override
-	public int getGeneratedVersion() {
-		return 6;
-	}
-
-	@Override
-	public UUID generateUUID(final SharedSessionContractImplementor session) {
-		return generateUuid( session );
 	}
 
 	@Override

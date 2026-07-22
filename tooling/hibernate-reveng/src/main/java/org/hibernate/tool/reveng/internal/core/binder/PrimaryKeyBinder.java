@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,18 +74,6 @@ class PrimaryKeyBinder extends AbstractBinder {
 	}
 
 	void updatePrimaryKey(RootClass rc, PrimaryKeyInfo pki) {
-		EnhancedValue idValue = (EnhancedValue) rc.getIdentifierProperty().getValue();
-		Properties defaultStrategyProperties = new Properties();
-		Property constrainedOneToOne = getConstrainedOneToOne(rc);
-		if(constrainedOneToOne!=null) {
-			if(pki.suggestedStrategy==null) {
-				idValue.setIdentifierGeneratorStrategy("foreign");
-			}
-			if(pki.suggestedProperties==null) {
-				defaultStrategyProperties.setProperty("property", constrainedOneToOne.getName());
-				idValue.setIdentifierGeneratorProperties(defaultStrategyProperties);
-			}
-		}
 	}
 
 	private EnhancedValue createKeyValue(

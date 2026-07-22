@@ -53,7 +53,7 @@
 
     <class name="Account" table="PROPREF_ACCT">
         <id name="accountId" length="32">
-            <generator class="uuid.hex"/>
+            <generator class="uuid"/>
         </id>
         <many-to-one name="user" column="userId" property-ref="userId"/>
         <property name="type" column="`type`" not-null="true"/>

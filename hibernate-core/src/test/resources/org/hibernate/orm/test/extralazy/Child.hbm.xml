@@ -9,7 +9,7 @@
 	<class name="Child" >
 		<id name="id" >
 			<column name="ID" length="32" />
-			<generator class="uuid.hex" />
+			<generator class="uuid" />
 		</id>
 
 		<property name="firstName" />

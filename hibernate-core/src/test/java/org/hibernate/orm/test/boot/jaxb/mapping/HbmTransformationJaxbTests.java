@@ -800,6 +800,25 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20712" )
+	public void testOnDeleteCascadeTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/on-delete-toone/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "Child".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( childEntity.getAttributes().getManyToOneAttributes() ).hasSize( 1 );
+
+			final JaxbManyToOneImpl parentManyToOne = childEntity.getAttributes().getManyToOneAttributes().get( 0 );
+			assertThat( parentManyToOne.getName() ).isEqualTo( "parent" );
+			assertThat( parentManyToOne.getOnDelete() )
+					.as( "many-to-one with on-delete='cascade' should have on-delete=CASCADE" )
+					.isEqualTo( org.hibernate.annotations.OnDeleteAction.CASCADE );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20709" )
 	public void testCollectionFetchJoinEagerTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/collection-fetch-join-eager/hbm.xml", scope, (transformed) -> {

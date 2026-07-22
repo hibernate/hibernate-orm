@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.Origin;
@@ -58,6 +59,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToAnyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapKeyBasicType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
@@ -1903,6 +1905,10 @@ public class HbmXmlTransformer {
 		}
 
 		jaxbManyToOne.setForeignKey( transformForeignKey( hbmNode.getForeignKey() ) );
+
+		if ( hbmNode.getOnDelete() == JaxbHbmOnDeleteEnum.CASCADE ) {
+			jaxbManyToOne.setOnDelete( OnDeleteAction.CASCADE );
+		}
 
 		if ( hbmNode.getNotFound() != null ) {
 			jaxbManyToOne.setNotFound( interpretNotFoundAction( hbmNode.getNotFound() ) );

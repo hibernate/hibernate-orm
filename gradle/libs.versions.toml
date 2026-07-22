@@ -121,7 +121,7 @@ asciidoctorj = "3.0.0"
 # Compilation (static checks)
 jetbrainsAnnotations = "26.1.0"
 errorprone = "2.50.0"
-nullaway = "0.13.7"
+nullaway = "0.13.8"
 ## For custom NullAway LibraryModels
 guava = "33.6.0-jre"
 

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/stats/Continent.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/stats/Continent.orm.xml")
 @SessionFactory(generateStatistics = true)
 public class StatsTest {
 

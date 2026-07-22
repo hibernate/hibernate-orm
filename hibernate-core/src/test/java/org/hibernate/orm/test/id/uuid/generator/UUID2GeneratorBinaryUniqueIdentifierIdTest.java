@@ -8,8 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.id.UUIDGenerator;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -56,7 +55,7 @@ public class UUID2GeneratorBinaryUniqueIdentifierIdTest {
 	static class FooEntity {
 
 		@Id
-		@GenericGenerator(type = UUIDGenerator.class)
+		@UuidGenerator
 		@Column(columnDefinition = "UNIQUEIDENTIFIER")
 		byte[] id;
 

@@ -6,9 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.id.UUIDGenerator;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -72,7 +71,7 @@ public class UUID2GeneratorStringUniqueIdentifierIdTest {
 	public static class FooEntity {
 
 		@Id
-		@GenericGenerator(type = UUIDGenerator.class)
+		@UuidGenerator
 		@Column(columnDefinition = "UNIQUEIDENTIFIER")
 		private String id;
 

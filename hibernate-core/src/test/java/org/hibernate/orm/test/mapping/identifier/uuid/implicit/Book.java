@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Basic;
+import org.hibernate.annotations.UuidGenerator;
 
 /**
  * @author Steve Ebersole
@@ -15,6 +16,7 @@ import jakarta.persistence.Basic;
 public class Book {
 	@Id
 	@GeneratedValue
+	@UuidGenerator
 	private UUID id;
 	@Basic
 	private String name;

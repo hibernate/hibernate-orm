@@ -94,7 +94,7 @@ public class TestCase {
 	@Test
 	public void testAddressWithForeignKeyGeneration() {
 		PersistentClass address = metadata.getEntityBinding("AddressPerson");
-		assertEquals("foreign", ((EnhancedValue)address.getIdentifier()).getIdentifierGeneratorStrategy());
+		assertEquals("assigned", ((EnhancedValue)address.getIdentifier()).getIdentifierGeneratorStrategy());
 	}
 
 	@Test

@@ -586,15 +586,16 @@ include::{domain-identifiers-extrasdir}/id/identifiers-generators-table-configur
 
 Hibernate provides two approaches to UUID generation:
 
-1. using `org.hibernate.id.uuid.UuidGenerator`, which can be configured using the `org.hibernate.annotations.UuidGenerator` annotation.
-2. using `org.hibernate.id.UUIDGenerator`, which can be configured using the `@GenericGenerator` annotation.  Note that this approach is deprecated.
+1.  using `org.hibernate.id.uuid.UuidGenerator`, which can be configured using the `org.hibernate.annotations.UuidGenerator` annotation. It builds on top of the <<identifiers-generators-IdGeneratorType,@IdGeneratorType>> support.
+2.  using `@jakarta.persistence.GeneratedValue(strategy = GenerationType.UUID)`, on a String or UUID typed attribute, or also
+`@jakarta.persistence.GeneratedValue(strategy = GenerationType.AUTO)` on a UUID typed attribute.
 
 Implicit UUID generation uses `org.hibernate.id.uuid.UuidGenerator`.
 This includes `@GeneratedValue(strategy = UUID)` and `@GeneratedValue` with `AUTO` for `UUID` or `String` identifiers.
 The following examples use this generator without an explicit `@UuidGenerator` annotation.
 
 [[example-identifiers-generators-uuid-implicit]]
-.Implicit UUID generation
+.UUID generation
 ====
 [source,java]
 ----
@@ -603,7 +604,7 @@ include::{example-dir-identifier}/uuid/implicit/Book.java[tag=example-identifier
 ====
 
 [[example-identifiers-generators-uuid-implicit2]]
-.Another example of implicit UUID generation
+.UUID generation with explicit UUID Version 7 generation strategy
 ====
 [source,java]
 ----

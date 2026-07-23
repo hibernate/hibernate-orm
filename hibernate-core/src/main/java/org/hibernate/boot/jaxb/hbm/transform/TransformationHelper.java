@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +48,21 @@ public class TransformationHelper {
 		return discoverUnmappedPropertyNames( javaClass, Set.of(), fieldAccess );
 	}
 
+	static String extractPropertyName(Method method) {
+		if ( method.getParameterCount() != 0 ) {
+			return null;
+		}
+		final String methodName = method.getName();
+		if ( methodName.startsWith( "get" ) && methodName.length() > 3 ) {
+			return StringHelper.decapitalize( methodName.substring( 3 ) );
+		}
+		if ( methodName.startsWith( "is" ) && methodName.length() > 2
+				&& ( method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class ) ) {
+			return StringHelper.decapitalize( methodName.substring( 2 ) );
+		}
+		return null;
+	}
+
 	static Set<String> discoverUnmappedPropertyNames(
 			Class<?> javaClass,
 			Set<String> mappedPropertyNames,
@@ -68,18 +84,7 @@ public class TransformationHelper {
 				effectiveMappedNames.add( StringHelper.decapitalize( name ) );
 			}
 			for ( var method : javaClass.getMethods() ) {
-				if ( method.getParameterCount() != 0 ) {
-					continue;
-				}
-				String propertyName = null;
-				final String methodName = method.getName();
-				if ( methodName.startsWith( "get" ) && methodName.length() > 3 ) {
-					propertyName = StringHelper.decapitalize( methodName.substring( 3 ) );
-				}
-				else if ( methodName.startsWith( "is" ) && methodName.length() > 2
-						&& ( method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class ) ) {
-					propertyName = StringHelper.decapitalize( methodName.substring( 2 ) );
-				}
+				final String propertyName = extractPropertyName( method );
 				if ( propertyName != null
 						&& !effectiveMappedNames.contains( propertyName )
 						&& !propertyName.equals( "class" ) ) {

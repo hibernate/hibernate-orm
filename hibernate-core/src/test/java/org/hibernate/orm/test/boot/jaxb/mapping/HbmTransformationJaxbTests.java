@@ -26,6 +26,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
@@ -1385,6 +1386,19 @@ public class HbmTransformationJaxbTests {
 			assertThat( personManyToOne.getFetch() )
 					.as( "Composite-id key-many-to-one should have fetch=LAZY" )
 					.isEqualTo( jakarta.persistence.FetchType.LAZY );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20717" )
+	public void testImportWithoutRenameDefaultsToUnqualifiedClassName(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/import-no-rename/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getHqlImports() ).hasSize( 1 );
+			final JaxbHqlImportImpl hqlImport = (JaxbHqlImportImpl) transformed.getHqlImports().get( 0 );
+			assertThat( hqlImport.getClazz() ).isEqualTo( "Animal" );
+			assertThat( hqlImport.getRename() )
+					.as( "When hbm.xml import has no rename, transformer should default to unqualified class name" )
+					.isEqualTo( "Animal" );
 		} );
 	}
 

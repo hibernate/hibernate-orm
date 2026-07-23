@@ -3904,7 +3904,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public List<AnnotationMirror> inheritedAnnotations() {
-		if ( jakartaDataRepository ) {
+		if ( repository ) {
 			return element.getAnnotationMirrors().stream()
 					.filter( annotationMirror -> hasAnnotation( annotationMirror.getAnnotationType().asElement(),
 							"jakarta.interceptor.InterceptorBinding" ) )

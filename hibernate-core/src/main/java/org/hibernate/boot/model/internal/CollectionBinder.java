@@ -922,7 +922,7 @@ public abstract class CollectionBinder {
 		}
 
 		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		if ( !property.hasAnnotationUsage( Bag.class, modelsContext ) ) {
+		if ( property.locateAnnotationUsage( Bag.class, modelsContext ) == null ) {
 			return determineCollectionClassification( determineSemanticJavaType( property ), property, buildingContext );
 		}
 
@@ -1004,7 +1004,9 @@ public abstract class CollectionBinder {
 			}
 
 			// otherwise, return the implicit classification for List attributes
-			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
+			return hasScopedBagDefault( property, buildingContext )
+					? CollectionClassification.BAG
+					: buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 		}
 
 		if ( java.util.SortedSet.class.isAssignableFrom( semanticJavaType ) ) {
@@ -1030,6 +1032,17 @@ public abstract class CollectionBinder {
 		}
 
 		return null;
+	}
+
+	private static boolean hasScopedBagDefault(
+			MemberDetails property,
+			MetadataBuildingContext buildingContext) {
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		return property.fromContainers(
+				false,
+				modelsContext,
+				container -> container.locateAnnotationUsage( Bag.class, modelsContext )
+		) != null;
 	}
 
 	private static Class<?> determineSemanticJavaType(MemberDetails property) {

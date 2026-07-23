@@ -107,6 +107,19 @@ public class LocalDateTimeTest
 				// This does not work, but it's unrelated to HHH-13379; see HHH-13515
 				//.add( 2018, 9, 30, 2, 0, 0, 0, ZONE_AUCKLAND )
 				.add( 2018, 9, 30, 3, 0, 0, 0, ZONE_AUCKLAND )
+				// HHH-14256 / JDK-8249280: Confirm workaround for broken LocalDate/LocalDateTime conversion for BCE dates
+				.withForcedJdbcTimezone( "UTC", b -> b
+						.add( 0, 3, 15, 22, 3, 47, 999_999_999, ZONE_GMT )
+						.add( -1, 11, 3, 8, 45, 12, 500_000_000, ZONE_GMT )
+						.add( -100, 6, 20, 14, 27, 53, 123_456_789, ZONE_GMT )
+				)
+				// Ensure behaviour for 2 AD fast path cutoff in SqlDateTimeHelper
+				.withForcedJdbcTimezone( "UTC", b -> b
+						.add( 1, 12, 1, 0, 0, 0, 0, ZONE_GMT )
+						.add( 1, 12, 31, 23, 58, 30, 250_000_000, ZONE_GMT )
+						.add( 2, 1, 1, 0, 1, 15, 750_000_000, ZONE_GMT )
+						.add( 1, 1, 31, 0, 0, 0, 0, ZONE_GMT )
+				)
 				.build();
 	}
 

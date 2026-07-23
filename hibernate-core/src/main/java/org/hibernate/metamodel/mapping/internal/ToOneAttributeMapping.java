@@ -2221,7 +2221,7 @@ public class ToOneAttributeMapping
 					if ( associatedEntityMappingType.getEntityPersister().hasFilterForLoadByKey() ) {
 						associatedEntityMappingType.applyBaseRestrictions(
 								join::applyPredicate,
-								tableGroup,
+								lazyTableGroup,
 								true,
 								creationState.getLoadQueryInfluencers().getEnabledFilters(),
 								creationState.applyOnlyLoadByKeyFilters(),
@@ -2231,7 +2231,7 @@ public class ToOneAttributeMapping
 					}
 					associatedEntityMappingType.applyWhereRestrictions(
 							join::applyPredicate,
-							tableGroup,
+							lazyTableGroup,
 							true,
 							creationState
 					);

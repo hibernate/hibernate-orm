@@ -1218,6 +1218,18 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			if ( mainTableReference != null ) {
 				retainedTableReferences.add( mainTableReference );
 			}
+			// Retain the identifier table of the persister as well.
+			// For an association whose foreign key targets the entity identifier, the join predicate
+			// qualifies the identifier column with the identifier table, which may be a superclass table
+			// that is otherwise unreferenced by selections. Pruning it would leave the predicate with a
+			// dangling table alias (HHH-20718).
+			final String identifierTableName = persister.getIdentifierTableName();
+			if ( !identifierTableName.equals( tableName ) ) {
+				final var identifierTableReference = tableGroup.getTableReference( null, identifierTableName, false );
+				if ( identifierTableReference != null ) {
+					retainedTableReferences.add( identifierTableReference );
+				}
+			}
 			final String sqlWhereStringTableExpression = persister.getSqlWhereStringTableExpression();
 			if ( sqlWhereStringTableExpression != null ) {
 				final var tableReference = tableGroup.getTableReference( sqlWhereStringTableExpression );

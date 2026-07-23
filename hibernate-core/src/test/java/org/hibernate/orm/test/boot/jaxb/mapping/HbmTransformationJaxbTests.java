@@ -29,6 +29,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
@@ -861,6 +862,50 @@ public class HbmTransformationJaxbTests {
 					.hasSize( 2 );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20715" )
+	public void testUnmappedSuperclassGeneratesMappedSuperclass(ServiceRegistryScope scope) {
+		// State extends Locality (a plain Java class, not an entity).
+		// The hbm.xml maps State with id and name properties that are declared on Locality.
+		// The transformer should generate a <mapped-superclass> for Locality
+		// and move the inherited attributes (id, name) to it.
+		transformAndVerify( "xml/jaxb/mapping/unmapped-superclass/hbm.xml", scope, (transformed) -> {
+			// A mapped-superclass should be generated for Locality
+			assertThat( transformed.getMappedSuperclasses() )
+					.as( "Transformer should generate a <mapped-superclass> for the unmapped Locality superclass" )
+					.hasSize( 1 );
+
+			final JaxbMappedSuperclassImpl mappedSuperclass = transformed.getMappedSuperclasses().get( 0 );
+			assertThat( mappedSuperclass.getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.stats.Locality" );
+			assertThat( mappedSuperclass.isMetadataComplete() ).isTrue();
+
+			// The id and name attributes should be on the mapped-superclass (moved from the entity)
+			assertThat( mappedSuperclass.getAttributes().getIdAttributes() )
+					.as( "id should be moved to the mapped-superclass" )
+					.hasSize( 1 );
+			assertThat( mappedSuperclass.getAttributes().getIdAttributes().get( 0 ).getName() )
+					.isEqualTo( "id" );
+
+			assertThat( mappedSuperclass.getAttributes().getBasicAttributes() )
+					.as( "name should be moved to the mapped-superclass" )
+					.hasSize( 1 );
+			assertThat( mappedSuperclass.getAttributes().getBasicAttributes().get( 0 ).getName() )
+					.isEqualTo( "name" );
+
+			// The entity should NOT have the inherited attributes anymore
+			final JaxbEntityImpl stateEntity = transformed.getEntities().get( 0 );
+			assertThat( stateEntity.getClazz() ).isEqualTo( "State" );
+			assertThat( stateEntity.getAttributes().getIdAttributes() )
+					.as( "Entity should not have id — it's inherited from mapped-superclass" )
+					.isEmpty();
+			assertThat( stateEntity.getAttributes().getBasicAttributes() )
+					.as( "Entity should not have name — it's inherited from mapped-superclass" )
+					.isEmpty();
+		} );
+	}
+
 
 	private void transformAndVerify(
 			String resourceName,

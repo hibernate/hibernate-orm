@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.hqlimport</package>
+    <attribute-accessor>property</attribute-accessor>
+
+
+    <mapped-superclass class="org.hibernate.orm.test.hqlimport.Animal" access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </mapped-superclass>
+
+
+    <entity class="Dog" metadata-complete="true">
+        <table name="Dog"/>
+        <attributes>
+            <basic name="breed"/>
+        </attributes>
+    </entity>
+
+    <entity class="Cat" metadata-complete="true">
+        <table name="Cat"/>
+        <attributes>
+            <basic name="indoor"/>
+        </attributes>
+    </entity>
+
+    <!-- Register Animal as an HQL name for polymorphic queries -->
+    <import class="Animal" rename="Animal"/>
+
+</entity-mappings>

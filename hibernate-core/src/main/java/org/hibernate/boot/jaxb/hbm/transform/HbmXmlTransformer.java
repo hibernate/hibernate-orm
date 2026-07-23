@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -134,6 +135,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritanceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
@@ -369,8 +371,232 @@ public class HbmXmlTransformer {
 			defineInheritance( rootMappingEntity, InheritanceType.TABLE_PER_CLASS );
 		} );
 
+		generateMappedSuperclassesForUnmappedSuperclasses( mappingXmlRoot );
+
 		if ( TRANSFORMATION_LOGGER.isDebugEnabled() ) {
 			dumpTransformed( origin(), mappingXmlRoot );
+		}
+	}
+
+	/**
+	 * In hbm.xml, an entity can map properties (id, basic, many-to-one, etc.) whose Java
+	 * member (getter/field) is declared on a plain superclass — not a mapped entity or
+	 * mapped-superclass. The hbm processing handles this transparently via Java reflection
+	 * ({@code ReflectHelper.findGetterMethod()} walks the class hierarchy).
+	 * <p>
+	 * In orm.xml, the XML processor requires each attribute's member to be declared on
+	 * the entity class itself or on an explicitly declared {@code <mapped-superclass>}.
+	 * Without a mapped-superclass, the processor fails with MemberResolutionException.
+	 * <p>
+	 * This method detects when an entity maps properties inherited from an unmapped Java
+	 * superclass, generates a {@code <mapped-superclass metadata-complete="true">} with
+	 * those inherited attributes, and removes them from the entity (the entity inherits
+	 * them from the mapped-superclass). Superclass properties that are NOT mapped by any
+	 * entity are declared as {@code <transient/>}.
+	 */
+	private void generateMappedSuperclassesForUnmappedSuperclasses(JaxbEntityMappingsImpl mappingXmlRoot) {
+		// Collect the fully qualified class names of all already-mapped entities
+		// so we don't generate a mapped-superclass for classes that are entities
+		final Set<String> mappedEntityClassNames = new HashSet<>();
+		for ( var entity : mappingXmlRoot.getEntities() ) {
+			if ( entity.getClazz() != null ) {
+				final String fqn = entity.getClazz().contains( "." )
+						? entity.getClazz()
+						: mappingXmlRoot.getPackage() != null
+								? mappingXmlRoot.getPackage() + "." + entity.getClazz()
+								: entity.getClazz();
+				mappedEntityClassNames.add( fqn );
+			}
+		}
+
+		// Track which superclasses we've already generated to avoid duplicates
+		// when multiple entities share the same unmapped superclass
+		final Map<String, JaxbMappedSuperclassImpl> generatedSuperclasses = new HashMap<>();
+		final boolean fieldAccess = "field".equals(
+				hbmXmlBinding.getRoot().getDefaultAccess() != null
+						? hbmXmlBinding.getRoot().getDefaultAccess().toLowerCase( Locale.ROOT )
+						: "property"
+		);
+
+		for ( var entity : new ArrayList<>( mappingXmlRoot.getEntities() ) ) {
+			final String entityClassName = entity.getClazz();
+			if ( entityClassName == null ) {
+				continue;
+			}
+
+			final String fqn = entityClassName.contains( "." )
+					? entityClassName
+					: mappingXmlRoot.getPackage() != null
+							? mappingXmlRoot.getPackage() + "." + entityClassName
+							: entityClassName;
+
+			Class<?> javaClass;
+			try {
+				javaClass = Class.forName( fqn );
+			}
+			catch (ClassNotFoundException e) {
+				continue;
+			}
+
+			final Class<?> javaSuperclass = javaClass.getSuperclass();
+			if ( javaSuperclass == null || javaSuperclass == Object.class ) {
+				continue;
+			}
+
+			final String superclassName = javaSuperclass.getName();
+			if ( mappedEntityClassNames.contains( superclassName ) ) {
+				// superclass is already a mapped entity — no need for mapped-superclass
+				continue;
+			}
+
+			// Check if this entity has attributes whose Java member is on the superclass.
+			// If so, move those attributes to a <mapped-superclass> and remove them from
+			// the entity, so the orm.xml processor can find the members.
+			final var attrs = entity.getAttributes();
+			if ( attrs == null ) {
+				continue;
+			}
+
+			// Find or create the mapped-superclass for this Java superclass
+			var mappedSuperclass = generatedSuperclasses.get( superclassName );
+			if ( mappedSuperclass == null ) {
+				mappedSuperclass = new JaxbMappedSuperclassImpl();
+				mappedSuperclass.setClazz( superclassName );
+				mappedSuperclass.setMetadataComplete( true );
+				mappedSuperclass.setAccess( fieldAccess
+						? jakarta.persistence.AccessType.FIELD
+						: jakarta.persistence.AccessType.PROPERTY );
+				mappedSuperclass.setAttributes( new JaxbAttributesContainerImpl() );
+				generatedSuperclasses.put( superclassName, mappedSuperclass );
+				mappingXmlRoot.getMappedSuperclasses().add( mappedSuperclass );
+			}
+
+			final var superAttrs = mappedSuperclass.getAttributes();
+
+			// Move id attributes declared on the superclass
+			final var idsToMove = new ArrayList<JaxbIdImpl>();
+			for ( var id : attrs.getIdAttributes() ) {
+				if ( isMemberDeclaredOnClass( id.getName(), javaSuperclass, fieldAccess ) ) {
+					idsToMove.add( id );
+				}
+			}
+			for ( var id : idsToMove ) {
+				attrs.getIdAttributes().remove( id );
+				// Only add to mapped-superclass if not already there
+				if ( superAttrs.getIdAttributes().stream().noneMatch( a -> a.getName().equals( id.getName() ) ) ) {
+					superAttrs.getIdAttributes().add( id );
+				}
+			}
+
+			// Move basic attributes declared on the superclass
+			final var basicsToMove = new ArrayList<JaxbBasicImpl>();
+			for ( var basic : attrs.getBasicAttributes() ) {
+				if ( isMemberDeclaredOnClass( basic.getName(), javaSuperclass, fieldAccess ) ) {
+					basicsToMove.add( basic );
+				}
+			}
+			for ( var basic : basicsToMove ) {
+				attrs.getBasicAttributes().remove( basic );
+				if ( superAttrs.getBasicAttributes().stream().noneMatch( a -> a.getName().equals( basic.getName() ) ) ) {
+					superAttrs.getBasicAttributes().add( basic );
+				}
+			}
+
+			// Move many-to-one attributes declared on the superclass
+			final var manyToOnesToMove = new ArrayList<JaxbManyToOneImpl>();
+			for ( var mto : attrs.getManyToOneAttributes() ) {
+				if ( isMemberDeclaredOnClass( mto.getName(), javaSuperclass, fieldAccess ) ) {
+					manyToOnesToMove.add( mto );
+				}
+			}
+			for ( var mto : manyToOnesToMove ) {
+				attrs.getManyToOneAttributes().remove( mto );
+				if ( superAttrs.getManyToOneAttributes().stream().noneMatch( a -> a.getName().equals( mto.getName() ) ) ) {
+					superAttrs.getManyToOneAttributes().add( mto );
+				}
+			}
+
+			// Move one-to-many attributes declared on the superclass
+			final var oneToManysToMove = new ArrayList<JaxbOneToManyImpl>();
+			for ( var otm : attrs.getOneToManyAttributes() ) {
+				if ( isMemberDeclaredOnClass( otm.getName(), javaSuperclass, fieldAccess ) ) {
+					oneToManysToMove.add( otm );
+				}
+			}
+			for ( var otm : oneToManysToMove ) {
+				attrs.getOneToManyAttributes().remove( otm );
+				if ( superAttrs.getOneToManyAttributes().stream().noneMatch( a -> a.getName().equals( otm.getName() ) ) ) {
+					superAttrs.getOneToManyAttributes().add( otm );
+				}
+			}
+
+			// Remove transients for members that are now on the mapped-superclass
+			attrs.getTransients().removeIf( t -> isMemberDeclaredOnClass( t.getName(), javaSuperclass, fieldAccess ) );
+		}
+
+		// Add <transient/> for all properties on each generated mapped-superclass
+		// that are NOT mapped by any entity (i.e. not moved to the mapped-superclass)
+		for ( var entry : generatedSuperclasses.entrySet() ) {
+			final var mappedSuperclass = entry.getValue();
+			final var superAttrs = mappedSuperclass.getAttributes();
+			final Set<String> mappedNames = new HashSet<>();
+			for ( var id : superAttrs.getIdAttributes() ) {
+				mappedNames.add( id.getName() );
+			}
+			for ( var basic : superAttrs.getBasicAttributes() ) {
+				mappedNames.add( basic.getName() );
+			}
+			for ( var mto : superAttrs.getManyToOneAttributes() ) {
+				mappedNames.add( mto.getName() );
+			}
+			for ( var otm : superAttrs.getOneToManyAttributes() ) {
+				mappedNames.add( otm.getName() );
+			}
+			try {
+				final Class<?> superclass = Class.forName( entry.getKey() );
+				final Set<String> transientNames = TransformationHelper.discoverUnmappedPropertyNames(
+						superclass, mappedNames, "field".equals(
+								hbmXmlBinding.getRoot().getDefaultAccess() != null
+										? hbmXmlBinding.getRoot().getDefaultAccess().toLowerCase( Locale.ROOT )
+										: "property"
+						)
+				);
+				TransformationHelper.addTransients( transientNames, superAttrs.getTransients() );
+			}
+			catch (ClassNotFoundException ignored) {
+			}
+		}
+	}
+
+	/**
+	 * Check if a field or getter for the given property name is declared directly
+	 * on the given class (not inherited).
+	 */
+	private static boolean isMemberDeclaredOnClass(String propertyName, Class<?> clazz, boolean fieldAccess) {
+		if ( fieldAccess ) {
+			try {
+				clazz.getDeclaredField( propertyName );
+				return true;
+			}
+			catch (NoSuchFieldException ignored) {
+				return false;
+			}
+		}
+		else {
+			final String stem = Character.toUpperCase( propertyName.charAt( 0 ) ) + propertyName.substring( 1 );
+			try {
+				clazz.getDeclaredMethod( "get" + stem );
+				return true;
+			}
+			catch (NoSuchMethodException ignored) {
+			}
+			try {
+				clazz.getDeclaredMethod( "is" + stem );
+				return true;
+			}
+			catch (NoSuchMethodException ignored) {
+			}
+			return false;
 		}
 	}
 

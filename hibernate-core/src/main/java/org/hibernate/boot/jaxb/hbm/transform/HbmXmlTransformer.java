@@ -779,7 +779,9 @@ public class HbmXmlTransformer {
 				final var ormImport = new JaxbHqlImportImpl();
 				ormRoot.getHqlImports().add( ormImport );
 				ormImport.setClazz( hbmImport.getClazz() );
-				ormImport.setRename( hbmImport.getRename() );
+				final String rename = hbmImport.getRename();
+				// In hbm.xml rename is optional and defaults to the unqualified class name
+				ormImport.setRename( rename != null ? rename : StringHelper.unqualify( hbmImport.getClazz() ) );
 			}
 		}
 	}

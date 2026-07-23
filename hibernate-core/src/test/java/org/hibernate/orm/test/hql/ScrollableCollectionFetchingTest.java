@@ -15,6 +15,7 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -535,6 +536,88 @@ public class ScrollableCollectionFetchingTest {
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "position(2) did not return expected row" );
 						assertEquals( 2, results.getPosition() );
+					}
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-10815")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsBackwardsScrollableResultSets.class)
+	@SuppressWarnings("deprecation")
+	public void testScrollableResultsGetRowNumber(SessionFactoryScope scope) {
+		TestData data = new TestData();
+		data.prepare( scope );
+
+		scope.inTransaction(
+				session -> {
+					// getRowNumber() numbers the first result 0 (unlike JDBC) and returns -1 when
+					// there is no current row. The plain and the fetch-join implementations must
+					// report the same row number at the same position (HHH-10815).
+					try (
+							ScrollableResults<Animal> fetchResult = session.createQuery(
+									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
+									.setParameter( "desc", "root%" ).scroll();
+							ScrollableResults<Animal> standardResult = session.createQuery(
+									"from Animal a where a.description like :desc order by a.id", Animal.class )
+									.setParameter( "desc", "root%" ).scroll()
+					) {
+						standardResult.first();
+						fetchResult.first();
+						assertEquals( 0, standardResult.getRowNumber(), "row number must be 0 on the first result" );
+						assertEquals( 0, fetchResult.getRowNumber(), "row number must be 0 on the first result" );
+						assertEquals( standardResult.getRowNumber(), fetchResult.getRowNumber(),
+								"both results must have the same row number" );
+
+						standardResult.next();
+						fetchResult.next();
+						assertEquals( 1, standardResult.getRowNumber(), "row number must be 1 on the next result" );
+						assertEquals( 1, fetchResult.getRowNumber(), "row number must be 1 on the next result" );
+						assertEquals( standardResult.getRowNumber(), fetchResult.getRowNumber(),
+								"both results must have the same row number" );
+
+						standardResult.last();
+						fetchResult.last();
+						assertEquals( standardResult.getRowNumber(), fetchResult.getRowNumber(),
+								"both results must have the same row number on the last result" );
+						assertEquals( standardResult.getPosition() - 1, standardResult.getRowNumber() );
+						assertEquals( fetchResult.getPosition() - 1, fetchResult.getRowNumber() );
+					}
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-10815")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsBackwardsScrollableResultSets.class)
+	@SuppressWarnings("deprecation")
+	public void testScrollableResultsSetRowNumber(SessionFactoryScope scope) {
+		TestData data = new TestData();
+		data.prepare( scope );
+
+		scope.inTransaction(
+				session -> {
+					// setRowNumber(i) must behave identically with and without a fetch join at every
+					// position. In particular setRowNumber(0) addresses the position before the first
+					// row and must be accepted (returning false), rather than throwing as the
+					// fetch-join implementation previously did (HHH-10815).
+					try (
+							ScrollableResults<Animal> fetchResult = session.createQuery(
+									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
+									.setParameter( "desc", "root%" ).scroll();
+							ScrollableResults<Animal> standardResult = session.createQuery(
+									"from Animal a where a.description like :desc order by a.id", Animal.class )
+									.setParameter( "desc", "root%" ).scroll()
+					) {
+						// there are two "root%" rows, so positions 1 and 2 are rows and 0 is before the first
+						for ( int i = 0; i <= 2; i++ ) {
+							assertEquals( standardResult.setRowNumber( i ), fetchResult.setRowNumber( i ),
+									"setRowNumber(" + i + ") must return the same result with and without a fetch join" );
+							assertEquals( standardResult.getRowNumber(), fetchResult.getRowNumber(),
+									"row number at position " + i + " must be the same with and without a fetch join" );
+							assertEquals( standardResult.get(), fetchResult.get(),
+									"the row at position " + i + " must be the same with and without a fetch join" );
+						}
 					}
 				}
 		);

@@ -30,6 +30,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
@@ -1299,6 +1300,92 @@ public class HbmTransformationJaxbTests {
 			assertThat( employments.getMappedBy() )
 					.as( "Inverse one-to-many should resolve mapped-by to composite-id key-property 'personName'" )
 					.isEqualTo( "personName" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20715" )
+	public void testUnmappedSuperclassGeneratesMappedSuperclass(ServiceRegistryScope scope) {
+		// ConcreteEntity and AnotherEntity both extend AbstractBase (a plain Java class, not an entity).
+		// The hbm.xml maps properties (id, version, name, relatedBase) declared on AbstractBase.
+		// The transformer should generate a single <mapped-superclass> for AbstractBase,
+		// move the inherited attributes there, and mark unmapped superclass properties as transient.
+		transformAndVerify( "xml/jaxb/mapping/unmapped-superclass/hbm.xml", scope, (transformed) -> {
+			// A single mapped-superclass should be generated even though two entities share the same superclass
+			assertThat( transformed.getMappedSuperclasses() )
+					.as( "Exactly one <mapped-superclass> should be generated for the shared AbstractBase" )
+					.hasSize( 1 );
+
+			final JaxbMappedSuperclassImpl mappedSuperclass = transformed.getMappedSuperclasses().get( 0 );
+			assertThat( mappedSuperclass.getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.unmappedsuperclass.AbstractBase" );
+			assertThat( mappedSuperclass.isMetadataComplete() ).isTrue();
+
+			final var superAttrs = mappedSuperclass.getAttributes();
+
+			// Id attribute should be on the mapped-superclass
+			assertThat( superAttrs.getIdAttributes() )
+					.extracting( JaxbIdImpl::getName )
+					.containsExactly( "id" );
+
+			// Version attribute should be on the mapped-superclass
+			assertThat( superAttrs.getVersion() )
+					.as( "version should be moved to the mapped-superclass" )
+					.isNotNull();
+			assertThat( superAttrs.getVersion().getName() )
+					.isEqualTo( "version" );
+
+			// Basic attribute 'name' should be on the mapped-superclass
+			assertThat( superAttrs.getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "name" );
+
+			// Many-to-one attribute 'relatedBase' should be on the mapped-superclass
+			assertThat( superAttrs.getManyToOneAttributes() )
+					.extracting( JaxbManyToOneImpl::getName )
+					.containsExactly( "relatedBase" );
+
+			// Unmapped property should be declared as transient
+			assertThat( superAttrs.getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.contains( "unmappedProperty" );
+
+			// --- ConcreteEntity assertions ---
+			final JaxbEntityImpl concreteEntity = transformed.getEntities().stream()
+					.filter( e -> "ConcreteEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			// Inherited attributes should NOT be on the entity
+			assertThat( concreteEntity.getAttributes().getIdAttributes() )
+					.as( "Entity should not have id — inherited from mapped-superclass" )
+					.isEmpty();
+			assertThat( concreteEntity.getAttributes().getVersion() )
+					.as( "Entity should not have version — inherited from mapped-superclass" )
+					.isNull();
+			assertThat( concreteEntity.getAttributes().getManyToOneAttributes() )
+					.as( "Entity should not have relatedBase — inherited from mapped-superclass" )
+					.isEmpty();
+
+			// Entity's own attribute should remain
+			assertThat( concreteEntity.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "description" );
+
+			// --- AnotherEntity assertions ---
+			final JaxbEntityImpl anotherEntity = transformed.getEntities().stream()
+					.filter( e -> "AnotherEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			// Inherited attributes should NOT be on the entity
+			assertThat( anotherEntity.getAttributes().getIdAttributes() ).isEmpty();
+			assertThat( anotherEntity.getAttributes().getVersion() ).isNull();
+
+			// Entity's own attribute should remain
+			assertThat( anotherEntity.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "code" );
 		} );
 	}
 

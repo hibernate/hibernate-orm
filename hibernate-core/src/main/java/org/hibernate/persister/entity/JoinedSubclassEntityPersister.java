@@ -1206,6 +1206,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final boolean innerJoinOptimization = tableGroup.canUseInnerJoins() || tableGroup.isRealTableGroup();
 		final Set<String> tablesToInnerJoin = innerJoinOptimization ? new HashSet<>() : null;
 		boolean needsTreatDiscriminator = false;
+		// The identifier table, i.e. the root table of the hierarchy, is referenced by the join predicate of
+		// an association whose foreign key targets the identifier, so pruning it would leave that predicate
+		// with a dangling alias (HHH-20718). Passing resolve=false retains it only when the join was already
+		// materialized, leaving the optimization unchanged otherwise.
+		final var identifierTableReference =
+				tableGroup.getTableReference( null, getIdentifierTableName(), false );
+		if ( identifierTableReference != null ) {
+			retainedTableReferences.add( identifierTableReference );
+		}
 		for ( var entry : entityNameUses.entrySet() ) {
 			final var useKind = entry.getValue().getKind();
 			final var persister = (JoinedSubclassEntityPersister) metamodel.findEntityDescriptor( entry.getKey() );

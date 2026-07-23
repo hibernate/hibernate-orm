@@ -32,7 +32,6 @@ import java.util.List;
 import static java.util.Collections.emptyIterator;
 import static org.hibernate.engine.internal.ForeignKeys.isTransient;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
-import static org.hibernate.internal.util.StringHelper.join;
 
 /**
  * @author Steve Ebersole
@@ -388,7 +387,7 @@ public class CascadingActions {
 						parentEntityName,
 						attributePath == null
 								? propertyName
-								: join( ".", attributePath ) + '.' + propertyName
+								: String.join( ".", attributePath ) + '.' + propertyName
 				);
 			}
 		}

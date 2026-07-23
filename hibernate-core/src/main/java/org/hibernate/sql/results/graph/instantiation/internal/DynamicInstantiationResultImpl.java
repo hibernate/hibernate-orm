@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.tree.spi.select.DynamicInstantiationNature;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -139,7 +138,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			if ( !duplicatedAliases.isEmpty() ) {
 				throw new IllegalStateException(
 						"Map instantiation has arguments with duplicate aliases ["
-								+ StringHelper.join( ",", duplicatedAliases ) + "]"
+								+ String.join( ",", duplicatedAliases ) + "]"
 				);
 			}
 			return (DomainResultAssembler<R>)
@@ -189,7 +188,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 					"Cannot instantiate class '" + javaType.getTypeName() + "'"
 							+ " (it has no constructor with signature " + signature()
 							+ ", and has arguments with duplicate aliases ["
-							+ StringHelper.join( ",", duplicatedAliases) + "])"
+							+ String.join( ",", duplicatedAliases) + "])"
 			);
 		}
 

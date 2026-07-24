@@ -80,7 +80,8 @@ public class SessionFactoryPipeline {
 		final var runtimeMappingHandoff = requireRuntimeMappingHandoff( metadata );
 		final var optionsBuilder = new SessionFactoryOptionsBuilder(
 				serviceRegistry,
-				unwrappedMetadata.getBootstrapContext()
+				unwrappedMetadata.getBootstrapContext(),
+				unwrappedMetadata.getMappingResolutionOptions()
 		);
 		optionsBuilder.addSessionFactoryObservers( SessionFactoryObserverFactory.createObservers( unwrappedMetadata ) );
 		if ( unwrappedMetadata.getSqlFunctionMap() != null ) {

@@ -458,6 +458,11 @@ points are removed or routed through the resolved pipeline.
 
 == Open Questions
 
+These are PR-blocking Stage 3 questions for completing the static-metamodel
+handoff.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
+
 * Which boot product should own the final `JpaStaticMetamodelInjectionPlan`:
   `ResolvedMapping`, the mapping materialization result, or a broader
   bootstrap result object?

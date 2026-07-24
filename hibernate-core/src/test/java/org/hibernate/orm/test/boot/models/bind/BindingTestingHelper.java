@@ -22,16 +22,17 @@ import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.pipeline.internal.FunctionRegistryCoordinator;
-import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.pipeline.internal.ResolvedMapping;
 import org.hibernate.boot.pipeline.internal.ResolvedMappingImplementor;
+import org.hibernate.boot.pipeline.internal.TypeContributionCoordinator;
 import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.usertype.CompositeUserType;
@@ -54,26 +55,33 @@ public class BindingTestingHelper {
 			StandardServiceRegistry serviceRegistry,
 			List<String> mappingFiles,
 			Class<?>... domainClasses) {
-		final BootstrapContextImpl bootstrapContext = buildBootstrapContext( serviceRegistry );
+		final var typeConfiguration = new org.hibernate.type.spi.TypeConfiguration();
+		final var mappingResolutionOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl(
+						serviceRegistry,
+						typeConfiguration
+				);
+		final BootstrapContextImpl bootstrapContext =
+				new BootstrapContextImpl( serviceRegistry, typeConfiguration );
 
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
 				bootstrapContext,
-				bootstrapContext.getMappingResolutionOptions()
+				mappingResolutionOptions
 		);
 
 		final MetadataBuildingContextRootImpl metadataBuildingContext = new MetadataBuildingContextRootImpl(
 				MetadataBuildingContextRootInput.create(
 				"models",
 				bootstrapContext,
-				bootstrapContext.getMappingResolutionOptions(),
+				mappingResolutionOptions,
 				metadataCollector,
 				new RootMappingDefaults(
-						bootstrapContext.getMappingResolutionOptions().getMappingDefaults(),
+						mappingResolutionOptions.getMappingDefaults(),
 						metadataCollector.getPersistenceUnitMetadata()
 				)
 		) );
 		bootstrapContext.getTypeConfiguration().scope( metadataBuildingContext );
-		applyDialectTypeContributions( metadataBuildingContext );
+		applyTypeContributions( metadataBuildingContext );
 		final PreparedMappingSources resolvedMappingSources = buildPreparedMappingSources(
 				metadataBuildingContext,
 				mappingFiles,
@@ -102,7 +110,7 @@ public class BindingTestingHelper {
 		final MetadataImplementor bootMetadata = metadataCollector.buildMetadataInstance( metadataBuildingContext );
 		FunctionRegistryCoordinator.populate(
 				bootMetadata.getFunctionRegistry(),
-				MappingCustomizations.NONE,
+				FunctionRegistryCustomizations.NONE,
 				serviceRegistry,
 				bootstrapContext.getTypeConfiguration()
 		);
@@ -142,13 +150,31 @@ public class BindingTestingHelper {
 		} );
 	}
 
-	private static void applyDialectTypeContributions(MetadataBuildingContext metadataBuildingContext) {
+	private static void applyTypeContributions(MetadataBuildingContext metadataBuildingContext) {
 		final var bootstrapContext = metadataBuildingContext.getBootstrapContext();
 		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final var typeContributions = new TypeContributions() {
 			@Override
 			public org.hibernate.type.spi.TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
+			}
+
+			@Override
+			public void contributeType(org.hibernate.type.BasicType<?> type) {
+				metadataBuildingContext.getBuildingPlan().getBasicTypeRegistrations()
+						.add( new BasicTypeRegistration( type ) );
+			}
+
+			@Override
+			public void contributeType(org.hibernate.type.BasicType<?> type, String... keys) {
+				metadataBuildingContext.getBuildingPlan().getBasicTypeRegistrations()
+						.add( new BasicTypeRegistration( type, keys ) );
+			}
+
+			@Override
+			public void contributeType(org.hibernate.usertype.UserType<?> type, String... keys) {
+				metadataBuildingContext.getBuildingPlan().getBasicTypeRegistrations()
+						.add( new BasicTypeRegistration( type, keys, typeConfiguration ) );
 			}
 
 			@Override
@@ -164,10 +190,11 @@ public class BindingTestingHelper {
 			}
 		};
 
-		bootstrapContext.getServiceRegistry()
-				.requireService( JdbcServices.class )
-				.getDialect()
-				.contribute( typeContributions, bootstrapContext.getServiceRegistry() );
+		TypeContributionCoordinator.contribute(
+				typeContributions,
+				List.of(),
+				bootstrapContext.getServiceRegistry()
+		);
 	}
 
 	public static Set<EntityHierarchy> buildHierarchyMetadata(Class<?>... classes) {
@@ -191,14 +218,6 @@ public class BindingTestingHelper {
 
 			return DomainModelCategorizer.categorize( resolvedMappingSources, metadataBuildingContext );
 		}
-	}
-
-	private static BootstrapContextImpl buildBootstrapContext(StandardServiceRegistry serviceRegistry) {
-		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
-				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( serviceRegistry, metadataBuildingOptions );
-		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
-		return bootstrapContext;
 	}
 
 	private static PreparedMappingSources buildPreparedMappingSources(MetadataBuildingContext metadataBuildingContext, Class<?>... classes) {

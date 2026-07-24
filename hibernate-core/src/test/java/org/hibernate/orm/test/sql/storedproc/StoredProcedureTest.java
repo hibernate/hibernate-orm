@@ -47,8 +47,6 @@ public class StoredProcedureTest extends BaseSessionFactoryFunctionalTest {
 				null,
 				null,
 				null,
-				null,
-				null,
 				H2ProcTesting.procDefinitions(),
 				null,
 				null,

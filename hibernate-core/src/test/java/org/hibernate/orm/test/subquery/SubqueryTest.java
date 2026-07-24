@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -67,20 +68,14 @@ public class SubqueryTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	protected MappingCustomizations metadataCustomizations() {
-		return new MappingCustomizations(
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				Map.of( "limit", LIMIT_FUNCTION ),
-				null,
-				null,
-				null,
-				null,
-				null,
-				null
+		return MappingCustomizations.NONE;
+	}
+
+	@Override
+	protected FunctionRegistryCustomizations functionCustomizations() {
+		return new FunctionRegistryCustomizations(
+				List.of(),
+				Map.of( "limit", LIMIT_FUNCTION )
 		);
 	}
 

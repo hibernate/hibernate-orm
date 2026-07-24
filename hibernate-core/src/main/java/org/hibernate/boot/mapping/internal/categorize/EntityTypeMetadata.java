@@ -4,7 +4,12 @@
  */
 package org.hibernate.boot.mapping.internal.categorize;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.spi.ProcessedEntity;
 import org.hibernate.mapping.CustomSqlMapping;
 
 /// Categorized metadata about an {@linkplain jakarta.persistence.metamodel.EntityType entity type}.
@@ -14,17 +19,41 @@ import org.hibernate.mapping.CustomSqlMapping;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public interface EntityTypeMetadata extends IdentifiableTypeMetadata, EntityNaming {
+public interface EntityTypeMetadata extends IdentifiableTypeMetadata, EntityNaming, ProcessedEntity {
 	@Override
 	default Kind getManagedTypeKind() {
 		return Kind.ENTITY;
 	}
 
-	/// The Hibernate notion of entity-name, used for dynamic models
+	/// The Hibernate entity-name.
 	String getEntityName();
 
 	/// The JPA notion of entity-name, used for HQL references (import)
 	String getJpaEntityName();
+
+	@Override
+	default boolean isHierarchyRoot() {
+		return this == getHierarchy().getRoot();
+	}
+
+	@Override
+	default String getSuperEntityName() {
+		IdentifiableTypeMetadata superType = getSuperType();
+		while ( superType != null ) {
+			if ( superType instanceof EntityTypeMetadata superEntity ) {
+				return superEntity.getEntityName();
+			}
+			superType = superType.getSuperType();
+		}
+		return null;
+	}
+
+	@Override
+	default Set<String> getDeclaredAttributeNames() {
+		final Set<String> attributeNames = new LinkedHashSet<>();
+		getAttributes().forEach( attribute -> attributeNames.add( attribute.getName() ) );
+		return Collections.unmodifiableSet( attributeNames );
+	}
 
 	/// Whether the state of the entity is written to the database (mutable) or not (immutable)
 	boolean isMutable();

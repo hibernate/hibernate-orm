@@ -31,12 +31,11 @@ Binding should preserve source and application correspondence.  Legacy
 `org.hibernate.mapping` objects should be materialized compatibility views, not
 the only semantic record.
 
-While `MetadataBuildingProcess` remains an active boot path, this means richer
-resolved contribution state should live inside the new pipeline and be projected
-into legacy-compatible mapping shapes.  Do not attach new descriptor or
-contribution state to shared mapping contracts as authoritative state unless
-legacy boot also populates that state, or until legacy boot no longer exposes
-the same mapping objects to runtime and schema consumers.
+Richer resolved contribution state should live inside the explicit pipeline and
+be projected into legacy-compatible mapping shapes.  New semantic state may
+become authoritative only when the runtime and schema consumers which need that
+state consume it directly; attaching a parallel descriptor to a shared mapping
+contract is not sufficient by itself.
 
 In practical terms:
 
@@ -599,6 +598,12 @@ facts, reshape `org.hibernate.mapping` for that area so compatibility APIs
 become derived views rather than the primary semantic source.
 
 == Open Questions
+
+The umbrella model is an implemented foundation.  Route each remaining
+question to the concrete mapped-superclass, embeddable, generic, identifier, or
+runtime consumer which exposes it; do not reopen the umbrella design.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
 
 * Should the resolved contribution model be attached to `MetadataImplementor`, a
   boot-model-specific state object, or a new internal runtime-mapping plan?

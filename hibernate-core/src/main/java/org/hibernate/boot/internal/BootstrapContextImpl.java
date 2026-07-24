@@ -13,7 +13,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -35,7 +34,6 @@ import static org.hibernate.cfg.PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER;
 public class BootstrapContextImpl implements BootstrapContext {
 
 	private final StandardServiceRegistry serviceRegistry;
-	private final MappingResolutionOptions metadataBuildingOptions;
 
 	private final TypeConfiguration typeConfiguration;
 	private final MutableJpaCompliance jpaCompliance;
@@ -55,26 +53,21 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private final ModelsContext modelsContext;
 
-	public BootstrapContextImpl(
-			StandardServiceRegistry serviceRegistry,
-			MappingResolutionOptions metadataBuildingOptions) {
-		this( serviceRegistry, metadataBuildingOptions, new TypeConfiguration() );
+	public BootstrapContextImpl(StandardServiceRegistry serviceRegistry) {
+		this( serviceRegistry, new TypeConfiguration() );
 	}
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
-			MappingResolutionOptions metadataBuildingOptions,
 			TypeConfiguration typeConfiguration) {
-		this( serviceRegistry, metadataBuildingOptions, typeConfiguration, null );
+		this( serviceRegistry, typeConfiguration, null );
 	}
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
-			MappingResolutionOptions metadataBuildingOptions,
 			TypeConfiguration typeConfiguration,
 			ModelsContext restoredModelsContext) {
 		this.serviceRegistry = serviceRegistry;
-		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
@@ -127,11 +120,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public BeanInstanceProducer getCustomTypeProducer() {
 		return beanInstanceProducer;
-	}
-
-	@Override
-	public MappingResolutionOptions getMappingResolutionOptions() {
-		return metadataBuildingOptions;
 	}
 
 	@Override

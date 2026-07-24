@@ -469,14 +469,18 @@ A conservative migration path:
    where it currently reverse-engineers subtype, discriminator, and declaring
    class state from `Component`.
 
-During the `MetadataBuildingProcess` transition, these contribution and
-component-mapping products should remain internal to the new pipeline or be
-projected into the legacy-compatible `Component` shape.  Do not attach new
-descriptor state to shared `org.hibernate.mapping` contracts as authoritative
-state unless legacy boot also populates that same state, or until legacy boot no
-longer exposes the same mapping objects to runtime consumers.
+These contribution and component-mapping products should remain explicit
+pipeline products or be projected into the compatibility `Component` shape.
+Do not attach new descriptor state to shared `org.hibernate.mapping` contracts
+as authoritative state until the relevant runtime consumers use it directly.
 
 == Open Questions
+
+Questions needed for nested, generic, polymorphic, and mixed
+`@Embeddable`/`@Embedded` application and runtime handoff are PR-blocking Stage
+2 work.  Compatibility-model replacement is follow-up.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
 
 * Should `ComponentSource` evolve directly into `EmbeddableContribution`, or
   should a new type wrap it first?

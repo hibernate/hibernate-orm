@@ -12,14 +12,12 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.spi.BasicTypeRegistration;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.SharedCacheMode;
@@ -36,11 +34,9 @@ import jakarta.persistence.SharedCacheMode;
 public record MappingCustomizations(
 		Map<String, Class<?>> queryImports,
 		List<TypeContributor> typeContributors,
-		List<FunctionContributor> functionContributors,
 		List<CacheRegionDefinition> cacheRegionDefinitions,
 		List<BasicTypeRegistration> basicTypeRegistrations,
 		List<UserTypeRegistration> userTypeRegistrations,
-		Map<String, SqmFunctionDescriptor> sqlFunctions,
 		List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects,
 		List<ConverterDescriptor<?, ?>> attributeConverters,
 		ImplicitNamingStrategy implicitNamingStrategy,
@@ -54,8 +50,6 @@ public record MappingCustomizations(
 			List.of(),
 			List.of(),
 			List.of(),
-			Map.of(),
-			List.of(),
 			List.of(),
 			null,
 			null,
@@ -66,16 +60,13 @@ public record MappingCustomizations(
 	public MappingCustomizations(
 			Map<String, Class<?>> queryImports,
 			List<TypeContributor> typeContributors,
-			List<FunctionContributor> functionContributors,
 			List<CacheRegionDefinition> cacheRegionDefinitions) {
 		this(
 				queryImports,
 				typeContributors,
-				functionContributors,
 				cacheRegionDefinitions,
 				List.of(),
 				List.of(),
-				Map.of(),
 				List.of(),
 				List.of(),
 				null,
@@ -88,11 +79,9 @@ public record MappingCustomizations(
 	public MappingCustomizations {
 		queryImports = queryImports == null ? Map.of() : Collections.unmodifiableMap( new LinkedHashMap<>( queryImports ) );
 		typeContributors = typeContributors == null ? List.of() : List.copyOf( typeContributors );
-		functionContributors = functionContributors == null ? List.of() : List.copyOf( functionContributors );
 		cacheRegionDefinitions = cacheRegionDefinitions == null ? List.of() : List.copyOf( cacheRegionDefinitions );
 		basicTypeRegistrations = basicTypeRegistrations == null ? List.of() : List.copyOf( basicTypeRegistrations );
 		userTypeRegistrations = userTypeRegistrations == null ? List.of() : List.copyOf( userTypeRegistrations );
-		sqlFunctions = sqlFunctions == null ? Map.of() : Collections.unmodifiableMap( new LinkedHashMap<>( sqlFunctions ) );
 		auxiliaryDatabaseObjects = auxiliaryDatabaseObjects == null ? List.of() : List.copyOf( auxiliaryDatabaseObjects );
 		attributeConverters = attributeConverters == null ? List.of() : List.copyOf( attributeConverters );
 	}

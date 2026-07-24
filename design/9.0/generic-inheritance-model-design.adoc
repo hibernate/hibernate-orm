@@ -167,8 +167,8 @@ compatibility views, not the authoritative representation.
 
 == What Can Be Improved Now
 
-Before removing `MetadataBuildingProcess`, improvements should stay within the
-new boot pipeline and its compatibility materialization:
+Improvements should stay within the explicit boot pipeline and its
+compatibility materialization:
 
 * centralize Java type-variable detection instead of repeating reflection
   helpers in individual binders;
@@ -268,9 +268,8 @@ Tests to revisit when this is implemented:
 
 == Runtime Model Handoff
 
-Generic inheritance facts should be carried toward runtime model creation, but
-only as handoff metadata or adapter input during the `MetadataBuildingProcess`
-transition.
+Generic inheritance facts should be carried toward runtime model creation as
+explicit handoff metadata or adapter input.
 
 The near-term flow should be:
 
@@ -313,17 +312,14 @@ inside `MetadataContext`.
 
 == What Should Wait
 
-The authoritative boot mapping model for generics should wait until either:
-
-* `MetadataBuildingProcess` has been removed; or
-* a contribution-aware runtime adapter exists and is populated equivalently for
-  both legacy boot and the new boot pipeline.
+Further replacement of the compatibility boot mapping model for generics
+should wait until a contribution-aware runtime adapter consumes the explicit
+handoff.
 
 Until then, `PersistentClass`, `MappedSuperclass`, `Property`, `Value`, and
-`Component` remain shared runtime handoff objects.  Adding new generic state to
-those contracts as the only source of truth would create a split-brain model:
-new pipeline boot would understand the state, while legacy boot and runtime
-consumers would still rely on flattened closure conventions.
+`Component` remain compatibility runtime handoff objects.  Adding new generic
+state to those contracts without migrating consumers would create two competing
+sources of truth.
 
 The post-legacy phase may introduce explicit generic binding products such as:
 
@@ -340,19 +336,20 @@ of copied legacy mapping objects.
 
 == Trigger
 
-Move from bridge fixes to the proposed generic inheritance model when one of
-these conditions is true:
-
-* `MetadataBuildingProcess` is removed and the new pipeline is the only boot
-  path producing runtime mapping state; or
-* a runtime handoff adapter can consume declaration/usage/contribution facts
-  directly and can be populated from all supported boot paths.
+Move from bridge fixes to the proposed generic inheritance model when a runtime
+handoff adapter can consume declaration/usage/contribution facts directly, or
+when a concrete runtime/JPA correctness gap requires such an adapter.
 
 At that point, generic inheritance should be handled as part of the broader
 mapped-superclass and embeddable contribution model, not as isolated
 `Property` flag handling.
 
 == Open Questions
+
+Questions needed to complete stable generic runtime/JPA handoffs are
+PR-blocking Stage 2 work.  Broader runtime-model replacement is follow-up.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
 
 * Should generic declaration state live on `AttributeDeclarationBinding`, a
   sidecar descriptor, or a resolved-model product created after all managed

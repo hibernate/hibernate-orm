@@ -6,7 +6,12 @@ package org.hibernate.boot.pipeline.internal;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -15,7 +20,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.internal.BootstrapContextImpl;
@@ -34,6 +38,7 @@ import org.hibernate.boot.mapping.internal.context.InFlightMetadataCollectorAdap
 import org.hibernate.boot.mapping.internal.binders.BindingCoordinator;
 import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
@@ -41,15 +46,21 @@ import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
+import org.hibernate.boot.spi.AdditionalMappingContributorContext;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.ProcessedEntity;
+import org.hibernate.boot.spi.ProcessedMappings;
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MutableClassDetailsRegistry;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
@@ -95,6 +106,7 @@ public class MappingResolutionPipeline {
 				mappingSettings,
 				mappingSources,
 				MappingCustomizations.NONE,
+				FunctionRegistryCustomizations.NONE,
 				serviceRegistry
 		);
 	}
@@ -106,25 +118,42 @@ public class MappingResolutionPipeline {
 			MappingSources mappingSources,
 			MappingCustomizations mappingCustomizations,
 			ServiceRegistry serviceRegistry) {
+		return resolve(
+				bootstrapSettings,
+				mappingSettings,
+				mappingSources,
+				mappingCustomizations,
+				FunctionRegistryCustomizations.NONE,
+				serviceRegistry
+		);
+	}
+
+	public static ResolvedMapping resolve(
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
+			MappingSources mappingSources,
+			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations,
+			ServiceRegistry serviceRegistry) {
 		final var typeConfiguration = new TypeConfiguration();
 		final var standardServiceRegistry = getStandardServiceRegistry( serviceRegistry );
-		final var buildingPlan = new MappingResolutionOptionsImpl( standardServiceRegistry );
-		final var bootstrapContext = new BootstrapContextImpl( standardServiceRegistry, buildingPlan, typeConfiguration );
-		buildingPlan.setBootstrapContext( bootstrapContext );
+		final var buildingPlan = new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
+		final var bootstrapContext = new BootstrapContextImpl( standardServiceRegistry, typeConfiguration );
 		if ( bootstrapSettings.jpaBootstrap() ) {
 			bootstrapContext.markAsJpaBootstrap();
 		}
-			final var resolvedMapping = resolve(
-					bootstrapSettings,
-					mappingSettings,
-					mappingSources,
-					mappingCustomizations,
-					bootstrapContext,
-					buildingPlan
-			);
+		final var resolvedMapping = resolve(
+				bootstrapSettings,
+				mappingSettings,
+				mappingSources,
+				mappingCustomizations,
+				functionCustomizations,
+				bootstrapContext,
+				buildingPlan
+		);
 		FunctionRegistryCoordinator.populate(
 				resolvedMapping.metadata().getFunctionRegistry(),
-				mappingCustomizations,
+				functionCustomizations,
 				standardServiceRegistry,
 				typeConfiguration
 		);
@@ -136,17 +165,26 @@ public class MappingResolutionPipeline {
 			ResolvedMappingSettings mappingSettings,
 			MappingSources mappingSources,
 			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations,
 			BootstrapContext bootstrapContext,
 			MappingResolutionOptions buildingPlan) {
 		mappingCustomizations = mappingCustomizations == null ? MappingCustomizations.NONE : mappingCustomizations;
+		functionCustomizations = functionCustomizations == null
+				? FunctionRegistryCustomizations.NONE
+				: functionCustomizations;
 		final MetadataBuildingContext metadataBuildingContext = createMetadataBuildingContext(
 				mappingSettings,
 				mappingCustomizations,
+				functionCustomizations,
 				bootstrapContext,
 				(MappingResolutionOptionsImpl) buildingPlan
 		);
 		metadataBuildingContext.getTypeConfiguration().scope( metadataBuildingContext );
-		applyTypeContributions( metadataBuildingContext );
+		applyTypeCustomizations(
+				mappingCustomizations,
+				metadataBuildingContext,
+				(MappingResolutionOptionsImpl) buildingPlan
+		);
 		final PreparedMappingSources resolvedMappingSources = buildPreparedMappingSources(
 				mappingSources,
 				mappingSettings,
@@ -165,11 +203,19 @@ public class MappingResolutionPipeline {
 			ResolvedMappingSettings mappingSettings,
 			PreparedMappingSources resolvedMappingSources,
 			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations,
 			BootstrapContext bootstrapContext,
 			MappingResolutionOptions buildingPlan) {
 		mappingCustomizations = mappingCustomizations == null ? MappingCustomizations.NONE : mappingCustomizations;
+		functionCustomizations = functionCustomizations == null
+				? FunctionRegistryCustomizations.NONE
+				: functionCustomizations;
 		final var functionRegistry = FunctionRegistryCoordinator.create();
-		final var mappingContributions = mappingContributions( mappingSettings, mappingCustomizations )
+		final var mappingContributions = mappingContributions(
+				mappingSettings,
+				mappingCustomizations,
+				functionCustomizations
+		)
 				.functionRegistry( functionRegistry )
 				.build();
 		final var metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingPlan, mappingContributions );
@@ -184,7 +230,11 @@ public class MappingResolutionPipeline {
 				)
 		) );
 		bootstrapContext.getTypeConfiguration().scope( metadataBuildingContext );
-		applyTypeContributions( metadataBuildingContext );
+		applyTypeCustomizations(
+				mappingCustomizations,
+				metadataBuildingContext,
+				(MappingResolutionOptionsImpl) buildingPlan
+		);
 		final var resolvedMapping = resolve(
 				metadataBuildingContext,
 				mappingSettings,
@@ -193,7 +243,7 @@ public class MappingResolutionPipeline {
 		);
 		FunctionRegistryCoordinator.populate(
 				functionRegistry,
-				mappingCustomizations,
+				functionCustomizations,
 				bootstrapContext.getServiceRegistry(),
 				bootstrapContext.getTypeConfiguration()
 		);
@@ -217,6 +267,7 @@ public class MappingResolutionPipeline {
 		bindAdditionalMappingContributions(
 				mappingSettings,
 				metadataBuildingContext,
+				categorizedDomainModel,
 				bindingState
 		);
 		applyQueryImports( mappingCustomizations, metadataBuildingContext );
@@ -257,10 +308,12 @@ public class MappingResolutionPipeline {
 	private static void bindAdditionalMappingContributions(
 			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext,
+			CategorizedDomainModel categorizedDomainModel,
 			BindingStateImpl bindingState) {
 		final PreparedMappingSources contributedResources = collectAdditionalMappingContributions(
 				mappingSettings,
-				metadataBuildingContext
+				metadataBuildingContext,
+				categorizedDomainModel
 		);
 		if ( contributedResources == null ) {
 			return;
@@ -313,21 +366,29 @@ public class MappingResolutionPipeline {
 
 	private static PreparedMappingSources collectAdditionalMappingContributions(
 			ResolvedMappingSettings mappingSettings,
-			MetadataBuildingContext metadataBuildingContext) {
+			MetadataBuildingContext metadataBuildingContext,
+			CategorizedDomainModel categorizedDomainModel) {
 		final ClassLoaderService classLoaderService = metadataBuildingContext.getClassLoaderService();
 		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
 				mappingSettings,
 				metadataBuildingContext,
 				classLoaderService
 		);
+		final ProcessedMappings processedMappings = ProcessedMappingsImpl.from( categorizedDomainModel );
 		for ( AdditionalMappingContributor contributor : classLoaderService.loadJavaServices( AdditionalMappingContributor.class ) ) {
 			contributions.setCurrentContributor( contributor.getContributorName() );
 			try {
+				final var metadataCollector = metadataBuildingContext.getMetadataCollector();
 				contributor.contribute(
 						contributions,
-						metadataBuildingContext.getMetadataCollector(),
-						classLoaderService,
-						metadataBuildingContext
+						processedMappings,
+						new AdditionalMappingContributorContextImpl(
+								metadataBuildingContext.getModelsContext(),
+								metadataBuildingContext.getBootstrapContext().getClassLoaderAccess(),
+								classLoaderService,
+								metadataCollector.getDatabase().getDialect(),
+								metadataBuildingContext.getTypeConfiguration()
+						)
 				);
 			}
 			finally {
@@ -335,6 +396,69 @@ public class MappingResolutionPipeline {
 			}
 		}
 		return contributions.complete();
+	}
+
+	private record ProcessedMappingsImpl(Map<String, ProcessedEntity> entityBindings) implements ProcessedMappings {
+		private static ProcessedMappingsImpl from(CategorizedDomainModel categorizedDomainModel) {
+			final Map<String, ProcessedEntity> entityBindings = new LinkedHashMap<>();
+			categorizedDomainModel.forEachEntityHierarchy( (index, hierarchy) ->
+					hierarchy.forEachType( (type, superType, entityHierarchy, relation) -> {
+						if ( type instanceof EntityTypeMetadata entityType ) {
+							entityBindings.put( entityType.getEntityName(), entityType );
+						}
+					} )
+			);
+			return new ProcessedMappingsImpl(
+					Collections.unmodifiableMap( entityBindings )
+			);
+		}
+
+		@Override
+		public Set<String> getMappedEntityNames() {
+			return entityBindings.keySet();
+		}
+
+		@Override
+		public ProcessedEntity getEntityBinding(String hibernateEntityName) {
+			return entityBindings.get( hibernateEntityName );
+		}
+
+		@Override
+		public Collection<ProcessedEntity> getEntityBindings() {
+			return entityBindings.values();
+		}
+	}
+
+	private record AdditionalMappingContributorContextImpl(
+			ModelsContext modelsContext,
+			ClassLoaderAccess classLoaderAccess,
+			org.hibernate.boot.ResourceStreamLocator resourceStreamLocator,
+			Dialect dialect,
+			TypeConfiguration typeConfiguration) implements AdditionalMappingContributorContext {
+		@Override
+		public ModelsContext getModelsContext() {
+			return modelsContext;
+		}
+
+		@Override
+		public ClassLoaderAccess getClassLoaderAccess() {
+			return classLoaderAccess;
+		}
+
+		@Override
+		public org.hibernate.boot.ResourceStreamLocator getResourceStreamLocator() {
+			return resourceStreamLocator;
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return dialect;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return typeConfiguration;
+		}
 	}
 
 	private static CategorizedDomainModel categorize(
@@ -390,10 +514,14 @@ public class MappingResolutionPipeline {
 	private static MetadataBuildingContext createMetadataBuildingContext(
 			ResolvedMappingSettings mappingSettings,
 			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations,
 			BootstrapContext bootstrapContext,
 			MappingResolutionOptionsImpl buildingPlan) {
-		final var standardServiceRegistry = bootstrapContext.getServiceRegistry();
-		final var mappingContributions = mappingContributions( mappingSettings, mappingCustomizations )
+		final var mappingContributions = mappingContributions(
+				mappingSettings,
+				mappingCustomizations,
+				functionCustomizations
+		)
 				.functionRegistry( FunctionRegistryCoordinator.create() );
 
 		buildingPlan.applyDefaultToOneFetchType( mappingSettings.defaultToOneFetchType() );
@@ -409,27 +537,6 @@ public class MappingResolutionPipeline {
 		if ( mappingCustomizations.sharedCacheMode() != null ) {
 			buildingPlan.applySharedCacheMode( mappingCustomizations.sharedCacheMode() );
 		}
-
-		mappingCustomizations.typeContributors().forEach( typeContributor ->
-			typeContributor.contribute(
-					typeContributions( bootstrapContext, buildingPlan, mappingContributions ),
-					standardServiceRegistry
-			)
-		);
-
-		mappingCustomizations.basicTypeRegistrations().forEach( registration ->
-			buildingPlan.applyBasicType(
-					registration.getBasicType(),
-					registration.getRegistrationKeys()
-			)
-		);
-
-		mappingCustomizations.userTypeRegistrations().forEach( registration ->
-			buildingPlan.applyBasicType(
-					registration.type(),
-					registration.keys()
-			)
-		);
 
 		final var metadataCollector = new InFlightMetadataCollectorImpl(
 				bootstrapContext,
@@ -470,13 +577,12 @@ public class MappingResolutionPipeline {
 	}
 
 	private static TypeContributions typeContributions(
-			BootstrapContext bootstrapContext,
-			MappingResolutionOptionsImpl buildingPlan,
-			MappingResolutionContributions.Builder mappingContributions) {
+			MetadataBuildingContext metadataBuildingContext,
+			MappingResolutionOptionsImpl buildingPlan) {
 		return new TypeContributions() {
 			@Override
 			public org.hibernate.type.spi.TypeConfiguration getTypeConfiguration() {
-				return bootstrapContext.getTypeConfiguration();
+				return metadataBuildingContext.getTypeConfiguration();
 			}
 
 			@Override
@@ -501,45 +607,46 @@ public class MappingResolutionPipeline {
 
 			@Override
 			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
-				mappingContributions.addAttributeConverter( ConverterDescriptors.of( converterClass ) );
+				metadataBuildingContext.getMetadataCollector().addAttributeConverter( converterClass );
 			}
 		};
 	}
 
 	private static MappingResolutionContributions.Builder mappingContributions(
 			ResolvedMappingSettings mappingSettings,
-			MappingCustomizations mappingCustomizations) {
+			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations) {
 		return MappingResolutionContributions.builder()
 				.addCacheRegionDefinitions( mappingSettings.cacheRegionDefinitions() )
 				.addCacheRegionDefinitions( mappingCustomizations.cacheRegionDefinitions() )
-				.addSqlFunctions( mappingCustomizations.sqlFunctions() )
-				.addAuxiliaryDatabaseObjects( mappingCustomizations.auxiliaryDatabaseObjects() )
-				.addAttributeConverters( mappingCustomizations.attributeConverters() );
+				.addSqlFunctions( functionCustomizations.sqlFunctions() )
+				.addAuxiliaryDatabaseObjects( mappingCustomizations.auxiliaryDatabaseObjects() );
 	}
 
-	private static void applyTypeContributions(MetadataBuildingContext metadataBuildingContext) {
-		final var metadataCollector = metadataBuildingContext.getMetadataCollector();
-		final var typeConfiguration = metadataBuildingContext.getTypeConfiguration();
-		final var serviceRegistry = metadataBuildingContext.getServiceRegistry();
-		final var typeContributions = new TypeContributions() {
-			@Override
-			public org.hibernate.type.spi.TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-
-			@Override
-			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
-				metadataCollector.getConverterRegistry().addAttributeConverter( converterClass );
-			}
-
-			@Override
-			public void contributeType(CompositeUserType<?> type) {
-				metadataBuildingContext.getBuildingPlan().getCompositeUserTypes().add( type );
-			}
-		};
-
-		metadataBuildingContext.getJdbcServices().getDialect()
-				.contribute( typeContributions, serviceRegistry );
+	private static void applyTypeCustomizations(
+			MappingCustomizations mappingCustomizations,
+			MetadataBuildingContext metadataBuildingContext,
+			MappingResolutionOptionsImpl buildingPlan) {
+		TypeContributionCoordinator.contribute(
+				typeContributions( metadataBuildingContext, buildingPlan ),
+				mappingCustomizations.typeContributors(),
+				metadataBuildingContext.getServiceRegistry()
+		);
+		mappingCustomizations.basicTypeRegistrations().forEach( registration ->
+				buildingPlan.applyBasicType(
+						registration.getBasicType(),
+						registration.getRegistrationKeys()
+				)
+		);
+		mappingCustomizations.userTypeRegistrations().forEach( registration ->
+				buildingPlan.applyBasicType(
+						registration.type(),
+						registration.keys()
+				)
+		);
+		mappingCustomizations.attributeConverters().forEach(
+				metadataBuildingContext.getMetadataCollector()::addAttributeConverter
+		);
 	}
 
 	private static class AdditionalMappingContributionsImpl implements AdditionalMappingContributions {
@@ -627,6 +734,11 @@ public class MappingResolutionPipeline {
 		@Override
 		public void contributeAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 			metadataBuildingContext.getMetadataCollector().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+		}
+
+		@Override
+		public org.hibernate.boot.model.relational.Database getDatabase() {
+			return metadataBuildingContext.getMetadataCollector().getDatabase();
 		}
 
 		@Override

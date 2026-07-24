@@ -5,8 +5,6 @@
 package org.hibernate.boot.serial.internal;
 
 import java.util.EnumSet;
-import java.util.ArrayList;
-import java.util.Comparator;
 
 import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionServicesImpl;
@@ -15,9 +13,9 @@ import org.hibernate.boot.mapping.internal.context.TypeDefinitionRegistryStandar
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
+import org.hibernate.boot.pipeline.internal.TypeContributionCoordinator;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -64,19 +62,11 @@ public final class RestoredMetadataBuildingContext implements MetadataBuildingCo
 				// Composite user-type declarations are restored with their components.
 			}
 		};
-		services.getJdbcServices().getDialect().contribute(
+		TypeContributionCoordinator.contribute(
 				restorationContributions,
+				java.util.List.of(),
 				bootstrapContext.getServiceRegistry()
 		);
-		final var contributors = new ArrayList<>(
-				bootstrapContext.getClassLoaderService().loadJavaServices( TypeContributor.class )
-		);
-		contributors.sort( Comparator.comparingInt( TypeContributor::ordinal )
-				.thenComparing( contributor -> contributor.getClass().getName() ) );
-		contributors.forEach( contributor -> contributor.contribute(
-				restorationContributions,
-				bootstrapContext.getServiceRegistry()
-		) );
 		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 		typeDefinitions.forEach( typeDefinitionRegistry::register );
 		this.effectiveDefaults = new RootMappingDefaults( options.getMappingDefaults(), EmptyPersistenceUnitMetadata.INSTANCE );

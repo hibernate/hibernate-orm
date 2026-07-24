@@ -1609,8 +1609,10 @@ abstract public class DialectFeatureChecks {
 			this.functionRegistry = functionRegistry;
 			this.bootstrapContext = new BootstrapContextImpl();
 			this.serviceComponents = new MappingResolutionServicesImpl( bootstrapContext );
-			this.buildingPlan = new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( bootstrapContext.getServiceRegistry() );
-			this.buildingPlan.setBootstrapContext( bootstrapContext );
+			this.buildingPlan = new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl(
+					bootstrapContext.getServiceRegistry(),
+					bootstrapContext.getTypeConfiguration()
+			);
 			this.database = new Database( buildingPlan, null );
 		}
 

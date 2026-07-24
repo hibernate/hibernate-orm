@@ -186,7 +186,6 @@ pipeline:
 * `PreparedMappingSources.from(HibernatePersistenceConfiguration, MappingSourcePreparationContext)`
 * `PreparedMappingSources.from(HibernatePersistenceConfiguration, MappingSourcePreparationContext, ResolvedMappingSettings)`
 * `PreparedMappingSources.from(MappingSources, MappingSourcePreparationContext, ResolvedMappingSettings)`
-* `PreparedMappingSources.from(MetadataSources, MappingSourcePreparationContext)`
 
 link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/MappingSourcePreparationContext.java[`MappingSourcePreparationContext`]
 carries the early bootstrap inputs needed to build the inventory:
@@ -697,8 +696,8 @@ carry the dependency
 | Temporal, audit, changelog, and related state-management side effects that
 must be projected into the existing `org.hibernate.mapping` shape after core
 tables, values, keys, associations, and foreign keys are available
-| Attaching new boot-model descriptor state to shared mapping contracts while
-`MetadataBuildingProcess` is still an active boot path
+| Attaching new boot-model descriptor state to shared mapping contracts without
+migrating the runtime consumers which would make it authoritative
 
 | Validation and compatibility finalization
 | Mapping consistency checks and transitional compatibility behavior still
@@ -722,9 +721,8 @@ mapping objects are available and projects the result into the legacy
 `org.hibernate.mapping` / `Stateful` shape expected by existing runtime and
 schema consumers.  Do not attach a new `StateManagementDescriptor` directly to
 `PersistentClass`, `Collection`, `Property`, or other shared mapping contracts
-while `MetadataBuildingProcess` remains active.  Descriptor-like state should
-remain internal to the new pipeline until it can become authoritative for all
-supported boot paths.
+without migrating those consumers.  Descriptor-like state should remain an
+explicit pipeline product until it can become authoritative.
 
 If materialization ordering becomes too large for the binding phase interfaces
 to express clearly, introduce a small materialization coordinator with the same

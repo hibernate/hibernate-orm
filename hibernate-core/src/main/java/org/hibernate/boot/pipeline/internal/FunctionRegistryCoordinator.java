@@ -30,10 +30,12 @@ public final class FunctionRegistryCoordinator {
 
 	public static void populate(
 			SqmFunctionRegistry functionRegistry,
-			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations,
 			ServiceRegistry serviceRegistry,
 			TypeConfiguration typeConfiguration) {
-		mappingCustomizations = mappingCustomizations == null ? MappingCustomizations.NONE : mappingCustomizations;
+		functionCustomizations = functionCustomizations == null
+				? FunctionRegistryCustomizations.NONE
+				: functionCustomizations;
 
 		final var functionContributions = new FunctionContributionsImpl(
 				serviceRegistry,
@@ -41,28 +43,29 @@ public final class FunctionRegistryCoordinator {
 				functionRegistry
 		);
 
-		mappingCustomizations.functionContributors()
-				.forEach( contributor -> contributor.contributeFunctions( functionContributions ) );
-
-		sortedFunctionContributors( serviceRegistry )
-				.forEach( contributor -> contributor.contributeFunctions( functionContributions ) );
-
 		serviceRegistry.requireService( JdbcServices.class )
 				.getDialect()
 				.initializeFunctionRegistry( functionContributions );
 
-		mappingCustomizations.sqlFunctions().forEach( functionRegistry::register );
+		sortedFunctionContributors( serviceRegistry, functionCustomizations.functionContributors() )
+				.forEach( contributor -> contributor.contributeFunctions( functionContributions ) );
+
+		functionCustomizations.sqlFunctions().forEach( functionRegistry::register );
 	}
 
-	private static List<FunctionContributor> sortedFunctionContributors(ServiceRegistry serviceRegistry) {
+	private static List<FunctionContributor> sortedFunctionContributors(
+			ServiceRegistry serviceRegistry,
+			List<FunctionContributor> programmaticContributors) {
 		final var functionContributors =
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( FunctionContributor.class );
 		final List<FunctionContributor> contributors = new ArrayList<>( functionContributors );
 		contributors.sort(
 				comparingInt( FunctionContributor::ordinal )
-						.thenComparing( a -> a.getClass().getCanonicalName() )
+						.thenComparing( a -> a.getClass().getName() )
 		);
+		contributors.addAll( programmaticContributors );
+		contributors.sort( comparingInt( FunctionContributor::ordinal ) );
 		return contributors;
 	}
 

@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 /// Internal implementation of the Hibernate Models based mapping pipeline.
 ///
 /// This package is intentionally not a public extension contract.  It is still

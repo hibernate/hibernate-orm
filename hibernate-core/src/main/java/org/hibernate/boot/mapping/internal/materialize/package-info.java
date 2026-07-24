@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 /// Materializers that consume binding-model views and create boot mapping
 /// structures.
 ///

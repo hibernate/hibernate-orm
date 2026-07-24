@@ -2,7 +2,6 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.Internal;
-import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.type.MappingContext;
@@ -83,6 +82,20 @@ public abstract sealed class ToOne
 	public void copyRestrictions(ToOne original) {
 		sqlRestriction = original.sqlRestriction;
 		filters = original.filters.isEmpty() ? List.of() : new ArrayList<>( original.filters );
+	}
+
+	/**
+	 * Creates an independently materialized projection of this association for
+	 * the supplied concrete mapping role.
+	 * <p>
+	 * The association mapping state and selectable mappings are copied, while
+	 * the destination role identifies the distinct application represented by
+	 * the copy.
+	 */
+	public final ToOne copyForApplication(MappingRole mappingRole) {
+		final ToOne copy = (ToOne) copy();
+		copy.setMappingRole( Objects.requireNonNull( mappingRole, "Mapping role" ) );
+		return copy;
 	}
 
 	@Override
@@ -229,7 +242,7 @@ public abstract sealed class ToOne
 							? entityBinding.getIdentifier()
 							: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
 			if ( value instanceof Component component ) {
-				final var originalPropertyOrder = component.sortProperties();
+				final var originalPropertyOrder = component.completeShape();
 				if ( !sorted ) {
 					if ( originalPropertyOrder != null ) {
 						sortColumns( originalPropertyOrder );

@@ -33,11 +33,26 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 			BasicType<R> underlyingJdbcMapping,
 			Map<Object, String> valueMappings,
 			ServiceRegistry serviceRegistry) {
-		final List<EmbeddableDiscriminatorValueDetailsImpl> valueDetailsList = new ArrayList<>( valueMappings.size() );
 		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		return fromValueMappings(
+				discriminatedType,
+				domainJavaType,
+				underlyingJdbcMapping,
+				valueMappings,
+				classLoaderService::classForName
+		);
+	}
+
+	public static <O, R> EmbeddableDiscriminatorConverter<O, R> fromValueMappings(
+			String discriminatedType,
+			JavaType<O> domainJavaType,
+			BasicType<R> underlyingJdbcMapping,
+			Map<Object, String> valueMappings,
+			Function<String, Class<?>> classResolver) {
+		final List<EmbeddableDiscriminatorValueDetailsImpl> valueDetailsList = new ArrayList<>( valueMappings.size() );
 		valueMappings.forEach( (value, embeddableClassName) ->
 				valueDetailsList.add( new EmbeddableDiscriminatorValueDetailsImpl( value,
-						classLoaderService.classForName( embeddableClassName ) ) ) );
+						classResolver.apply( embeddableClassName ) ) ) );
 		return new EmbeddableDiscriminatorConverter<>(
 				discriminatedType,
 				domainJavaType,

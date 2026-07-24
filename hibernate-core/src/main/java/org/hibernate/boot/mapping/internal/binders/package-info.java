@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 /// Phase-oriented worker classes for populating and completing boot binding
 /// state.
 ///

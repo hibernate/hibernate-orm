@@ -14,7 +14,8 @@ import org.hibernate.boot.models.annotations.internal.CollectionClassificationXm
 import org.hibernate.boot.models.annotations.internal.ExtendsXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
-import org.hibernate.models.CompleteAnnotationDescriptor;
+import org.hibernate.models.Creator;
+import org.hibernate.models.spi.MutableAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 
 import static org.hibernate.models.spi.AnnotationTarget.Kind;
@@ -23,31 +24,31 @@ import static org.hibernate.models.spi.AnnotationTarget.Kind;
  * @author Steve Ebersole
  */
 public interface XmlAnnotations {
-	CompleteAnnotationDescriptor<Abstract, AbstractXmlAnnotation> ABSTRACT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Abstract, AbstractXmlAnnotation> ABSTRACT = Creator.createCompleteAnnotationDescriptor(
 			Abstract.class,
 			AbstractXmlAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	CompleteAnnotationDescriptor<AnyKeyType, AnyKeyTypeXmlAnnotation> ANY_KEY_TYPE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyKeyType, AnyKeyTypeXmlAnnotation> ANY_KEY_TYPE = Creator.createCompleteAnnotationDescriptor(
 			AnyKeyType.class,
 			AnyKeyTypeXmlAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	CompleteAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = Creator.createCompleteAnnotationDescriptor(
 			CollectionClassification.class,
 			CollectionClassificationXmlAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	CompleteAnnotationDescriptor<Extends, ExtendsXmlAnnotation> EXTENDS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Extends, ExtendsXmlAnnotation> EXTENDS = Creator.createCompleteAnnotationDescriptor(
 			Extends.class,
 			ExtendsXmlAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	CompleteAnnotationDescriptor<Target, TargetXmlAnnotation> TARGET = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Target, TargetXmlAnnotation> TARGET = Creator.createCompleteAnnotationDescriptor(
 			Target.class,
 			TargetXmlAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),

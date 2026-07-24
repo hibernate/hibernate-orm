@@ -1,13 +1,10 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.model;
 
 import jakarta.persistence.AccessType;
 
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.mapping.DeclarationRole;
 
 /// Binding-model contract for the source-side declaration of an attribute.
 ///
@@ -29,6 +26,14 @@ import org.hibernate.models.spi.MemberDetails;
 /// @since 9.0
 /// @author Steve Ebersole
 public interface AttributeDeclarationBinding {
+	/// Stable identity of this source declaration.
+	default DeclarationRole declarationRole() {
+		return new DeclarationRole(
+				declarationContainer().classDetails().getName(),
+				attributeName()
+		);
+	}
+
 	/// The persistent attribute name as declared by the source member.
 	///
 	/// This is the local declaration name, not a dotted usage path.  Usage

@@ -119,7 +119,8 @@ import org.hibernate.boot.models.annotations.internal.TransientJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.VersionJpaAnnotation;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
-import org.hibernate.models.CompleteAnnotationDescriptor;
+import org.hibernate.models.Creator;
+import org.hibernate.models.spi.MutableAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 
 import static org.hibernate.models.spi.AnnotationTarget.Kind;
@@ -227,21 +228,21 @@ import jakarta.persistence.Version;
  * @author Steve Ebersole
  */
 public interface JpaAnnotations {
-	CompleteAnnotationDescriptor<Access,AccessJpaAnnotation> ACCESS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Access,AccessJpaAnnotation> ACCESS = Creator.createCompleteAnnotationDescriptor(
 			Access.class,
 			AccessJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<AssociationOverrides,AssociationOverridesJpaAnnotation> ASSOCIATION_OVERRIDES = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AssociationOverrides,AssociationOverridesJpaAnnotation> ASSOCIATION_OVERRIDES = Creator.createCompleteAnnotationDescriptor(
 			AssociationOverrides.class,
 			AssociationOverridesJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<AssociationOverride,AssociationOverrideJpaAnnotation> ASSOCIATION_OVERRIDE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AssociationOverride,AssociationOverrideJpaAnnotation> ASSOCIATION_OVERRIDE = Creator.createCompleteAnnotationDescriptor(
 			AssociationOverride.class,
 			AssociationOverrideJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
@@ -249,14 +250,14 @@ public interface JpaAnnotations {
 			ASSOCIATION_OVERRIDES
 	);
 
-	CompleteAnnotationDescriptor<AttributeOverrides,AttributeOverridesJpaAnnotation> ATTRIBUTE_OVERRIDES = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AttributeOverrides,AttributeOverridesJpaAnnotation> ATTRIBUTE_OVERRIDES = Creator.createCompleteAnnotationDescriptor(
 			AttributeOverrides.class,
 			AttributeOverridesJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<AttributeOverride,AttributeOverrideJpaAnnotation> ATTRIBUTE_OVERRIDE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AttributeOverride,AttributeOverrideJpaAnnotation> ATTRIBUTE_OVERRIDE = Creator.createCompleteAnnotationDescriptor(
 			AttributeOverride.class,
 			AttributeOverrideJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
@@ -264,49 +265,49 @@ public interface JpaAnnotations {
 			ATTRIBUTE_OVERRIDES
 	);
 
-	CompleteAnnotationDescriptor<Basic,BasicJpaAnnotation> BASIC = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Basic,BasicJpaAnnotation> BASIC = Creator.createCompleteAnnotationDescriptor(
 			Basic.class,
 			BasicJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Cacheable,CacheableJpaAnnotation> CACHEABLE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Cacheable,CacheableJpaAnnotation> CACHEABLE = Creator.createCompleteAnnotationDescriptor(
 			Cacheable.class,
 			CacheableJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<CheckConstraint,CheckConstraintJpaAnnotation> CHECK_CONSTRAINT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CheckConstraint,CheckConstraintJpaAnnotation> CHECK_CONSTRAINT = Creator.createCompleteAnnotationDescriptor(
 			CheckConstraint.class,
 			CheckConstraintJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<CollectionTable,CollectionTableJpaAnnotation> COLLECTION_TABLE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionTable,CollectionTableJpaAnnotation> COLLECTION_TABLE = Creator.createCompleteAnnotationDescriptor(
 			CollectionTable.class,
 			CollectionTableJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Column,ColumnJpaAnnotation> COLUMN = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Column,ColumnJpaAnnotation> COLUMN = Creator.createCompleteAnnotationDescriptor(
 			Column.class,
 			ColumnJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ColumnResult.ColumnResults,ColumnResultsJpaAnnotation> COLUMN_RESULTS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ColumnResult.ColumnResults,ColumnResultsJpaAnnotation> COLUMN_RESULTS = Creator.createCompleteAnnotationDescriptor(
 			ColumnResult.ColumnResults.class,
 			ColumnResultsJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ColumnResult,ColumnResultJpaAnnotation> COLUMN_RESULT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ColumnResult,ColumnResultJpaAnnotation> COLUMN_RESULT = Creator.createCompleteAnnotationDescriptor(
 			ColumnResult.class,
 			ColumnResultJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
@@ -314,14 +315,14 @@ public interface JpaAnnotations {
 			COLUMN_RESULTS
 	);
 
-	CompleteAnnotationDescriptor<ConstructorResult.ConstructorResults,ConstructorResultsJpaAnnotation> CONSTRUCTOR_RESULTS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ConstructorResult.ConstructorResults,ConstructorResultsJpaAnnotation> CONSTRUCTOR_RESULTS = Creator.createCompleteAnnotationDescriptor(
 			ConstructorResult.ConstructorResults.class,
 			ConstructorResultsJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ConstructorResult,ConstructorResultJpaAnnotation> CONSTRUCTOR_RESULT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ConstructorResult,ConstructorResultJpaAnnotation> CONSTRUCTOR_RESULT = Creator.createCompleteAnnotationDescriptor(
 			ConstructorResult.class,
 			ConstructorResultJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
@@ -329,14 +330,14 @@ public interface JpaAnnotations {
 			CONSTRUCTOR_RESULTS
 	);
 
-	CompleteAnnotationDescriptor<Converts,ConvertsJpaAnnotation> CONVERTS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Converts,ConvertsJpaAnnotation> CONVERTS = Creator.createCompleteAnnotationDescriptor(
 			Converts.class,
 			ConvertsJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Convert,ConvertJpaAnnotation> CONVERT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Convert,ConvertJpaAnnotation> CONVERT = Creator.createCompleteAnnotationDescriptor(
 			Convert.class,
 			ConvertJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
@@ -344,91 +345,91 @@ public interface JpaAnnotations {
 			CONVERTS
 	);
 
-	CompleteAnnotationDescriptor<Converter,ConverterJpaAnnotation> CONVERTER = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Converter,ConverterJpaAnnotation> CONVERTER = Creator.createCompleteAnnotationDescriptor(
 			Converter.class,
 			ConverterJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<DiscriminatorColumn,DiscriminatorColumnJpaAnnotation> DISCRIMINATOR_COLUMN = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DiscriminatorColumn,DiscriminatorColumnJpaAnnotation> DISCRIMINATOR_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			DiscriminatorColumn.class,
 			DiscriminatorColumnJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Discoverable, DiscoverableJpaAnnotation> DISCOVERABLE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Discoverable, DiscoverableJpaAnnotation> DISCOVERABLE = Creator.createCompleteAnnotationDescriptor(
 			Discoverable.class,
 			DiscoverableJpaAnnotation.class,
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<DiscriminatorValue,DiscriminatorValueJpaAnnotation> DISCRIMINATOR_VALUE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DiscriminatorValue,DiscriminatorValueJpaAnnotation> DISCRIMINATOR_VALUE = Creator.createCompleteAnnotationDescriptor(
 			DiscriminatorValue.class,
 			DiscriminatorValueJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ElementCollection,ElementCollectionJpaAnnotation> ELEMENT_COLLECTION = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ElementCollection,ElementCollectionJpaAnnotation> ELEMENT_COLLECTION = Creator.createCompleteAnnotationDescriptor(
 			ElementCollection.class,
 			ElementCollectionJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Embeddable,EmbeddableJpaAnnotation> EMBEDDABLE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Embeddable,EmbeddableJpaAnnotation> EMBEDDABLE = Creator.createCompleteAnnotationDescriptor(
 			Embeddable.class,
 			EmbeddableJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Embedded,EmbeddedJpaAnnotation> EMBEDDED = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Embedded,EmbeddedJpaAnnotation> EMBEDDED = Creator.createCompleteAnnotationDescriptor(
 			Embedded.class,
 			EmbeddedJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<EmbeddedId,EmbeddedIdJpaAnnotation> EMBEDDED_ID = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EmbeddedId,EmbeddedIdJpaAnnotation> EMBEDDED_ID = Creator.createCompleteAnnotationDescriptor(
 			EmbeddedId.class,
 			EmbeddedIdJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Entity,EntityJpaAnnotation> ENTITY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Entity,EntityJpaAnnotation> ENTITY = Creator.createCompleteAnnotationDescriptor(
 			Entity.class,
 			EntityJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<EntityListener,EntityListenerJpaAnnotation> ENTITY_LISTENER = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EntityListener,EntityListenerJpaAnnotation> ENTITY_LISTENER = Creator.createCompleteAnnotationDescriptor(
 			EntityListener.class,
 			EntityListenerJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<EntityListeners,EntityListenersJpaAnnotation> ENTITY_LISTENERS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EntityListeners,EntityListenersJpaAnnotation> ENTITY_LISTENERS = Creator.createCompleteAnnotationDescriptor(
 			EntityListeners.class,
 			EntityListenersJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<EntityResult.EntityResults,EntityResultsJpaAnnotation> ENTITY_RESULTS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EntityResult.EntityResults,EntityResultsJpaAnnotation> ENTITY_RESULTS = Creator.createCompleteAnnotationDescriptor(
 			EntityResult.EntityResults.class,
 			EntityResultsJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<EntityResult,EntityResultJpaAnnotation> ENTITY_RESULT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EntityResult,EntityResultJpaAnnotation> ENTITY_RESULT = Creator.createCompleteAnnotationDescriptor(
 			EntityResult.class,
 			EntityResultJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
@@ -436,47 +437,47 @@ public interface JpaAnnotations {
 			ENTITY_RESULTS
 	);
 
-	CompleteAnnotationDescriptor<Enumerated,EnumeratedJpaAnnotation> ENUMERATED = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Enumerated,EnumeratedJpaAnnotation> ENUMERATED = Creator.createCompleteAnnotationDescriptor(
 			Enumerated.class,
 			EnumeratedJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<EnumeratedValue,EnumeratedValueJpaAnnotation> ENUMERATED_VALUE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EnumeratedValue,EnumeratedValueJpaAnnotation> ENUMERATED_VALUE = Creator.createCompleteAnnotationDescriptor(
 			EnumeratedValue.class,
 			EnumeratedValueJpaAnnotation.class,
 			EnumSet.of( Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ExcludeDefaultListeners,ExcludeDefaultListenersJpaAnnotation> EXCLUDE_DEFAULT_LISTENERS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ExcludeDefaultListeners,ExcludeDefaultListenersJpaAnnotation> EXCLUDE_DEFAULT_LISTENERS = Creator.createCompleteAnnotationDescriptor(
 			ExcludeDefaultListeners.class,
 			ExcludeDefaultListenersJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	CompleteAnnotationDescriptor<ExcludedFromVersioning, ExcludedFromVersioningJpaAnnotation> EXCLUDE_FROM_VERSIONING = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ExcludedFromVersioning, ExcludedFromVersioningJpaAnnotation> EXCLUDE_FROM_VERSIONING = Creator.createCompleteAnnotationDescriptor(
 			ExcludedFromVersioning.class,
 			ExcludedFromVersioningJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	CompleteAnnotationDescriptor<ExcludeSuperclassListeners,ExcludeSuperclassListenersJpaAnnotation> EXCLUDE_SUPERCLASS_LISTENERS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ExcludeSuperclassListeners,ExcludeSuperclassListenersJpaAnnotation> EXCLUDE_SUPERCLASS_LISTENERS = Creator.createCompleteAnnotationDescriptor(
 			ExcludeSuperclassListeners.class,
 			ExcludeSuperclassListenersJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Fetch.Fetches,FetchesJpaAnnotation> FETCHES = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Fetch.Fetches,FetchesJpaAnnotation> FETCHES = Creator.createCompleteAnnotationDescriptor(
 			Fetch.Fetches.class,
 			FetchesJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Fetch,FetchJpaAnnotation> FETCH = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Fetch,FetchJpaAnnotation> FETCH = Creator.createCompleteAnnotationDescriptor(
 			Fetch.class,
 			FetchJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
@@ -484,63 +485,63 @@ public interface JpaAnnotations {
 			FETCHES
 	);
 
-	CompleteAnnotationDescriptor<FieldResult,FieldResultJpaAnnotation> FIELD_RESULT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FieldResult,FieldResultJpaAnnotation> FIELD_RESULT = Creator.createCompleteAnnotationDescriptor(
 			FieldResult.class,
 			FieldResultJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ForeignKey,ForeignKeyJpaAnnotation> FOREIGN_KEY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ForeignKey,ForeignKeyJpaAnnotation> FOREIGN_KEY = Creator.createCompleteAnnotationDescriptor(
 			ForeignKey.class,
 			ForeignKeyJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<GeneratedValue,GeneratedValueJpaAnnotation> GENERATED_VALUE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<GeneratedValue,GeneratedValueJpaAnnotation> GENERATED_VALUE = Creator.createCompleteAnnotationDescriptor(
 			GeneratedValue.class,
 			GeneratedValueJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Id,IdJpaAnnotation> ID = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Id,IdJpaAnnotation> ID = Creator.createCompleteAnnotationDescriptor(
 			Id.class,
 			IdJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<IdClass,IdClassJpaAnnotation> ID_CLASS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<IdClass,IdClassJpaAnnotation> ID_CLASS = Creator.createCompleteAnnotationDescriptor(
 			IdClass.class,
 			IdClassJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Index,IndexJpaAnnotation> INDEX = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Index,IndexJpaAnnotation> INDEX = Creator.createCompleteAnnotationDescriptor(
 			Index.class,
 			IndexJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Inheritance,InheritanceJpaAnnotation> INHERITANCE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Inheritance,InheritanceJpaAnnotation> INHERITANCE = Creator.createCompleteAnnotationDescriptor(
 			Inheritance.class,
 			InheritanceJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<JoinColumns,JoinColumnsJpaAnnotation> JOIN_COLUMNS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JoinColumns,JoinColumnsJpaAnnotation> JOIN_COLUMNS = Creator.createCompleteAnnotationDescriptor(
 			JoinColumns.class,
 			JoinColumnsJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<JoinColumn,JoinColumnJpaAnnotation> JOIN_COLUMN = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JoinColumn,JoinColumnJpaAnnotation> JOIN_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			JoinColumn.class,
 			JoinColumnJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
@@ -548,70 +549,70 @@ public interface JpaAnnotations {
 			JOIN_COLUMNS
 	);
 
-	CompleteAnnotationDescriptor<JoinTable,JoinTableJpaAnnotation> JOIN_TABLE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JoinTable,JoinTableJpaAnnotation> JOIN_TABLE = Creator.createCompleteAnnotationDescriptor(
 			JoinTable.class,
 			JoinTableJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Lob,LobJpaAnnotation> LOB = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Lob,LobJpaAnnotation> LOB = Creator.createCompleteAnnotationDescriptor(
 			Lob.class,
 			LobJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ManyToMany,ManyToManyJpaAnnotation> MANY_TO_MANY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ManyToMany,ManyToManyJpaAnnotation> MANY_TO_MANY = Creator.createCompleteAnnotationDescriptor(
 			ManyToMany.class,
 			ManyToManyJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<ManyToOne,ManyToOneJpaAnnotation> MANY_TO_ONE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ManyToOne,ManyToOneJpaAnnotation> MANY_TO_ONE = Creator.createCompleteAnnotationDescriptor(
 			ManyToOne.class,
 			ManyToOneJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MapKey,MapKeyJpaAnnotation> MAP_KEY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKey,MapKeyJpaAnnotation> MAP_KEY = Creator.createCompleteAnnotationDescriptor(
 			MapKey.class,
 			MapKeyJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MapKeyClass,MapKeyClassJpaAnnotation> MAP_KEY_CLASS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyClass,MapKeyClassJpaAnnotation> MAP_KEY_CLASS = Creator.createCompleteAnnotationDescriptor(
 			MapKeyClass.class,
 			MapKeyClassJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MapKeyColumn,MapKeyColumnJpaAnnotation> MAP_KEY_COLUMN = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyColumn,MapKeyColumnJpaAnnotation> MAP_KEY_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			MapKeyColumn.class,
 			MapKeyColumnJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MapKeyEnumerated,MapKeyEnumeratedJpaAnnotation> MAP_KEY_ENUMERATED = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyEnumerated,MapKeyEnumeratedJpaAnnotation> MAP_KEY_ENUMERATED = Creator.createCompleteAnnotationDescriptor(
 			MapKeyEnumerated.class,
 			MapKeyEnumeratedJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MapKeyJoinColumns,MapKeyJoinColumnsJpaAnnotation> MAP_KEY_JOIN_COLUMNS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyJoinColumns,MapKeyJoinColumnsJpaAnnotation> MAP_KEY_JOIN_COLUMNS = Creator.createCompleteAnnotationDescriptor(
 			MapKeyJoinColumns.class,
 			MapKeyJoinColumnsJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MapKeyJoinColumn,MapKeyJoinColumnJpaAnnotation> MAP_KEY_JOIN_COLUMN = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyJoinColumn,MapKeyJoinColumnJpaAnnotation> MAP_KEY_JOIN_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			MapKeyJoinColumn.class,
 			MapKeyJoinColumnJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
@@ -619,42 +620,42 @@ public interface JpaAnnotations {
 			MAP_KEY_JOIN_COLUMNS
 	);
 
-	CompleteAnnotationDescriptor<MapKeyTemporal,MapKeyTemporalJpaAnnotation> MAP_KEY_TEMPORAL = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyTemporal,MapKeyTemporalJpaAnnotation> MAP_KEY_TEMPORAL = Creator.createCompleteAnnotationDescriptor(
 			MapKeyTemporal.class,
 			MapKeyTemporalJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MappedSuperclass,MappedSuperclassJpaAnnotation> MAPPED_SUPERCLASS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MappedSuperclass,MappedSuperclassJpaAnnotation> MAPPED_SUPERCLASS = Creator.createCompleteAnnotationDescriptor(
 			MappedSuperclass.class,
 			MappedSuperclassJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<MapsId,MapsIdJpaAnnotation> MAPS_ID = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapsId,MapsIdJpaAnnotation> MAPS_ID = Creator.createCompleteAnnotationDescriptor(
 			MapsId.class,
 			MapsIdJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<NamedAttributeNode,NamedAttributeNodeJpaAnnotation> NAMED_ATTRIBUTE_NODE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedAttributeNode,NamedAttributeNodeJpaAnnotation> NAMED_ATTRIBUTE_NODE = Creator.createCompleteAnnotationDescriptor(
 			NamedAttributeNode.class,
 			NamedAttributeNodeJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<NamedEntityGraphs,NamedEntityGraphsJpaAnnotation> NAMED_ENTITY_GRAPHS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedEntityGraphs,NamedEntityGraphsJpaAnnotation> NAMED_ENTITY_GRAPHS = Creator.createCompleteAnnotationDescriptor(
 			NamedEntityGraphs.class,
 			NamedEntityGraphsJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<NamedEntityGraph,NamedEntityGraphJpaAnnotation> NAMED_ENTITY_GRAPH = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedEntityGraph,NamedEntityGraphJpaAnnotation> NAMED_ENTITY_GRAPH = Creator.createCompleteAnnotationDescriptor(
 			NamedEntityGraph.class,
 			NamedEntityGraphJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
@@ -662,14 +663,14 @@ public interface JpaAnnotations {
 			NAMED_ENTITY_GRAPHS
 	);
 
-	CompleteAnnotationDescriptor<NamedNativeQueries,NamedNativeQueriesJpaAnnotation> NAMED_NATIVE_QUERIES = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedNativeQueries,NamedNativeQueriesJpaAnnotation> NAMED_NATIVE_QUERIES = Creator.createCompleteAnnotationDescriptor(
 			NamedNativeQueries.class,
 			NamedNativeQueriesJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<NamedNativeQuery,NamedNativeQueryJpaAnnotation> NAMED_NATIVE_QUERY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedNativeQuery,NamedNativeQueryJpaAnnotation> NAMED_NATIVE_QUERY = Creator.createCompleteAnnotationDescriptor(
 			NamedNativeQuery.class,
 			NamedNativeQueryJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
@@ -677,54 +678,54 @@ public interface JpaAnnotations {
 			NAMED_NATIVE_QUERIES
 	);
 
-	CompleteAnnotationDescriptor<NamedQueries,NamedQueriesJpaAnnotation> NAMED_QUERIES = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedQueries,NamedQueriesJpaAnnotation> NAMED_QUERIES = Creator.createCompleteAnnotationDescriptor(
 			NamedQueries.class,
 			NamedQueriesJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<NamedQuery,NamedQueryJpaAnnotation> NAMED_QUERY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedQuery,NamedQueryJpaAnnotation> NAMED_QUERY = Creator.createCompleteAnnotationDescriptor(
 			NamedQuery.class,
 			NamedQueryJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			NAMED_QUERIES
 	);
-	CompleteAnnotationDescriptor<NamedStatements, NamedStatementsJpaAnnotation> NAMED_STATEMENTS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedStatements, NamedStatementsJpaAnnotation> NAMED_STATEMENTS = Creator.createCompleteAnnotationDescriptor(
 			NamedStatements.class,
 			NamedStatementsJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
-	CompleteAnnotationDescriptor<NamedStatement, NamedStatementJpaAnnotation> NAMED_STATEMENT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedStatement, NamedStatementJpaAnnotation> NAMED_STATEMENT = Creator.createCompleteAnnotationDescriptor(
 			NamedStatement.class,
 			NamedStatementJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			NAMED_STATEMENTS
 	);
-	CompleteAnnotationDescriptor<NamedNativeStatements, NamedNativeStatementsJpaAnnotation> NAMED_NATIVE_STATEMENTS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedNativeStatements, NamedNativeStatementsJpaAnnotation> NAMED_NATIVE_STATEMENTS = Creator.createCompleteAnnotationDescriptor(
 			NamedNativeStatements.class,
 			NamedNativeStatementsJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
-	CompleteAnnotationDescriptor<NamedNativeStatement, NamedNativeStatementJpaAnnotation> NAMED_NATIVE_STATEMENT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedNativeStatement, NamedNativeStatementJpaAnnotation> NAMED_NATIVE_STATEMENT = Creator.createCompleteAnnotationDescriptor(
 			NamedNativeStatement.class,
 			NamedNativeStatementJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			NAMED_NATIVE_STATEMENTS
 	);
-	CompleteAnnotationDescriptor<NamedStoredProcedureQueries,NamedStoredProcedureQueriesJpaAnnotation> NAMED_STORED_PROCEDURE_QUERIES = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedStoredProcedureQueries,NamedStoredProcedureQueriesJpaAnnotation> NAMED_STORED_PROCEDURE_QUERIES = Creator.createCompleteAnnotationDescriptor(
 			NamedStoredProcedureQueries.class,
 			NamedStoredProcedureQueriesJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<NamedStoredProcedureQuery,NamedStoredProcedureQueryJpaAnnotation> NAMED_STORED_PROCEDURE_QUERY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedStoredProcedureQuery,NamedStoredProcedureQueryJpaAnnotation> NAMED_STORED_PROCEDURE_QUERY = Creator.createCompleteAnnotationDescriptor(
 			NamedStoredProcedureQuery.class,
 			NamedStoredProcedureQueryJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
@@ -732,147 +733,147 @@ public interface JpaAnnotations {
 			NAMED_STORED_PROCEDURE_QUERIES
 	);
 
-	CompleteAnnotationDescriptor<NamedSubgraph,NamedSubgraphJpaAnnotation> NAMED_SUBGRAPH = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedSubgraph,NamedSubgraphJpaAnnotation> NAMED_SUBGRAPH = Creator.createCompleteAnnotationDescriptor(
 			NamedSubgraph.class,
 			NamedSubgraphJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<OneToMany,OneToManyJpaAnnotation> ONE_TO_MANY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<OneToMany,OneToManyJpaAnnotation> ONE_TO_MANY = Creator.createCompleteAnnotationDescriptor(
 			OneToMany.class,
 			OneToManyJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<OneToOne,OneToOneJpaAnnotation> ONE_TO_ONE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<OneToOne,OneToOneJpaAnnotation> ONE_TO_ONE = Creator.createCompleteAnnotationDescriptor(
 			OneToOne.class,
 			OneToOneJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<OrderBy,OrderByJpaAnnotation> ORDER_BY = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<OrderBy,OrderByJpaAnnotation> ORDER_BY = Creator.createCompleteAnnotationDescriptor(
 			OrderBy.class,
 			OrderByJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<OrderColumn,OrderColumnJpaAnnotation> ORDER_COLUMN = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<OrderColumn,OrderColumnJpaAnnotation> ORDER_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			OrderColumn.class,
 			OrderColumnJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<PostLoad,PostLoadJpaAnnotation> POST_LOAD = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<PostLoad,PostLoadJpaAnnotation> POST_LOAD = Creator.createCompleteAnnotationDescriptor(
 			PostLoad.class,
 			PostLoadJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<PostPersist,PostPersistJpaAnnotation> POST_PERSIST = new CompleteAnnotationDescriptor<>(
-			PostPersist.class,
-			PostPersistJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PostRemove,PostRemoveJpaAnnotation> POST_REMOVE = new CompleteAnnotationDescriptor<>(
-			PostRemove.class,
-			PostRemoveJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PostUpdate,PostUpdateJpaAnnotation> POST_UPDATE = new CompleteAnnotationDescriptor<>(
-			PostUpdate.class,
-			PostUpdateJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PrePersist,PrePersistJpaAnnotation> PRE_PERSIST = new CompleteAnnotationDescriptor<>(
-			PrePersist.class,
-			PrePersistJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PreRemove,PreRemoveJpaAnnotation> PRE_REMOVE = new CompleteAnnotationDescriptor<>(
-			PreRemove.class,
-			PreRemoveJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PreUpdate,PreUpdateJpaAnnotation> PRE_UPDATE = new CompleteAnnotationDescriptor<>(
-			PreUpdate.class,
-			PreUpdateJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PreMerge,PreMergeJpaAnnotation> PRE_MERGE = new CompleteAnnotationDescriptor<>(
-			PreMerge.class,
-			PreMergeJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PreInsert,PreInsertJpaAnnotation> PRE_INSERT = new CompleteAnnotationDescriptor<>(
-			PreInsert.class,
-			PreInsertJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PostInsert,PostInsertJpaAnnotation> POST_INSERT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<PostInsert,PostInsertJpaAnnotation> POST_INSERT = Creator.createCompleteAnnotationDescriptor(
 			PostInsert.class,
 			PostInsertJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<PreUpsert,PreUpsertJpaAnnotation> PRE_UPSERT = new CompleteAnnotationDescriptor<>(
-			PreUpsert.class,
-			PreUpsertJpaAnnotation.class,
+	MutableAnnotationDescriptor<PostPersist,PostPersistJpaAnnotation> POST_PERSIST = Creator.createCompleteAnnotationDescriptor(
+			PostPersist.class,
+			PostPersistJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<PostUpsert,PostUpsertJpaAnnotation> POST_UPSERT = new CompleteAnnotationDescriptor<>(
-			PostUpsert.class,
-			PostUpsertJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PreDelete,PreDeleteJpaAnnotation> PRE_DELETE = new CompleteAnnotationDescriptor<>(
-			PreDelete.class,
-			PreDeleteJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
-	);
-
-	CompleteAnnotationDescriptor<PostDelete,PostDeleteJpaAnnotation> POST_DELETE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<PostDelete,PostDeleteJpaAnnotation> POST_DELETE = Creator.createCompleteAnnotationDescriptor(
 			PostDelete.class,
 			PostDeleteJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<PrimaryKeyJoinColumns,PrimaryKeyJoinColumnsJpaAnnotation> PRIMARY_KEY_JOIN_COLUMNS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<PostRemove,PostRemoveJpaAnnotation> POST_REMOVE = Creator.createCompleteAnnotationDescriptor(
+			PostRemove.class,
+			PostRemoveJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PostUpdate,PostUpdateJpaAnnotation> POST_UPDATE = Creator.createCompleteAnnotationDescriptor(
+			PostUpdate.class,
+			PostUpdateJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PostUpsert,PostUpsertJpaAnnotation> POST_UPSERT = Creator.createCompleteAnnotationDescriptor(
+			PostUpsert.class,
+			PostUpsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PreInsert,PreInsertJpaAnnotation> PRE_INSERT = Creator.createCompleteAnnotationDescriptor(
+			PreInsert.class,
+			PreInsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PreMerge,PreMergeJpaAnnotation> PRE_MERGE = Creator.createCompleteAnnotationDescriptor(
+			PreMerge.class,
+			PreMergeJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PrePersist,PrePersistJpaAnnotation> PRE_PERSIST = Creator.createCompleteAnnotationDescriptor(
+			PrePersist.class,
+			PrePersistJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PreDelete,PreDeleteJpaAnnotation> PRE_DELETE = Creator.createCompleteAnnotationDescriptor(
+			PreDelete.class,
+			PreDeleteJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PreRemove,PreRemoveJpaAnnotation> PRE_REMOVE = Creator.createCompleteAnnotationDescriptor(
+			PreRemove.class,
+			PreRemoveJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PreUpdate,PreUpdateJpaAnnotation> PRE_UPDATE = Creator.createCompleteAnnotationDescriptor(
+			PreUpdate.class,
+			PreUpdateJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PreUpsert,PreUpsertJpaAnnotation> PRE_UPSERT = Creator.createCompleteAnnotationDescriptor(
+			PreUpsert.class,
+			PreUpsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<PrimaryKeyJoinColumns,PrimaryKeyJoinColumnsJpaAnnotation> PRIMARY_KEY_JOIN_COLUMNS = Creator.createCompleteAnnotationDescriptor(
 			PrimaryKeyJoinColumns.class,
 			PrimaryKeyJoinColumnsJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<PrimaryKeyJoinColumn,PrimaryKeyJoinColumnJpaAnnotation> PRIMARY_KEY_JOIN_COLUMN = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<PrimaryKeyJoinColumn,PrimaryKeyJoinColumnJpaAnnotation> PRIMARY_KEY_JOIN_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			PrimaryKeyJoinColumn.class,
 			PrimaryKeyJoinColumnJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
@@ -880,21 +881,21 @@ public interface JpaAnnotations {
 			PRIMARY_KEY_JOIN_COLUMNS
 	);
 
-	CompleteAnnotationDescriptor<QueryHint,QueryHintJpaAnnotation> QUERY_HINT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<QueryHint,QueryHintJpaAnnotation> QUERY_HINT = Creator.createCompleteAnnotationDescriptor(
 			QueryHint.class,
 			QueryHintJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<SecondaryTables,SecondaryTablesJpaAnnotation> SECONDARY_TABLES = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SecondaryTables,SecondaryTablesJpaAnnotation> SECONDARY_TABLES = Creator.createCompleteAnnotationDescriptor(
 			SecondaryTables.class,
 			SecondaryTablesJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<SecondaryTable,SecondaryTableJpaAnnotation> SECONDARY_TABLE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SecondaryTable,SecondaryTableJpaAnnotation> SECONDARY_TABLE = Creator.createCompleteAnnotationDescriptor(
 			SecondaryTable.class,
 			SecondaryTableJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
@@ -902,14 +903,14 @@ public interface JpaAnnotations {
 			SECONDARY_TABLES
 	);
 
-	CompleteAnnotationDescriptor<SequenceGenerators,SequenceGeneratorsJpaAnnotation> SEQUENCE_GENERATORS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SequenceGenerators,SequenceGeneratorsJpaAnnotation> SEQUENCE_GENERATORS = Creator.createCompleteAnnotationDescriptor(
 			SequenceGenerators.class,
 			SequenceGeneratorsJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<SequenceGenerator,SequenceGeneratorJpaAnnotation> SEQUENCE_GENERATOR = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SequenceGenerator,SequenceGeneratorJpaAnnotation> SEQUENCE_GENERATOR = Creator.createCompleteAnnotationDescriptor(
 			SequenceGenerator.class,
 			SequenceGeneratorJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
@@ -917,14 +918,14 @@ public interface JpaAnnotations {
 			SEQUENCE_GENERATORS
 	);
 
-	CompleteAnnotationDescriptor<SqlResultSetMappings,SqlResultSetMappingsJpaAnnotation> SQL_RESULT_SET_MAPPINGS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SqlResultSetMappings,SqlResultSetMappingsJpaAnnotation> SQL_RESULT_SET_MAPPINGS = Creator.createCompleteAnnotationDescriptor(
 			SqlResultSetMappings.class,
 			SqlResultSetMappingsJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<SqlResultSetMapping,SqlResultSetMappingJpaAnnotation> SQL_RESULT_SET_MAPPING = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SqlResultSetMapping,SqlResultSetMappingJpaAnnotation> SQL_RESULT_SET_MAPPING = Creator.createCompleteAnnotationDescriptor(
 			SqlResultSetMapping.class,
 			SqlResultSetMappingJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD ),
@@ -932,28 +933,28 @@ public interface JpaAnnotations {
 			SQL_RESULT_SET_MAPPINGS
 	);
 
-	CompleteAnnotationDescriptor<StoredProcedureParameter,StoredProcedureParameterJpaAnnotation> STORED_PROCEDURE_PARAMETER = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<StoredProcedureParameter,StoredProcedureParameterJpaAnnotation> STORED_PROCEDURE_PARAMETER = Creator.createCompleteAnnotationDescriptor(
 			StoredProcedureParameter.class,
 			StoredProcedureParameterJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Table,TableJpaAnnotation> TABLE = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Table,TableJpaAnnotation> TABLE = Creator.createCompleteAnnotationDescriptor(
 			Table.class,
 			TableJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<TableGenerators,TableGeneratorsJpaAnnotation> TABLE_GENERATORS = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TableGenerators,TableGeneratorsJpaAnnotation> TABLE_GENERATORS = Creator.createCompleteAnnotationDescriptor(
 			TableGenerators.class,
 			TableGeneratorsJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<TableGenerator,TableGeneratorJpaAnnotation> TABLE_GENERATOR = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TableGenerator,TableGeneratorJpaAnnotation> TABLE_GENERATOR = Creator.createCompleteAnnotationDescriptor(
 			TableGenerator.class,
 			TableGeneratorJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
@@ -961,28 +962,28 @@ public interface JpaAnnotations {
 			TABLE_GENERATORS
 	);
 
-	CompleteAnnotationDescriptor<Temporal,TemporalJpaAnnotation> TEMPORAL = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Temporal,TemporalJpaAnnotation> TEMPORAL = Creator.createCompleteAnnotationDescriptor(
 			Temporal.class,
 			TemporalJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Transient,TransientJpaAnnotation> TRANSIENT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Transient,TransientJpaAnnotation> TRANSIENT = Creator.createCompleteAnnotationDescriptor(
 			Transient.class,
 			TransientJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<UniqueConstraint,UniqueConstraintJpaAnnotation> UNIQUE_CONSTRAINT = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<UniqueConstraint,UniqueConstraintJpaAnnotation> UNIQUE_CONSTRAINT = Creator.createCompleteAnnotationDescriptor(
 			UniqueConstraint.class,
 			UniqueConstraintJpaAnnotation.class,
 			EnumSet.noneOf( Kind.class ),
 			false
 	);
 
-	CompleteAnnotationDescriptor<Version,VersionJpaAnnotation> VERSION = new CompleteAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Version,VersionJpaAnnotation> VERSION = Creator.createCompleteAnnotationDescriptor(
 			Version.class,
 			VersionJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),

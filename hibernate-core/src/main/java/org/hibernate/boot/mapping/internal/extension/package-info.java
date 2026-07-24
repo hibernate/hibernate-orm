@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Internal proof package for a future public binding-layer extension SPI.
 ///
 /// The contracts in this package intentionally resemble the eventual supported

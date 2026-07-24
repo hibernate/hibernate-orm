@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Vlad Mihalcea

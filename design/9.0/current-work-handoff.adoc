@@ -1,15 +1,364 @@
 = ORM 9 Current Work Handoff
 
 Read this first when picking up the ORM 9 boot-model / binding-model branch.
-This file is intentionally compact: it describes the current branch direction,
-the current in-flight redesign state, the next design-led work phase, and the
-guardrails to use before reopening any old failure bucket.
+The immediate handoff below is authoritative for the next conversation. Later
+sections retain useful architectural background and historical guardrails, but
+an older "next step" must not override the immediate serialization handoff.
 
 Historical refresh notes, retired failure narratives, and old census buckets
 were removed after the suite went green.  Use git history if that archaeology
 is needed.
 
-== Current Branch Theme
+== Immediate Handoff: Metadata Serialization Closeout
+
+Date of handoff: 2026-07-24.
+
+The factory-ready metadata archive work is complete on `wip/9-boot-design`.
+The final contract is documented in
+link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`].
+
+The closeout establishes:
+
+* an opaque public `MetadataArchive` whose restoration result is the
+  factory-ready `RestoredMetadata` contract;
+* exact archive-format and Hibernate ORM version checks;
+* an explicit trusted-build-artifact policy, with no forward or backward
+  compatibility promise across ORM versions;
+* normalized archive read/write/restore failures through
+  `MetadataSerializationException`, while invalid API arguments and missing
+  producer opt-in retain their documented argument/state failures;
+* payload bounds and a payload-class guard which rejects `BootBindingModel`,
+  `BindingState`, live services and bootstrap contexts, `TypeConfiguration`,
+  and `BasicValue.Resolution` implementations;
+* reconstruction in the consumer environment for converters, user and
+  composite types, Java/JDBC descriptors, mutability plans, named type
+  definitions, filter parameter mappings and resolvers, collection types,
+  value generators, and identifier generators;
+* removal of the service-less metadata-restoration branch and the
+  always-empty explicit SQL-function archive state;
+* explicit verification that serialization-disabled bootstrap allocates no
+  `MappingResolutionDetailsCollector` and retains no resolution-details
+  collector in `ResolvedMapping`.
+
+Final verification completed:
+
+* the focused archive, recipe, graph-index, and SessionFactory pipeline tests;
+* `:hibernate-core:spotlessCheck`;
+* `:hibernate-core:javadoc`, with only the existing unnamed-module warning;
+* the complete `:hibernate-core:test` suite; and
+* `git diff --check`.
+
+The next work should be review/integration of the serialization stack, not
+another reconstruction-coverage expansion without a concrete unsupported
+mapping case. Preserve the payload guardrails and keep
+`MetadataState`, `MappingResolutionSnapshot`, and
+`RuntimeMappingHandoffSnapshot` as the only ORM payload products.
+
+== Historical Handoff: Return to Metadata Serialization
+
+Date of handoff: 2026-07-24.
+
+The declaration / usage / application prerequisite work is committed on
+`wip/9-boot-mapping` as `ade0dcf4f99`. The next conversation should:
+
+. preserve this handoff-document update and confirm the mapping branch is
+  otherwise clean;
+. rebase the existing serialization branch onto `ade0dcf4f99`;
+. resolve the integration in favor of the new semantic mapping model;
+. validate the rebased branch; and
+. continue factory-ready metadata serialization from that integrated baseline.
+
+Do not merge the branches. The serialization branch is based on the mapping
+branch's previous tip, so it should remain a stacked branch by replaying its
+seven commits onto the new mapping tip.
+
+=== Branch Topology
+
+The current committed topology is:
+
+[source,text]
+----
+wip/9.0
+   |
+   +-- c3a4618b62a  (old mapping tip and current fork point)
+          |
+          +-- ade0dcf4f99
+          |      wip/9-boot-mapping
+          |
+          +-- seven serialization commits
+                 wip/9-boot-design
+                 f7b2700ac94
+----
+
+`git merge-base wip/9-boot-mapping wip/9-boot-design` currently returns:
+
+[source,text]
+----
+c3a4618b62a98a290da786c54cfff73f441c0727
+----
+
+`wip/9-boot-design` has seven commits not present on
+`wip/9-boot-mapping`; `wip/9-boot-mapping` has one commit not present on
+`wip/9-boot-design`.
+
+=== Current Worktree State
+
+The current branch is `wip/9-boot-mapping`. The mapping implementation,
+including the moves of `DeclarationRole` and `MappingRole` into
+`org.hibernate.mapping` and `SyntheticPropertyMappingProjection`, is safely
+contained in `ade0dcf4f99`.
+
+Immediately before this handoff was corrected, the branch was clean. The only
+expected new worktree change is this handoff-document update. Inspect current
+status rather than assuming no concurrent changes, and preserve or commit the
+document before switching branches. Do not use `git reset --hard`,
+`git checkout --`, or other destructive cleanup.
+
+=== Mapping Prerequisite Now Implemented
+
+The worktree establishes:
+
+* `AttributeDeclarationBinding` for source declaration facts;
+* `AttributeUsageBinding` for path- and type-context interpretation;
+* `AppliedAttributeMapping` and `AppliedEmbeddableMapping` for concrete
+  mapping-graph applications;
+* intrinsic `DeclarationRole` and typed `MappingRole` values in
+  `org.hibernate.mapping`;
+* `AppliedMappingPart` on durable `org.hibernate.mapping` projections;
+* role assignment for entity attributes, identifiers, joins, collection parts,
+  nested embeddables, soft-delete values, and other concrete mapping parts;
+* role-indexed applied products in `BootBindingModel`;
+* role-based mapped-superclass and embeddable runtime/JPA handoff resolution;
+* removal of the former component/property identity handoff DTOs and maps;
+* explicit declaration, declaration-view, same-application, new-application,
+  and transient-selection copy operations for `Property`, `Component`, and
+  `ToOne`;
+* removal of `PersistentClass.mappedSuperclassPropertyOrigins`, whose source
+  correspondence is now represented by declaration/application roles;
+* an updated contributor guide and the design in
+  link:declaration-usage-applied-mapping-design.adoc[
+  `declaration-usage-applied-mapping-design.adoc`].
+
+Important semantic rules:
+
+* a declaration-side compatibility projection has a `DeclarationRole` but no
+  `MappingRole`;
+* a concrete application has an intrinsic `MappingRole`;
+* an applied `Property` and its applied `Value` normally carry the same
+  attribute role;
+* child/component/collection-part roles are derived from their concrete
+  container role;
+* a copy attached at a different mapping location must use
+  `copyForApplication(...)` and independently copied mutable state;
+* `copyForSameApplication()` is only an alias of the same occurrence;
+* property-selection views are transient, roleless, and must not be attached
+  to the mapping graph;
+* semantic correspondence must use roles, not mapping-object identity.
+
+=== Verification Already Completed
+
+Before this handoff, the mapping prerequisite passed:
+
+* `:hibernate-core:compileJava`;
+* `:hibernate-core:compileTestJava`;
+* `MappingRoleTests`;
+* the complete `MappedSuperclassTests` class;
+* Hibernate Core Javadoc, with only the existing unnamed-module warning; and
+* `git diff --check`.
+
+No references to the old
+`org.hibernate.spi.DeclarationRole` or `org.hibernate.spi.MappingRole` remain
+in the worktree.
+
+Do not redo broad mapping work which is already complete unless review finds a
+concrete problem.
+
+=== Commit and Rebase Procedure
+
+First preserve the handoff update and confirm `wip/9-boot-mapping` is clean:
+
+[source,bash]
+----
+git status --short --branch
+git diff
+git diff --cached
+
+# Commit the handoff-document update using the user's preferred commit policy.
+git status --short --branch
+----
+
+The branch must be clean before switching.
+
+Create a safety pointer for the unrevised serialization history:
+
+[source,bash]
+----
+git branch backup/wip-9-boot-design-before-mapping wip/9-boot-design
+----
+
+Then rebase the seven serialization commits onto the new mapping tip:
+
+[source,bash]
+----
+git switch wip/9-boot-design
+git rebase --onto wip/9-boot-mapping c3a4618b62a
+----
+
+This is equivalent to taking every serialization commit after the old mapping
+tip and replaying it on the newly committed mapping prerequisite.
+
+If the integration becomes unsalvageable:
+
+[source,bash]
+----
+git rebase --abort
+----
+
+The original serialization tip remains reachable through
+`backup/wip-9-boot-design-before-mapping`.
+
+=== Expected Conflict Policy
+
+Conflicts are likely in:
+
+* `Property`, `Component`, `Collection`, and related mapping parts;
+* `BootBindingModel`;
+* mapped-superclass, identifier, and embeddable handoff resolvers;
+* mapping binders/materializers which now assign intrinsic roles;
+* `MappingModelGraphIndex`;
+* `RuntimeMappingHandoffSnapshot`;
+* `BasicValueResolutionDetails` capture and restoration recipes; and
+* `ResolvedMapping` / SessionFactory construction handoff code.
+
+Do not resolve these mechanically with whole-file "ours" or "theirs". During a
+rebase, the terminology is especially confusing: the new mapping base is
+"ours", while the serialization commit being replayed is "theirs".
+
+Resolve semantically:
+
+* preserve intrinsic `MappingRole` identity from the new mapping branch;
+* make `MappingModelGraphIndex` validate/index intrinsic roles instead of
+  inventing archive roles, with traversal-derived identity only as an explicit
+  compatibility fallback;
+* preserve declaration / usage / application distinctions;
+* preserve explicit copy semantics and do not restore generic `copy()` calls
+  across semantic boundaries;
+* build archive/runtime handoff snapshots from role-indexed applied semantic
+  products;
+* do not serialize `BootBindingModel`, `BindingState`, mapping-object identity
+  maps, live services, or live type-resolution objects;
+* keep BasicValue restoration capture opt-in;
+* when opt-in is disabled, retain no extra resolution state;
+* when enabled, retain `BasicValueResolutionDetails` and create immutable
+  `BasicValueRestorationRecipe` values at store time;
+* archive references and restoration diagnostics should use the stable mapping
+  role.
+
+After each conflict resolution:
+
+[source,bash]
+----
+git add <resolved-files>
+git rebase --continue
+----
+
+=== Post-Rebase Verification
+
+Verify that the mapping branch is now an ancestor and that the seven
+serialization commits were replayed:
+
+[source,bash]
+----
+git merge-base --is-ancestor wip/9-boot-mapping wip/9-boot-design
+
+git range-diff \
+    c3a4618b62a..backup/wip-9-boot-design-before-mapping \
+    wip/9-boot-mapping..wip/9-boot-design
+
+git diff --check
+----
+
+Also verify that no old role package references were reintroduced:
+
+[source,bash]
+----
+rg 'org\.hibernate\.spi\.(DeclarationRole|MappingRole)' \
+  hibernate-core/src/main hibernate-core/src/test
+----
+
+Run at least:
+
+[source,bash]
+----
+./gradlew :hibernate-core:compileJava :hibernate-core:compileTestJava
+
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests org.hibernate.orm.test.boot.models.bind.MappingRoleTests \
+  --tests org.hibernate.orm.test.boot.models.bind.mappedsuper.MappedSuperclassTests \
+  --tests org.hibernate.boot.serial.internal.BasicValueRestorationRecipeTests \
+  --tests org.hibernate.boot.serial.internal.MappingModelGraphIndexTests \
+  --tests org.hibernate.orm.test.boot.orchestration.SessionFactoryPipelineTests
+
+./gradlew :hibernate-core:javadoc
+----
+
+Then run any broader metadata-serialization, mapping-resolution, generic
+metamodel, and SessionFactory construction suites affected by conflict
+resolution.
+
+If the rebased branch is pushed over an existing remote branch, use
+`git push --force-with-lease`, never plain `--force`.
+
+=== Serialization Work After Integration
+
+The active serialization design is
+`design/9.0/metadata-serialization-design.adoc` on
+`wip/9-boot-design`. That file is not present on the mapping prerequisite
+branch until the serialization commits are replayed.
+
+The intended public contract is:
+
+* metadata archive production is opt-in through
+  `hibernate.boot.metadata_serialization.enabled`;
+* `MetadataArchive#restore(...)` returns factory-ready `RestoredMetadata`, not a
+  bare inspection-only `Metadata`;
+* `RestoredMetadata#getMetadata()` supplies the inspection view;
+* `RestoredMetadata#buildSessionFactory()` supplies the public factory
+  construction path;
+* raw archive reading is data-only, while restoration performs class loading,
+  model restoration, service attachment, type resolution, and runtime-handoff
+  reconstruction.
+
+The archive product remains:
+
+[source,text]
+----
+MetadataState
+MappingResolutionSnapshot
+RuntimeMappingHandoffSnapshot
+----
+
+The first architectural integration task after the rebase is to make the
+serialization code consume the newly intrinsic semantic roles and applied
+products:
+
+. make `MappingModelGraphIndex` index and validate
+  `AppliedMappingPart#getMappingRole()`;
+. reject missing, duplicate, or structurally inconsistent durable roles with
+  role-rich diagnostics;
+. use the live applied model to freeze a data-only runtime handoff rather than
+  retaining or serializing `BootBindingModel`;
+. keep `BasicValueResolutionDetails` capture conditional on the opt-in setting
+  and freeze recipes only at store time;
+. update `ResolvedMapping` so factory construction no longer retains
+  `CategorizedDomainModel` or `BindingState`;
+. restore BasicValue resolutions and runtime handoff facts by stable role;
+. build and exercise a SessionFactory from the restored archive.
+
+Generator-descriptor decisions remain deferred. Do not reopen generator design
+unless a concrete serialization integration failure requires it.
+
+== Background Branch Theme
 
 The branch moves ORM bootstrap away from direct, side-effect-heavy
 `org.hibernate.mapping` construction and toward an explicit boot/mapping
@@ -44,7 +393,7 @@ Key orientation documents:
 * link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
 * link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
 
-== Current Status
+== Historical Baseline Status
 
 The current worktree is past the old green-suite closeout and is now in the
 post-bootstrap-API-removal cleanup.  The previous complete-suite green point was
@@ -212,10 +561,11 @@ Suggested next step in this area:
   broad rename/delete pass until the current mapping-object simplification work
   has settled.
 
-== Next Fresh-Chat Focus: `MetadataBuildingContext`
+== Historical Follow-up: `MetadataBuildingContext`
 
-The next design pass should shift back to `MetadataBuildingContext`.  The
-current mapping-layer audit is captured in
+A prior design pass selected `MetadataBuildingContext` as a follow-up. That work
+is not the immediate next-chat focus; the serialization rebase above takes
+precedence. The mapping-layer audit remains captured in
 link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`].
 
 That audit intentionally separates binder/helper uses from mapping objects that
@@ -345,22 +695,22 @@ Current code direction:
   it carries genuinely new semantics.
 * `MappedSuperclassContribution` owns contribution provenance and the ordered
   list of applied usages.
-* `BootBindingModel` owns indexed lookup for applied mapped-superclass usages.
-  Register usages through
-  `BootBindingModel#addAppliedMappedSuperclassAttributeUsage(...)` so the
-  contribution list and lookup index stay consistent.
-* `MappedSuperclassPropertyHandoff` links the copied compatibility `Property`
-  to the applied `AttributeUsageBinding` and contribution provenance.
+* `BootBindingModel` owns the global `MappingRole -> AppliedAttributeMapping`
+  index and keeps mapped-superclass contribution provenance as an ordered list
+  of applied usages.
 * `MappedSuperclassHandoffResolver` is exposed through
   `RuntimeModelCreationContext` and is the runtime/JPA metamodel bridge from
-  legacy `Property` inputs to applied boot-model metadata.
-* `BootBindingModel` also owns an initial `Component -> EmbeddableContribution`
-  handoff index.  `BindingState#addEmbeddableComponentHandoff(...)` still
-  preserves the transitional binding-state API, but it now feeds the boot-model
-  index used after binding.
+  legacy `Property` inputs to applied boot-model metadata.  It uses the
+  property's intrinsic role or, for declaration-side properties, derives the
+  applied role from the nearest entity consumer.
+* The former `MappedSuperclassPropertyHandoff`, its `BindingState` identity
+  map, and the parallel entity-alias/attribute-name index have been removed.
+* `BootBindingModel` owns the applied embeddable mappings indexed by intrinsic
+  `MappingRole`.  The former `Component` identity handoff and its transitional
+  `BindingState` API have been removed.
 * `EmbeddableHandoffResolver` is exposed through
   `RuntimeModelCreationContext` and is the runtime/JPA metamodel bridge from a
-  legacy `Component + Property` pair to the applied `ComponentMemberBinding`.
+  legacy `Component + Property` pair to the applied `AttributeUsageBinding`.
 * `Property#isGenericSpecialization()` is localized fallback bridge state.
   Runtime/JPA metamodel code should ask the mapped-superclass or embeddable
   handoff resolver for semantic member/type/classification decisions instead of
@@ -370,9 +720,10 @@ Current code direction:
   but applied usage metadata should win when available.
 
 Known next modeling gap: embeddable concrete-generic classification now treats
-applied `ComponentMemberBinding` metadata as authoritative when the component
-handoff exists, but it still retains copied-property fallbacks for compatibility
-paths not yet backed by applied contribution data.  The next cleanup should
+the role-indexed applied `AttributeUsageBinding` as authoritative when an
+applied embeddable mapping exists, but it still retains copied-property
+fallbacks for compatibility paths not yet backed by applied mapping data.  The
+next cleanup should
 identify those remaining unbacked paths and either model them as applied
 handoffs or keep them explicitly marked as legacy compatibility paths.
 
@@ -384,11 +735,10 @@ The current fallback paths break down as follows:
   `AttributeUsageBinding`.  `MappedSuperclassHandoffResolver` should treat the
   applied usage as authoritative when found and use
   `Property#isGenericSpecialization()` only when no applied handoff exists.
-* Embeddable members are backed by `ComponentMemberBinding` through the
-  `Component -> EmbeddableContribution` index.  `EmbeddableHandoffResolver`
-  should treat the applied member binding as authoritative when found and use
-  copied-property/mapped-superclass generic markers only when no component
-  member handoff exists.
+* Embeddable members are backed by role-indexed `AppliedEmbeddableMapping` and
+  `AppliedAttributeMapping` products.  `EmbeddableHandoffResolver` should treat
+  the applied usage as authoritative when found and use copied-property or
+  mapped-superclass generic markers only when no applied mapping exists.
 * Generic mapped-superclass identifiers are a distinct handoff path.  The
   legacy runtime metamodel receives identifiers through `PersistentClass`
   identifier slots rather than ordinary declared-property iteration.
@@ -414,7 +764,7 @@ Follow-up options:
 * avoid adding new direct `Property#isGenericSpecialization()` checks outside
   resolver or low-level mapping compatibility code.
 
-== Next Phase
+== Historical Design Queue
 
 The next pass should shift from failure-bucket triage to implementing the
 design work captured in the 9.0 design documents.  Treat the green suite as the
@@ -594,23 +944,29 @@ git diff --check
 
 [source,text]
 ----
-Please read design/9.0/current-work-handoff.adoc first.  The old complete-suite
-green point was 2026-07-02, but the current branch is after the large
-bootstrap/API removal commit 514b824c9db2574442e6dfc9f4f54a9df41d546c, so do
-not use the old binding-gap tracker or full-suite census as the work queue.
-The next design focus is MetadataBuildingContext cleanup: audit its contract,
-remaining getBootstrapContext()/service-registry paths, and the mapping-object
-constructor/materializer call sites that still receive the broad context.
-Classify each use as true mapping-resolution state, service access, legacy
-mapping-object construction context, transient binder/materializer input, or
-documented compatibility bridge.  Start with one narrow implementation slice,
-preferring explicit small dependencies over moving BootstrapContext's grab-bag
-shape into MetadataBuildingContext.  The full test suite is currently passing;
-use fresh test reports rather than stale failure buckets.  Also audit the
-deprecated hidden mapping side-effect hooks documented in
-mapping-key-creation-design.adoc and delete or narrow the retained helpers whose
-ORM boot callers have been drained.  Run focused guardrails for the touched
-area, and finish with git diff --check.
+Please read design/9.0/current-work-handoff.adoc, especially "Immediate
+Handoff: Return to Metadata Serialization", before changing anything.
+
+We are on wip/9-boot-mapping with the declaration / usage / application
+prerequisite committed as ade0dcf4f99. First inspect the worktree and preserve
+the handoff-document update; apart from that update, the branch was clean when
+the handoff was written. Do not switch branches, stash, reset, or discard files
+until any local changes are safely preserved.
+
+Then create the documented backup pointer and rebase the seven commits on
+wip/9-boot-design onto the new wip/9-boot-mapping tip, using
+c3a4618b62a as the old fork point. Do not merge the branches. Resolve conflicts
+semantically in favor of intrinsic MappingRole identity, the
+declaration/usage/application model, explicit mapping-copy operations,
+role-indexed applied mappings, opt-in BasicValueResolutionDetails capture, and
+store-time BasicValueRestorationRecipe creation. Do not restore identity-keyed
+handoffs or serialize BootBindingModel/BindingState.
+
+After the rebase, run the range-diff and focused validation documented in the
+handoff. Then continue the metadata-serialization work by adapting
+MappingModelGraphIndex, RuntimeMappingHandoffSnapshot, and ResolvedMapping to
+the new role-based applied model, with factory-ready RestoredMetadata remaining
+the public archive contract.
 ----
 
 == Fresh-Context Cautions

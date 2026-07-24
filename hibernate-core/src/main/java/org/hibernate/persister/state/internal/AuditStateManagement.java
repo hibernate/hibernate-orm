@@ -13,7 +13,6 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPla
 import org.hibernate.action.queue.internal.decompose.entity.AuditEntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.AuxiliaryTableHolder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;

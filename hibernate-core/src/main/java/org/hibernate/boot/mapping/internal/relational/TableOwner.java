@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.relational;
 
 /// Marker for categorized or binding objects that own a table reference.

@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.materialize;
 
 import java.util.ArrayList;
@@ -51,7 +47,7 @@ public final class ForeignKeyMappingMaterializer {
 		}
 
 		if ( property.getValue() instanceof Component component ) {
-			component.sortProperties();
+			component.completeShape();
 		}
 
 		if ( value.isConstrained() && !hasAuxiliaryColumnInPrimaryKey( referencedClass ) ) {

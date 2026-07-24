@@ -1,8 +1,10 @@
 package org.hibernate.mapping;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import static java.util.Collections.emptyMap;
@@ -11,13 +13,14 @@ import static java.util.Collections.singletonMap;
 /**
  * @author Rob Worsnop
  */
-public class FilterConfiguration {
+public class FilterConfiguration implements Serializable {
 	private final String name;
 	private final String condition;
 	private final boolean autoAliasInjection;
 	private final Map<String, String> aliasTableMap;
 	private final Map<String, String> aliasEntityMap;
-	private final PersistentClass persistentClass;
+	private final QualifiedTableName persistentClassTableName;
+	private final String persistentClassSubselect;
 
 	public FilterConfiguration(
 			String name,
@@ -31,7 +34,10 @@ public class FilterConfiguration {
 		this.autoAliasInjection = autoAliasInjection;
 		this.aliasTableMap = aliasTableMap;
 		this.aliasEntityMap = aliasEntityMap;
-		this.persistentClass = persistentClass;
+		this.persistentClassTableName =
+				persistentClass == null ? null : persistentClass.getTable().getQualifiedTableName();
+		this.persistentClassSubselect =
+				persistentClass == null ? null : persistentClass.getTable().getSubselect();
 	}
 
 	public String getName() {
@@ -51,10 +57,12 @@ public class FilterConfiguration {
 		if ( !mergedAliasTableMap.isEmpty() ) {
 			return mergedAliasTableMap;
 		}
-		else if ( persistentClass != null ) {
+		else if ( persistentClassSubselect != null ) {
+			return singletonMap( null, "( " + persistentClassSubselect + " )" );
+		}
+		else if ( persistentClassTableName != null ) {
 			final String tableName =
-					persistentClass.getTable()
-							.getQualifiedName( factory.getSqlStringGenerationContext() );
+					factory.getSqlStringGenerationContext().format( persistentClassTableName );
 			return singletonMap( null, tableName );
 		}
 		else {

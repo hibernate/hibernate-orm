@@ -1,5 +1,7 @@
 package org.hibernate.boot.query;
 
+import java.io.Serializable;
+
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.named.spi.ResultMemento;
@@ -10,7 +12,7 @@ import org.hibernate.query.internal.ResultSetMappingResolutionContext;
  *
  * @author Steve Ebersole
  */
-public interface ResultDescriptor {
+public interface ResultDescriptor extends Serializable {
 	/**
 	 * Resolve the descriptor into a memento capable of being stored in the
 	 * {@link NamedObjectRepository}

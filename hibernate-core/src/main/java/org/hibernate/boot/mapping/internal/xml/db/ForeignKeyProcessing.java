@@ -1,5 +1,6 @@
 package org.hibernate.boot.mapping.internal.xml.db;
 
+
 import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.ForeignKeyJpaAnnotation;

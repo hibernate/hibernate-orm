@@ -11,7 +11,6 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
@@ -62,6 +61,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 			StandardServiceRegistry serviceRegistry,
 			MappingResolutionOptions metadataBuildingOptions,
 			TypeConfiguration typeConfiguration) {
+		this( serviceRegistry, metadataBuildingOptions, typeConfiguration, null );
+	}
+
+	public BootstrapContextImpl(
+			StandardServiceRegistry serviceRegistry,
+			MappingResolutionOptions metadataBuildingOptions,
+			TypeConfiguration typeConfiguration,
+			ModelsContext restoredModelsContext) {
 		this.serviceRegistry = serviceRegistry;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
@@ -88,7 +95,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 		managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
-		modelsContext = createModelBuildingContext( classLoaderService, configService );
+		modelsContext = restoredModelsContext == null
+				? createModelBuildingContext( classLoaderService, configService )
+				: restoredModelsContext;
 	}
 
 	@Override

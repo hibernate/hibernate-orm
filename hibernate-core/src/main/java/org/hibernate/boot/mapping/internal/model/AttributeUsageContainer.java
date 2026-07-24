@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.model;
 
 /// Binding-model container in which an attribute declaration is used.

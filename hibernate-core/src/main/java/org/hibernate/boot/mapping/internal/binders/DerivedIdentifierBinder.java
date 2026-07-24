@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.List;
@@ -180,7 +176,7 @@ class DerivedIdentifierBinder {
 
 	private List<Column> sortedColumns(Value value, List<Column> fallbackColumns) {
 		if ( value instanceof Component component ) {
-			component.sortProperties();
+			component.completeShape();
 			return component.getColumns();
 		}
 		return fallbackColumns;

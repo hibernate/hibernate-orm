@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Source-to-mapping pipeline for boot-time mapping model creation.
 ///
 /// This package family is an ORM-internal implementation detail.  Its types are

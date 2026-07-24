@@ -41,7 +41,6 @@ import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -82,7 +81,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
@@ -92,6 +90,7 @@ import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.RuntimeModelHandoffResolvers;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
@@ -248,7 +247,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				bootMetamodel,
 				options,
 				bootstrapContext,
-				extractBootBindingModel( bootMetamodel )
+				extractRuntimeMappingHandoff( bootMetamodel )
 		) );
 	}
 
@@ -263,7 +262,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				null,
 				options,
 				bootstrapContext,
-				extractBootBindingModel( bootMetamodel ),
+				extractRuntimeMappingHandoff( bootMetamodel ),
 				runtimeComponents
 		) );
 	}
@@ -281,17 +280,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				identity,
 				options,
 				bootstrapContext,
-				extractBootBindingModel( bootMetamodel ),
+				extractRuntimeMappingHandoff( bootMetamodel ),
 				runtimeComponents
 		) );
 	}
 
-	private static BootBindingModel extractBootBindingModel(MetadataImplementor bootMetamodel) {
+	private static RuntimeMappingHandoff extractRuntimeMappingHandoff(MetadataImplementor bootMetamodel) {
 		if ( bootMetamodel instanceof ResolvedMappingImplementor resolvedMappingImplementor ) {
-			return resolvedMappingImplementor.getResolvedMapping().bindingState().getBootBindingModel();
+			return resolvedMappingImplementor.getResolvedMapping().runtimeMappingHandoff();
 		}
 		throw new IllegalArgumentException(
-				"SessionFactory construction requires resolved mapping exposing a BootBindingModel"
+				"SessionFactory construction requires resolved mapping exposing a runtime mapping handoff"
 		);
 	}
 
@@ -389,7 +388,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 							inFlightModel.mappingMetamodel(),
 							typeConfiguration,
 							graphPlanningOptions,
-							constructionPlan.bootBindingModel(),
+							constructionPlan.runtimeMappingHandoff(),
 							queryEngine,
 							wrapperOptions,
 							changesetCoordinator,
@@ -1614,7 +1613,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final MappingMetamodelImplementor mappingMetamodel;
 		private final TypeConfiguration typeConfiguration;
 		private final PlanningOptions graphPlanningOptions;
-		private final BootBindingModel bootBindingModel;
+		private final RuntimeMappingHandoff runtimeMappingHandoff;
 		private final QueryEngine queryEngine;
 		private final WrapperOptions wrapperOptions;
 		private final ChangesetCoordinator changesetCoordinator;
@@ -1627,7 +1626,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				MappingMetamodelImplementor mappingMetamodel,
 				TypeConfiguration typeConfiguration,
 				PlanningOptions graphPlanningOptions,
-				BootBindingModel bootBindingModel,
+				RuntimeMappingHandoff runtimeMappingHandoff,
 				QueryEngine queryEngine,
 				WrapperOptions wrapperOptions,
 				ChangesetCoordinator changesetCoordinator,
@@ -1637,12 +1636,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.mappingMetamodel = mappingMetamodel;
 			this.typeConfiguration = typeConfiguration;
 			this.graphPlanningOptions = graphPlanningOptions;
-			this.bootBindingModel = bootBindingModel;
+			this.runtimeMappingHandoff = runtimeMappingHandoff;
 			this.queryEngine = queryEngine;
 			this.wrapperOptions = wrapperOptions;
 			this.changesetCoordinator = changesetCoordinator;
 			this.sessionFactoryAccess = sessionFactoryAccess;
-			this.handoffResolvers = RuntimeModelHandoffResolvers.create( bootBindingModel );
+			this.handoffResolvers = RuntimeModelHandoffResolvers.create( runtimeMappingHandoff );
 			generators = new HashMap<>();
 		}
 
@@ -1670,8 +1669,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public BootBindingModel getBootBindingModel() {
-			return bootBindingModel;
+		public RuntimeMappingHandoff getRuntimeMappingHandoff() {
+			return runtimeMappingHandoff;
 		}
 
 		@Override

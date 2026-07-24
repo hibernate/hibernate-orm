@@ -626,4 +626,5 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public Map<Class<?>, DiscriminatorType<?>> getEmbeddableDiscriminatorTypesMap() {
 		return embeddableDiscriminatorTypesMap;
 	}
+
 }

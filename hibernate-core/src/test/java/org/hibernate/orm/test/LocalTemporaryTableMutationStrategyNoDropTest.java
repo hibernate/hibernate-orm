@@ -25,6 +25,8 @@ import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
+import org.hibernate.boot.serial.internal.RuntimeMappingHandoffSnapshot;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -121,12 +123,16 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		private final SessionFactoryImplementor sessionFactory;
 		private final SessionFactoryScope scope;
 		private final JdbcServices jdbcServices;
-		private final BootBindingModel bootBindingModel = new BootBindingModel();
+		private final RuntimeMappingHandoff runtimeMappingHandoff;
 
 		public ModelCreationContext(SessionFactoryImplementor sessionFactory, SessionFactoryScope scope, JdbcServices jdbcServices) {
 			this.sessionFactory = sessionFactory;
 			this.scope = scope;
 			this.jdbcServices = jdbcServices;
+			this.runtimeMappingHandoff = RuntimeMappingHandoffSnapshot.from(
+					new BootBindingModel(),
+					scope.getMetadataImplementor()
+			);
 		}
 
 		@Override
@@ -160,8 +166,8 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		}
 
 		@Override
-		public BootBindingModel getBootBindingModel() {
-			return bootBindingModel;
+		public RuntimeMappingHandoff getRuntimeMappingHandoff() {
+			return runtimeMappingHandoff;
 		}
 
 		@Override

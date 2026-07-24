@@ -1,5 +1,7 @@
 package org.hibernate.boot.query;
 
+import java.io.Serializable;
+
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.spi.NamedObjectRepository;
@@ -18,7 +20,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
-public interface NamedResultSetMappingDescriptor {
+public interface NamedResultSetMappingDescriptor extends Serializable {
 	/**
 	 * The name under which the result-set-mapping is to be registered
 	 */

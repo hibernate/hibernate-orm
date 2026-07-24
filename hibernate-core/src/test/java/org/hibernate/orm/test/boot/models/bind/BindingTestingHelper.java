@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.boot.models.bind;
 
 import java.util.List;
@@ -109,8 +105,11 @@ public class BindingTestingHelper {
 		final MetadataImplementor metadata = new ResolvedMappingImplementor(
 				new ResolvedMapping(
 						bootMetadata,
-						categorizedDomainModel,
-						bindingState
+						bindingState.getMappingResolutionState().resolutionDetailsCollector(),
+						org.hibernate.boot.serial.internal.RuntimeMappingHandoffSnapshot.from(
+								bindingState.getBootBindingModel(),
+								bootMetadata
+						)
 				)
 		);
 		metadata.orderColumns( false );

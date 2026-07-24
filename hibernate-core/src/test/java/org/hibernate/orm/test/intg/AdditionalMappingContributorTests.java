@@ -15,13 +15,13 @@ import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.models.internal.dynamic.DynamicClassDetails;
-import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
-import org.hibernate.models.internal.jdk.JdkClassDetails;
+import org.hibernate.models.Creator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
@@ -340,8 +340,7 @@ public class AdditionalMappingContributorTests {
 			final ClassDetails entity4Details = ModelsHelper.resolveClassDetails(
 					Entity4.class.getName(),
 					classDetailsRegistry,
-					() ->
-							new JdkClassDetails( Entity4.class, ModelsContext )
+					() -> Creator.createJdkClassDetails( Entity4.class, ModelsContext )
 			);
 			contributions.contributeManagedClass( entity4Details );
 		}
@@ -354,7 +353,7 @@ public class AdditionalMappingContributorTests {
 					Entity5.class.getName(),
 					classDetailsRegistry,
 					() -> {
-						final JdkClassDetails jdkClassDetails = new JdkClassDetails(
+						final MutableClassDetails jdkClassDetails = Creator.createJdkClassDetails(
 								Entity5.class,
 								modelBuildingContext
 						);
@@ -396,7 +395,7 @@ public class AdditionalMappingContributorTests {
 					"Entity6",
 					classDetailsRegistry,
 					() -> {
-						final DynamicClassDetails classDetails = new DynamicClassDetails(
+						final MutableClassDetails classDetails = Creator.createDynamicClassDetails(
 								"Entity6",
 								modelBuildingContext
 						);
@@ -406,22 +405,26 @@ public class AdditionalMappingContributorTests {
 						);
 						entityUsage.name( "Entity6" );
 
-						final DynamicFieldDetails idMember = classDetails.applyAttribute(
+						final MutableMemberDetails idMember = Creator.createDynamicMemberDetails(
 								"id",
-								classDetailsRegistry.resolveClassDetails( Integer.class.getName() ),
+								TypeDetails.classType( classDetailsRegistry.resolveClassDetails( Integer.class.getName() ) ),
+								classDetails,
 								false,
 								false,
 								modelBuildingContext
 						);
+						classDetails.addField( idMember.asFieldDetails() );
 						idMember.applyAnnotationUsage( JpaAnnotations.ID, modelBuildingContext );
 
-						final DynamicFieldDetails nameMember = classDetails.applyAttribute(
+						final MutableMemberDetails nameMember = Creator.createDynamicMemberDetails(
 								"name",
-								classDetailsRegistry.resolveClassDetails( String.class.getName() ),
+								TypeDetails.classType( classDetailsRegistry.resolveClassDetails( String.class.getName() ) ),
+								classDetails,
 								false,
 								false,
 								modelBuildingContext
 						);
+						classDetails.addField( nameMember.asFieldDetails() );
 						nameMember.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, modelBuildingContext );
 
 						return classDetails;

@@ -14,7 +14,6 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 

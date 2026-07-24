@@ -15,12 +15,10 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.enhance.spi.EnhancementModel;
 import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;

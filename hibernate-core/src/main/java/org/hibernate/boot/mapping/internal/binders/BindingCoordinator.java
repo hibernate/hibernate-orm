@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.binders;
 
 import java.time.Duration;
@@ -487,10 +483,9 @@ public class BindingCoordinator {
 			return null;
 		}
 
-		final Class<?> javaClass = type.toJavaClass();
 		final MappedSuperclass existing = bindingState.getMetadataBuildingContext()
 				.getMetadataCollector()
-				.getMappedSuperclass( javaClass );
+				.getMappedSuperclass( type );
 		if ( existing != null ) {
 			return existing;
 		}
@@ -501,11 +496,11 @@ public class BindingCoordinator {
 				null,
 				new Table( "orm", type.getName() + "#mapped-superclass" )
 		);
-		mappedSuperclass.setMappedClass( javaClass );
+		mappedSuperclass.setClassDetails( type );
 		if ( superMappedSuperclass != null ) {
 			superMappedSuperclass.addSubType( mappedSuperclass );
 		}
-		bindingState.addMappedSuperclass( javaClass, mappedSuperclass );
+		bindingState.addMappedSuperclass( type, mappedSuperclass );
 		return mappedSuperclass;
 	}
 

@@ -7,8 +7,11 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import jakarta.annotation.Nullable;
 
@@ -28,10 +31,12 @@ import static java.util.Collections.emptyMap;
  * @author Steve Ebersole
  */
 public class FilterDefinition implements org.hibernate.engine.FilterDefinition, Serializable {
-	private final @Nonnull String filterName;
-	private final @Nonnull String defaultFilterCondition;
-	private final @Nonnull Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
-	private final @Nonnull Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
+	private final String filterName;
+	private final String defaultFilterCondition;
+	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
+	private final Map<String, String> parameterTypeClassNames = new HashMap<>();
+	private final Map<String, String> parameterResolverClassNames = new HashMap<>();
+	private transient Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
 	private final boolean applyToLoadByKey;
 
@@ -54,16 +59,87 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 			boolean applyToLoadByKey,
 			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
 			@Nullable Map<String, ManagedBean<? extends  Supplier<?>>> parameterResolverMap) {
+		this(
+				name,
+				defaultCondition,
+				autoEnabled,
+				applyToLoadByKey,
+				explicitParamJaMappings,
+				inferParameterTypeClassNames( explicitParamJaMappings ),
+				parameterResolverMap
+		);
+	}
+
+	@Internal
+	public FilterDefinition(
+			String name,
+			String defaultCondition,
+			boolean autoEnabled,
+			boolean applyToLoadByKey,
+			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
+			@Nullable Map<String, String> parameterTypeClassNames,
+			@Nullable Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
 			this.explicitParamJaMappings.putAll( explicitParamJaMappings );
 		}
+		if ( parameterTypeClassNames != null ) {
+			this.parameterTypeClassNames.putAll( parameterTypeClassNames );
+		}
 		if ( parameterResolverMap != null ) {
 			this.parameterResolverMap.putAll( parameterResolverMap );
+			parameterResolverMap.forEach( (parameterName, bean) ->
+					parameterResolverClassNames.put( parameterName, bean.getBeanClass().getName() ) );
 		}
 		this.autoEnabled = autoEnabled;
 		this.applyToLoadByKey = applyToLoadByKey;
+	}
+
+	private static Map<String, String> inferParameterTypeClassNames(
+			@Nullable Map<String, JdbcMapping> parameterMappings) {
+		if ( parameterMappings == null || parameterMappings.isEmpty() ) {
+			return Collections.emptyMap();
+		}
+		final Map<String, String> result = new HashMap<>();
+		parameterMappings.forEach( (name, mapping) -> {
+			if ( mapping != null ) {
+				result.put( name, mapping.getJavaTypeDescriptor().getJavaTypeClass().getName() );
+			}
+		} );
+		return result;
+	}
+
+	@Internal
+	public Map<String, String> getParameterTypeClassNames() {
+		return Collections.unmodifiableMap( parameterTypeClassNames );
+	}
+
+	@Internal
+	public Map<String, String> getParameterResolverClassNames() {
+		return Collections.unmodifiableMap( parameterResolverClassNames );
+	}
+
+	@Internal
+	public static FilterDefinition restored(
+			String name,
+			String defaultCondition,
+			boolean autoEnabled,
+			boolean applyToLoadByKey,
+			Map<String, JdbcMapping> parameterMappings,
+			Map<String, String> parameterTypeClassNames,
+			Map<String, String> parameterResolverClassNames) {
+		final var definition = new FilterDefinition(
+				name,
+				defaultCondition,
+				autoEnabled,
+				applyToLoadByKey,
+				parameterMappings,
+				parameterTypeClassNames,
+				Collections.emptyMap()
+		);
+		definition.parameterResolverClassNames.putAll( parameterResolverClassNames );
+		return definition;
 	}
 
 	/**
@@ -100,8 +176,47 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 	}
 
 	public @Nullable Supplier<?> getParameterResolver(String parameterName) {
-		final var resolver = parameterResolverMap.get( parameterName );
+		final var resolver = parameterResolverMap == null ? null : parameterResolverMap.get( parameterName );
 		return resolver == null ? null : resolver.getBeanInstance();
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void reattachParameterResolvers(
+			ClassLoaderAccess classLoaderAccess,
+			ManagedBeanRegistry managedBeanRegistry) {
+		parameterResolverMap = new HashMap<>();
+		parameterResolverClassNames.forEach( (name, className) -> {
+			final Class<?> resolvedClass;
+			try {
+				resolvedClass = classLoaderAccess.classForName( className );
+			}
+			catch (RuntimeException e) {
+				throw new IllegalStateException(
+						"Could not resolve archived parameter resolver class '" + className
+								+ "' for filter '" + filterName + "' parameter '" + name + "'",
+						e
+				);
+			}
+			if ( !Supplier.class.isAssignableFrom( resolvedClass ) ) {
+				throw new IllegalArgumentException(
+						"Archived parameter resolver class '" + className
+								+ "' for filter '" + filterName + "' parameter '" + name
+								+ "' does not implement " + Supplier.class.getName()
+				);
+			}
+			final Class<? extends Supplier<?>> resolverClass =
+					(Class<? extends Supplier<?>>) (Class) resolvedClass;
+			try {
+				parameterResolverMap.put( name, managedBeanRegistry.getBean( resolverClass ) );
+			}
+			catch (RuntimeException e) {
+				throw new IllegalStateException(
+						"Could not instantiate archived parameter resolver class '" + className
+								+ "' for filter '" + filterName + "' parameter '" + name + "'",
+						e
+				);
+			}
+		} );
 	}
 
 	@Override

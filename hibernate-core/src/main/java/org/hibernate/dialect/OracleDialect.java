@@ -66,7 +66,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;

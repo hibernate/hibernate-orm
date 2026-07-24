@@ -110,6 +110,11 @@ should be folded into another document before deletion.
 | Umbrella declaration/contribution/correspondence model across identifiers, mapped superclasses, and embeddables.
 | Keep as canonical contribution/correspondence design.  Durable material from the old proposal and applied-contribution notes has been folded here.
 
+| link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
+| Active
+| Cross-cutting declaration, contextual usage, concrete applied-mapping, compatibility-projection, and stable-role design.
+| Keep as the canonical target for distinguishing semantic mapping products from `org.hibernate.mapping` projections and for intrinsic mapping identity.
+
 | link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
 | Active
 | Long-term mapped-superclass representation and table/context ownership.
@@ -206,6 +211,7 @@ Canonical target:
 
 * link:boot-model-terminology.adoc[`boot-model-terminology.adoc`]
 * link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+* link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
 
 Focused active docs:
 

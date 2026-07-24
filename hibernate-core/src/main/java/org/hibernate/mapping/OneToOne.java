@@ -22,7 +22,7 @@ public final class OneToOne extends ToOne {
 	private String propertyName;
 	private final String entityName;
 	private String mappedByProperty;
-	private final TypeConfiguration typeConfiguration;
+	private transient TypeConfiguration typeConfiguration;
 
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );
@@ -88,6 +88,10 @@ public final class OneToOne extends ToOne {
 					isConstrained()
 			);
 		}
+	}
+
+	public void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override

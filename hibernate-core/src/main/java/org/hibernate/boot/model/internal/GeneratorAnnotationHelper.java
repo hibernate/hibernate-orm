@@ -65,7 +65,23 @@ public class GeneratorAnnotationHelper {
 			@Nullable Function<A,String> nameExtractor,
 			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final var modelsContext = context.getModelsContext();
+		return findLocalizedMatch(
+				generatorAnnotationType,
+				idMember,
+				entityType,
+				nameExtractor,
+				matchName,
+				context.getModelsContext()
+		);
+	}
+
+	public static <A extends Annotation> A findLocalizedMatch(
+			AnnotationDescriptor<A> generatorAnnotationType,
+			MemberDetails idMember,
+			ClassDetails entityType,
+			@Nullable Function<A,String> nameExtractor,
+			@Nullable String matchName,
+			ModelsContext modelsContext) {
 
 		A possibleMatch = null;
 
@@ -174,13 +190,15 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
+		final int fallbackAllocationSize = fallbackAllocationSize( generatorAnnotation, buildingContext );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var memberDetails = creationContext.getMemberDetails();
 			final var sequenceStyleGenerator =
-					instantiateGenerator( beanContainer( buildingContext ), SequenceStyleGenerator.class );
+					instantiateGenerator( beanContainer( creationContext ), SequenceStyleGenerator.class );
 			prepareForUse(
 					sequenceStyleGenerator,
 					generatorAnnotation,
-					idMember,
+					memberDetails,
 					properties -> {
 						if ( generatorAnnotation != null ) {
 							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
@@ -189,7 +207,7 @@ public class GeneratorAnnotationHelper {
 							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
 						}
 						// we need to better handle the default allocation size here
-						properties.put( INCREMENT_PARAM, fallbackAllocationSize( generatorAnnotation, buildingContext ) );
+						properties.put( INCREMENT_PARAM, fallbackAllocationSize );
 						applyOptimizer( idMember, properties );
 					},
 					generatorAnnotation == null
@@ -224,14 +242,16 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
+		final int fallbackAllocationSize = fallbackAllocationSize( generatorAnnotation, buildingContext );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var memberDetails = creationContext.getMemberDetails();
 			final var tableGenerator =
-					instantiateGenerator( beanContainer( buildingContext ),
+					instantiateGenerator( beanContainer( creationContext ),
 							org.hibernate.id.enhanced.TableGenerator.class );
 			prepareForUse(
 					tableGenerator,
 					generatorAnnotation,
-					idMember,
+					memberDetails,
 					properties -> {
 						if ( generatorAnnotation != null ) {
 							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
@@ -242,7 +262,7 @@ public class GeneratorAnnotationHelper {
 						// we need to better handle the default allocation size here
 						properties.put(
 								INCREMENT_PARAM,
-								fallbackAllocationSize( generatorAnnotation, buildingContext )
+								fallbackAllocationSize
 						);
 						applyOptimizer( idMember, properties );
 					},
@@ -273,12 +293,13 @@ public class GeneratorAnnotationHelper {
 		final var markerAnnotation =
 				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var memberDetails = creationContext.getMemberDetails();
 			final var identifierGenerator =
-					instantiateGenerator( beanContainer( buildingContext ), markerAnnotation.value() );
+					instantiateGenerator( beanContainer( creationContext ), markerAnnotation.value() );
 			prepareForUse(
 					identifierGenerator,
 					generatorAnnotation,
-					idMember,
+					memberDetails,
 					null,
 					null,
 					creationContext
@@ -377,7 +398,7 @@ public class GeneratorAnnotationHelper {
 				context
 		);
 		idValue.setCustomIdGeneratorCreator(
-				creationContext -> new UuidGenerator( generatorConfig, idMember, creationContext )
+				creationContext -> new UuidGenerator( generatorConfig, creationContext.getMemberDetails(), creationContext )
 		);
 	}
 

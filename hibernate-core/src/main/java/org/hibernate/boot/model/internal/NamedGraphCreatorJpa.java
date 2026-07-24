@@ -35,7 +35,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 	private final NamedEntityGraph annotation;
 	private final String jpaEntityName;
 	private final List<FetchGraphContribution> fetchContributions;
-	private final ModelsContext modelsContext;
+	private transient ModelsContext modelsContext;
 
 	NamedGraphCreatorJpa(
 			NamedEntityGraph annotation,
@@ -47,6 +47,11 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 		this.annotation = annotation;
 		this.jpaEntityName = jpaEntityName;
 		this.fetchContributions = fetchContributions;
+		this.modelsContext = modelsContext;
+	}
+
+	@Override
+	public void reattachModelsContext(ModelsContext modelsContext) {
 		this.modelsContext = modelsContext;
 	}
 

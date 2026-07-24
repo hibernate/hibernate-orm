@@ -12,7 +12,6 @@ import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
-import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.JiraKey;

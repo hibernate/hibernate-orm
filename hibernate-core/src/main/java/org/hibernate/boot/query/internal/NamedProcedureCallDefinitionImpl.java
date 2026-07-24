@@ -1,5 +1,6 @@
 package org.hibernate.boot.query.internal;
 
+import java.io.Serializable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
@@ -162,7 +163,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 				.buildResultSetMapping( registeredName, false, sessionFactory );
 	}
 
-	static class ParameterDefinitions {
+	static class ParameterDefinitions implements Serializable {
 		private final ParameterStrategy parameterStrategy;
 		private final ParameterDefinition<?>[] parameterDefinitions;
 
@@ -199,7 +200,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		}
 	}
 
-	static class ParameterDefinition<T> {
+	static class ParameterDefinition<T> implements Serializable {
 		private final Integer position;
 		private final String name;
 		private final ParameterMode parameterMode;

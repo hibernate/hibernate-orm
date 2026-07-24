@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Source-context objects used by mapping binders and materializers.
 ///
 /// The records and helpers in this package adapt categorized source facts,

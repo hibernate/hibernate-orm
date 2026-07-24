@@ -47,7 +47,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.Character.isWhitespace;

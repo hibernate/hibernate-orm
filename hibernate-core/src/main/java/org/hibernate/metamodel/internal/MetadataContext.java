@@ -314,7 +314,7 @@ public class MetadataContext {
 			final var genericComponent =
 					runtimeModelCreationContext.getMetadata()
 							.getGenericComponent( component.getComponentClass() );
-			final var genericProperty = property.copy();
+			final var genericProperty = property.copyForDeclaration( genericComponent );
 			genericProperty.setValue( genericComponent );
 			genericProperty.setGeneric( true );
 			final var attribute = factoryFunction.apply( entityType, genericProperty );
@@ -513,7 +513,7 @@ public class MetadataContext {
 	}
 
 	private static Property concreteGenericProperty(Property property) {
-		final var concreteProperty = property.copy();
+		final var concreteProperty = property.copyForSameApplication();
 		concreteProperty.setGeneric( false );
 		concreteProperty.setGenericSpecialization( true );
 		return concreteProperty;

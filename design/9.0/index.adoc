@@ -41,7 +41,9 @@ link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.ado
 link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`],
 link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`],
 and
-link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`].
+link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`],
+plus
+link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`].
 
 Boot-model vocabulary and contributor orientation::
 link:boot-model-terminology.adoc[`boot-model-terminology.adoc`] and
@@ -49,6 +51,7 @@ link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-gui
 
 Contribution and correspondence model::
 link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`],
+link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`],
 with focused notes for mapped superclasses, generic inheritance, embeddables,
 identifiers, and deterministic ordering.
 
@@ -75,6 +78,7 @@ documents are still active, reference-only, deferred, or archive candidates:
 * link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
 * link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
 * link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
+* link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
 * link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
 * link:flow-notation.adoc[`flow-notation.adoc`]
 * link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]

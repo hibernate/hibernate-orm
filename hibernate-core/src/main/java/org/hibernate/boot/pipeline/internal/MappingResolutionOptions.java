@@ -1,13 +1,10 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.pipeline.internal;
 
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.boot.serial.internal.MappingResolutionDetailsCollector;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.GlobalMappingDefaults;
 import org.hibernate.boot.mapping.internal.context.MappingPreferences;
@@ -31,6 +28,14 @@ import jakarta.persistence.SharedCacheMode;
 /// @since 9.0
 /// @author Steve Ebersole
 public interface MappingResolutionOptions {
+	default boolean isMetadataSerializationEnabled() {
+		return false;
+	}
+
+	default MappingResolutionDetailsCollector getResolutionDetailsCollector() {
+		return null;
+	}
+
 	/// Access to the [StandardServiceRegistry].
 	StandardServiceRegistry getServiceRegistry();
 

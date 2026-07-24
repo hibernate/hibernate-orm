@@ -18,16 +18,12 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.models.internal.ModelsHelper;
-import org.hibernate.models.internal.ClassTypeDetailsImpl;
-import org.hibernate.models.internal.MutableClassDetailsRegistry;
-import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
-import org.hibernate.models.internal.WildcardTypeDetailsImpl;
-import org.hibernate.models.internal.dynamic.DynamicClassDetails;
-import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
-import org.hibernate.models.internal.jdk.JdkClassDetails;
+import org.hibernate.models.Creator;
+import org.hibernate.models.spi.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableClassDetails;
+import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -46,7 +42,7 @@ import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
-import static org.hibernate.models.internal.ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS;
+import static org.hibernate.models.Creator.DYNAMIC_ATTRIBUTE_MODIFIERS;
 
 /**
  * Used from {@linkplain ManagedTypeProcessor} to help dealing with dynamic models
@@ -55,7 +51,7 @@ import static org.hibernate.models.internal.ModifierUtils.DYNAMIC_ATTRIBUTE_MODI
  */
 public class DynamicModelHelper {
 	/**
-	 * Creates DynamicFieldDetails for each attribute defined in the XML
+	 * Creates MutableMemberDetails for each attribute defined in the XML
 	 */
 	static void prepareDynamicClass(
 			MutableClassDetails classDetails,
@@ -72,7 +68,7 @@ public class DynamicModelHelper {
 								jaxbId,
 								xmlDocumentContext
 						);
-						final DynamicFieldDetails member = new DynamicFieldDetails(
+						final MutableMemberDetails member = Creator.createDynamicMemberDetails(
 								jaxbId.getName(),
 								attributeJavaType,
 								classDetails,
@@ -81,7 +77,7 @@ public class DynamicModelHelper {
 								false,
 								xmlDocumentContext.getModelsContext()
 						);
-						classDetails.addField( member );
+						classDetails.addField( member.asFieldDetails() );
 					} );
 				}
 				else if ( attributes.getEmbeddedIdAttribute() != null ) {
@@ -92,7 +88,7 @@ public class DynamicModelHelper {
 							embeddedId,
 							xmlDocumentContext
 					);
-					final var member = new DynamicFieldDetails(
+					final var member = Creator.createDynamicMemberDetails(
 							embeddedId.getName(),
 							attributeJavaType,
 							classDetails,
@@ -101,7 +97,7 @@ public class DynamicModelHelper {
 							false,
 							xmlDocumentContext.getModelsContext()
 					);
-					classDetails.addField( member );
+					classDetails.addField( member.asFieldDetails() );
 				}
 
 				// <natural-id/>
@@ -113,7 +109,7 @@ public class DynamicModelHelper {
 								jaxbBasic,
 								xmlDocumentContext
 						);
-						final var member = new DynamicFieldDetails(
+						final var member = Creator.createDynamicMemberDetails(
 								jaxbBasic.getName(),
 								attributeJavaType,
 								classDetails,
@@ -122,7 +118,7 @@ public class DynamicModelHelper {
 								false,
 								xmlDocumentContext.getModelsContext()
 						);
-						classDetails.addField( member );
+						classDetails.addField( member.asFieldDetails() );
 					} );
 
 					naturalId.getEmbeddedAttributes().forEach( (jaxbEmbedded) -> {
@@ -131,7 +127,7 @@ public class DynamicModelHelper {
 								jaxbEmbedded,
 								xmlDocumentContext
 						);
-						final var member = new DynamicFieldDetails(
+						final var member = Creator.createDynamicMemberDetails(
 								jaxbEmbedded.getName(),
 								attributeJavaType,
 								classDetails,
@@ -140,7 +136,7 @@ public class DynamicModelHelper {
 								false,
 								xmlDocumentContext.getModelsContext()
 						);
-						classDetails.addField( member );
+						classDetails.addField( member.asFieldDetails() );
 					} );
 
 					naturalId.getManyToOneAttributes().forEach( (jaxbManyToOne) -> {
@@ -148,7 +144,7 @@ public class DynamicModelHelper {
 								jaxbManyToOne,
 								xmlDocumentContext
 						);
-						final var member = new DynamicFieldDetails(
+						final var member = Creator.createDynamicMemberDetails(
 								jaxbManyToOne.getName(),
 								attributeJavaType,
 								classDetails,
@@ -157,7 +153,7 @@ public class DynamicModelHelper {
 								false,
 								xmlDocumentContext.getModelsContext()
 						);
-						classDetails.addField( member );
+						classDetails.addField( member.asFieldDetails() );
 					} );
 
 					naturalId.getAnyMappingAttributes().forEach( (jaxbAnyMapping) -> {
@@ -165,7 +161,7 @@ public class DynamicModelHelper {
 								jaxbAnyMapping,
 								xmlDocumentContext
 						);
-						final var member = new DynamicFieldDetails(
+						final var member = Creator.createDynamicMemberDetails(
 								jaxbAnyMapping.getName(),
 								attributeJavaType,
 								classDetails,
@@ -174,7 +170,7 @@ public class DynamicModelHelper {
 								false,
 								xmlDocumentContext.getModelsContext()
 						);
-						classDetails.addField( member );
+						classDetails.addField( member.asFieldDetails() );
 					} );
 				}
 			}
@@ -187,7 +183,7 @@ public class DynamicModelHelper {
 						tenantId,
 						xmlDocumentContext
 				);
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						tenantId.getName(),
 						attributeJavaType,
 						classDetails,
@@ -196,7 +192,7 @@ public class DynamicModelHelper {
 						false,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			}
 		}
 		else if ( jaxbManagedType instanceof JaxbMappedSuperclassImpl jaxbMappedSuperclass ) {
@@ -210,7 +206,7 @@ public class DynamicModelHelper {
 								jaxbId,
 								xmlDocumentContext
 						);
-						final var member = new DynamicFieldDetails(
+						final var member = Creator.createDynamicMemberDetails(
 								jaxbId.getName(),
 								attributeJavaType,
 								classDetails,
@@ -219,7 +215,7 @@ public class DynamicModelHelper {
 								false,
 								xmlDocumentContext.getModelsContext()
 						);
-						classDetails.addField( member );
+						classDetails.addField( member.asFieldDetails() );
 					} );
 				}
 				else {
@@ -230,7 +226,7 @@ public class DynamicModelHelper {
 							embeddedId,
 							xmlDocumentContext
 					);
-					final var member = new DynamicFieldDetails(
+					final var member = Creator.createDynamicMemberDetails(
 							embeddedId.getName(),
 							attributeJavaType,
 							classDetails,
@@ -239,7 +235,7 @@ public class DynamicModelHelper {
 							false,
 							xmlDocumentContext.getModelsContext()
 					);
-					classDetails.addField( member );
+					classDetails.addField( member.asFieldDetails() );
 				}
 			}
 		}
@@ -249,7 +245,7 @@ public class DynamicModelHelper {
 		if ( attributes != null ) {
 			// <basic/>
 			attributes.getBasicAttributes().forEach( (jaxbBasic) -> {
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbBasic.getName(),
 						determineAttributeJavaTypeDetails( jaxbManagedType, jaxbBasic, xmlDocumentContext ),
 						classDetails,
@@ -258,12 +254,12 @@ public class DynamicModelHelper {
 						false,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <embedded/>
 			attributes.getEmbeddedAttributes().forEach( (jaxbEmbedded) -> {
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbEmbedded.getName(),
 						determineAttributeJavaTypeDetails( jaxbManagedType, jaxbEmbedded, xmlDocumentContext ),
 						classDetails,
@@ -272,12 +268,12 @@ public class DynamicModelHelper {
 						false,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <one-to-one/>
 			attributes.getOneToOneAttributes().forEach( (jaxbOneToOne) -> {
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbOneToOne.getName(),
 						determineAttributeJavaTypeDetails( jaxbOneToOne, xmlDocumentContext ),
 						classDetails,
@@ -286,12 +282,12 @@ public class DynamicModelHelper {
 						false,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <many-to-one/>
 			attributes.getManyToOneAttributes().forEach( (jaxbManyToOne) -> {
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbManyToOne.getName(),
 						determineAttributeJavaTypeDetails( jaxbManyToOne, xmlDocumentContext ),
 						classDetails,
@@ -300,12 +296,12 @@ public class DynamicModelHelper {
 						false,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <any/>
 			attributes.getAnyMappingAttributes().forEach( (jaxbAnyMapping) -> {
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbAnyMapping.getName(),
 						determineAttributeJavaTypeDetails( jaxbAnyMapping, xmlDocumentContext ),
 						classDetails,
@@ -314,13 +310,13 @@ public class DynamicModelHelper {
 						false,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <element-collection/>
 			attributes.getElementCollectionAttributes().forEach( (jaxbElementCollection) -> {
 				final var elementType = determineAttributeJavaTypeDetails( jaxbElementCollection, xmlDocumentContext );
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbElementCollection.getName(),
 						makeCollectionType( classDetails, jaxbElementCollection, elementType, xmlDocumentContext ),
 						classDetails,
@@ -329,13 +325,13 @@ public class DynamicModelHelper {
 						true,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <one-to-many/>
 			attributes.getOneToManyAttributes().forEach( (jaxbOneToMany) -> {
 				final var elementType = determineAttributeJavaTypeDetails( jaxbOneToMany, xmlDocumentContext );
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbOneToMany.getName(),
 						// todo : this is wrong.  should be the collection-type (List, ...)
 						//  	wrapping the result from determineAttributeJavaTypeDetails
@@ -346,13 +342,13 @@ public class DynamicModelHelper {
 						true,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <many-to-many/>
 			attributes.getManyToManyAttributes().forEach( (jaxbManyToMany) -> {
 				final var elementType = determineAttributeJavaTypeDetails( jaxbManyToMany, xmlDocumentContext );
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbManyToMany.getName(),
 						makeCollectionType( classDetails, jaxbManyToMany, elementType, xmlDocumentContext ),
 						classDetails,
@@ -361,7 +357,7 @@ public class DynamicModelHelper {
 						true,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 
 			// <many-to-any/>
@@ -370,7 +366,7 @@ public class DynamicModelHelper {
 						jaxbPluralAnyMapping,
 						xmlDocumentContext
 				);
-				final var member = new DynamicFieldDetails(
+				final var member = Creator.createDynamicMemberDetails(
 						jaxbPluralAnyMapping.getName(),
 						attributeType,
 						classDetails,
@@ -379,7 +375,7 @@ public class DynamicModelHelper {
 						true,
 						xmlDocumentContext.getModelsContext()
 				);
-				classDetails.addField( member );
+				classDetails.addField( member.asFieldDetails() );
 			} );
 		}
 	}
@@ -420,7 +416,7 @@ public class DynamicModelHelper {
 				// for now, just use wildcard for the key
 				final ClassDetails objectClassDetails = classDetailsRegistry.resolveClassDetails( OBJECT_CLASS_NAME );
 				typeParams = List.of(
-						new WildcardTypeDetailsImpl( new ClassTypeDetailsImpl( objectClassDetails, TypeDetails.Kind.CLASS ), true ),
+						TypeDetails.extendsWildcard( TypeDetails.classType( objectClassDetails ) ),
 						elementType
 				);
 			}
@@ -436,7 +432,7 @@ public class DynamicModelHelper {
 			}
 		}
 
-		return new ParameterizedTypeDetailsImpl( collectionClassDetails, typeParams, declaringType );
+		return TypeDetails.parameterizedType( collectionClassDetails, typeParams, declaringType );
 	}
 
 	private static ClassDetails collectionType(MutableClassDetailsRegistry classDetailsRegistry) {
@@ -498,7 +494,7 @@ public class DynamicModelHelper {
 			JaxbManagedType declaringType,
 			JaxbBasicMapping jaxbBasicMapping,
 			XmlDocumentContext xmlDocumentContext) {
-		return new ClassTypeDetailsImpl( determineAttributeJavaType( declaringType, jaxbBasicMapping, xmlDocumentContext ), TypeDetails.Kind.CLASS );
+		return TypeDetails.classType( determineAttributeJavaType( declaringType, jaxbBasicMapping, xmlDocumentContext ) );
 	}
 
 	private static ClassDetails determineAttributeJavaType(
@@ -613,19 +609,19 @@ public class DynamicModelHelper {
 			case DATE -> {
 				return (MutableClassDetails) classDetailsRegistry.resolveClassDetails(
 						java.sql.Date.class.getName(),
-						name -> new JdkClassDetails( java.sql.Date.class, modelsContext )
+						name -> Creator.createJdkClassDetails( java.sql.Date.class, modelsContext )
 				);
 			}
 			case TIME -> {
 				return (MutableClassDetails) classDetailsRegistry.resolveClassDetails(
 						java.sql.Time.class.getName(),
-						name -> new JdkClassDetails( java.sql.Time.class, modelsContext )
+						name -> Creator.createJdkClassDetails( java.sql.Time.class, modelsContext )
 				);
 			}
 			default -> {
 				return (MutableClassDetails) classDetailsRegistry.resolveClassDetails(
 						java.sql.Timestamp.class.getName(),
-						name -> new JdkClassDetails( java.sql.Timestamp.class, modelsContext )
+						name -> Creator.createJdkClassDetails( java.sql.Timestamp.class, modelsContext )
 				);
 			}
 		}
@@ -646,10 +642,10 @@ public class DynamicModelHelper {
 					target,
 					xmlDocumentContext,
 					modelsContext.getClassDetailsRegistry(),
-					() -> new DynamicClassDetails( target, modelsContext )
+					() -> Creator.createDynamicClassDetails( target, modelsContext )
 			);
 
-			return new ClassTypeDetailsImpl( memberTypeClassDetails, TypeDetails.Kind.CLASS );
+			return TypeDetails.classType( memberTypeClassDetails );
 		}
 
 		// todo : need more context here for better exception message
@@ -670,37 +666,23 @@ public class DynamicModelHelper {
 			final String targetEntityName = xmlDocumentContext.resolveTargetEntityName( target );
 			final var existingClassDetails = classDetailsRegistry.findClassDetails( targetEntityName );
 			if ( existingClassDetails != null ) {
-				return new ClassTypeDetailsImpl( existingClassDetails, TypeDetails.Kind.CLASS );
+				return TypeDetails.classType( existingClassDetails );
 			}
 			if ( xmlDocumentContext.isDynamicManagedTypeName( targetEntityName ) ) {
 				final var dynamicClassDetails = ModelsHelper.resolveClassDetails(
 						targetEntityName,
 						classDetailsRegistry,
-						() -> new DynamicClassDetails(
-								targetEntityName,
-								null,
-								false,
-								null,
-								null,
-								modelsContext
-						)
+						() -> Creator.createDynamicClassDetails( targetEntityName, modelsContext )
 				);
-				return new ClassTypeDetailsImpl( dynamicClassDetails, TypeDetails.Kind.CLASS );
+				return TypeDetails.classType( dynamicClassDetails );
 			}
 			final var classDetails = ModelsHelper.resolveClassDetails(
 					targetEntityName,
 					xmlDocumentContext,
 					classDetailsRegistry,
-					() -> new DynamicClassDetails(
-							targetEntityName,
-							null,
-							false,
-							null,
-							null,
-							modelsContext
-					)
+					() -> Creator.createDynamicClassDetails( targetEntityName, modelsContext )
 			);
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
+			return TypeDetails.classType( classDetails );
 		}
 
 		// todo : need more context here for better exception message
@@ -717,7 +699,7 @@ public class DynamicModelHelper {
 		// Logically this is Object, which is what we return here for now.
 		// todo : might be nice to allow specifying a "common interface"
 		final var objectClassDetails = xmlDocumentContext.getClassDetailsRegistry().resolveClassDetails( OBJECT_CLASS_NAME );
-		return new ClassTypeDetailsImpl( objectClassDetails, TypeDetails.Kind.CLASS );
+		return TypeDetails.classType( objectClassDetails );
 	}
 
 	/**
@@ -740,7 +722,7 @@ public class DynamicModelHelper {
 		final var classDetails = xmlDocumentContext
 				.getClassDetailsRegistry()
 				.resolveClassDetails( collectionType.getName() );
-		return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
+		return TypeDetails.classType( classDetails );
 	}
 
 	@Nonnull

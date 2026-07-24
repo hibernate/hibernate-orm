@@ -35,7 +35,7 @@ public class IndexBackref extends Property {
 		return false;
 	}
 
-	private PropertyAccessStrategy accessStrategy;
+	private transient PropertyAccessStrategy accessStrategy;
 
 	@Override
 	public PropertyAccessStrategy getPropertyAccessStrategy(

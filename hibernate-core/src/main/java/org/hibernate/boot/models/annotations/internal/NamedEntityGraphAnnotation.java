@@ -1,5 +1,6 @@
 package org.hibernate.boot.models.annotations.internal;
 
+import java.io.Serializable;
 import org.hibernate.annotations.NamedEntityGraph;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -10,7 +11,7 @@ import java.util.Map;
 /**
  * @author Steve Ebersole
  */
-public class NamedEntityGraphAnnotation implements NamedEntityGraph {
+public class NamedEntityGraphAnnotation implements NamedEntityGraph, Serializable {
 	private String name;
 	private String graph;
 	private Class<?> root;

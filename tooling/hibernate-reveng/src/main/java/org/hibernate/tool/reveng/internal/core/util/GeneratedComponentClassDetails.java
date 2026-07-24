@@ -4,9 +4,9 @@
  */
 package org.hibernate.tool.reveng.internal.core.util;
 
-import org.hibernate.models.internal.dynamic.DynamicClassDetails;
-import org.hibernate.models.spi.ClassLoading;
+import org.hibernate.models.Creator;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.MutableClassDetails;
 
 /**
  * Class details for a component class that reverse engineering intends to
@@ -15,24 +15,20 @@ import org.hibernate.models.spi.ModelsContext;
  * @since 9.0
  * @author Steve Ebersole
  */
-public class GeneratedComponentClassDetails extends DynamicClassDetails {
+public final class GeneratedComponentClassDetails {
 
-	public GeneratedComponentClassDetails(String componentClassName, ModelsContext modelsContext) {
-		super( componentClassName, componentClassName, Object.class, false, null, null, modelsContext );
+	private GeneratedComponentClassDetails() {
 	}
 
-	@Override
-	public <X> Class<X> toJavaClass() {
-		return objectClass();
-	}
-
-	@Override
-	public <X> Class<X> toJavaClass(ClassLoading classLoading, ModelsContext modelContext) {
-		return objectClass();
-	}
-
-	@SuppressWarnings("unchecked")
-	private static <X> Class<X> objectClass() {
-		return (Class<X>) Object.class;
+	public static MutableClassDetails create(String componentClassName, ModelsContext modelsContext) {
+		return Creator.createDynamicClassDetails(
+				componentClassName,
+				componentClassName,
+				Object.class,
+				false,
+				null,
+				null,
+				modelsContext
+		);
 	}
 }

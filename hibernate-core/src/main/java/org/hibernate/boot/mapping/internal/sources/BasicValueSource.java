@@ -1,12 +1,9 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.sources;
 
+import java.io.Serializable;
 import org.hibernate.annotations.CollectionIdJavaClass;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
-import org.hibernate.mapping.BasicValue;
+import org.hibernate.boot.serial.internal.SourceJavaType;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 
@@ -114,7 +111,7 @@ public record BasicValueSource(
 		/// the owning component member.  Keeping the selected conversion here lets
 		/// [org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder] apply
 		/// conversion uniformly instead of having each higher-level binder special-case it.
-		Convert conversion) {
+		Convert conversion) implements Serializable {
 
 	/// The basic-value role relative to the source member.
 	///
@@ -386,8 +383,8 @@ public record BasicValueSource(
 	}
 
 	/// Resolves the source type to expose to [BasicValue].
-	public BasicValue.SourceJavaType sourceJavaType() {
-		return BasicValue.SourceJavaType.from( type, explicitJavaType );
+	public SourceJavaType sourceJavaType() {
+		return SourceJavaType.from( type, explicitJavaType );
 	}
 
 	public Class<?> rawJavaType() {

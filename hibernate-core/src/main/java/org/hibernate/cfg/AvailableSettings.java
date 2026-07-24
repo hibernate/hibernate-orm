@@ -1,6 +1,5 @@
 package org.hibernate.cfg;
 
-import org.hibernate.Remove;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 

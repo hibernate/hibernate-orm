@@ -166,7 +166,7 @@ public class InFlightMetadataCollectorImpl
 	private final Set<String> defaultNamedNativeQueryNames = new HashSet<>();
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
-	private Map<Class<?>, MappedSuperclass> mappedSuperClasses;
+	private Map<String, MappedSuperclass> mappedSuperClasses;
 	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
 	private Map<String, String> mappedByResolver;
@@ -1274,16 +1274,29 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	public void addMappedSuperclass(ClassDetails type, MappedSuperclass mappedSuperclass) {
+		if ( mappedSuperClasses == null ) {
+			mappedSuperClasses = new HashMap<>();
+		}
+		mappedSuperClasses.put( type.getName(), mappedSuperclass );
+	}
+
+	@Override
 	public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {
 		if ( mappedSuperClasses == null ) {
 			mappedSuperClasses = new HashMap<>();
 		}
-		mappedSuperClasses.put( type, mappedSuperclass );
+		mappedSuperClasses.put( type.getName(), mappedSuperclass );
+	}
+
+	@Override
+	public MappedSuperclass getMappedSuperclass(ClassDetails type) {
+		return mappedSuperClasses == null ? null : mappedSuperClasses.get( type.getName() );
 	}
 
 	@Override
 	public MappedSuperclass getMappedSuperclass(Class<?> type) {
-		return mappedSuperClasses == null ? null : mappedSuperClasses.get( type );
+		return mappedSuperClasses == null ? null : mappedSuperClasses.get( type.getName() );
 	}
 
 	@Override
@@ -1533,7 +1546,7 @@ public class InFlightMetadataCollectorImpl
 	 * Ugh!  But we need this done before we ask Envers to produce its entities.
 	 */
 	public void processSecondPasses(MetadataBuildingContext buildingContext) {
-		composites.forEach( Component::sortProperties );
+		composites.forEach( Component::completeShape );
 
 		processPropertyReferences();
 
@@ -1668,7 +1681,7 @@ public class InFlightMetadataCollectorImpl
 					composites,
 					genericComponentsMap,
 					embeddableDiscriminatorTypesMap,
-					mappedSuperClasses,
+					classKeyedMappedSuperclasses(),
 					collectionBindingMap,
 					typeDefRegistry.copyRegistrationMap(),
 					filterDefinitionMap,
@@ -1705,11 +1718,11 @@ public class InFlightMetadataCollectorImpl
 						dialect,
 						rootClass,
 						entityBinding.getIdentifierProperty()
-				);
+					);
+				}
 			}
-		}
 
-		for ( var collection : collectionBindingMap.values() ) {
+			for ( var collection : collectionBindingMap.values() ) {
 			if ( collection instanceof IdentifierCollection identifierCollection ) {
 				handleIdentifierValueBinding(
 						identifierCollection.getIdentifier(),
@@ -1719,6 +1732,15 @@ public class InFlightMetadataCollectorImpl
 				);
 			}
 		}
+	}
+
+	private Map<Class<?>, MappedSuperclass> classKeyedMappedSuperclasses() {
+		if ( mappedSuperClasses == null ) {
+			return null;
+		}
+		final Map<Class<?>, MappedSuperclass> result = new HashMap<>();
+		mappedSuperClasses.values().forEach( mappedSuperclass -> result.put( mappedSuperclass.getMappedClass(), mappedSuperclass ) );
+		return result;
 	}
 
 	private void handleIdentifierValueBinding(

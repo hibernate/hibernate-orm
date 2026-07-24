@@ -170,6 +170,8 @@ public class MappingBinder extends AbstractBinder<JaxbEntityMappingsImpl> {
 			}
 		}
 
+	}
+
 	@Internal
 	public JAXBContext mappingJaxbContext() {
 		if ( entityMappingsJaxbContext == null ) {

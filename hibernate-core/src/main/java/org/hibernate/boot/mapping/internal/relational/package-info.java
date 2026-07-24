@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Relational table-reference model used while binding mappings.
 ///
 /// This package contains the small binding-time model for relational table

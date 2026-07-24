@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 /// Stable read views over the horizontal boot binding model.
 ///
 /// Views are the handoff between mutable binding state and later consumers.

@@ -1,5 +1,6 @@
 package org.hibernate.id.enhanced;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 
 import jakarta.annotation.Nonnull;
@@ -24,7 +25,7 @@ import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
  *
  * @author Steve Ebersole
  */
-public class SequenceStructure implements DatabaseStructure {
+public class SequenceStructure implements DatabaseStructure, Serializable {
 
 	private final @Nonnull String contributor;
 	private final @Nonnull QualifiedName logicalQualifiedSequenceName;
@@ -167,21 +168,21 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public void registerExtraExportables(@Nonnull Table table, @Nonnull Optimizer optimizer) {
+	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		final var optimizerState = new OptimizerResetState( optimizer );
 		table.addResyncCommand( (sqlContext, isolator) -> {
 			final String sequenceName = sqlContext.format( physicalSequenceName );
 			final String tableName = sqlContext.format( table.getQualifiedTableName() );
 			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
-			final int adjustment = optimizer.getAdjustment();
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
 			final long current = getNextSequenceValue( isolator, sequenceName);
-			final long startWith = Math.max( max + adjustment, current );
-			optimizer.reset();
+			final long startWith = Math.max( max + optimizerState.adjustment(), current );
+			optimizerState.reset();
 			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
 					.getRestartSequenceString( sequenceName, startWith ) );
 		} );
 		table.addResetCommand( sqlContext -> {
-			optimizer.reset();
+			optimizerState.reset();
 			final String sequenceName = sqlContext.format( physicalSequenceName );
 			return new InitCommand( sqlContext.getDialect().getSequenceSupport()
 					.getRestartSequenceString( sequenceName, initialValue ) );

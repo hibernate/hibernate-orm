@@ -1,11 +1,8 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.boot.orchestration;
 
 import java.util.Map;
 
+import org.hibernate.boot.serial.MetadataSerialization;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.pipeline.internal.source.ContributionDiscoveryContext;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
@@ -35,6 +32,7 @@ import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Steve Ebersole
@@ -174,8 +172,13 @@ public class SessionFactoryPipelineTests {
 
 		assertThat( metadata ).isInstanceOf( ResolvedMappingImplementor.class );
 		final var resolvedMapping = ( (ResolvedMappingImplementor) metadata ).getResolvedMapping();
-		assertThat( resolvedMapping.categorizedDomainModel() ).isNotNull();
-		assertThat( resolvedMapping.bindingState() ).isNotNull();
+		assertThat( resolvedMapping.metadata().getMappingResolutionOptions().isMetadataSerializationEnabled() ).isFalse();
+		assertThat( resolvedMapping.metadata().getMappingResolutionOptions().getResolutionDetailsCollector() ).isNull();
+		assertThat( resolvedMapping.mappingResolutionDetailsCollector() ).isNull();
+		assertThat( resolvedMapping.runtimeMappingHandoff() ).isNotNull();
+		assertThatThrownBy( () -> MetadataSerialization.serialize( metadata ) )
+				.isInstanceOf( IllegalStateException.class )
+				.hasMessageContaining( org.hibernate.cfg.MappingSettings.METADATA_SERIALIZATION_ENABLED );
 
 		try (var sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 			assertThat( sessionFactory.getRuntimeMetamodels()

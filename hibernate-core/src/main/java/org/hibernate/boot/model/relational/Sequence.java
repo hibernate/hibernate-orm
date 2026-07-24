@@ -1,5 +1,7 @@
 package org.hibernate.boot.model.relational;
 
+import java.io.Serializable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
 
@@ -8,7 +10,7 @@ import org.hibernate.boot.model.naming.Identifier;
  *
  * @author Steve Ebersole
  */
-public class Sequence implements ContributableDatabaseObject {
+public class Sequence implements ContributableDatabaseObject, Serializable {
 	public static class Name extends QualifiedNameParser.NameParts {
 		public Name(
 				Identifier catalogIdentifier,

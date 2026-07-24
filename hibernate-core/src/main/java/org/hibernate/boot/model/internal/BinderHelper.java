@@ -3,7 +3,6 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.CascadeType;
 import org.hibernate.MappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.Component;
@@ -20,10 +19,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
-import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.collections.ArrayHelper.forEach;
-import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 
 /**

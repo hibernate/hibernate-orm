@@ -1,5 +1,6 @@
 package org.hibernate.boot.model.relational;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -27,15 +28,15 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 /**
  * @author Steve Ebersole
  */
-public class Database {
+public class Database implements Serializable {
 
-	private final Dialect dialect;
-	private final TypeConfiguration typeConfiguration;
-	private final JdbcEnvironment jdbcEnvironment;
+	private transient Dialect dialect;
+	private transient TypeConfiguration typeConfiguration;
+	private transient JdbcEnvironment jdbcEnvironment;
 	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<>();
 	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new LinkedHashMap<>();
-	private final ServiceRegistry serviceRegistry;
-	private final PhysicalNamingStrategy physicalNamingStrategy;
+	private transient ServiceRegistry serviceRegistry;
+	private transient PhysicalNamingStrategy physicalNamingStrategy;
 
 	private Namespace.Name physicalImplicitNamespaceName;
 	private List<InitCommand> initCommands;
@@ -215,5 +216,14 @@ public class Database {
 
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	public void reattach(MappingResolutionOptions buildingPlan) {
+		serviceRegistry = buildingPlan.getServiceRegistry();
+		typeConfiguration = buildingPlan.getTypeConfiguration();
+		jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
+		physicalNamingStrategy = buildingPlan.getPhysicalNamingStrategy();
+		dialect = determineDialect( buildingPlan );
+		namespaceMap.values().forEach( namespace -> namespace.reattach( physicalNamingStrategy, jdbcEnvironment ) );
 	}
 }

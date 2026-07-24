@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.HashMap;
@@ -530,7 +526,10 @@ class CollectionShapeBinder {
 
 		final var sortComparator = source.sortComparator();
 		if ( sortComparator != null ) {
-			collection.setComparatorClassName( sortComparator.value().getName() );
+			collection.setComparatorClassDetails(
+					source.modelsContext().getClassDetailsRegistry()
+							.resolveClassDetails( sortComparator.value().getName() )
+			);
 		}
 	}
 

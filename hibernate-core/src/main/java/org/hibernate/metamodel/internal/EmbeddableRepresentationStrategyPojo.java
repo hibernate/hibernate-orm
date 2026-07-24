@@ -55,11 +55,12 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	private final Map<String, EmbeddableInstantiator> instantiatorsByClass;
 
 	public EmbeddableRepresentationStrategyPojo(
-			@Nonnull Component bootDescriptor,
-			@Nonnull Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
-			@Nullable EmbeddableInstantiator customInstantiator,
-			@Nullable CompositeUserType<Object> compositeUserType,
-			@Nonnull RuntimeModelCreationContext creationContext) {
+			Component bootDescriptor,
+			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			EmbeddableInstantiator customInstantiator,
+			CompositeUserType<Object> compositeUserType,
+			RuntimeModelCreationContext creationContext) {
+		bootDescriptor.requireShapeComplete();
 		embeddableJavaType = resolveEmbeddableJavaType( bootDescriptor, compositeUserType, creationContext );
 
 		final int propertySpan = bootDescriptor.getPropertySpan();

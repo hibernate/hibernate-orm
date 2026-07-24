@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.orm.test.boot.models.xml;
 
 import java.util.List;
@@ -20,7 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.SIMPLE_CLASS_LOADING;
 
 /**
  * Verifies the XML/source phase boundary before categorization.

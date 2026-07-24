@@ -12,7 +12,6 @@ dependencies {
         api project( ":hibernate-testing" )
         api project( ":hibernate-dialect-testkit" )
 
-        api project( ":hibernate-envers" )
         api project( ":hibernate-spatial" )
         api project( ":hibernate-vector" )
 

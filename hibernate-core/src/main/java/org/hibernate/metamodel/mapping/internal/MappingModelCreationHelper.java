@@ -1426,6 +1426,7 @@ public class MappingModelCreationHelper {
 	}
 
 	private static void collectComponentSelectables(Component component, List<Selectable> selectables) {
+		component.requireShapeComplete();
 		for ( Property property : component.getProperties() ) {
 			if ( property.getValue() instanceof Component nestedComponent ) {
 				collectComponentSelectables( nestedComponent, selectables );

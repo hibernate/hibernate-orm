@@ -28,7 +28,6 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.addAll;

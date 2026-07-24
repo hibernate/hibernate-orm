@@ -111,7 +111,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		else if ( bootDescriptor.isRecord() ) {
 			final var accessorFactory = creationContext.getServiceRegistry()
 					.requireService( PropertyAccessorService.class ).hibernateAccessorFactory();
-			if ( bootDescriptor.sortProperties() == null ) {
+			if ( bootDescriptor.completeShape() == null ) {
 				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass(), accessorFactory );
 			}
 			else {
@@ -123,7 +123,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			}
 		}
 		else if ( bootDescriptor.getInstantiator() != null ) {
-			bootDescriptor.sortProperties();
+			bootDescriptor.completeShape();
 			return EmbeddableInstantiatorPojoIndirecting.of(
 					bootDescriptor.getPropertyNames(),
 					bootDescriptor.getInstantiator(),

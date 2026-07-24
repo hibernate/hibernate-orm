@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.sources;
 
 import java.util.ArrayList;
@@ -24,7 +20,6 @@ import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -345,10 +340,9 @@ public record ComponentSource(
 	private static TypeDetails elementCollectionElementType(MemberDetails member, BindingContext bindingContext) {
 		final ElementCollection elementCollection = member.getDirectAnnotationUsage( ElementCollection.class );
 		if ( elementCollection != null && elementCollection.targetClass() != void.class ) {
-			return new ClassTypeDetailsImpl(
+			return TypeDetails.classType(
 					bindingContext.getClassDetailsRegistry()
-							.resolveClassDetails( elementCollection.targetClass().getName() ),
-					TypeDetails.Kind.CLASS
+							.resolveClassDetails( elementCollection.targetClass().getName() )
 			);
 		}
 		return member.getElementType();
@@ -705,8 +699,7 @@ public record ComponentSource(
 			Column column,
 			MetadataBuildingContext buildingContext) {
 		final var timeZoneColumn = member.getDirectAnnotationUsage( TimeZoneColumn.class );
-		final var created = JpaAnnotations.COLUMN.createUsage(
-				buildingContext.getModelsContext()
+		final var created = JpaAnnotations.COLUMN.createUsage( buildingContext.getModelsContext()
 		);
 		created.name( timeZoneColumn == null ? column.name() + "_tz" : timeZoneColumn.name() );
 		created.nullable( column.nullable() );
@@ -738,8 +731,7 @@ public record ComponentSource(
 			return column;
 		}
 
-		final var created = JpaAnnotations.COLUMN.createUsage(
-				buildingContext.getModelsContext()
+		final var created = JpaAnnotations.COLUMN.createUsage( buildingContext.getModelsContext()
 		);
 		if ( column != null ) {
 			created.precision( column.precision() );

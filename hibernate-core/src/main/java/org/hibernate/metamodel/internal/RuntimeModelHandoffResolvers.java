@@ -1,12 +1,6 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.metamodel.internal;
 
 import java.util.Objects;
-
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 
 /// Resolvers for carrying boot binding handoff details into runtime model
 /// creation.
@@ -24,12 +18,12 @@ public record RuntimeModelHandoffResolvers(
 		Objects.requireNonNull( identifierHandoffResolver );
 	}
 
-	public static RuntimeModelHandoffResolvers create(BootBindingModel bootBindingModel) {
-		Objects.requireNonNull( bootBindingModel );
+	public static RuntimeModelHandoffResolvers create(RuntimeMappingHandoff runtimeMappingHandoff) {
+		Objects.requireNonNull( runtimeMappingHandoff );
 		return new RuntimeModelHandoffResolvers(
-				new MappedSuperclassHandoffResolver( bootBindingModel ),
-				new EmbeddableHandoffResolver( bootBindingModel ),
-				new IdentifierHandoffResolver( bootBindingModel )
+				new MappedSuperclassHandoffResolver( runtimeMappingHandoff ),
+				new EmbeddableHandoffResolver( runtimeMappingHandoff ),
+				new IdentifierHandoffResolver( runtimeMappingHandoff )
 		);
 	}
 }

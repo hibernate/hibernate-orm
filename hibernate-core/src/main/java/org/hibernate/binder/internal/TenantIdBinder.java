@@ -6,7 +6,6 @@ import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.dialect.rowsecurity.internal.RowLevelSecurityDdlMaterializer;
 import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.spi.TenantIdentifierSource;

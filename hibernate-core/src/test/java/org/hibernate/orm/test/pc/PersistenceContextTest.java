@@ -14,7 +14,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.KeyType;
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;

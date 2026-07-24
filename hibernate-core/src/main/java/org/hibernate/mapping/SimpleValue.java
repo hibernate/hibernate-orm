@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
@@ -39,7 +40,8 @@ import static org.hibernate.models.spi.TypeDetails.Kind.PARAMETERIZED_TYPE;
  * @author Gavin King
  * @author Yanming Zhou
  */
-public abstract class SimpleValue implements KeyValue {
+public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
+	private MappingRole mappingRole;
 	private final List<Selectable> columns = new ArrayList<>();
 	private final List<Boolean> insertability = new ArrayList<>();
 	private final List<Boolean> updatability = new ArrayList<>();
@@ -47,7 +49,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	private String typeName;
 	private Properties typeParameters;
-	private Annotation typeAnnotation;
+	private transient Annotation typeAnnotation;
+	private Class<? extends Annotation> typeAnnotationType;
 	private MemberDetails memberDetails;
 	private boolean isVersion;
 	private boolean isNationalized;
@@ -64,8 +67,8 @@ public abstract class SimpleValue implements KeyValue {
 	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
 
-	private ConverterDescriptor<?,?> attributeConverterDescriptor;
-	private Type type;
+	private transient ConverterDescriptor<?,?> attributeConverterDescriptor;
+	private transient Type type;
 
 	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
 
@@ -91,6 +94,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
 		this.typeAnnotation = original.typeAnnotation;
+		this.typeAnnotationType = original.typeAnnotationType;
 		this.memberDetails = original.memberDetails;
 		this.isVersion = original.isVersion;
 		this.isNationalized = original.isNationalized;
@@ -107,6 +111,16 @@ public abstract class SimpleValue implements KeyValue {
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
 		this.nullValueSemantic = original.nullValueSemantic;
 		this.foreignKeyOptions = original.foreignKeyOptions;
+	}
+
+	@Override
+	public MappingRole getMappingRole() {
+		return mappingRole;
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		this.mappingRole = mappingRole;
 	}
 
 	public void setOnDeleteAction(OnDeleteAction onDeleteAction) {
@@ -444,7 +458,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	protected void setAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
-		this.attributeConverterDescriptor = descriptor;
+		setConverterDescriptor( descriptor );
 	}
 
 	protected ConverterDescriptor<?,?> getAttributeConverterDescriptor() {
@@ -507,6 +521,25 @@ public abstract class SimpleValue implements KeyValue {
 
 	public void setTypeAnnotation(Annotation typeAnnotation) {
 		this.typeAnnotation = typeAnnotation;
+		this.typeAnnotationType = typeAnnotation == null ? null : typeAnnotation.annotationType();
+	}
+
+	public void reattachTypeAnnotation(ModelsContext modelsContext) {
+		if ( typeAnnotationType != null ) {
+			if ( memberDetails == null ) {
+				throw new MappingException(
+						"Could not reconstruct custom type annotation '" + typeAnnotationType.getName()
+								+ "' because the mapped value has no source member"
+				);
+			}
+			typeAnnotation = memberDetails.locateAnnotationUsage( typeAnnotationType, modelsContext );
+			if ( typeAnnotation == null ) {
+				throw new MappingException(
+						"Could not reconstruct custom type annotation '" + typeAnnotationType.getName()
+								+ "' for member '" + memberDetails.getName() + "'"
+				);
+			}
+		}
 	}
 
 	public void setMemberDetails(MemberDetails memberDetails) {
@@ -637,7 +670,11 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void setJpaAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
-		this.attributeConverterDescriptor = descriptor;
+		setConverterDescriptor( descriptor );
+	}
+
+	private void setConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
+		attributeConverterDescriptor = descriptor;
 	}
 
 	private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];

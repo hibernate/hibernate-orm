@@ -5,9 +5,9 @@ This note describes a possible ORM 9 design direction for aggregate-valued
 embeddable mappings such as SQL `STRUCT` / UDT, JSON, XML, and aggregate arrays.
 
 The immediate trigger is `@Struct` parity in the boot-model pipeline, but the
-larger goal is broader: if ORM 9 replaces `MetadataBuildingProcess` with the
-new pipeline, then mapping-model, runtime-model, binder, and extractor changes
-are valid design tools.  The goal should not be to reproduce every historical
+larger goal is broader: mapping-model, runtime-model, binder, and extractor
+changes are valid design tools in the explicit pipeline.  The goal should not
+be to reproduce every historical
 internal shape when a cleaner model would make aggregate mappings easier to bind,
 validate, and execute.
 
@@ -85,10 +85,9 @@ collect richer aggregate intent internally, but it should project that intent
 into `Component`, `AggregateColumn`, component aggregate finalization, and
 existing database aggregate metadata for now.
 
-As with other transitional boot-model work, explicit storage descriptors should
-not be attached directly to shared `org.hibernate.mapping` contracts while
-`MetadataBuildingProcess` remains an active boot path, unless the legacy path is
-also changed to populate the same descriptor as authoritative state.
+Explicit storage descriptors should not be attached directly to shared
+`org.hibernate.mapping` contracts as parallel state.  Introduce one only when
+the relevant runtime and schema consumers can treat it as authoritative.
 
 Current bridge status:
 
@@ -136,7 +135,7 @@ Current bridge status:
   bridge coverage only.  A runtime-model smoke attempt reaches
   `buildSessionFactory()` and exposes a `CollectionTableGroup` /
   `StandardVirtualTableGroup` recursion for aggregate collection elements.
-  A legacy `MetadataSources` characterization using the same mapping shape
+  A historical pre-removal bootstrap characterization using the same mapping shape
   reaches the same recursion, so this is not tracked as a new-pipeline
   binding/materialization parity gap.  Any follow-up belongs at the runtime
   collection table-group/model boundary, not in source discovery or aggregate
@@ -190,12 +189,10 @@ This could eventually be implemented as a descriptor attached to `Component`
 rather than a replacement for `Component`.  Replacing `Component` wholesale would
 be far more invasive and is not necessary to get a clearer model.
 
-That attachment should wait until the descriptor can be authoritative for all
-supported boot paths, or until `MetadataBuildingProcess` has been removed far
-enough that runtime and schema consumers no longer need to handle both
-descriptor-populated and legacy side-effect-populated aggregate mappings.
-Before that point, descriptor-like state should remain an internal new-pipeline
-contribution or resolved plan that is projected into the current mapping shape.
+That attachment should wait until the descriptor can be authoritative for the
+runtime and schema consumers which need aggregate state.  Before that point,
+descriptor-like state should remain an explicit pipeline contribution or
+resolved plan projected into the current mapping shape.
 
 === Flattened Storage
 
@@ -384,10 +381,9 @@ This should be incremental.
 3. Use that internal state to characterize aggregate source roles, validation,
    aggregate column placement, database-object contribution, and unsupported
    combinations.
-4. Introduce a storage descriptor on `Component` or beside it only when it can
-   become authoritative for all supported boot paths, or when
-   `MetadataBuildingProcess` has been removed far enough to avoid a parallel
-   representation.
+4. Introduce a storage descriptor on `Component` or beside it only when the
+   relevant runtime and schema consumers can make it authoritative rather than
+   a parallel representation.
 5. Teach the new binder to resolve component storage before child attribute
    binding.
 6. Add an aggregate member container so aggregate child selectables are never
@@ -402,24 +398,27 @@ This should be incremental.
 The trigger for steps 4 through 9 is not simply that the new pipeline has a
 working aggregate bridge.  The trigger is one of:
 
-* `MetadataBuildingProcess` is removed or no longer produces the same shared
-  `Component` mappings consumed by runtime and schema tooling;
-* legacy aggregate binding is intentionally updated to populate the same storage
-  descriptor so both boot paths share one source of truth;
 * a supported aggregate shape cannot be represented through the bridge without
   excessive table mutation, duplicated runtime inference, or unmaintainable
-  side channels.
+  side channels;
+* runtime and schema consumers are deliberately migrated to a shared aggregate
+  descriptor.
 
 == Open Questions
+
+These are stabilization questions.  A question becomes PR-blocking only when a
+focused runtime reproducer cannot be expressed through the existing aggregate
+intent/member-container handoff.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
 
 Should aggregate storage be represented as a descriptor attached to `Component`,
 or as a distinct mapping value type?
 
-During the `MetadataBuildingProcess` transition, this should remain an internal
-new-pipeline design question rather than new state attached to shared mapping
-contracts.  The safe near-term answer is to project into the existing
-`Component` / `AggregateColumn` shape and keep descriptor-like state inside the
-new pipeline until it can become authoritative.
+This should remain an explicit pipeline design question rather than parallel
+state attached to shared mapping contracts.  The safe near-term answer is to
+project into the existing `Component` / `AggregateColumn` shape until runtime
+and schema consumers can make a descriptor authoritative.
 
 Can `UserDefinedObjectType` remain the right database metadata object for SQL
 `STRUCT`, or should aggregate member metadata move behind a more general

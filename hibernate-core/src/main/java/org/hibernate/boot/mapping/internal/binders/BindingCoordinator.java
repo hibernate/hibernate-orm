@@ -8,8 +8,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,8 +32,6 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -121,10 +117,6 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 /// @since 9.0
 /// @author Steve Ebersole
 public class BindingCoordinator {
-	private static final Comparator<TypeContributor> TYPE_CONTRIBUTOR_COMPARATOR = Comparator.comparingInt(
-			TypeContributor::ordinal
-	).thenComparing( typeContributor -> typeContributor.getClass().getName() );
-
 	private final CategorizedDomainModel categorizedDomainModel;
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
@@ -172,7 +164,6 @@ public class BindingCoordinator {
 
 		registerConfiguredUserTypes();
 		registerConfiguredCompositeUserTypes();
-		processTypeContributors();
 		applyBasicTypeRegistrations();
 		applyFallbackJdbcTypeContributions();
 		coordinateGlobalBindings();
@@ -197,41 +188,6 @@ public class BindingCoordinator {
 				.getBuildingPlan()
 				.getCompositeUserTypes()
 				.forEach( this::registerCompositeUserType );
-	}
-
-	private void processTypeContributors() {
-		final TypeConfiguration typeConfiguration = bindingState.getTypeConfiguration();
-		final TypeContributions typeContributions = new TypeContributions() {
-			@Override
-			public TypeConfiguration getTypeConfiguration() {
-				return typeConfiguration;
-			}
-
-			@Override
-			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
-				bindingState.addAttributeConverter( converterClass );
-			}
-
-			@Override
-			public void contributeType(UserType<?> type) {
-				registerUserType( type );
-				TypeContributions.super.contributeType( type );
-			}
-
-			@Override
-			@Deprecated
-			public void contributeType(UserType<?> type, String... keys) {
-				registerUserType( type );
-				TypeContributions.super.contributeType( type, keys );
-			}
-
-			@Override
-			public void contributeType(CompositeUserType<?> type) {
-				registerCompositeUserType( type );
-			}
-		};
-		sortedTypeContributors().forEach( (typeContributor) ->
-				typeContributor.contribute( typeContributions, bindingContext.getServiceRegistry() ) );
 	}
 
 	private void applyBasicTypeRegistrations() {
@@ -381,14 +337,6 @@ public class BindingCoordinator {
 		if ( !jdbcTypeRegistry.hasRegisteredDescriptor( typeCode ) ) {
 			jdbcTypeRegistry.addDescriptor( typeCode, jdbcTypeRegistry.getDescriptor( fallbackTypeCode ) );
 		}
-	}
-
-	private List<TypeContributor> sortedTypeContributors() {
-		final Collection<TypeContributor> typeContributors = bindingContext.getClassLoaderService()
-				.loadJavaServices( TypeContributor.class );
-		final List<TypeContributor> contributors = new ArrayList<>( typeContributors );
-		contributors.sort( TYPE_CONTRIBUTOR_COMPARATOR );
-		return contributors;
 	}
 
 	private void coordinateModelBindings() {

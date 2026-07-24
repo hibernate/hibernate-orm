@@ -49,8 +49,6 @@ public class ImmutableWithAttributeConverterTest {
 					null,
 					null,
 					null,
-					null,
-					null,
 					List.of(
 							ConverterDescriptors.of( ExifConverter.class ),
 							ConverterDescriptors.of( CaptionConverter.class )

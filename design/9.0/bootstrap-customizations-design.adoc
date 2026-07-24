@@ -109,6 +109,40 @@ implementation benefits from that.  The important rule is that type contribution
 application should have one owner and should not be hidden behind unrelated
 bootstrap-context state.
 
+`TypeContributionCoordinator` is the owner of dialect and `TypeContributor`
+application.  Type contribution is complete before source categorization; the
+binding coordinator consumes the resulting registrations and must not
+rediscover contributors.
+
+Type inputs are applied in this deterministic low-to-high precedence sequence:
+
+. dialect contribution establishes the Hibernate and dialect baseline;
+. service-loaded and programmatic `TypeContributor`s are applied together by
+  ascending `TypeContributor#ordinal()`;
+. explicit basic types, user types, and converter descriptors are applied last.
+
+For contributors with the same ordinal, service-loaded contributors are
+ordered by implementation class name and run before programmatic contributors.
+Programmatic contributors with the same ordinal retain registration order.
+This mirrors function-contributor ordering and preserves the documented
+high-ordinal user-override contract.
+
+Applying contributors before source categorization also makes contributed
+attribute converters available to categorization.  Basic and composite
+user-type registrations are retained in the mapping-resolution plan for the
+binding coordinator to consume; contributor discovery itself does not belong
+to binding.
+
+Metadata restoration uses the same coordinator for dialect and service-loaded
+contributions.  Programmatic contributors and explicit resolved type instances
+are not archive payload state; declarative mapping type state is reconstructed
+by the archive restoration recipes.
+
+For compatibility, JPA entry-point adapters normalize the deprecated
+`hibernate.type_contributors` / `TypeContributorList` setting into the
+programmatic contributor list before mapping resolution.  It therefore follows
+the same ordinal and tie-breaking rules as `Configuration` registrations.
+
 === Function Registry Customizations
 
 Function registry customizations affect the `SqmFunctionRegistry`.
@@ -124,9 +158,7 @@ Examples:
 Functions are not mapping sources or mapping defaults.  They are a bootstrap
 product used by mapping resolution and later query-engine construction.
 
-Prefer a dedicated coordinator for this product, for example
-`SqmFunctionRegistryBuilder`, `FunctionRegistryCoordinator`, or
-`QueryFunctionRegistryBuilder`.
+`FunctionRegistryCoordinator` is the dedicated owner of this product.
 
 `BootstrapPipeline` should treat the function registry as a cross-phase
 bootstrap product.  It should create the shared `TypeConfiguration`, ask the
@@ -138,6 +170,34 @@ sequence and return the populated registry as a resolved bootstrap product.
 
 `QueryEngineImpl` should consume the populated registry from metadata rather
 than re-running `FunctionContributor` discovery or dialect initialization.
+
+==== Function Precedence
+
+Function inputs are applied in this deterministic low-to-high precedence
+sequence:
+
+. dialect initialization establishes the Hibernate and dialect baseline;
+. service-loaded and programmatic `FunctionContributor`s are applied together
+  by ascending `FunctionContributor#ordinal()`;
+. explicit SQL function descriptors are applied last.
+
+For contributors with the same ordinal, service-loaded contributors are
+ordered by implementation class name and run before programmatic contributors.
+Programmatic contributors with the same ordinal retain registration order.
+Consequently, a programmatic contributor wins an equal-ordinal collision with
+a service-loaded contributor, and a later programmatic registration wins a
+collision with an earlier one.
+
+The dialect is a baseline rather than an ordinal participant.  This preserves
+the `FunctionContributor` contract that user contributors in the documented
+high-ordinal range can override standard Hibernate or dialect functions.
+Explicit descriptors remain the strongest user instruction.
+
+`FunctionRegistryCoordinator` applies this sequence for normal mapping
+resolution and metadata-archive restoration.  Explicit contributor and
+descriptor lists are carried by `FunctionRegistryCustomizations`, separately
+from `MappingCustomizations`, through `BootstrapPipelineRequest` and mapping
+resolution.
 
 === SessionFactory Customizations
 
@@ -269,34 +329,45 @@ Configuration#setInterceptor / setStatementInspector
     -> SessionFactoryImpl
 ----
 
-== Open Questions
+== Resolved Ownership Decisions
 
-* Should type-system customizations be a separate group, or are they
-  sufficiently mapping-adjacent to remain with mapping customizations?
-* Should shared cache mode and cache region definitions live with mapping
-  customizations or with a separate caching customization group?
-* Should SessionFactory/query-engine custom function overlays be treated as
-  function registry customizations before metadata resolution, or as late
-  SessionFactory customizations?
-* What is the final deterministic ordering for dialect functions, service-loaded
-  `FunctionContributor`s, programmatic `FunctionContributor`s, and explicit SQL
-  function descriptors?
-* Should Java service-loaded contributors ever be materialized into
-  customization objects, or should they always be discovered by the product
-  owner?
+* Type contributors and explicit basic/user types and converters remain
+  mapping-adjacent inputs in `MappingCustomizations`, with
+  `TypeContributionCoordinator` as their application owner.  A separate public
+  group would add transport without changing phase ownership.
+* Shared cache mode and cache-region definitions remain mapping customizations:
+  they affect mapping metadata and are resolved before SessionFactory
+  construction.
+* Function contributions and explicit boot SQL functions belong to
+  `FunctionRegistryCustomizations` and are applied before metadata resolution.
+  A separately supplied `SessionFactoryOptions` custom registry remains a
+  runtime compatibility overlay; it does not rerun boot contributors.
+* Implicit and physical naming strategies, column ordering, auxiliary database
+  objects, and cache definitions are normalized by entry-point adapters into
+  `MappingCustomizations`.  `MappingResolutionPipeline` is their sole
+  application owner: strategies update `MappingResolutionOptions`, while
+  objects and cache definitions enter through immutable
+  `MappingResolutionContributions`.
+== Implemented Ownership Boundary
 
-== Migration Notes
+`BootstrapContext` no longer transports `MappingResolutionOptions` or
+`SqmFunctionRegistry`.
 
-Near-term cleanup candidates:
+`MappingResolutionOptions` is an explicit mapping-pipeline product.  It is
+passed directly to mapping resolution, retained by the resolved metadata, and
+passed from that metadata to the legacy SessionFactory-options adapter where
+needed.  `MappingResolutionOptionsImpl` receives its `TypeConfiguration`
+directly, eliminating the former circular `setBootstrapContext(...)`
+initialization.
 
-* remove `MappingResolutionOptions` from `BootstrapContext`
-* remove `SqmFunctionRegistry` from `BootstrapContext`
-* extract function customizations from `MappingCustomizations`
-* introduce a function registry coordinator owned by `BootstrapPipeline`
-* make `QueryEngineImpl` consume the resolved function registry without
-  invoking contributors again
-* keep mapping contribution buckets constructor-fed into the metadata collector
-  rather than exposed through `BootstrapContext`
+The function registry is created and populated by
+`FunctionRegistryCoordinator`, carried into binding through explicit mapping
+contributions, retained by resolved metadata, and consumed from there by
+runtime construction.  Contributors are not invoked again by
+`QueryEngineImpl`.
+
+Mapping contribution buckets remain constructor-fed into the metadata
+collector rather than exposed through `BootstrapContext`.
 
 This should be treated as a broader bootstrap-customization design, not only as
 a function-registry cleanup.

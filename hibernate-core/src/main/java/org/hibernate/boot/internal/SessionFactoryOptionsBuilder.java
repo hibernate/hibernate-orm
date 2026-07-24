@@ -35,6 +35,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
@@ -287,7 +288,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final GraphParserMode graphParserMode;
 
 
-	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
+	public SessionFactoryOptionsBuilder(
+			StandardServiceRegistry serviceRegistry,
+			BootstrapContext context,
+			MappingResolutionOptions mappingResolutionOptions) {
 		this.serviceRegistry = serviceRegistry;
 		jpaBootstrap = context.isJpaBootstrap();
 
@@ -328,6 +332,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			public BootstrapContext getBootstrapContext() {
 				return context;
 			}
+
+			@Override
+			public MappingResolutionOptions getMappingResolutionOptions() {
+				return mappingResolutionOptions;
+			}
 		};
 		jsonFormatMapper = jsonFormatMapper(
 				settings.get( JSON_FORMAT_MAPPER ),
@@ -340,8 +349,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				settings.get( XML_FORMAT_MAPPER ),
 				strategySelector,
 				xmlFormatMapperLegacyFormatEnabled =
-						context.getMappingResolutionOptions()
-								.isXmlFormatMapperLegacyFormatEnabled(),
+						mappingResolutionOptions.isXmlFormatMapperLegacyFormatEnabled(),
 				formatMapperCreationContext
 		);
 
@@ -464,7 +472,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		preferredSqlTypeCodeForUuid = mappingPreferences.getPreferredSqlTypeCodeForUuid();
 		preferredSqlTypeCodeForInstant = mappingPreferences.getPreferredSqlTypeCodeForInstant();
 		preferredSqlTypeCodeForArray = mappingPreferences.getPreferredSqlTypeCodeForArray();
-		defaultTimeZoneStorageStrategy = context.getMappingResolutionOptions().getDefaultTimeZoneStorage();
+		defaultTimeZoneStorageStrategy = mappingResolutionOptions.getDefaultTimeZoneStorage();
 
 		final var regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {

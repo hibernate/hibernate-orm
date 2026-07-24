@@ -359,6 +359,12 @@ legacy adapter in the new pipeline to avoid double application.
 
 == Open Questions
 
+These questions are stabilization or triggered follow-ups.  They do not block
+the PR unless the ORM 9 status of the legacy binders cannot be stated without a
+replacement.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
+
 * Package name: likely an SPI package, not an internal binding package.
 * Whether contributors mutate targets directly, return structured commands, or
   both.

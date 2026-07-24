@@ -5,7 +5,6 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.service.JavaServiceLoadable;
 
 /**
@@ -31,13 +30,11 @@ public interface AdditionalMappingContributor {
 	 * Contribute the additional mappings
 	 *
 	 * @param contributions Collector of the contributions.
-	 * @param metadata Current (live) metadata.  Can be used to access already known mappings.
-	 * @param resourceStreamLocator Delegate for locating XML resources via class-path lookup.
-	 * @param buildingContext Access to useful contextual references.
+	 * @param processedMappings Immutable view of mappings already processed.
+	 * @param contributorContext Access to contextual services.
 	 */
 	void contribute(
 			AdditionalMappingContributions contributions,
-			InFlightMetadataCollector metadata,
-			ResourceStreamLocator resourceStreamLocator,
-			MetadataBuildingContext buildingContext);
+			ProcessedMappings processedMappings,
+			AdditionalMappingContributorContext contributorContext);
 }

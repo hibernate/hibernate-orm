@@ -1,0 +1,525 @@
+= Improve Bootstrap Completion Plan
+:toc:
+
+This document defines the staged plan for finishing the ORM 9 "Improve
+bootstrap" work.
+
+It is a scope and dependency plan, not a branch-status log.  Current branch
+state, verification results, and the immediate next task continue to belong in
+link:current-work-handoff.adoc[`current-work-handoff.adoc`].
+
+== Completion Boundary
+
+"Improve bootstrap" is complete when the supported bootstrap entry points use
+the explicit ORM 9 pipeline, the boot mapping model has stable semantic
+handoffs for its remaining runtime consumers, and `SessionFactory`
+construction consumes explicit resolved products with only documented
+compatibility bridges.
+
+Completion does _not_ require every long-term replacement described by the
+design notes.  In particular, the following are follow-ups unless a concrete
+correctness or archive-restoration failure makes one blocking:
+
+* a public binding-extension SPI;
+* a pipeline-native early mapping-contributor SPI;
+* elimination of every `MetadataBuildingContext` constructor parameter;
+* replacement of every legacy `org.hibernate.mapping` compatibility shape;
+* removal of every `SessionFactoryOptions` runtime view;
+* a new first-class state-management descriptor;
+* a finalized general-purpose binding-model snapshot format.
+
+The PR should therefore track three scope levels:
+
+Blocking::
+Required for correctness, a coherent supported pipeline, or factory-ready
+metadata restoration.
+
+Stabilization::
+Required to leave deliberate, documented compatibility boundaries and no
+ambiguous active design.
+
+Follow-up::
+Valuable post-PR work with an explicit trigger and owner document.
+
+== Design-Document Disposition
+
+[cols="2,1,4", options="header"]
+|===
+| Area
+| Disposition
+| Action
+
+| Boot-model snapshot and serialization
+| Resolved / consolidate
+| `metadata-serialization-design.adoc` is now canonical.  Fold any unique
+stable-identity and invalidation rationale from
+`boot-model-snapshot-design.adoc` into it, then move the old snapshot proposal
+to finished/historical material or delete it.  Further serialization work is
+not a prerequisite for the other stages.
+
+| Bootstrap customizations
+| Active / blocking
+| Finish ownership and ordering for type contributors, function contributors,
+naming strategies, mapping customizations, and factory customizations.  Remove
+the remaining broad `BootstrapContext` access that merely transports these
+products.
+
+| Additional mapping contribution
+| Active / focused
+| Preserve the current late contribution behavior, but replace the
+`InFlightMetadataCollector` read-side parameter with a narrow processed-model
+view if compatibility analysis permits.  Keep the proposed early
+`BootModelContributor` as a triggered follow-up rather than implementing it
+without a concrete use case.
+
+| Binding extensions
+| Deferred stabilization
+| Keep the internal facet-based proofs for built-in binders.  Do not freeze a
+public replacement for `TypeBinder` and `AttributeBinder` until the semantic
+binding model and materialization boundary have settled.  Explicitly decide
+whether the legacy SPIs remain supported compatibility hooks for ORM 9.
+
+| JPA static metamodel
+| Active / blocking
+| Complete the data-only injection plan, including embeddables, inherited
+generic attributes, explicit field roles, and field-hiding behavior.  Runtime
+JPA model creation remains the owner of injected values.
+
+| Aggregate mappings
+| Mostly resolved / verify runtime boundary
+| Treat mapping-side intent, member-container, materialization, and aggregate
+array handoff as implemented.  Audit the remaining runtime consumers and add
+focused observable-behavior tests.  Do not reopen broad aggregate parity
+buckets without a reproducer.
+
+| Identifier and value generators
+| Active / post-serialization blocking
+| Now that archive restoration exists, choose the retained descriptor/source
+shape and replace opaque creator closures with declarative, archive-safe
+descriptors in incremental generator-family slices.  Preserve exportable and
+CDI behavior.
+
+| State management
+| Mostly resolved / stabilization
+| Keep the existing binding phase and runtime behavior.  Add a new
+contribution/resolution product only if a concrete whole-model requirement
+cannot be expressed by the current bridge.  Otherwise convert the design note
+to a final-state reference.
+
+| Components and embeddables
+| Active / blocking
+| Finish the distinction between embeddable declaration, contextual usage, and
+concrete component application.  Cover mixed `@Embeddable` / `@Embedded`,
+generic embeddables, polymorphic embeddables, and runtime handoff.
+
+| Inheritance and generics
+| Active / blocking
+| Treat declaration/usage/applied mapping and intrinsic mapping roles as the
+implemented foundation.  Finish mapped-superclass and generic runtime/JPA
+handoffs, then consolidate the overlapping focused design notes.
+
+| SessionFactory bootstrap and construction
+| Active / blocking
+| Preserve `session-factory-bootstrap-design.adoc` as the top-level
+architecture and `session-factory-construction-design.adoc` as the construction
+detail.  Continue preparing no-factory-needed runtime components, narrow model
+creation context, and remove broad contexts from the final construction
+boundary.
+
+| Mapping-key creation
+| Mostly resolved / stabilization
+| Preserve the explicit resolved key products and materializers.  Audit only
+the remaining low-level compatibility helpers and stale status text.
+
+| Identifier correspondence
+| Active only where behavior requires it
+| Remove the stale legacy-boot precondition.  Decide from concrete IdClass,
+derived-id, and association-valued-id runtime consumers whether a first-class
+identifier-part correspondence product is needed for this PR or is a
+post-PR runtime-model improvement.
+
+| Deterministic attribute ordering
+| Resolved
+| Record the phase-owned sorting solution as the final design, move the note to
+finished reference material, and retain focused ordering guardrails.
+
+| `MetadataBuildingContext` audit
+| Active / cross-cutting stabilization
+| Use it as a capability checklist while completing the stages below.  Avoid
+making total reference count a completion metric; stored broad context and
+phase-ownership violations are the relevant blockers.
+|===
+
+== Staged Implementation Plan
+
+The stages are ordered by dependency, but they are not all strictly serial.
+After Stage 0, customization ownership (Stage 1) and the semantic mapping model
+(Stage 2) can advance independently.  Runtime-sensitive mapping work (Stage 3)
+depends on the relevant Stage 2 handoffs.  SessionFactory construction
+(Stage 4) can proceed beside Stages 2 and 3 once Stage 1 has fixed input
+ownership.  SPI and documentation stabilization (Stage 5) follows the final
+shape of the preceding stages.
+
+=== Stage 0: Establish The Review Baseline
+
+Goal::
+Make the PR reviewable and make the remaining scope unambiguous.
+
+Work::
+
+. Reconcile the handoff with the final serialization implementation and remove
+  stale branch-topology and superseded "next step" narratives.
+. Apply the document dispositions above to `design-doc-audit.adoc`.
+. Mark each active design question as blocking, stabilization, or triggered
+  follow-up.
+. Produce a short API-removal and compatibility note for the removed builder
+  surfaces and the retained native `Configuration` path.
+. Establish focused test groups for mapping bootstrap, archive restoration,
+  generic inheritance/JPA metamodel, aggregate runtime behavior, generators,
+  and SessionFactory construction.
+
+Exit gate::
+Every active design document has one canonical owner, an explicit disposition,
+and no contradiction with the current code or handoff.
+
+=== Stage 1: Close Bootstrap Inputs And Customization Ownership
+
+Status:: Complete.
+
+Goal::
+Every bootstrap input has one owner and deterministic application timing.
+
+Work::
+
+. Split function customizations from the general `MappingCustomizations`
+  product and make `FunctionRegistryCoordinator` the sole coordinator.
+. Specify and test ordering for dialect functions, service-loaded
+  `FunctionContributor`s, programmatic contributors, and explicit function
+  registrations.
+. Verify equivalent ownership for `TypeContributor`, converters, basic/user
+  types, implicit and physical naming strategies, column ordering, auxiliary
+  database objects, and cache definitions.
+. Remove `MappingResolutionOptions` and `SqmFunctionRegistry` transport through
+  `BootstrapContext` where the explicit pipeline product is available.
+. Preserve the late `AdditionalMappingContributor` capability while replacing
+  its broad read-side collector exposure with a narrow, immutable
+  processed-mappings view if the compatibility surface permits.
+. Document an implementation trigger for the early source-level contributor;
+  do not add recategorization and fixed-point semantics preemptively.
+
+Exit gate::
+JPA bootstrap, `Configuration`, and restored-metadata bootstrap apply the same
+customization ordering, and no contributor is run twice during factory
+construction or archive restoration.
+
+Current progress::
+`FunctionRegistryCoordinator` now applies the dialect baseline first, combines
+service-loaded and programmatic contributors by ascending ordinal, and applies
+explicit descriptors last.  Focused tests lock down this precedence.
+`FunctionRegistryCustomizations` now carries these inputs separately from
+`MappingCustomizations` through bootstrap and mapping resolution.
++
+`TypeContributionCoordinator` now owns dialect and service/programmatic
+contributor application before categorization, with contributors combined by
+ascending ordinal and explicit type/converter registrations applied afterward.
+Binding no longer performs contributor discovery, and metadata restoration
+uses the same coordinator.  JPA adapters normalize the retained
+`hibernate.type_contributors` compatibility setting into this input.
++
+`BootstrapContext` no longer transports `MappingResolutionOptions`; mapping
+resolution and SessionFactory option adaptation receive that product
+explicitly.  `MappingResolutionOptionsImpl` receives its
+`TypeConfiguration` directly, removing its former circular
+`setBootstrapContext(...)` initialization.  Function-registry transport had
+already moved to explicit mapping contributions and resolved metadata, so
+`BootstrapContext` carries neither product.
++
+Late `AdditionalMappingContributor` execution now receives an immutable
+`ProcessedMappings` snapshot and a narrow
+`AdditionalMappingContributorContext` instead of the mutable
+`InFlightMetadataCollector` and `MetadataBuildingContext`.  Existing
+processed-model use cases require mapped-entity presence and a narrow entity
+view.  `ProcessedMappings` is backed by the primary categorized model and is
+explicitly keyed by Hibernate entity name; Hibernate entity name, JPA entity
+name, and Java class name remain separate in `ProcessedEntity`.  Dialect
+information is an environmental service on the contributor context.
+Relational mutation remains explicitly on the
+`AdditionalMappingContributions` write side.  The early source-level hook
+remains unimplemented and is guarded by the concrete triggers documented in
+`additional-mapping-contributor-design.adoc`.
++
+The remaining mapping-adjacent inputs have one application owner:
+`MappingResolutionPipeline` applies naming and column-ordering strategies to
+`MappingResolutionOptions`, and constructor-feeds auxiliary database objects
+and cache definitions through immutable `MappingResolutionContributions`.
+Shared cache mode remains a mapping-resolution option.  Entry-point adapters
+only normalize these inputs; binding and factory construction do not discover
+or reapply them.
+Extracting a dedicated type input product remains open.
+
+=== Stage 2: Finalize The Semantic Boot-Mapping Handoff
+
+Goal::
+Make declaration, contextual usage, and concrete application the authoritative
+semantic model for downstream handoffs.
+
+Work::
+
+. Treat `DeclarationRole`, `MappingRole`, declaration bindings, usage bindings,
+  and applied mappings as the completed base contract.
+. Finish mapped-superclass application traversal and remove identity-keyed or
+  copied-property-origin handoffs that duplicate role-based correspondence.
+. Finish embeddable usage/application products for nested, generic,
+  polymorphic, and mixed `@Embeddable` / `@Embedded` cases.
+. Decide the remaining identifier-part correspondence scope from concrete
+  runtime consumers.  Implement it only where positional legacy component
+  encoding is insufficient.
+. Make compatibility sorting an explicit finalization/materialization concern;
+  close the deterministic-ordering design.
+. Continue the `MetadataBuildingContext` capability split where mapping objects
+  retain broad context, prioritizing `SimpleValue` and explicit
+  value-resolution, database, class-loading, bean, naming, and custom-type
+  capabilities.
+
+Exit gate::
+Mapped-superclass, embeddable, generic, identifier, and copy/materialization
+handoffs use stable semantic roles rather than mapping-object identity.
+Legacy flattened `org.hibernate.mapping` views are clearly labeled projections,
+not the semantic source of truth.
+
+=== Stage 3: Complete Runtime-Sensitive Mapping Products
+
+Goal::
+Close the mapping areas whose correctness can only be demonstrated at runtime.
+
+Work::
+
+. Complete the static-metamodel plan during mapping materialization rather than
+  reconstructing it from retained `BootBindingModel`.
+. Add embeddable static-metamodel entries and explicit roles for inherited,
+  id-class, version, and ordinary fields.
+. Define and test Java field-hiding behavior separately from inherited JPA
+  attribute lookup, especially for generic attributes declared by mapped
+  superclasses.
+. Audit aggregate runtime consumers for scalar aggregates, aggregate arrays,
+  map keys/values, nested aggregates, and UDT/STRUCT order.  Keep the existing
+  aggregate member container as the handoff unless a failing runtime case
+  proves another product is needed.
+. Verify state-management products through runtime behavior.  Do not introduce
+  `StateManagementDescriptor` unless this audit finds an actual missing
+  whole-model handoff.
+. Choose the generator descriptor/source contract, then migrate identifier and
+  value generators by family.  Each slice must preserve schema exportables,
+  normal factory construction, archive restoration, and CDI/non-CDI creation.
+
+Exit gate::
+The same resolved mapping produces equivalent runtime/JPA models through live
+bootstrap and metadata restoration.  Static metamodel, aggregate, generator,
+and state-management tests assert observable runtime behavior rather than only
+successful metadata construction.
+
+=== Stage 4: Finish SessionFactory Construction Boundaries
+
+Goal::
+Make final factory construction consume explicit, prepared products without
+using an incomplete factory or broad bootstrap context as a general service
+locator.
+
+Work::
+
+. Continue moving no-factory-needed work into
+  `SessionFactoryRuntimeComponentsBuilder`,
+  `StandardServiceComponentsBuilder`, and the construction plan.
+. Narrow `ModelCreationContext` / `RuntimeModelCreationContext` to named
+  runtime-model inputs before attempting to move runtime metamodel creation.
+. Make factory-scoped service-registry creation and integrator execution
+  explicit construction phases with a completed-safe factory access handle.
+. Keep legacy `Integrator` as a compatibility adapter; define narrower new
+  hooks only when a real integration phase needs them.
+. Remove `MetadataBuildingContext` from the final construction boundary.
+. Remove wholesale `BootstrapContext` exposure from the construction plan,
+  passing the genuinely required class-loading, type, bean, model, and service
+  inputs explicitly.
+. Decide the supported post-PR role of `SessionFactoryOptions`: compatibility
+  view over resolved settings versus broader retained SPI.  It need not be
+  eliminated from all runtime consumers in this PR.
+
+Exit gate::
+Default and custom `SessionFactoryProducer` paths consume the same coherent
+construction request; lifecycle callbacks retain their required ordering; and
+the final boundary exposes no `MetadataBuildingContext` and no general-purpose
+`BootstrapContext`.
+
+=== Stage 5: Stabilize Extension Boundaries And Documentation
+
+Goal::
+Leave a coherent supported surface and contributor documentation that describes
+the final code rather than the migration.
+
+Work::
+
+. Decide the ORM 9 status of `AttributeBinder` and `TypeBinder`: retained
+  compatibility SPI, deprecated SPI, or replacement candidate.
+. Keep the internal attribute-contribution facets as implementation proofs.
+  Publish a replacement SPI only if the binding/materialization contracts are
+  stable and a concrete external use case validates the facade.
+. Consolidate mapped-superclass, generic-inheritance, embeddable, and resolved
+  contribution notes into the smallest useful canonical set.
+. Move resolved audits and final-state designs under `finished/`; delete stale
+  work logs after preserving durable decisions.
+. Replace `new-contributor-model-binding-guide.adoc` with three linked guides:
+  ** overall bootstrap architecture and entry points;
+  ** boot model and mapping bootstrap;
+  ** SessionFactory bootstrap and construction.
+. Make the overall guide a short routing document and keep detailed package,
+  phase, and extension instructions in the two focused guides.
+
+Exit gate::
+A new contributor can start at one bootstrap overview, follow either focused
+path into the code, and encounter no stale class names, removed workflows, or
+contradictory status claims.
+
+== Focused Verification Groups
+
+These groups are the starting point for later stages.  Add a focused reproducer
+to the relevant group when a slice exposes a new boundary.  Do not substitute
+all of these groups for the complete final test run.
+
+=== Mapping Bootstrap
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.annotation.*' \
+  --tests 'org.hibernate.orm.test.boot.models.source.*' \
+  --tests 'org.hibernate.orm.test.boot.models.categorize.*' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.*' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.*.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.*.*' \
+  --tests 'org.hibernate.orm.test.boot.models.foreigngenerator.*' \
+  --console=plain
+----
+
+=== Metadata Archive And Restoration
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.boot.serial.internal.*' \
+  --tests 'org.hibernate.orm.test.mapping.BootModelSerializationTest' \
+  --tests 'org.hibernate.orm.test.boot.orchestration.SessionFactoryPipelineTests' \
+  --console=plain
+----
+
+=== Generic Inheritance And JPA Metamodel
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.MappingRoleTests' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.mappedsuper.MappedSuperclassTests' \
+  --tests 'org.hibernate.orm.test.annotations.generics.EmbeddedIdGenericsSuperclassTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericAssociationOrderColumnTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericMapElementCollectionMetamodelTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericsTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.GenericsTest' \
+  --tests 'org.hibernate.orm.test.jpa.metamodel.MappedSuperclassIdClassSiblingTest' \
+  --console=plain
+----
+
+=== Aggregate And State-Management Runtime
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.embeddable.EmbeddableBindingTests' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.state.StateManagementBindingTests' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.JsonEmbeddableArrayTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.JsonWithArrayEmbeddableTest' \
+  --tests 'org.hibernate.orm.test.mapping.embeddable.StructEmbeddableArrayTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.JsonAggregateEmbeddableInheritanceTest' \
+  --tests 'org.hibernate.orm.test.inheritance.embeddable.StructAggregateEmbeddableInheritanceTest' \
+  --console=plain
+----
+
+=== Generator Lifecycle
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.IdGeneratorOverridingTest' \
+  --tests 'org.hibernate.orm.test.boot.models.foreigngenerator.ForeignGeneratorTests' \
+  --tests 'org.hibernate.orm.test.idgen.userdefined.GenericAnnotationBasedGeneratorTest' \
+  --tests 'org.hibernate.orm.test.idgen.userdefined.ExportableValueGeneratorTest' \
+  --tests 'org.hibernate.orm.test.idgen.userdefined.IdGeneratorTypeWithBeanContainerTest' \
+  --tests 'org.hibernate.orm.test.id.uuid.annotation.UuidGeneratorAnnotationTests' \
+  --console=plain
+----
+
+=== Bootstrap And SessionFactory Construction
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.orchestration.BootstrapPipelineTest' \
+  --tests 'org.hibernate.orm.test.boot.orchestration.SessionFactoryPipelineTests' \
+  --tests 'org.hibernate.orm.test.boot.orchestration.SessionFactoryProducerTests' \
+  --tests 'org.hibernate.orm.test.boot.settings.*' \
+  --tests 'org.hibernate.orm.test.intg.AdditionalMappingContributorTests' \
+  --tests 'org.hibernate.orm.test.intg.AdditionalMappingContributorBasicColumnTests' \
+  --console=plain
+----
+
+== PR Completion Gates
+
+The "Improve bootstrap" PR is ready for final review when all blocking stages
+satisfy these gates:
+
+Architecture::
+The supported entry points converge on `BootstrapPipeline`,
+`MappingResolutionPipeline`, and `SessionFactoryPipeline`, with explicit
+resolved settings and source/customization products.
+
+Semantic model::
+Stable roles and explicit runtime handoffs cover mapped superclasses,
+embeddables, generics, identifiers, and static metamodel injection.
+
+Restoration::
+Live and restored metadata use the same factory-construction path and produce
+equivalent runtime behavior for the focused handoff areas.
+
+Construction::
+The final factory boundary has no `MetadataBuildingContext`, does not use
+`BootstrapContext` as a general construction input, and keeps incomplete-factory
+callbacks localized and documented.
+
+Compatibility::
+Retained SPIs and adapters have explicit status, ordering, and tests.  Removed
+public APIs have migration guidance.
+
+Documentation::
+The audit, handoff, canonical designs, and contributor guides agree with the
+code.  Resolved or obsolete notes no longer appear as active work.
+
+Verification::
+Focused suites pass for every stage, followed by formatting, Javadoc,
+`git diff --check`, and the complete test suite before final review.
+
+== Follow-Up Queue After The PR
+
+The following should become separately tracked work rather than silently
+remaining in the PR:
+
+* early source-level mapping contribution, triggered by a contributor that
+  needs pre-binding discovery or recategorization;
+* a public structured binding-extension SPI, triggered by a validated external
+  use case after the internal facet model stabilizes;
+* further `MetadataBuildingContext` removal from compatibility constructors and
+  naming SPI, where it does not represent retained broad state;
+* first-class identifier correspondence in runtime mappings beyond the cases
+  required for correctness;
+* replacement of flattened `org.hibernate.mapping` compatibility views;
+* further `SessionFactoryOptions` decomposition;
+* a first-class state-management boot descriptor;
+* additional snapshot layers beyond the factory-ready metadata archive.

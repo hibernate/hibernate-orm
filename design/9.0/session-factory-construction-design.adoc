@@ -772,6 +772,12 @@ Focused tests should prove:
 
 == Open Questions
 
+These are PR-blocking Stage 4 construction-boundary decisions except for total
+`SessionFactoryOptions` elimination, which may remain a follow-up after its
+minimum compatibility view is defined.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
+
 * Should the construction request expose finalized `org.hibernate.boot.Metadata`
   for compatibility, or only narrower finalized metadata products?
 * How much of runtime metamodel creation can move before the factory instance

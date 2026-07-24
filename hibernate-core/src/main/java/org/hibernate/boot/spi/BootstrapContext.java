@@ -5,9 +5,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.scan.spi.Scanner;
@@ -57,11 +55,6 @@ public interface BootstrapContext {
 	 * @implNote Usually a {@link org.hibernate.boot.internal.TypeBeanInstanceProducer}.
 	 */
 	BeanInstanceProducer getCustomTypeProducer();
-
-	/**
-	 * Options specific to building the {@linkplain Metadata boot metamodel}
-	 */
-	MappingResolutionOptions getMappingResolutionOptions();
 
 	/**
 	 * Access to the {@link ClassLoaderService}.

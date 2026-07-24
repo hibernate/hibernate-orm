@@ -137,7 +137,7 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 					aggregatedColumns,
 					metadataCollector,
 					typeConfiguration,
-					context.getBootstrapContext().getMappingResolutionOptions()
+					context.getBuildingPlan()
 			).forEach( database::addAuxiliaryDatabaseObject );
 		}
 		aggregateColumn.setCustomWrite(

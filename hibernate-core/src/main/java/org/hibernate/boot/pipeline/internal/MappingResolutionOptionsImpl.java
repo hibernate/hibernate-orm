@@ -27,7 +27,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.serial.internal.MappingResolutionDetailsCollector;
 import org.hibernate.boot.spi.BasicTypeRegistration;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.GlobalMappingDefaults;
 import org.hibernate.cache.spi.RegionFactory;
@@ -81,8 +80,7 @@ public class MappingResolutionOptionsImpl
 	private final TimeZoneStorageType defaultTimezoneStorage;
 	private final WrapperArrayHandling wrapperArrayHandling;
 
-	// todo (6.0) : remove bootstrapContext property along with the deprecated methods
-	private BootstrapContext bootstrapContext;
+	private final TypeConfiguration typeConfiguration;
 
 	final ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
 	final ArrayList<CompositeUserType<?>> compositeUserTypes = new ArrayList<>();
@@ -108,7 +106,14 @@ public class MappingResolutionOptionsImpl
 	private final MappingResolutionDetailsCollector resolutionDetailsCollector;
 
 	public MappingResolutionOptionsImpl(StandardServiceRegistry serviceRegistry) {
+		this( serviceRegistry, new TypeConfiguration() );
+	}
+
+	public MappingResolutionOptionsImpl(
+			StandardServiceRegistry serviceRegistry,
+			TypeConfiguration typeConfiguration) {
 		this.serviceRegistry = serviceRegistry;
+		this.typeConfiguration = typeConfiguration;
 
 		final var strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		final var configService = serviceRegistry.requireService( ConfigurationService.class );
@@ -356,7 +361,7 @@ public class MappingResolutionOptionsImpl
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return bootstrapContext.getTypeConfiguration();
+		return typeConfiguration;
 	}
 
 	@Override
@@ -478,10 +483,6 @@ public class MappingResolutionOptionsImpl
 					nullIfEmpty( persistenceUnitMetadata.getDefaultSchema() )
 			);
 		}
-	}
-
-	public void setBootstrapContext(BootstrapContext bootstrapContext) {
-		this.bootstrapContext = bootstrapContext;
 	}
 
 	public void applyDefaultToOneFetchType(FetchType defaultToOneFetchType) {

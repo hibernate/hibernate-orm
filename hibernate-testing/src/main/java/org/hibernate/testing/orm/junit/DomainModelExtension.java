@@ -16,6 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Collection;
@@ -194,6 +195,7 @@ public class DomainModelExtension
 				final MappingSources mappingSources = new MappingSources();
 				final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 				final List<MappingCustomizations> descriptorCustomizations = new ArrayList<>();
+				final List<FunctionRegistryCustomizations> descriptorFunctionCustomizations = new ArrayList<>();
 
 				for ( String annotatedPackageName : domainModelAnnotation.annotatedPackageNames() ) {
 					mappingSources.addPackage( annotatedPackageName );
@@ -203,6 +205,7 @@ public class DomainModelExtension
 					final DomainModelDescriptor descriptor = standardDomainModel.getDescriptor();
 					descriptor.applyDomainModel( mappingSources );
 					descriptorCustomizations.add( descriptor.metadataCustomizations() );
+					descriptorFunctionCustomizations.add( descriptor.functionCustomizations() );
 				}
 
 				for ( Class<? extends DomainModelDescriptor> modelDescriptorClass : domainModelAnnotation.modelDescriptorClasses() ) {
@@ -210,6 +213,7 @@ public class DomainModelExtension
 						final DomainModelDescriptor modelDescriptor = modelDescriptorClass.newInstance();
 						modelDescriptor.applyDomainModel( mappingSources );
 						descriptorCustomizations.add( modelDescriptor.metadataCustomizations() );
+						descriptorFunctionCustomizations.add( modelDescriptor.functionCustomizations() );
 						for ( Class<?> annotatedClass : modelDescriptor.getAnnotatedClasses() ) {
 							mappingSources.addManagedClass( annotatedClass );
 						}
@@ -246,7 +250,8 @@ public class DomainModelExtension
 				MetadataImplementor metadataImplementor = MetadataBuildingHelper.buildMetadata(
 						serviceRegistry,
 						mappingSources,
-						metadataCustomizations( queryImports, typeContributors, sharedCacheMode, descriptorCustomizations )
+						metadataCustomizations( queryImports, typeContributors, sharedCacheMode, descriptorCustomizations ),
+						functionCustomizations( descriptorFunctionCustomizations )
 				);
 				applyCacheSettings(
 						metadataImplementor,
@@ -274,11 +279,9 @@ public class DomainModelExtension
 			List<MappingCustomizations> descriptorCustomizations) {
 		final var mergedQueryImports = new LinkedHashMap<String, Class<?>>( queryImports );
 		final var mergedTypeContributors = new ArrayList<TypeContributor>( typeContributors );
-		final var functionContributors = new ArrayList<org.hibernate.boot.model.FunctionContributor>();
 		final var cacheRegionDefinitions = new ArrayList<org.hibernate.boot.CacheRegionDefinition>();
 		final var basicTypeRegistrations = new ArrayList<org.hibernate.boot.spi.BasicTypeRegistration>();
 		final var userTypeRegistrations = new ArrayList<MappingCustomizations.UserTypeRegistration>();
-		final var sqlFunctions = new LinkedHashMap<String, org.hibernate.query.sqm.function.SqmFunctionDescriptor>();
 		final var auxiliaryDatabaseObjects = new ArrayList<org.hibernate.boot.model.relational.AuxiliaryDatabaseObject>();
 		final var attributeConverters = new ArrayList<org.hibernate.boot.model.convert.spi.ConverterDescriptor<?, ?>>();
 		var implicitNamingStrategy = (org.hibernate.boot.model.naming.ImplicitNamingStrategy) null;
@@ -292,11 +295,9 @@ public class DomainModelExtension
 			}
 			mergedQueryImports.putAll( customizations.queryImports() );
 			mergedTypeContributors.addAll( customizations.typeContributors() );
-			functionContributors.addAll( customizations.functionContributors() );
 			cacheRegionDefinitions.addAll( customizations.cacheRegionDefinitions() );
 			basicTypeRegistrations.addAll( customizations.basicTypeRegistrations() );
 			userTypeRegistrations.addAll( customizations.userTypeRegistrations() );
-			sqlFunctions.putAll( customizations.sqlFunctions() );
 			auxiliaryDatabaseObjects.addAll( customizations.auxiliaryDatabaseObjects() );
 			attributeConverters.addAll( customizations.attributeConverters() );
 			if ( implicitNamingStrategy == null ) {
@@ -316,11 +317,9 @@ public class DomainModelExtension
 		return new MappingCustomizations(
 				mergedQueryImports,
 				mergedTypeContributors,
-				functionContributors,
 				cacheRegionDefinitions,
 				basicTypeRegistrations,
 				userTypeRegistrations,
-				sqlFunctions,
 				auxiliaryDatabaseObjects,
 				attributeConverters,
 				implicitNamingStrategy,
@@ -328,6 +327,20 @@ public class DomainModelExtension
 				columnOrderingStrategy,
 				effectiveSharedCacheMode
 		);
+	}
+
+	private static FunctionRegistryCustomizations functionCustomizations(
+			List<FunctionRegistryCustomizations> descriptorCustomizations) {
+		final var functionContributors = new ArrayList<org.hibernate.boot.model.FunctionContributor>();
+		final var sqlFunctions = new LinkedHashMap<String, org.hibernate.query.sqm.function.SqmFunctionDescriptor>();
+		for ( FunctionRegistryCustomizations customizations : descriptorCustomizations ) {
+			if ( customizations == null ) {
+				continue;
+			}
+			functionContributors.addAll( customizations.functionContributors() );
+			sqlFunctions.putAll( customizations.sqlFunctions() );
+		}
+		return new FunctionRegistryCustomizations( functionContributors, sqlFunctions );
 	}
 
 	protected static void applyCacheSettings(Metadata metadata, boolean overrideCacheStrategy, String cacheConcurrencyStrategy) {

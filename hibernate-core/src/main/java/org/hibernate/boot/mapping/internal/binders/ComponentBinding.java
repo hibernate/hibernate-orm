@@ -147,7 +147,7 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 				aggregatedColumns,
 				auxiliaryNamespace
 		);
-		final boolean legacyXmlFormat = context.getBuildingOptions().isXmlFormatMapperLegacyFormatEnabled();
+		final boolean legacyXmlFormat = context.getBuildingPlan().isXmlFormatMapperLegacyFormatEnabled();
 		if ( addAuxiliaryObjects ) {
 			for ( var auxiliary : aggregateSupport.aggregateAuxiliaryObjects(
 					new AggregateAuxiliaryObjectRequest(

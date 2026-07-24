@@ -21,7 +21,7 @@ import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.pipeline.internal.FunctionRegistryCoordinator;
-import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
@@ -128,15 +128,13 @@ public final class MetadataState implements Serializable {
 	}
 
 	MetadataImpl restore(StandardServiceRegistry serviceRegistry, ModelsContext modelsContext) {
-		final var restoredOptions = new MappingResolutionOptionsImpl( serviceRegistry );
+		final var restoredTypeConfiguration = new TypeConfiguration();
+		final var restoredOptions = new MappingResolutionOptionsImpl( serviceRegistry, restoredTypeConfiguration );
 		final var restoredContext = new BootstrapContextImpl(
 				serviceRegistry,
-				restoredOptions,
-				new TypeConfiguration(),
+				restoredTypeConfiguration,
 				modelsContext
 		);
-		restoredOptions.setBootstrapContext( restoredContext );
-		final TypeConfiguration restoredTypeConfiguration = restoredContext.getTypeConfiguration();
 		final Map<String, TypeDefinition> restoredTypeDefinitionMap = restoreTypeDefinitions(
 				restoredContext.getClassLoaderService()::classForTypeName
 		);
@@ -178,7 +176,7 @@ public final class MetadataState implements Serializable {
 		final SqmFunctionRegistry restoredFunctionRegistry = FunctionRegistryCoordinator.create();
 		FunctionRegistryCoordinator.populate(
 				restoredFunctionRegistry,
-				MappingCustomizations.NONE,
+				FunctionRegistryCustomizations.NONE,
 				serviceRegistry,
 				restoredContext.getTypeConfiguration()
 		);

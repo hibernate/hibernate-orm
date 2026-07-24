@@ -19,6 +19,14 @@ The cleanup and routing map for this directory.  It classifies every design
 note as active, reference, resolved, historical, deferred, or an archive
 candidate, and names the canonical document for each design area.
 
+link:improve-bootstrap-completion-plan.adoc[`improve-bootstrap-completion-plan.adoc`]::
+The staged scope and dependency plan for completing the "Improve bootstrap"
+work.  It separates PR-blocking work, stabilization, and triggered follow-ups.
+
+link:bootstrap-api-compatibility.adoc[`bootstrap-api-compatibility.adoc`]::
+Compatibility and migration reference for removed staged builders, supported
+entry points, retained extension boundaries, and replacement hooks.
+
 Use the audit before updating older design notes.  If a document and the audit
 disagree about whether a topic is active, resolved, or historical, treat the
 audit as the routing source and fix the stale document before adding more

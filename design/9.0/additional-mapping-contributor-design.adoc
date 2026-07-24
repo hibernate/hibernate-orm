@@ -4,12 +4,9 @@
 This document captures the ORM 9 direction for mapping contributions made after
 the application sources have been inspected.
 
-The legacy `AdditionalMappingContributor` contract is currently
-collector-oriented: Hibernate passes an `InFlightMetadataCollector` so
-contributors can inspect processed boot state before deciding whether to add
-more mappings.  That "mappings processed so far" behavior is valid and must
-remain available, but `AdditionalMappingContributor` is incubating, so the
-method signature may change if ORM can provide a better replacement view than
+The `AdditionalMappingContributor` contract runs after the primary mappings
+have been processed.  ORM 9 preserves that timing while exposing the processed
+state through the narrow immutable `ProcessedMappings` view instead of
 `InFlightMetadataCollector`.
 
 The target is to keep the late processed-mappings capability, avoid exposing the
@@ -20,8 +17,7 @@ contributor contract for earlier source/model decisions.
 
 * Preserve the existing `AdditionalMappingContributor` capability to inspect
   mappings processed so far before contributing more mappings.
-* Replace the `InFlightMetadataCollector` method parameter if a narrower
-  processed-mapping view can cover the legitimate contributor use cases.
+* Keep the processed-mapping view narrow and immutable.
 * Provide a new contributor contract that can make decisions from processed
   source/categorization facts without requiring `org.hibernate.mapping` state.
 * Allow contributions through a sidecar accumulator similar to
@@ -44,12 +40,12 @@ contributor contract for earlier source/model decisions.
 
 == Current Processed-Mappings Hook
 
-Existing contributors are collector-dependent.  Their contract includes:
+The contributor contract includes:
 
 * `AdditionalMappingContributions`, the write sidecar;
-* `InFlightMetadataCollector`, the processed-state query surface;
-* `ResourceStreamLocator`;
-* `MetadataBuildingContext`.
+* `ProcessedMappings`, the immutable processed-state query surface;
+* `AdditionalMappingContributorContext`, a narrow contextual-services view
+  containing model, class-loading, type, and resource-location services.
 
 In the ORM 9 pipeline this hook, or its replacement, should remain late:
 
@@ -67,29 +63,32 @@ This timing is deliberate.  Contributors may query mapped classes, tables,
 namespaces, registrations, or other processed mapping state that does not exist
 until after binding/materialization has populated compatibility metadata.
 
-The open design question is the read-side parameter.  `InFlightMetadataCollector`
-is too broad because it is both a mutable metadata collector and a query surface.
-Since `AdditionalMappingContributor` is incubating, ORM 9 may replace it with a
-narrow interface such as `ProcessedMappings`, `MappingProcessingView`, or
-`InFlightMappingView`.
+The repository compatibility inventory found two read-side decisions in
+existing contributors: whether an entity name was already mapped, and which
+dialect/version is active.  Only the first is processed-model state.
+`ProcessedMappings` therefore exposes an immutable view of processed entities
+backed by the primary `CategorizedDomainModel`.  Its lookup and
+`getMappedEntityNames()` are explicitly keyed by Hibernate entity name; each
+`ProcessedEntity` exposes the Hibernate entity name, JPA entity name, Java
+class name, hierarchy position, access type, and declared attribute names as
+distinct concepts.  `EntityTypeMetadata` implements this narrow interface
+directly, so the processed view reuses the categorized model without
+constructing a parallel entity representation.
++
+The snapshot is constructed once and shared by all contributors in this phase.
+It contains only the primary categorized model, not mappings supplied by
+earlier `AdditionalMappingContributor` instances in the same discovery pass.
+The dialect belongs to
+`AdditionalMappingContributorContext` with the other environmental services.
+Additional processed-model lookup capabilities should still be added only
+with a focused integration use case.
 
-The replacement should answer the legitimate "mappings processed so far"
-questions without exposing collector mutation.  Candidate capabilities include:
-
-* entity binding lookup and iteration;
-* mapped superclass and embeddable/component lookup where contributors
-  legitimately inspect processed types;
-* database/namespace/table lookup;
-* type, converter, generator, filter, named query, result-set mapping, and
-  entity-graph registration lookup;
-* access to bootstrap services needed only for reading resources or resolving
-  names;
-* an explicit "not available here" boundary for operations that would mutate
-  final metadata directly.
-
-The write side should remain `AdditionalMappingContributions` or an equivalent
-sidecar.  The read side should not be the write side, and neither side should
-encourage contributors to mutate `org.hibernate.mapping` structures directly.
+`AdditionalMappingContributorContext` exposes model inspection, class loading,
+resource lookup, and the type configuration without exposing
+`MetadataBuildingContext` or its mutable metadata collector.  Relational
+contributions remain on the write side:
+`AdditionalMappingContributions` owns table, sequence, auxiliary-object, and
+the narrow database materialization escape hatch needed by dialect JDBC types.
 
 == New Pipeline-Native Hook
 
@@ -305,16 +304,15 @@ Both hooks can coexist:
 Early, source/categorization-driven, contributes additional mapping sources.
 
 `AdditionalMappingContributor`::
-Late, processed-mapping-driven, preserves the existing behavioral capability and
-supports decisions that need compatibility metadata.  The current incubating
-signature uses `InFlightMetadataCollector`, but that should be treated as a
-replaceable implementation detail if a narrower processed-mappings view is
-designed.
+Late, processed-mapping-driven, preserves the existing behavioral capability
+through `ProcessedMappings` and writes only through
+`AdditionalMappingContributions`.
 
 Over time, integrations that only need source/categorization facts should move
-to the early hook.  Integrations that require `InFlightMetadataCollector` or
-direct relational-object contribution should stay on the late hook until a
-processed-mappings view or source-level model exists for those facts.
+to the early hook.  Integrations needing processed entity facts, environmental
+services such as the dialect, or direct relational-object contribution remain
+on the late hook.  A request for broader collector state must first be
+expressed as a focused read-side query or write-side contribution operation.
 
 == Implementation Triggers
 
@@ -331,7 +329,8 @@ Implement the early hook when one of these appears:
   been present from the beginning.
 
 Do not implement the early hook merely to remove the existing late hook.  The
-late hook remains the compatibility boundary for collector-dependent behavior.
+late hook remains the compatibility boundary for processed-mapping and direct
+relational-contribution behavior.
 
 == Verification Strategy
 
@@ -342,8 +341,8 @@ Initial coverage should include:
 * a contributed mapped superclass that affects a final entity hierarchy;
 * a contributed embeddable used by a contributed entity;
 * duplicate contribution handling;
-* proof that legacy `AdditionalMappingContributor` still sees processed
-  `InFlightMetadataCollector` state.
+* proof that `AdditionalMappingContributor` sees the immutable processed entity
+  snapshot without receiving `InFlightMetadataCollector`.
 
 The focused legacy guardrail remains:
 

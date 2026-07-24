@@ -9,15 +9,15 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.ProcessedEntity;
+import org.hibernate.boot.spi.ProcessedMappings;
+import org.hibernate.boot.spi.AdditionalMappingContributorContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.models.Creator;
 import org.hibernate.models.spi.ClassDetails;
@@ -56,7 +56,7 @@ public class AdditionalMappingContributorTests {
 					impl = AdditionalMappingContributorTests.ClassContributorImpl.class
 			)
 	)
-	@DomainModel
+	@DomainModel( annotatedClasses = Entity1.class )
 	@SessionFactory
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void verifyClassContribution(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
@@ -270,9 +270,18 @@ public class AdditionalMappingContributorTests {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
-				InFlightMetadataCollector metadata,
-				ResourceStreamLocator resourceStreamLocator,
-				MetadataBuildingContext buildingContext) {
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
+			assertThat( processedMappings.getMappedEntityNames() )
+					.containsExactly( Entity1.class.getName() );
+			final ProcessedEntity entity1 = processedMappings.getEntityBinding( Entity1.class.getName() );
+			assertThat( entity1 ).isNotNull();
+			assertThat( entity1.getEntityName() ).isEqualTo( Entity1.class.getName() );
+			assertThat( entity1.getJpaEntityName() ).isEqualTo( "Entity1" );
+			assertThat( entity1.getClassName() ).isEqualTo( Entity1.class.getName() );
+			assertThat( entity1.isHierarchyRoot() ).isTrue();
+			assertThat( entity1.getSuperEntityName() ).isNull();
+			assertThat( entity1.getDeclaredAttributeNames() ).containsExactlyInAnyOrder( "id", "name" );
 			contributions.contributeEntity( Entity2.class );
 		}
 	}
@@ -281,10 +290,9 @@ public class AdditionalMappingContributorTests {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
-				InFlightMetadataCollector metadata,
-				ResourceStreamLocator resourceStreamLocator,
-				MetadataBuildingContext buildingContext) {
-			try (final InputStream stream = resourceStreamLocator.locateResourceStream(
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
+			try (final InputStream stream = contributorContext.getResourceStreamLocator().locateResourceStream(
 					"mappings/intg/contributed-mapping.xml" )) {
 				contributions.contributeBinding( stream );
 			}
@@ -298,10 +306,9 @@ public class AdditionalMappingContributorTests {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
-				InFlightMetadataCollector metadata,
-				ResourceStreamLocator resourceStreamLocator,
-				MetadataBuildingContext buildingContext) {
-			final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
+			final ModelsContext modelsContext = contributorContext.getModelsContext();
 			final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 
 			contributeEntity4Details( contributions, modelsContext, classDetailsRegistry );
@@ -354,10 +361,9 @@ public class AdditionalMappingContributorTests {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
-				InFlightMetadataCollector metadata,
-				ResourceStreamLocator resourceStreamLocator,
-				MetadataBuildingContext buildingContext) {
-			final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
+			final ModelsContext modelsContext = contributorContext.getModelsContext();
 			final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 			contributeEntity6Details( contributions, modelsContext, classDetailsRegistry );
 		}

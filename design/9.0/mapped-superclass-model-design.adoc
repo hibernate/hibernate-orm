@@ -352,13 +352,18 @@ while the mapping node represents the hierarchy-scoped application.
 This lets the binder move toward the right ownership model while preserving the
 legacy mapping APIs that expect flattened property closures.
 
-During the `MetadataBuildingProcess` transition, contribution-style state should
-remain an internal new-pipeline product or a compatibility wrapper around the
-current mapping nodes unless legacy boot also populates the same state.  Do not
-make a new descriptor attached to shared `org.hibernate.mapping` contracts the
-only source of truth until it can be authoritative for all supported boot paths.
+Contribution-style state should remain an explicit pipeline product or a
+compatibility wrapper around the current mapping nodes.  Do not make a new
+descriptor attached to shared `org.hibernate.mapping` contracts the only source
+of truth until the relevant runtime consumers use it directly.
 
 == Follow-Up Questions
+
+Questions needed to finish stable role-based application and runtime/JPA
+handoff are PR-blocking Stage 2 work.  Renaming or replacing the compatibility
+mapping class is follow-up.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
 
 * Should the existing `org.hibernate.mapping.MappedSuperclass` class be renamed
   or repurposed as the contribution object?

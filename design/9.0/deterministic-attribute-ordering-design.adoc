@@ -1,6 +1,9 @@
 = Deterministic Attribute Ordering Design
 :toc:
 
+Status: resolved by phase-owned ordering and compatibility sorting.  Preserve
+this note as a final-state reference and focused regression-test guide.
+
 This note captures the ORM 9 direction for replacing early alphabetical
 attribute ordering with explicit deterministic ordering products.
 
@@ -376,6 +379,10 @@ Trigger to leave Phase 3:
   source-model or contribution-model mutation.
 
 == Open Questions
+
+These questions no longer block the PR.  Recast any still-useful item as a
+final-state invariant or a focused follow-up before moving this note to
+`finished/`.
 
 * Should hibernate-models expose source ordinals on all `MemberDetails`, or
   separate source-order accessors on `ClassDetails`?

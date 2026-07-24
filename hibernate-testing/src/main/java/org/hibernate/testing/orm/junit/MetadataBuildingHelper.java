@@ -5,6 +5,7 @@
 package org.hibernate.testing.orm.junit;
 
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -24,10 +25,24 @@ public final class MetadataBuildingHelper {
 			StandardServiceRegistry serviceRegistry,
 			MappingSources mappingSources,
 			MappingCustomizations metadataCustomizations) {
+		return buildMetadata(
+				serviceRegistry,
+				mappingSources,
+				metadataCustomizations,
+				FunctionRegistryCustomizations.NONE
+		);
+	}
+
+	public static MetadataImplementor buildMetadata(
+			StandardServiceRegistry serviceRegistry,
+			MappingSources mappingSources,
+			MappingCustomizations metadataCustomizations,
+			FunctionRegistryCustomizations functionCustomizations) {
 		return org.hibernate.boot.pipeline.internal.MetadataBuildingHelper.buildMetadata(
 				serviceRegistry,
 				mappingSources,
-				metadataCustomizations
+				metadataCustomizations,
+				functionCustomizations
 		);
 	}
 }

@@ -25,13 +25,31 @@ public final class MetadataBuildingHelper {
 	}
 
 	public static MetadataImplementor buildMetadata(StandardServiceRegistry serviceRegistry, MappingSources mappingSources) {
-		return buildMetadata( serviceRegistry, mappingSources, MappingCustomizations.NONE );
+		return buildMetadata(
+				serviceRegistry,
+				mappingSources,
+				MappingCustomizations.NONE,
+				FunctionRegistryCustomizations.NONE
+		);
 	}
 
 	public static MetadataImplementor buildMetadata(
 			StandardServiceRegistry serviceRegistry,
 			MappingSources mappingSources,
 			MappingCustomizations mappingCustomizations) {
+		return buildMetadata(
+				serviceRegistry,
+				mappingSources,
+				mappingCustomizations,
+				FunctionRegistryCustomizations.NONE
+		);
+	}
+
+	public static MetadataImplementor buildMetadata(
+			StandardServiceRegistry serviceRegistry,
+			MappingSources mappingSources,
+			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations) {
 		final var configurationValues = new HashMap<>();
 		configurationValues.putAll( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( configurationValues, false );
@@ -41,6 +59,7 @@ public final class MetadataBuildingHelper {
 				mappingSettings,
 				mappingSources,
 				mappingCustomizations,
+				functionCustomizations,
 				serviceRegistry
 		) );
 	}

@@ -1,0 +1,181 @@
+= ORM 9 Bootstrap API Compatibility
+:toc:
+
+This note records the public and integration-facing bootstrap changes made by
+the ORM 9 "Improve bootstrap" work.
+
+It is a compatibility reference, not a current-status log.  The architectural
+target is described by
+link:session-factory-bootstrap-design.adoc[
+`session-factory-bootstrap-design.adoc`].
+
+== Supported Entry Points
+
+The preferred entry points are:
+
+`jakarta.persistence.Persistence`::
+Standard Jakarta Persistence bootstrap from a named persistence unit.
+
+`jakarta.persistence.spi.PersistenceUnitInfo`::
+Standard container bootstrap.
+
+`jakarta.persistence.PersistenceConfiguration`::
+Standard programmatic Jakarta Persistence bootstrap.
+
+`org.hibernate.jpa.HibernatePersistenceConfiguration`::
+Hibernate's programmatic extension of `PersistenceConfiguration`, including
+Hibernate-specific mapping-source, setting, and customization conveniences.
+
+`org.hibernate.boot.serial.RestoredMetadata`::
+The supported transition from a restored ORM metadata archive to a
+`SessionFactory`.
+
+`org.hibernate.cfg.Configuration` remains as a native compatibility facade.  It
+normalizes its accumulated sources, settings, and customizations into the same
+bootstrap pipeline as the preferred entry points.  It must not grow a parallel
+bootstrap implementation.
+
+The user guide describes `Configuration` as deprecated, but the class is not
+currently annotated `@Deprecated` on this branch.  Formal source-level
+deprecation, timing, and removal policy are an explicit stabilization decision;
+the compatibility behavior is required until that decision is made.
+
+== Removed Staged Builder APIs
+
+The former public staged workflow has been removed:
+
+[source,text]
+----
+MetadataSources
+    -> MetadataBuilder
+    -> Metadata
+    -> SessionFactoryBuilder
+    -> SessionFactory
+----
+
+Removed public types and methods include:
+
+* `org.hibernate.boot.MetadataSources`;
+* `org.hibernate.boot.MetadataBuilder`;
+* `org.hibernate.boot.SessionFactoryBuilder`;
+* `Metadata#getSessionFactoryBuilder()`;
+* `Metadata#buildSessionFactory()`.
+
+The related delegating/internal builder contracts and services were also
+removed.  They are implementation SPIs, not compatibility entry points to
+restore under new names.
+
+There is intentionally no public one-for-one replacement for constructing and
+mutating intermediate metadata through staged builders.  Applications should
+configure a supported entry point and build the factory.  Code which only needs
+to inspect restored metadata may use `RestoredMetadata#getMetadata()`.
+
+== Removed Integration Hooks
+
+[cols="2,3,3", options="header"]
+|===
+| Removed hook
+| Former role
+| ORM 9 direction
+
+| `MetadataBuilderContributor`
+| Mutate the broad metadata builder, often to register types or functions.
+| Use `TypeContributor`, `FunctionContributor`, a supported programmatic
+customization method, or a focused integration SPI matching the actual
+contribution.
+
+| `MetadataBuilderInitializer`
+| Replace or initialize builder behavior globally.
+| No broad replacement.  Use explicit contributors or entry-point
+customizations.
+
+| `MetadataSourcesContributor`
+| Add mapping sources to the old source collector.
+| Use `AdditionalMappingContributor` for the retained late contribution
+capability.  An early source-level contributor is a triggered follow-up, not a
+current public contract.
+
+| `MetadataBuilderFactory` and `MetadataBuilderImplementor`
+| Replace or extend staged metadata-builder construction.
+| No replacement.  Mapping resolution is owned by the explicit pipeline.
+
+| `SessionFactoryBuilderFactory`, `SessionFactoryBuilderService`, and
+  `SessionFactoryBuilderImplementor`
+| Replace or extend the old factory builder.
+| Use `SessionFactoryProducer` for custom factory construction and normal
+resolved settings/customization products for factory options.
+
+| `org.hibernate.jpa.boot.spi.Bootstrap`,
+  `EntityManagerFactoryBuilder`, and `PersistenceConfigurationDescriptor`
+| Expose Hibernate's former staged JPA provider bootstrap internals.
+| Use the standard Jakarta Persistence entry points.  Provider internals route
+through `BootstrapPipeline` and are not a replacement public SPI.
+|===
+
+== Retained Compatibility And Extension Boundaries
+
+`Configuration`::
+Retained native facade.  It must delegate to the explicit pipeline and obey the
+same customization ordering as JPA bootstrap.
+
+`Metadata`::
+Retained resolved mapping inspection view.  It is not a factory builder and is
+not the internal resolved-mapping handoff.
+
+`AdditionalMappingContributor`::
+Retained incubating late contributor.  It may inspect mappings already
+processed and contribute additional sources.  Its current
+`InFlightMetadataCollector` parameter is broader than the desired read-side
+contract and is tracked for narrowing.
+
+`TypeContributor` and `FunctionContributor`::
+Retained focused contribution SPIs.  Their ordering and single ownership are
+part of bootstrap-customization completion.
+
+`AttributeBinder` and `TypeBinder`::
+Retained compatibility extension points while the internal facet-based binding
+model stabilizes.  No public replacement SPI is committed yet.
+
+`Integrator`::
+Retained lifecycle compatibility SPI.  It remains an adapter around explicit
+factory-construction phases and must not determine the target shape of new
+construction contexts.
+
+`SessionFactoryProducer`::
+The ORM 9 custom-factory construction SPI.  It consumes the finalized
+construction request instead of replacing a staged builder.
+
+`MetadataSerialization`, `MetadataArchive`, and `RestoredMetadata`::
+The supported metadata archive boundary.  Internal snapshots and
+`ResolvedMapping` are not public compatibility SPIs.
+
+== Migration Rules
+
+* Move source declarations, settings, and programmatic customizations to
+  `PersistenceConfiguration` or `HibernatePersistenceConfiguration`.
+* Migrate existing `Configuration` usage incrementally; its current behavior
+  remains a supported compatibility path for ORM 9 unless the formal
+  deprecation decision says otherwise.
+* Replace broad builder contributors with the narrow contributor matching the
+  actual extension.
+* Do not pass intermediate metadata between application layers as a substitute
+  for a bootstrap request.
+* Do not depend on `org.hibernate.boot.pipeline.internal` or
+  `org.hibernate.boot.serial.internal`.
+* Use `RestoredMetadata#buildSessionFactory()` after archive restoration rather
+  than trying to reconstruct a removed metadata/factory builder.
+
+== Stabilization Questions
+
+These are compatibility-policy decisions, not reasons to restore removed
+builders:
+
+* whether and when `Configuration` receives a formal `@Deprecated` annotation;
+* how long source and binary migration support is promised for removed staged
+  builder APIs before ORM 9 final;
+* whether any former `MetadataBuilderContributor` use case lacks an adequately
+  focused replacement;
+* whether `AdditionalMappingContributor` can replace its collector parameter
+  without losing required processed-model queries;
+* what minimum public settings view custom `SessionFactoryProducer`
+  implementations need after `SessionFactoryOptions` is narrowed.

@@ -1,9 +1,9 @@
 = Generator Descriptor Design
 :toc:
 
-Status: Deferred. Identifier-generator descriptor/source and UUID-interpretation
-decisions are intentionally postponed while boot-model serialization work
-continues in other areas.
+Scope: PR-blocking follow-up to the completed metadata-serialization
+foundation.  Choose the retained identifier descriptor/source shape before
+implementation; migrate generator families in archive-safe slices.
 
 This note defines the ORM 9 direction for representing bound generator
 declarations and creating runtime `Generator` instances.
@@ -476,6 +476,11 @@ Archive inspection should assert that descriptors retain only declarative
 state and require no post-restoration `ModelsContext` attachment.
 
 == Remaining Questions
+
+These are blocking design choices for the generator stage.  Their execution
+scope is routed by
+link:design-doc-audit.adoc#_open_question_routing[
+`design-doc-audit.adoc`].
 
 * Should identifier descriptors remain internal construction recipes, or
   should `IdentifierGeneratorSource` become the primary retained boot fact?

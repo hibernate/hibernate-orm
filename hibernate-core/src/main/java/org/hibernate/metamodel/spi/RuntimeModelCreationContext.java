@@ -74,7 +74,7 @@ public interface RuntimeModelCreationContext {
 	}
 
 	default MappingResolutionOptions getMappingResolutionOptions() {
-		return getBootstrapContext().getMappingResolutionOptions();
+		return getBootModel().getMappingResolutionOptions();
 	}
 
 	default ManagedTypeRepresentationResolver getRepresentationStrategySelector() {

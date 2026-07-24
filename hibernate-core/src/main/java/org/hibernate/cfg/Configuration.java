@@ -46,6 +46,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.boot.pipeline.internal.BootstrapPipelineRequest;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.spi.BasicTypeRegistration;
@@ -1068,6 +1069,7 @@ public class Configuration {
 				mappingSettings,
 				mappingSources,
 				createMappingCustomizations(),
+				createFunctionCustomizations(),
 				sessionFactorySettings,
 				standardServiceRegistry,
 				null
@@ -1096,11 +1098,9 @@ public class Configuration {
 		return new MappingCustomizations(
 				Map.of(),
 				typeContributorRegistrations,
-				functionContributorRegistrations,
 				List.of(),
 				basicTypeRegistrations,
 				deferredUserTypeRegistrations,
-				customFunctionDescriptors,
 				auxiliaryDatabaseObjectList,
 				attributeConverterDescriptorsByClass == null
 						? List.of()
@@ -1112,6 +1112,12 @@ public class Configuration {
 		);
 	}
 
+	private FunctionRegistryCustomizations createFunctionCustomizations() {
+		return new FunctionRegistryCustomizations(
+				functionContributorRegistrations,
+				customFunctionDescriptors
+		);
+	}
 
 	/**
 	 * Create a {@link SessionFactory} using the properties and mappings

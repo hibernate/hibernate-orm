@@ -87,7 +87,6 @@ public class MappingSourcesTests {
 		final var mappingCustomizations = new MappingCustomizations(
 				Map.of( "Simple", SimpleEntity.class ),
 				null,
-				null,
 				null
 		);
 

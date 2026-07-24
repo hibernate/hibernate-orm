@@ -27,6 +27,7 @@ import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.ModelsConfiguration;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
@@ -151,11 +152,14 @@ public class SourceModelTestHelper {
 	public static ModelsContext createBuildingContext(
 			ManagedResources managedResources,
 			StandardServiceRegistry serviceRegistry) {
+		final var typeConfiguration = new TypeConfiguration();
 		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
-				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl(
+						serviceRegistry,
+						typeConfiguration
+				);
 		final BootstrapContextImpl bootstrapContext =
-				new BootstrapContextImpl( serviceRegistry, metadataBuildingOptions );
-		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
+				new BootstrapContextImpl( serviceRegistry, typeConfiguration );
 		return createBuildingContext(
 				managedResources,
 				false,
@@ -168,11 +172,14 @@ public class SourceModelTestHelper {
 			ManagedResources managedResources,
 			Index jandexIndex,
 			StandardServiceRegistry serviceRegistry) {
+		final var typeConfiguration = new TypeConfiguration();
 		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
-				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl(
+						serviceRegistry,
+						typeConfiguration
+				);
 		final BootstrapContextTesting bootstrapContext =
-				new BootstrapContextTesting( jandexIndex, serviceRegistry, metadataBuildingOptions );
-		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
+				new BootstrapContextTesting( jandexIndex, serviceRegistry, typeConfiguration );
 		return createBuildingContext(
 				managedResources,
 				false,

@@ -22,6 +22,7 @@ public record BootstrapPipelineRequest(
 		ResolvedMappingSettings mappingSettings,
 		MappingSources mappingSources,
 		MappingCustomizations mappingCustomizations,
+		FunctionRegistryCustomizations functionCustomizations,
 		ResolvedSessionFactorySettings sessionFactorySettings,
 		ServiceRegistry serviceRegistry,
 		SessionFactoryObserver[] additionalSessionFactoryObservers) {
@@ -33,6 +34,9 @@ public record BootstrapPipelineRequest(
 		Objects.requireNonNull( sessionFactorySettings );
 		Objects.requireNonNull( serviceRegistry );
 		mappingCustomizations = mappingCustomizations == null ? MappingCustomizations.NONE : mappingCustomizations;
+		functionCustomizations = functionCustomizations == null
+				? FunctionRegistryCustomizations.NONE
+				: functionCustomizations;
 		additionalSessionFactoryObservers = additionalSessionFactoryObservers == null
 				? new SessionFactoryObserver[0]
 				: additionalSessionFactoryObservers.clone();

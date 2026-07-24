@@ -12,11 +12,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.ProcessedMappings;
+import org.hibernate.boot.spi.AdditionalMappingContributorContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
@@ -267,9 +266,8 @@ public class AdditionalMappingContributorBasicColumnTests {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
-				InFlightMetadataCollector metadata,
-				ResourceStreamLocator resourceStreamLocator,
-				MetadataBuildingContext buildingContext) {
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
 			try ( final InputStream stream = new ByteArrayInputStream( String.format( Locale.ROOT,
 					"<entity-mappings xmlns=\"http://www.hibernate.org/xsd/orm/mapping\" version=\"3.1\">\n" +
 							"    <entity class=\"org.hibernate.orm.test.intg.AdditionalMappingContributorBasicColumnTests$Entity1\">\n" +

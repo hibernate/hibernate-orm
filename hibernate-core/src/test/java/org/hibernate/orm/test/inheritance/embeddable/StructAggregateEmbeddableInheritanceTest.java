@@ -7,14 +7,13 @@ package org.hibernate.orm.test.inheritance.embeddable;
 import java.util.Set;
 
 import org.hibernate.annotations.Struct;
-import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.ProcessedMappings;
+import org.hibernate.boot.spi.AdditionalMappingContributorContext;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
@@ -206,9 +205,8 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 	@Override
 	public void contribute(
 			AdditionalMappingContributions contributions,
-			InFlightMetadataCollector metadata,
-			ResourceStreamLocator resourceStreamLocator,
-			MetadataBuildingContext buildingContext) {
+			ProcessedMappings processedMappings,
+			AdditionalMappingContributorContext contributorContext) {
 		final Namespace namespace = new Namespace(
 				PhysicalNamingStrategyStandardImpl.INSTANCE,
 				null,

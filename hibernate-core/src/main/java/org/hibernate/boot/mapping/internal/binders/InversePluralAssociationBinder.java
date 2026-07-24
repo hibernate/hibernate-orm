@@ -346,7 +346,7 @@ class InversePluralAssociationBinder {
 		element.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
 				inverseBinding.attributeMetadata().getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		for ( Column owningKeyColumn : owningCollection.getKey().getColumns() ) {
 			element.addColumn( copyColumn( collectionTable, owningKeyColumn, owningKeyColumn.isUnique() ) );
@@ -366,7 +366,7 @@ class InversePluralAssociationBinder {
 		element.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
 				inverseBinding.attributeMetadata().getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		for ( Column owningKeyColumn : owningJoin.getKey().getColumns() ) {
 			element.addColumn( copyColumn( collectionTable, owningKeyColumn, owningKeyColumn.isUnique() ) );
@@ -562,7 +562,7 @@ class InversePluralAssociationBinder {
 		inverseIndex.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
 				inverseBinding.attributeMetadata().getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		if ( owningIndex.isLogicalOneToOne() ) {
 			inverseIndex.markAsLogicalOneToOne();
@@ -585,7 +585,7 @@ class InversePluralAssociationBinder {
 		element.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
 				inverseBinding.attributeMetadata().getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		return element;
 	}

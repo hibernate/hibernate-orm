@@ -480,7 +480,7 @@ class CollectionIndexBinder {
 			index.setTypeUsingReflection(
 					collection.getOwner().getClassName(),
 					collection.getRole().substring( collection.getRole().lastIndexOf( '.' ) + 1 ),
-					bindingState.getMetadataBuildingContext()
+					bindingState.getClassLoaderService()
 			);
 			if ( manyToOne.isLogicalOneToOne() ) {
 				index.markAsLogicalOneToOne();
@@ -658,7 +658,7 @@ class CollectionIndexBinder {
 		index.setTypeUsingReflection(
 				collection.getOwner().getClassName(),
 				source.member().resolveAttributeName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 
 		final List<MapKeyJoinColumn> orderedJoinColumns = referenceToPrimaryKey

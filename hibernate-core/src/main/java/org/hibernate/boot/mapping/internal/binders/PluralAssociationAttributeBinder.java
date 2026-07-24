@@ -257,7 +257,7 @@ class PluralAssociationAttributeBinder {
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -292,7 +292,7 @@ class PluralAssociationAttributeBinder {
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -331,7 +331,7 @@ class PluralAssociationAttributeBinder {
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -406,7 +406,7 @@ class PluralAssociationAttributeBinder {
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 		applyCascade( source, property, collection );
@@ -420,7 +420,7 @@ class PluralAssociationAttributeBinder {
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		collection.setElement( element );
 		StateManagementBindingPhase.registerOneToManyCollection(
@@ -500,7 +500,7 @@ class PluralAssociationAttributeBinder {
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 
@@ -685,7 +685,7 @@ class PluralAssociationAttributeBinder {
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		applyOnDelete( element );
 
@@ -791,7 +791,7 @@ class PluralAssociationAttributeBinder {
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		return element;
 	}
@@ -807,7 +807,7 @@ class PluralAssociationAttributeBinder {
 		element.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		return element;
 	}

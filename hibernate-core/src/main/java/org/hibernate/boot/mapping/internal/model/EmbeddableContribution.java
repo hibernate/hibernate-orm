@@ -1,5 +1,6 @@
 package org.hibernate.boot.mapping.internal.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
@@ -29,6 +30,7 @@ public class EmbeddableContribution {
 	private final String pathPrefix;
 	private final String namingPathPrefix;
 	private final List<ComponentMemberBinding> members;
+	private final EmbeddableDiscriminatorSource discriminator;
 
 	public EmbeddableContribution(
 			ComponentSource.Kind kind,
@@ -38,7 +40,8 @@ public class EmbeddableContribution {
 			AccessType defaultAccessType,
 			String pathPrefix,
 			String namingPathPrefix,
-			List<ComponentMemberBinding> members) {
+			List<ComponentMemberBinding> members,
+			EmbeddableDiscriminatorSource discriminator) {
 		this.kind = kind;
 		this.sourceMember = sourceMember;
 		this.componentType = componentType;
@@ -47,12 +50,22 @@ public class EmbeddableContribution {
 		this.pathPrefix = pathPrefix;
 		this.namingPathPrefix = namingPathPrefix;
 		this.members = List.copyOf( members );
+		this.discriminator = discriminator;
 	}
 
 	public static EmbeddableContribution from(
 			ComponentSource source,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		final List<ComponentMemberBinding> members = new ArrayList<>();
+		source.members()
+				.stream()
+				.map( member -> ComponentMemberBinding.from( source, member, bindingState, bindingContext ) )
+				.forEach( members::add );
+		source.subclassMembers( bindingContext )
+				.stream()
+				.map( member -> ComponentMemberBinding.from( source, member, bindingState, bindingContext ) )
+				.forEach( members::add );
 		return new EmbeddableContribution(
 				source.kind(),
 				source.sourceMember(),
@@ -61,10 +74,8 @@ public class EmbeddableContribution {
 				source.defaultAccessType(),
 				source.pathPrefix(),
 				source.namingPathPrefix(),
-				source.members()
-						.stream()
-						.map( (member) -> ComponentMemberBinding.from( source, member, bindingState, bindingContext ) )
-						.toList()
+				members,
+				EmbeddableDiscriminatorSource.from( source, bindingContext )
 		);
 	}
 
@@ -98,5 +109,9 @@ public class EmbeddableContribution {
 
 	public List<ComponentMemberBinding> members() {
 		return members;
+	}
+
+	public EmbeddableDiscriminatorSource discriminator() {
+		return discriminator;
 	}
 }

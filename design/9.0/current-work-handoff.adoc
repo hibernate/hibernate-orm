@@ -11,9 +11,65 @@ link:design-doc-audit.adoc[`design-doc-audit.adoc`].
 
 Date: 2026-07-24.
 
-Stage 0, "Establish The Review Baseline", and Stage 1, "Close Bootstrap
-Inputs And Customization Ownership", are complete.  The next active work is
-Stage 2, "Finish The Semantic Boot-Mapping Handoff".
+Stage 0, "Establish The Review Baseline", Stage 1, "Close Bootstrap Inputs And
+Customization Ownership", and Stage 2, "Finish The Semantic Boot-Mapping
+Handoff", are complete.  The next active work is Stage 3, "Complete
+Runtime-Sensitive Mapping Products".
+
+The first Stage 2 mapped-superclass cleanup stores role-bearing
+`AppliedAttributeMapping` values directly in each
+`MappedSuperclassContribution`.  Contribution registration no longer tests
+copied `Property` membership by object identity, and the unused contribution
+view which filtered categorized consumers by identity has been removed.
+Mapped-superclass declarations also remain declaration-owned when an attribute
+names a secondary table.  The concrete entity application is placed in the
+secondary-table `Join` as inherited compatibility state and is retained in the
+contribution by its stable `MappingRole`.
+The first embeddable cleanup similarly makes `EmbeddableContribution` the
+direct binder/materializer exchange product and removes its pass-through view.
+Polymorphic subtype members are now part of that contribution before
+materialization; the contribution, `AppliedEmbeddableMapping`, and legacy
+`Component` projection therefore consume one ordered member plan.
+Polymorphic discriminator discovery has likewise moved into the data-only
+`EmbeddableDiscriminatorSource` owned by each contribution.  Singular embedded
+attributes and collection elements materialize their discriminator
+`BasicValue`, value map, and subtype-supertype links from that source.
+Nested polymorphic components now follow the same path during recursive
+materialization, with boot-model and persist/load regressions covering the
+nested contribution and runtime subtype instantiation.
+Explicit `@Embedded` and implicit embeddable attributes have also been verified
+as one semantic path: they share categorized member declarations and the
+`EMBEDDED_ATTRIBUTE` contribution kind, while retaining distinct path-specific
+contributions, applied mappings, member usages, roles, and runtime handoff
+results.
+The mixed generic/polymorphic case is covered as well: a generic
+mapped-superclass member resolves to its concrete application type while
+subtype-local members and discriminator source remain in the same contribution
+and role-based handoff.
+The Stage 2 identifier audit verified all four whole-target derived-identity
+combinations across `@IdClass` and `@EmbeddedId` parents and dependents.
+Whole-target association identifiers now retain
+`IdentifierExtractionKind.WHOLE_TARGET_ID` rather than being misclassified as
+`DIRECT`, and focused boot tests assert the ordered selectables and compatibility
+mapping shape.  `EntityIdentifierHandoff` is now indexed by the stable
+identifier `MappingRole`; its `RootClass` and `KeyValue` lookups derive that role
+as compatibility adapters.  Because the focused runtime matrix passes, the
+larger multi-part `IdentifierPartCorrespondence` product and direct runtime
+consumption are routed to follow-up rather than duplicated in this PR.
+Deterministic attribute ordering is also closed.  Semantic contribution and
+selectable order remain binding products; component, mapped-superclass, and
+entity alphabetical ordering is an explicit compatibility projection completed
+before runtime metamodel creation.  The reduced final-state note now lives
+under `finished/`, with focused boot/runtime, native-query inheritance, and
+polymorphic embeddable ordering guardrails.
+The final Stage 2 context audit is closed as well.  `SimpleValue` does not
+retain or expose `MetadataBuildingContext`, and `Value` no longer provides a
+broad context-recovery contract.  Its remaining reflection hook now receives
+`ClassLoaderService` explicitly from binding state.  Value-resolution and
+custom-user-type compatibility receive phase-owned inputs directly; empty
+context-taking mapping constructors are compatibility signatures rather than
+retained state.  Naming-source and `UserTypeCreationContext` SPI narrowing are
+routed to follow-up.
 
 The first Stage 1 slice established function precedence in
 `FunctionRegistryCoordinator`: dialect baseline, then all contributors by

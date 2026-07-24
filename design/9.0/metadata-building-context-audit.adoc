@@ -48,11 +48,11 @@ caller appears:
   receives `Database` explicitly.
 * `Any.MetaValue` no longer uses `getBuildingContext()` to render its
   discriminator column name; it uses the metadata `Database`.
-* `ToOne#setTypeUsingReflection(...)` no longer uses `getBuildingContext()` for
-  class loading; it uses `SimpleValue#classLoaderService()`.
+* `Value#setTypeUsingReflection(...)` receives `ClassLoaderService`, not
+  `MetadataBuildingContext`.  The `SimpleValue` and `ToOne` implementations use
+  that capability directly; the other implementations are no-ops.
 * `Component` no longer uses `getBuildingContext()` for component class loading
-  or composite-user-type instantiation; it uses narrower `SimpleValue`
-  helpers.
+  or composite-user-type instantiation.
 * `Component` no longer resolves embeddable discriminator types itself.
   `EmbeddableAttributeBinder` injects the resolved discriminator type after
   the discriminator value has been resolved.
@@ -115,6 +115,9 @@ caller appears:
   second-pass processing.
 
 == Fresh Audit: 2026-07-14
+
+The dated audits below record the sequence of the cleanup.  They are historical
+snapshots; `Current State` is authoritative.
 
 The current code has a much smaller mapping-layer context surface than earlier
 notes implied.
@@ -271,6 +274,37 @@ arrive from `main`.  With that understood, `Value#getBuildingContext()` should
 be either removable or limited to `SimpleValue` internals while the broader
 `SimpleValue` stored-context split is designed.
 
+== Final Audit: 2026-07-24
+
+The premise of the earlier `SimpleValue` follow-up is no longer true:
+
+* `SimpleValue` has no `MetadataBuildingContext` field and exposes no context,
+  metadata-collector, database, service-registry, class-loader, bean, or
+  mapping-option convenience accessors;
+* `Value` has no `getBuildingContext()` or `getServiceRegistry()` contract;
+* `BasicValueResolutionBuilder.UserTypeCreationContextImpl` receives its
+  compatibility `MetadataBuildingContext` explicitly from the resolution
+  phase instead of recovering it from a `Value`;
+* `SimpleValue` constructors still accept `MetadataBuildingContext`, but the
+  parameter is not retained.  Removing every compatibility constructor
+  parameter is outside this audit's goal;
+* the remaining reflection method on `Value` has been narrowed from
+  `MetadataBuildingContext` to `ClassLoaderService`.
+
+Some descendants retain smaller immutable capabilities for their own mapping
+semantics: for example, to-one values retain `TypeConfiguration`, and
+collections retain explicit class-loading and bean-creation inputs.  This is
+the intended result of the capability split, not broad-context retention.
+
+The mapping-object portion of this audit is therefore complete.  Remaining
+broad context is phase-owned or belongs to a separate SPI decision:
+
+* `UserTypeCreationContext#getBuildingContext()` and `getServiceRegistry()` are
+  compatibility hooks localized to value resolution;
+* `ImplicitNameSource#getBuildingContext()` is part of the naming SPI;
+* transient context parameters used by centralized materialization or naming
+  do not cause mapping objects to retain or expose the context.
+
 == Current State
 
 [cols="2,3,3", options="header"]
@@ -291,20 +325,14 @@ be either removable or limited to `SimpleValue` internals while the broader
 | `SimpleValue` and descendants:
   `BasicValue`, `DependantValue`, `DependantBasicValue`, `ToOne`,
   `ManyToOne`, `OneToOne`, `Any`, `Component`
-| Still stores `MetadataBuildingContext`.  Remaining uses include metadata
-  collector/database access, type configuration, managed-bean registry, class
-  loading, mapping options/preferences, custom type producer, converter
-  descriptor compatibility, generator/naming helper bridges, and legacy
-  reflection/dynamic-type support.  Attribute-converter
-  instance creation and legacy converted-type adapter creation no longer depend
-  on `SimpleValue`.  Identifier generator creation no longer depends on a
-  `SimpleValue` method or nested context.
-  Custom `UserType` creation no longer depends on `SimpleValue`
-  service-registry access.
-| Main remaining design target.  Avoid a blind constructor rename.  Split by
-  capability: value resolution/options, custom type instantiation, class
-  loading, metadata collector/database access, generator defaults, and naming
-  inputs.
+| `SimpleValue` stores no `MetadataBuildingContext`.  Reflection receives
+  `ClassLoaderService` explicitly.  Value resolution, custom-type creation,
+  database access, naming, and generator creation are phase-owned.  Individual
+  descendants retain only smaller capabilities required by their mapping
+  semantics.
+| Complete for Stage 2.  Retain empty context-taking constructors as
+  compatibility signatures unless a separate API cleanup justifies removing
+  them.
 
 | `BasicValue`
 | No longer implements `JdbcTypeIndicators` or
@@ -347,8 +375,8 @@ be either removable or limited to `SimpleValue` internals while the broader
   asking `property.getValue().getServiceRegistry()`.
 
 | `OneToMany`
-| Does not retain `MetadataBuildingContext`; `getBuildingContext()` is a
-  tripwire.  It stores `TypeConfiguration` and the referencing table.
+| Does not retain or expose `MetadataBuildingContext`.  It stores
+  `TypeConfiguration` and the referencing table.
 | Narrowed.  The audit found no direct `OneToMany#getServiceRegistry()`
   consumers, and collection properties resolve services from the owning
   `Collection`, not from the `OneToMany` element.
@@ -391,12 +419,11 @@ Built-in naming strategies and anonymous naming-source adapters call
 If we want to narrow it, the work belongs to the implicit-naming SPI and its
 source contracts.
 
-3. Split `SimpleValue` stored `MetadataBuildingContext` by capability.
+3. Keep the completed `SimpleValue` split intact.
 +
-The first useful split is likely a value-resolution support object covering
-`TypeConfiguration`, mapping preferences/options, `Database`, managed beans,
-class loading, and custom type production.  This should be done by actual
-call-site need, not by introducing another broad context with a new name.
+Do not reintroduce stored context or convenience accessors.  Reflection uses
+`ClassLoaderService`; value resolution and custom-type creation receive their
+phase services explicitly.
 
 4. Continue narrowing hidden key/constraint helpers.
 +
@@ -569,13 +596,10 @@ Avoid adding:
    keep the broad `MetadataBuildingContext` / `ServiceRegistry` exposure
    localized, let the planned `main` deprecation rebase into this branch, and
    watch for external usage before removing or replacing it.
-2. `BasicValue` option/preference access:
-   design a narrow value-resolution/options capability before removing its
-   stored `MetadataBuildingContext`.
-3. Naming SPI context:
+2. Naming SPI context:
    audit whether `ImplicitNameSource#getBuildingContext()` should remain the
    naming-strategy contract or be narrowed separately.
-4. Hidden key/constraint helpers:
+3. Hidden key/constraint helpers:
    audit the remaining low-level `Table#createForeignKey(...)` overloads and
    `Column#getNameIdentifier(MetadataBuildingContext)` naming path for further
    narrowing.

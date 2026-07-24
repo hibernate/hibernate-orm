@@ -326,7 +326,7 @@ class ToOneAttributeBinder {
 		value.setPropertyName( propertyName );
 		value.setReferencedEntityName( target.entityName() );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getMetadataBuildingContext() );
+		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getClassLoaderService() );
 		final FetchType fetchType = effectiveFetchType( source, bindingOptions );
 		applyLazy( source, value, ownerBinding, fetchType );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
@@ -406,7 +406,7 @@ class ToOneAttributeBinder {
 		value.setReferencedEntityName( target.entityName() );
 		value.setReferenceToPrimaryKey( referenceToPrimaryKey );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getMetadataBuildingContext() );
+		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getClassLoaderService() );
 		final FetchType fetchType = effectiveFetchType( source, bindingOptions );
 		applyLazy( source, value, ownerBinding, fetchType );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
@@ -648,7 +648,7 @@ class ToOneAttributeBinder {
 		value.setPropertyName( propertyName );
 		value.setReferencedEntityName( target.entityName() );
 		value.setTypeName( target.entityName() );
-		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getMetadataBuildingContext() );
+		value.setTypeUsingReflection( ownerClassName, propertyName, bindingState.getClassLoaderService() );
 		final FetchType fetchType = effectiveFetchType( source, bindingOptions );
 		applyLazy( source, value, ownerBinding, fetchType );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );

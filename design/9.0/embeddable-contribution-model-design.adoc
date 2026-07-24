@@ -408,10 +408,31 @@ Current transitional behavior:
 * `ComponentSource` also performs superclass-first member discovery for
   embeddable and mapped-superclass members and resolves member `TypeDetails`
   against the component-use `TypeVariableScope`;
-* `ComponentBinder` consumes `ComponentSource` and materializes `Property`,
-  `BasicValue`, `Component`, to-one, and collection mappings;
-* `EmbeddableAttributeBinder` creates discriminator state directly on
-  `Component` for polymorphic embeddables.
+* `EmbeddableMappingMaterializer` creates and registers an immutable
+  `EmbeddableContribution` for the usage path; `ComponentBinder` consumes that
+  contribution directly, without a pass-through view, and materializes
+  `Property`, `BasicValue`, `Component`, to-one, and collection mappings;
+* polymorphic subtype members are resolved while creating the contribution and
+  are retained in its ordered member list; `ComponentBinder` and
+  `AppliedEmbeddableMapping` consume that same list instead of independently
+  rediscovering subtype members;
+* `EmbeddableContribution` owns an immutable
+  `EmbeddableDiscriminatorSource` containing effective column source,
+  discriminator values, and subtype-supertype links;
+  `EmbeddableAttributeBinder` materializes the corresponding `BasicValue` and
+  legacy `Component` discriminator state for singular attributes and collection
+  elements, while recursive `ComponentBinder` materialization does the same for
+  nested embeddables from the nested contribution;
+* explicit `@Embedded` attributes and implicit embeddable attributes converge
+  on the same `EMBEDDED_ATTRIBUTE` contribution kind and the same categorized
+  member declarations.  Each consuming path still receives a distinct
+  `EmbeddableContribution`, `AppliedEmbeddableMapping`, applied member usage,
+  and `MappingRole`; runtime handoff resolves against that path-specific
+  application;
+* generic substitution and polymorphic inheritance compose within one
+  contribution.  A generic mapped-superclass member is resolved against the
+  concrete embeddable application while subtype-local members and discriminator
+  source remain part of the same applied mapping and role-based runtime handoff.
 
 Record embeddables are still transitional.  In field-access cases the current
 pipeline may bind record component properties through their backing

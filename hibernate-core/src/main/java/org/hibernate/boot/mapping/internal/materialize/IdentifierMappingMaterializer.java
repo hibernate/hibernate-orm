@@ -180,7 +180,7 @@ public class IdentifierMappingMaterializer {
 		idValue.setTypeUsingReflection(
 				type.getClassDetails().getClassName(),
 				aggregatedKeyMapping.getAttributeName(),
-				state.getMetadataBuildingContext()
+				state.getClassLoaderService()
 		);
 		applyIdGeneratorType( idValue, aggregatedKeyMapping.getAttribute().getMember() );
 		typeBinding.setIdentifier( idValue );
@@ -864,7 +864,7 @@ public class IdentifierMappingMaterializer {
 		component.setTypeUsingReflection(
 				type.getClassDetails().getClassName(),
 				idAttribute.getName(),
-				state.getMetadataBuildingContext()
+				state.getClassLoaderService()
 		);
 		bindComponentIdentifierProperties(
 				type,
@@ -1087,7 +1087,7 @@ public class IdentifierMappingMaterializer {
 		manyToOne.setTypeUsingReflection(
 				type.getClassDetails().getClassName(),
 				idAttribute.getName(),
-				state.getMetadataBuildingContext()
+				state.getClassLoaderService()
 		);
 		final FetchType fetchType = effectiveFetchType( source );
 		manyToOne.setLazy( fetchType == FetchType.LAZY );
@@ -1135,7 +1135,7 @@ public class IdentifierMappingMaterializer {
 		oneToOne.setTypeUsingReflection(
 				type.getClassDetails().getClassName(),
 				idAttribute.getName(),
-				state.getMetadataBuildingContext()
+				state.getClassLoaderService()
 		);
 		oneToOne.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
 		oneToOne.setConstrained( true );

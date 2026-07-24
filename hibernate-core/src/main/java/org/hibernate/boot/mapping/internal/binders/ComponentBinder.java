@@ -25,6 +25,7 @@ import org.hibernate.boot.mapping.internal.model.AppliedEmbeddableMapping;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
 import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
@@ -34,7 +35,6 @@ import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.sources.ToOneSource;
-import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
@@ -140,6 +140,35 @@ public class ComponentBinder {
 			boolean nullableByDefault,
 			boolean updatable,
 			boolean registerCollectionBindings) {
+		final EmbeddableContribution contribution =
+				embeddableMappingMaterializer.createContribution( source, context );
+		return bindBasicProperties(
+				ownerType,
+				ownerBinding,
+				source,
+				component,
+				table,
+				columnConsumer,
+				uniqueByDefault,
+				nullableByDefault,
+				updatable,
+				registerCollectionBindings,
+				contribution
+		);
+	}
+
+	public List<Column> bindBasicProperties(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			ComponentSource source,
+			Component component,
+			Table table,
+			BiConsumer<MemberDetails, Column> columnConsumer,
+			boolean uniqueByDefault,
+			boolean nullableByDefault,
+			boolean updatable,
+			boolean registerCollectionBindings,
+			EmbeddableContribution contribution) {
 		validateEmbeddedTablePlacement( source );
 		embeddableMappingMaterializer.prepareComponentForBinding( component, source );
 		final ComponentMemberTarget memberTarget = ComponentMemberTarget.forSource( source, table );
@@ -156,7 +185,8 @@ public class ComponentBinder {
 				nullableByDefault,
 				updatable,
 				registerCollectionBindings,
-				List.of( source.componentType() )
+				List.of( source.componentType() ),
+				contribution
 		);
 		AggregateComponentBinder.processAggregate( ownerBinding, source, component, memberTarget, state );
 		return columns;
@@ -175,24 +205,19 @@ public class ComponentBinder {
 			boolean nullableByDefault,
 			boolean updatable,
 			boolean registerCollectionBindings,
-			List<ClassDetails> componentTypeStack) {
+			List<ClassDetails> componentTypeStack,
+			EmbeddableContribution contribution) {
 		final List<Column> columns = new ArrayList<>();
 		final List<Column> associationIdentifierColumns =
 				source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
 						? columns
 						: identifierColumns != null ? identifierColumns : columns;
-		final EmbeddableContributionView contributionView =
-				embeddableMappingMaterializer.createContributionView( source, context );
-		final List<ComponentMemberBinding> members = new ArrayList<>( contributionView.members() );
-		if ( component.isPolymorphic() ) {
-			source.subclassMembers( context )
-					.forEach( (member) -> members.add( ComponentMemberBinding.from( source, member, state, context ) ) );
-		}
+		final List<ComponentMemberBinding> members = new ArrayList<>( contribution.members() );
 		final List<AppliedAttributeMapping> appliedAttributes = createAppliedAttributes( component, members );
 		final AppliedEmbeddableMapping appliedEmbeddable = component.getMappingRole() == null
 				? null
 				: new AppliedEmbeddableMapping(
-						contributionView.contribution(),
+						contribution,
 						component.getMappingRole(),
 						appliedAttributes
 				);
@@ -327,6 +352,17 @@ public class ComponentBinder {
 				}
 				final ComponentMemberTarget nestedMemberTarget =
 						ComponentMemberTarget.forSource( nestedSource, memberTarget.table() );
+				final EmbeddableContribution nestedContribution =
+						embeddableMappingMaterializer.createContribution( nestedSource, context );
+				EmbeddableAttributeBinder.bindDiscriminator(
+						nestedComponent,
+						nestedMemberTarget.table(),
+						nestedContribution,
+						attributeName + "_DTYPE",
+						state,
+						options,
+						context
+				);
 				final List<Column> nestedColumns = bindProperties(
 						ownerType,
 						ownerBinding,
@@ -340,7 +376,8 @@ public class ComponentBinder {
 						nullableByDefault,
 						updatable,
 						registerCollectionBindings,
-						extendComponentTypeStack( componentTypeStack, nestedSource.componentType() )
+						extendComponentTypeStack( componentTypeStack, nestedSource.componentType() ),
+						nestedContribution
 				);
 				AggregateComponentBinder.processAggregate(
 						ownerBinding,
@@ -661,7 +698,7 @@ public class ComponentBinder {
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setReferenceToPrimaryKey( true );
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		value.setTypeUsingReflection( componentType.getClassName(), attributeName, state.getMetadataBuildingContext() );
+		value.setTypeUsingReflection( componentType.getClassName(), attributeName, state.getClassLoaderService() );
 		final FetchType fetchType = effectiveFetchType( source );
 		value.setLazy( fetchType == FetchType.LAZY );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
@@ -704,7 +741,7 @@ public class ComponentBinder {
 		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
 		value.setReferenceToPrimaryKey( true );
 		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
-		value.setTypeUsingReflection( componentType.getClassName(), attributeName, state.getMetadataBuildingContext() );
+		value.setTypeUsingReflection( componentType.getClassName(), attributeName, state.getClassLoaderService() );
 		final FetchType fetchType = effectiveFetchType( source );
 		value.setLazy( fetchType == FetchType.LAZY );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );

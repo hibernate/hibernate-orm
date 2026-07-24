@@ -1,0 +1,101 @@
+= Deterministic Attribute Ordering
+:toc:
+
+== Status
+
+Complete.  Attribute ordering is phase-owned, and compatibility sorting is a
+finalization/materialization concern rather than an authoritative semantic
+model.
+
+This document is a finished-state reference and regression-test guide.  It does
+not define active ORM 9 work.
+
+== Final Contract
+
+Hibernate uses several distinct orders.  They must not be collapsed into one
+alphabetically sorted source list:
+
+Semantic contribution order::
+Declaration bindings, contextual usage bindings, mapped-superclass
+contributions, embeddable contributions, and applied mappings retain the order
+selected by categorization and binding.
+
+Compatibility property order::
+Legacy `PersistentClass`, `MappedSuperclass`, and `Component` property lists
+may require deterministic alphabetical order.  That projection is applied when
+the compatibility shape is completed.
+
+Runtime fetchable/state-array order::
+Runtime metamodel creation consumes the finalized boot compatibility order so
+fetchable keys, persister property arrays, native-query alias expansion, and
+result assembly remain aligned.
+
+Identifier/selectable order::
+Identifier attributes retain their semantic extraction and selectable order in
+`EntityIdentifierBinding`.  Foreign-key and derived-identifier ordering uses
+`SelectableOrderResolution` / `SelectableCorrespondence` or the retained
+identifier selectable order, rather than independently sorting two lists.
+
+Relational column order::
+Column ordering strategy application is a separate metadata-finalization
+concern.  It must preserve explicit selectable correspondence and must not be
+used to infer Java attribute correspondence.
+
+== Phase Ownership
+
+Binding::
+Builds declaration, usage, contribution, applied-mapping, identifier, and
+selectable-correspondence products.  Binding may complete a component shape
+early when a positional consumer such as a foreign key requires it.
+
+Compatibility shape completion::
+`Component#completeShape()` owns component compatibility sorting and retains an
+original-to-completed order correspondence where alternate unique keys,
+flattened components, XML order, or another positional consumer requires it.
+Explicitly preserved property order and simple-record component order are not
+alphabetized.
+
+Runtime-model preparation::
+`MappingMetamodelImpl#finishInitialization()` invokes
+`Component#prepareForMappingModel()`,
+`MappedSuperclass#prepareForMappingModel()`, and
+`PersistentClass#prepareForMappingModel(...)`.  These methods complete the
+legacy compatibility projections before persisters and runtime attribute
+mappings are created.
+
+Key and association finalization::
+Identifier and association binders use semantic selectable names and
+`SelectableOrderResolution` to align local and target columns.  A
+`sortProperties()` call in this area completes a compatibility value shape; it
+is not the source of identifier or foreign-key correspondence.
+
+== Guardrails
+
+* Do not use alphabetical source collection as declaration identity or
+  contribution order.
+* Do not infer correspondence from independently sorted property or column
+  lists.
+* Keep compatibility sorting local to shape completion or runtime preparation.
+* Preserve record component order and any mapping with an explicit
+  `preservePropertyOrder` contract.
+* Use `MappingRole`, declaration/usage bindings, applied mappings, identifier
+  selectable order, and selectable correspondence for semantic handoffs.
+* Treat future source-ordinal work as an independent enhancement.  It is not
+  required to reopen this compatibility-ordering contract.
+
+== Focused Verification
+
+The canonical command is maintained in
+link:../improve-bootstrap-completion-plan.adoc#_deterministic_ordering[
+the completion plan's deterministic-ordering verification group].
+
+`DeterministicOrderingTests` verifies that the new pipeline's boot
+compatibility properties, runtime attribute mappings, persister property
+arrays, and component attributes remain aligned.
+
+`SingleTableNativeQueryTest` guards the subclass-property-closure/runtime
+fetchable alignment used by native `{alias.*}` expansion.
+
+`EmbeddableInheritanceHierarchyOrderTest` guards deterministic polymorphic
+embeddable hierarchy ordering independently from compatibility property
+sorting.

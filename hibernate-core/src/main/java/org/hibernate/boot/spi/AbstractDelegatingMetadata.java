@@ -5,7 +5,6 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -14,6 +13,7 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
@@ -66,16 +66,6 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Override
 	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
 		return delegate.getReferencedPropertyType( className, propertyName );
-	}
-
-	@Override
-	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		return delegate.getSessionFactoryBuilder();
-	}
-
-	@Override
-	public SessionFactoryImplementor buildSessionFactory() {
-		return delegate.buildSessionFactory();
 	}
 
 	@Override
@@ -204,8 +194,8 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
-		return delegate.getMetadataBuildingOptions();
+	public MappingResolutionOptions getMappingResolutionOptions() {
+		return delegate.getMappingResolutionOptions();
 	}
 
 	@Override
@@ -220,7 +210,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 
 	@Override
 	public void orderColumns(boolean forceOrdering) {
-		delegate.orderColumns( false );
+		delegate.orderColumns( forceOrdering );
 	}
 
 	@Override

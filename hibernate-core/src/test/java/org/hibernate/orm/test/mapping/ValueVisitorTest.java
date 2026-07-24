@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -27,6 +26,7 @@ import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ValueVisitor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -56,8 +56,7 @@ public class ValueVisitorTest {
 	@Test
 	public void testProperCallbacks() {
 		final MetadataImplementor metadata =
-				(MetadataImplementor) new MetadataSources( serviceRegistry )
-		.buildMetadata();
+				(MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( serviceRegistry );
 		final Table tbl = new Table( "orm" );
 		final RootClass rootClass = new RootClass( metadataBuildingContext );
 

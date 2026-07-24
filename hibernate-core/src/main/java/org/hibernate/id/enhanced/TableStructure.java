@@ -4,6 +4,7 @@
  */
 package org.hibernate.id.enhanced;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,7 +38,7 @@ import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOG
  *
  * @author Steve Ebersole
  */
-public class TableStructure implements DatabaseStructure {
+public class TableStructure implements DatabaseStructure, Serializable {
 
 	private final QualifiedName logicalQualifiedTableName;
 	private final Identifier logicalValueColumnNameIdentifier;
@@ -330,18 +331,18 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public void registerExtraExportables(Table table, Optimizer optimizer) {
+		final var optimizerState = new OptimizerResetState( optimizer );
 		table.addResyncCommand( (sqlContext, isolator) -> {
 			final String sequenceTableName = sqlContext.format( physicalTableName );
 			final String tableName = sqlContext.format( table.getQualifiedTableName() );
 			final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
-			final int adjustment = optimizer.getAdjustment();
 			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
 			final long current = getCurrentTableValue( isolator, sequenceTableName, valueColumnNameText );
-			if ( max + adjustment > current ) {
-				optimizer.reset();
+			if ( max + optimizerState.adjustment() > current ) {
+				optimizerState.reset();
 				final String update =
 						"update " + sequenceTableName
-						+ " set " + valueColumnNameText + " = " + (max + adjustment);
+						+ " set " + valueColumnNameText + " = " + (max + optimizerState.adjustment());
 				return new InitCommand( update );
 			}
 			else {
@@ -349,7 +350,7 @@ public class TableStructure implements DatabaseStructure {
 			}
 		} );
 		table.addResetCommand( sqlContext -> {
-			optimizer.reset();
+			optimizerState.reset();
 			final String update =
 					"update " + sqlContext.format( physicalTableName )
 					+ " set " + valueColumnNameText + " = " + initialValue;

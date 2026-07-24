@@ -16,13 +16,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -60,11 +60,9 @@ public class BasicCdiTest {
 			final SessionFactoryImplementor sessionFactory;
 
 			try {
-				sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-						.addAnnotatedClass( MyEntity.class )
-						.buildMetadata()
-						.getSessionFactoryBuilder()
-						.build();
+				sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+						MetadataBuildingTestHelper.buildMetadata( ssr, MyEntity.class )
+				);
 			}
 			catch ( Exception e ) {
 				StandardServiceRegistryBuilder.destroy( ssr );

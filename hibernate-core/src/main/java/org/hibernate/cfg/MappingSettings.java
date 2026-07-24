@@ -6,21 +6,17 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
-import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderColumn;
 
 import java.util.Locale;
 
@@ -29,10 +25,24 @@ import java.util.Locale;
  */
 public interface MappingSettings {
 	/**
+	 * Enables capture of the additional declarative boot state required to
+	 * {@linkplain org.hibernate.boot.serial.MetadataSerialization store and restore}
+	 * a factory-ready mapping.
+	 * <p>
+	 * This must be enabled while the mapping is built. Enabling it only when
+	 * serialization is attempted is too late because type-resolution inputs
+	 * are otherwise discarded as mapping resolution completes.
+	 *
+	 * @settingDefault {@code false}
+	 * @since 9.0
+	 */
+	String METADATA_SERIALIZATION_ENABLED = "hibernate.boot.metadata_serialization.enabled";
+
+	/**
 	 * A default database catalog name to use for unqualified database
 	 * object (table, sequence, ...) names
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitCatalogName
+	 * @see org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getMappingDefaults()
 	 */
 	String DEFAULT_CATALOG = "hibernate.default_catalog";
 
@@ -40,7 +50,7 @@ public interface MappingSettings {
 	 * A default database schema (owner) name to use for unqualified
 	 * database object (table, sequence, ...) names
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitSchemaName
+	 * @see org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getMappingDefaults()
 	 */
 	String DEFAULT_SCHEMA = "hibernate.default_schema";
 
@@ -176,6 +186,7 @@ public interface MappingSettings {
 	 * @settingDefault {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean dialect-specific type code}
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForBoolean
 	 */
 	@Incubating
 	String PREFERRED_BOOLEAN_JDBC_TYPE = "hibernate.type.preferred_boolean_jdbc_type";
@@ -192,6 +203,7 @@ public interface MappingSettings {
 	 * @settingDefault {@link org.hibernate.type.SqlTypes#UUID}.
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForUuid
 	 */
 	@Incubating
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
@@ -208,6 +220,7 @@ public interface MappingSettings {
 	 * @settingDefault {@link org.hibernate.type.SqlTypes#NUMERIC}
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForDuration
 	 */
 	@Incubating
 	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
@@ -225,6 +238,7 @@ public interface MappingSettings {
 	 * @settingDefault {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}.
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForInstant
 	 */
 	@Incubating
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
@@ -249,6 +263,7 @@ public interface MappingSettings {
 	 * @settingDefault false
 	 *
 	 * @since 6.5
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#isPreferJavaTimeJdbcTypesEnabled
 	 */
 	@Incubating
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
@@ -307,6 +322,7 @@ public interface MappingSettings {
 	 * @see org.hibernate.type.SqlTypes#TABLE
 	 *
 	 * @since 6.6
+	 * @see org.hibernate.boot.mapping.internal.context.MappingPreferences#getPreferredSqlTypeCodeForArray
 	 */
 	@Incubating
 	String PREFERRED_ARRAY_JDBC_TYPE = "hibernate.type.preferred_array_jdbc_type";
@@ -325,7 +341,6 @@ public interface MappingSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJsonFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
@@ -344,7 +359,6 @@ public interface MappingSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0.1
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyXmlFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
@@ -410,8 +424,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code "default"}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy
-	 *
 	 * @since 5.0
 	 */
 	String IMPLICIT_NAMING_STRATEGY = "hibernate.implicit_naming_strategy";
@@ -421,8 +433,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@link org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl},
 	 * in which case physical names are taken to be identical to logical names.
-	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy
 	 *
 	 * @since 5.0
 	 */
@@ -463,8 +473,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code "default"}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#applyColumnOrderingStrategy
-	 *
 	 * @since 6.2
 	 */
 	String COLUMN_ORDERING_STRATEGY = "hibernate.column_ordering_strategy";
@@ -480,26 +488,6 @@ public interface MappingSettings {
 	 * @since 5.4.1
 	 */
 	String XML_MAPPING_ENABLED = "hibernate.xml_mapping_enabled";
-
-	/**
-	 * Specifies the {@link CollectionClassification} to use for a plural attribute
-	 * typed as {@link java.util.List} with no explicit list index details
-	 * ({@link OrderColumn}, {@link ListIndexBase}, etc.).
-	 * <p>
-	 * Accepts any of:
-	 * <ul>
-	 *     <li>an instance of {@code CollectionClassification}
-	 *     <li>the (case-insensitive) name of a {@code CollectionClassification} (list e.g.)
-	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
-	 * </ul>
-	 *
-	 * @settingDefault {@link CollectionClassification#BAG}
-	 *
-	 * @since 6.0
-	 *
-	 * @see org.hibernate.annotations.Bag
-	 */
-	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 
 	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.
@@ -520,7 +508,6 @@ public interface MappingSettings {
 	 * {@link org.hibernate.annotations.DiscriminatorOptions#force
 	 * DiscriminatorOptions(force=true)}.
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect
 	 * @see org.hibernate.annotations.DiscriminatorOptions#force
 	 *
 	 * @settingDefault {@code false}
@@ -541,7 +528,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code false}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	String IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.implicit_for_joined";
@@ -559,7 +545,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code false}
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableExplicitDiscriminatorsForJoinedSubclassSupport
 	 * @see #IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
@@ -598,7 +583,6 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@code false} (disabled)
 	 *
-	 * @see org.hibernate.boot.MetadataBuilder#enableGlobalNationalizedCharacterDataSupport(boolean)
 	 * @see Dialect#getNationalizationSupport
 	 * @see Nationalized
 	 */

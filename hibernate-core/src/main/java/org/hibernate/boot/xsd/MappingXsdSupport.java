@@ -38,6 +38,12 @@ public class MappingXsdSupport {
 			"http://www.hibernate.org/xsd/orm/mapping"
 	);
 
+	public static final XsdDescriptor _90 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/xsd/mapping/mapping-9.0.xsd",
+			"9.0",
+			"http://www.hibernate.org/xsd/orm/mapping"
+	);
+
 	public static final XsdDescriptor jpa10 = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/jpa/orm_1_0.xsd",
 			"1.0",
@@ -91,7 +97,7 @@ public class MappingXsdSupport {
 	}
 
 	public static XsdDescriptor latestDescriptor() {
-		return _80;
+		return _90;
 	}
 
 	public static XsdDescriptor latestJpaDescriptor() {

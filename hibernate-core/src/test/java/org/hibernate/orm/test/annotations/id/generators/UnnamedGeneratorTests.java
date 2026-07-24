@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -17,6 +16,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 
 import org.junit.jupiter.api.Test;
 
@@ -87,11 +88,10 @@ public class UnnamedGeneratorTests {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, strictlyGlobal )
 				.build()) {
-			final Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClasses( entityClass )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, entityClass );
 			final RootClass entityBinding = metadata.getEntityBinding( entityClass.getName() ).getRootClass();
-			final Generator generator = entityBinding.getIdentifier().createGenerator(
+			final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator(
+					entityBinding.getIdentifier(),
 					metadata.getDatabase().getDialect(),
 					entityBinding,
 					entityBinding.getIdentifierProperty(),
@@ -110,7 +110,8 @@ public class UnnamedGeneratorTests {
 						public SqlStringGenerationContext getSqlStringGenerationContext() {
 							return SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
 						}
-					}
+					},
+					metadata
 			);
 
 			checks.accept( generator );

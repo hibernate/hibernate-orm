@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.internal.AnnotatedJoinColumn;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -20,6 +18,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests {@link AnnotatedJoinColumn} and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}
+ * Tests join-column naming and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}
  * interaction
  *
  * @author Anton Wimmer
@@ -46,14 +45,12 @@ public class Tests {
 				.applySettings( Environment.getProperties() )
 				.build();
 		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( Language.class );
-
-			final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-			metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
-			metadataBuilder.applyPhysicalNamingStrategy( PhysicalNamingStrategyImpl.INSTANCE );
-
-			final Metadata metadata = metadataBuilder.build();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadataWithNaming(
+					ssr,
+					new MappingSources().addManagedClass( Language.class ),
+					ImplicitNamingStrategyJpaCompliantImpl.INSTANCE,
+					PhysicalNamingStrategyImpl.INSTANCE
+			);
 			( (MetadataImplementor) metadata ).orderColumns( false );
 			( (MetadataImplementor) metadata ).validate();
 

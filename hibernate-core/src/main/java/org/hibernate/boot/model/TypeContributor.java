@@ -17,8 +17,7 @@ import org.hibernate.service.ServiceRegistry;
  *     it discoverable via the Java {@link java.util.ServiceLoader} facility.
  * <li>
  *     Alternatively, a {@code TypeContributor} may be programmatically supplied to
- *     {@link org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)}
- *     or even {@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}.
+ *     {@link org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)}.
  * <li>
  *     When bootstrapping Hibernate via JPA or {@link org.hibernate.cfg.Configuration},
  *

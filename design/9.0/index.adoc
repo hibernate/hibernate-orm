@@ -1,0 +1,111 @@
+= ORM 9 Boot Model Design Notes
+:toc:
+
+This directory collects design notes for the ORM 9 boot-model work.
+
+The documents are not all the same kind of artifact.  Some describe durable
+target design, some are contributor references, some are completed audits, and
+some are historical notes retained only for rationale.  Do not use every file in
+this directory as current branch state.
+
+== Start Here
+
+link:current-work-handoff.adoc[`current-work-handoff.adoc`]::
+The only current-status document.  Read this first when picking up an existing
+worktree, starting a new chat, or asking "what should we do next?"
+
+link:design-doc-audit.adoc[`design-doc-audit.adoc`]::
+The cleanup and routing map for this directory.  It classifies every design
+note as active, reference, resolved, historical, deferred, or an archive
+candidate, and names the canonical document for each design area.
+
+link:improve-bootstrap-completion-plan.adoc[`improve-bootstrap-completion-plan.adoc`]::
+The staged scope and dependency plan for completing the "Improve bootstrap"
+work.  It separates PR-blocking work, stabilization, and triggered follow-ups.
+
+link:bootstrap-api-compatibility.adoc[`bootstrap-api-compatibility.adoc`]::
+Compatibility and migration reference for removed staged builders, supported
+entry points, retained extension boundaries, and replacement hooks.
+
+Use the audit before updating older design notes.  If a document and the audit
+disagree about whether a topic is active, resolved, or historical, treat the
+audit as the routing source and fix the stale document before adding more
+status.
+
+== Current Policy
+
+* Current branch status, test health, and next-work guidance belong in
+  link:current-work-handoff.adoc[`current-work-handoff.adoc`].
+* Durable target design and rationale belong in focused design notes.
+* Contributor orientation belongs in reference docs.
+* Historical PoC notes and work logs should be folded into canonical docs or
+  removed once their useful decisions are captured.
+* Do not add new status narratives to design docs other than the handoff.
+
+== Canonical Active Areas
+
+Bootstrap architecture::
+link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`],
+link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`],
+link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`],
+and
+link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`],
+plus
+link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`].
+
+Boot-model vocabulary and contributor orientation::
+link:boot-model-terminology.adoc[`boot-model-terminology.adoc`] and
+link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`].
+
+Contribution and correspondence model::
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`],
+link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`],
+with focused notes for mapped superclasses, generic inheritance, embeddables,
+identifiers, and deterministic ordering.
+
+Mapping integration and hidden side effects::
+link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
+Use this for primary-key, foreign-key, unique-key, index materialization, and
+deprecated hidden mapping side-effect hook cleanup.
+
+Current handoff/mapping-context cleanup::
+link:current-work-handoff.adoc[`current-work-handoff.adoc`] records the current
+`MetadataBuildingContext` cleanup focus and any immediate implementation slice.
+Use
+link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
+for the mapping-layer context audit.
+
+== Reference And Deferred Areas
+
+Use link:design-doc-audit.adoc[`design-doc-audit.adoc`] to decide whether these
+documents are still active, reference-only, deferred, or archive candidates:
+
+* link:additional-mapping-contributor-design.adoc[`additional-mapping-contributor-design.adoc`]
+* link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
+* link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
+* link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
+* link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
+* link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
+* link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
+* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+* link:flow-notation.adoc[`flow-notation.adoc`]
+* link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+* link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
+* link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
+* link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+* link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
+* link:state-management-design.adoc[`state-management-design.adoc`]
+
+== Finished References
+
+Completed reference and audit artifacts live under
+link:finished/index.adoc[`finished/`].
+
+* link:finished/annotation-coverage.adoc[`finished/annotation-coverage.adoc`]
+
+== Cleanup Queue
+
+The cleanup queue is maintained in
+link:design-doc-audit.adoc#_recommended_first_cleanup_pass[`design-doc-audit.adoc`].
+Do not mirror it here.

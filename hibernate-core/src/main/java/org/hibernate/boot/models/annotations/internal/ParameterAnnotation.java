@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.annotations.Parameter;
@@ -12,7 +13,7 @@ import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class ParameterAnnotation implements Parameter {
+public class ParameterAnnotation implements Parameter, Serializable {
 	private String name;
 	private String value;
 

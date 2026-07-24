@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.internal;
 
-import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
@@ -33,11 +31,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
-import static java.util.Comparator.comparingInt;
 import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_ENABLED;
 import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
@@ -75,7 +70,7 @@ public class QueryEngineImpl implements QueryEngine {
 		dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
 		bindingContext = context;
 		typeConfiguration = metadata.getTypeConfiguration();
-		sqmFunctionRegistry = createFunctionRegistry( serviceRegistry, metadata, options, dialect );
+		sqmFunctionRegistry = createFunctionRegistry( metadata, options );
 		sqmTranslatorFactory = resolveSqmTranslatorFactory( options, dialect );
 		namedObjectRepository = metadata.buildNamedQueryRepository();
 		interpretationCache = buildInterpretationCache( serviceRegistry, properties );
@@ -126,10 +121,8 @@ public class QueryEngineImpl implements QueryEngine {
 	}
 
 	private static SqmFunctionRegistry createFunctionRegistry(
-			ServiceRegistry serviceRegistry,
 			MetadataImplementor metadata,
-			QueryEngineOptions queryEngineOptions,
-			Dialect dialect) {
+			QueryEngineOptions queryEngineOptions) {
 		final var sqmFunctionRegistry = metadata.getFunctionRegistry();
 
 		queryEngineOptions.getCustomSqlFunctionMap().forEach( sqmFunctionRegistry::register );
@@ -138,14 +131,6 @@ public class QueryEngineImpl implements QueryEngine {
 		if ( customSqmFunctionRegistry != null ) {
 			customSqmFunctionRegistry.overlay( sqmFunctionRegistry );
 		}
-
-		//TODO: probably better to turn this back into an anonymous class
-		final var functionContributions =
-				new FunctionContributionsImpl( serviceRegistry, metadata.getTypeConfiguration(), sqmFunctionRegistry );
-		for ( var contributor : sortedFunctionContributors( serviceRegistry ) ) {
-			contributor.contributeFunctions( functionContributions );
-		}
-		dialect.initializeFunctionRegistry( functionContributions );
 
 		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {
 			var list = new StringBuilder("Available HQL Functions:\n");
@@ -157,18 +142,6 @@ public class QueryEngineImpl implements QueryEngine {
 		}
 
 		return sqmFunctionRegistry;
-	}
-
-	private static List<FunctionContributor> sortedFunctionContributors(ServiceRegistry serviceRegistry) {
-		final var functionContributors =
-				serviceRegistry.requireService(ClassLoaderService.class)
-						.loadJavaServices(FunctionContributor.class);
-		final List<FunctionContributor> contributors = new ArrayList<>( functionContributors );
-		contributors.sort(
-				comparingInt( FunctionContributor::ordinal )
-						.thenComparing( a -> a.getClass().getCanonicalName() )
-		);
-		return contributors;
 	}
 
 	public static QueryInterpretationCache buildInterpretationCache(
@@ -287,33 +260,4 @@ public class QueryEngineImpl implements QueryEngine {
 		}
 	}
 
-	private static class FunctionContributionsImpl implements FunctionContributions {
-		private final ServiceRegistry serviceRegistry;
-		private final TypeConfiguration typeConfiguration;
-		private final SqmFunctionRegistry functionRegistry;
-
-		public FunctionContributionsImpl(
-				ServiceRegistry serviceRegistry,
-				TypeConfiguration typeConfiguration,
-				SqmFunctionRegistry functionRegistry) {
-			this.serviceRegistry = serviceRegistry;
-			this.typeConfiguration = typeConfiguration;
-			this.functionRegistry = functionRegistry;
-		}
-
-		@Override
-		public TypeConfiguration getTypeConfiguration() {
-			return typeConfiguration;
-		}
-
-		@Override
-		public SqmFunctionRegistry getFunctionRegistry() {
-			return functionRegistry;
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return serviceRegistry;
-		}
-	}
 }

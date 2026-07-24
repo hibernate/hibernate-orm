@@ -25,6 +25,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
@@ -73,6 +74,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		final var strategySelector =
 				creationContext.getServiceRegistry()
 						.getService( StrategySelector.class );
+		final var propertyAccessStrategyResolver =
+				creationContext.getServiceRegistry()
+						.requireService( PropertyAccessStrategyResolver.class );
 
 		final var identifierProperty = bootDescriptor.getIdentifierProperty();
 		if ( identifierProperty == null ) {
@@ -102,12 +106,15 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		else {
 			mapsIdRepresentationStrategy = null;
 			identifierPropertyName = identifierProperty.getName();
-			identifierPropertyAccess = makePropertyAccess( identifierProperty, strategySelector );
+				identifierPropertyAccess = makePropertyAccess(
+						identifierProperty,
+						strategySelector,
+						propertyAccessStrategyResolver
+				);
 		}
 
 		final var bytecodeProvider =
-				creationContext.getBootstrapContext().getServiceRegistry()
-						.requireService( BytecodeProvider.class );
+				creationContext.getBytecodeProvider();
 
 		proxyFactory = resolveProxyFactory(
 				bootDescriptor,
@@ -117,7 +124,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				creationContext
 		);
 
-		propertyAccessMap = buildPropertyAccessMap( bootDescriptor, strategySelector );
+		propertyAccessMap = buildPropertyAccessMap(
+				bootDescriptor,
+				strategySelector,
+				propertyAccessStrategyResolver
+		);
 		reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
 
 		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor );
@@ -152,10 +163,15 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	private Map<String, PropertyAccess> buildPropertyAccessMap(
-			PersistentClass bootDescriptor, StrategySelector strategySelector) {
+			PersistentClass bootDescriptor,
+			StrategySelector strategySelector,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
 		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
 		for ( var property : bootDescriptor.getAllPropertyClosure() ) {
-			propertyAccessMap.put( property.getName(), makePropertyAccess( property, strategySelector ) );
+			propertyAccessMap.put(
+					property.getName(),
+					makePropertyAccess( property, strategySelector, propertyAccessStrategyResolver )
+			);
 		}
 		return propertyAccessMap;
 	}
@@ -188,14 +204,17 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		final var proxyInterfaces = proxyInterfaces( bootDescriptor, proxyInterface, mappedClass );
 
 		final var clazz = bootDescriptor.getMappedClass();
+		final var propertyAccessStrategyResolver =
+				creationContext.getServiceRegistry()
+						.requireService( PropertyAccessStrategyResolver.class );
 		final Method idGetterMethod;
 		final Method idSetterMethod;
 		try {
 			for ( var property : bootDescriptor.getProperties() ) {
 				validateGetterSetterMethodProxyability( "Getter",
-						property.getGetter( clazz ).getMethod() );
+						property.getGetter( clazz, propertyAccessStrategyResolver ).getMethod() );
 				validateGetterSetterMethodProxyability( "Setter",
-						property.getSetter( clazz ).getMethod() );
+						property.getSetter( clazz, propertyAccessStrategyResolver ).getMethod() );
 			}
 			if ( identifierPropertyAccess != null ) {
 				idGetterMethod = identifierPropertyAccess.getGetter().getMethod();
@@ -306,10 +325,18 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return bytecodeProvider.getReflectionOptimizer( mappedJtd.getJavaTypeClass(), propertyAccessMap );
 	}
 
-	private PropertyAccess makePropertyAccess(Property bootAttributeDescriptor, StrategySelector strategySelector) {
+	private PropertyAccess makePropertyAccess(
+			Property bootAttributeDescriptor,
+			StrategySelector strategySelector,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
 		final var mappedClass = mappedJtd.getJavaTypeClass();
 		final String descriptorName = bootAttributeDescriptor.getName();
-		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector );
+		final var strategy = propertyAccessStrategy(
+				bootAttributeDescriptor,
+				mappedClass,
+				strategySelector,
+				propertyAccessStrategyResolver
+		);
 		if ( strategy == null ) {
 			throw new HibernateException(
 					String.format(

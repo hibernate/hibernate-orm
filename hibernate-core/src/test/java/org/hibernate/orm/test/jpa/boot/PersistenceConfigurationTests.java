@@ -5,9 +5,11 @@
 package org.hibernate.orm.test.jpa.boot;
 
 import java.io.StringWriter;
+import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
@@ -43,7 +45,7 @@ public class PersistenceConfigurationTests {
 		try (EntityManagerFactory emf = new PersistenceConfiguration( "emf" ).createEntityManagerFactory()) {
 			assert emf.isOpen();
 		}
-		try (EntityManagerFactory emf = new HibernatePersistenceConfiguration( "emf" ).createEntityManagerFactory()) {
+		try (SessionFactory emf = new HibernatePersistenceConfiguration( "emf" ).createEntityManagerFactory()) {
 			assert emf.isOpen();
 		}
 	}
@@ -182,5 +184,26 @@ public class PersistenceConfigurationTests {
 				em.createSelectionQuery( "from Book", Book.class ).list();
 			} );
 		}
+	}
+
+	@Test
+	public void testHibernateSourceForms() throws Exception {
+		final var mappingFileUri = URI.create( "file:/tmp/mapping.xml" );
+		final var mappingFileUrl = URI.create( "file:/tmp/mapping.orm.xml" ).toURL();
+		final var cfg = new HibernatePersistenceConfiguration( "emf" )
+				.managedClassName( Book.class.getName() )
+				.managedClassNames( Person.class.getName() )
+				.packageName( Book.class.getPackage() )
+				.packageNames( Person.class.getPackage().getName() )
+				.mappingResource( "META-INF/orm.xml" )
+				.mappingResources( "org/hibernate/example/Product.orm.xml" )
+				.mappingFile( mappingFileUri )
+				.mappingFile( mappingFileUrl );
+
+		assertThat( cfg.managedClassNames() ).contains( Book.class.getName(), Person.class.getName() );
+		assertThat( cfg.packageNames() ).contains( Book.class.getPackage().getName(), Person.class.getPackage().getName() );
+		assertThat( cfg.mappingFiles() ).contains( "META-INF/orm.xml", "org/hibernate/example/Product.orm.xml" );
+		assertThat( cfg.mappingFileUris() ).contains( mappingFileUri );
+		assertThat( cfg.mappingFileUrls() ).contains( mappingFileUrl );
 	}
 }

@@ -401,7 +401,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 				columnNames,
 				false,
 				true,
-				converter.getCreationContext().getSessionFactory()
+				converter.getLoadQueryInfluencers().getSessionFactory()
 		);
 		outerQuerySpec.getFromClause().addRoot( queryPartTableGroup );
 

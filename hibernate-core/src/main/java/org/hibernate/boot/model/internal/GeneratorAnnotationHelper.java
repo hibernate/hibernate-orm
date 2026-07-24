@@ -14,7 +14,6 @@ import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -53,6 +52,8 @@ import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
+import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
+import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 
 /**
@@ -68,7 +69,23 @@ public class GeneratorAnnotationHelper {
 			@Nullable Function<A,String> nameExtractor,
 			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		return findLocalizedMatch(
+				generatorAnnotationType,
+				idMember,
+				entityType,
+				nameExtractor,
+				matchName,
+				context.getModelsContext()
+		);
+	}
+
+	public static <A extends Annotation> A findLocalizedMatch(
+			AnnotationDescriptor<A> generatorAnnotationType,
+			MemberDetails idMember,
+			ClassDetails entityType,
+			@Nullable Function<A,String> nameExtractor,
+			@Nullable String matchName,
+			ModelsContext modelsContext) {
 
 		A possibleMatch = null;
 
@@ -130,7 +147,7 @@ public class GeneratorAnnotationHelper {
 		}
 
 		// lastly, on the package
-		final var packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
+		final var packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), modelsContext );
 		if ( packageInfo != null ) {
 			for ( A generatorAnnotation:
 					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
@@ -155,7 +172,7 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		return locatePackageInfoDetails( classDetails, buildingContext.getBootstrapContext().getModelsContext() );
+		return locatePackageInfoDetails( classDetails, buildingContext.getModelsContext() );
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {
@@ -179,13 +196,15 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
+		final int fallbackAllocationSize = fallbackAllocationSize( generatorAnnotation, buildingContext );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var memberDetails = creationContext.getMemberDetails();
 			final var sequenceStyleGenerator =
-					instantiateGenerator( beanContainer( buildingContext ), SequenceStyleGenerator.class );
+					instantiateGenerator( beanContainer( creationContext ), SequenceStyleGenerator.class );
 			prepareForUse(
 					sequenceStyleGenerator,
 					generatorAnnotation,
-					idMember,
+					memberDetails,
 					properties -> {
 						if ( generatorAnnotation != null ) {
 							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
@@ -194,16 +213,32 @@ public class GeneratorAnnotationHelper {
 							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
 						}
 						// we need to better handle the default allocation size here
-						properties.put( INCREMENT_PARAM, fallbackAllocationSize( generatorAnnotation, buildingContext ) );
+						properties.put( INCREMENT_PARAM, fallbackAllocationSize );
 					},
 					generatorAnnotation == null
 							? null
 							: (a, properties) ->
-									SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+									applySequenceGeneratorConfiguration( generatorAnnotation, properties ),
 					creationContext
 			);
 			return sequenceStyleGenerator;
 		} );
+	}
+
+	private static void applySequenceGeneratorConfiguration(
+			SequenceGenerator generatorAnnotation,
+			Properties properties) {
+		SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put );
+		if ( !generatorAnnotation.sequenceName().isEmpty()
+				&& !generatorAnnotation.sequenceName().contains( "." )
+				&& generatorAnnotation.schema().isEmpty() ) {
+			properties.remove( SCHEMA );
+		}
+		if ( !generatorAnnotation.sequenceName().isEmpty()
+				&& !generatorAnnotation.sequenceName().contains( "." )
+				&& generatorAnnotation.catalog().isEmpty() ) {
+			properties.remove( CATALOG );
+		}
 	}
 
 	public static void handleTableGenerator(
@@ -212,14 +247,16 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
+		final int fallbackAllocationSize = fallbackAllocationSize( generatorAnnotation, buildingContext );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var memberDetails = creationContext.getMemberDetails();
 			final var tableGenerator =
-					instantiateGenerator( beanContainer( buildingContext ),
+					instantiateGenerator( beanContainer( creationContext ),
 							org.hibernate.id.enhanced.TableGenerator.class );
 			prepareForUse(
 					tableGenerator,
 					generatorAnnotation,
-					idMember,
+					memberDetails,
 					properties -> {
 						if ( generatorAnnotation != null ) {
 							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
@@ -230,7 +267,7 @@ public class GeneratorAnnotationHelper {
 						// we need to better handle the default allocation size here
 						properties.put(
 								INCREMENT_PARAM,
-								fallbackAllocationSize( generatorAnnotation, buildingContext )
+								fallbackAllocationSize
 						);
 					},
 					generatorAnnotation == null
@@ -253,12 +290,13 @@ public class GeneratorAnnotationHelper {
 		final var markerAnnotation =
 				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
 		idValue.setCustomIdGeneratorCreator( creationContext -> {
+			final var memberDetails = creationContext.getMemberDetails();
 			final var identifierGenerator =
-					instantiateGenerator( beanContainer( buildingContext ), markerAnnotation.value() );
+					instantiateGenerator( beanContainer( creationContext ), markerAnnotation.value() );
 			prepareForUse(
 					identifierGenerator,
 					generatorAnnotation,
-					idMember,
+					memberDetails,
 					null,
 					null,
 					creationContext
@@ -309,11 +347,7 @@ public class GeneratorAnnotationHelper {
 			configBaseline.accept( properties );
 		}
 		collectBaselineProperties(
-				creationContext.getProperty() != null
-						? creationContext.getProperty().getValue()
-						: creationContext.getPersistentClass().getIdentifierProperty().getValue(),
-				creationContext.getDatabase().getDialect(),
-				creationContext.getRootClass(),
+				creationContext,
 				properties::setProperty,
 				creationContext.getServiceRegistry().requireService( ConfigurationService.class )
 		);
@@ -360,7 +394,8 @@ public class GeneratorAnnotationHelper {
 				null,
 				context
 		);
-		idValue.setCustomIdGeneratorCreator( creationContext -> new UuidGenerator( generatorConfig, idMember ) );
+		idValue.setCustomIdGeneratorCreator( creationContext ->
+				new UuidGenerator( generatorConfig, creationContext.getMemberDetails() ) );
 	}
 
 	public static void handleIdentityStrategy(SimpleValue idValue) {
@@ -415,10 +450,6 @@ public class GeneratorAnnotationHelper {
 	}
 
 	private static String determineStrategyName(GenericGenerator generatorConfig) {
-		if ( generatorConfig instanceof GenericGeneratorAnnotation generatorAnnotation
-				&& generatorAnnotation.strategy() != null ) {
-			return generatorAnnotation.strategy();
-		}
 		return generatorConfig.type().getName();
 	}
 

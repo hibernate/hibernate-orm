@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
@@ -16,6 +16,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -35,13 +36,14 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 	@BeforeAll
 	public void setUp() {
 		ssr = ServiceRegistryUtil.serviceRegistry();
-		metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Category.class )
-				.addAnnotatedClass( Item.class )
-				.addAnnotatedClass( Workflow.class )
-				.getMetadataBuilder()
-				.applyImplicitNamingStrategy( new MyNamingStrategy() )
-				.build();
+		metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadataWithImplicitNaming(
+				ssr,
+				new MappingSources()
+						.addManagedClass( Category.class )
+						.addManagedClass( Item.class )
+						.addManagedClass( Workflow.class ),
+				new MyNamingStrategy()
+		);
 	}
 
 	@AfterAll

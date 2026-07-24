@@ -24,6 +24,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
@@ -631,7 +632,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
+			RuntimeModelCreationContext runtimeModelCreationContext,
+			JpaStaticMetamodelInjectionSource staticMetamodelInjectionSource) {
 		bootMetamodel.getImports()
 				.forEach( (key, value) -> nameToImportMap.put( key,
 						new ImportInfo( value, null ) ) );
@@ -644,7 +646,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				jpaStaticMetaModelPopulationSetting,
 				jpaMetaModelPopulationSetting,
 				runtimeModelCreationContext,
-				runtimeModelCreationContext.getBootstrapContext().getClassLoaderService()
+				runtimeModelCreationContext.getClassLoaderService(),
+				staticMetamodelInjectionSource
 		);
 
 
@@ -737,7 +740,17 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	private Class<?> graphMetamodelClass(NamedEntityGraphDefinition definition, MetadataContext context) {
-		return context.metamodelClass( managedTypeByName.get( definition.entityName() ) );
+		return context.metamodelClass( resolveEntityDomainTypeByJpaName( definition.entityName() ) );
+	}
+
+	private ManagedDomainType<?> resolveEntityDomainTypeByJpaName(String jpaEntityName) {
+		for ( var managedType : managedTypeByName.values() ) {
+			if ( managedType instanceof EntityDomainType<?> entityDomainType
+					&& jpaEntityName.equals( entityDomainType.getName() ) ) {
+				return entityDomainType;
+			}
+		}
+		return null;
 	}
 
 	private Class<?> metamodelClass(ManagedDomainType<?> managedDomainType) {

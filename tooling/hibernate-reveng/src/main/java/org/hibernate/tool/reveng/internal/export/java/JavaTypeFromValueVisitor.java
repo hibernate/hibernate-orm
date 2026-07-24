@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.export.java;
 
 import org.hibernate.HibernateException;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Map;
@@ -17,9 +18,11 @@ import org.hibernate.mapping.Value;
 import org.hibernate.tool.reveng.internal.export.common.DefaultValueVisitor;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class JavaTypeFromValueVisitor extends DefaultValueVisitor {
 
+	private static final TypeConfiguration TYPE_CONFIGURATION = new TypeConfiguration();
 
 	public JavaTypeFromValueVisitor() {
 		super( true );
@@ -62,6 +65,10 @@ public class JavaTypeFromValueVisitor extends DefaultValueVisitor {
 		return value.getAssociatedClass().getClassName();
 	}
 
+	public Object accept(BasicValue value) {
+		return handle( value );
+	}
+
 	private String toName(Class<?> c) {
 
 		if ( c.isArray() ) {
@@ -89,6 +96,16 @@ public class JavaTypeFromValueVisitor extends DefaultValueVisitor {
 		if ( o.isSimpleValue() ) {
 			// this logic make us use the raw typename if it is something else than an Hibernate type. So, if user wrote long we will use long...if he meant to have a Long then he should use the java.lang.Long version.
 			String typename = ( (SimpleValue) o).getTypeName();
+			if ( typename != null ) {
+				final String javaTypeName = javaTypeNameForLegacyTypeName( typename );
+				if ( javaTypeName != null ) {
+					return javaTypeName;
+				}
+				final Type registeredType = TYPE_CONFIGURATION.getBasicTypeRegistry().getRegisteredType( typename );
+				if ( registeredType != null ) {
+					return toName( registeredType.getReturnedClass() );
+				}
+			}
 			if ( !Cfg2JavaTool.isNonPrimitiveTypeName( typename ) ) {
 				String val = ( (SimpleValue) o).getTypeName();
 				if(val!=null) return val; // val can be null when type is any
@@ -97,6 +114,14 @@ public class JavaTypeFromValueVisitor extends DefaultValueVisitor {
 
 	return toName( o.getType().getReturnedClass() );
 
+	}
+
+	static String javaTypeNameForLegacyTypeName(String typeName) {
+		return switch ( typeName ) {
+			case "string" -> String.class.getName();
+			case "yes_no" -> Boolean.class.getName();
+			default -> null;
+		};
 	}
 
 

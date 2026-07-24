@@ -15,7 +15,8 @@ import jakarta.persistence.Id;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -73,29 +74,30 @@ public class InterceptorTest {
 	public void testSessionFactoryInterceptor() {
 
 		Serializable customerId = 1L;
-		SessionFactory sessionFactory = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-		/*
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
+				SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+						MetadataBuildingTestHelper.buildMetadata( serviceRegistry, Customer.class )
+			/*
+			//tag::events-interceptors-session-factory-scope-example[]
+			try (SessionFactory sessionFactory = new HibernatePersistenceConfiguration( "CRM" )
+							.property( AvailableSettings.INTERCEPTOR, new LoggingInterceptor() )
+							.managedClass( Customer.class )
+							.createEntityManagerFactory()) {
+			}
+			//end::events-interceptors-session-factory-scope-example[]
+			*/
 		//tag::events-interceptors-session-factory-scope-example[]
-		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder().build())
+				) ) {
 		//end::events-interceptors-session-factory-scope-example[]
-		*/
-		//tag::events-interceptors-session-factory-scope-example[]
-			.addAnnotatedClass(Customer.class)
-			.getMetadataBuilder()
-			.build()
-			.getSessionFactoryBuilder()
-			.applyInterceptor(new LoggingInterceptor())
-			.build();
-		//end::events-interceptors-session-factory-scope-example[]
-		Session session = sessionFactory.openSession();
-		session.getTransaction().begin();
+			Session session = sessionFactory.openSession();
+			session.getTransaction().begin();
 
-		Customer customer = session.get( Customer.class, customerId );
-		customer.setName( "Mr. John Doe" );
+			Customer customer = session.get( Customer.class, customerId );
+			customer.setName( "Mr. John Doe" );
 		//Entity Customer#1 changed from [John Doe, 0] to [Mr. John Doe, 0]
-		session.getTransaction().commit();
-		session.close();
-		sessionFactory.close();
+			session.getTransaction().commit();
+			session.close();
+		}
 	}
 
 	@Entity(name = "Customer")

@@ -12,31 +12,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 
 /**
@@ -45,7 +39,16 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
  * @author Gavin King
  */
 public class Table implements Serializable, ContributableDatabaseObject {
-	private static final Column[] EMPTY_COLUMN_ARRAY = new Column[0];
+	@FunctionalInterface
+	public interface InitCommandProducer
+			extends java.util.function.Function<SqlStringGenerationContext, InitCommand>, Serializable {
+	}
+
+	@FunctionalInterface
+	public interface ResyncCommandProducer
+			extends java.util.function.BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>,
+				Serializable {
+	}
 
 	private final String contributor;
 
@@ -73,9 +76,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private String options;
 	private String extraDeclarations;
 
-	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
-	private List<BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>> resyncCommandProducers;
-	private List<Function<SqlStringGenerationContext, InitCommand>> resetCommandProducers;
+	private List<InitCommandProducer> initCommandProducers;
+	private List<ResyncCommandProducer> resyncCommandProducers;
+	private List<InitCommandProducer> resetCommandProducers;
 
 	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
@@ -290,6 +293,12 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			column.uniqueInteger = columns.size();
 		}
 		else {
+			if ( !column.isNullable() ) {
+				oldColumn.setNullable( false );
+			}
+			else if ( !oldColumn.isNullable() ) {
+				column.setNullable( false );
+			}
 			column.uniqueInteger = oldColumn.uniqueInteger;
 		}
 	}
@@ -481,80 +490,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueKey;
 	}
 
-	/**
-	 * Mark the given column unique and assign a name to the unique key.
-	 * <p>
-	 * This method does not add a {@link UniqueKey} to the table itself!
-	 */
-	public void createUniqueKey(Column column, MetadataBuildingContext context) {
-		final String keyName = context.getBuildingOptions().getImplicitNamingStrategy()
-				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-					@Override
-					public Identifier getTableName() {
-						return name;
-					}
-
-					@Override
-					public List<Identifier> getColumnNames() {
-						return singletonList( column.getNameIdentifier( context ) );
-					}
-
-					@Override
-					public Identifier getUserProvidedIdentifier() {
-						return null;
-					}
-
-					@Override
-					public MetadataBuildingContext getBuildingContext() {
-						return context;
-					}
-				} )
-				.render( context.getMetadataCollector().getDatabase().getDialect() );
-		column.setUniqueKeyName( keyName );
-		column.setUnique( true );
-	}
-
-	/**
-	 * If there is one given column, mark it unique, otherwise
-	 * create a {@link UniqueKey} comprising the given columns.
-	 */
-	public void createUniqueKey(List<Column> keyColumns, MetadataBuildingContext context) {
-		if ( keyColumns.size() == 1 ) {
-			createUniqueKey( keyColumns.get(0), context );
-		}
-		else {
-			final String keyName = context.getBuildingOptions().getImplicitNamingStrategy()
-					.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-						@Override
-						public Identifier getTableName() {
-							return name;
-						}
-
-						@Override
-						public List<Identifier> getColumnNames() {
-							return keyColumns.stream()
-									.map( column -> column.getNameIdentifier( context ) )
-									.collect(toList());
-						}
-
-						@Override
-						public Identifier getUserProvidedIdentifier() {
-							return null;
-						}
-
-						@Override
-						public MetadataBuildingContext getBuildingContext() {
-							return context;
-						}
-					} )
-					.render( context.getMetadataCollector().getDatabase().getDialect() );
-			final var uniqueKey = getOrCreateUniqueKey( keyName );
-			for ( var keyColumn : keyColumns ) {
-				uniqueKey.addColumn( keyColumn );
-			}
-		}
-	}
-
 	public UniqueKey getUniqueKey(String keyName) {
 		return uniqueKeys.get( keyName );
 	}
@@ -569,11 +504,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueKey;
 	}
 
-	public void createForeignKeys(MetadataBuildingContext context) {
-	}
-
-	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition, String options) {
-		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, options, null );
+	public void markColumnUnique(String keyName, Column column) {
+		column.setUniqueKeyName( keyName );
+		column.setUnique( true );
 	}
 
 	public ForeignKey createForeignKey(
@@ -583,7 +516,22 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			String keyDefinition,
 			String options,
 			List<Column> referencedColumns) {
-		final var key = new ForeignKeyKey( keyColumns, referencedEntityName, referencedColumns );
+		return createForeignKey(
+				keyName,
+				new ForeignKeyColumnMappings( toForeignKeyColumnMappings( keyColumns, referencedColumns ) ),
+				referencedEntityName,
+				keyDefinition,
+				options
+		);
+	}
+
+	public ForeignKey createForeignKey(
+			String keyName,
+			ForeignKeyColumnMappings columnMappings,
+			String referencedEntityName,
+			String keyDefinition,
+			String options) {
+		final var key = new ForeignKeyKey( columnMappings.mappings(), referencedEntityName );
 
 		ForeignKey foreignKey = foreignKeys.get( key );
 		if ( foreignKey == null ) {
@@ -591,12 +539,13 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			foreignKey.setReferencedEntityName( referencedEntityName );
 			foreignKey.setKeyDefinition( keyDefinition );
 			foreignKey.setOptions( options );
-			for ( var keyColumn : keyColumns ) {
-				foreignKey.addColumn( keyColumn );
+			for ( var columnMapping : columnMappings.mappings() ) {
+				foreignKey.addColumn( columnMapping.column() );
 			}
 
-			// null referencedColumns means a reference to primary key
-			if ( referencedColumns != null ) {
+			// null referenced columns mean a reference to the primary key
+			final List<Column> referencedColumns = referencedColumns( columnMappings.mappings() );
+			if ( !referencedColumns.isEmpty() ) {
 				foreignKey.addReferencedColumns( referencedColumns );
 			}
 
@@ -612,6 +561,43 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 
 		return foreignKey;
+	}
+
+	private List<ForeignKeyColumnMapping> toForeignKeyColumnMappings(
+			List<Column> keyColumns,
+			List<Column> referencedColumns) {
+		if ( referencedColumns == null ) {
+			return keyColumns.stream()
+					.map( (keyColumn) -> new ForeignKeyColumnMapping( keyColumn, null ) )
+					.toList();
+		}
+		if ( keyColumns.size() != referencedColumns.size() ) {
+			throw new MappingException(
+					"Foreign key column count did not match referenced column count for table " + getName()
+							+ " - key columns: " + keyColumns
+							+ ", referenced columns: " + referencedColumns
+			);
+		}
+		final ArrayList<ForeignKeyColumnMapping> result = new ArrayList<>( keyColumns.size() );
+		for ( int i = 0; i < keyColumns.size(); i++ ) {
+			result.add( new ForeignKeyColumnMapping( keyColumns.get( i ), referencedColumns.get( i ) ) );
+		}
+		return result;
+	}
+
+	private List<Column> referencedColumns(List<ForeignKeyColumnMapping> columnMappings) {
+		if ( columnMappings.stream().noneMatch( (columnMapping) -> columnMapping.referencedColumn() != null ) ) {
+			return emptyList();
+		}
+		if ( columnMappings.stream().anyMatch( (columnMapping) -> columnMapping.referencedColumn() == null ) ) {
+			throw new MappingException(
+					"Foreign key column mappings for table " + getName()
+							+ " must either all reference primary-key columns or all reference explicit columns"
+			);
+		}
+		return columnMappings.stream()
+				.map( ForeignKeyColumnMapping::referencedColumn )
+				.toList();
 	}
 
 	/**
@@ -749,40 +735,37 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		this.viewQuery = viewQuery;
 	}
 
-	private record ForeignKeyKey(Column[] columns, String referencedClassName, Column[] referencedColumns)
+	private record ForeignKeyKey(ForeignKeyColumnMapping[] columnMappings, String referencedClassName)
 			implements Serializable {
 		private ForeignKeyKey {
-			Objects.requireNonNull( columns );
+			Objects.requireNonNull( columnMappings );
 			Objects.requireNonNull( referencedClassName );
 		}
-		private ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
-			this( columns.toArray( EMPTY_COLUMN_ARRAY ),
-					referencedClassName,
-					referencedColumns == null
-							? EMPTY_COLUMN_ARRAY
-							: referencedColumns.toArray( EMPTY_COLUMN_ARRAY ) );
+
+		private ForeignKeyKey(List<ForeignKeyColumnMapping> columnMappings, String referencedClassName) {
+			this( columnMappings.toArray( ForeignKeyColumnMapping[]::new ), referencedClassName );
 		}
 
 		public int hashCode() {
-			return Arrays.hashCode( columns ) + Arrays.hashCode( referencedColumns );
+			return Objects.hash( referencedClassName, Arrays.hashCode( columnMappings ) );
 		}
 
 		public boolean equals(Object other) {
 			return other instanceof ForeignKeyKey foreignKeyKey
-				&& Arrays.equals( foreignKeyKey.columns, columns )
-				&& Arrays.equals( foreignKeyKey.referencedColumns, referencedColumns );
+				&& Objects.equals( foreignKeyKey.referencedClassName, referencedClassName )
+				&& Arrays.equals( foreignKeyKey.columnMappings, columnMappings );
 		}
 	}
 
 	/**
-	 * @deprecated Use {@link #addInitCommand(Function)} instead.
+	 * @deprecated Use {@link #addInitCommand(InitCommandProducer)} instead.
 	 */
 	@Deprecated
 	public void addInitCommand(InitCommand command) {
 		addInitCommand( ignored -> command );
 	}
 
-	public void addInitCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+	public void addInitCommand(InitCommandProducer commandProducer) {
 		if ( initCommandProducers == null ) {
 			initCommandProducers = new ArrayList<>();
 		}
@@ -798,7 +781,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						.toList();
 	}
 
-	public void addResyncCommand(BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand> commandProducer) {
+	public void addResyncCommand(ResyncCommandProducer commandProducer) {
 		if ( resyncCommandProducers == null ) {
 			resyncCommandProducers = new ArrayList<>();
 		}
@@ -814,7 +797,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						.toList();
 	}
 
-	public void addResetCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+	public void addResetCommand(InitCommandProducer commandProducer) {
 		if ( resetCommandProducers == null ) {
 			resetCommandProducers = new ArrayList<>();
 		}

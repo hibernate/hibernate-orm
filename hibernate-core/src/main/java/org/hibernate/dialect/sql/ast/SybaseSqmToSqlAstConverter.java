@@ -63,7 +63,7 @@ public class SybaseSqmToSqlAstConverter<T extends Statement> extends BaseSqmToSq
 								null,
 								new NamedTableReference( "(select 1)", "dummy_(x)" ),
 								null,
-								getCreationContext().getSessionFactory()
+								getLoadQueryInfluencers().getSessionFactory()
 						)
 				);
 			}

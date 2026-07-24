@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.core.util;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -14,11 +15,13 @@ import java.util.Properties;
 @SuppressWarnings("serial")
 public class EnhancedComponent extends Component implements EnhancedValue {
 
+	private final MetadataBuildingContext metadataBuildingContext;
 	private Properties idGenProps = new Properties();
 	private String genStrategy = null;
 
 	public EnhancedComponent(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		super(metadata, owner);
+		this.metadataBuildingContext = metadata;
 	}
 
 	@Override
@@ -42,11 +45,26 @@ public class EnhancedComponent extends Component implements EnhancedValue {
 		return genStrategy;
 	}
 
+	public void setGeneratedComponentClassName(String componentClassName) {
+		final var modelsContext = metadataBuildingContext.getModelsContext();
+		setComponentClassDetails( ModelsHelper.resolveClassDetails(
+				componentClassName,
+				modelsContext.getClassDetailsRegistry(),
+				() -> GeneratedComponentClassDetails.create( componentClassName, modelsContext )
+		) );
+	}
+
 	@Override
 	public Class<?> getComponentClass() throws MappingException {
 		// we prevent ORM from trying to load a component class by name,
 		// since at the point when we are building these, a corresponding class is not yet created
 		// (so can't even think about it being compiled and able to load via any classloader) ...
 		return Object.class;
+	}
+
+	@Override
+	public boolean isDynamic() {
+		// This component represents a Java class that the exporter will generate.
+		return false;
 	}
 }

@@ -15,10 +15,13 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.exec.spi.Callback;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -72,11 +75,6 @@ public abstract class BaseSqmUnitTest
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory();
-	}
-
-	@Override
 	public MappingMetamodelImplementor getMappingMetamodel() {
 		return sessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 	}
@@ -92,6 +90,11 @@ public abstract class BaseSqmUnitTest
 	}
 
 	@Override
+	public SqmCreationContext getSqmCreationContext() {
+		return sessionFactory().getQueryEngine().getCriteriaBuilder();
+	}
+
+	@Override
 	public Integer getMaximumFetchDepth() {
 		return sessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
 	}
@@ -104,6 +107,16 @@ public abstract class BaseSqmUnitTest
 	@Override
 	public Dialect getDialect() {
 		return sessionFactory().getQueryEngine().getDialect();
+	}
+
+	@Override
+	public SqmFunctionRegistry getSqmFunctionRegistry() {
+		return sessionFactory().getQueryEngine().getSqmFunctionRegistry();
+	}
+
+	@Override
+	public WrapperOptions getWrapperOptions() {
+		return sessionFactory().getWrapperOptions();
 	}
 
 	@Override

@@ -5,16 +5,17 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.lang.reflect.Type;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
-import jakarta.persistence.AttributeConverter;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.annotations.Mutability;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.ModelsException;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
@@ -44,40 +45,34 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			JpaAttributeConverterCreationContext converterCreationContext,
-			MetadataBuildingContext context) {
+			MappingResolutionServices services) {
+		final var typeConfiguration = services.getTypeConfiguration();
 		return fromInternal(
-				explicitJtdAccess,
-				explicitStdAccess,
-				explicitMutabilityPlanAccess,
+				explicitJtdAccess == null ? null : explicitJtdAccess.apply( typeConfiguration ),
+				explicitStdAccess == null ? null : explicitStdAccess.apply( typeConfiguration ),
+				explicitMutabilityPlanAccess == null ? null : explicitMutabilityPlanAccess.apply( typeConfiguration ),
 				converter( converterCreationContext, converterDescriptor ),
 				resolvedJavaType,
-				sqlTypeIndicators,
-				context
+				sqlTypeIndicators
 		);
 	}
 
 	public static <T> NamedConverterResolution<T> from(
-			String name,
-			Function<TypeConfiguration, BasicJavaType<?>> explicitJtdAccess,
-			Function<TypeConfiguration, JdbcType> explicitStdAccess,
-			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			ConverterDescriptor<T,?> converterDescriptor,
+			BasicJavaType<?> explicitJtd,
+			JdbcType explicitStd,
+			MutabilityPlan<?> explicitMutabilityPlan,
+			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			JpaAttributeConverterCreationContext converterCreationContext,
-			MetadataBuildingContext context) {
-		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
-		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
-		final var bootstrapContext = context.getBootstrapContext();
-		final Class<? extends AttributeConverter<T, ?>> converterClass =
-				bootstrapContext.getClassLoaderService().classForName( converterClassName );
-		final var converterDescriptor = ConverterDescriptors.of( converterClass );
+			MappingResolutionServices services) {
 		return fromInternal(
-				explicitJtdAccess,
-				explicitStdAccess,
-				explicitMutabilityPlanAccess,
+				explicitJtd,
+				explicitStd,
+				explicitMutabilityPlan,
 				converter( converterCreationContext, converterDescriptor ),
-				null,
-				sqlTypeIndicators,
-				context
+				resolvedJavaType,
+				sqlTypeIndicators
 		);
 	}
 
@@ -88,30 +83,19 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	private static <T,S> NamedConverterResolution<T> fromInternal(
-			Function<TypeConfiguration, BasicJavaType<?>> explicitJtdAccess,
-			Function<TypeConfiguration, JdbcType> explicitStdAccess,
-			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			BasicJavaType<?> explicitJtd,
+			JdbcType explicitJdbcType,
+			MutabilityPlan<?> explicitMutabilityPlan,
 			JpaAttributeConverter<T,S> converter,
 			Type resolvedJavaType,
-			JdbcTypeIndicators sqlTypeIndicators,
-			MetadataBuildingContext context) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-
+			JdbcTypeIndicators sqlTypeIndicators) {
 		//noinspection unchecked
-		final var explicitJtd =
-				explicitJtdAccess != null
-						? (JavaType<T>) explicitJtdAccess.apply( typeConfiguration )
-						: null;
+		final var explicitJavaType = (JavaType<T>) explicitJtd;
 
 		final var domainJtd =
-				explicitJtd != null
-						? explicitJtd
+				explicitJavaType != null
+						? explicitJavaType
 						: converter.getDomainJavaType();
-
-		final var explicitJdbcType =
-				explicitStdAccess != null
-						? explicitStdAccess.apply( typeConfiguration )
-						: null;
 
 		final var relationalJtd = converter.getRelationalJavaType();
 
@@ -121,8 +105,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 						: relationalJtd.getRecommendedJdbcType( sqlTypeIndicators );
 
 		final var mutabilityPlan = determineMutabilityPlan(
-				explicitMutabilityPlanAccess,
-				typeConfiguration,
+				explicitMutabilityPlan,
 				converter,
 				domainJtd
 		);
@@ -144,17 +127,15 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	private static <T> MutabilityPlan<T> determineMutabilityPlan(
-			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			TypeConfiguration typeConfiguration,
+			MutabilityPlan<?> explicitMutabilityPlan,
 			JpaAttributeConverter<T, ?> converter,
 			JavaType<T> domainJtd) {
 		//noinspection unchecked
-		final var explicitMutabilityPlan =
-				explicitMutabilityPlanAccess != null
-						? (MutabilityPlan<T>) explicitMutabilityPlanAccess.apply( typeConfiguration )
-						: null;
 		if ( explicitMutabilityPlan != null ) {
-			return explicitMutabilityPlan;
+			return (MutabilityPlan<T>) explicitMutabilityPlan;
+		}
+		else if ( converter.getConverterJavaType().getJavaTypeClass().isAnnotationPresent( Mutability.class ) ) {
+			return instantiateMutabilityPlan( converter.getConverterJavaType().getJavaTypeClass().getAnnotation( Mutability.class ) );
 		}
 		else if ( converter.getConverterJavaType().getJavaTypeClass().isAnnotationPresent( Immutable.class ) ) {
 			return ImmutableMutabilityPlan.instance();
@@ -167,6 +148,20 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		}
 		else {
 			return new AttributeConverterMutabilityPlan<>( converter, true );
+		}
+	}
+
+	private static <T> MutabilityPlan<T> instantiateMutabilityPlan(Mutability mutability) {
+		try {
+			//noinspection unchecked
+			return (MutabilityPlan<T>) mutability.value().getConstructor().newInstance();
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			final ModelsException modelsException = new ModelsException(
+					"Error instantiating converter @Mutability plan - " + mutability.value().getName()
+			);
+			modelsException.addSuppressed( e );
+			throw modelsException;
 		}
 	}
 

@@ -181,13 +181,13 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	};
 	private final StandardTableExporter sqlServerTableExporter = new StandardTableExporter( this ) {
 		@Override
-		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
-			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn, Metadata metadata) {
+			final JdbcType jdbcType = aggregateColumn.getJdbcType( metadata );
 			if ( jdbcType.isXml() ) {
 				// XML columns can't have check constraints
 				return;
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
+			super.applyAggregateColumnCheck( buf, aggregateColumn, metadata );
 		}
 	};
 

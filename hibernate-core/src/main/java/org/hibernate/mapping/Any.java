@@ -6,14 +6,17 @@ package org.hibernate.mapping;
 
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.MappingContext;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,10 +40,12 @@ public class Any extends SimpleValue {
 
 	// common
 	private Map<DiscriminatorValue,String> metaValueToEntityNameMap;
-	private ImplicitDiscriminatorStrategy implicitValueStrategy;
+	private String implicitValueStrategyClassName;
+	private transient ImplicitDiscriminatorStrategy implicitValueStrategy;
 	private boolean lazy = true;
+	private transient TypeConfiguration typeConfiguration;
 
-	private AnyType resolvedType;
+	private transient AnyType resolvedType;
 
 	public Any(MetadataBuildingContext buildingContext, Table table) {
 		this( buildingContext, table, false );
@@ -48,6 +53,7 @@ public class Any extends SimpleValue {
 
 	public Any(MetadataBuildingContext buildingContext, Table table, boolean annotations) {
 		super( buildingContext, table );
+		this.typeConfiguration = buildingContext.getTypeConfiguration();
 		if ( ! annotations ) {
 			metaMapping = new MetaValue( this::applySelectableToSuper, buildingContext, table );
 			metaMapping.setTypeName( "string" );
@@ -61,6 +67,7 @@ public class Any extends SimpleValue {
 
 	public Any(Any original) {
 		super( original );
+		this.typeConfiguration = original.typeConfiguration;
 
 		this.metaMapping = original.metaMapping == null ? null : original.metaMapping.copy();
 		this.keyMapping = original.keyMapping == null ? null : (SimpleValue) original.keyMapping.copy();
@@ -76,6 +83,7 @@ public class Any extends SimpleValue {
 				? null
 				: new HashMap<>(original.metaValueToEntityNameMap);
 		this.implicitValueStrategy = original.implicitValueStrategy;
+		this.implicitValueStrategyClassName = original.implicitValueStrategyClassName;
 		this.lazy = original.lazy;
 	}
 
@@ -135,9 +143,20 @@ public class Any extends SimpleValue {
 					discriminatorDescriptor != null ? discriminatorDescriptor.getType() : metaMapping.getType();
 			final Type identifierType = keyDescriptor != null ? keyDescriptor.getType() : keyMapping.getType();
 			final MetaType metaType = new MetaType( discriminatorType, implicitValueStrategy, metaValueToEntityNameMap );
-			resolvedType = new AnyType( getTypeConfiguration(), metaType, identifierType, isLazy() );
+			resolvedType = new AnyType( typeConfiguration, metaType, identifierType, isLazy() );
 		}
 		return resolvedType;
+	}
+
+	public void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
+		this.resolvedType = null;
+		if ( metaMapping != null ) {
+			metaMapping.reattachTypeConfiguration( typeConfiguration );
+		}
+		if ( keyMapping instanceof KeyValue keyValue ) {
+			keyValue.reattachTypeConfiguration( typeConfiguration );
+		}
 	}
 
 	@Override
@@ -203,6 +222,21 @@ public class Any extends SimpleValue {
 	@Incubating
 	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
 		this.implicitValueStrategy = implicitValueStrategy;
+		implicitValueStrategyClassName = implicitValueStrategy == null
+				? null
+				: implicitValueStrategy.getClass().getName();
+	}
+
+	@SuppressWarnings("unchecked")
+	public void reattachImplicitDiscriminatorStrategy(
+			ClassLoaderAccess classLoaderAccess,
+			ManagedBeanRegistry managedBeanRegistry) {
+		if ( implicitValueStrategyClassName != null ) {
+			final Class<? extends ImplicitDiscriminatorStrategy> strategyClass =
+					(Class<? extends ImplicitDiscriminatorStrategy>) (Class<?>)
+							classLoaderAccess.classForName( implicitValueStrategyClassName );
+			implicitValueStrategy = managedBeanRegistry.getBean( strategyClass ).getBeanInstance();
+		}
 	}
 
 	public boolean isLazy() {
@@ -214,7 +248,10 @@ public class Any extends SimpleValue {
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
 	}
 
 	@Override
@@ -247,15 +284,17 @@ public class Any extends SimpleValue {
 		return metaMapping.isValid( mappingContext ) && keyMapping.isValid( mappingContext );
 	}
 
-	private static String columnName(Column column, MetadataBuildingContext buildingContext) {
-		final var jdbcServices =
-				buildingContext.getBootstrapContext().getServiceRegistry()
-						.requireService( JdbcServices.class );
-		return column.getQuotedName( jdbcServices.getDialect() );
+	private static String columnName(Column column, Database database) {
+		return column.getQuotedName( database.getDialect() );
 	}
 
 	public void setDiscriminator(BasicValue discriminatorDescriptor) {
 		this.discriminatorDescriptor = discriminatorDescriptor;
+		if ( getMappingRole() != null ) {
+			discriminatorDescriptor.setMappingRole(
+					getMappingRole().append( MappingRole.PartKind.DISCRIMINATOR )
+			);
+		}
 		if ( discriminatorDescriptor.getColumn() instanceof Column column ) {
 			justAddColumn(
 					column,
@@ -275,6 +314,9 @@ public class Any extends SimpleValue {
 
 	public void setKey(BasicValue keyDescriptor) {
 		this.keyDescriptor = keyDescriptor;
+		if ( getMappingRole() != null ) {
+			keyDescriptor.setMappingRole( getMappingRole().append( MappingRole.PartKind.KEY ) );
+		}
 		if ( keyDescriptor.getColumn() instanceof Column column ) {
 			justAddColumn(
 					column,
@@ -287,19 +329,48 @@ public class Any extends SimpleValue {
 		}
 	}
 
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		super.setMappingRole( mappingRole );
+		if ( metaMapping != null ) {
+			metaMapping.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.DISCRIMINATOR )
+			);
+		}
+		if ( keyMapping != null ) {
+			keyMapping.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.KEY )
+			);
+		}
+		if ( discriminatorDescriptor != null ) {
+			discriminatorDescriptor.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.DISCRIMINATOR )
+			);
+		}
+		if ( keyDescriptor != null ) {
+			keyDescriptor.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.KEY )
+			);
+		}
+	}
+
 	/**
 	 * The discriminator {@linkplain Value}
 	 */
 	public static class MetaValue extends SimpleValue {
 		private String typeName;
 		private String columnName;
+		private final Database database;
+		private transient TypeConfiguration typeConfiguration;
 
-		private final Consumer<Selectable> selectableConsumer;
+		private transient Consumer<Selectable> selectableConsumer;
 
 		public MetaValue(
 				Consumer<Selectable> selectableConsumer,
 				MetadataBuildingContext buildingContext) {
 			super( buildingContext );
+			this.database = buildingContext.getMetadataCollector().getDatabase();
+			this.typeConfiguration = buildingContext.getTypeConfiguration();
 			this.selectableConsumer = selectableConsumer;
 		}
 
@@ -308,6 +379,8 @@ public class Any extends SimpleValue {
 				MetadataBuildingContext buildingContext,
 				Table table) {
 			super( buildingContext, table );
+			this.database = buildingContext.getMetadataCollector().getDatabase();
+			this.typeConfiguration = buildingContext.getTypeConfiguration();
 			this.selectableConsumer = selectableConsumer;
 		}
 
@@ -315,6 +388,8 @@ public class Any extends SimpleValue {
 			super( original );
 			this.typeName = original.typeName;
 			this.columnName = original.columnName;
+			this.database = original.database;
+			this.typeConfiguration = original.typeConfiguration;
 			this.selectableConsumer = original.selectableConsumer;
 		}
 
@@ -325,7 +400,11 @@ public class Any extends SimpleValue {
 
 		@Override
 		public Type getType() throws MappingException {
-			return getMetadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( typeName );
+			return typeConfiguration.getBasicTypeRegistry().getRegisteredType( typeName );
+		}
+
+		private void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+			this.typeConfiguration = typeConfiguration;
 		}
 
 		@Override
@@ -348,7 +427,7 @@ public class Any extends SimpleValue {
 				throw new MappingException( "ANY discriminator already contained column" );
 			}
 			super.addColumn( column );
-			this.columnName = columnName( column, getBuildingContext() );
+			this.columnName = columnName( column, database );
 			selectableConsumer.accept( column );
 			column.setValue( this );
 		}
@@ -359,7 +438,7 @@ public class Any extends SimpleValue {
 				throw new MappingException( "ANY discriminator already contained column" );
 			}
 			super.addColumn( column, isInsertable, isUpdatable );
-			this.columnName = columnName( column, getBuildingContext() );
+			this.columnName = columnName( column, database );
 			selectableConsumer.accept( column );
 			column.setValue( this );
 		}
@@ -383,13 +462,15 @@ public class Any extends SimpleValue {
 
 	public static class KeyValue extends SimpleValue {
 		private String typeName;
+		private transient TypeConfiguration typeConfiguration;
 
-		private final Consumer<Selectable> selectableConsumer;
+		private transient Consumer<Selectable> selectableConsumer;
 
 		public KeyValue(
 				Consumer<Selectable> selectableConsumer,
 				MetadataBuildingContext buildingContext) {
 			super( buildingContext );
+			this.typeConfiguration = buildingContext.getTypeConfiguration();
 			this.selectableConsumer = selectableConsumer;
 		}
 
@@ -398,12 +479,14 @@ public class Any extends SimpleValue {
 				MetadataBuildingContext buildingContext,
 				Table table) {
 			super( buildingContext, table );
+			this.typeConfiguration = buildingContext.getTypeConfiguration();
 			this.selectableConsumer = selectableConsumer;
 		}
 
 		private KeyValue(KeyValue original) {
 			super( original );
 			this.typeName = original.typeName;
+			this.typeConfiguration = original.typeConfiguration;
 			this.selectableConsumer = original.selectableConsumer;
 		}
 
@@ -414,7 +497,11 @@ public class Any extends SimpleValue {
 
 		@Override
 		public Type getType() throws MappingException {
-			return getMetadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( typeName );
+			return typeConfiguration.getBasicTypeRegistry().getRegisteredType( typeName );
+		}
+
+		private void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+			this.typeConfiguration = typeConfiguration;
 		}
 
 		@Override

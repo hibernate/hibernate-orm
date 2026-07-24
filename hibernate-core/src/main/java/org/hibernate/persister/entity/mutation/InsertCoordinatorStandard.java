@@ -114,11 +114,11 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		// apply any pre-insert in-memory value generation
 		final boolean needsDynamicInsert = preInsertInMemoryValueGeneration( values, entity, session );
 		final var persister = entityPersister();
-		final boolean forceIdentifierBinding = persister.getGenerator().generatedOnExecution() && id != null;
+		final boolean forceEntityIdentifierBinding = persister.getGenerator().generatedOnExecution() && id != null;
 		return persister.isDynamicInsert()
 			|| needsDynamicInsert
-			|| forceIdentifierBinding
-				? doDynamicInserts( id, values, entity, session, forceIdentifierBinding )
+			|| forceEntityIdentifierBinding
+				? doDynamicInserts( id, values, entity, session, forceEntityIdentifierBinding )
 				: doStaticInserts( id, values, entity, session );
 	}
 
@@ -426,10 +426,10 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object[] values,
 			Object object,
 			SharedSessionContractImplementor session,
-			boolean forceIdentifierBinding) {
+			boolean forceEntityIdentifierBinding) {
 		final boolean[] propertiesToInsert = getPropertiesToInsert( entityPersister(), values );
 		final var insertGroup =
-				generateDynamicInsertSqlGroup( propertiesToInsert, object, session, forceIdentifierBinding );
+				generateDynamicInsertSqlGroup( propertiesToInsert, object, session, forceEntityIdentifierBinding );
 		final var mutationExecutor = executor( session, insertGroup, true );
 		final var insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
 		final var tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
@@ -487,12 +487,12 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean[] insertable,
 			Object object,
 			SharedSessionContractImplementor session,
-			boolean forceIdentifierBinding) {
+			boolean forceEntityIdentifierBinding) {
 		final var insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister() );
 		entityPersister().forEachMutableTable(
-				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, forceIdentifierBinding ) )
+				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, forceEntityIdentifierBinding ) )
 		);
-		applyTableInsertDetails( insertGroupBuilder, insertable, object, session, forceIdentifierBinding );
+		applyTableInsertDetails( insertGroupBuilder, insertable, object, session, forceEntityIdentifierBinding );
 		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
 	}
 
@@ -508,12 +508,12 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private TableMutationBuilder<?> createTableInsertBuilder(
 			EntityTableMapping tableMapping,
-			boolean forceIdentifierBinding) {
+			boolean forceEntityIdentifierBinding) {
 		final var persister = entityPersister();
 		final var delegate = persister.getInsertDelegate();
 		return tableMapping.isIdentifierTable()
 			&& delegate != null
-			&& !forceIdentifierBinding
+			&& !forceEntityIdentifierBinding
 				? delegate.createTableMutationBuilder( tableMapping.getInsertExpectation(), factory() )
 				: new TableInsertBuilderStandard( persister, tableMapping, factory() );
 	}
@@ -523,7 +523,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean[] attributeInclusions,
 			Object object,
 			SharedSessionContractImplementor session,
-			boolean forceIdentifierBinding) {
+			boolean forceEntityIdentifierBinding) {
 		final var attributeMappings = entityPersister().getAttributeMappings();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
@@ -565,7 +565,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var keyMapping = tableMapping.getKeyMapping();
 			if ( tableMapping.isIdentifierTable()
 					&& entityPersister().isIdentifierAssignedByInsert()
-					&& !forceIdentifierBinding ) {
+					&& !forceEntityIdentifierBinding ) {
 				assert entityPersister().getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister().getGenerator();
 				final boolean[] columnInclusions = generator.getColumnInclusions( dialect, EventType.INSERT );

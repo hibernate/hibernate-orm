@@ -6,7 +6,7 @@ package org.hibernate.orm.test.proxy;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -16,6 +16,7 @@ import org.hibernate.bytecode.spi.ByteCodeHelper;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -99,11 +100,12 @@ public class ProxyClassReuseTest {
 			}
 			final StandardServiceRegistry ssr = builder.build();
 
-			try (final SessionFactoryImplementor sf = (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClassName( ProxyClassReuseTest.class.getName() + "$MyEntity" )
-					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build()) {
+			try (final SessionFactoryImplementor sf = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata(
+							ssr,
+							new MappingSources().addManagedClassName( ProxyClassReuseTest.class.getName() + "$MyEntity" )
+					)
+			)) {
 				return consumer.apply( sf );
 			}
 			catch (Exception e) {

@@ -7,9 +7,9 @@ package org.hibernate.mapping;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -44,6 +44,31 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
+		if ( identifier instanceof AppliedMappingPart mappingPart && getRole() != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.collection( getRole() ).append( MappingRole.PartKind.COLLECTION_IDENTIFIER )
+			);
+		}
+	}
+
+	@Override
+	public void setRole(String role) {
+		super.setRole( role );
+		if ( identifier instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.collection( role ).append( MappingRole.PartKind.COLLECTION_IDENTIFIER )
+			);
+		}
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		super.setMappingRole( mappingRole );
+		if ( identifier instanceof AppliedMappingPart mappingPart ) {
+			mappingPart.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.COLLECTION_IDENTIFIER )
+			);
+		}
 	}
 
 	public final boolean isIdentified() {
@@ -61,16 +86,22 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 			&& isSame( identifier, other.identifier );
 	}
 
+	/**
+	 * Compatibility-only implementation of the hidden collection key hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
-		if ( !isOneToMany() ) {
-			final var primaryKey = new PrimaryKey( getCollectionTable() );
-			primaryKey.addColumns( getIdentifier() );
-			getCollectionTable().setPrimaryKey( primaryKey );
-		}
-		// create an index on the key columns??
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
-	public void validate(MappingContext mappingContext) throws MappingException {
+	public void validate(Metadata mappingContext) throws MappingException {
 		super.validate( mappingContext );
 
 		assert getElement() != null : "IdentifierCollection identifier not bound : " + getRole();

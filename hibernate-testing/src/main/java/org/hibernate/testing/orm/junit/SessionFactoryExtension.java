@@ -7,7 +7,8 @@ package org.hibernate.testing.orm.junit;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -125,27 +126,28 @@ public class SessionFactoryExtension
 
 				producer = model -> {
 					try {
-						final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
+						final var optionsCollector = new SessionFactoryOptionsCollector();
 						if ( StringHelper.isNotEmpty( sessionFactoryConfig.sessionFactoryName() ) ) {
-							sessionFactoryBuilder.applyName( sessionFactoryConfig.sessionFactoryName() );
+							optionsCollector.applySessionFactoryName( sessionFactoryConfig.sessionFactoryName() );
 						}
 
 						if ( sessionFactoryConfig.generateStatistics() ) {
-							sessionFactoryBuilder.applyStatisticsSupport( true );
+							optionsCollector.enableStatisticsSupport( true );
 						}
 
 						if ( ! sessionFactoryConfig.interceptorClass().equals( Interceptor.class ) ) {
-							sessionFactoryBuilder.applyInterceptor( sessionFactoryConfig.interceptorClass().getDeclaredConstructor().newInstance() );
+							optionsCollector.applyInterceptor( sessionFactoryConfig.interceptorClass().getDeclaredConstructor().newInstance() );
 						}
 
-						applyJdbcStatementObservation( sessionFactoryConfig, sessionFactoryBuilder );
+						applyJdbcStatementObservation( sessionFactoryConfig, optionsCollector );
 
-						sessionFactoryBuilder.applyCollectionsInDefaultFetchGroup( sessionFactoryConfig.applyCollectionsInDefaultFetchGroup() );
+							optionsCollector.enableCollectionInDefaultFetchGroup( sessionFactoryConfig.applyCollectionsInDefaultFetchGroup() );
 
 						sessionFactoryConfig.sessionFactoryConfigurer().getDeclaredConstructor().newInstance()
-								.accept( sessionFactoryBuilder );
+								.accept( optionsCollector );
 
-						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
+						final SessionFactoryImplementor sessionFactory =
+								SessionFactoryPipeline.build( model, optionsCollector );
 						if ( sessionFactoryConfig.exportSchema() ) {
 							prepareSchemaExport( sessionFactory, model, sessionFactoryConfig.createSecondarySchemas() );
 						}
@@ -172,18 +174,20 @@ public class SessionFactoryExtension
 		return sfScope;
 	}
 
-	private static void applyJdbcStatementObservation(SessionFactory sessionFactoryConfig, SessionFactoryBuilder sessionFactoryBuilder) {
+	private static void applyJdbcStatementObservation(
+			SessionFactory sessionFactoryConfig,
+			SessionFactoryOptionsCollector optionsCollector) {
 		if ( sessionFactoryConfig.useCollectingStatementObserver() ) {
-			sessionFactoryBuilder.applyStatementObserver( new CollectingStatementObserver() );
+			optionsCollector.applyStatementObserver( new CollectingStatementObserver() );
 		}
 		else if ( sessionFactoryConfig.useCollectingStatementInspector() ) {
-			sessionFactoryBuilder.applyStatementInspector( new SQLStatementInspector() );
+			optionsCollector.applyStatementInspector( new SQLStatementInspector() );
 		}
 		else {
 			final Class<? extends StatementInspector> explicitInspectorClass = sessionFactoryConfig.statementInspectorClass();
 			if ( !explicitInspectorClass.equals( StatementInspector.class ) ) {
 				try {
-					sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
+					optionsCollector.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
 				}
 				catch (Exception e) {
 					throw new RuntimeException( "Could not instantiate specified StatementInspector: " + explicitInspectorClass, e );
@@ -215,7 +219,7 @@ public class SessionFactoryExtension
 			}
 			settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, true );
 		}
-		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
+		final StandardServiceRegistry serviceRegistry = model.getMappingResolutionOptions().getServiceRegistry();
 
 		SchemaManagementToolCoordinator.process(
 				model,

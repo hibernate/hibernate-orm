@@ -8,6 +8,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
@@ -46,7 +48,7 @@ public class TestCase {
 		JdbcUtil.createDatabase(this);
 		destinationDir = new File(outputDir, "destination");
 		assertTrue(destinationDir.mkdir());
-		SessionFactory factory = createMetadata().buildSessionFactory();
+		SessionFactory factory = SessionFactoryPipeline.build( createMetadata(), new SessionFactoryOptionsCollector() );
 		Session s = factory.openSession();
 		Transaction t = s.beginTransaction();
 		User user = new User("max", "jboss");

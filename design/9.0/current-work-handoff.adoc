@@ -1,0 +1,215 @@
+= ORM 9 Current Work Handoff
+:toc:
+
+This is the only current-status document for the ORM 9 "Improve bootstrap"
+work.  Durable scope and dependencies live in
+link:improve-bootstrap-completion-plan.adoc[
+`improve-bootstrap-completion-plan.adoc`].  Design-document routing lives in
+link:design-doc-audit.adoc[`design-doc-audit.adoc`].
+
+== Current Objective
+
+Date: 2026-07-24.
+
+Stage 0, "Establish The Review Baseline", and Stage 1, "Close Bootstrap
+Inputs And Customization Ownership", are complete.  The next active work is
+Stage 2, "Finish The Semantic Boot-Mapping Handoff".
+
+The first Stage 1 slice established function precedence in
+`FunctionRegistryCoordinator`: dialect baseline, then all contributors by
+ordinal, then explicit descriptors.  Equal-ordinal service contributors use
+class-name order; equal-ordinal programmatic contributors retain registration
+order and run after service contributors.  Focused tests cover dialect
+override, ordinal ordering, equal-ordinal tie-breaking, and explicit descriptor
+precedence.
+
+The second Stage 1 slice established equivalent type precedence through
+`TypeContributionCoordinator`: dialect baseline, all service/programmatic
+contributors by ordinal, then explicit basic types, user types, and converters.
+Contributors now run before source categorization, service discovery was
+removed from `BindingCoordinator`, and archive restoration uses the same
+coordinator.  Focused tests cover dialect override, ordinal ordering, and
+equal-ordinal tie-breaking.  JPA entry points now normalize the retained
+`hibernate.type_contributors` compatibility setting into the same contributor
+input.
+
+The third Stage 1 slice extracted `FunctionRegistryCustomizations` from
+`MappingCustomizations` and made it an explicit `BootstrapPipelineRequest` and
+mapping-resolution input.  `Configuration`, JPA entry points, metadata-only
+bootstrap, schema generation, test bootstrap, and archive restoration now
+route function population through that product.  A full `Configuration`
+bootstrap guardrail verifies that a programmatic contributor is invoked once.
+
+The fourth Stage 1 slice removed `MappingResolutionOptions` transport through
+`BootstrapContext`.  Mapping resolution receives the options product
+explicitly, resolved metadata retains it, and SessionFactory option adaptation
+receives it from metadata.  `MappingResolutionOptionsImpl` now receives its
+`TypeConfiguration` directly instead of using a circular
+`setBootstrapContext(...)` link.  The function registry was already carried by
+explicit mapping contributions and resolved metadata, so neither product is
+now exposed by `BootstrapContext`.
+
+The fifth Stage 1 slice replaced the late
+`AdditionalMappingContributor` parameters `InFlightMetadataCollector` and
+`MetadataBuildingContext` with the immutable `ProcessedMappings` snapshot and
+the narrow `AdditionalMappingContributorContext`.  Mapped-entity presence and
+dialect inspection are separated into processed-model and contextual concerns,
+respectively; direct relational materialization is explicitly retained on the
+`AdditionalMappingContributions` write side.
+`ProcessedMappings` now also exposes a narrow `ProcessedEntity` view backed by
+the primary categorized model.  Its names and lookups explicitly use Hibernate
+entity names while JPA entity names and Java class names are exposed
+separately.
+The early source-level hook remains a triggered follow-up; its implementation
+triggers and no-fixed-point rule are documented, so no speculative
+recategorization machinery was added.
+
+The final Stage 1 ownership audit confirmed `MappingResolutionPipeline` as the
+single application owner for naming strategies, column ordering, shared cache
+mode, cache definitions, and auxiliary database objects.  Entry points
+normalize these into `MappingCustomizations`; binding and factory construction
+do not rediscover or reapply them.
+
+The old mapping/serialization branch split, rebase procedure, conflict policy,
+and serialization "next step" are complete and have been removed from this
+handoff.  Git history retains that implementation history.
+
+== Worktree Baseline
+
+The active branch is `wip/9-boot-design`.
+
+Expected current worktree changes:
+
+* `design/9.0/improve-bootstrap-completion-plan.adoc`;
+* `design/9.0/index.adoc`;
+* this handoff;
+* `design/9.0/design-doc-audit.adoc`;
+* `design/9.0/bootstrap-api-compatibility.adoc`;
+* focused design notes whose open questions are assigned a scope;
+* `FunctionRegistryCustomizations`, `FunctionRegistryCoordinator`, and
+  `FunctionContributionOrderingTests`, plus bootstrap/test-infrastructure
+  plumbing for the separate input;
+* `TypeContributionCoordinator`, `TypeContributionOrderingTests`, and the
+  corresponding mapping-resolution, binding, restoration, and test-helper
+  integration;
+* explicit `MappingResolutionOptions` plumbing and the narrowed
+  `BootstrapContext` contract across core, test support, and reverse-engineering
+  tooling;
+* `ProcessedMappings`, `AdditionalMappingContributorContext`, and updated late
+  contributor implementations/tests.
+
+Inspect `git status` before changing or switching branches.  Preserve unrelated
+worktree changes and do not use destructive cleanup.
+
+== Completed Baseline
+
+The following are implemented foundations, not pending design work:
+
+* the supported bootstrap entry points route through the explicit bootstrap,
+  mapping-resolution, and SessionFactory pipelines;
+* `MetadataSources`, `MetadataBuilder`, `HibernateBootstrap`, the public
+  `SessionFactoryBuilder` family, and `Metadata#buildSessionFactory()` have
+  been removed;
+* `Configuration` is a compatibility facade over the new pipeline;
+* declaration, usage, and applied-mapping products use stable
+  `DeclarationRole` and `MappingRole` identity;
+* explicit mapping products and materializers cover primary, foreign, unique,
+  dependent-table, and collection-table keys;
+* mapped-superclass, embeddable, identifier, aggregate, state-management, and
+  static-metamodel handoffs have implemented foundations;
+* SessionFactory construction uses an explicit construction request,
+  coordinator, producer SPI, construction plan, runtime components, and
+  standard-service components;
+* metadata archive production and restoration are factory-ready.
+
+The metadata archive contract is canonical in
+link:metadata-serialization-design.adoc[
+`metadata-serialization-design.adoc`].  It includes:
+
+* opaque `MetadataArchive` and factory-ready `RestoredMetadata`;
+* exact archive-format and ORM-version checks;
+* a trusted-build-artifact policy and payload bounds;
+* declarative reconstruction of mapping resolutions, types, converters,
+  generators, and runtime handoff products;
+* stable role-based snapshot identity;
+* rejection of mutable binding state, live services, contexts, and resolved
+  type instances from the payload;
+* no serialization-specific capture allocation when archive production is
+  disabled.
+
+The older `boot-model-snapshot-design.adoc` proposal is superseded by this
+implemented contract except for any durable rationale explicitly folded into
+the canonical serialization note.
+
+== Remaining Stages
+
+The implementation stages are defined by the completion plan.  In dependency
+order, the active areas are:
+
+. bootstrap input and customization ownership;
+. semantic boot-mapping handoff for inheritance, generics, embeddables, and
+  identifiers;
+. runtime-sensitive static-metamodel, aggregate, state-management, and
+  generator work;
+. SessionFactory construction-boundary narrowing;
+. extension-boundary and contributor-documentation stabilization.
+
+Do not reopen a resolved broad parity bucket without a focused failing
+reproducer.  In particular, aggregate mapping, state-management binding,
+key materialization, deterministic ordering, and metadata serialization all
+have implemented foundations that should be extended in narrow slices.
+
+== Stage 0 Closeout
+
+Stage 0 established:
+
+* a handoff with no obsolete branch topology or completed rebase procedure;
+* an audit aligned with the completion plan and current code;
+* blocking, stabilization, resolved, and triggered-follow-up routing for active
+  design questions;
+* one compatibility note for removed and retained bootstrap APIs;
+* centralized focused verification commands;
+* resolved document links, verified test-filter class names, and a clean
+  `git diff --check`.
+
+Stage 0 made no production-code changes.
+
+== Verification
+
+Stage-specific focused commands are maintained in
+link:improve-bootstrap-completion-plan.adoc#_focused_verification_groups[
+the completion plan].  Use the smallest relevant group while implementing a
+slice.
+
+Before final PR review, run:
+
+[source,bash]
+----
+./gradlew :hibernate-core:spotlessCheck
+./gradlew :hibernate-core:javadoc
+./gradlew :hibernate-core:test
+git diff --check
+----
+
+== Guardrails
+
+* Keep current status and immediate work only in this file.
+* Keep durable decisions in focused design notes.
+* Do not serialize `BootBindingModel`, `BindingState`, live services, bootstrap
+  contexts, or derived mapping/type instances.
+* Use stable semantic roles rather than mapping-object identity for handoffs
+  and archive references.
+* Keep new binding-model contracts free of `org.hibernate.mapping` types unless
+  they are explicitly materializers or compatibility projections.
+* Do not restore removed builder surfaces as compatibility shortcuts.
+* Keep `Metadata` as the resolved mapping inspection view unless a concrete
+  consumer proves it insufficient.
+* Treat `Configuration`, legacy binders, `AdditionalMappingContributor`,
+  `Integrator`, `BootstrapContext`, `MetadataBuildingContext`, and
+  `SessionFactoryOptions` according to their documented compatibility
+  boundaries rather than as target pipeline products.
+* Use `Identifier#matches(...)` semantics where identifier-aware comparison is
+  required.
+* Quoted JPA entity names are illegal; quote database identifiers through
+  `@Table`, `@Column`, and related mapping annotations.
+* New Java files require `@since 9.0` and `@author Steve Ebersole`.

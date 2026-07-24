@@ -7,13 +7,14 @@ package org.hibernate.orm.test.nationalized.pkg;
 import java.sql.Types;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -36,10 +37,12 @@ public class PackageLevelNationalizedTest {
 	public void test() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final Metadata metadata = new MetadataSources( ssr )
-					.addAnnotatedClass( NationalizedPackageEntity.class )
-					.addPackage( NationalizedPackageEntity.class.getPackage().getName() )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources()
+							.addManagedClass( NationalizedPackageEntity.class )
+							.addPackage( NationalizedPackageEntity.class.getPackage().getName() )
+			);
 
 			final Dialect dialect = metadata.getDatabase().getDialect();
 			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()

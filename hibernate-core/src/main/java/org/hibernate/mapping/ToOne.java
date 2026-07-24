@@ -5,15 +5,13 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.MappingContext;
 
 import java.util.Objects;
+import java.util.function.Function;
 
-import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 
 /**
@@ -34,6 +32,7 @@ public abstract sealed class ToOne
 	private boolean unwrapProxy;
 	private boolean unwrapProxyImplicit;
 	private boolean referenceToPrimaryKey = true;
+	private ForeignKeyColumnMappings foreignKeyColumnMappings;
 
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -50,6 +49,21 @@ public abstract sealed class ToOne
 		this.unwrapProxy = original.unwrapProxy;
 		this.unwrapProxyImplicit = original.unwrapProxyImplicit;
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
+		this.foreignKeyColumnMappings = original.foreignKeyColumnMappings;
+	}
+
+	/**
+	 * Creates an independently materialized projection of this association for
+	 * the supplied concrete mapping role.
+	 * <p>
+	 * The association mapping state and selectable mappings are copied, while
+	 * the destination role identifies the distinct application represented by
+	 * the copy.
+	 */
+	public final ToOne copyForApplication(MappingRole mappingRole) {
+		final ToOne copy = (ToOne) copy();
+		copy.setMappingRole( Objects.requireNonNull( mappingRole, "Mapping role" ) );
+		return copy;
 	}
 
 	@Override
@@ -89,10 +103,16 @@ public abstract sealed class ToOne
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final var classLoaderService = getBootstrapContext().getClassLoaderService();
-			referencedEntityName = reflectedPropertyClass( className, propertyName, classLoaderService ).getName();
+			referencedEntityName = reflectedPropertyClass(
+					className,
+					propertyName,
+					buildingContext.getClassLoaderService()
+			).getName();
 		}
 	}
 
@@ -158,6 +178,14 @@ public abstract sealed class ToOne
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 
+	public ForeignKeyColumnMappings getForeignKeyColumnMappings() {
+		return foreignKeyColumnMappings;
+	}
+
+	public void setForeignKeyColumnMappings(ForeignKeyColumnMappings foreignKeyColumnMappings) {
+		this.foreignKeyColumnMappings = foreignKeyColumnMappings;
+	}
+
 	@Override
 	public boolean isSorted() {
 		return sorted;
@@ -168,15 +196,15 @@ public abstract sealed class ToOne
 	}
 
 	@Override
-	public int[] sortProperties() {
-		final var entityBinding = getMetadata().getEntityBinding( referencedEntityName );
+	public int[] sortProperties(Function<String, PersistentClass> entityBindingResolver) {
+		final var entityBinding = entityBindingResolver == null ? null : entityBindingResolver.apply( referencedEntityName );
 		if ( entityBinding != null ) {
 			final var value =
 					referencedPropertyName == null
 							? entityBinding.getIdentifier()
 							: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
 			if ( value instanceof Component component ) {
-				final var originalPropertyOrder = component.sortProperties();
+				final var originalPropertyOrder = component.completeShape();
 				if ( !sorted ) {
 					if ( originalPropertyOrder != null ) {
 						sortColumns( originalPropertyOrder );
@@ -196,49 +224,4 @@ public abstract sealed class ToOne
 		return isConstrained();
 	}
 
-	@Override
-	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		if ( referencedPropertyName == null
-				&& isActuallyConstrained()
-				&& !hasAuxiliaryColumnInPrimaryKey( referencedEntity ) ) {
-			final var firstColumn = joinColumns.getJoinColumns().get( 0 );
-			final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
-			if ( owner instanceof Join join ) {
-				// Here we handle the case of a foreign key that refers to the
-				// primary key of a secondary table of the referenced entity
-				final var foreignKey = getTable().createForeignKey(
-						getForeignKeyName(),
-						getConstraintColumns(),
-						referencedEntity.getEntityName(),
-						getForeignKeyDefinition(),
-						getForeignKeyOptions(),
-						join.getKey().getColumns()
-				);
-				foreignKey.setOnDeleteAction( getOnDeleteAction() );
-				foreignKey.setReferencedTable( join.getTable() );
-			}
-			else {
-				// it's just a reference to the primary key of the main table
-				createForeignKeyOfEntity( referencedEntity.getEntityName() );
-			}
-		}
-	}
-
-	@Override
-	public void createForeignKey() {
-		// Ensure properties are sorted before we create a foreign key
-		sortProperties();
-		// A non-null referencedPropertyName tells us that the foreign key
-		// does not reference the primary key, but some other unique key of
-		// the referenced table. We do not handle this case here:
-		// - For ManyToOne, the case of a foreign key to something other than
-		//   the primary key is handled in createPropertyRefConstraints()
-		// - For OneToOne, we still need to add some similar logic somewhere
-		//   (for now, no foreign key constraint is created)
-		if ( isForeignKeyEnabled() && referencedPropertyName==null && !hasFormula() ) {
-			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
-		}
-	}
 }

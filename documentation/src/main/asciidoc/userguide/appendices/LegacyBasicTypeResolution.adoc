@@ -132,8 +132,8 @@ As a baseline within `BasicTypeRegistry`, Hibernate follows the recommended mapp
 JDBC recommends mapping Strings to VARCHAR, which is the exact mapping that `StringType` handles.
 So that is the baseline mapping within `BasicTypeRegistry` for Strings.
 
-Applications can also extend (add new `BasicType` registrations) or override (replace an existing `BasicType` registration) using one of the
-`MetadataBuilder#applyBasicType` methods or the `MetadataBuilder#applyTypes` method during bootstrap.
+Applications can also extend (add new `BasicType` registrations) or override (replace an existing `BasicType` registration) using a
+`TypeContributor` during bootstrap.
 For more details, see <<basic-custom-type>> section.
 
 [[basic-type-annotation]]
@@ -220,14 +220,7 @@ The `BasicType` must be registered, and this can be done at bootstrapping time:
 ====
 [source, java,, indent=0]
 ----
-include::{sourcedir}/basic/bitset/BitSetTypeTest.java[tags=basic-custom-type-register-BasicType-example]
-----
-
-or using the `MetadataBuilder`
-
-[source, java,, indent=0]
-----
-include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-BasicType-example]
+include::{sourcedir}/basic/bitset/BitSetTypeContributor.java[tags=basic-custom-type-register-BasicType-example]
 ----
 ====
 
@@ -299,13 +292,6 @@ In this example, the `UserType` is registered under the `bitset` name, and this 
 [source, java,, indent=0]
 ----
 include::{sourcedir}/basic/bitset/BitSetUserTypeTest.java[tags=basic-custom-type-register-UserType-example]
-----
-
-or using the `MetadataBuilder`
-
-[source, java,, indent=0]
-----
-include::{sourcedir}/../bootstrap/BootstrapTest.java[tags=basic-custom-type-register-UserType-example]
 ----
 ====
 

@@ -7,9 +7,9 @@ package org.hibernate.mapping;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -42,6 +42,27 @@ public sealed abstract class IndexedCollection extends Collection permits Map, L
 
 	public void setIndex(Value index) {
 		this.index = index;
+		if ( index instanceof AppliedMappingPart mappingPart && getRole() != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( getRole() ).append( MappingRole.PartKind.INDEX ) );
+		}
+	}
+
+	@Override
+	public void setRole(String role) {
+		super.setRole( role );
+		if ( index instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( role ).append( MappingRole.PartKind.INDEX ) );
+		}
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		super.setMappingRole( mappingRole );
+		if ( index instanceof AppliedMappingPart mappingPart ) {
+			mappingPart.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.INDEX )
+			);
+		}
 	}
 
 	public final boolean isIndexed() {
@@ -63,39 +84,22 @@ public sealed abstract class IndexedCollection extends Collection permits Map, L
 			&& isSame( index, other.index );
 	}
 
+	/**
+	 * Compatibility-only implementation of the hidden collection key hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
-		if ( !isOneToMany() ) {
-			final var primaryKey = new PrimaryKey( getCollectionTable() );
-			primaryKey.addColumns( getKey() );
-
-			// index should be last column listed
-			boolean indexIsPartOfElement = false;
-			for ( var selectable: getIndex().getSelectables() ) {
-				if ( selectable.isFormula() || !getCollectionTable().containsColumn( (Column) selectable ) ) {
-					indexIsPartOfElement = true;
-				}
-			}
-			if ( indexIsPartOfElement ) {
-				//if it is part of the element, use the element columns in the PK
-				primaryKey.addColumns( getElement() );
-			}
-			else {
-				primaryKey.addColumns( getIndex() );
-			}
-			getCollectionTable().setPrimaryKey( primaryKey );
-		}
-//		else {
-			// don't create a unique key, 'cos some
-			// databases don't like a UK on nullable
-			// columns
-			/*ArrayList list = new ArrayList();
-			list.addAll( getKey().getConstraintColumns() );
-			list.addAll( getIndex().getConstraintColumns() );
-			getCollectionTable().createUniqueKey(list);*/
-//		}
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
-	public void validate(MappingContext mappingContext) throws MappingException {
+	public void validate(Metadata mappingContext) throws MappingException {
 		super.validate( mappingContext );
 
 		assert getElement() != null : "IndexedCollection index not bound : " + getRole();

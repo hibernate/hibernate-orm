@@ -5,13 +5,13 @@
 package org.hibernate.orm.test.boot.models.xml.column;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -34,13 +34,16 @@ public class ColumnTests {
 				.addXmlMappings( "mappings/models/column/complete.xml" )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final var typeConfiguration = new TypeConfiguration();
+		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl(
+						serviceRegistry,
+						typeConfiguration
+				);
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
-				metadataBuildingOptions
+				typeConfiguration
 		);
-		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
 		final ModelsContext ModelsContext = createBuildingContext(
 				managedResources,
 				false,
@@ -68,13 +71,16 @@ public class ColumnTests {
 				.build();
 
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final var typeConfiguration = new TypeConfiguration();
+		final org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl metadataBuildingOptions =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl(
+						serviceRegistry,
+						typeConfiguration
+				);
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
-				metadataBuildingOptions
+				typeConfiguration
 		);
-		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
 		final ModelsContext ModelsContext = createBuildingContext(
 				managedResources,
 				false,

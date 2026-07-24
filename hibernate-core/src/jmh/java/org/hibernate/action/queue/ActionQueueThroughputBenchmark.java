@@ -7,11 +7,9 @@ package org.hibernate.action.queue;
 import jakarta.persistence.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 
@@ -491,44 +489,40 @@ public class ActionQueueThroughputBenchmark {
 			String databaseName,
 			boolean orderInserts,
 			boolean orderUpdates) {
-		ServiceRegistry registry = new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect")
-				.applySetting(AvailableSettings.URL, "jdbc:h2:mem:throughput_" + databaseName + ";DB_CLOSE_DELAY=-1")
-				.applySetting(AvailableSettings.USER, "sa")
-				.applySetting(AvailableSettings.PASS, "")
-				.applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
-				.applySetting(AvailableSettings.SHOW_SQL, "false")
-				.applySetting(AvailableSettings.FORMAT_SQL, "false")
-				.applySetting(AvailableSettings.USE_SQL_COMMENTS, "false")
-				.applySetting(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
-				.applySetting( "hibernate.flush.queue.type", queueImpl)
+		return new HibernatePersistenceConfiguration( "action-queue-throughput-" + databaseName )
+				.property(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect")
+				.property(AvailableSettings.URL, "jdbc:h2:mem:throughput_" + databaseName + ";DB_CLOSE_DELAY=-1")
+				.property(AvailableSettings.USER, "sa")
+				.property(AvailableSettings.PASS, "")
+				.property(AvailableSettings.HBM2DDL_AUTO, "create-drop")
+				.property(AvailableSettings.SHOW_SQL, "false")
+				.property(AvailableSettings.FORMAT_SQL, "false")
+				.property(AvailableSettings.USE_SQL_COMMENTS, "false")
+				.property(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
+				.property( "hibernate.flush.queue.type", queueImpl)
 				// for apples/apples
-				.applySetting( BatchSettings.ORDER_INSERTS, Boolean.toString( orderInserts ) )
-				.applySetting( BatchSettings.ORDER_UPDATES, Boolean.toString( orderUpdates ) )
-				.build();
-
-		return new MetadataSources(registry)
-				.addAnnotatedClass(ThroughputEntity.class)
-				.addAnnotatedClass(ThroughputParent.class)
-				.addAnnotatedClass(ThroughputChild.class)
-				.addAnnotatedClass(OrderHeader.class)
-				.addAnnotatedClass(OrderedItem.class)
-				.addAnnotatedClass(SeqEntity.class)
-				.addAnnotatedClass(SeqParent.class)
-				.addAnnotatedClass(SeqChild.class)
-				.addAnnotatedClass(SeqOrderHeader.class)
-				.addAnnotatedClass(SeqOrderedItem.class)
-				.addAnnotatedClass(RetailCustomer.class)
-				.addAnnotatedClass(RetailOrder.class)
-				.addAnnotatedClass(RetailPayment.class)
-				.addAnnotatedClass(RetailShipment.class)
-				.addAnnotatedClass(BusinessAuditEvent.class)
-				.addAnnotatedClass(BusinessOutboxEvent.class)
-				.addAnnotatedClass(InventoryReservation.class)
-				.addAnnotatedClass(SearchIndexDocument.class)
-				.addAnnotatedClass(SecondaryTableEntity.class)
-				.buildMetadata()
-				.buildSessionFactory();
+				.property( BatchSettings.ORDER_INSERTS, Boolean.toString( orderInserts ) )
+				.property( BatchSettings.ORDER_UPDATES, Boolean.toString( orderUpdates ) )
+				.managedClass( ThroughputEntity.class )
+				.managedClass( ThroughputParent.class )
+				.managedClass( ThroughputChild.class )
+				.managedClass( OrderHeader.class )
+				.managedClass( OrderedItem.class )
+				.managedClass( SeqEntity.class )
+				.managedClass( SeqParent.class )
+				.managedClass( SeqChild.class )
+				.managedClass( SeqOrderHeader.class )
+				.managedClass( SeqOrderedItem.class )
+				.managedClass( RetailCustomer.class )
+				.managedClass( RetailOrder.class )
+				.managedClass( RetailPayment.class )
+				.managedClass( RetailShipment.class )
+				.managedClass( BusinessAuditEvent.class )
+				.managedClass( BusinessOutboxEvent.class )
+				.managedClass( InventoryReservation.class )
+				.managedClass( SearchIndexDocument.class )
+				.managedClass( SecondaryTableEntity.class )
+				.createEntityManagerFactory();
 	}
 
 	// ========== Throughput Benchmarks: Single Entity Insert ==========

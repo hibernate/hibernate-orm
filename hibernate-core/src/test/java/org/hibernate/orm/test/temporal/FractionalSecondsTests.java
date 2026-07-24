@@ -93,7 +93,7 @@ public class FractionalSecondsTests {
 		final Property theInstant = entityBinding.getProperty( propertyName );
 		final BasicValue value = (BasicValue) theInstant.getValue();
 		final Column column = (Column) value.getColumn();
-		final Size columnSize = column.getColumnSize( value.getDialect(), domainModel );
+		final Size columnSize = column.getColumnSize( domainModel.getDatabase().getDialect(), domainModel );
 		assertThat( columnSize.getPrecision() ).isEqualTo( expectedMinimumSize );
 	}
 

@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
@@ -19,6 +20,7 @@ import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -49,8 +51,10 @@ public interface AggregateSupport {
 			String aggregateParentReadExpression,
 			String columnExpression,
 			AggregateColumn aggregateColumn,
-			Column column) {
-		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+			Column column,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration) {
+		final int sqlTypeCode = aggregateColumn.getJdbcType( mappingContext ).getDefaultSqlTypeCode();
 		return aggregateComponentCustomReadExpression(
 				template,
 				placeholder,
@@ -65,9 +69,9 @@ public interface AggregateSupport {
 						column.getPrecision(),
 						column.getScale(),
 						column.getTemporalPrecision(),
-						column.getType()
+						column.getType( mappingContext )
 				),
-				aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
+				typeConfiguration
 		);
 	}
 
@@ -112,8 +116,9 @@ public interface AggregateSupport {
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
 			AggregateColumn aggregateColumn,
-			Column column) {
-		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+			Column column,
+			MappingContext mappingContext) {
+		final int sqlTypeCode = aggregateColumn.getJdbcType( mappingContext ).getDefaultSqlTypeCode();
 		return aggregateComponentAssignmentExpression(
 				aggregateParentAssignmentExpression,
 				columnExpression,
@@ -148,7 +153,11 @@ public interface AggregateSupport {
 	 * @param aggregateColumn The type information for the aggregate column
 	 * @param aggregatedColumns The columns of the aggregate type
 	 */
-	String aggregateCustomWriteExpression(AggregateColumn aggregateColumn, List<Column> aggregatedColumns);
+	String aggregateCustomWriteExpression(
+			AggregateColumn aggregateColumn,
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration);
 
 	/**
 	 * Whether {@link #aggregateCustomWriteExpressionRenderer(SelectableMapping, SelectableMapping[], TypeConfiguration)} is needed
@@ -210,7 +219,10 @@ public interface AggregateSupport {
 			Namespace namespace,
 			String aggregatePath,
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns);
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			MappingResolutionOptions mappingResolutionOptions);
 
 	/**
 	 * Returns the {@link org.hibernate.type.SqlTypes} type code to use for the given column type code,

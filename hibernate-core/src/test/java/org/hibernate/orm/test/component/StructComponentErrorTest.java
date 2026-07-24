@@ -6,9 +6,10 @@ package org.hibernate.orm.test.component;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Struct;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -28,10 +29,7 @@ public class StructComponentErrorTest {
 	public void testError() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
-			new MetadataSources( ssr )
-					.addAnnotatedClass( Book.class )
-					.getMetadataBuilder()
-					.build();
+			MetadataBuildingTestHelper.buildMetadata( ssr, new MappingSources().addManagedClass( Book.class ) );
 			Assertions.fail( "Expected a failure" );
 		}
 		catch (MappingException ex) {

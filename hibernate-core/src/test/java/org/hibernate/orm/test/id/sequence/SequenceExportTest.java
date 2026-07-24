@@ -4,12 +4,13 @@
  */
 package org.hibernate.orm.test.id.sequence;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -40,12 +41,12 @@ public class SequenceExportTest implements ServiceRegistryProducer {
 	@Test
 	@JiraKey("HHH-9936")
 	public void testMultipleUsesOfDefaultSequenceName(ServiceRegistryScope registryScope) {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( Entity1.class )
-				.addAnnotatedClass( Entity2.class )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+				registryScope.getRegistry(),
+				new MappingSources()
+						.addManagedClass( Entity1.class )
+						.addManagedClass( Entity2.class )
+		);
 
 		int namespaceCount = 0;
 		int sequenceCount = 0;
@@ -64,12 +65,12 @@ public class SequenceExportTest implements ServiceRegistryProducer {
 	@Test
 	@JiraKey("HHH-9936")
 	public void testMultipleUsesOfExplicitSequenceName(ServiceRegistryScope registryScope) {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( Entity3.class )
-				.addAnnotatedClass( Entity4.class )
-				.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata(
+				registryScope.getRegistry(),
+				new MappingSources()
+						.addManagedClass( Entity3.class )
+						.addManagedClass( Entity4.class )
+		);
 
 		int namespaceCount = 0;
 		int sequenceCount = 0;

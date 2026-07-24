@@ -207,46 +207,17 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	 * @see jakarta.persistence.ConstructorResult
 	 */
 	private static class ConstructorResultDescriptor implements ResultDescriptor {
-		private static class ArgumentDescriptor {
-			private final JpaColumnResultDescriptor argumentResultDescriptor;
-
-			private ArgumentDescriptor(JpaColumnResultDescriptor argumentResultDescriptor) {
-				this.argumentResultDescriptor = argumentResultDescriptor;
-			}
-
-			ArgumentMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-				return new ArgumentMemento( argumentResultDescriptor.resolve( resolutionContext ) );
-			}
-		}
-
 		private final String mappingName;
-
-		private final Class<?> targetJavaType;
-		private final List<ArgumentDescriptor> argumentResultDescriptors;
+		private final ConstructorResult constructorResult;
 
 		public ConstructorResultDescriptor(
 				ConstructorResult constructorResult,
 				String mappingName) {
 			this.mappingName = mappingName;
-			targetJavaType = constructorResult.targetClass();
-			argumentResultDescriptors = interpretArguments( constructorResult, mappingName );
-		}
-
-		private static List<ArgumentDescriptor> interpretArguments(
-				ConstructorResult constructorResult,
-				String mappingName) {
-			final var columnResults = constructorResult.columns();
-			if ( isEmpty( columnResults ) ) {
+			this.constructorResult = constructorResult;
+			if ( isEmpty( constructorResult.columns() ) ) {
 				throw new IllegalArgumentException( "ConstructorResult did not define any ColumnResults" );
 			}
-
-			final List<ArgumentDescriptor> argumentResultDescriptors = arrayList( columnResults.length );
-			for ( var columnResult : columnResults ) {
-				final var argumentResultDescriptor =
-						new JpaColumnResultDescriptor( columnResult, mappingName );
-				argumentResultDescriptors.add( new ArgumentDescriptor(argumentResultDescriptor) );
-			}
-			return argumentResultDescriptors;
 		}
 
 		@Nonnull
@@ -254,17 +225,19 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
 			BOOT_QUERY_LOGGER.tracef(
 					"Generating InstantiationResultMappingMemento for JPA ConstructorResult(%s) for ResultSet mapping `%s`",
-					targetJavaType.getName(),
+					constructorResult.targetClass().getName(),
 					mappingName
 			);
 
-			final List<ArgumentMemento> argumentResultMementos = new ArrayList<>( argumentResultDescriptors.size() );
-			argumentResultDescriptors.forEach(
-					(mapping) -> argumentResultMementos.add( mapping.resolve( resolutionContext ) )
-			);
+			final List<ArgumentMemento> argumentResultMementos = arrayList( constructorResult.columns().length );
+			for ( ColumnResult columnResult : constructorResult.columns() ) {
+				argumentResultMementos.add( new ArgumentMemento(
+						new JpaColumnResultDescriptor( columnResult, mappingName ).resolve( resolutionContext )
+				) );
+			}
 			final var targetJtd =
 					resolutionContext.getTypeConfiguration().getJavaTypeRegistry()
-							.resolveDescriptor( targetJavaType );
+							.resolveDescriptor( constructorResult.targetClass() );
 			return new ResultMementoInstantiationStandard( targetJtd, argumentResultMementos );
 		}
 	}
@@ -273,19 +246,10 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	 * @see jakarta.persistence.EntityResult
 	 */
 	public static class EntityResultDescriptor implements ResultDescriptor {
-		private final NavigablePath navigablePath;
-		private final String entityName;
-		private final String discriminatorColumn;
-		private final LockModeType lockMode;
-
-		private final Map<String, AttributeFetchDescriptor> explicitFetchMappings;
+		private final EntityResult entityResult;
 
 		public EntityResultDescriptor(EntityResult entityResult) {
-			entityName = entityResult.entityClass().getName();
-			navigablePath = new NavigablePath( entityName );
-			discriminatorColumn = entityResult.discriminatorColumn();
-			lockMode = entityResult.lockMode();
-			explicitFetchMappings = extractFetchMappings( navigablePath, entityResult );
+			this.entityResult = entityResult;
 		}
 
 		private static Map<String, AttributeFetchDescriptor> extractFetchMappings(
@@ -310,17 +274,21 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
+			final String entityName = entityResult.entityClass().getName();
+			final NavigablePath navigablePath = new NavigablePath( entityName );
 			final var entityDescriptor =
 					resolutionContext.getMappingMetamodel()
 							.getEntityDescriptor( entityName );
 
 			final var discriminatorMemento = resolveDiscriminatorMemento(
 					entityDescriptor,
-					discriminatorColumn,
+					entityResult.discriminatorColumn(),
 					navigablePath
 			);
 
 			final Map<String, FetchMemento> fetchMementos = new HashMap<>();
+			final Map<String, AttributeFetchDescriptor> explicitFetchMappings =
+					extractFetchMappings( navigablePath, entityResult );
 			explicitFetchMappings.forEach(
 					(relativePath, fetchDescriptor) -> fetchMementos.put(
 							relativePath,
@@ -330,9 +298,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			return new ResultMementoEntityJpa(
 					entityDescriptor,
-					lockMode == LockModeType.OPTIMISTIC
+					entityResult.lockMode() == LockModeType.OPTIMISTIC
 							? LockMode.NONE
-							: LockMode.fromJpaLockMode( lockMode ),
+							: LockMode.fromJpaLockMode( entityResult.lockMode() ),
 					discriminatorMemento,
 					fetchMementos
 			);

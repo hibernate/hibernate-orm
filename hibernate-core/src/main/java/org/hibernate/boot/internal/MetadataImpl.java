@@ -16,7 +16,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -29,11 +28,8 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
-import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -56,7 +52,6 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static java.lang.String.join;
 import static java.util.Collections.emptySet;
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
@@ -72,7 +67,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
 public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final UUID uuid;
-	private final MetadataBuildingOptions metadataBuildingOptions;
+	private final MappingResolutionOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
 	private final Map<String,PersistentClass> entityBindingMap;
@@ -91,12 +86,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
+	private final SqmFunctionRegistry functionRegistry;
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final Database database;
 
 	public MetadataImpl(
 			UUID uuid,
-			MetadataBuildingOptions metadataBuildingOptions,
+			MappingResolutionOptions metadataBuildingOptions,
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
 			Map<Class<?>, Component> genericComponentsMap,
@@ -113,6 +109,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
+			SqmFunctionRegistry functionRegistry,
 			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
 			Database database,
 			BootstrapContext bootstrapContext) {
@@ -134,13 +131,14 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.namedProcedureCallMap = namedProcedureCallMap;
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
+		this.functionRegistry = functionRegistry;
 		this.sqlFunctionMap = sqlFunctionMap;
 		this.database = database;
 		this.bootstrapContext = bootstrapContext;
 	}
 
 	@Override
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
+	public MappingResolutionOptions getMappingResolutionOptions() {
 		return metadataBuildingOptions;
 	}
 
@@ -151,53 +149,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
-		return bootstrapContext.getFunctionRegistry();
-	}
-
-	@Override
-	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final var defaultBuilder = getFactoryBuilder();
-		SessionFactoryBuilder builder = null;
-		List<String> activeFactoryNames = null;
-		for ( var discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
-			final SessionFactoryBuilder returnedBuilder =
-					discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
-			if ( returnedBuilder != null ) {
-				if ( activeFactoryNames == null ) {
-					activeFactoryNames = new ArrayList<>();
-				}
-				activeFactoryNames.add( discoveredBuilderFactory.getClass().getName() );
-				builder = returnedBuilder;
-			}
-		}
-
-		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
-			throw new HibernateException(
-					"Multiple active SessionFactoryBuilderFactory definitions were discovered: " +
-							join( ", ", activeFactoryNames )
-			);
-		}
-
-		return builder == null ? defaultBuilder : builder;
-	}
-
-	private Iterable<SessionFactoryBuilderFactory> getSessionFactoryBuilderFactories() {
-		return getClassLoaderService().loadJavaServices( SessionFactoryBuilderFactory.class );
-	}
-
-	private SessionFactoryBuilderImplementor getFactoryBuilder() {
-		return metadataBuildingOptions.getServiceRegistry()
-				.requireService( SessionFactoryBuilderService.class )
-				.createSessionFactoryBuilder( this, bootstrapContext );
+		return functionRegistry;
 	}
 
 	private ClassLoaderService getClassLoaderService() {
 		return metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
-	}
-
-	@Override
-	public SessionFactoryImplementor buildSessionFactory() {
-		return (SessionFactoryImplementor) getSessionFactoryBuilder().build();
 	}
 
 	@Override
@@ -415,8 +371,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 					final int[] originalPrimaryKeyOrder = targetPrimaryKey.getOriginalOrder();
 					if ( originalPrimaryKeyOrder != null ) {
 						final var foreignKeyColumnsCopy = new ArrayList<>( columns );
-						for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
-							columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
+						if ( originalPrimaryKeyOrder.length == foreignKeyColumnsCopy.size() ) {
+							for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
+								columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
+							}
 						}
 					}
 				}
@@ -632,4 +590,5 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public Map<Class<?>, DiscriminatorType<?>> getEmbeddableDiscriminatorTypesMap() {
 		return embeddableDiscriminatorTypesMap;
 	}
+
 }

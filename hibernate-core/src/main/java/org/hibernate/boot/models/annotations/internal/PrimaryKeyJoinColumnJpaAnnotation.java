@@ -9,8 +9,8 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
-import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.db.ForeignKeyProcessing;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 
 import static org.hibernate.boot.models.JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectCheckConstraints;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectCheckConstraints;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")

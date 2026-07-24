@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.action.queue.internal.support.ActionQueueFactoryServiceInitiator;
-import org.hibernate.boot.internal.DefaultSessionFactoryBuilderInitiator;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.internal.ProxyFactoryFactoryInitiator;
@@ -63,9 +62,6 @@ public final class StandardServiceInitiators {
 		// for example, we customize this list in Hibernate Reactive and Quarkus.
 
 		final ArrayList<StandardServiceInitiator<?>> serviceInitiators = new ArrayList<>();
-
-		// SessionFactoryBuilderService
-		serviceInitiators.add( DefaultSessionFactoryBuilderInitiator.INSTANCE );
 
 		// BytecodeProvider
 		serviceInitiators.add( BytecodeProviderInitiator.INSTANCE );

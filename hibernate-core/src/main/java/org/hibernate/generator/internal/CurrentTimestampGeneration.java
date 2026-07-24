@@ -39,7 +39,6 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ClockHelper;
 
@@ -169,11 +168,9 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	}
 
 	private static int getPrecision(GeneratorCreationContext context) {
-		final var basicValue = (BasicValue) context.getProperty().getValue();
 		final Size size =
-				basicValue.getColumns().get( 0 )
-						.getColumnSize( context.getDatabase().getDialect(),
-								basicValue.getMetadata() );
+				context.getValue().getColumns().get( 0 )
+						.getColumnSizeForType( context.getDatabase().getDialect(), context.getType() );
 		return size.getPrecision() == null ? 0 : size.getPrecision();
 	}
 

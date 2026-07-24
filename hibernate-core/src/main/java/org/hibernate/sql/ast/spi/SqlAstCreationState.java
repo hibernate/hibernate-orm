@@ -31,7 +31,7 @@ public interface SqlAstCreationState {
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	default SqmCreationContext getSqmCreationContext() {
-		return getCreationContext().getSessionFactory().getQueryEngine().getCriteriaBuilder();
+		return getCreationContext().getSqmCreationContext();
 	}
 
 	boolean applyOnlyLoadByKeyFilters();

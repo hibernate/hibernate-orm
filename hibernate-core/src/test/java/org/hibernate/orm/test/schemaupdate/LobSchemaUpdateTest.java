@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -60,14 +60,7 @@ public class LobSchemaUpdateTest {
 	}
 
 	private void createSchema(Class<?>... annotatedClasses) {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-
-		for ( Class<?> annotatedClass : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
-		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, annotatedClasses );
 		new SchemaExport()
 				.setHaltOnError( false )
 				.setFormat( false )
@@ -75,14 +68,7 @@ public class LobSchemaUpdateTest {
 	}
 
 	private void updateSchema(Class<?>... annotatedClasses) {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-
-		for ( Class<?> annotatedClass : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
-		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, annotatedClasses );
 		new SchemaUpdate()
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
@@ -91,14 +77,7 @@ public class LobSchemaUpdateTest {
 	}
 
 	private void dropDatabase(Class<?>... annotatedClasses){
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-
-		for ( Class<?> annotatedClass : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
-		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, annotatedClasses );
 		new SchemaExport()
 				.setHaltOnError( false )
 				.setFormat( false )

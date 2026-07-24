@@ -9,9 +9,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -33,10 +33,9 @@ public class ValidationTests {
 	@Test
 	void checkManyToOne(ServiceRegistryScope registryScope) {
 		final StandardServiceRegistry registry = registryScope.getRegistry();
-		final MetadataSources metadataSources = new MetadataSources( registry )
-				.addAnnotatedClass( Thing1.class )
-				.addAnnotatedClass( Thing2.class );
-		try (final SessionFactory sessionFactory = metadataSources.buildMetadata().buildSessionFactory() ) {
+		try (final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( registry, Thing1.class, Thing2.class )
+		) ) {
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {
@@ -47,11 +46,9 @@ public class ValidationTests {
 	@Test
 	void checkEmbeddable(ServiceRegistryScope registryScope) {
 		final StandardServiceRegistry registry = registryScope.getRegistry();
-		final MetadataSources metadataSources = new MetadataSources( registry )
-				.addAnnotatedClass( Thing1.class )
-				.addAnnotatedClass( Thing3.class )
-				.addAnnotatedClass( Container.class );
-		try (final SessionFactory sessionFactory = metadataSources.buildMetadata().buildSessionFactory() ) {
+		try (final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( registry, Thing1.class, Thing3.class, Container.class )
+		) ) {
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {

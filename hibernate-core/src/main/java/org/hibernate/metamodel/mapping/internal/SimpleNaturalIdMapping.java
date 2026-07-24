@@ -14,7 +14,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderArrayParam;
@@ -29,6 +28,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -42,9 +42,9 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlAr
  * Single-attribute NaturalIdMapping implementation
  */
 public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
-		implements BasicValuedMapping {
+	implements BasicValuedMapping {
 	private final SingularAttributeMapping attribute;
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 
 	public SimpleNaturalIdMapping(
 			SingularAttributeMapping attribute,
@@ -52,7 +52,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 			MappingModelCreationProcess creationProcess) {
 		super( declaringType, attribute.getAttributeMetadata().isUpdatable() );
 		this.attribute = attribute;
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		this.sessionFactoryAccess = creationProcess.getCreationContext().getSessionFactoryAccess();
 	}
 
 	public SingularAttributeMapping getAttribute() {
@@ -150,6 +150,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	private Object normalizedValue(Object incoming) {
+		final var sessionFactory = sessionFactoryAccess.getSessionFactory();
 		sessionFactory.getStatistics().normalizeNaturalId( getDeclaringType().getEntityName() );
 
 		if ( incoming instanceof Map<?,?> valueMap ) {
@@ -167,7 +168,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	private boolean isLoadByIdComplianceEnabled() {
-		return sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
+		return sessionFactoryAccess.getSessionFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance()
+				.isLoadByIdComplianceEnabled();
 	}
 
 	@Override
@@ -303,7 +307,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	private Dialect getDialect() {
-		return sessionFactory.getJdbcServices().getDialect();
+		return sessionFactoryAccess.getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	@Override

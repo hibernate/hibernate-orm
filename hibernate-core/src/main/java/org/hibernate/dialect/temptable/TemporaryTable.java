@@ -143,7 +143,7 @@ public class TemporaryTable implements Exportable, Contributable {
 
 		if ( columns.size() > 1 ) {
 			final ArrayList<TemporaryTableColumn> columnsForExport = new ArrayList<>( columns );
-			creationContext.getBootModel().getMetadataBuildingOptions().getColumnOrderingStrategy()
+			creationContext.getBootModel().getMappingResolutionOptions().getColumnOrderingStrategy()
 					.orderTemporaryTableColumns( columnsForExport, creationContext.getMetadata() );
 			this.columnsForExport = columnsForExport;
 		}
@@ -169,17 +169,17 @@ public class TemporaryTable implements Exportable, Contributable {
 					final List<TemporaryTableColumn> columns = new ArrayList<>();
 
 					for ( Column column : persistentClass.getKey().getColumns() ) {
-						columns.add(
-								new TemporaryTableColumn(
-										temporaryTable,
-										column.getText( dialect ),
-										column.getType(),
-										column.getSqlType( metadata ),
-										column.getColumnSize( dialect, metadata ),
-										column.isNullable(),
-										true
-								)
-						);
+							columns.add(
+									new TemporaryTableColumn(
+											temporaryTable,
+											column.getText( dialect ),
+											column.getType( metadata ),
+											column.getSqlType( metadata ),
+											column.getColumnSize( dialect, metadata ),
+											column.isNullable(),
+											true
+									)
+							);
 					}
 
 					visitPluralAttributes( persistentClass.getPropertyClosure(), collection -> {
@@ -187,16 +187,16 @@ public class TemporaryTable implements Exportable, Contributable {
 							final KeyValue collectionKey = collection.getKey();
 							for ( Selectable selectable : collectionKey.getSelectables() ) {
 								if ( selectable instanceof Column column ) {
-									columns.add(
-											new TemporaryTableColumn(
-													temporaryTable,
-													column.getText( dialect ),
-													column.getType(),
-													column.getSqlType( metadata ),
-													column.getColumnSize( dialect, metadata ),
-													column.isNullable()
-											)
-									);
+										columns.add(
+												new TemporaryTableColumn(
+														temporaryTable,
+														column.getText( dialect ),
+														column.getType( metadata ),
+														column.getSqlType( metadata ),
+														column.getColumnSize( dialect, metadata ),
+														column.isNullable()
+												)
+										);
 								}
 							}
 						}
@@ -249,7 +249,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									new TemporaryTableColumn(
 											temporaryTable,
 											ENTITY_TABLE_IDENTITY_COLUMN,
-											column.getType(),
+											column.getType( metadata ),
 											sqlTypeName,
 											column.getColumnSize( dialect, metadata ),
 											// Always report as nullable as the identity column string usually includes the not null constraint
@@ -385,12 +385,12 @@ public class TemporaryTable implements Exportable, Contributable {
 
 	private static void forEachTemporaryTableColumn(Metadata metadata, TemporaryTable temporaryTable, String prefix, Value value, Consumer<TemporaryTableColumn> consumer) {
 		final Dialect dialect = metadata.getDatabase().getDialect();
-		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, value, (columnName, selectable) -> {
+		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, value, metadata, (columnName, selectable) -> {
 			consumer.accept(
 					new TemporaryTableColumn(
 							temporaryTable,
 							columnName,
-							selectable.getType(),
+							selectable.getType( metadata ),
 							selectable.getSqlType( metadata ),
 							selectable.getColumnSize( dialect, metadata ),
 							// Treat regular temporary table columns as nullable for simplicity

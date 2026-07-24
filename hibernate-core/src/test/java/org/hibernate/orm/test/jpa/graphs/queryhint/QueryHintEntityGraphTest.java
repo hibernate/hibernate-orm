@@ -23,8 +23,6 @@ import org.hibernate.orm.test.jpa.graphs.Student;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +33,6 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Subgraph;
 import jakarta.persistence.TypedQuery;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
@@ -56,9 +53,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				Location.class,
 				Course.class,
 				Student.class
-		}
-)
-@ServiceRegistry(settings = {@Setting(name = DEFAULT_LIST_SEMANTICS, value = "BAG")})
+			}
+	)
 public class QueryHintEntityGraphTest {
 
 	@Test

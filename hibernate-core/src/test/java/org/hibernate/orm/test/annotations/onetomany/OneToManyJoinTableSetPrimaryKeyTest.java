@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
@@ -46,10 +46,11 @@ public class OneToManyJoinTableSetPrimaryKeyTest {
 
 	@Test
 	public void testJoinTablePrimaryKeyUsesOnlyTargetForeignKey() {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Publisher.class )
-				.addAnnotatedClass( Author.class )
-				.buildMetadata();
+		final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				ssr,
+				Publisher.class,
+				Author.class
+		);
 		metadata.orderColumns( true );
 		metadata.validate();
 

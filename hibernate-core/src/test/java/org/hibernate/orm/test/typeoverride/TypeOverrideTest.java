@@ -5,14 +5,16 @@
 package org.hibernate.orm.test.typeoverride;
 
 import java.sql.Types;
+import java.util.List;
 
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -38,8 +40,20 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		metadataBuilder.applyBasicType( StoredPrefixedStringType.INSTANCE );
+	protected MappingCustomizations metadataCustomizations() {
+		return new MappingCustomizations(
+				null,
+				null,
+				null,
+				List.of( new BasicTypeRegistration( StoredPrefixedStringType.INSTANCE ) ),
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
 	}
 
 	@Test

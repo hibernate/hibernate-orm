@@ -6,8 +6,9 @@ package org.hibernate.orm.test.multitenancy.schema;
 
 import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -15,6 +16,7 @@ import org.hibernate.engine.jdbc.env.internal.ExtractedDatabaseMetaDataImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
@@ -66,11 +68,11 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
 				.build();
 
-		MetadataSources ms = new MetadataSources( serviceRegistry );
-		ms.addAnnotatedClass( Customer.class );
-		ms.addAnnotatedClass( Invoice.class );
-
-		Metadata metadata = ms.buildMetadata();
+		Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+				(StandardServiceRegistry) serviceRegistry,
+				Customer.class,
+				Invoice.class
+		);
 		final PersistentClass customerMapping = metadata.getEntityBinding( Customer.class.getName() );
 		customerMapping.setCached( true );
 		((RootClass) customerMapping).setCacheConcurrencyStrategy( "read-write" );
@@ -116,12 +118,12 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 				)
 		);
 
-		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-		configure( sfb );
-		sessionFactory = (SessionFactoryImplementor) sfb.build();
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		configure( optionsCollector );
+		sessionFactory = SessionFactoryPipeline.build( metadata, optionsCollector );
 	}
 
-	protected void configure(SessionFactoryBuilder sfb) {
+	protected void configure(SessionFactoryOptionsCollector optionsCollector) {
 	}
 
 	protected abstract T buildMultiTenantConnectionProvider();

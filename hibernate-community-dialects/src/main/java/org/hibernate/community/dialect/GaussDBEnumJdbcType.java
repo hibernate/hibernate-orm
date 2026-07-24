@@ -17,7 +17,6 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -137,8 +136,7 @@ public class GaussDBEnumJdbcType implements JdbcType {
 			JavaType<?> javaType,
 			BasicValueConverter<?, ?> valueConverter,
 			Size columnSize,
-			Database database,
-			JdbcTypeIndicators context) {
+			Database database) {
 		@SuppressWarnings("unchecked")
 		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
 		@SuppressWarnings("unchecked")

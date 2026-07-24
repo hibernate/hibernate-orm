@@ -7,18 +7,20 @@ package org.hibernate.mapping;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.SoftDeleteType;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.MappingContext;
@@ -46,15 +48,17 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  * @author Gavin King
  */
 public abstract sealed class Collection
-		implements Fetchable, Value, Filterable, SoftDeletable
-		permits Set, Bag,
-				IndexedCollection, // List, Map
-				IdentifierCollection { // IdentifierBag only built-in implementation
+		implements Fetchable, Value, AppliedMappingPart, Filterable, SoftDeletable
+		permits Set, Bag, IndexedCollection, IdentifierCollection {
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final MetadataBuildingContext buildingContext;
+	private MappingRole mappingRole;
+	// Runtime bootstrap service; never part of the serialized boot-model graph.
+	private transient ClassLoaderAccess classLoaderAccess;
+	private transient ManagedBeanRegistry managedBeanRegistry;
+	private transient boolean allowExtensionsInCdi;
 	private final PersistentClass owner;
 
 	private KeyValue key;
@@ -70,13 +74,18 @@ public abstract sealed class Collection
 	private String cacheRegionName;
 	private CacheLayout queryCacheLayout;
 	private String orderBy;
+	private String jpaOrderBy;
+	private String sqlOrderBy;
 	private String where;
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
+	private String manyToManyJpaOrderBy;
+	private String manyToManySqlOrderBy;
 	private String referencedPropertyName;
 	private String mappedByProperty;
 	private boolean sorted;
-	private Comparator<?> comparator;
+	private transient Comparator<?> comparator;
+	private ClassDetails comparatorClassDetails;
 	private String comparatorClassName;
 	private boolean orphanDelete;
 	private int batchSize = -1;
@@ -85,22 +94,18 @@ public abstract sealed class Collection
 
 	private String typeName;
 	private Properties typeParameters;
-	private Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver;
-	private CollectionType cachedCollectionType;
-	private CollectionSemantics<?,?> cachedCollectionSemantics;
+	private transient Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver;
+	private transient CollectionType cachedCollectionType;
+	private transient CollectionSemantics<?,?> cachedCollectionSemantics;
 
 	private final List<FilterConfiguration> filters = new ArrayList<>();
 	private final List<FilterConfiguration> manyToManyFilters = new ArrayList<>();
 	private final java.util.Set<String> synchronizedTables = new HashSet<>();
 
-	private String customSQLInsert;
-	private boolean customInsertCallable;
-	private String customSQLUpdate;
-	private boolean customUpdateCallable;
-	private String customSQLDelete;
-	private boolean customDeleteCallable;
-	private String customSQLDeleteAll;
-	private boolean customDeleteAllCallable;
+	private CustomSqlMapping customSqlInsert;
+	private CustomSqlMapping customSqlUpdate;
+	private CustomSqlMapping customSqlDelete;
+	private CustomSqlMapping customSqlDeleteAll;
 
 	private SoftDeleteType softDeleteStrategy;
 
@@ -113,16 +118,13 @@ public abstract sealed class Collection
 
 	private String loaderName;
 
-	private Supplier<? extends Expectation> insertExpectation;
-	private Supplier<? extends Expectation> updateExpectation;
-	private Supplier<? extends Expectation> deleteExpectation;
-	private Supplier<? extends Expectation> deleteAllExpectation;
-
 	/**
 	 * hbm.xml binding
 	 */
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
-		this.buildingContext = buildingContext;
+		this.classLoaderAccess = buildingContext.getClassLoaderAccess();
+		this.managedBeanRegistry = buildingContext.getManagedBeanRegistry();
+		this.allowExtensionsInCdi = buildingContext.getBuildingPlan().isAllowExtensionsInCdi();
 		this.owner = owner;
 	}
 
@@ -135,11 +137,15 @@ public abstract sealed class Collection
 			MetadataBuildingContext buildingContext) {
 		this.customTypeBeanResolver = customTypeBeanResolver;
 		this.owner = owner;
-		this.buildingContext = buildingContext;
+		this.classLoaderAccess = buildingContext.getClassLoaderAccess();
+		this.managedBeanRegistry = buildingContext.getManagedBeanRegistry();
+		this.allowExtensionsInCdi = buildingContext.getBuildingPlan().isAllowExtensionsInCdi();
 	}
 
 	protected Collection(Collection original) {
-		this.buildingContext = original.buildingContext;
+		this.classLoaderAccess = original.classLoaderAccess;
+		this.managedBeanRegistry = original.managedBeanRegistry;
+		this.allowExtensionsInCdi = original.allowExtensionsInCdi;
 		this.owner = original.owner;
 		this.key = original.key == null ? null : (KeyValue) original.key.copy();
 		this.element = original.element == null ? null : original.element.copy();
@@ -153,13 +159,18 @@ public abstract sealed class Collection
 		this.cacheConcurrencyStrategy = original.cacheConcurrencyStrategy;
 		this.cacheRegionName = original.cacheRegionName;
 		this.orderBy = original.orderBy;
+		this.jpaOrderBy = original.jpaOrderBy;
+		this.sqlOrderBy = original.sqlOrderBy;
 		this.where = original.where;
 		this.manyToManyWhere = original.manyToManyWhere;
 		this.manyToManyOrderBy = original.manyToManyOrderBy;
+		this.manyToManyJpaOrderBy = original.manyToManyJpaOrderBy;
+		this.manyToManySqlOrderBy = original.manyToManySqlOrderBy;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mappedByProperty = original.mappedByProperty;
 		this.sorted = original.sorted;
 		this.comparator = original.comparator;
+		this.comparatorClassDetails = original.comparatorClassDetails;
 		this.comparatorClassName = original.comparatorClassName;
 		this.orphanDelete = original.orphanDelete;
 		this.batchSize = original.batchSize;
@@ -171,18 +182,10 @@ public abstract sealed class Collection
 		this.filters.addAll( original.filters );
 		this.manyToManyFilters.addAll( original.manyToManyFilters );
 		this.synchronizedTables.addAll( original.synchronizedTables );
-		this.customSQLInsert = original.customSQLInsert;
-		this.customInsertCallable = original.customInsertCallable;
-		this.customSQLUpdate = original.customSQLUpdate;
-		this.customUpdateCallable = original.customUpdateCallable;
-		this.customSQLDelete = original.customSQLDelete;
-		this.customDeleteCallable = original.customDeleteCallable;
-		this.customSQLDeleteAll = original.customSQLDeleteAll;
-		this.customDeleteAllCallable = original.customDeleteAllCallable;
-		this.insertExpectation = original.insertExpectation;
-		this.updateExpectation = original.updateExpectation;
-		this.deleteExpectation = original.deleteExpectation;
-		this.deleteAllExpectation = original.deleteAllExpectation;
+		this.customSqlInsert = original.customSqlInsert;
+		this.customSqlUpdate = original.customSqlUpdate;
+		this.customSqlDelete = original.customSqlDelete;
+		this.customSqlDeleteAll = original.customSqlDeleteAll;
 		this.loaderName = original.loaderName;
 		this.auxiliaryTable = original.auxiliaryTable;
 		this.auxiliaryColumns = original.auxiliaryColumns == null ? null : new HashMap<>( original.auxiliaryColumns );
@@ -197,21 +200,55 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public MetadataBuildingContext getBuildingContext() {
-		return buildingContext;
-	}
-
-	BootstrapContext getBootstrapContext() {
-		return getBuildingContext().getBootstrapContext();
-	}
-
-	public MetadataImplementor getMetadata() {
-		return getBuildingContext().getMetadataCollector();
+	public MappingRole getMappingRole() {
+		return mappingRole;
 	}
 
 	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
+	public void setMappingRole(MappingRole mappingRole) {
+		this.mappingRole = mappingRole;
+		if ( key instanceof AppliedMappingPart keyPart ) {
+			keyPart.setMappingRole( mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.KEY ) );
+		}
+		if ( element instanceof AppliedMappingPart elementPart ) {
+			elementPart.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.ELEMENT )
+			);
+		}
+	}
+
+	protected ClassLoaderAccess getClassLoaderAccess() {
+		return classLoaderAccess;
+	}
+
+	public void reattachRuntimeServices(
+			ClassLoaderAccess classLoaderAccess,
+			ManagedBeanRegistry managedBeanRegistry,
+			boolean allowExtensionsInCdi) {
+		this.classLoaderAccess = classLoaderAccess;
+		this.managedBeanRegistry = managedBeanRegistry;
+		this.allowExtensionsInCdi = allowExtensionsInCdi;
+		if ( typeName != null ) {
+			final Class<? extends UserCollectionType> userCollectionTypeClass;
+			try {
+				userCollectionTypeClass = classForName( UserCollectionType.class, typeName, classLoaderAccess );
+			}
+			catch (RuntimeException e) {
+				throw new MappingException(
+						"Could not restore custom collection type '" + typeName + "' for collection '" + role + "'",
+						e
+				);
+			}
+			customTypeBeanResolver = () -> createUserTypeBean(
+					role,
+					userCollectionTypeClass,
+					PropertiesHelper.map( typeParameters ),
+					managedBeanRegistry,
+					allowExtensionsInCdi
+			);
+		}
+		cachedCollectionType = null;
+		cachedCollectionSemantics = null;
 	}
 
 	public boolean isSet() {
@@ -243,8 +280,10 @@ public abstract sealed class Collection
 	}
 
 	public Comparator<?> getComparator() {
-		if ( comparator == null && comparatorClassName != null ) {
-			final var clazz = classForName( Comparator.class, comparatorClassName, getBootstrapContext() );
+		if ( comparator == null && ( comparatorClassDetails != null || comparatorClassName != null ) ) {
+			final Class<? extends Comparator> clazz = comparatorClassDetails == null
+					? classForName( Comparator.class, comparatorClassName, classLoaderAccess )
+					: comparatorClassDetails.toJavaClass().asSubclass( Comparator.class );
 			try {
 				comparator = clazz.getConstructor().newInstance();
 			}
@@ -301,24 +340,57 @@ public abstract sealed class Collection
 		return orderBy;
 	}
 
+	public String getJpaOrderBy() {
+		return jpaOrderBy;
+	}
+
+	public String getSqlOrderBy() {
+		return sqlOrderBy;
+	}
+
 	public void setComparator(@SuppressWarnings("rawtypes") Comparator comparator) {
 		this.comparator = comparator;
 	}
 
 	public void setElement(Value element) {
 		this.element = element;
+		if ( element instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( role ).append( MappingRole.PartKind.ELEMENT ) );
+		}
 	}
 
 	public void setKey(KeyValue key) {
 		this.key = key;
+		if ( key instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( role ).append( MappingRole.PartKind.KEY ) );
+		}
 	}
 
 	public void setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
 	}
 
+	public void setJpaOrderBy(String jpaOrderBy) {
+		this.jpaOrderBy = jpaOrderBy;
+		this.orderBy = jpaOrderBy;
+	}
+
+	public void setSqlOrderBy(String sqlOrderBy) {
+		this.sqlOrderBy = sqlOrderBy;
+		this.orderBy = sqlOrderBy;
+	}
+
 	public void setRole(String role) {
 		this.role = role;
+		if ( role != null ) {
+			mappingRole = MappingRole.collection( role );
+			if ( key instanceof AppliedMappingPart keyPart ) {
+				keyPart.setMappingRole( mappingRole.append( MappingRole.PartKind.KEY ) );
+			}
+			if ( element instanceof AppliedMappingPart elementPart ) {
+				elementPart.setMappingRole( mappingRole.append( MappingRole.PartKind.ELEMENT ) );
+			}
+		}
 	}
 
 	public void setSorted(boolean sorted) {
@@ -353,7 +425,25 @@ public abstract sealed class Collection
 		return manyToManyOrderBy;
 	}
 
+	public String getManyToManyJpaOrdering() {
+		return manyToManyJpaOrderBy;
+	}
+
+	public String getManyToManySqlOrdering() {
+		return manyToManySqlOrderBy;
+	}
+
 	public void setManyToManyOrdering(String orderFragment) {
+		this.manyToManyOrderBy = orderFragment;
+	}
+
+	public void setManyToManyJpaOrdering(String orderFragment) {
+		this.manyToManyJpaOrderBy = orderFragment;
+		this.manyToManyOrderBy = orderFragment;
+	}
+
+	public void setManyToManySqlOrdering(String orderFragment) {
+		this.manyToManySqlOrderBy = orderFragment;
 		this.manyToManyOrderBy = orderFragment;
 	}
 
@@ -387,7 +477,7 @@ public abstract sealed class Collection
 		this.fetchStyle = fetchStyle;
 	}
 
-	public void validate(MappingContext mappingContext) throws MappingException {
+	public void validate(Metadata mappingContext) throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
 
@@ -408,21 +498,21 @@ public abstract sealed class Collection
 			);
 		}
 
-		checkColumnDuplication();
+		checkColumnDuplication( mappingContext.getDatabase() );
 	}
 
-	private void checkColumnDuplication() throws MappingException {
+	private void checkColumnDuplication(Database database) throws MappingException {
 		final String owner = "collection '" + getReferencedPropertyName() + "'";
 		final HashSet<QualifiedColumnName> cols = new HashSet<>();
-		getKey().checkColumnDuplication( cols, owner );
+		getKey().checkColumnDuplication( cols, owner, database );
 		if ( isIndexed() ) {
-			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner );
+			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner, database );
 		}
 		if ( isIdentified() ) {
-			( (IdentifierCollection) this ).getIdentifier().checkColumnDuplication( cols, owner );
+			( (IdentifierCollection) this ).getIdentifier().checkColumnDuplication( cols, owner, database );
 		}
 		if ( !isOneToMany() ) {
-			getElement().checkColumnDuplication( cols, owner );
+			getElement().checkColumnDuplication( cols, owner, database );
 		}
 	}
 
@@ -487,13 +577,12 @@ public abstract sealed class Collection
 	}
 
 	private ManagedBean<? extends UserCollectionType> userTypeBean() {
-		final var bootstrapContext = getBootstrapContext();
 		return createUserTypeBean(
 				role,
-				classForName( UserCollectionType.class, typeName, bootstrapContext ),
+				classForName( UserCollectionType.class, typeName, classLoaderAccess ),
 				PropertiesHelper.map( typeParameters ),
-				bootstrapContext,
-				getMetadata().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+				managedBeanRegistry,
+				allowExtensionsInCdi
 		);
 	}
 
@@ -517,14 +606,6 @@ public abstract sealed class Collection
 	@Override
 	public Table getTable() {
 		return owner.getTable();
-	}
-
-	@Override
-	public void createForeignKey() {
-	}
-
-	@Override
-	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
 	@Override
@@ -559,30 +640,44 @@ public abstract sealed class Collection
 			&& Objects.equals( typeParameters, other.typeParameters );
 	}
 
-	private void createForeignKeys() throws MappingException {
-		// if ( !isInverse() ) { // for inverse collections, let the "other end" handle it
-		final String entityName = getOwner().getEntityName();
-		if ( referencedPropertyName == null ) {
-			getElement().createForeignKey();
-			key.createForeignKeyOfEntity( entityName );
-		}
-		else {
-			final var property = owner.getProperty( referencedPropertyName );
-			assert property != null;
-			key.createForeignKeyOfEntity( entityName,
-					property.getValue().getConstraintColumns() );
-		}
-		// }
+	/**
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
+	void createPrimaryKey() {
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
-	abstract void createPrimaryKey();
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
+	public void createPrimaryKeyIfNeeded() {
+		throw new UnsupportedOperationException(
+				"Collection primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
+	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createAllKeys() throws MappingException {
-		createForeignKeys();
-		if ( !isInverse() && !isPrimaryKeyDisabled() ) {
-			createPrimaryKey();
-			adjustTemporalPrimaryKey();
-		}
+		throw new UnsupportedOperationException(
+				"Collection key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
 	private void adjustTemporalPrimaryKey() {
@@ -628,6 +723,10 @@ public abstract sealed class Collection
 		return auxiliaryColumnInPrimaryKey != null;
 	}
 
+	public String getAuxiliaryColumnInPrimaryKey() {
+		return auxiliaryColumnInPrimaryKey;
+	}
+
 	public String getCacheConcurrencyStrategy() {
 		return cacheConcurrencyStrategy;
 	}
@@ -637,7 +736,10 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
 	}
 
 	public String getCacheRegionName() {
@@ -657,55 +759,83 @@ public abstract sealed class Collection
 	}
 
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
-		this.customSQLInsert = customSQLInsert;
-		this.customInsertCallable = callable;
+		setCustomSqlInsert( new CustomSqlMapping( customSQLInsert, callable, null ) );
+	}
+
+	public void setCustomSqlInsert(CustomSqlMapping customSqlInsert) {
+		this.customSqlInsert = customSqlInsert;
+	}
+
+	public CustomSqlMapping getCustomSqlInsert() {
+		return customSqlInsert;
 	}
 
 	public String getCustomSQLInsert() {
-		return customSQLInsert;
+		return customSqlInsert == null ? null : customSqlInsert.sql();
 	}
 
 	public boolean isCustomInsertCallable() {
-		return customInsertCallable;
+		return customSqlInsert != null && customSqlInsert.callable();
 	}
 
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
-		this.customSQLUpdate = customSQLUpdate;
-		this.customUpdateCallable = callable;
+		setCustomSqlUpdate( new CustomSqlMapping( customSQLUpdate, callable, null ) );
+	}
+
+	public void setCustomSqlUpdate(CustomSqlMapping customSqlUpdate) {
+		this.customSqlUpdate = customSqlUpdate;
+	}
+
+	public CustomSqlMapping getCustomSqlUpdate() {
+		return customSqlUpdate;
 	}
 
 	public String getCustomSQLUpdate() {
-		return customSQLUpdate;
+		return customSqlUpdate == null ? null : customSqlUpdate.sql();
 	}
 
 	public boolean isCustomUpdateCallable() {
-		return customUpdateCallable;
+		return customSqlUpdate != null && customSqlUpdate.callable();
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
-		this.customSQLDelete = customSQLDelete;
-		this.customDeleteCallable = callable;
+		setCustomSqlDelete( new CustomSqlMapping( customSQLDelete, callable, null ) );
+	}
+
+	public void setCustomSqlDelete(CustomSqlMapping customSqlDelete) {
+		this.customSqlDelete = customSqlDelete;
+	}
+
+	public CustomSqlMapping getCustomSqlDelete() {
+		return customSqlDelete;
 	}
 
 	public String getCustomSQLDelete() {
-		return customSQLDelete;
+		return customSqlDelete == null ? null : customSqlDelete.sql();
 	}
 
 	public boolean isCustomDeleteCallable() {
-		return customDeleteCallable;
+		return customSqlDelete != null && customSqlDelete.callable();
 	}
 
 	public void setCustomSQLDeleteAll(String customSQLDeleteAll, boolean callable) {
-		this.customSQLDeleteAll = customSQLDeleteAll;
-		this.customDeleteAllCallable = callable;
+		setCustomSqlDeleteAll( new CustomSqlMapping( customSQLDeleteAll, callable, null ) );
+	}
+
+	public void setCustomSqlDeleteAll(CustomSqlMapping customSqlDeleteAll) {
+		this.customSqlDeleteAll = customSqlDeleteAll;
+	}
+
+	public CustomSqlMapping getCustomSqlDeleteAll() {
+		return customSqlDeleteAll;
 	}
 
 	public String getCustomSQLDeleteAll() {
-		return customSQLDeleteAll;
+		return customSqlDeleteAll == null ? null : customSqlDeleteAll.sql();
 	}
 
 	public boolean isCustomDeleteAllCallable() {
-		return customDeleteAllCallable;
+		return customSqlDeleteAll != null && customSqlDeleteAll.callable();
 	}
 
 	@Override
@@ -862,10 +992,20 @@ public abstract sealed class Collection
 
 	public void setComparatorClassName(String comparatorClassName) {
 		this.comparatorClassName = comparatorClassName;
+		this.comparatorClassDetails = null;
 	}
 
 	public String getComparatorClassName() {
-		return comparatorClassName;
+		return comparatorClassDetails == null ? comparatorClassName : comparatorClassDetails.getClassName();
+	}
+
+	public ClassDetails getComparatorClassDetails() {
+		return comparatorClassDetails;
+	}
+
+	public void setComparatorClassDetails(ClassDetails comparatorClassDetails) {
+		this.comparatorClassDetails = comparatorClassDetails;
+		this.comparatorClassName = comparatorClassDetails == null ? null : comparatorClassDetails.getClassName();
 	}
 
 	public String getMappedByProperty() {
@@ -913,35 +1053,51 @@ public abstract sealed class Collection
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {
-		return insertExpectation;
+		return customSqlInsert == null ? null : customSqlInsert.expectation();
 	}
 
 	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
-		this.insertExpectation = insertExpectation;
+		this.customSqlInsert = new CustomSqlMapping(
+				getCustomSQLInsert(),
+				isCustomInsertCallable(),
+				insertExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getUpdateExpectation() {
-		return updateExpectation;
+		return customSqlUpdate == null ? null : customSqlUpdate.expectation();
 	}
 
 	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
-		this.updateExpectation = updateExpectation;
+		this.customSqlUpdate = new CustomSqlMapping(
+				getCustomSQLUpdate(),
+				isCustomUpdateCallable(),
+				updateExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteExpectation() {
-		return deleteExpectation;
+		return customSqlDelete == null ? null : customSqlDelete.expectation();
 	}
 
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
-		this.deleteExpectation = deleteExpectation;
+		this.customSqlDelete = new CustomSqlMapping(
+				getCustomSQLDelete(),
+				isCustomDeleteCallable(),
+				deleteExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteAllExpectation() {
-		return deleteAllExpectation;
+		return customSqlDeleteAll == null ? null : customSqlDeleteAll.expectation();
 	}
 
 	public void setDeleteAllExpectation(Supplier<? extends Expectation> deleteAllExpectation) {
-		this.deleteAllExpectation = deleteAllExpectation;
+		this.customSqlDeleteAll = new CustomSqlMapping(
+				getCustomSQLDeleteAll(),
+				isCustomDeleteAllCallable(),
+				deleteAllExpectation
+		);
 	}
 
 	@Override

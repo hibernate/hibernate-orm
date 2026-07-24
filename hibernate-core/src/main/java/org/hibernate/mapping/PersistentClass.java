@@ -8,7 +8,9 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -16,8 +18,7 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.Alias;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -51,8 +52,6 @@ public abstract sealed class PersistentClass
 				Filterable, MetaAttributable, Contributable, Serializable
 		permits RootClass, Subclass {
 
-	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
-
 	/**
 	 * The magic value of {@link jakarta.persistence.DiscriminatorValue#value}
 	 * which indicates that the subclass is distinguished by a null value of the
@@ -66,11 +65,13 @@ public abstract sealed class PersistentClass
 	 */
 	public static final String NOT_NULL_DISCRIMINATOR_MAPPING = "not null";
 
-	private final MetadataBuildingContext metadataBuildingContext;
 	private final String contributor;
+	private transient ClassLoaderAccess classLoaderAccess;
+	private final List<IdentifiableTypeClass> subTypes = new ArrayList<>();
 
 	private String entityName;
 
+	private ClassDetails classDetails;
 	private String className;
 	private transient Class<?> mappedClass;
 
@@ -83,6 +84,7 @@ public abstract sealed class PersistentClass
 	private boolean lazy;
 	private final List<Property> properties = new ArrayList<>();
 	private final List<Property> declaredProperties = new ArrayList<>();
+	private final List<Property> mappedSuperclassProperties = new ArrayList<>();
 	private final List<Subclass> subclasses = new ArrayList<>();
 	private final List<Property> subclassProperties = new ArrayList<>();
 	private final List<Table> subclassTables = new ArrayList<>();
@@ -106,45 +108,48 @@ public abstract sealed class PersistentClass
 
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
-	// Custom SQL
-	private String customSQLInsert;
-	private boolean customInsertCallable;
-	private String customSQLUpdate;
-	private boolean customUpdateCallable;
-	private String customSQLDelete;
-	private boolean customDeleteCallable;
+	private CustomSqlMapping customSqlInsert;
+	private CustomSqlMapping customSqlUpdate;
+	private CustomSqlMapping customSqlDelete;
 
 	private MappedSuperclass superMappedSuperclass;
 	private Component declaredIdentifierMapper;
 	private OptimisticLockStyle optimisticLockStyle;
 
-	private Supplier<? extends Expectation> insertExpectation;
-	private Supplier<? extends Expectation> updateExpectation;
-	private Supplier<? extends Expectation> deleteExpectation;
-
 	private boolean isCached;
 	private CacheLayout queryCacheLayout;
 
 	public PersistentClass(MetadataBuildingContext buildingContext) {
-		this.metadataBuildingContext = buildingContext;
 		this.contributor = buildingContext.getCurrentContributorName();
+		this.classLoaderAccess = buildingContext.getClassLoaderAccess();
 	}
 
 	public String getContributor() {
 		return contributor;
 	}
 
-	public ServiceRegistry getServiceRegistry() {
-		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
+	public String getClassName() {
+		return classDetails == null ? className : classDetails.getClassName();
 	}
 
-	public String getClassName() {
-		return className;
+	public ClassDetails getClassDetails() {
+		return classDetails;
+	}
+
+	public void setClassDetails(ClassDetails classDetails) {
+		this.classDetails = classDetails;
+		this.className = classDetails == null ? null : classDetails.getClassName();
+		this.mappedClass = null;
 	}
 
 	public void setClassName(String className) {
+		this.classDetails = null;
 		this.className = className == null ? null : className.intern();
 		this.mappedClass = null;
+	}
+
+	public void reattachClassLoaderAccess(ClassLoaderAccess classLoaderAccess) {
+		this.classLoaderAccess = classLoaderAccess;
 	}
 
 	public String getProxyInterfaceName() {
@@ -157,21 +162,21 @@ public abstract sealed class PersistentClass
 	}
 
 	private Class<?> getClassForName(String className) {
-		return classForName( className, metadataBuildingContext.getBootstrapContext() );
+		return classForName( className, classLoaderAccess );
 	}
 
 	public Class<?> getMappedClass() throws MappingException {
-		if ( className == null ) {
+		if ( getClassName() == null ) {
 			return null;
 		}
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = getClassForName( className );
+				mappedClass = getClassForName( getClassName() );
 			}
 			return mappedClass;
 		}
 		catch (ClassLoadingException e) {
-			throw new MappingException( "entity class not found: " + className, e );
+			throw new MappingException( "entity class not found: " + getClassName(), e );
 		}
 	}
 
@@ -231,6 +236,20 @@ public abstract sealed class PersistentClass
 			superclass = superclass.getSuperclass();
 		}
 		subclasses.add( subclass );
+	}
+
+	/**
+	 * Registers a direct managed-type subtype.
+	 * <p>
+	 * This is separate from {@link #addSubclass(Subclass)} because
+	 * {@code addSubclass} preserves legacy entity-inheritance state while this
+	 * method records the direct managed-type graph, which may include mapped
+	 * superclasses.
+	 */
+	public void addSubType(IdentifiableTypeClass subType) {
+		if ( !subTypes.contains( subType ) ) {
+			subTypes.add( subType );
+		}
 	}
 
 	public boolean hasSubclasses() {
@@ -411,11 +430,32 @@ public abstract sealed class PersistentClass
 	public List<Property> getSubclassPropertyClosure() {
 		final ArrayList<List<Property>> lists = new ArrayList<>();
 		lists.add( getPropertyClosure() );
-		lists.add( subclassProperties );
+		lists.add( getSubclassPropertiesInLegacyOrder() );
 		for ( var join : subclassJoins ) {
 			lists.add( join.getProperties() );
 		}
 		return new JoinedList<>( lists );
+	}
+
+	private List<Property> getSubclassPropertiesInLegacyOrder() {
+		if ( subclassProperties.size() < 2 ) {
+			return subclassProperties;
+		}
+
+		final ArrayList<Property> orderedProperties = new ArrayList<>( subclassProperties );
+		orderedProperties.sort(
+				comparing( PersistentClass::getDeclaringEntityName )
+						.thenComparing( Property::getName )
+		);
+		return orderedProperties;
+	}
+
+	private static String getDeclaringEntityName(Property property) {
+		final PersistentClass persistentClass = property.getPersistentClass();
+		if ( persistentClass == null || persistentClass.getEntityName() == null ) {
+			return "";
+		}
+		return persistentClass.getEntityName();
 	}
 
 	public List<Join> getSubclassJoinClosure() {
@@ -460,37 +500,6 @@ public abstract sealed class PersistentClass
 
 	public void setEntityName(String entityName) {
 		this.entityName = entityName == null ? null : entityName.intern();
-	}
-
-	public void createPrimaryKey() {
-		final var table = getTable();
-		// Never overwrite the primary key if there already is an existing one,
-		// because previously created ForeignKey might depend on the order of columns,
-		// which the new PrimaryKey might not have
-		if ( table.getPrimaryKey() == null ) {
-			final var primaryKey = makePrimaryKey( table );
-			table.setPrimaryKey( primaryKey );
-		}
-	}
-
-	PrimaryKey makePrimaryKey(Table table) {
-		final var primaryKey = new PrimaryKey( table );
-		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
-		primaryKey.addColumns( getKey() );
-		if ( addPartitionKeyToPrimaryKey() ) {
-			for ( var property : getProperties() ) {
-				if ( property.getValue().isPartitionKey() ) {
-					primaryKey.addColumns( property.getValue() );
-				}
-			}
-		}
-		return primaryKey;
-	}
-
-	private boolean addPartitionKeyToPrimaryKey() {
-		return metadataBuildingContext.getMetadataCollector()
-				.getDatabase().getDialect()
-				.addPartitionKeyToPrimaryKey();
 	}
 
 	public abstract String getWhere();
@@ -706,7 +715,7 @@ public abstract sealed class PersistentClass
 			}
 		}
 		checkPropertyDuplication();
-		checkColumnDuplication();
+		checkColumnDuplication( mapping.getDatabase() );
 	}
 
 	private void checkPropertyDuplication() throws MappingException {
@@ -848,46 +857,52 @@ public abstract sealed class PersistentClass
 		return properties;
 	}
 
-	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
-		this.customSQLInsert = customSQLInsert;
-		this.customInsertCallable = callable;
-		this.insertExpectation = Expectation.None::new;
+	public void setCustomSqlInsert(CustomSqlMapping customSqlInsert) {
+		this.customSqlInsert = customSqlInsert;
+	}
+
+	public CustomSqlMapping getCustomSqlInsert() {
+		return customSqlInsert;
 	}
 
 	public String getCustomSQLInsert() {
-		return customSQLInsert;
+		return customSqlInsert == null ? null : customSqlInsert.sql();
 	}
 
 	public boolean isCustomInsertCallable() {
-		return customInsertCallable;
+		return customSqlInsert != null && customSqlInsert.callable();
 	}
 
-	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
-		this.customSQLUpdate = customSQLUpdate;
-		this.customUpdateCallable = callable;
-		this.updateExpectation = Expectation.None::new;
+	public void setCustomSqlUpdate(CustomSqlMapping customSqlUpdate) {
+		this.customSqlUpdate = customSqlUpdate;
+	}
+
+	public CustomSqlMapping getCustomSqlUpdate() {
+		return customSqlUpdate;
 	}
 
 	public String getCustomSQLUpdate() {
-		return customSQLUpdate;
+		return customSqlUpdate == null ? null : customSqlUpdate.sql();
 	}
 
 	public boolean isCustomUpdateCallable() {
-		return customUpdateCallable;
+		return customSqlUpdate != null && customSqlUpdate.callable();
 	}
 
-	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
-		this.customSQLDelete = customSQLDelete;
-		this.customDeleteCallable = callable;
-		this.deleteExpectation = Expectation.None::new;
+	public void setCustomSqlDelete(CustomSqlMapping customSqlDelete) {
+		this.customSqlDelete = customSqlDelete;
+	}
+
+	public CustomSqlMapping getCustomSqlDelete() {
+		return customSqlDelete;
 	}
 
 	public String getCustomSQLDelete() {
-		return customSQLDelete;
+		return customSqlDelete == null ? null : customSqlDelete.sql();
 	}
 
 	public boolean isCustomDeleteCallable() {
-		return customDeleteCallable;
+		return customSqlDelete != null && customSqlDelete.callable();
 	}
 
 	public void addFilter(
@@ -944,26 +959,26 @@ public abstract sealed class PersistentClass
 		return getUnjoinedProperties();
 	}
 
-	protected void checkColumnDuplication() {
+	protected void checkColumnDuplication(Database database) {
 		final String owner = "entity '" + getEntityName() + "'";
 		final HashSet<QualifiedColumnName> cols = new HashSet<>();
 		if ( getIdentifierMapper() == null ) {
 			//an identifier mapper => getKey will be included in the getNonDuplicatedPropertyIterator()
 			//and checked later, so it needs to be excluded
-			getKey().checkColumnDuplication( cols, owner );
+			getKey().checkColumnDuplication( cols, owner, database );
 		}
 		if ( isDiscriminatorInsertable() && getDiscriminator() != null ) {
-			getDiscriminator().checkColumnDuplication( cols, owner );
+			getDiscriminator().checkColumnDuplication( cols, owner, database );
 		}
 		final var softDeleteColumn = getRootClass().getSoftDeleteColumn();
 		if ( softDeleteColumn != null ) {
-			softDeleteColumn.getValue().checkColumnDuplication( cols, owner );
+			softDeleteColumn.getValue().checkColumnDuplication( cols, owner, database );
 		}
-		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner );
+		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner, database );
 		for ( var join : getJoins() ) {
 			cols.clear();
-			join.getKey().checkColumnDuplication( cols, owner );
-			checkPropertyColumnDuplication( cols, join.getProperties(), owner );
+			join.getKey().checkColumnDuplication( cols, owner, database );
+			checkPropertyColumnDuplication( cols, join.getProperties(), owner, database );
 		}
 	}
 
@@ -1065,6 +1080,11 @@ public abstract sealed class PersistentClass
 
 	public void setIdentifierMapper(Component handle) {
 		this.identifierMapper = handle;
+		if ( handle != null && handle.getMappingRole() == null && getEntityName() != null ) {
+			handle.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.IDENTIFIER_MAPPER )
+			);
+		}
 	}
 
 	private Boolean hasNaturalId;
@@ -1098,7 +1118,21 @@ public abstract sealed class PersistentClass
 
 	public void addMappedSuperclassProperty(Property property) {
 		properties.add( property );
+		mappedSuperclassProperties.add( property );
 		property.setPersistentClass( this );
+	}
+
+	/**
+	 * Properties locally applied to this entity from mapped-superclass
+	 * contributions.
+	 * <p>
+	 * These properties are also exposed through compatibility APIs such as
+	 * {@link #getProperties()}. This method keeps their application category
+	 * distinguishable from declared entity properties; each property's source
+	 * declaration is identified by {@link Property#getDeclarationRole()}.
+	 */
+	public List<Property> getMappedSuperclassProperties() {
+		return unmodifiableList( mappedSuperclassProperties );
 	}
 
 	public MappedSuperclass getSuperMappedSuperclass() {
@@ -1230,16 +1264,19 @@ public abstract sealed class PersistentClass
 
 	@Override
 	public IdentifiableTypeClass getSuperType() {
+		if ( superMappedSuperclass != null ) {
+			return superMappedSuperclass;
+		}
 		final var superPersistentClass = getSuperclass();
 		if ( superPersistentClass != null ) {
 			return superPersistentClass;
 		}
-		return superMappedSuperclass;
+		return null;
 	}
 
 	@Override
 	public List<IdentifiableTypeClass> getSubTypes() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		return unmodifiableList( subTypes );
 	}
 
 	private boolean containsColumn(Column column) {
@@ -1286,27 +1323,39 @@ public abstract sealed class PersistentClass
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {
-		return insertExpectation;
+		return customSqlInsert == null ? null : customSqlInsert.expectation();
 	}
 
 	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
-		this.insertExpectation = insertExpectation;
+		this.customSqlInsert = new CustomSqlMapping(
+				getCustomSQLInsert(),
+				isCustomInsertCallable(),
+				insertExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getUpdateExpectation() {
-		return updateExpectation;
+		return customSqlUpdate == null ? null : customSqlUpdate.expectation();
 	}
 
 	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
-		this.updateExpectation = updateExpectation;
+		this.customSqlUpdate = new CustomSqlMapping(
+				getCustomSQLUpdate(),
+				isCustomUpdateCallable(),
+				updateExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteExpectation() {
-		return deleteExpectation;
+		return customSqlDelete == null ? null : customSqlDelete.expectation();
 	}
 
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
-		this.deleteExpectation = deleteExpectation;
+		this.customSqlDelete = new CustomSqlMapping(
+				getCustomSQLDelete(),
+				isCustomDeleteCallable(),
+				deleteExpectation
+		);
 	}
 
 	public void removeProperty(Property property) {
@@ -1314,8 +1363,5 @@ public abstract sealed class PersistentClass
 			throw new IllegalArgumentException( "Property not among declared properties: " + property.getName() );
 		}
 		properties.remove( property );
-	}
-
-	public void createConstraints(MetadataBuildingContext context) {
 	}
 }

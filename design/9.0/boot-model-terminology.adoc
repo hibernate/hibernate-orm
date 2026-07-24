@@ -1,0 +1,361 @@
+= Boot Model Terminology
+:toc:
+
+This note explains the naming vocabulary used by the ORM 9 boot-model work.
+It is intentionally example-driven because many of the names describe adjacent
+parts of one concept: source metadata interpreted, applied, projected, and
+handed off to legacy compatibility objects.
+
+The current implementation uses these names mainly under:
+
+* `org.hibernate.boot.mapping.internal.model` for mutable boot binding
+  products such as `BootBindingModel`, `ManagedTypeBinding`,
+  `AttributeDeclarationBinding`, `AttributeUsageBinding`,
+  `MappedSuperclassContribution`, `EmbeddableContribution`, identifier,
+  version, tenant-id, natural-id, and collation products;
+* `org.hibernate.boot.mapping.internal.view` for read views over those products;
+* `org.hibernate.boot.mapping.internal.context` for handoff records that link
+  semantic boot products to materialized `org.hibernate.mapping`
+  compatibility objects;
+* `org.hibernate.boot.mapping.internal.relational` and selected runtime
+  metamodel bridges for correspondence products.
+
+== Example Model
+
+Use this small model as the running example:
+
+[source,java]
+----
+@MappedSuperclass
+abstract class Audited<T> {
+    @Id
+    Long id;
+
+    T code;
+}
+
+@Entity
+class Customer extends Audited<String> {
+    String name;
+}
+
+@Entity
+class Order extends Audited<Integer> {
+    BigDecimal total;
+}
+----
+
+The important tension is that `Audited#code` is declared once as `T`, but it is
+used twice with different concrete meanings:
+
+* `Customer#code` uses `String`;
+* `Order#code` uses `Integer`.
+
+ORM also still needs to expose legacy `org.hibernate.mapping` objects such as
+`PersistentClass`, `MappedSuperclass`, and copied `Property` instances for
+runtime, schema, and integration consumers.
+
+== Short Vocabulary
+
+[cols="1,3,3", options="header"]
+|===
+| Name
+| Meaning
+| Example
+
+| `*Binding`
+| A boot-time semantic model object produced by binding source metadata.
+| `ManagedTypeBinding` for `Audited`; `AttributeDeclarationBinding` for
+  `Audited#code`; `AttributeUsageBinding` for `Customer#code`;
+  `EntityIdentifierBinding` for a root identifier.
+
+| `*Declaration`
+| A source-level fact that is true before choosing a concrete consumer.
+| `Audited#code` is declared once with declared type `T`.
+
+| `*Usage`
+| A declaration interpreted in one consuming type, path, or role.  The
+  consumer may itself be a declaration-relative context; a final concrete
+  result is an applied mapping.
+| `Audited#code` used by `Customer` has resolved type `String`; `Base.box`
+  may also describe an embeddable usage before `Base` is applied to an entity.
+
+| `*Contribution`
+| A declaration applied into a larger model context.
+| `Audited` contributes `id` and `code` to the `Customer` entity hierarchy, and
+  separately contributes them to the `Order` entity hierarchy.
+
+| `Applied*`
+| The concrete result of applying a declaration/contribution to a consumer.
+| `AttributeUsageBinding` is the applied attribute usage for `Customer#code`;
+  the owning `MappedSuperclassContribution` supplies mapped-superclass
+  provenance.
+
+| `*Handoff`
+| A bridge from boot-model semantic facts to a compatibility object or later
+  phase.
+| `MappedSuperclassHandoffResolver` correlates the copied legacy `Property`
+  for `Customer#code` with its `AppliedAttributeMapping` through their common
+  `MappingRole`; `EntityIdentifierHandoff` links an identifier view to its
+  materialized `IdentifierBinding`.
+
+| `*Correspondence`
+| A product that relates two model parts that should not be matched by object
+  identity or list position.
+| `AttributeTypeCorrespondence` relates the public declaration type `T` to the
+  concrete usage type `String` for runtime JPA metamodel creation;
+  `ColumnNameCorrespondence` relates table-local logical column names to
+  materialized `Column` objects.
+
+| `*View`
+| A read-only projection over mutable/internal binding state.
+| `MappedSuperclassContributionView` exposes contribution facts without
+  exposing mutable binder internals.
+
+| `compatibility`
+| The legacy `org.hibernate.mapping` shape still consumed by existing runtime,
+  schema, and extension code.
+| A copied `Property` for `Customer#code` appears on the `Customer`
+  `PersistentClass` even though the semantic declaration belongs to `Audited`.
+|===
+
+== Walking The Example
+
+=== Binding
+
+Binding is the phase that interprets source metadata and records semantic
+facts.
+
+For the example model, binding creates managed-type and attribute products such
+as:
+
+* a `ManagedTypeBinding` for `Audited`;
+* a `ManagedTypeBinding` for `Customer`;
+* a `ManagedTypeBinding` for `Order`;
+* an `AttributeDeclarationBinding` for `Audited#id`;
+* an `AttributeDeclarationBinding` for `Audited#code`;
+* an `AttributeDeclarationBinding` for `Customer#name`;
+* an `AttributeDeclarationBinding` for `Order#total`.
+
+As binding proceeds, the model also records narrower semantic products such as
+`EntityIdentifierBinding`, `VersionBinding`, `TenantIdBinding`,
+`NaturalIdContribution`, `CollationContribution`, `MappedSuperclassContribution`,
+and `EmbeddableContribution`.
+
+The key rule is that a binding object should describe what ORM has understood,
+not merely mirror a Java reflection object or a legacy mapping object.
+
+=== Declaration
+
+A declaration is source-level meaning independent of a concrete consumer.
+
+For `Audited#code`, the declaration says:
+
+* declaring type: `Audited`;
+* declaring member: `code`;
+* declared type: `T`;
+* source annotations and access strategy from the mapped-superclass member.
+
+The declaration does not say that `code` is `String` or `Integer`.  Those facts
+only exist after applying `Audited` to `Customer` or `Order`.
+
+=== Usage
+
+A usage is a declaration interpreted in a consuming context.  That context may
+be a concrete entity, as in this example, or another declaration-relative
+usage such as an embeddable declared by a generic mapped superclass.  Use
+*applied mapping* when the usage has been applied to its final entity,
+collection, identifier, or relational mapping context.
+
+For `Customer`, the usage of `Audited#code` says:
+
+* usage container: `Customer`;
+* declaration: `Audited#code`;
+* resolved type: `String`;
+* usage member: the hibernate-models member for the inherited `code`
+  attribute, resolved relative to `Customer`.
+
+For `Order`, the same declaration has a different usage:
+
+* usage container: `Order`;
+* declaration: `Audited#code`;
+* resolved type: `Integer`.
+
+This is why the model needs both `AttributeDeclarationBinding` and
+`AttributeUsageBinding`.  They are not two names for the same fact.
+
+=== Contribution
+
+A contribution is the application of one declaration-bearing type into a
+larger model context.
+
+`Audited` is a mapped superclass.  It does not own a table and is not an entity.
+Instead, it contributes persistent state to each entity hierarchy that consumes
+it.
+
+In the example, ORM needs two mapped-superclass contributions:
+
+* `Audited` applied to the `Customer` hierarchy;
+* `Audited` applied to the `Order` hierarchy.
+
+Those contributions may have different table context, override results,
+generic resolutions, and copied compatibility properties even though both start
+from the same mapped-superclass declaration.
+
+=== Applied
+
+Applied names the concrete result of a contribution at a smaller granularity.
+
+For the mapped superclass itself, `MappedSuperclassContribution` says
+"`Audited` contributes to `Customer`."
+
+For the individual attribute, the applied `AttributeUsageBinding` says:
+
+* declaration: `Audited#code`;
+* usage: `Customer#code`;
+* declaration type: `T`;
+* usage type: `String`.
+
+The owning `MappedSuperclassContribution` supplies the provenance:
+"this usage was produced by applying `Audited` to `Customer`."
+
+There would be a separate `AttributeUsageBinding` for `Order#code` whose
+declaration is still `Audited#code` but whose usage type is `Integer`.
+
+=== Handoff
+
+A handoff connects the semantic boot model to a compatibility consumer or a
+later construction phase.
+
+For now, runtime metamodel creation still consumes `PersistentClass` and
+`Property`.  To keep that working, ORM materializes a copied legacy `Property`
+for inherited mapped-superclass attributes.
+
+For `Customer#code`, the handoff says:
+
+* owner: the `PersistentClass` for `Customer`;
+* property: the copied `Property` named `code`;
+* contribution: `Audited` applied to `Customer`;
+* semantic metadata: the `AttributeUsageBinding` for `Audited#code` as used by
+  `Customer`.
+
+The handoff is deliberately not the semantic model itself.  It is the bridge
+that lets old consumers keep receiving `Property` while new consumers can find
+the declaration/usage facts that produced that property.
+
+The current code uses the same pattern for several materialized compatibility
+objects:
+
+* `EntityIdentifierHandoff` links `EntityIdentifierBindingView` to the
+  materialized identifier value/property/table state;
+* `NaturalIdPropertyHandoff`, `CollationPropertyHandoff`,
+  `TenantIdPropertyHandoff`, and `VersionPropertyHandoff` link source
+  contribution/binding views to the materialized `Property`;
+* `AppliedEmbeddableMapping` links an embeddable contribution to the intrinsic
+  role of the materialized `Component` and its applied attributes;
+* `MappedSuperclassHandoffResolver` links mapped-superclass usage metadata to
+  the copied compatibility `Property` through its intrinsic mapping role.
+
+=== Correspondence
+
+Correspondence objects keep related facts together when identity or position is
+not reliable enough.
+
+For `Customer#code`, the runtime JPA metamodel bridge
+`AttributeTypeCorrespondence` can carry:
+
+* the compatibility `Property`;
+* the owning runtime/domain type;
+* the Java `Member` needed by legacy APIs;
+* the hibernate-models declaration member/type;
+* the hibernate-models usage type.
+
+This avoids treating the copied `Property` as if it alone can answer both
+"what did the mapped superclass declare?" and "what does this entity actually
+use?"
+
+Other current correspondence products are more relational:
+
+* `ColumnNameCorrespondence` records the table-local logical column identifier
+  and materialized `Column` so later phases can recover logical source names
+  without treating `InFlightMetadataCollector` as the primary store;
+* `SelectableCorrespondence` and `SelectableOrderResolution` track
+  local-to-referenced selectable relationships where positional matching would
+  be ambiguous.
+
+=== View
+
+Views expose selected binding-model facts without exposing mutable binder
+internals.
+
+For example, `MappedSuperclassContributionView` lets materialization or tests
+inspect a contribution without mutating the underlying
+`MappedSuperclassContribution`.
+
+Views are useful during the transition because the boot model is still being
+populated and projected into legacy mapping objects in phases.
+
+Current views include managed-type views such as `EntityHierarchyView`,
+`EntityView`, `MappedSuperclassView`, and `EmbeddableView`, plus focused views
+such as `EntityIdentifierBindingView`, `VersionBindingView`,
+`TenantIdBindingView`, `NaturalIdContributionView`,
+`CollationContributionView`, and `EmbeddableContributionView`.
+
+== Naming Rules Of Thumb
+
+Use these rules when naming new boot-model objects:
+
+* Use `Declaration` for source-level facts independent of a concrete consumer.
+* Use `Usage` for a declaration interpreted relative to one concrete
+  consuming type, path, or role.
+* Use `Contribution` for applying a declaration-bearing type or feature to a
+  larger context.
+* Use `Applied` for the concrete product of applying one contribution or
+  declaration to one consumer.
+* Use `Handoff` only for bridges to legacy compatibility objects or later
+  phases.
+* Use `Correspondence` when two related model parts need an explicit
+  relationship rather than positional matching.
+* Use `View` for read-only projections over mutable binding state.
+* Use `Binding` for boot-time semantic products, not for legacy mapping objects
+  that merely happen to be produced during boot.
+
+== Common Confusions
+
+=== Is A Contribution The Same As A Usage?
+
+No.
+
+A contribution is usually broader.  `Audited` contributing to `Customer`
+includes all mapped-superclass state applied to that hierarchy.  A usage is
+usually one declaration interpreted in that context, such as `Audited#code`
+having usage type `String`.
+
+=== Is Applied The Same As Handoff?
+
+No.
+
+The applied `AttributeUsageBinding` is semantic boot metadata.  It exists even
+if the future mapping model no longer needs copied mapped-superclass
+properties.  The copied `Property` and `AppliedAttributeMapping` share a
+`MappingRole`, so no identity handoff DTO is needed.
+
+=== Is A Copied Property The Semantic Attribute?
+
+No.
+
+The copied `Property` is a compatibility projection.  It remains important, but
+new code should prefer applied metadata for declaration/usage questions and use
+the copied property for the legacy APIs that still require it.
+
+=== Why Keep Declaration Type And Usage Type?
+
+Because both are observable in different places.
+
+For `Audited<T>#code` used by `Customer extends Audited<String>`:
+
+* public generic-domain compatibility may need the declaration shape `T`;
+* concrete SQM/runtime resolution needs the usage shape `String`.
+
+Collapsing either fact into the other recreates the bugs that the applied
+contribution model is meant to prevent.

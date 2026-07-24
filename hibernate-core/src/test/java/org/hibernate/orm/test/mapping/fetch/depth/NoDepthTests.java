@@ -10,9 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -61,11 +62,11 @@ public class NoDepthTests {
 		registryBuilder.applySetting( HBM2DDL_AUTO, Action.CREATE_DROP );
 
 		registryBuilder.applySetting( MAX_FETCH_DEPTH, configureMax ? "10" : "" );
+		final StandardServiceRegistry serviceRegistry = registryBuilder.build();
 
-		return new MetadataSources( registryBuilder.build() )
-				.addAnnotatedClasses( SysModule.class, SysModule2.class )
-				.buildMetadata()
-				.buildSessionFactory()
+		return org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( serviceRegistry, SysModule.class, SysModule2.class )
+				)
 				.unwrap( SessionFactoryImplementor.class );
 	}
 

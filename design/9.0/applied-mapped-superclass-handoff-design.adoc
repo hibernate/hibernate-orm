@@ -1,0 +1,180 @@
+= Applied Mapped-Superclass Handoff Design
+:toc:
+
+This note records the current ORM 9 transition shape for mapped-superclass
+attributes that are applied to a concrete entity hierarchy, especially when the
+attribute declaration involves generics.
+
+It is a focused companion to
+link:boot-model-terminology.adoc[`boot-model-terminology.adoc`],
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`],
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`],
+and link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`].
+
+== Pipeline Shape
+
+Mapped-superclass attributes now have an explicit declaration-to-usage handoff:
+
+[source]
+----
+AttributeDeclarationBinding
+        -> AttributeUsageBinding
+        -> AppliedAttributeMapping (MappingRole)
+        -> Property (same MappingRole)
+        -> MappedSuperclassHandoffResolver
+        -> runtime metamodel consumers
+----
+
+The pipeline separates semantic model facts from compatibility projection:
+
+* `AttributeDeclarationBinding` is the mapped-superclass member declaration.
+  It owns declaration source facts such as the declaring type, member, and
+  declared hibernate-models type.
+* `AttributeUsageBinding` is the same attribute as consumed by a concrete
+  entity hierarchy.  It owns the usage container and resolved hibernate-models
+  type after generic substitution.
+  When stored by a `MappedSuperclassContribution`, it is the applied
+  mapped-superclass attribute usage.
+* `AppliedAttributeMapping` gives the concrete usage a stable `MappingRole`.
+  The copied legacy `Property` materialized for `PersistentClass`
+  compatibility carries the same role.
+* `MappedSuperclassHandoffResolver` uses that role to recover the applied
+  metadata without an object-identity correspondence.
+* Runtime metamodel consumers should prefer the applied metadata when they need
+  declaration/usage type or member facts.
+
+== Ownership Split
+
+`AttributeUsageBinding` is semantic metadata.
+
+It answers questions such as:
+
+* which declaration was applied;
+* which concrete usage binding was produced;
+* what the declaration member/type is;
+* what the usage member/type is after generic resolution.
+
+The owning `MappedSuperclassContribution` answers which mapped-superclass
+contribution produced the usage.
+
+`BootBindingModel` owns two complementary products:
+
+* `MappedSuperclassContribution` retains ordered contribution provenance and
+  its applied usages;
+* the global `MappingRole -> AppliedAttributeMapping` index resolves a
+  compatibility projection to its semantic application.
+
+There is no separate mapped-superclass identity map or
+`MappedSuperclassPropertyHandoff`.  Applied usages are registered with their
+contribution through
+`BootBindingModel#addAppliedMappedSuperclassAttributeUsage(...)`, while the
+`AppliedAttributeMapping` is registered in the global role index during
+attribute materialization.
+
+The copied `Property` is still important, but it is not the source of semantic
+truth.  New code should avoid deriving declaration/usage meaning only from the
+copied property when an applied mapped-superclass attribute is available.
+
+== Current Compatibility Rule
+
+During the transition, `org.hibernate.mapping` remains the broad compatibility
+surface:
+
+* `PersistentClass` still exposes mapped-superclass properties through
+  flattened and local compatibility APIs;
+* runtime metamodel creation still receives `PersistentClass` and `Property`;
+* copied mapped-superclass properties still carry bridge facts such as
+  `Property#isGenericSpecialization()` and `Property#getMemberDetails()`.
+
+The compatibility rule is:
+
+[quote]
+Semantic decisions should prefer applied contribution metadata when available,
+and fall back to copied `Property` bridge facts only for older paths or missing
+handoffs.
+
+This lets the new model become authoritative incrementally without forcing all
+runtime and schema consumers to stop using `org.hibernate.mapping` in one step.
+
+== Generic Attribute Shape
+
+For a mapped-superclass declaration such as:
+
+[source,java]
+----
+@MappedSuperclass
+class GenericMappedSuper<T> {
+    T genericValue;
+}
+----
+
+and a concrete entity usage such as:
+
+[source,java]
+----
+@Entity
+class GenericStringEntity extends GenericMappedSuper<String> {
+}
+----
+
+the model must retain both facts:
+
+* declaration type: `T`;
+* usage type: `String`.
+
+The declaration fact is needed for public generic-domain compatibility in some
+JPA metamodel paths.  The usage fact is needed for concrete SQM/runtime
+resolution, converter selection, schema/runtime typing, and member resolution.
+
+The handoff should therefore make both available through
+`AttributeTypeCorrespondence` and applied mapped-superclass metadata instead of
+trying to encode both concepts into one copied `Property`.
+
+== Runtime Metamodel Handoff
+
+Runtime metamodel creation currently consumes `PersistentClass` and `Property`.
+When a property comes from mapped-superclass application, runtime code should
+resolve the applied metadata through
+`RuntimeModelCreationContext#getMappedSuperclassHandoffResolver()` and then use
+that metadata for semantic choices.
+
+The lookup order is:
+
+* use the copied applied property's intrinsic `MappingRole`;
+* for a declaration-side mapped-superclass property, derive the concrete role
+  from the nearest entity consumer and attribute name;
+* resolve `AppliedAttributeMapping` through the global role index;
+* finally fall back to legacy copied `Property` bridge facts when there is no
+  applied mapping.
+
+This keeps the bridge localized and prevents `Property#isGenericSpecialization`
+from spreading as the semantic test for mapped-superclass generic usage.
+
+== Migration Targets
+
+The next code slices should retire ad hoc generic-specialization checks only
+where they are really standing in for applied mapped-superclass metadata.
+
+Completed targets:
+
+* centralize `AttributeFactory` lookup logic for applied mapped-superclass
+  metadata through `MappedSuperclassHandoffResolver`;
+* prefer applied usage member/type for concrete runtime attribute resolution;
+* classify runtime metamodel concrete-generic attribute placement through
+  `MappedSuperclassHandoffResolver`, which prefers applied usage metadata and
+  keeps `Property#isGenericSpecialization()` localized as a compatibility
+  fallback;
+* remove `MappedSuperclassPropertyHandoff`, its `BindingState` identity map,
+  and the parallel entity-alias/attribute-name lookup index;
+* keep public generic-domain compatibility assertions in place while concrete
+  resolved model assertions use usage type;
+
+Remaining targets:
+
+* leave lower-level mapping checks such as column-duplication filtering on
+  copied-property compatibility until schema/runtime consumers have equivalent
+  applied metadata access.
+
+Do not remove copied-property compatibility behavior until the downstream
+runtime, schema, and static metamodel paths have equivalent applied metadata
+access.

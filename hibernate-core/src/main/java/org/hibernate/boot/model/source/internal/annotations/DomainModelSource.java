@@ -7,11 +7,11 @@ package org.hibernate.boot.model.source.internal.annotations;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.models.spi.ConversionRegistration;
 import org.hibernate.boot.models.spi.ConverterRegistration;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
 /**

@@ -7,11 +7,9 @@ package org.hibernate.action.queue;
 import jakarta.persistence.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.ArrayList;
@@ -161,29 +159,25 @@ public class ActionQueueBenchmark {
 	// ========== Helper Methods ==========
 
 	private static SessionFactory createSessionFactory(String queueImpl) {
-		ServiceRegistry registry = new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect")
-				.applySetting(AvailableSettings.URL, "jdbc:h2:mem:testdb_" + queueImpl + ";DB_CLOSE_DELAY=-1")
-				.applySetting(AvailableSettings.USER, "sa")
-				.applySetting(AvailableSettings.PASS, "")
-				.applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
-				.applySetting(AvailableSettings.SHOW_SQL, "false")
-				.applySetting(AvailableSettings.FORMAT_SQL, "false")
-				.applySetting(AvailableSettings.USE_SQL_COMMENTS, "false")
-				.applySetting(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
-				.applySetting( "hibernate.flush.queue.type", queueImpl)
+		return new HibernatePersistenceConfiguration( "action-queue-" + queueImpl )
+				.property(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect")
+				.property(AvailableSettings.URL, "jdbc:h2:mem:testdb_" + queueImpl + ";DB_CLOSE_DELAY=-1")
+				.property(AvailableSettings.USER, "sa")
+				.property(AvailableSettings.PASS, "")
+				.property(AvailableSettings.HBM2DDL_AUTO, "create-drop")
+				.property(AvailableSettings.SHOW_SQL, "false")
+				.property(AvailableSettings.FORMAT_SQL, "false")
+				.property(AvailableSettings.USE_SQL_COMMENTS, "false")
+				.property(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
+				.property( "hibernate.flush.queue.type", queueImpl)
 				// for apples/apples
-				.applySetting( BatchSettings.ORDER_INSERTS, "true" )
-				.applySetting( BatchSettings.ORDER_UPDATES, "true" )
-				.build();
-
-		return new MetadataSources(registry)
-				.addAnnotatedClass(SimpleEntity.class)
-				.addAnnotatedClass(Parent.class)
-				.addAnnotatedClass(Child.class)
-				.addAnnotatedClass(Node.class)
-				.buildMetadata()
-				.buildSessionFactory();
+				.property( BatchSettings.ORDER_INSERTS, "true" )
+				.property( BatchSettings.ORDER_UPDATES, "true" )
+				.managedClass( SimpleEntity.class )
+				.managedClass( Parent.class )
+				.managedClass( Child.class )
+				.managedClass( Node.class )
+				.createEntityManagerFactory();
 	}
 
 	// ========== Benchmarks: Simple Inserts ==========

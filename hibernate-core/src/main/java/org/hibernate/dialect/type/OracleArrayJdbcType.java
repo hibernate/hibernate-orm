@@ -30,7 +30,6 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -228,15 +227,14 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 			JavaType<?> javaType,
 			BasicValueConverter<?, ?> valueConverter,
 			Size columnSize,
-			Database database,
-			JdbcTypeIndicators context) {
+			Database database) {
 		final var elementJdbcType = getElementJdbcType();
 		if ( !(elementJdbcType instanceof StructuredJdbcType) ) {
 			final var dialect = database.getDialect();
 			final var pluralJavaType = (BasicPluralJavaType<?>) javaType;
 			final var elementJavaType = pluralJavaType.getElementJavaType();
 			final String elementTypeName =
-					elementType( elementJavaType, elementJdbcType, columnSize, context.getTypeConfiguration(),
+					elementType( elementJavaType, elementJdbcType, columnSize, database.getTypeConfiguration(),
 							dialect );
 			final String arrayTypeName = arrayTypeName( elementJavaType, elementJdbcType, dialect );
 			createUserDefinedArrayType( arrayTypeName, elementTypeName, columnSize, elementJdbcType, database );

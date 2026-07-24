@@ -24,14 +24,26 @@ public class ClassLoaderServiceLoading implements ClassLoading {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> Class<T> classForName(String name) {
-		return classLoaderService.classForName( name );
+		return (Class<T>) switch ( name ) {
+			case "void" -> void.class;
+			case "boolean" -> boolean.class;
+			case "byte" -> byte.class;
+			case "char" -> char.class;
+			case "short" -> short.class;
+			case "int" -> int.class;
+			case "float" -> float.class;
+			case "long" -> long.class;
+			case "double" -> double.class;
+			default -> classLoaderService.classForName( name );
+		};
 	}
 
 	@Override
 	public <T> Class<T> findClassForName(String name) {
 		try {
-			return classLoaderService.classForName( name );
+			return classForName( name );
 		}
 		catch (ClassLoadingException e) {
 			return null;

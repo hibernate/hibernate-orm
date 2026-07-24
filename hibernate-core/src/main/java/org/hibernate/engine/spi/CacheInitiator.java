@@ -27,8 +27,8 @@ public class CacheInitiator implements SessionFactoryServiceInitiator<CacheImple
 	public CacheImplementor initiateService(@Nonnull SessionFactoryServiceInitiatorContext context) {
 		final var regionFactory = context.getServiceRegistry().requireService( RegionFactory.class );
 		return regionFactory instanceof NoCachingRegionFactory
-				? new DisabledCaching( context.getSessionFactory() )
-				: new EnabledCaching( context.getSessionFactory() );
+				? new DisabledCaching( context.getSessionFactoryAccess().getSessionFactory() )
+				: new EnabledCaching( context.getSessionFactoryAccess().getSessionFactory() );
 	}
 
 	@Override

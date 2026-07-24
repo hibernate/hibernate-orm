@@ -1,0 +1,499 @@
+= JPA Metamodel Injection Plan Design
+:toc:
+
+This document captures the longer-term direction for deriving JPA static
+metamodel injection work while building the boot/mapping model from finalized
+binding views.
+
+It complements
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`].
+That design describes the broader binding/view/materialization model; this
+document focuses on static metamodel injection as a side product of
+boot/mapping-model materialization, not as a separate runtime-model traversal.
+
+== Problem
+
+The current runtime JPA metamodel path is still primarily driven by
+`org.hibernate.mapping` objects:
+
+[source]
+----
+org.hibernate.mapping.PersistentClass / MappedSuperclass / Component
+        -> MetadataContext creates ManagedDomainType and Attribute instances
+        -> MetadataContext walks runtime domain types again
+        -> static metamodel fields are injected
+----
+
+The new binding pipeline already walks finalized source/view facts while
+building the boot/mapping model.  That pass knows more about the source shape
+than the later runtime-domain traversal can easily recover:
+
+* hierarchy order from `EntityHierarchyView`;
+* declaration versus usage facts for attributes;
+* mapped-superclass declaration origins;
+* identifier, version, tenant-id, natural-id, and collation contributions;
+* embeddable usage-site facts such as path, access, override, conversion, and
+  type-variable substitution.
+
+The first view-backed static metamodel slice introduced a bridge:
+
+[source]
+----
+BootBindingModel views
+        -> JpaStaticMetamodelInjectionSource selects identifiable field references
+        -> JpaStaticMetamodelInjection resolves planned references
+        -> MetadataContext supplies runtime ManagedDomainType / Attribute values
+        -> static metamodel fields are injected
+----
+
+That proves the field-selection side can be view-backed, but it still derives
+the source in a separate view traversal near runtime JPA metamodel creation.
+
+== Current Implementation Split
+
+The current `org.hibernate.boot.mapping.internal.jpa` package owns the
+view-backed source/selection side and the view-backed application loop for
+identifiable managed types.  This is still not the final model, because the
+source is derived near runtime JPA metamodel creation rather than during
+boot/mapping-model materialization.
+
+Today it owns:
+
+[source]
+----
+BootBindingModel views
+        -> JpaStaticMetamodelInjectionSource
+        -> view-keyed managed-type and field references
+        -> JpaStaticMetamodelInjection resolves field references by role
+----
+
+`MetadataContext` remains the bridge to runtime values and reflection helpers:
+
+[source]
+----
+MetadataContext
+        -> creates runtime ManagedDomainType / Attribute values
+        -> locates runtime ManagedDomainType values for view-backed references
+        -> injects class_ and resolved Attribute values
+        -> falls back to runtime-domain traversal otherwise
+----
+
+`JpaStaticMetamodelInjection` is therefore the owner of the view-backed
+application algorithm, but it still uses `MetadataContext` as a runtime lookup
+and injection adapter.  This is a useful bridge, but it leaves responsibility
+split in a deliberately temporary way:
+
+* `org.hibernate.boot.mapping.internal.jpa` selects managed types and field
+  references from binding views;
+* selected static metamodel references are currently direct internal view
+  references, not stable plan keys;
+* `MetadataContext` still decides when injection happens and still contains the
+  legacy fallback traversal for metadata without a binding model;
+* runtime JPA metamodel objects remain the injected values, so injection cannot
+  happen during boot/mapping materialization itself.
+
+The likely target is for `org.hibernate.boot.mapping.internal.jpa` to own the
+injection application phase as well.  More importantly, it should own the
+view-keyed metamodel reference model: generated JPA metamodel fields should be
+tracked as references to `ManagedTypeView`, `AttributeDeclarationBindingView`,
+`EntityIdentifierBindingView`, `VersionBindingView`, and eventually embeddable
+declaration views.  Later, when runtime JPA model objects are created from those
+same views, the JPA package can resolve each planned reference to the matching
+runtime value and perform the reflective field write.  `MetadataContext` would
+then create runtime JPA model objects and delegate static metamodel resolution
+and injection, instead of owning the injection algorithm directly.
+
+== Correct Target Direction
+
+The better long-term target is to derive a JPA static metamodel injection plan
+while materializing the boot/mapping model from finalized binding views.
+
+[source]
+----
+finalized binding views
+        -> org.hibernate.mapping materialization
+        -> JpaStaticMetamodelInjectionPlan
+        -> runtime JPA metamodel creation
+        -> static field injection using the plan
+----
+
+In other words, the boot/mapping-model materialization walk should answer:
+
+* Which managed Java types participate in static metamodel injection?
+* Which metamodel class should each managed type use?
+* Which declared field names should be injected for each type?
+* Which pipeline view produced each generated metamodel reference?
+* Which runtime JPA attribute role will later provide the injected value for
+  that view-backed reference?
+
+The runtime JPA metamodel still owns the actual injected values:
+`ManagedDomainType`, `PersistentAttribute`, id attributes, version attributes,
+and id-class attributes.  The boot-time plan owns the correspondence from
+binding-view facts to generated static metamodel references.  Runtime JPA model
+creation then resolves those references using the same view identity/facts that
+created the runtime model objects.
+
+== Boot-Time Plan Shape
+
+The desired boot-time side product is a small immutable plan, not an eager
+runtime injection attempt:
+
+[source]
+----
+for each ManagedTypeView while materializing org.hibernate.mapping:
+    create/update PersistentClass, MappedSuperclass, Component, Property, Value
+    record static metamodel managed-type item
+    record view-keyed field references for id, version, id-class, and declared
+        attributes
+----
+
+Later, after `MetadataContext` has created the runtime JPA objects:
+
+[source]
+----
+for each static metamodel managed-type item:
+    resolve ManagedTypeView reference to runtime ManagedDomainType
+    inject class_
+    resolve planned view-keyed field references to runtime Attribute objects
+    inject the fields
+----
+
+This is still a single binding-view walk for source selection.  Runtime
+injection remains a later application step because the values being injected do
+not exist during boot/mapping-model materialization.  The important boot-time
+output is therefore not just "field names"; it is the set of generated JPA
+metamodel references keyed by the pipeline views that will also drive runtime
+model creation.
+
+== Why Not Inject During Boot Materialization?
+
+Immediate field injection while building `org.hibernate.mapping` is not viable
+because the injected values are runtime JPA model objects, not mapping objects.
+
+The boot/mapping pass can know the field names and semantic roles, but it
+cannot yet inject or fully resolve:
+
+* `ManagedDomainType` for `class_`;
+* runtime `PersistentAttribute` objects;
+* runtime id/version attributes;
+* runtime id-class attribute sets.
+
+Therefore the boot pass should record a view-keyed plan.  Runtime JPA metamodel
+creation then consumes that plan as soon as the needed runtime values are
+available, resolving each generated metamodel reference against the runtime
+objects created from the corresponding views.
+
+== Plan Contents
+
+A useful internal plan item should be richer than just a list of strings:
+
+[source]
+----
+JpaStaticMetamodelInjectionPlan
+    ManagedTypeInjection
+        managedTypeViewRef
+        managedJavaType
+        managedKind
+        metamodelClassName
+        fields
+
+    FieldInjection
+        sourceViewRef
+        fieldName
+        role
+        declaringManagedType
+        attributePath or identifier-part name
+        allowInheritedField
+----
+
+Possible field roles:
+
+* `MANAGED_TYPE_CLASS`;
+* `DECLARED_ATTRIBUTE`;
+* `IDENTIFIER_ATTRIBUTE`;
+* `VERSION_ATTRIBUTE`;
+* `ID_CLASS_ATTRIBUTE`;
+* eventually `EMBEDDABLE_DECLARED_ATTRIBUTE`.
+
+The current `JpaStaticMetamodelInjectionSource` is a v1 approximation of this
+plan.  It records managed type plus field names selected from views, but does
+not yet preserve explicit view references or distinguish field roles explicitly.
+
+`sourceViewRef` is intentionally conceptual in this document.  It might be a
+direct reference to an internal immutable view object, a stable key derived from
+the binding model, or a small reference object owned by the JPA package.  The
+essential requirement is that the plan can later say "resolve this generated
+metamodel field from the runtime model object created for this pipeline view",
+instead of rediscovering the field by class/name probing alone.
+
+== Identifiable Types First
+
+The first implementation target should remain identifiable managed types:
+
+* entities;
+* mapped superclasses;
+* identifier fields;
+* version fields;
+* id-class fields;
+* ordinary declared attributes.
+
+These are the easiest places for the plan to be produced during mapping-model
+materialization because `EntityHierarchyView`,
+`AttributeDeclarationBindingView`, `EntityIdentifierBindingView`, and
+`VersionBindingView` already exist.
+
+Embeddables should follow once the declaration/usage split is mature enough.
+An embeddable static metamodel class represents an embeddable type declaration,
+but many binding facts for an embeddable member are usage-site facts.  The
+eventual embeddable path therefore needs to distinguish:
+
+* declaration-level embeddable attributes suitable for the static metamodel;
+* usage-site attributes needed for `Component` and runtime mapping
+  materialization;
+* inherited mapped-superclass attributes applied to an embeddable;
+* generic specialization at a concrete embedded site.
+
+Until that settles, embeddable static metamodel injection can stay on the
+runtime-domain fallback.
+
+== Inherited Generic Attributes And Field Hiding
+
+Generic mapped-superclass attributes expose a second static-metamodel question:
+should the generated metamodel represent only the declaration attribute, or also
+represent concrete resolved usages through field hiding?
+
+The current canonical metamodel contract exposes an inherited generic attribute
+as one field declared by the superclass metamodel.  A generic mapped superclass
+such as `AbstractValueObject<V>` contributes
+`AbstractValueObject_.value : SingularAttribute<AbstractValueObject, Comparable>`.
+Concrete subtypes such as `SomeString extends AbstractValueObject<String>` and
+`SomeNumber extends AbstractValueObject<Integer>` inherit that same JVM static
+field from `AbstractValueObject_`.
+
+That means runtime injection must currently populate the superclass-declared
+field with the declaration attribute.  It must not repeatedly overwrite the
+same inherited field with each concrete resolved usage.
+
+A better future metamodel may intentionally generate subtype fields that hide
+the superclass field:
+
+[source,java]
+----
+public class SomeString_ extends AbstractValueObject_ {
+    public static volatile SingularAttribute<SomeString, String> value;
+}
+
+public class SomeNumber_ extends AbstractValueObject_ {
+    public static volatile SingularAttribute<SomeNumber, Integer> value;
+}
+----
+
+If ORM and the annotation processor adopt that contract, the injection plan
+must model both references:
+
+* the declaration field on `AbstractValueObject_`, resolved from the
+  mapped-superclass attribute declaration; and
+* the hidden concrete field on each subtype metamodel class, resolved from the
+  concrete attribute usage/contribution where generic substitution is known.
+
+The boot-time plan therefore cannot treat field name plus inherited lookup as
+the semantic identity of a generated field.  It needs an explicit
+declaration-versus-usage role, an owning metamodel class, and field-hiding
+semantics so runtime injection can prefer a declared subtype field when one
+exists while still populating the superclass declaration field correctly.
+
+This is the same design pressure described in
+link:generic-inheritance-model-design.adoc#_static_metamodel_follow_up[`generic-inheritance-model-design.adoc`].
+
+== Relationship To `MetadataContext`
+
+`MetadataContext` should not rediscover source field selection by independently
+walking runtime domain types when a boot-time plan exists.
+
+Its target role is:
+
+* create runtime JPA managed types and attributes;
+* consume `JpaStaticMetamodelInjectionPlan`;
+* resolve each planned field role to the runtime `ManagedDomainType` or
+  `Attribute` value;
+* inject the corresponding static field.
+
+This keeps runtime `ManagedDomainType` and `Attribute` objects as the injected
+values, while moving field selection and declaration ownership back to the
+boot/mapping-model pass where those facts are clearest.
+
+== Migration Slices
+
+=== Slice 1: View-Backed Static Injection Bridge
+
+Status: implemented as the first bridge.
+
+The bridge introduces an internal JPA consumer package and a
+`JpaStaticMetamodelInjectionSource` derived from `BootBindingModel` views.  The
+source drives identifiable static metamodel field selection, while
+`MetadataContext` still resolves the actual runtime `ManagedDomainType` and
+`Attribute` values.
+
+This proves:
+
+* binding views can serve consumers other than mapping-object materializers;
+* static metamodel field selection can be view-backed;
+* legacy/plain metadata paths can fall back to runtime-domain traversal.
+
+=== Slice 2: Produce The Plan During Mapping Materialization
+
+Move creation of the static metamodel source/plan into the same phase that
+materializes `org.hibernate.mapping` from finalized views.
+
+Expected behavior:
+
+* the mapping-model materializer records managed-type injection items while it
+  already walks `EntityHierarchyView` and managed-type views;
+* the plan is carried by resolved metadata or another boot product into
+  SessionFactory/runtime metamodel creation;
+* `MetadataContext` consumes the supplied plan instead of constructing a fresh
+  source from `BootBindingModel`;
+* legacy metadata without a plan keeps the old runtime-domain traversal.
+
+=== Slice 3: Track View-Keyed Static Metamodel References
+
+Track generated static metamodel references as references to pipeline views.
+
+Status: transitory implementation target.
+
+This slice intentionally did not change runtime injection behavior.  It
+upgrades `JpaStaticMetamodelInjectionSource` from "managed type plus field
+names" to "managed type plus field references keyed by source views", while
+retaining field-name access as a compatibility/debugging bridge.
+The point is to preserve source/view correspondence before the injection plan is
+produced during mapping materialization.
+
+Expected behavior:
+
+* each managed-type item points back to the `ManagedTypeView` or hierarchy view
+  that caused the generated metamodel class to participate;
+* each field item points back to the relevant declaration, identifier, version,
+  id-class, or later embeddable declaration view;
+* runtime JPA metamodel creation can resolve generated metamodel references
+  using those view keys when it creates runtime managed types and attributes;
+* field names remain available as diagnostics and reflective lookup inputs, but
+  are not the only semantic connection between boot and runtime models.
+
+After this transitory step, the intended direction is:
+
+* move production of these view-keyed references into the mapping
+  materialization walk;
+* replace direct view-object references with whichever stable view-reference
+  representation is chosen for the final plan;
+* have runtime JPA model creation register the runtime objects created from
+  those same views;
+* let the JPA injection component resolve planned metamodel references through
+  that view-to-runtime registry, falling back to field-name probing only where
+  legacy metadata still requires it.
+
+=== Slice 4: Move Injection Application Behind The JPA Package
+
+Move reflective static metamodel injection orchestration out of
+`MetadataContext` and behind `org.hibernate.boot.mapping.internal.jpa`.
+
+Status: transitory implementation target, partially complete for view-backed
+identifiable managed types.
+
+Expected behavior:
+
+* `MetadataContext` creates runtime JPA `ManagedDomainType` and `Attribute`
+  objects as it does today;
+* `MetadataContext` supplies runtime values and narrow injection helpers to the
+  JPA injection component;
+* the JPA injection component resolves view-keyed generated metamodel
+  references to runtime values and drives the reflective field writes;
+* the legacy runtime-domain fallback traversal also lives behind the JPA
+  package boundary until it can be removed.
+
+This does not mean injection happens during boot/mapping materialization.  The
+injected values still do not exist until runtime JPA metamodel creation.  The
+goal is ownership: source selection and injection application should be one JPA
+metamodel injection concern, not split between the JPA package and
+`MetadataContext`.
+
+=== Slice 5: Add Explicit Field Roles
+
+Make the view-keyed field reference model role-aware.
+
+Status: transitory implementation target, complete for declared attributes,
+identifier attributes, and version attributes.
+
+Expected behavior:
+
+* id, version, id-class, and ordinary attribute fields are resolved through
+  explicit roles rather than probing several runtime APIs by name;
+* diagnostics can name the source role and managed type;
+* inherited static fields and mapped-superclass fields can keep explicit
+  `allowInheritedField` semantics.
+
+=== Slice 6: Embeddable Declaration Plan
+
+Add embeddable static metamodel plan items once embeddable declaration views are
+stable.
+
+Expected behavior:
+
+* embeddable static metamodel injection uses declaration-level field names;
+* usage-site facts remain available for runtime mapping and component
+  materialization;
+* generic and mapped-superclass inherited embeddable members are represented
+  without pretending one global member selection applies to every usage.
+* inherited generic mapped-superclass attributes can later expose subtype
+  field-hiding references when the annotation processor and runtime injection
+  agree on that contract.
+
+=== Slice 7: Retire Separate Runtime-Domain Static Traversal
+
+Once identifiable and embeddable plan production are both view-driven, remove
+the separate `populateStaticMetamodel(...)` traversal for resolved pipeline
+metadata.
+
+Legacy/plain metadata may keep a compatibility traversal until those entry
+points are removed or routed through the resolved pipeline.
+
+== Open Questions
+
+These are PR-blocking Stage 3 questions for completing the static-metamodel
+handoff.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
+
+* Which boot product should own the final `JpaStaticMetamodelInjectionPlan`:
+  `ResolvedMapping`, the mapping materialization result, or a broader
+  bootstrap result object?
+* Should view references in the plan be direct internal view instances, stable
+  binding-model keys, or JPA-package-owned reference objects?
+* Should metamodel class-name resolution happen during boot plan creation or
+  during runtime plan consumption?
+* Should missing metamodel classes be represented in the plan, or should plan
+  creation skip them?
+* How should embeddable declaration fields be selected when effective member
+  access is usage-site dependent?
+* Should inherited generic attributes remain declaration-only static metamodel
+  fields, or should the annotation processor and runtime injection support
+  subtype field-hiding fields for concrete resolved usages?
+* If field-hiding generic metamodel fields are supported, should the injection
+  plan represent declaration fields and concrete usage fields as distinct field
+  roles, or as one role with an explicit declaration/usage target?
+* Should id-class static fields be modeled as identifier contribution facts, or
+  as a separate JPA metamodel projection over identifier contributions?
+
+== Recommendation
+
+Do not make runtime JPA metamodel creation perform another source-selection
+walk if the boot/mapping-model materializer already has the finalized views in
+hand.  Produce a role-aware static metamodel injection plan during
+boot/mapping-model materialization, carry view-keyed generated metamodel
+references forward, and let the JPA metamodel injection component resolve and
+apply them once the runtime JPA objects exist.  `MetadataContext` should provide
+those runtime objects, not own the field-selection, view-reference resolution,
+or reflective injection algorithm long-term.
+
+The current bridge is intentionally useful but transitional.  Its value is that
+it proves the view layer can supply static metamodel field selection before the
+source/field-selection step is moved into the boot/mapping-model materializer.

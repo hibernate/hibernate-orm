@@ -4,14 +4,13 @@
  */
 package org.hibernate.boot.model.process.internal;
 
-import java.util.function.Function;
-
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -31,20 +30,23 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	public static VersionResolution<?> from(
-			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
+			BasicValue basicValue,
 			TimeZoneStorageType timeZoneStorageType,
-			MetadataBuildingContext context) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final var implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
+			MappingResolutionServices services,
+		MappingResolutionState state) {
+		final var typeConfiguration = services.getTypeConfiguration();
+		final var implicitJavaType = basicValue.impliedJavaType( typeConfiguration, services.getClassLoaderService() );
 		final var registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
-		return resolve( timeZoneStorageType, context, (BasicJavaType<?>) registered );
+		return resolve( timeZoneStorageType, services, state, (BasicJavaType<?>) registered );
 	}
 
 	private static <E> VersionResolution<E> resolve(
 			TimeZoneStorageType timeZoneStorageType,
-			MetadataBuildingContext context,
+			MappingResolutionServices services,
+			MappingResolutionState state,
 			BasicJavaType<E> basicJavaType) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var typeConfiguration = services.getTypeConfiguration();
+		final var mappingPreferences = state.options().getMappingPreferences();
 		final var recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
@@ -61,48 +63,56 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 					@Override
 					public boolean isPreferJavaTimeJdbcTypesEnabled() {
-						return context.isPreferJavaTimeJdbcTypesEnabled();
+						return mappingPreferences.isPreferJavaTimeJdbcTypesEnabled();
 					}
 
 					@Override
 					public boolean isPreferNativeEnumTypesEnabled() {
-						return context.isPreferNativeEnumTypesEnabled();
+						return mappingPreferences.isPreferNativeEnumTypesEnabled();
 					}
 
 					@Override
 					@Nonnull
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
-						return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, context );
+						return timeZoneStorageType == null
+								? state.options().getDefaultTimeZoneStorage()
+								: switch ( timeZoneStorageType ) {
+									case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+									case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+									case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+									case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+									case AUTO, DEFAULT -> state.options().getDefaultTimeZoneStorage();
+								};
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForBoolean() {
-						return context.getPreferredSqlTypeCodeForBoolean();
+						return mappingPreferences.getPreferredSqlTypeCodeForBoolean();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForDuration() {
-						return context.getPreferredSqlTypeCodeForDuration();
+						return mappingPreferences.getPreferredSqlTypeCodeForDuration();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForUuid() {
-						return context.getPreferredSqlTypeCodeForUuid();
+						return mappingPreferences.getPreferredSqlTypeCodeForUuid();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForInstant() {
-						return context.getPreferredSqlTypeCodeForInstant();
+						return mappingPreferences.getPreferredSqlTypeCodeForInstant();
 					}
 
 					@Override
 					public int getPreferredSqlTypeCodeForArray() {
-						return context.getPreferredSqlTypeCodeForArray();
+						return mappingPreferences.getPreferredSqlTypeCodeForArray();
 					}
 
 					@Override
 					public Dialect getDialect() {
-						return context.getMetadataCollector().getDatabase().getDialect();
+						return state.database().getDialect();
 					}
 				}
 		);

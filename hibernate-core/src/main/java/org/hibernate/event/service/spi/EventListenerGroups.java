@@ -98,10 +98,11 @@ public final class EventListenerGroups {
 	}
 
 	public EventListenerGroups(@Nonnull ServiceRegistry serviceRegistry) {
-		Objects.requireNonNull( serviceRegistry );
+		this( Objects.requireNonNull( serviceRegistry ).requireService( EventListenerRegistry.class ) );
+	}
 
-		final var eventListenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
-
+	public EventListenerGroups(@Nonnull EventListenerRegistry eventListenerRegistry) {
+		Objects.requireNonNull( eventListenerRegistry );
 		// Pre-compute all iterators on Event listeners:
 
 		eventListenerGroup_AUTO_FLUSH = listeners( eventListenerRegistry, AUTO_FLUSH );

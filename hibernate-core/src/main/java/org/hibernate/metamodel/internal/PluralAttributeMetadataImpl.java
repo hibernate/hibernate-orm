@@ -5,11 +5,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Member;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
@@ -28,7 +24,6 @@ import static org.hibernate.metamodel.CollectionClassification.ORDERED_SET;
 import static org.hibernate.metamodel.CollectionClassification.SET;
 import static org.hibernate.metamodel.CollectionClassification.SORTED_MAP;
 import static org.hibernate.metamodel.CollectionClassification.SORTED_SET;
-import static org.hibernate.metamodel.internal.AttributeFactory.getSignatureType;
 
 /**
  * @author Steve Ebersole
@@ -48,14 +43,14 @@ class PluralAttributeMetadataImpl<X, Y, E>
 			Member member,
 			AttributeClassification attributeClassification,
 			AttributeClassification elementClassification,
-			AttributeClassification listIndexOrMapKeyClassification) {
-		super( propertyMapping, ownerType, member, attributeClassification );
+			AttributeClassification listIndexOrMapKeyClassification,
+			AttributeTypeCorrespondence typeCorrespondence) {
+		super( propertyMapping, ownerType, member, attributeClassification, typeCorrespondence );
 
 		collectionClassification = determineCollectionType( getJavaType(), propertyMapping );
 
-		final var signatureType = getSignatureType( member );
-		keyJavaType = getKeyJavaType( signatureType );
-		elementJavaType = getElementJavaType( signatureType );
+		keyJavaType = getTypeCorrespondence().pluralKeyJavaType( collectionClassification );
+		elementJavaType = getTypeCorrespondence().pluralElementJavaType();
 
 		elementValueContext = new ValueContext() {
 			@Override
@@ -108,60 +103,12 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		}
 	}
 
-	private Class<?> getElementJavaType(ParameterizedType signatureType) {
-		return switch ( collectionClassification ) {
-			case MAP, SORTED_MAP, ORDERED_MAP ->
-					signatureType == null
-							? Object.class
-							: getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] );
-			case SET, SORTED_SET, ORDERED_SET, ARRAY, LIST, BAG, ID_BAG ->
-					signatureType == null
-							? Object.class
-							: getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
-		};
-	}
-
-	private Class<?> getKeyJavaType(ParameterizedType signatureType) {
-		return switch ( collectionClassification ) {
-			case ARRAY, LIST -> Integer.class;
-			case MAP, SORTED_MAP, ORDERED_MAP ->
-					signatureType == null
-							? Object.class
-							: getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
-			default -> null;
-		};
-	}
-
 	private static ValueClassification toValueClassification(AttributeClassification classification) {
 		return switch ( classification ) {
 			case EMBEDDED -> ValueClassification.EMBEDDABLE;
 			case BASIC -> ValueClassification.BASIC;
 			default -> ValueClassification.ENTITY;
 		};
-	}
-
-	private Class<?> getClassFromGenericArgument(java.lang.reflect.Type type) {
-		if ( type instanceof Class<?> clazz ) {
-			return clazz;
-		}
-		else if ( type instanceof TypeVariable<?> typeVariable ) {
-			final var upperBound = typeVariable.getBounds()[0];
-			return getClassFromGenericArgument( upperBound );
-		}
-		else if ( type instanceof ParameterizedType parameterizedType ) {
-			final var rawType = parameterizedType.getRawType();
-			return getClassFromGenericArgument( rawType );
-		}
-		else if ( type instanceof WildcardType wildcardType ) {
-			final var upperBound = wildcardType.getUpperBounds()[0];
-			return getClassFromGenericArgument( upperBound );
-		}
-		else {
-			throw new AssertionFailure(
-					"Fail to process type argument in a generic declaration. Member : " + getMemberDescription()
-							+ " Type: " + type.getClass()
-			);
-		}
 	}
 
 	public static CollectionClassification determineCollectionType(Class<?> javaType, Property property) {

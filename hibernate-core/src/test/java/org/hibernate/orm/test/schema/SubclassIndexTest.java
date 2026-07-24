@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -31,9 +31,7 @@ public class SubclassIndexTest {
 	@ServiceRegistry
 	void test(ServiceRegistryScope registryScope) {
 		try {
-			new MetadataSources( registryScope.getRegistry() )
-					.addAnnotatedClasses( Foo.class, Bar.class )
-					.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), Foo.class, Bar.class );
 			fail( "Expecting exception" );
 		}
 		catch (AnnotationException expected) {

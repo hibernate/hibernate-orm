@@ -1,0 +1,656 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.pipeline.internal.settings;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TimeZone;
+import java.util.function.Supplier;
+
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.GraphParserMode;
+import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.LockOptions;
+import org.hibernate.SessionFactoryObserver;
+import org.hibernate.StatementObserver;
+import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.annotations.CacheLayout;
+import org.hibernate.audit.AuditStrategy;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
+import org.hibernate.boot.mapping.internal.context.MappingPreferences;
+import org.hibernate.boot.internal.StandardEntityNotFoundDelegate;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.BatchSettings;
+import org.hibernate.cfg.BytecodeSettings;
+import org.hibernate.cache.internal.NoCachingRegionFactory;
+import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.cfg.CacheSettings;
+import org.hibernate.cfg.FetchSettings;
+import org.hibernate.cfg.GraphParserSettings;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.PersistenceSettings;
+import org.hibernate.cfg.QuerySettings;
+import org.hibernate.cfg.SessionEventSettings;
+import org.hibernate.cfg.TransactionSettings;
+import org.hibernate.cfg.ValidationSettings;
+import org.hibernate.context.spi.MultiTenancy;
+import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
+import org.hibernate.jpa.internal.JpaEntityNotFoundDelegate;
+import org.hibernate.jpa.internal.util.CacheModeHelper;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.SpecHints;
+import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.query.criteria.ValueHandlingMode;
+import org.hibernate.query.hql.spi.HqlTranslator;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.service.spi.ServiceException;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.type.TimeZoneStorageStrategy;
+import org.hibernate.type.descriptor.java.ObjectJavaType;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.PessimisticLockScope;
+
+import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
+import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
+import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode;
+
+/// Projects resolved bootstrap settings into settings needed for SessionFactory
+/// construction.
+/// The resolver keeps SessionFactory-specific decisions separate from metadata
+/// resolution.  As the prototype grows, this class should own the translation
+/// from the single resolved bootstrap settings root to a narrower runtime factory
+/// settings contract.
+///
+/// @since 9.0
+/// @author Steve Ebersole
+public class SessionFactorySettingsResolver {
+	/// Resolve SessionFactory settings from the shared bootstrap settings root and
+	/// service registry.
+	///
+	/// @param bootstrapSettings The resolved bootstrap settings
+	/// @param serviceRegistry The service registry used for factory construction
+	///
+	/// @return The resolved SessionFactory settings
+	public static ResolvedSessionFactorySettings resolve(
+			ResolvedBootstrapSettings bootstrapSettings,
+			ServiceRegistry serviceRegistry) {
+		Objects.requireNonNull( bootstrapSettings );
+		Objects.requireNonNull( serviceRegistry );
+
+		if ( !(serviceRegistry instanceof StandardServiceRegistry standardServiceRegistry) ) {
+			throw new IllegalArgumentException(
+					"SessionFactory settings resolution requires a StandardServiceRegistry"
+			);
+		}
+
+		final var context = settingsResolutionContext( standardServiceRegistry );
+		final var configurationValues = bootstrapSettings.configurationValues();
+		final var cacheSettings = resolveCacheSettings( configurationValues, context );
+		final var defaultSessionProperties = resolveDefaultSessionProperties( configurationValues );
+		final var mappingPreferences = MappingPreferences.from( context.serviceRegistry() );
+		return new ResolvedSessionFactorySettings(
+				configurationValues,
+				bootstrapSettings.jpaBootstrap(),
+				standardServiceRegistry,
+				asString( configurationValues.get( PersistenceSettings.SESSION_FACTORY_NAME ) ),
+				asString( configurationValues.get( PersistenceSettings.SESSION_FACTORY_JNDI_NAME ) ),
+				asBoolean( configurationValues.get( PersistenceSettings.SESSION_FACTORY_NAME_IS_JNDI ), true ),
+				resolveStatementObserver( configurationValues ),
+				resolveStatementInspector( configurationValues, context ),
+				CacheMode.NORMAL,
+				resolveDefaultFlushMode( defaultSessionProperties ),
+				resolveDefaultLockOptions( defaultSessionProperties ),
+				defaultSessionProperties,
+				resolveDefaultCacheRetrieveMode( configurationValues ),
+				resolveDefaultCacheStoreMode( configurationValues ),
+				GraphParserMode.interpret( configurationValues.get( GraphParserSettings.GRAPH_PARSER_MODE ) ),
+				resolvePhysicalConnectionHandlingMode( configurationValues, context ),
+				asBoolean( configurationValues.get( JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT ), false ),
+				resolveJdbcTimeZone( configurationValues ),
+				asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
+				asBoolean( configurationValues.get( TransactionSettings.AUTO_CLOSE_SESSION ), false ),
+				asBoolean(
+						configurationValues.get( TransactionSettings.ALLOW_JTA_TRANSACTION_ACCESS ),
+						!bootstrapSettings.jpaBootstrap()
+				),
+				asBoolean( configurationValues.get( org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK ), false ),
+				asBoolean( configurationValues.get( TransactionSettings.ENABLE_LAZY_LOAD_NO_TRANS ), false ),
+				asBoolean(
+						configurationValues.get( UNOWNED_ASSOCIATION_TRANSIENT_CHECK ),
+						bootstrapSettings.jpaBootstrap()
+				),
+				resolveBidirectionalAssociationManagementEnabled( configurationValues ),
+				asBoolean( configurationValues.get( AvailableSettings.GENERATE_STATISTICS ), false ),
+				resolveInterceptor( configurationValues, context ),
+				resolveStatelessInterceptorSupplier( configurationValues, context ),
+				resolveSessionFactoryObservers( configurationValues, context ),
+				resolveValidatorFactoryReference( configurationValues ),
+				bootstrapSettings.jpaBootstrap()
+						? JpaEntityNotFoundDelegate.INSTANCE
+						: StandardEntityNotFoundDelegate.INSTANCE,
+				cacheSettings.secondLevelCacheEnabled(),
+				cacheSettings.queryCacheEnabled(),
+				cacheSettings.queryCacheLayout(),
+				cacheSettings.timestampsCacheFactory(),
+				cacheSettings.cacheRegionPrefix(),
+					cacheSettings.minimalPutsEnabled(),
+					cacheSettings.structuredCacheEntriesEnabled(),
+					cacheSettings.directReferenceCacheEntriesEnabled(),
+					cacheSettings.autoEvictCollectionCache(),
+					asInteger( configurationValues.get( BatchSettings.STATEMENT_BATCH_SIZE ), 1 ),
+					Collections.emptyMap(),
+					null,
+					resolveHqlTranslator( configurationValues, context ),
+					resolveSqmTranslatorFactory( configurationValues, context ),
+					resolveSqmMultiTableMutationStrategy( configurationValues, context ),
+					resolveSqmMultiTableInsertStrategy( configurationValues, context ),
+					resolveJpaCompliance( bootstrapSettings ),
+					ValueHandlingMode.interpret( configurationValues.get( QuerySettings.CRITERIA_VALUE_HANDLING_MODE ) ),
+					asBoolean( configurationValues.get( QuerySettings.CRITERIA_COPY_TREE ), bootstrapSettings.jpaBootstrap() ),
+					ImmutableEntityUpdateQueryHandlingMode.interpret(
+							configurationValues.get( QuerySettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
+					),
+					mappingPreferences.getPreferredSqlTypeCodeForBoolean(),
+					mappingPreferences.getPreferredSqlTypeCodeForDuration(),
+					resolveDefaultTimeZoneStorageStrategy( configurationValues, context ),
+					asBoolean( configurationValues.get( QuerySettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES ), false ),
+					mappingPreferences.isPreferJavaTimeJdbcTypesEnabled(),
+					asBoolean( configurationValues.get( QuerySettings.NATIVE_PREFER_JDBC_DATETIME_TYPES ), false ),
+					asBoolean( configurationValues.get( QuerySettings.IN_CLAUSE_PARAMETER_PADDING ), false ),
+					asBoolean( configurationValues.get( QuerySettings.JSON_FUNCTIONS_ENABLED ), false ),
+					asBoolean( configurationValues.get( QuerySettings.XML_FUNCTIONS_ENABLED ), false ),
+					asBoolean( configurationValues.get( QuerySettings.PORTABLE_INTEGER_DIVISION ), false ),
+					asBoolean( configurationValues.get( QuerySettings.NATIVE_IGNORE_JDBC_PARAMETERS ), false ),
+					asBoolean( configurationValues.get( QuerySettings.SAFE_MODE_ENABLED ), false ),
+					asBoolean( configurationValues.get( QuerySettings.QUERY_STARTUP_CHECKING ), true ),
+					true,
+					asBoolean( configurationValues.get( PersistenceSettings.JPA_CALLBACKS_ENABLED ), true ),
+					asInteger( configurationValues.get( FetchSettings.DEFAULT_BATCH_FETCH_SIZE ), -1 ),
+					asInteger( configurationValues.get( FetchSettings.MAX_FETCH_DEPTH ) ),
+					asBoolean( configurationValues.get( FetchSettings.USE_SUBSELECT_FETCH ), false ),
+					asBoolean( configurationValues.get( JdbcSettings.USE_SQL_COMMENTS ), false ),
+					resolveTemporalTableStrategy( configurationValues, context ),
+						resolveAuditStrategy( configurationValues ),
+						MultiTenancy.isMultiTenancyEnabled( context.serviceRegistry() ),
+						MultiTenancy.getTenantIdentifierResolver( configurationValues, context.serviceRegistry() ),
+						MultiTenancy.getTenantSchemaMapper( configurationValues, context.serviceRegistry() ),
+						MultiTenancy.getTenantCredentialsMapper( configurationValues, context.serviceRegistry() ),
+						ObjectJavaType.INSTANCE,
+					asString( configurationValues.get( MappingSettings.DEFAULT_CATALOG ) ),
+					asString( configurationValues.get( MappingSettings.DEFAULT_SCHEMA ) )
+		);
+	}
+
+	private static SessionFactorySettingsResolutionContext settingsResolutionContext(
+			StandardServiceRegistry serviceRegistry) {
+		return new SessionFactorySettingsResolutionContext(
+				serviceRegistry,
+				serviceRegistry.requireService( StrategySelector.class ),
+				serviceRegistry.requireService( JdbcServices.class ),
+				serviceRegistry.requireService( TransactionCoordinatorBuilder.class ),
+				serviceRegistry.getService( RegionFactory.class )
+		);
+	}
+
+	private static CacheRetrieveMode resolveDefaultCacheRetrieveMode(Map<String, Object> configurationValues) {
+		final var legacyRetrieveMode = (CacheRetrieveMode) configurationValues.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
+		if ( legacyRetrieveMode != null ) {
+			return legacyRetrieveMode;
+		}
+		final var retrieveMode = (CacheRetrieveMode) configurationValues.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE );
+		return retrieveMode == null ? CacheModeHelper.DEFAULT_RETRIEVE_MODE : retrieveMode;
+	}
+
+	private static CacheStoreMode resolveDefaultCacheStoreMode(Map<String, Object> configurationValues) {
+		final var legacyStoreMode = (CacheStoreMode) configurationValues.get( JPA_SHARED_CACHE_STORE_MODE );
+		if ( legacyStoreMode != null ) {
+			return legacyStoreMode;
+		}
+		final var storeMode = (CacheStoreMode) configurationValues.get( JAKARTA_SHARED_CACHE_STORE_MODE );
+		return storeMode == null ? CacheModeHelper.DEFAULT_STORE_MODE : storeMode;
+	}
+
+	private static boolean resolveBidirectionalAssociationManagementEnabled(Map<String, Object> configurationValues) {
+		final Object bidirectionalAssociationManagement =
+				configurationValues.get( PersistenceSettings.BIDIRECTIONALITY_MANAGEMENT );
+		return bidirectionalAssociationManagement == null
+				? asBoolean( configurationValues.get( BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT ), false )
+				: asBoolean( bidirectionalAssociationManagement, false );
+	}
+
+	private static Interceptor resolveInterceptor(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		return context.strategySelector()
+				.resolveStrategy( Interceptor.class, configurationValues.get( SessionEventSettings.INTERCEPTOR ) );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Supplier<? extends Interceptor> resolveStatelessInterceptorSupplier(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		final Object setting = configurationValues.get( SessionEventSettings.SESSION_SCOPED_INTERCEPTOR );
+		if ( setting == null ) {
+			return null;
+		}
+		if ( setting instanceof Supplier ) {
+			return (Supplier<? extends Interceptor>) setting;
+		}
+		if ( setting instanceof Class ) {
+			return interceptorSupplier( (Class<? extends Interceptor>) setting );
+		}
+		return interceptorSupplier(
+				context.strategySelector().selectStrategyImplementor( Interceptor.class, setting.toString() )
+		);
+	}
+
+	private static Supplier<? extends Interceptor> interceptorSupplier(Class<? extends Interceptor> interceptorClass) {
+		return () -> {
+			try {
+				return interceptorClass.getConstructor().newInstance();
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+				throw new HibernateException( "Could not instantiate session-scoped Interceptor", e );
+			}
+		};
+	}
+
+	private static FlushMode resolveDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
+		return getFlushMode( defaultSessionProperties.get( HibernateHints.HINT_FLUSH_MODE ), FlushMode.AUTO );
+	}
+
+	private static LockOptions resolveDefaultLockOptions(Map<String, Object> defaultSessionProperties) {
+		final var lockOptions = new LockOptions();
+		applyPropertiesToLockOptions( defaultSessionProperties, () -> lockOptions );
+		return lockOptions;
+	}
+
+	private static Map<String, Object> resolveDefaultSessionProperties(Map<String, Object> configurationValues) {
+		final HashMap<String, Object> settings = new HashMap<>();
+
+		settings.putIfAbsent( HibernateHints.HINT_FLUSH_MODE, FlushMode.AUTO );
+		settings.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
+		settings.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
+		settings.putIfAbsent( JPA_LOCK_TIMEOUT, WAIT_FOREVER_MILLI );
+		settings.putIfAbsent( JAKARTA_LOCK_TIMEOUT, WAIT_FOREVER_MILLI );
+		settings.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		settings.putIfAbsent( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		settings.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+		settings.putIfAbsent( JAKARTA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
+
+		final String[] entityManagerSpecificProperties = {
+				SpecHints.HINT_SPEC_LOCK_SCOPE,
+				SpecHints.HINT_SPEC_LOCK_TIMEOUT,
+				SpecHints.HINT_SPEC_QUERY_TIMEOUT,
+				SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE,
+				SpecHints.HINT_SPEC_CACHE_STORE_MODE,
+
+				HibernateHints.HINT_FLUSH_MODE,
+
+				LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE,
+				LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT,
+				LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE,
+				LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE,
+				LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT
+		};
+
+		for ( String key : entityManagerSpecificProperties ) {
+			if ( configurationValues.containsKey( key ) ) {
+				settings.put( key, configurationValues.get( key ) );
+			}
+		}
+		return settings;
+	}
+
+	private static StatementInspector resolveStatementInspector(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		return context.strategySelector()
+				.resolveStrategy( StatementInspector.class, configurationValues.get( JdbcSettings.STATEMENT_INSPECTOR ) );
+	}
+
+	private static PhysicalConnectionHandlingMode resolvePhysicalConnectionHandlingMode(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		final var specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
+				configurationValues.get( JdbcSettings.CONNECTION_HANDLING )
+		);
+		return specifiedHandlingMode != null
+				? specifiedHandlingMode
+				: context.transactionCoordinatorBuilder().getDefaultConnectionHandlingMode();
+	}
+
+	private static TimeZone resolveJdbcTimeZone(Map<String, Object> configurationValues) {
+		final Object setting = configurationValues.get( JdbcSettings.JDBC_TIME_ZONE );
+		if ( setting == null ) {
+			return null;
+		}
+		if ( setting instanceof TimeZone timeZone ) {
+			return timeZone;
+		}
+		if ( setting instanceof java.time.ZoneId zoneId ) {
+			return TimeZone.getTimeZone( zoneId );
+		}
+		return TimeZone.getTimeZone( setting.toString() );
+	}
+
+	private static TimeZoneStorageStrategy resolveDefaultTimeZoneStorageStrategy(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		final var storageType = resolveTimeZoneStorageType( configurationValues );
+		final var timeZoneSupport = resolveTimeZoneSupport( context );
+		return switch ( storageType ) {
+			case NATIVE -> {
+				if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
+					throw new HibernateException(
+							"The configured time zone storage type NATIVE is not supported with the configured dialect"
+					);
+				}
+				yield TimeZoneStorageStrategy.NATIVE;
+			}
+			case COLUMN -> TimeZoneStorageStrategy.COLUMN;
+			case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
+			case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+			case AUTO -> switch ( timeZoneSupport ) {
+				case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+				case NORMALIZE, NONE -> TimeZoneStorageStrategy.COLUMN;
+			};
+			case DEFAULT -> switch ( timeZoneSupport ) {
+				case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+				case NORMALIZE, NONE -> TimeZoneStorageStrategy.NORMALIZE_UTC;
+			};
+		};
+	}
+
+	private static TimeZoneStorageType resolveTimeZoneStorageType(Map<String, Object> configurationValues) {
+		final var setting = configurationValues.get( MappingSettings.TIMEZONE_DEFAULT_STORAGE );
+		return setting == null ? TimeZoneStorageType.DEFAULT : TimeZoneStorageType.valueOf( setting.toString() );
+	}
+
+	private static TimeZoneSupport resolveTimeZoneSupport(SessionFactorySettingsResolutionContext context) {
+		try {
+			return context.jdbcServices().getDialect().getTimeZoneSupport();
+		}
+		catch (ServiceException se) {
+			return TimeZoneSupport.NONE;
+		}
+	}
+
+	private static ResolvedCacheSettings resolveCacheSettings(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		final var regionFactory = context.regionFactory();
+		if ( regionFactory instanceof NoCachingRegionFactory ) {
+			return new ResolvedCacheSettings(
+					false,
+					false,
+					CacheLayout.AUTO,
+					null,
+					null,
+					false,
+					false,
+					false,
+					false
+			);
+		}
+
+			return new ResolvedCacheSettings(
+				asBoolean( configurationValues.get( CacheSettings.USE_SECOND_LEVEL_CACHE ), true ),
+				asBoolean( configurationValues.get( CacheSettings.USE_QUERY_CACHE ), false ),
+				resolveCacheLayout( configurationValues.get( CacheSettings.QUERY_CACHE_LAYOUT ) ),
+				context.strategySelector().resolveDefaultableStrategy(
+						TimestampsCacheFactory.class,
+						configurationValues.get( CacheSettings.QUERY_CACHE_FACTORY ),
+						StandardTimestampsCacheFactory.INSTANCE
+				),
+				asStringNullIfEmpty( configurationValues.get( CacheSettings.CACHE_REGION_PREFIX ) ),
+				asBoolean(
+						configurationValues.get( CacheSettings.USE_MINIMAL_PUTS ),
+						regionFactory == null || regionFactory.isMinimalPutsEnabledByDefault()
+				),
+				asBoolean( configurationValues.get( CacheSettings.USE_STRUCTURED_CACHE ), false ),
+				asBoolean( configurationValues.get( CacheSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES ), false ),
+					asBoolean( configurationValues.get( CacheSettings.AUTO_EVICT_COLLECTION_CACHE ), false )
+			);
+		}
+
+		private static HqlTranslator resolveHqlTranslator(
+				Map<String, Object> configurationValues,
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
+					.resolveStrategy( HqlTranslator.class, configurationValues.get( QuerySettings.SEMANTIC_QUERY_PRODUCER ) );
+		}
+
+		private static SqmTranslatorFactory resolveSqmTranslatorFactory(
+				Map<String, Object> configurationValues,
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
+					.resolveStrategy( SqmTranslatorFactory.class, configurationValues.get( QuerySettings.SEMANTIC_QUERY_TRANSLATOR ) );
+		}
+
+		private static SqmMultiTableMutationStrategy resolveSqmMultiTableMutationStrategy(
+				Map<String, Object> configurationValues,
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
+					.resolveStrategy(
+							SqmMultiTableMutationStrategy.class,
+							configurationValues.get( QuerySettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY )
+					);
+		}
+
+		private static SqmMultiTableInsertStrategy resolveSqmMultiTableInsertStrategy(
+				Map<String, Object> configurationValues,
+				SessionFactorySettingsResolutionContext context) {
+			return context.strategySelector()
+					.resolveStrategy(
+							SqmMultiTableInsertStrategy.class,
+							configurationValues.get( QuerySettings.QUERY_MULTI_TABLE_INSERT_STRATEGY )
+					);
+		}
+
+	private static JpaCompliance resolveJpaCompliance(ResolvedBootstrapSettings bootstrapSettings) {
+		final var configurationValues = bootstrapSettings.configurationValues();
+		return new MutableJpaComplianceImpl( configurationValues );
+	}
+
+	private static TemporalTableStrategy resolveTemporalTableStrategy(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		final var strategy = TemporalHelper.determineTemporalTableStrategy( configurationValues );
+		return strategy == TemporalTableStrategy.AUTO
+				? context.jdbcServices().getDialect()
+						.getTemporalTableSupport()
+						.getDefaultTemporalTableStrategy()
+				: strategy;
+	}
+
+	private static AuditStrategy resolveAuditStrategy(Map<String, Object> configurationValues) {
+		return determineAuditStrategy( configurationValues );
+	}
+
+	private static CacheLayout resolveCacheLayout(Object value) {
+		if ( value == null ) {
+			return CacheLayout.FULL;
+		}
+		if ( value instanceof CacheLayout cacheLayout ) {
+			return cacheLayout;
+		}
+		return CacheLayout.valueOf( value.toString().toUpperCase( java.util.Locale.ROOT ) );
+	}
+
+	private static Object resolveValidatorFactoryReference(Map<String, Object> configurationValues) {
+		final Object jpaReference = configurationValues.get( ValidationSettings.JPA_VALIDATION_FACTORY );
+		return jpaReference == null
+				? configurationValues.get( ValidationSettings.JAKARTA_VALIDATION_FACTORY )
+				: jpaReference;
+	}
+
+	private static StatementObserver resolveStatementObserver(Map<String, Object> configurationValues) {
+		final Object setting = configurationValues.get( JdbcSettings.STATEMENT_OBSERVER );
+		if ( setting == null ) {
+			return null;
+		}
+		if ( setting instanceof StatementObserver statementObserver ) {
+			return statementObserver;
+		}
+		if ( setting instanceof Class<?> javaType ) {
+			return instantiate( javaType, StatementObserver.class );
+		}
+		try {
+			return instantiate( Class.forName( setting.toString() ), StatementObserver.class );
+		}
+		catch (ClassNotFoundException e) {
+			throw new IllegalArgumentException( "Unable to resolve StatementObserver - " + setting, e );
+		}
+	}
+
+	private static SessionFactoryObserver[] resolveSessionFactoryObservers(
+			Map<String, Object> configurationValues,
+			SessionFactorySettingsResolutionContext context) {
+		final Object setting = configurationValues.get( PersistenceSettings.SESSION_FACTORY_OBSERVER );
+		if ( setting == null ) {
+			return new SessionFactoryObserver[0];
+		}
+
+		final var observers = new ArrayList<SessionFactoryObserver>();
+		addSessionFactoryObservers( setting, context, observers );
+		return observers.toArray( SessionFactoryObserver[]::new );
+	}
+
+	private static void addSessionFactoryObservers(
+			Object setting,
+			SessionFactorySettingsResolutionContext context,
+			ArrayList<SessionFactoryObserver> observers) {
+		if ( setting instanceof SessionFactoryObserver observer ) {
+			observers.add( observer );
+		}
+		else if ( setting instanceof SessionFactoryObserver[] observerArray ) {
+			observers.addAll( java.util.List.of( observerArray ) );
+		}
+		else if ( setting instanceof Collection<?> collection ) {
+			for ( Object item : collection ) {
+				addSessionFactoryObservers( item, context, observers );
+			}
+		}
+		else if ( setting instanceof Class<?> javaType ) {
+			observers.add( instantiate( javaType, SessionFactoryObserver.class ) );
+		}
+		else {
+			observers.add(
+					context.strategySelector().resolveStrategy( SessionFactoryObserver.class, setting )
+			);
+		}
+	}
+
+	private static String asString(Object value) {
+		return value == null ? null : value.toString();
+	}
+
+	private static String asStringNullIfEmpty(Object value) {
+		return value == null ? null : nullIfEmpty( value.toString() );
+	}
+
+	private static Boolean asBoolean(Object value, boolean defaultValue) {
+		if ( value == null ) {
+			return defaultValue;
+		}
+		if ( value instanceof Boolean booleanValue ) {
+			return booleanValue;
+		}
+		return Boolean.parseBoolean( value.toString() );
+	}
+
+	private static int asInteger(Object value, int defaultValue) {
+		if ( value == null ) {
+			return defaultValue;
+		}
+		if ( value instanceof Number number ) {
+			return number.intValue();
+		}
+		final String string = value.toString().trim();
+		return string.isEmpty() ? defaultValue : Integer.parseInt( string );
+	}
+
+	private static Integer asInteger(Object value) {
+		if ( value == null ) {
+			return null;
+		}
+		if ( value instanceof Number number ) {
+			return number.intValue();
+		}
+		final String string = value.toString().trim();
+		return string.isEmpty() ? null : Integer.valueOf( string );
+	}
+
+	private record SessionFactorySettingsResolutionContext(
+			StandardServiceRegistry serviceRegistry,
+			StrategySelector strategySelector,
+			JdbcServices jdbcServices,
+			TransactionCoordinatorBuilder transactionCoordinatorBuilder,
+			RegionFactory regionFactory) {
+	}
+
+	private static <T> T instantiate(Class<?> javaType, Class<T> expectedType) {
+		if ( !expectedType.isAssignableFrom( javaType ) ) {
+			throw new IllegalArgumentException(
+					javaType.getName() + " does not implement " + expectedType.getName()
+			);
+		}
+		try {
+			return expectedType.cast( javaType.getConstructor().newInstance() );
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			throw new IllegalArgumentException( "Unable to instantiate " + javaType.getName(), e );
+		}
+	}
+
+	private record ResolvedCacheSettings(
+			boolean secondLevelCacheEnabled,
+			boolean queryCacheEnabled,
+			CacheLayout queryCacheLayout,
+			TimestampsCacheFactory timestampsCacheFactory,
+			String cacheRegionPrefix,
+			boolean minimalPutsEnabled,
+			boolean structuredCacheEntriesEnabled,
+			boolean directReferenceCacheEntriesEnabled,
+			boolean autoEvictCollectionCache) {
+	}
+}

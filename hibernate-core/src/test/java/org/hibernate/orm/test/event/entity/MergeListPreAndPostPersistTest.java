@@ -13,6 +13,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
+import jakarta.persistence.Table;
 import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -62,7 +63,8 @@ public class MergeListPreAndPostPersistTest {
 		scope.inTransaction( s -> s.remove( order ) );
 	}
 
-	@Entity(name = "`Order`")
+	@Entity(name = "Order")
+	@Table(name = "`Order`")
 	static class Order {
 		@Id
 		public Long id;

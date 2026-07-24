@@ -12,6 +12,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.SpecialOneToOneType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.OneToOne many-to-one association}.
@@ -19,22 +20,24 @@ import org.hibernate.type.SpecialOneToOneType;
  * @author Gavin King
  */
 public final class OneToOne extends ToOne {
-
 	private boolean constrained;
 	private ForeignKeyDirection foreignKeyType;
 	private KeyValue identifier;
 	private String propertyName;
 	private final String entityName;
 	private String mappedByProperty;
+	private transient TypeConfiguration typeConfiguration;
 
 	public OneToOne(MetadataBuildingContext buildingContext, Table table, PersistentClass owner) throws MappingException {
 		super( buildingContext, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();
+		this.typeConfiguration = buildingContext.getTypeConfiguration();
 	}
 
 	private OneToOne(OneToOne original) {
 		super( original );
+		this.typeConfiguration = original.typeConfiguration;
 		this.constrained = original.constrained;
 		this.foreignKeyType = original.foreignKeyType;
 		this.identifier = original.identifier == null ? null : (KeyValue) original.identifier.copy();
@@ -63,7 +66,7 @@ public final class OneToOne extends ToOne {
 	public OneToOneType getType() throws MappingException {
 		if ( hasColumns() ) {
 			return new SpecialOneToOneType(
-					getTypeConfiguration(),
+					typeConfiguration,
 					getReferencedEntityName(),
 					getForeignKeyType(),
 					isReferenceToPrimaryKey(),
@@ -77,7 +80,7 @@ public final class OneToOne extends ToOne {
 		}
 		else {
 			return new OneToOneType(
-					getTypeConfiguration(),
+					typeConfiguration,
 					getReferencedEntityName(),
 					getForeignKeyType(),
 					isReferenceToPrimaryKey(),
@@ -91,11 +94,8 @@ public final class OneToOne extends ToOne {
 		}
 	}
 
-	@Override
-	public void createUniqueKey(MetadataBuildingContext context) {
-		if ( !hasFormula() && hasColumns()  ) {
-			getTable().createUniqueKey( getConstraintColumns(), context );
-		}
+	public void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override

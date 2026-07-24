@@ -72,6 +72,17 @@ public interface GeneratorCreationContext {
 	Value getValue();
 
 	/**
+	 * The contributor that contributed the generator's mapping.
+	 *
+	 * @since 7.3
+	 */
+	default String getContributorName() {
+		final var rootClass = getRootClass();
+		final var contributor = rootClass == null ? getValue().getTable().getContributor() : rootClass.getContributor();
+		return contributor == null ? "orm" : contributor;
+	}
+
+	/**
 	 * Mapping details for the identifier type.
 	 */
 	default Type getType() {

@@ -16,6 +16,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.SqlTypes;
 
 import static org.hibernate.type.SqlTypes.isBinaryType;
 
@@ -82,27 +83,35 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 		final String tableName = table.getQualifiedName( context );
 		final String tenantIdentifierColumnName =
 				tenantIdentifierColumn.getQuotedName( context.getDialect() );
-		final String tenantIdentifierColumnType =
-				tenantIdentifierColumn.getSqlType( metadata );
 		final String predicate =
-				predicateSql( tenantIdentifierColumn, metadata, tenantIdentifierSource )
-						.replace( "$TYPE$", tenantIdentifierColumnType );
+				predicateSql( tenantIdentifierColumn, metadata, tenantIdentifierSource );
 		final String permissionName =
 				TENANT_ISOLATION_PERMISSION + "_"
 					// permissions names are per-table; need to make them unique
 					+ NamingHelper.INSTANCE.hashedName( table.getQualifiedName( context ) );
 		return new String[] {
 				"create or replace permission " + permissionName + " on " + tableName
-					+ " for rows where " + tenantIdentifierColumnName + predicate + " enforced for all access enable",
+					+ " for rows where " + tenantIdentifierColumnName
+					+ applyColumnType( predicate, tenantIdentifierColumn, metadata )
+					+ " enforced for all access enable",
 				"alter table " + tableName + " activate row access control"
 		};
+	}
+
+	private static String applyColumnType(String predicate, Column tenantIdentifierColumn, Metadata metadata) {
+		if ( predicate.contains( "$TYPE$" ) ) {
+			return predicate.replace( "$TYPE$", tenantIdentifierColumn.getSqlType( metadata ) );
+		}
+		return predicate;
 	}
 
 	private static String predicateSql(
 			Column tenantIdentifierColumn,
 			Metadata metadata,
 			TenantIdentifierSource tenantIdentifierSource) {
-		final boolean binaryTenantIdentifier = isBinaryType( tenantIdentifierColumn.getSqlTypeCode( metadata ) );
+		final int tenantIdentifierTypeCode = tenantIdentifierColumn.getSqlTypeCode( metadata );
+		final boolean binaryTenantIdentifier =
+				tenantIdentifierTypeCode == SqlTypes.UUID || isBinaryType( tenantIdentifierTypeCode );
 		return switch ( tenantIdentifierSource ) {
 			case SESSION -> binaryTenantIdentifier ? UUID_PREDICATE_SQL : PREDICATE_SQL;
 			case DATABASE_USER -> binaryTenantIdentifier ? CURRENT_USER_UUID_PREDICATE_SQL : CURRENT_USER_PREDICATE_SQL;

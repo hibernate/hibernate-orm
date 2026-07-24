@@ -36,7 +36,9 @@ public class HibernateOrmSpecificAttributesMappingTest {
 	public void verifyMapping(DomainModelScope scope) {
 		scope.withHierarchy( HibernateOrmSpecificAttributesMappingTest.MyEntity.class, (entityDescriptor) -> {
 			Property identifierProperty = entityDescriptor.getIdentifierProperty();
-			Generator generator = identifierProperty.createGenerator( null );
+			GeneratorCreator generatorCreator = identifierProperty.getValueGeneratorCreator();
+			assertThat( generatorCreator ).isNotNull();
+			Generator generator = generatorCreator.createGenerator( new CustomTenantGeneratorContext( identifierProperty ) );
 			assertThat( generator )
 					.isInstanceOf( UuidGenerator.class );
 			assertThat( identifierProperty.getValue() )

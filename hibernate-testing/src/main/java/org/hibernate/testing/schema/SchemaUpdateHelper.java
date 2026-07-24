@@ -23,7 +23,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
  */
 public class SchemaUpdateHelper {
 	public static void update(Metadata metadata) {
-		update( metadata, ( ( MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+		update( metadata, ( ( MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry() );
 	}
 
 	public static void update(Metadata metadata, ServiceRegistry serviceRegistry) {
@@ -43,7 +43,7 @@ public class SchemaUpdateHelper {
 	}
 
 	public static void toWriter(Metadata metadata, Writer writer) {
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry();
+		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry();
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 		settings.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, Action.UPDATE );
 		// atm we reuse the CREATE scripts setting

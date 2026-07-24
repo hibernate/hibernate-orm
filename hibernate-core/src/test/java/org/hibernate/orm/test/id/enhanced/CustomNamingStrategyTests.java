@@ -57,11 +57,12 @@ public class CustomNamingStrategyTests {
 
 			KeyValue keyValue = entityDescriptor.getIdentifier();
 			Dialect dialect = jdbcEnvironment.getDialect();
-			final Generator generator = keyValue.createGenerator(
+			final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator(
+					keyValue,
 					dialect,
 					entityDescriptor,
 					entityDescriptor.getIdentifierProperty(),
-					new GeneratorSettingsImpl( domainModelScope.getDomainModel() )
+					domainModelScope.getDomainModel()
 			);
 			final SequenceStyleGenerator sequenceStyleGenerator =
 					(SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);

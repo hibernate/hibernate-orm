@@ -30,7 +30,7 @@ public class SchemaCreateHelper {
 	public static void create(Metadata metadata) {
 		create(
 				metadata,
-				( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry()
+				( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry()
 		);
 	}
 
@@ -66,7 +66,7 @@ public class SchemaCreateHelper {
 	}
 
 	public static void toWriter(Metadata metadata, Writer writer) {
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry();
+		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry();
 		final Map<String,Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
 		final Map<String,Object> copy = new HashMap<>( settings );
 		copy.put( SchemaToolingSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.CREATE );
@@ -82,7 +82,7 @@ public class SchemaCreateHelper {
 	public static String toCreateDdl(Metadata metadata) {
 		final StringWriter writer = new StringWriter();
 
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry();
+		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry();
 		final Map<String,Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
 		final Map<String,Object> copy = new HashMap<>( settings );
 		copy.put( SchemaToolingSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.CREATE_ONLY );

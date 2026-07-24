@@ -10,9 +10,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -24,8 +24,8 @@ import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
-import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -128,13 +128,8 @@ public class TableNamingStrategyTest {
 			ssrb.applySetting( AvailableSettings.ID_DB_STRUCTURE_NAMING_STRATEGY, namingStrategy );
 		}
 
-		try ( final ServiceRegistry ssr = ssrb.build() ) {
-			final MetadataSources metadataSources = new MetadataSources( ssr );
-			metadataSources.addAnnotatedClass( entityClass );
-
-			final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
-			metadata.orderColumns( false );
-			metadata.validate();
+		try ( final StandardServiceRegistry ssr = ssrb.build() ) {
+			final MetadataImplementor metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, entityClass );
 
 			consumer.accept( metadata );
 		}
@@ -142,12 +137,7 @@ public class TableNamingStrategyTest {
 
 	private IdentifierGenerator extractGenerator(PersistentClass entityBinding, MetadataImplementor metadata) {
 		KeyValue keyValue = entityBinding.getIdentifier();
-		final Generator generator = keyValue.createGenerator(
-				metadata.getDatabase().getDialect(),
-				entityBinding.getRootClass(),
-				entityBinding.getIdentifierProperty(),
-				new GeneratorSettingsImpl( metadata )
-		);
+		final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, metadata.getDatabase().getDialect(), entityBinding.getRootClass(), entityBinding.getIdentifierProperty(), metadata );
 		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 

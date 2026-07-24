@@ -6,11 +6,16 @@ package org.hibernate.mapping;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.type.MappingContext;
 import org.hibernate.sql.Template;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
 import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
+import static org.hibernate.type.SqlTypes.TABLE;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 /**
@@ -53,8 +58,19 @@ public final class AggregateColumn extends Column {
 		return component;
 	}
 
+	public JdbcType getJdbcType(MappingContext mappingContext) {
+		return getType( mappingContext ).getJdbcType();
+	}
+
 	public SelectablePath getSelectablePath() {
 		return getSelectablePath( component );
+	}
+
+	public boolean isAggregateArray() {
+		return switch ( getTypeCode() ) {
+			case ARRAY, TABLE, JSON_ARRAY, XML_ARRAY, STRUCT_ARRAY, STRUCT_TABLE -> true;
+			default -> false;
+		};
 	}
 
 	private static SelectablePath getSelectablePath(Component component) {
@@ -66,45 +82,55 @@ public final class AggregateColumn extends Column {
 				: getSelectablePath( parent.getComponent() ).append( simpleAggregateName );
 	}
 
-	public String getAggregateReadExpressionTemplate(Dialect dialect) {
-		return getAggregateReadExpressionTemplate( dialect, component );
+	public String getAggregateReadExpressionTemplate(
+			Dialect dialect,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration) {
+		return getAggregateReadExpressionTemplate( dialect, mappingContext, typeConfiguration, component );
 	}
 
-	private static String getAggregateReadExpressionTemplate(Dialect dialect, Component component) {
+	private static String getAggregateReadExpressionTemplate(
+			Dialect dialect,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			Component component) {
 		final var aggregateColumn = component.getAggregateColumn();
 		final var parent = component.getParentAggregateColumn();
 		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
 		// If the aggregate column is an array, drop the parent read expression, because this is a NestedColumnReference
 		// and will require special rendering
-		return parent == null || isArray( aggregateColumn )
+		return parent == null || aggregateColumn.isAggregateArray()
 				? getRootAggregateSelectableExpression( aggregateColumn, simpleAggregateName )
 				: dialect.getAggregateSupport()
 						.aggregateComponentCustomReadExpression(
 								"",
 								"",
-								getAggregateReadExpressionTemplate( dialect, parent.getComponent() ),
+								getAggregateReadExpressionTemplate(
+										dialect,
+										mappingContext,
+										typeConfiguration,
+										parent.getComponent()
+								),
 								simpleAggregateName,
 								parent,
-								aggregateColumn
+								aggregateColumn,
+								mappingContext,
+								typeConfiguration
 						);
 	}
 
 	private static String getRootAggregateSelectableExpression(AggregateColumn aggregateColumn, String simpleAggregateName) {
-		return isArray( aggregateColumn ) ? Template.TEMPLATE : Template.TEMPLATE + "." + simpleAggregateName;
+		return aggregateColumn.isAggregateArray() ? Template.TEMPLATE : Template.TEMPLATE + "." + simpleAggregateName;
 	}
 
-	private static boolean isArray(AggregateColumn aggregateColumn) {
-		return switch ( aggregateColumn.getTypeCode() ) {
-			case JSON_ARRAY, XML_ARRAY, STRUCT_ARRAY, STRUCT_TABLE -> true;
-			default -> false;
-		};
+	public String getAggregateAssignmentExpressionTemplate(Dialect dialect, MappingContext mappingContext) {
+		return getAggregateAssignmentExpressionTemplate( dialect, mappingContext, component );
 	}
 
-	public String getAggregateAssignmentExpressionTemplate(Dialect dialect) {
-		return getAggregateAssignmentExpressionTemplate( dialect, component );
-	}
-
-	private static String getAggregateAssignmentExpressionTemplate(Dialect dialect, Component component) {
+	private static String getAggregateAssignmentExpressionTemplate(
+			Dialect dialect,
+			MappingContext mappingContext,
+			Component component) {
 		final var aggregateColumn = component.getAggregateColumn();
 		final var parent = component.getParentAggregateColumn();
 		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
@@ -112,10 +138,11 @@ public final class AggregateColumn extends Column {
 				? Template.TEMPLATE + "." + simpleAggregateName
 				: dialect.getAggregateSupport()
 						.aggregateComponentAssignmentExpression(
-								getAggregateAssignmentExpressionTemplate( dialect, parent.getComponent() ),
+								getAggregateAssignmentExpressionTemplate( dialect, mappingContext, parent.getComponent() ),
 								simpleAggregateName,
 								parent,
-								aggregateColumn
+								aggregateColumn,
+								mappingContext
 						);
 	}
 

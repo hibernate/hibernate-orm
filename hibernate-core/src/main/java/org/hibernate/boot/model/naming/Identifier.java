@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.naming;
 
+import java.io.Serializable;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -20,7 +21,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  *
  * @author Steve Ebersole
  */
-public class Identifier implements Comparable<Identifier> {
+public class Identifier implements Comparable<Identifier>, Serializable {
 	private final String text;
 	private final boolean isQuoted;
 	private final boolean isExplicit;
@@ -303,6 +304,24 @@ public class Identifier implements Comparable<Identifier> {
 		return isQuoted()
 				? text.equals( name )
 				: text.equalsIgnoreCase( name );
+	}
+
+	/**
+	 * Does this identifier match another identifier, preserving the semantic
+	 * distinction between quoted and unquoted names.
+	 * <p>
+	 * Quoted identifiers match only other quoted identifiers with exactly the
+	 * same text.  Unquoted identifiers match case-insensitively.
+	 */
+	public boolean matches(Identifier identifier) {
+		if ( identifier == null ) {
+			return false;
+		}
+		if ( isQuoted() || identifier.isQuoted() ) {
+			return isQuoted() == identifier.isQuoted()
+				&& text.equals( identifier.text );
+		}
+		return text.equalsIgnoreCase( identifier.text );
 	}
 
 	@Override

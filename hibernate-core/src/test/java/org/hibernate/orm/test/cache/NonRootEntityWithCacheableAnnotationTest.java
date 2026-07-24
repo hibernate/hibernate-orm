@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.logger.LogInspectionHelper;
 import org.hibernate.testing.logger.TriggerOnPrefixLogListener;
@@ -44,17 +44,14 @@ public class NonRootEntityWithCacheableAnnotationTest {
 		settings.put( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "read-write" );
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 
-		try (ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build()) {
 
 			TriggerOnPrefixLogListener trigger = new TriggerOnPrefixLogListener( Set.of( "HHH000482" ) );
 			LogInspectionHelper.registerListener( trigger, CoreMessageLogger.CORE_LOGGER );
 
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( ABase.class )
-					.addAnnotatedClass( AEntity.class )
-					.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, ABase.class, AEntity.class );
 
 			assertFalse( metadata.getEntityBinding( ABase.class.getName() ).isCached() );
 			assertTrue( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );

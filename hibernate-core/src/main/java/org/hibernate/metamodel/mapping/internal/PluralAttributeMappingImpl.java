@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
+import org.hibernate.metamodel.mapping.ordering.SqlOrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
@@ -228,8 +229,7 @@ public class PluralAttributeMappingImpl
 	private static ClassDetails declaringClassDetails(
 			ManagedMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
-		return creationProcess.getCreationContext().getBootstrapContext()
-				.getModelsContext().getClassDetailsRegistry()
+		return creationProcess.getCreationContext().getModelsContext().getClassDetailsRegistry()
 				.resolveClassDetails( declaringType.getJavaType().getTypeName() );
 	}
 
@@ -419,21 +419,38 @@ public class PluralAttributeMappingImpl
 			final TranslationContext context = collectionDescriptor::getFactory;
 
 			if ( hasOrder ) {
-				orderByFragment = OrderByFragmentTranslator.translate(
+				orderByFragment = translateOrderByFragment(
+						bootDescriptor.getJpaOrderBy(),
+						bootDescriptor.getSqlOrderBy(),
 						bootDescriptor.getOrderBy(),
-						this,
 						context
 				);
 			}
 
 			if ( hasManyToManyOrder ) {
-				manyToManyOrderByFragment = OrderByFragmentTranslator.translate(
+				manyToManyOrderByFragment = translateOrderByFragment(
+						bootDescriptor.getManyToManyJpaOrdering(),
+						bootDescriptor.getManyToManySqlOrdering(),
 						bootDescriptor.getManyToManyOrdering(),
-						this,
 						context
 				);
 			}
 		}
+	}
+
+	private OrderByFragment translateOrderByFragment(
+			String jpaOrderBy,
+			String sqlOrderBy,
+			String fallbackOrderBy,
+			TranslationContext context) {
+		if ( sqlOrderBy != null ) {
+			return new SqlOrderByFragment( sqlOrderBy );
+		}
+		return OrderByFragmentTranslator.translate(
+				jpaOrderBy != null ? jpaOrderBy : fallbackOrderBy,
+				this,
+				context
+		);
 	}
 
 	@Override
@@ -1118,9 +1135,7 @@ public class PluralAttributeMappingImpl
 						sqlAliasBase,
 						creationState
 				),
-				creationState.getCreationContext()
-						// TODO: FIX ME
-						.getSessionFactory()
+				creationState.getLoadQueryInfluencers().getSessionFactory()
 		);
 		if ( indexDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
@@ -1183,9 +1198,7 @@ public class PluralAttributeMappingImpl
 				sqlAliasBase,
 				s -> false,
 				null,
-				creationState.getCreationContext()
-						// TODO: FIX ME
-						.getSessionFactory()
+				creationState.getLoadQueryInfluencers().getSessionFactory()
 		);
 
 		final boolean nestedJoin = isNestedJoin( joinType, addsPredicate, creationState );

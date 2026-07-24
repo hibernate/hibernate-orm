@@ -4,8 +4,6 @@
  */
 package org.hibernate.testing.orm.junit;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -19,9 +17,11 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -98,11 +98,14 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	@Override
 	public MetadataImplementor produceModel(StandardServiceRegistry serviceRegistry) {
-		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-		MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		applyMetadataBuilder( metadataBuilder );
-		applyMetadataSources( metadataSources );
-		final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+		final MappingSources mappingSources = new MappingSources();
+		applyMetadataSources( mappingSources );
+		final MetadataImplementor metadata = MetadataBuildingHelper.buildMetadata(
+				serviceRegistry,
+				mappingSources,
+				metadataCustomizations(),
+				functionCustomizations()
+		);
 		if ( overrideCacheStrategy() && getCacheConcurrencyStrategy() != null ) {
 			applyCacheSettings( metadata );
 		}
@@ -151,24 +154,23 @@ public abstract class BaseSessionFactoryFunctionalTest
 		return null;
 	}
 
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-
+	protected MappingCustomizations metadataCustomizations() {
+		return MappingCustomizations.NONE;
 	}
 
-	protected void applyMetadataSources(MetadataSources metadataSources) {
+	protected FunctionRegistryCustomizations functionCustomizations() {
+		return FunctionRegistryCustomizations.NONE;
+	}
+
+	protected void applyMetadataSources(MappingSources mappingSources) {
 
 		for ( Class annotatedClass : getAnnotatedClasses() ) {
-			metadataSources.addAnnotatedClass( annotatedClass );
+			mappingSources.addManagedClass( annotatedClass );
 		}
 		String[] xmlFiles = getOrmXmlFiles();
 		if ( xmlFiles != null ) {
 			for ( String xmlFile : xmlFiles ) {
-				try ( InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile ) ) {
-					metadataSources.addInputStream( is );
-				}
-				catch (IOException e) {
-					throw new IllegalArgumentException( e );
-				}
+				mappingSources.addMappingResource( xmlFile );
 			}
 		}
 	}
@@ -189,14 +191,14 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
 		log.trace( "Producing SessionFactory" );
-		final SessionFactoryBuilder sfBuilder = model.getSessionFactoryBuilder();
-		configure( sfBuilder );
-		final SessionFactoryImplementor factory = (SessionFactoryImplementor) sfBuilder.build();
+		final var optionsCollector = new SessionFactoryOptionsCollector();
+		configure( optionsCollector );
+		final SessionFactoryImplementor factory = SessionFactoryPipeline.build( model, optionsCollector );
 		sessionFactoryBuilt( factory );
 		return factory;
 	}
 
-	protected void configure(SessionFactoryBuilder builder) {
+	protected void configure(SessionFactoryOptionsCollector optionsCollector) {
 	}
 
 	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {

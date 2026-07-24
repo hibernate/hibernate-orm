@@ -7,10 +7,8 @@ package org.hibernate.orm.test.jpa.model;
 import java.sql.Connection;
 
 import org.hibernate.Session;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.SkipLog;
@@ -42,16 +40,11 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Override
-	protected void configure(SessionFactoryBuilder builder) {
-		super.configure( builder );
-		builder.applyEntityNotFoundDelegate( (entityName, id) -> {
+	protected void configure(SessionFactoryOptionsCollector optionsCollector) {
+		super.configure( optionsCollector );
+		optionsCollector.applyEntityNotFoundDelegate( (entityName, id) -> {
 			throw new EntityNotFoundException( "Unable to find " + entityName + " with id " + id );
 		} );
-	}
-
-	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		((MetadataBuilderImplementor) metadataBuilder).getBootstrapContext().markAsJpaBootstrap();
 	}
 
 	// a useful method that doesn't really belong here ~~~~~~~~~~~~~~~~

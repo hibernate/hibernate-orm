@@ -1,0 +1,1094 @@
+= New Contributor Guide: Model Binding Pipeline
+:toc:
+
+This guide explains the prototype boot flow from source collection through
+binding-model population and `org.hibernate.mapping` materialization.
+
+The goal is to give new contributors a mental model before they start changing
+annotation, XML, categorization, or binding code.
+
+
+== Before You Start
+
+This guide assumes you are familiar with:
+
+* JPA annotations such as `@Entity`, `@MappedSuperclass`, `@Embeddable`, and `@ElementCollection`
+* The idea that Hibernate needs to process your domain classes and turn them into
+an internal model before it can generate SQL.  This is the "boot" process.
+* `org.hibernate.mapping` is Hibernate's internal boot-time representation of your
+domain model: tables, columns, joins, and foreign keys.  In the ORM 9 pipeline it
+is the materialization target, not the semantic binding model itself.  It is not
+the runtime metamodel; it exists during startup to build the SessionFactory.
+
+If any of these are unfamiliar, start with the Hibernate ORM documentation on
+bootstrapping and the JPA specification chapter on metadata.
+
+
+== Big Picture
+
+The pipeline is:
+
+[source,text]
+----
+Persistence unit / programmatic config / tests
+        |
+        v
+PreparedMappingSources
+        |
+        v
+DomainModelCategorizer.categorize(...)
+        |
+        v
+CategorizedDomainModel
+        |
+        v
+BindingCoordinator.coordinateBinding(...)
+        |
+        v
+BindingState / binding products / pending work
+        |
+        v
+declarations / usages / applied mappings
+        |
+        v
+materializers
+        |
+        v
+org.hibernate.mapping with intrinsic semantic roles
+----
+
+Source collection is the input-assembly step.  It gathers explicit persistence
+unit declarations, programmatic configuration, XML mapping bindings, and any
+archive-scanning contributions into
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`].
+
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
+answers: "What source material should this boot process consider?"
+
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+answers: "After interpreting that source material, what persistent types,
+attributes, hierarchies, and global registrations does binding need?"
+
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
+answers: "How do we turn that categorized model into ordered binding facts,
+pending work, and materialization requests in a dependency-safe order?"
+
+Materializers answer: "Given finalized binding facts or resolved products, how
+do we create or mutate Hibernate's boot-time `org.hibernate.mapping` objects?"
+
+The categorizer should be the last place that works with raw source material
+(classes, package metadata, XML documents, global annotations).  Later binding
+code should consume categorized contracts (typed Java interfaces that expose
+already-interpreted facts, rather than raw annotation or XML data) instead of
+re-examining that source material directly.
+
+
+[TIP]
+.Example: A Simple @Entity
+====
+Imagine a persistence unit with one class, `Customer`, annotated with `@Entity`.
+
+1. link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
+receives `Customer` as a managed class detail.
+2. link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
+sees `@Entity` on `Customer` and records it as a persistent entity type.  It
+also collects any global registrations declared on the class, such as
+`@NamedQuery`.
+3. link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
+creates a single-class hierarchy with `Customer` as the root.
+4. The result, a
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`],
+now contains one entity hierarchy, zero mapped superclasses, and zero
+embeddables.
+5. link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
+walks that hierarchy and records the ordered binding facts needed for tables,
+identifiers, attributes, and constraints.
+6. Materializers consume those binding facts and resolved products, creating or
+mutating the `PersistentClass`, `Table`, `Property`, `Value`, `PrimaryKey`,
+`ForeignKey`, `UniqueKey`, and `Index` objects needed by the rest of boot.
+
+At the end, `org.hibernate.mapping` contains the materialized boot mapping model
+Hibernate needs to generate the `customer` table DDL and build the runtime
+SessionFactory.
+====
+
+
+== Package Layout
+
+[cols="1,2", options="header"]
+|===
+| Package
+| Role
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/settings/package-info.java[`o.h.boot.pipeline.internal.settings`]
+| Bootstrap setting resolution used before source collection and binding
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/package-info.java[`o.h.boot.pipeline.internal.source`]
+| Source inventory: `PreparedMappingSources`
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/package-info.java[`o.h.boot.mapping.internal.categorize`]
+| Internal categorization contracts and implementation: `CategorizedDomainModel`, `EntityHierarchy`, collector, hierarchy builder, and inheritance state
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/package-info.java[`o.h.boot.mapping.internal.context`]
+| Internal mapping context contracts and state shared by pipeline phases
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/package-info.java[`o.h.boot.mapping.internal.binders`]
+| Type and attribute binders, including binding phases.  Binders should record
+semantic facts, value shapes, and pending work; they should avoid owning physical
+constraint/index creation directly.
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/materialize/package-info.java[`o.h.boot.mapping.internal.materialize`]
+| Materializers that consume finalized binding facts or resolved products and
+create or mutate `org.hibernate.mapping` objects.
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/package-info.java[`o.h.boot.mapping.internal.model`]
+| Internal binding-side model products that are richer than legacy
+`org.hibernate.mapping` compatibility objects.
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/relational/package-info.java[`o.h.boot.mapping.internal.relational`]
+| Relational correspondence and table/column helper products used by binding
+and materialization.
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/view/package-info.java[`o.h.boot.mapping.internal.view`]
+| View products over binding state for consumers that need stable, resolved
+facts rather than mutable binding collections.
+
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/package-info.java[`o.h.boot.mapping.internal.sources`]
+| Source descriptors that normalize annotation/XML facts for binders
+
+| link:../../hibernate-core/src/main/java/org/hibernate/mapping/package-info.java[`o.h.mapping`]
+| The materialized boot mapping graph. Concrete mapping occurrences carry
+intrinsic `MappingRole` identity; attribute projections may also carry their
+source `DeclarationRole`.
+|===
+
+
+== PreparedMappingSources
+
+`PreparedMappingSources` is a small source inventory: the raw inputs represented as
+Java class details, `package-info` class details, and XML mapping documents.  It
+has three buckets:
+
+* managed class details
+* package details, represented by `package-info` class details
+* already-bound XML mapping documents
+
+Touchpoint:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
+
+The record has convenience factories for the source forms used by the ORM 9
+pipeline:
+
+* `PreparedMappingSources.from(PersistenceUnitDescriptor, MappingSourcePreparationContext)`
+* `PreparedMappingSources.from(PersistenceUnitDescriptor, MappingSourcePreparationContext, ResolvedMappingSettings)`
+* `PreparedMappingSources.from(PersistenceConfiguration, MappingSourcePreparationContext)`
+* `PreparedMappingSources.from(HibernatePersistenceConfiguration, MappingSourcePreparationContext)`
+* `PreparedMappingSources.from(HibernatePersistenceConfiguration, MappingSourcePreparationContext, ResolvedMappingSettings)`
+* `PreparedMappingSources.from(MappingSources, MappingSourcePreparationContext, ResolvedMappingSettings)`
+
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/MappingSourcePreparationContext.java[`MappingSourcePreparationContext`]
+carries the early bootstrap inputs needed to build the inventory:
+`ModelsContext`, `ClassLoaderService`, and XML binding setting access.  The
+context still has a service-registry-taking adapter constructor, but it adapts
+that registry immediately to the narrower inputs needed for source collection
+and `MappingBinder` creation.  This keeps source collection independent of
+`MetadataBuildingContext`, which is created later when resolved mapping sources are
+categorized and bound.
+
+The factories resolve class names through the Hibernate Models
+`ClassDetailsRegistry`, Hibernate Models' registry for reflective class
+metadata.  They also bind mapping files immediately with `MappingBinder`, so by
+the time categorization starts XML mappings are JAXB bindings, Java objects
+parsed from XML, rather than unresolved resource names or DOM models.
+
+The `HibernatePersistenceConfiguration` factory additionally applies archive
+scanning results from
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/HibernatePersistenceConfigurationScanner.java[`HibernatePersistenceConfigurationScanner`].
+
+Tests sometimes construct `PreparedMappingSources` directly.  That is fine when a
+test wants tight control over the source set.
+
+
+== Package Metadata
+
+Package annotations enter through `package-info` class details.  The helper
+method
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources#applyClassDetails`]
+separates these from ordinary managed classes.
+
+That distinction matters because package metadata can contribute defaults or
+global declarations, but it is not itself a persistent type.  New code should not
+put `package-info` into the same mental bucket as an entity, mapped superclass,
+or embeddable.
+
+
+== XML Pre-Processing
+
+Categorization starts with XML that has been pre-processed from
+`PreparedMappingSources`:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/xml/XmlPreProcessor.java[`XmlPreProcessor`]
+
+This happens before annotation processing because XML can affect what is visible
+to Hibernate Models.  For example, XML can contribute mapped classes, dynamic
+model names, and metadata-complete annotation overlays.  Metadata-complete is
+the XML flag that tells Hibernate to ignore annotations on a class and use only
+the XML mapping.
+
+`DomainModelCategorizer` keeps XML pre-processing in the categorization phase by
+calling `XmlPreProcessor` with `PreparedMappingSources#xmlMappings` directly, so this
+path no longer needs ORM's historical `ManagedResources` source shape.
+
+After pre-processing, `DomainModelCategorizer` builds an `allKnownClassNames`
+list from:
+
+* mapped classes contributed by XML
+* explicitly supplied managed class details
+* explicitly supplied package details
+
+
+== Categorization
+
+`DomainModelCategorizer.categorize(...)` owns the transition from source
+inventory to categorized model.
+
+Touchpoint:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
+
+The high-level sequence is:
+
+1. Pre-process XML into ORM's `XmlPreProcessingResult`.
+2. Build the complete list of known class and package names.
+3. Create a
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`].
+4. Process XML through ORM's `XmlProcessor`.
+5. Apply each known `ClassDetails` to the collector.
+6. Apply deferred XML overlays.
+7. Build inheritance state from the visible persistent types.
+8. Build entity hierarchies.
+9. Create the
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`].
+
+The categorizer uses the existing bootstrap `ModelsContext`; it does not create a
+separate source model registry.
+
+
+== Categorization Collector
+
+`DomainModelCategorizationCollector` is the in-flight builder for the categorized
+model.
+
+Touchpoint:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`]
+
+It records:
+
+* source persistent types, meaning visible entities and mapped superclasses
+* root entity candidates
+* mapped superclasses keyed by class name
+* embeddables keyed by class name
+* persistence-unit scoped global registrations
+
+When it sees a class, it first collects global registrations from that class.
+Then it classifies the class as one of:
+
+* `@MappedSuperclass`
+* `@Entity`
+* `@Embeddable`
+* none of the above
+
+Only entities and mapped superclasses are added to the source persistent type
+set used for inheritance.  Embeddables are tracked separately because they are
+managed types, but they do not participate in entity inheritance.
+
+
+== Global Registrations
+
+Global registrations are persistence-unit scoped things collected while
+categorizing.  They are exposed through:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/GlobalRegistrations.java[`GlobalRegistrations`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/GlobalRegistrationsImpl.java[`GlobalRegistrationsImpl`]
+
+Examples include:
+
+* identifier generators
+* Java and JDBC type registrations
+* converters
+* user types and collection types
+* embeddable instantiators
+* filter definitions
+* named queries
+* named entity graphs
+* JPA event listeners
+
+If a new annotation or XML element affects the whole persistence unit rather than
+one mapped attribute or entity binding, it probably belongs in global
+registrations.  Categorization should collect it, and the binding coordinator
+should have a small processing method that applies it to the appropriate ORM
+boot collector or registry.  Most registrations are applied before entity
+binding.  Registrations that need bound model state should have an explicit late
+phase; fetch profile overrides are the current example because the declaration
+can be created up front, while the override has to validate entity and
+association names after entity binding.
+
+
+== Entity Hierarchies
+
+After all visible persistent types are collected, categorization builds
+inheritance state:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/ManagedTypeInheritanceState.java[`ManagedTypeInheritanceState`]
+
+This state is scoped to the visible source set.  It does not scan every class
+reachable from the classpath.  If a persistent superclass exists in Java but was
+not included in `PreparedMappingSources`, the inheritance state decides how to handle
+that missing type.
+
+Then
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
+creates hierarchy objects:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchyBuilder.java[`EntityHierarchyBuilder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityHierarchy.java[`EntityHierarchy`]
+
+An `EntityHierarchy` starts from a root entity.  Its absolute root may be a
+mapped superclass above that root entity.  Each hierarchy also records facts that
+the binder needs later, such as default access type, identifier mapping, version
+attribute, tenant-id attribute, inheritance style, caching, and optimistic
+locking.
+
+
+== CategorizedDomainModel
+
+`CategorizedDomainModel` is the result of categorization.
+
+Touchpoints:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModelImpl.java[`CategorizedDomainModelImpl`]
+
+It exposes:
+
+* global registrations
+* entity hierarchies
+* mapped superclasses
+* embeddables
+
+It deliberately does not expose categorization-time infrastructure such as the
+`ClassDetailsRegistry` or `AnnotationDescriptorRegistry`.  If later binding code
+needs services, it should get them from binding/categorization context objects,
+not by treating
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+as a service locator.
+
+
+== BindingCoordinator
+
+`BindingCoordinator` takes the categorized model and coordinates binding phases.
+The phases populate binding state, create transitional mapping shells where the
+current compatibility model still requires them, and schedule or invoke explicit
+materializers for mapping-object population.
+
+Touchpoint:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
+
+`BindingCoordinator.coordinateBinding(...)` receives:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingState.java[`BindingState`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingOptions.java[`BindingOptions`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingContext.java[`BindingContext`]
+
+The categorized model describes what should be bound.  The binding state is the
+mutable place where semantic binding products, compatibility mapping shells, and
+pending bindings are recorded.  Options and context provide boot-time services
+and configuration.
+
+
+== Declaration, Usage, and Application
+
+An attribute must be understood at three related but distinct levels. Keeping
+these levels separate is especially important for mapped superclasses,
+embeddables, generic attributes, and any mapping object which must be copied.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Concept
+| Question answered
+| Binding product
+| Stable identity
+
+| Declaration
+| Which source member declared this persistent attribute?
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeDeclarationBinding.java[`AttributeDeclarationBinding`]
+| link:../../hibernate-core/src/main/java/org/hibernate/mapping/DeclarationRole.java[`DeclarationRole`]
+
+| Usage
+| How is that declaration interpreted in this type and path context?
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeUsageBinding.java[`AttributeUsageBinding`]
+| Retains its declaration and usage-relative path/type facts
+
+| Application
+| Where does that interpreted usage occur in the concrete mapping graph?
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedAttributeMapping.java[`AppliedAttributeMapping`],
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedEmbeddableMapping.java[`AppliedEmbeddableMapping`]
+| link:../../hibernate-core/src/main/java/org/hibernate/mapping/MappingRole.java[`MappingRole`]
+|===
+
+For a direct, non-generic entity attribute, all three may contain nearly the
+same facts. They remain conceptually distinct because that is not true in the
+general case:
+
+[source,java]
+----
+@MappedSuperclass
+class Base<T> {
+    T value;
+}
+
+@Entity
+class Customer extends Base<UUID> {
+}
+
+@Entity
+class Report extends Base<String> {
+}
+----
+
+There is one declaration of `Base.value`. Its declaration role is:
+
+[source,text]
+----
+type:Base#attribute:value
+----
+
+There are two usages because `T` resolves differently for `Customer` and
+`Report`, and two applications because the attribute occurs at two concrete
+mapping locations:
+
+[source,text]
+----
+entity:Customer#attribute:value
+entity:Report#attribute:value
+----
+
+The same rule applies when one embeddable declaration is embedded more than
+once. Each embedded occurrence has its own applied component role, and each
+direct member has a role relative to that component. Nested embeddables,
+embedded identifiers, collection elements, map keys, and aggregate components
+are all concrete applications, not additional declarations.
+
+=== Stable Semantic Roles
+
+`DeclarationRole` and `MappingRole` live in `org.hibernate.mapping` because
+they identify source provenance and concrete occurrences of the resolved boot
+mapping graph. They are internal contracts, not supported user-facing mapping
+API.
+
+A `DeclarationRole` consists of the declaring type name and local attribute
+name. A `MappingRole` consists of:
+
+* a typed root, such as entity, mapped superclass, or collection;
+* typed parts such as attribute, identifier, discriminator, key, element,
+  index, join, or soft-delete value;
+* names only for parts whose kind requires one.
+
+Create roles through the typed factories and append operations:
+
+[source,java]
+----
+MappingRole customerAddress =
+        MappingRole.entity( "Customer" ).appendAttribute( "address" );
+
+MappingRole city =
+        customerAddress.appendAttribute( "city" );
+
+MappingRole orderElement =
+        MappingRole.collection( "Customer.orders" )
+                .append( MappingRole.PartKind.ELEMENT );
+----
+
+Do not assemble role strings manually. `getFullPath()` is the canonical
+diagnostic and archive rendering, not a second identity model.
+
+link:../../hibernate-core/src/main/java/org/hibernate/mapping/AppliedMappingPart.java[`AppliedMappingPart`]
+is implemented by durable compatibility projections such as `Property`,
+`SimpleValue`, `Component`, `Collection`, `Join`, and collection parts. A
+concrete applied `Property` and its applied `Value` normally carry the same
+attribute role. Component members derive their roles from the component role;
+collection key, element, index, and identifier values derive theirs from the
+collection role.
+
+Declaration-side compatibility projections deliberately have no
+`MappingRole`. They retain `DeclarationRole` when they project a real source
+attribute. Temporary property-selection views have neither a new application
+nor a new declaration.
+
+`BootBindingModel` indexes applied semantic products by `MappingRole`.
+Runtime/JPA metamodel handoff and archive creation should query that index or a
+role-keyed snapshot. Do not add an identity map from `Property` or `Component`
+to semantic binding state.
+
+=== Materialization and Copying
+
+A materializer receives or creates the applied semantic product before
+attaching the compatibility projection. It must pass the application role into
+the `Property`, `Value`, component, collection, or join it materializes and
+propagate derived roles recursively.
+
+Copying a mapping object must state the semantic relationship between source
+and destination:
+
+[cols="1,2", options="header"]
+|===
+| Operation
+| Use
+
+| `Property#copyForDeclaration(value)` /
+  `Component#copyForDeclaration(properties)`
+| Build independent declaration-side state. The supplied values/properties
+must be roleless.
+
+| `Property#copyForDeclarationView()`
+| Build the exceptional compatibility declaration view which deliberately
+shares an already-applied value, such as an identifier-mapper view.
+
+| `Property#copyForSameApplication()` /
+  `Component#copyForSameApplication()`
+| Build a transient alias of the same concrete occurrence. The existing value
+and application role are retained.
+
+| `Property#copyForApplication(role, value)` /
+  `Component#copyForApplication(context, role, properties)` /
+  `ToOne#copyForApplication(role)`
+| Materialize a genuinely different concrete occurrence. The destination role
+is required and mutable mapping values must be independently copied.
+
+| `Component#copyForPropertySelection(properties)`
+| Build a temporary, roleless view used only while matching properties or
+columns. It must never be attached to the mapping graph.
+|===
+
+For example, applying the same embeddable declaration to `homeAddress` and
+`workAddress` requires two independently materialized components:
+
+[source,java]
+----
+MappingRole homeRole =
+        MappingRole.entity( "Customer" ).appendAttribute( "homeAddress" );
+MappingRole workRole =
+        MappingRole.entity( "Customer" ).appendAttribute( "workAddress" );
+
+Component home = declaration.copyForApplication(
+        buildingContext,
+        homeRole,
+        materializeMembers( declaration, homeRole )
+);
+Component work = declaration.copyForApplication(
+        buildingContext,
+        workRole,
+        materializeMembers( declaration, workRole )
+);
+----
+
+Do not use a generic `copy()` at a declaration/application boundary. First
+decide whether the destination is declaration state, an alias of the same
+application, a new application, or a transient selection view.
+
+For the complete rationale and migration details, see
+link:declaration-usage-applied-mapping-design.adoc[Declaration, Usage, and Applied Mapping Design].
+
+
+== Binding Steps
+
+`BindingCoordinator` does two things:
+
+1. `coordinateGlobalBindings()`
+2. `coordinateModelBindings()`
+
+Global bindings apply persistence-unit scoped registrations to the metadata
+collector.  Model bindings record type/member/table/value facts, create
+transitional compatibility shells where needed, and call named materializers for
+the parts of `org.hibernate.mapping` that are now phase-owned products.  Primary
+keys, dependent table keys, collection-table keys, foreign keys, unique keys,
+and indexes are examples of work that should flow through explicit
+materialization products instead of hidden side effects on mapping values.
+
+The current global binding step processes:
+
+* identifier generators
+* converters
+* named queries
+* named entity graphs
+* Java type registrations
+* JDBC type registrations
+* user type registrations
+* composite user type registrations
+* collection type registrations
+* embeddable instantiator registrations
+* filter definitions
+
+JPA event listeners are different: they are consumed while binding entity
+metadata through
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/EntityTypeMetadata.java[`EntityTypeMetadata#getCompleteJpaEventListeners()`].
+
+
+[[_bootstrap_phase_contract]]
+== Bootstrap Phase Contract
+
+The pipeline has one guiding rule:
+
+Binding records source-aware facts and resolved intents.
+Materialization creates or mutates `org.hibernate.mapping` objects based on
+those facts and intents.
+
+Do not add a new phase just because a feature feels complicated.  Add a phase
+only when some work must wait until a clearly defined dependency is available
+for every managed type, collection, or table.  Otherwise, prefer a typed pending
+binding or a resolved product consumed by an existing phase.
+
+[cols="1,2,2", options="header"]
+|===
+| Step
+| Owns
+| Must not own
+
+| Source collection
+| Persistence-unit resources, mapping files, package details, scanner results
+| Annotation interpretation, binding decisions, mapping-object mutation
+
+| Categorization
+| Source interpretation into typed persistent-type, member, hierarchy, XML, and
+global-registration facts
+| `org.hibernate.mapping` object construction or physical constraint creation
+
+| Binding intent capture
+| Binding products, source descriptors, value shapes, selectable
+correspondence, pending work, and compatibility lookup shells
+| Opportunistic physical `PrimaryKey`, `ForeignKey`, `UniqueKey`, or `Index`
+creation
+
+| Value/table materialization
+| `Table`, `Column`, `Value`, `Property`, `PersistentClass`, `Join`, and
+collection-table mapping objects needed as compatibility anchors or later
+materialization targets
+| Final physical keys and constraints unless the current phase explicitly owns
+that artifact
+
+| Key/constraint materialization
+| Physical `PrimaryKey`, `ForeignKey`, `UniqueKey`, `Index`, and table-level
+constraint objects from resolved products
+| Re-reading raw annotations or inventing source semantics from mutable mapping
+objects
+
+| Cross-reference finalization
+| Property-ref associations, inverse associations, derived identifiers,
+synthetic properties, and other work that requires both sides to be bound
+| Creating new side channels when typed pending state or resolved products can
+carry the dependency
+
+| State-management compatibility finalization
+| Temporal, audit, changelog, and related state-management side effects that
+must be projected into the existing `org.hibernate.mapping` shape after core
+tables, values, keys, associations, and foreign keys are available
+| Attaching new boot-model descriptor state to shared mapping contracts without
+migrating the runtime consumers which would make it authoritative
+
+| Validation and compatibility finalization
+| Mapping consistency checks and transitional compatibility behavior still
+needed by old mapping consumers
+| New semantic binding decisions
+|===
+
+Materialization therefore has a phase concept, but it is an ownership and
+ordering concept first, not necessarily a separate coordinator framework.
+Today, materializers are invoked from the binding phase that owns their
+dependencies: table-key materializers run after values and tables are available,
+foreign-key materializers run after association targets and inverse structures
+are stable, and collection/index materializers run after collection key, element,
+and index columns are known.
+
+State management follows the same rule.  `StateManagementBindingPhase` is the
+current compatibility bridge for `@Temporal`, `@Audited`, `@Changelog`, and
+related state-management annotations.  Earlier binders register the
+state-management work they discover; the phase applies it after the normal
+mapping objects are available and projects the result into the legacy
+`org.hibernate.mapping` / `Stateful` shape expected by existing runtime and
+schema consumers.  Do not attach a new `StateManagementDescriptor` directly to
+`PersistentClass`, `Collection`, `Property`, or other shared mapping contracts
+without migrating those consumers.  Descriptor-like state should remain an
+explicit pipeline product until it can become authoritative.
+
+If materialization ordering becomes too large for the binding phase interfaces
+to express clearly, introduce a small materialization coordinator with the same
+contract: each materialization phase consumes resolved products, creates or
+mutates mapping artifacts, and does not rediscover source metadata.
+
+
+== Type Binders
+
+Model binding starts by walking every categorized entity hierarchy.  For each
+entity or mapped superclass in hierarchy order, the coordinator creates a
+`ManagedTypeBinder`:
+
+* entities use
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/EntityTypeBinder.java[`EntityTypeBinder`]
+* mapped superclasses use
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/MappedSuperTypeBinder.java[`MappedSuperTypeBinder`]
+
+Touchpoints:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ManagedTypeBinder.java[`ManagedTypeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/EntityTypeBinder.java[`EntityTypeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/MappedSuperTypeBinder.java[`MappedSuperTypeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ModelBinders.java[`ModelBinders`]
+
+While each binder is created, the coordinator immediately calls
+`bindTypeSkeleton()`.  The skeleton is a compatibility anchor with just enough
+identity and table/type structure for other binders to reference it.  In the
+current transition this may still include partially populated
+`org.hibernate.mapping` objects, but new binding contracts should treat those as
+materialization targets or lookup anchors, not as the place where semantic facts
+are rediscovered.
+
+
+== Binding Phases
+
+After binder creation, the coordinator runs a fixed sequence of narrow phase
+contracts.
+
+The phases exist because binding facts and materialized mapping objects have
+circular dependencies.  For example, a foreign key cannot be materialized until
+both sides of an association have tables and columns.  Rather than using
+callbacks or lazy resolution, the coordinator runs a fixed sequence of narrow
+phases.  Each phase can assume that all prior phases have completed for all
+types in all hierarchies.
+
+Treat these as dependency boundaries, not as buckets for arbitrary work.  A
+phase may collect binding facts, resolve pending work, or invoke a materializer,
+but it should do so only for artifacts whose dependencies are guaranteed by that
+point in the sequence.  If a materializer needs more information than the phase
+has, carry that information forward as typed pending state instead of looking
+back at raw source metadata or mutable mapping objects.
+
+The phase contracts live here:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/TypeBindingPhase.java[`TypeBindingPhase`]
+
+The order is:
+
+[cols="1,3", options="header"]
+|===
+| Phase
+| Purpose
+
+| `Tables`
+| Create primary, secondary, joined-subclass, collection, and association table shells.
+
+| `SuperType`
+| Connect mapping objects to their already-created super type skeletons.
+
+| `EntityMetadata`
+| Apply entity-level metadata that does not depend on member value binding.
+
+| `Identifiers`
+| Create root identifier value shapes.
+
+| `AssociationIdentifiers`
+| Complete identifier attributes that are associations, after all root identifier shapes exist.
+
+| `Members`
+| Bind discriminator, version, tenant id, and persistent attributes.
+
+| `CollectionIndexes`
+| Resolve collection index/key values that depend on member bindings, such as `@MapKey(name)`.
+
+| `AssociationTargets`
+| Resolve associations that reference non-primary-key target properties.
+
+| `DerivedIdentifiers`
+| Resolve `@MapsId` associations after owner identifiers and association values exist.
+
+| `TableKeys`
+| Resolve and materialize dependent table keys for joined subclasses, secondary tables, and collection/association tables.
+
+| `InverseAssociations`
+| Copy or reconcile owning-side state for `mappedBy` associations.
+
+| `ForeignKeys`
+| Resolve and materialize physical foreign-key constraints after values, table keys, and inverse structures are available.
+
+| `StateManagement`
+| Apply registered temporal, audit, changelog, and related state-management work as a compatibility projection into the legacy mapping shape.
+
+| `Finalization`
+| Apply deterministic final mapping side effects that require the complete bound model, such as discriminator column finalization and other compatibility finalizers.
+|===
+
+Binders implement only the phases they participate in.  The coordinator checks
+whether each binder implements the phase interface before invoking it.
+
+Materialization does not currently require a separate public phase interface for
+each artifact family.  The important contract is that the binding phase that
+invokes a materializer owns that artifact's dependency boundary and passes a
+resolved product such as `ResolvedForeignKey`, `ResolvedUniqueKey`, or
+`ResolvedIndex`.
+
+
+== Pending State
+
+The pipeline avoids callback-style second passes where practical by recording
+typed pending state in
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingState.java[`BindingState`].
+
+Examples:
+
+* association targets that need non-primary-key property resolution
+* association-valued identifiers
+* derived identifiers
+* table-key foreign keys
+* inverse to-one and inverse plural associations
+
+This pattern keeps dependencies explicit:
+
+[source,text]
+----
+early phase creates mapping shape
+        |
+        v
+register typed pending binding
+        |
+        v
+later phase consumes pending binding
+        |
+        v
+resolved product is materialized into org.hibernate.mapping
+----
+
+If a new feature cannot be completed in the member phase because another type,
+table, identifier, or association is not ready yet, add typed pending state and
+consume it in the phase where the dependency is guaranteed to exist.
+
+A small compatibility tail still uses legacy `SecondPass` callbacks where the
+old mapping model owns shared behavior, notably aggregate compatibility
+projection and entity constraint creation.  New code should prefer typed
+pending state, resolved products, or `TypeBindingPhase.Finalization` over adding
+another callback.
+
+After binding and materialization complete, `org.hibernate.mapping` contains a
+full description of every table, column, identifier, association, and constraint
+in the persistence unit.  The SessionFactory builder consumes these mapping
+objects to produce the runtime metamodel and SQL generators, then discards them.
+
+
+== Source Descriptors
+
+Most attribute binders do not read raw annotations directly everywhere.  Instead,
+they use small source descriptors that normalize source facts.
+
+Examples:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/ColumnSource.java[`ColumnSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/TableSource.java[`TableSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/BasicValueSource.java[`BasicValueSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/ToOneSource.java[`ToOneSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/CollectionSource.java[`CollectionSource`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/ComponentSource.java[`ComponentSource`]
+
+These descriptors are important because one Java member can produce multiple
+mapping values.  A map-valued member, for example, has collection structure,
+element value metadata, and key value metadata.  Each value may use a different
+annotation vocabulary.
+
+When adding support for an annotation family, first check whether the relevant
+source descriptor should expose a normalized form of that information.
+
+
+== Adding New Support
+
+When adding support for a new annotation or XML construct, first decide what kind
+of thing it is:
+
+* A persistence-unit scoped registration belongs in
+  link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/GlobalRegistrationsImpl.java[`GlobalRegistrationsImpl`].
+* A class-level persistent-type fact usually belongs in entity, mapped-superclass,
+  embeddable, or hierarchy metadata.
+* A member-level fact usually belongs in
+  link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/AttributeMetadata.java[`AttributeMetadata`],
+  link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/KeyMapping.java[`KeyMapping`],
+  or a source descriptor consumed later by binding.
+* XML that changes annotation visibility or metadata-complete behavior must be
+  handled before ordinary annotation categorization.
+
+A useful workflow:
+
+1. Identify where the source fact should be categorized.
+2. Add or extend a source descriptor if the binder needs normalized annotation or
+   XML facts.
+3. Decide which phase contract owns the work: binding intent capture,
+   value/table materialization, key/constraint materialization, cross-reference
+   finalization, or validation.
+4. Record the earliest binding fact or compatibility shell in the earliest safe
+   phase.
+5. If anything depends on later state, register typed pending state in
+   link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/context/BindingState.java[`BindingState`].
+6. Resolve the pending state in the narrowest phase that has the dependency
+   available.
+7. Materialize mapping objects through an existing materializer, or add a narrow
+   resolved product plus materializer when the work creates physical mapping
+   artifacts such as keys, constraints, indexes, or compatibility values.
+8. For an attribute mapping, identify or create its declaration, interpret a
+   usage in the current context, register its applied mapping by
+   `MappingRole`, and materialize the compatibility projection with that role.
+9. Add focused tests for the produced mapping object, declaration/application
+   roles, and the phase-ordering edge case.
+
+Useful questions:
+
+* Does binding need this information before any `org.hibernate.mapping` object
+  exists, or can it be carried as a binding product until materialization?
+* Is this a global declaration, or is it tied to one managed type/member?
+* Does XML need to override annotations, replace annotations, or simply add more
+  source facts?
+* Can the binder consume a typed categorized contract, or would it need to
+  re-read raw annotations?
+* Is an ordering problem better modeled as a narrow phase or typed pending
+  binding?
+* Is this materialization ordering already owned by an existing phase, or does
+  the feature expose a genuinely new cross-type dependency boundary?
+* Is this code creating a physical table artifact?  If so, should it use a
+  resolved product and a materializer instead of mutating a `Value`, `Table`, or
+  `Collection` opportunistically?
+
+Prefer adding a categorized contract over making the binder search the source
+model opportunistically.
+
+
+== Common Traps
+
+Do not assume every class in
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
+is persistent.  Package-info, plain converter classes, listener classes, and
+non-persistent support classes may all appear in the visible source set.
+
+*Do instead:* check the class's categorization role: entity, mapped superclass,
+embeddable, or none.
+
+Do not assume embeddables are part of entity inheritance.  They are tracked as
+managed types, but entity hierarchy construction uses entities and mapped
+superclasses.
+
+*Do instead:* use the entity hierarchy APIs for inheritance questions and the
+embeddable registry for embeddable lookups.  Keep the two paths separate.
+
+Do not skip XML pre-processing when debugging annotation behavior.  XML can add
+mapped classes and can change the annotation model that categorization sees.
+
+*Do instead:* run the full categorization pipeline in your test or debug
+scenario, including
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/xml/XmlPreProcessor.java[`XmlPreProcessor`],
+even if the bug looks purely annotation-related.
+
+Do not resolve non-primary-key association targets during ordinary member
+binding.  Other members of the target type may not be bound yet.
+
+*Do instead:* register a typed pending binding during the `Members` phase and
+resolve it in the `AssociationTargets` phase, where all member bindings are
+guaranteed to exist.
+
+Do not create physical foreign keys as soon as a value is created.  FK creation
+belongs after table keys, association targets, derived identifiers, and inverse
+associations have done their work.
+
+*Do instead:* record the FK requirement as pending state and create the physical
+foreign key in the `ForeignKeys` phase through `ResolvedForeignKey` and
+`ForeignKeyMappingMaterializer`.
+
+Do not create primary keys, unique keys, indexes, or collection-table keys by
+calling hidden mapping helper methods from whichever binder happens to have the
+columns in hand.
+
+*Do instead:* use the appropriate resolved product and materializer, such as
+`ResolvedPrimaryTableKey`, `ResolvedDependentTableKey`,
+`ResolvedCollectionTableKey`, `ResolvedUniqueKey`, or `ResolvedIndex`.  If the
+artifact needs a new source of semantic information, add that information to the
+binding product first and let the materializer perform the mapping mutation.
+
+Do not assume collection indexes are simple columns.  Property map keys and
+entity-valued map keys depend on element or target bindings.
+
+*Do instead:* defer index resolution to the `CollectionIndexes` phase, which runs
+after member bindings are complete.
+
+Do not treat inverse associations as ordinary owning associations with a flag
+flipped.  Inverse bindings often need to copy or reconcile state from an
+owning-side mapping that is only complete in a later phase.
+
+*Do instead:* handle inverse associations in the `InverseAssociations` phase,
+copying or reconciling state from the owning-side mapping that is already
+complete by that point.
+
+Do not add binder-only side channels for source facts that are naturally known
+during categorization.  If a later binding phase needs the fact, categorize it
+once and carry it forward explicitly.
+
+*Do instead:* add the fact to the appropriate categorized contract or metadata
+object during categorization, so binders can consume it without re-reading raw
+annotations or XML.
+
+Do not use mapping-object identity to correlate a concrete `Property`,
+`Component`, collection part, or value with its binding product.
+
+*Do instead:* assign its intrinsic `MappingRole` while materializing it and use
+the role-keyed applied mapping registry.
+
+Do not reuse an applied `Property` or mutable `Value` when the destination is a
+different entity, embeddable occurrence, identifier mapper, collection part, or
+other concrete application. That would give one object graph two semantic
+identities.
+
+*Do instead:* use the appropriate `copyForApplication(...)` operation with the
+destination role and independently copied child/value state.
+
+Do not assign a `MappingRole` to a declaration-side compatibility projection or
+a temporary property-selection view.
+
+*Do instead:* retain only `DeclarationRole` for real declaration projections,
+and keep transient selection views roleless and detached from the mapping
+graph.
+
+
+== Where To Start In Code
+
+Start with the pipeline:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/source/PreparedMappingSources.java[`PreparedMappingSources`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/DomainModelCategorizer.java[`DomainModelCategorizer`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/TypeBindingPhase.java[`TypeBindingPhase`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeDeclarationBinding.java[`AttributeDeclarationBinding`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeUsageBinding.java[`AttributeUsageBinding`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedAttributeMapping.java[`AppliedAttributeMapping`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedEmbeddableMapping.java[`AppliedEmbeddableMapping`]
+
+Then follow the feature-specific binder:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ToOneAttributeBinder.java[`ToOneAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ElementCollectionAttributeBinder.java[`ElementCollectionAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/PluralAssociationAttributeBinder.java[`PluralAssociationAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ComponentBinder.java[`ComponentBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/ForeignKeyBinder.java[`ForeignKeyBinder`]
+
+For tests, look under:
+
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/source[`src/test/java/org/hibernate/orm/test/boot/models/source`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/categorize[`src/test/java/org/hibernate/orm/test/boot/models/categorize`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/bind[`src/test/java/org/hibernate/orm/test/boot/models/bind`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml[`src/test/java/org/hibernate/orm/test/boot/models/xml`]

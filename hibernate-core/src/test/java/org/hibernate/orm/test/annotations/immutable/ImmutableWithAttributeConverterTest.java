@@ -4,16 +4,18 @@
  */
 package org.hibernate.orm.test.annotations.immutable;
 
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
+import java.util.Collections;
+import java.util.List;
+
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,10 +37,27 @@ public class ImmutableWithAttributeConverterTest {
 
 
 		@Override
-		public void applyDomainModel(MetadataSources sources) {
-			MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
-			metadataBuilder.applyAttributeConverter( ExifConverter.class );
-			metadataBuilder.applyAttributeConverter( CaptionConverter.class );
+		public void applyDomainModel(MappingSources sources) {
+		}
+
+		@Override
+		public MappingCustomizations metadataCustomizations() {
+			return new MappingCustomizations(
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					List.of(
+							ConverterDescriptors.of( ExifConverter.class ),
+							ConverterDescriptors.of( CaptionConverter.class )
+					),
+					null,
+					null,
+					null,
+					null
+			);
 		}
 	}
 

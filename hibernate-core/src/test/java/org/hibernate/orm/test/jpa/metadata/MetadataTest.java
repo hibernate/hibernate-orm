@@ -24,8 +24,8 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -107,11 +107,11 @@ public class MetadataTest {
 
 	@Test
 	public void testBuildingMetamodelWithParameterizedCollection() {
-		Metadata metadata = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addAnnotatedClass(WithGenericCollection.class)
-				.buildMetadata();
-		SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();
-		sfi.close();
+		try (var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, WithGenericCollection.class );
+			SessionFactoryImplementor sfi = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
+			sfi.close();
+		}
 	}
 
 	@Test

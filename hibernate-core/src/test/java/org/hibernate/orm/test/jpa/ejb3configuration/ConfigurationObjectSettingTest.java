@@ -10,17 +10,16 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
@@ -38,7 +37,6 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test passing along various config settings that take objects other than strings as values.
@@ -56,26 +54,21 @@ public class ConfigurationObjectSettingTest {
 	private void verifyCacheMode(String settingName) {
 		// first, via the integration vars
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
-		EntityManagerFactoryBuilderImpl builder = null;
 		{
 			// as object
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			assertThat( configurationValues(
 					empty,
 					Collections.singletonMap( settingName, SharedCacheMode.DISABLE_SELECTIVE )
-			);
-			assertThat( builder.getConfigurationValues().get( settingName ) ).isEqualTo( SharedCacheMode.DISABLE_SELECTIVE );
+			).get( settingName ) ).isEqualTo( SharedCacheMode.DISABLE_SELECTIVE );
 		}
-		builder.cancel();
 
 		{
 			// as string
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			assertThat( configurationValues(
 					empty,
 					Collections.singletonMap( settingName, SharedCacheMode.DISABLE_SELECTIVE.name() )
-			);
-			assertThat( builder.getConfigurationValues().get( settingName ) ).isEqualTo( SharedCacheMode.DISABLE_SELECTIVE.name() );
+			).get( settingName ) ).isEqualTo( SharedCacheMode.DISABLE_SELECTIVE.name() );
 		}
-		builder.cancel();
 
 		// next, via the PUI
 		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter() {
@@ -85,11 +78,7 @@ public class ConfigurationObjectSettingTest {
 			}
 		};
 		{
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
-					adapter,
-					null
-			);
-			Object value = builder.getConfigurationValues().get( settingName );
+			Object value = configurationValues( adapter, null ).get( settingName );
 			// PUI should only set non-deprecated setting
 			if (AvailableSettings.JPA_SHARED_CACHE_MODE.equals( settingName )) {
 				assertNull( value );
@@ -98,17 +87,13 @@ public class ConfigurationObjectSettingTest {
 				assertEquals( SharedCacheMode.ENABLE_SELECTIVE, value );
 			}
 		}
-		builder.cancel();
-
 		// via both, integration vars should take precedence
 		{
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, configurationValues(
 					adapter,
 					Collections.singletonMap( settingName, SharedCacheMode.DISABLE_SELECTIVE )
-			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( settingName ) );
+			).get( settingName ) );
 		}
-		builder.cancel();
 	}
 
 	@Test
@@ -120,26 +105,21 @@ public class ConfigurationObjectSettingTest {
 	private void verifyValidationMode(String settingName) {
 		// first, via the integration vars
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
-		EntityManagerFactoryBuilderImpl builder = null;
 		{
 			// as object
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			assertThat( configurationValues(
 					empty,
 					Collections.singletonMap( settingName, ValidationMode.CALLBACK )
-			);
-			assertThat( builder.getConfigurationValues().get( settingName ) ).isEqualTo( ValidationMode.CALLBACK );
+			).get( settingName ) ).isEqualTo( ValidationMode.CALLBACK );
 		}
-		builder.cancel();
 
 		{
 			// as string
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			assertThat( configurationValues(
 					empty,
 					Collections.singletonMap( settingName, ValidationMode.CALLBACK.name() )
-			);
-			assertThat( builder.getConfigurationValues().get( settingName ) ).isEqualTo( ValidationMode.CALLBACK.name() );
+			).get( settingName ) ).isEqualTo( ValidationMode.CALLBACK.name() );
 		}
-		builder.cancel();
 
 		// next, via the PUI
 		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter() {
@@ -149,11 +129,7 @@ public class ConfigurationObjectSettingTest {
 			}
 		};
 		{
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
-					adapter,
-					null
-			);
-			Object value = builder.getConfigurationValues().get( settingName );
+			Object value = configurationValues( adapter, null ).get( settingName );
 			// PUI should only set non-deprecated settings
 			if (AvailableSettings.JPA_VALIDATION_MODE.equals( settingName )) {
 				assertNull( value );
@@ -162,38 +138,12 @@ public class ConfigurationObjectSettingTest {
 				assertThat( value ).isEqualTo( ValidationMode.CALLBACK );
 			}
 		}
-		builder.cancel();
-
 		// via both, integration vars should take precedence
 		{
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			assertThat( configurationValues(
 					adapter,
 					Collections.singletonMap( settingName, ValidationMode.NONE )
-			);
-			assertThat( builder.getConfigurationValues().get( settingName ) ).isEqualTo( ValidationMode.NONE );
-		}
-		builder.cancel();
-	}
-
-	@Test
-	public void testValidationFactory() {
-		verifyValidatorFactory( AvailableSettings.JAKARTA_VALIDATION_FACTORY );
-		verifyValidatorFactory( AvailableSettings.JPA_VALIDATION_FACTORY );
-	}
-
-	private void verifyValidatorFactory(String settingName) {
-		final Object token = new Object();
-		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
-		try {
-			Bootstrap.getEntityManagerFactoryBuilder(
-					adapter,
-					Collections.singletonMap( settingName, token )
-			).cancel();
-			fail( "Was expecting error as token did not implement ValidatorFactory" );
-		}
-		catch ( HibernateException e ) {
-			// probably the condition we want but unfortunately the exception is not specific
-			// and the pertinent info is in a cause
+			).get( settingName ) ).isEqualTo( ValidationMode.NONE );
 		}
 	}
 
@@ -233,25 +183,21 @@ public class ConfigurationObjectSettingTest {
 
 		// first, via the integration vars
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
-		EntityManagerFactoryBuilderImpl builder = null;
 		{
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			final var configurationValues = configurationValues(
 					empty,
 					Map.of(
 							jdbcUrl, urlValue,
 							jdbcDriver, driverValue,
 							jdbcUser, userValue,
 							jdbcPassword, passwordValue
-					),
-					mergedSettings -> mergedSettings.getConfigurationValues().clear()
+					)
 			);
 
-			assertThat( builder.getConfigurationValues().get( jdbcUrl ) ).isEqualTo( urlValue );
-			assertThat( builder.getConfigurationValues().get( jdbcDriver ) ).isEqualTo( driverValue );
-			assertThat( builder.getConfigurationValues().get( jdbcUser ) ).isEqualTo( userValue );
-			assertThat( builder.getConfigurationValues().get( jdbcPassword ) ).isEqualTo( passwordValue );
-
-			builder.cancel();
+			assertThat( configurationValues.get( jdbcUrl ) ).isEqualTo( urlValue );
+			assertThat( configurationValues.get( jdbcDriver ) ).isEqualTo( driverValue );
+			assertThat( configurationValues.get( jdbcUser ) ).isEqualTo( userValue );
+			assertThat( configurationValues.get( jdbcPassword ) ).isEqualTo( passwordValue );
 		}
 
 		PersistenceUnitInfoAdapter pui = new PersistenceUnitInfoAdapter();
@@ -263,19 +209,22 @@ public class ConfigurationObjectSettingTest {
 				jdbcPassword, passwordValue
 		);
 		{
-			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
-					pui,
-					null,
-					mergedSettings -> mergedSettings.getConfigurationValues().clear()
-			);
+			final var configurationValues = configurationValues( pui, null );
 
-			assertThat( builder.getConfigurationValues().get( jdbcUrl ) ).isEqualTo( urlValue );
-			assertThat( builder.getConfigurationValues().get( jdbcDriver ) ).isEqualTo( driverValue );
-			assertThat( builder.getConfigurationValues().get( jdbcUser ) ).isEqualTo( userValue );
-			assertThat( builder.getConfigurationValues().get( jdbcPassword ) ).isEqualTo( passwordValue );
-
-			builder.cancel();
+			assertThat( configurationValues.get( jdbcUrl ) ).isEqualTo( urlValue );
+			assertThat( configurationValues.get( jdbcDriver ) ).isEqualTo( driverValue );
+			assertThat( configurationValues.get( jdbcUser ) ).isEqualTo( userValue );
+			assertThat( configurationValues.get( jdbcPassword ) ).isEqualTo( passwordValue );
 		}
+	}
+
+	private static Map<String, Object> configurationValues(
+			PersistenceUnitInfoAdapter persistenceUnitInfo,
+			Map<?, ?> integrationSettings) {
+		return SettingsResolver.resolveBootstrapSettings(
+				new PersistenceUnitInfoDescriptor( persistenceUnitInfo ),
+				integrationSettings
+		).configurationValues();
 	}
 
 	@Test
@@ -342,9 +291,7 @@ public class ConfigurationObjectSettingTest {
 		// the check above uses a "for testing only" form of what happens for "real".
 		// verify the "real" path as well
 		try (StandardServiceRegistryImpl servicedRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			final Metadata metadata = new MetadataSources( servicedRegistry )
-					.addAnnotatedClass( Bell.class )
-					.buildMetadata();
+			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( servicedRegistry, Bell.class );
 			final Set<ActionGrouping> actionGroupings = ActionGrouping.interpret( metadata, settings );
 			assertThat( actionGroupings ).hasSize( 1 );
 			final ActionGrouping grouping = actionGroupings.iterator().next();

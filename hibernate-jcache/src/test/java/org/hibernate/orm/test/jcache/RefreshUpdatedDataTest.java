@@ -15,7 +15,7 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.InformixDialect;
@@ -25,11 +25,13 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.MetadataBuildingHelper;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.hibernate.tool.schema.Action;
@@ -47,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @JiraKey(value = "HHH-10649")
 @BaseUnitTest
 public class RefreshUpdatedDataTest {
-	private ServiceRegistry serviceRegistry;
+	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
 	@BeforeEach
@@ -65,16 +67,17 @@ public class RefreshUpdatedDataTest {
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
 				.build();
 
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-		metadataSources.addAnnotatedClass( ReadWriteCacheableItem.class );
-		metadataSources.addAnnotatedClass( ReadWriteVersionedCacheableItem.class );
-		metadataSources.addAnnotatedClass( NonStrictReadWriteCacheableItem.class );
-		metadataSources.addAnnotatedClass( NonStrictReadWriteVersionedCacheableItem.class );
-
-		final Metadata metadata = metadataSources.buildMetadata();
+		final Metadata metadata = MetadataBuildingHelper.buildMetadata(
+				serviceRegistry,
+				new MappingSources()
+						.addManagedClass( ReadWriteCacheableItem.class )
+						.addManagedClass( ReadWriteVersionedCacheableItem.class )
+						.addManagedClass( NonStrictReadWriteCacheableItem.class )
+						.addManagedClass( NonStrictReadWriteVersionedCacheableItem.class )
+		);
 		TestHelper.createRegions( metadata, true );
 
-		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		sessionFactory = SessionFactoryUtil.buildSessionFactory( metadata );
 	}
 
 	@AfterEach

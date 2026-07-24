@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl;
@@ -31,7 +31,7 @@ public class HibernateLoadingTestAction extends NotLeakingTestAction implements 
 	public final void run() {
 		super.run(); //for basic sanity self-check
 		final Map<String,Object> config = new HashMap<>();
-		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder(
+		EntityManagerFactory emf = BootstrapPipeline.build(
 				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
 					@Override
 					public boolean isExcludeUnlistedClasses() {
@@ -44,7 +44,7 @@ public class HibernateLoadingTestAction extends NotLeakingTestAction implements 
 					}
 				},
 				config
-		).build();
+		);
 		try {
 			checkExpectedClassLoader( emf.unwrap( SessionFactory.class ).getClass() );
 			actionOnHibernate( emf );

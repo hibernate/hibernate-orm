@@ -8,7 +8,7 @@
           xmlns:simplify="urn:jvnet.org:basicjaxb:xjc:simplify"
           version="3.0">
 
-    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-8.0.xsd" node="/xsd:schema">
+    <bindings schemaLocation="../resources/org/hibernate/xsd/mapping/mapping-9.0.xsd" node="/xsd:schema">
         <schemaBindings>
             <package name="org.hibernate.boot.jaxb.mapping.spi" />
             <nameXmlTransform>

@@ -12,44 +12,83 @@ include::{asciidoc-dir}/shared/common-attributes.adoc[]
 :extrasdir: extras
 
 The term bootstrapping refers to initializing and starting a software component.
-In Hibernate, we are specifically talking about the process of building a fully functional `SessionFactory` instance
-(or `EntityManagerFactory` instance, for Jakarta Persistence).
+In Hibernate, we are specifically talking about the process of building a fully functional `SessionFactory` / `EntityManagerFactory` instance.
 
 [TIP]
 ====
-In this chapter, we will discuss on a number of specific configuration settings.  Be sure to check out the
+This chapter mentions a number of specific configuration settings.  Be sure to check out the
 <<appendices/SettingsReference.adoc#settings>> section as well for documentation of each available setting.
 ====
 
-Hibernate supports both <<#bootstrap-native,native>> and <<#bootstrap-standardized,standardized>> approaches for
-bootstrapping the `SessionFactory` / `EntityManagerFactory`.
+[[bootstrap-process]]
+=== Bootstrap Process
+
+Every supported bootstrap entry point follows the same basic shape:
+
+* define mapping information;
+* define configuration settings;
+* apply integrations; and
+* build a `SessionFactory` / `EntityManagerFactory`.
+
+Mapping information may come from:
+
+* annotated classes;
+* managed class names;
+* package-level annotations;
+* XML mapping documents;
+* `persistence.xml` declarations; or
+* classpath scanning, where available.
+
+Settings may come from the selected bootstrap API, persistence-unit
+descriptors, integration-provided settings, `hibernate.properties`, system
+properties, or other environment-specific sources.  The exact precedence
+depends on the entry point and deployment environment.
+
+Hibernate also discovers a number of optional integrations using Java service
+loading.  See <<bootstrap-java-service-loadable>> for the service-loadable
+contracts that can affect bootstrap.
+
+The supported entry points collect mapping information, settings, and integrations, and
+Hibernate handles the internal bootstrap pipeline.
 
 
-[[bootstrap-standardized]]
-=== Standardized Bootstrapping
+[[bootstrap-entrypoints]]
+=== Supported Entry Points
 
-Jakarta Persistence defines two standardized bootstrap approaches depending on the environment into which the application is deployed
-and on how the application intends to access the `EntityManager` instances from an `EntityManagerFactory`.
+Hibernate supports several bootstrap entry points for building the factory.
+Since the Hibernate `SessionFactory` is also an implementation of the
+Jakarta Persistence `EntityManagerFactory`, these approaches are interchangeable.
 
-It uses the terms _EE_ and _SE_ for these two approaches, but those terms are very misleading in this context.
-What Jakarta Persistence calls _EE_ bootstrapping implies the existence of a container (EE, OSGi, etc.) that will manage and inject the persistence context on behalf of the application.
-What it calls _SE_ bootstrapping is everything else.
-We will use the terms <<#bootstrap-standardized-container,container>> and <<#bootstrap-standardized-app,application>> bootstrapping in this guide.
+* <<PersistenceUnitInfo>>
+* <<Persistence>>
+* <<PersistenceConfiguration>>
+* <<HibernatePersistenceConfiguration>>
+
 
 [NOTE]
 ====
-If you would like additional details on accessing and using `EntityManager` instances, sections 7.6 and 7.7 of the Jakarta Persistence specification cover container-managed and application-managed `EntityManagers`, respectively.
+`org.hibernate.cfg.Configuration` remains available (though deprecated) as a
+native compatibility facade for existing applications.  Existing
+`Configuration` usage should be migrated to
+`PersistenceConfiguration` or `HibernatePersistenceConfiguration`.
 ====
 
+[[PersistenceUnitInfo]]
+=== PersistenceUnitInfo
 
-[[bootstrap-standardized-container]]
-==== Container Bootstrapping
+`jakarta.persistence.spi.PersistenceUnitInfo` is the standard way to bootstrap
+Hibernate in a container.  Jakarta Persistence calls this approach "EE
+bootstrapping".
 
-For compliant container-bootstrapping, the container will build an `EntityManagerFactory` for each persistent-unit defined in the `META-INF/persistence.xml` configuration file
-and make that available to the application for injection via the `jakarta.persistence.PersistenceUnit` annotation or via JNDI lookup.
+The application provides `META-INF/persistence.xml` for configuration.  The
+container parses the configuration and builds a `PersistenceUnitInfo`, which it
+passes to Hibernate (as the `PersistenceProvider`).  Hibernate then builds a
+factory based on the `PersistenceUnitInfo` and integration settings provided by
+the container.
+In these container environments, an `EntityManager` may be dependency injected
+via `@PersistenceContext` or located by JNDI.  In most cases, the lifecycle of such an injected
+`EntityManager` is managed by the container.
 
-In these container environments, an `EntityManager` may be dependency injected via `@PersistenceContext`.  In most
-cases, the lifecycle of such an injected `EntityManager` is managed by the container.
 
 Consider the following `META-INF/persistence.xml` file:
 
@@ -86,19 +125,12 @@ include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-Pers
 
 See the documentation of your container for additional details.
 
+[[Persistence]]
+=== Persistence
 
-
-[[bootstrap-standardized-app]]
-==== Application Bootstrapping
-
-Jakarta Persistence also allows for the application itself to manage bootstrapping the `EntityManagerFactory` reference it needs.
-This is achieved through `jakarta.persistence.Persistence` or `jakarta.persistence.PersistenceConfiguration`.
-
-The traditional way an application builds an `EntityManagerFactory` itself is to use `jakarta.persistence.Persistence`
-and either -
-
-* a `peristence.xml` file
-* manually passing a `Map` of settings
+`jakarta.persistence.Persistence` is the traditional Jakarta Persistence "SE
+bootstrap" API.  It locates a `persistence.xml` persistence unit and builds an
+`EntityManagerFactory`.
 
 [[example-bootstrap-jpa-compliant-EntityManagerFactory]]
 .Application bootstrapped `EntityManagerFactory`
@@ -110,9 +142,15 @@ include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-Enti
 ====
 
 
-Jakarta Persistence 3.2 also introduced a new way for applications to build the `EntityManagerFactory` itself using
-`jakarta.persistence.PersistenceConfiguration` which offers a more type-safe approach.
+[[PersistenceConfiguration]]
+=== PersistenceConfiguration
 
+Jakarta Persistence defines a programmatic bootstrap API named
+`jakarta.persistence.PersistenceConfiguration`.
+
+`PersistenceConfiguration` is useful when an application wants to build an
+`EntityManagerFactory` without a `persistence.xml` descriptor while staying on
+portable Jakarta Persistence contracts.
 
 [[example-bootstrap-standard-PersistenceConfiguration]]
 .Using PersistenceConfiguration
@@ -123,8 +161,18 @@ include::{example-dir-boot-jpa}/PersistenceConfigurationTests.java[tags=example-
 ----
 ====
 
-Hibernate offers an extension to `jakarta.persistence.PersistenceConfiguration` named `org.hibernate.jpa.HibernatePersistenceConfiguration`
-which exposes additional conveniences.
+[[HibernatePersistenceConfiguration]]
+=== HibernatePersistenceConfiguration
+
+`org.hibernate.jpa.HibernatePersistenceConfiguration` is Hibernate's extension
+of `jakarta.persistence.PersistenceConfiguration`.  It produces a Hibernate
+`SessionFactory`, which is also a Jakarta Persistence `EntityManagerFactory`,
+and exposes Hibernate-specific conveniences for settings, mapping sources,
+scanning, schema tooling, caching, and other native features.
+
+Use this entry point when the application wants programmatic Jakarta
+Persistence bootstrap with Hibernate-specific conveniences, or when the
+application wants to work with a native Hibernate `SessionFactory` directly.
 
 [[example-bootstrap-standard-HibernatePersistenceConfiguration]]
 .Using HibernatePersistenceConfiguration
@@ -135,251 +183,118 @@ include::{example-dir-boot-jpa}/PersistenceConfigurationTests.java[tags=example-
 ----
 ====
 
-[[bootstrap-standardized-integrations]]
-==== Standardized Bootstrapping and Integrations
+Hibernate-specific programmatic bootstrapping is organized around a
+`HibernatePersistenceConfiguration` instance.  Settings may be supplied using
+the fluent methods inherited from
+`PersistenceConfiguration` or the Hibernate-specific convenience methods
+declared by `HibernatePersistenceConfiguration`.
 
-When performing standardized Jakarta Persistence bootstrapping, Hibernate still uses its <<#bootstrap-native,native>> under the covers.
-Therefore, all extension/integration points discussed in that section are also available.
-It is especially useful in such cases that the integrations are discoverable as Java services.
-
-
-[[bootstrap-native]]
-=== Native Bootstrapping
-
-Hibernate exposes its own approaches for bootstrapping a `SessionFactory` -
-
-* a <<bootstrap-native-simple,simplified>> approach using `Configuration`
-* more controlled <<bootstrap-native-builders,builder-style>> approach
-
-
-[[bootstrap-native-simple]]
-==== Native Bootstrapping: Simple
-
-`org.hibernate.cfg.Configuration` provides a simple API for bootstrapping a Hibernate `SessionFactory`.
-It is a collection of settings and mappings, thrown together, and used to build the `SessionFactory`.
-
-[NOTE]
-====
-Even simplified bootstrapping uses the <<bootstrap-native-builders,builder-style>> approach under the covers, so the
-integration points discussed there are still available.
-====
-
-You can obtain the `Configuration` by instantiating it directly.
-You then specify mapping metadata (XML mapping documents, annotated classes) that describe your applications object model and its mapping to a SQL database.
-
-[source,java]
-----
-Configuration cfg = new Configuration()
-    // addResource does a classpath resource lookup
-    .addResource( "Item.hbm.xml" )
-    .addResource( "Bid.hbm.xml" )
-
-    // calls addResource using "/org/hibernate/auction/User.hbm.xml"
-    .addClass( org.hibernate.auction.User.class )
-
-    // parses Address class for mapping annotations
-    .addAnnotatedClass( Address.class )
-
-    // reads package-level (package-info.class) annotations in the named package
-    .addPackage( "org.hibernate.auction" )
-
-    .setProperty( "hibernate.dialect", "org.hibernate.dialect.H2Dialect" )
-    .setProperty( "hibernate.connection.datasource", "java:comp/env/jdbc/test" )
-    .setProperty( "hibernate.order_updates", "true" );
-----
-
-There are other ways to specify Configuration information, including:
-
-* Place a file named hibernate.properties in a root directory of the classpath
-* Pass an instance of java.util.Properties to `Configuration#setProperties`
-* System properties using Java `-Dproperty=value`
-
-
-
-
-
-[[bootstrap-native-builders]]
-==== Native Bootstrapping: Builder-style
-
-Bootstrapping a `SessionFactory` may also be achieved using a number of builders.  This approach is broken down into 3 course phases.
-
-First, a `ServiceRegistry` is built, which represents the various services that will be available.
-An example of such a service is `ConnectionProvider` which Hibernate uses to obtain JDBC Connections.
-See <<bootstrap-native-builders-registry>>.
-
-Next, a `Metadata` is built, which represents the application's mapping information (entities, embeddables, generators, etc).
-See <<bootstrap-native-builders-metadata>>.
-
-And finally, the `SessionFactory` is built.
-See <<bootstrap-native-builders-sessionfactory>>.
-
-
-While "more complex", these builders represents the actual process Hibernate goes through to build a `SessionFactory`.
-And more importantly, illustrate the various integration points in this bootstrap process.
-
-[NOTE]
-====
-Notice that a `ServiceRegistry` can be passed at a number of points in this bootstrapping process.
-The suggested approach is to build a `StandardServiceRegistry` yourself and pass that along to the `MetadataSources` constructor.
-From there, `MetadataBuilder`, `Metadata`, `SessionFactoryBuilder`, and `SessionFactory` will all pick up that same `StandardServiceRegistry`.
-====
-
-
-
-[[bootstrap-native-builders-registry]]
-===== Building the ServiceRegistry
-
-As mentioned earlier, Hibernate needs a `ServiceRegistry` holding the services Hibernate will need during bootstrap and at run time.
-
-Actually, there are 2 types of registries which are important here.
-
-First is the `org.hibernate.boot.registry.BootstrapServiceRegistry` which contains 3 important services:
-
-`org.hibernate.boot.registry.classloading.spi.ClassLoaderService`:: which controls how Hibernate interacts with ``ClassLoader``s.
-`org.hibernate.integrator.spi.IntegratorService`:: which controls the management and discovery of `org.hibernate.integrator.spi.Integrator` instances.
-`org.hibernate.boot.registry.selector.spi.StrategySelector`:: which controls how Hibernate resolves implementations of various strategy contracts.
-This is a very powerful service, but a full discussion of it is beyond the scope of this guide.
-
-[NOTE]
-====
-If you are ok with the default behavior of Hibernate in regard to these `BootstrapServiceRegistry` services
-(which is quite often the case, especially in stand-alone environments), then explicitly building the `BootstrapServiceRegistry` is
-not needed.
-====
-
-If you wish to alter how the `BootstrapServiceRegistry` is built, that is controlled through the `org.hibernate.boot.registry.BootstrapServiceRegistryBuilder`:
-
-[[example-bootstrap-native-BootstrapServiceRegistry]]
-.Controlling `BootstrapServiceRegistry` building
+[[example-bootstrap-native-HibernatePersistenceConfiguration-sources]]
+.Building a `HibernatePersistenceConfiguration`
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-BootstrapServiceRegistry]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-sources]
 ----
 ====
 
-The second registry is the `org.hibernate.boot.registry.StandardServiceRegistry`.
-You will almost always need to configure this registry, which is done through `org.hibernate.boot.registry.StandardServiceRegistryBuilder`:
-
-[[example-bootstrap-native-StandardServiceRegistryBuilder]]
-.Building a `BootstrapServiceRegistryBuilder`
-====
-[source, java, indent=0]
-----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-StandardServiceRegistryBuilder]
-----
-====
-
-See the `StandardServiceRegistryBuilder` link:{doc-javadoc-url}/org/hibernate/boot/registry/StandardServiceRegistryBuilder.html[Javadocs] for more details.
-
-
-The main integration point in this process is `org.hibernate.service.spi.ServiceContributor`, usually provided
-as a Java service, which allows contributing custom Hibernate services.
-
-
-
-[[bootstrap-native-builders-metadata]]
-===== Building the Metadata
-
-To build the `Metadata` reference, we first construct a `MetadataSources` which allows specifying the different sources for mapping information.
-This mapping information might be in the form of XML, annotations or both.
-
-[[example-bootstrap-native-MetadataSources]]
-.Building a `MetadataSources`
-====
-[source, java, indent=0]
-----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-MetadataSources]
-----
-====
-
-Also, all methods on `MetadataSources` offer fluent-style call chaining -
+All methods on `HibernatePersistenceConfiguration` offer fluent-style call chaining -
 
 [[bootstrap-native-metadata-source-example]]
-.Configuring a `MetadataSources` with method chaining
+.Configuring a `HibernatePersistenceConfiguration` with method chaining
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-MetadataSources-chained]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-sources-chained]
 ----
 ====
 
-`MetadataSources` has many other methods as well. Explore its API and link:{doc-javadoc-url}/org/hibernate/boot/MetadataSources.html[Javadocs] for more information.
+`HibernatePersistenceConfiguration` has many other methods as well. Explore its API and link:{doc-javadoc-url}/org/hibernate/jpa/HibernatePersistenceConfiguration.html[Javadocs] for more information.
 
-Once we have the sources of mapping information defined, we need to build the `Metadata` object.
+Once we have the sources of mapping information defined, we can build the `SessionFactory`.
 
-If you have specified everything as settings, or you are ok with the default behavior, you can simply call link:{doc-javadoc-url}/org/hibernate/boot/MetadataSources.html#buildMetadata--[`MetadataSources#buildMetadata`].
+If you have specified everything as settings, or if the default behavior is appropriate, call `HibernatePersistenceConfiguration#createEntityManagerFactory`.
 
-[[example-bootstrap-native-Metadata-no-builder]]
-.Using `MetadataSources#buildMetadata`
-====
-[source, java, indent=0]
-----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-Metadata-no-builder]
-----
-====
-
-
-Optionally, we can obtain a `MetadataBuilder` from `MetadataSources` which can be used to configure the interpretation of the mapping information.
-
-[[example-bootstrap-native-MetadataBuilder]]
-.Using `MetadataBuilder`
+[[example-bootstrap-native-HibernatePersistenceConfiguration-createEntityManagerFactory]]
+.Using `HibernatePersistenceConfiguration#createEntityManagerFactory`
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-Metadata-using-builder]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-createEntityManagerFactory]
 ----
 ====
 
 
-There are a few integration points, usually provided as Java services, that hook into this part of bootstrapping -
+Options that affect the interpretation of mapping information may be applied as bootstrap settings.
 
-* `org.hibernate.boot.model.TypeContributor` which allows contributing custom types such as Java type descriptors, JDBC type descriptors, etc.
-* `org.hibernate.boot.spi.MetadataSourcesContributor` which allows access to `MetadataSources` to contribute additional sources.
-* `org.hibernate.boot.spi.AdditionalMappingContributor` which, like `MetadataSourcesContributor`, allows contributing additional sources.
-* `org.hibernate.boot.spi.MetadataBuilderInitializer` which allows for configuration of `MetadataBuilder`
-
-
-
-
-[[bootstrap-native-builders-sessionfactory]]
-===== Building the SessionFactory
-
-Once we have `Metadata`, we can build the `SessionFactory`.
-
-If all configuration has been done by settings, or if you are ok with the default behavior, you can simply call
-link:{doc-javadoc-url}/org/hibernate/boot/Metadata.html#buildSessionFactory--[`Metadata#buildSessionFactory`].
-
-[[example-bootstrap-native-SessionFactory-no-builder]]
-.Using `SessionFactoryBuilder`
+[[example-bootstrap-native-HibernatePersistenceConfiguration]]
+.Configuring `HibernatePersistenceConfiguration`
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-SessionFactory-no-builder]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-HibernatePersistenceConfiguration-with-settings]
 ----
 ====
 
-Or a `SessionFactoryBuilder`, obtained from `Metadata`, may be used to configure the `SessionFactory` creation.
 
-[[example-bootstrap-native-SessionFactoryBuilder]]
-.Using `SessionFactoryBuilder`
-====
-[source, java, indent=0]
-----
-include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-SessionFactory-using-builder]
-----
-====
+Once all mapping sources and settings have been specified, build
+the `SessionFactory` by calling `HibernatePersistenceConfiguration#createEntityManagerFactory`.
 
-The main integration point here is `org.hibernate.integrator.spi.Integrator`, usually provided
-as a Java service, which allows contributing custom Hibernate services.
-
-A common use case for `Integrator`, for example, is to hook in custom event listeners -
-
-[[example-bootstrap-event-listener-registration]]
-.Configuring an event listener
+[[example-bootstrap-native-SessionFactory-with-settings]]
+.Building a `SessionFactory` with settings
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-event-listener-registration-example]
+include::{example-dir-boot}/BootstrapTest.java[tags=example-bootstrap-native-SessionFactory-with-settings]
 ----
+====
+
+[[bootstrap-java-service-loadable]]
+=== Java Service Loading
+
+Many Hibernate bootstrap integration contracts are discoverable using the
+standard Java `ServiceLoader` facility.  A contract annotated with
+`org.hibernate.service.JavaServiceLoadable` may be implemented by a library or
+application and listed in a `META-INF/services/<fully-qualified-contract-name>`
+file.  The service file contains the fully-qualified names of implementation
+classes, one per line.
+
+The service-loadable contracts most directly affecting the bootstrap process include:
+
+.`@JavaServiceLoadable` bootstrap contracts
+[cols="35,65", options="header"]
+|===
+| Contract
+| Purpose
+
+| `org.hibernate.boot.model.TypeContributor`
+| Contributes custom basic types, Java type descriptors, JDBC type descriptors, or related type-system registrations.
+
+| `org.hibernate.boot.model.FunctionContributor`
+| Contributes HQL/SQL functions to the function registry.
+
+| `org.hibernate.boot.spi.AdditionalMappingContributor`
+| Contributes additional mapping metadata during metadata building.
+
+| `org.hibernate.boot.scan.spi.ScanningProvider`
+| Provides classpath scanning support for discovered managed classes and mapping files.
+
+| `org.hibernate.resource.beans.container.spi.BeanContainer`
+| Supplies managed-bean integration for CDI or another bean container.
+
+| `org.hibernate.boot.pipeline.spi.SessionFactoryProducer`
+| Advanced internal extension point for replacing the SessionFactory production pipeline.
+|===
+
+[NOTE]
+====
+Some service-loadable contracts are intended for ordinary application or
+library integration, while others are low-level replacement points for
+containers, modules, or Hibernate extensions.  This section only lists the
+contracts that directly affect the bootstrap process; other service-loadable
+contracts affect runtime services, dialect selection, schema tooling,
+statistics, or event monitoring.  Prefer the most specific contract for the
+customization you need, and use settings for ordinary configuration choices.
+
+See `@JavaServiceLoadable` and its uses to identify which services are loadable.
 ====

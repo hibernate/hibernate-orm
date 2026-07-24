@@ -293,9 +293,12 @@ public abstract class AbstractManagedType<J>
 	@Nullable
 	public SqmSingularPersistentAttribute<? super J, ?> findSingularAttribute(@Nonnull String name) {
 		final var attribute = findDeclaredSingularAttribute( name );
-		return attribute == null && getSuperType() != null
+		if ( attribute != null ) {
+			return attribute;
+		}
+		return getSuperType() != null
 				? getSuperType().findSingularAttribute( name )
-				: attribute;
+				: null;
 	}
 
 	@Override
@@ -389,6 +392,13 @@ public abstract class AbstractManagedType<J>
 				declaredPluralAttributes == null
 						? new HashSet<>()
 						: new HashSet<>( declaredPluralAttributes.values() );
+		if ( declaredConcreteGenericAttributes != null ) {
+			for ( SqmPersistentAttribute<J, ?> attribute : declaredConcreteGenericAttributes.values() ) {
+				if ( attribute instanceof SqmPluralPersistentAttribute<J, ?, ?> pluralAttribute ) {
+					attributes.add( pluralAttribute );
+				}
+			}
+		}
 		if ( getSuperType() != null ) {
 			attributes.addAll( getSuperType().getPluralAttributes() );
 		}
@@ -409,6 +419,10 @@ public abstract class AbstractManagedType<J>
 		var attribute = findDeclaredPluralAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
+		}
+		final var concreteGenericAttribute = findDeclaredConcreteGenericAttribute( name );
+		if ( concreteGenericAttribute instanceof SqmPluralPersistentAttribute<J, ?, ?> pluralAttribute ) {
+			return pluralAttribute;
 		}
 		else if ( getSuperType() != null ) {
 			return getSuperType().findPluralAttribute( name );

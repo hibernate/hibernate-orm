@@ -35,6 +35,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
@@ -50,7 +51,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.context.MappingPreferences;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
@@ -64,7 +65,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
@@ -118,12 +118,11 @@ import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbLegacyXmlFor
 import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbXmlFormatMapperOrNull;
 
 /**
- * In-flight state of {@link SessionFactoryOptions} during {@link org.hibernate.boot.SessionFactoryBuilder}
- * processing.
+ * In-flight state of {@link SessionFactoryOptions} during factory construction.
  * <p>
- * The intention is that {@code SessionFactoryBuilder} internally creates and populates this builder, which
- * is then used to construct the {@code SessionFactoryOptions} as part of building the {@code SessionFactory}
- * from {@link org.hibernate.boot.SessionFactoryBuilder#build}.
+ * The bootstrap pipeline creates and populates this builder, which is then used
+ * to construct the {@code SessionFactoryOptions} as part of building the
+ * {@code SessionFactory}.
  *
  * @author Steve Ebersole
  */
@@ -289,7 +288,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final GraphParserMode graphParserMode;
 
 
-	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
+	public SessionFactoryOptionsBuilder(
+			StandardServiceRegistry serviceRegistry,
+			BootstrapContext context,
+			MappingResolutionOptions mappingResolutionOptions) {
 		this.serviceRegistry = serviceRegistry;
 		jpaBootstrap = context.isJpaBootstrap();
 
@@ -330,6 +332,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			public BootstrapContext getBootstrapContext() {
 				return context;
 			}
+
+			@Override
+			public MappingResolutionOptions getMappingResolutionOptions() {
+				return mappingResolutionOptions;
+			}
 		};
 		jsonFormatMapper = jsonFormatMapper(
 				settings.get( JSON_FORMAT_MAPPER ),
@@ -342,8 +349,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				settings.get( XML_FORMAT_MAPPER ),
 				strategySelector,
 				xmlFormatMapperLegacyFormatEnabled =
-						context.getMetadataBuildingOptions()
-								.isXmlFormatMapperLegacyFormatEnabled(),
+						mappingResolutionOptions.isXmlFormatMapperLegacyFormatEnabled(),
 				formatMapperCreationContext
 		);
 
@@ -457,15 +463,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		namedQueryStartupCheckingEnabled =
 				configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 
-		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
-		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
-		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
-		preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
-		preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
-		preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
-		preferredSqlTypeCodeForInstant = ConfigurationHelper.getPreferredSqlTypeCodeForInstant( serviceRegistry );
-		preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( serviceRegistry );
-		defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
+		final var mappingPreferences = MappingPreferences.from( serviceRegistry );
+		preferJavaTimeJdbcTypes = mappingPreferences.isPreferJavaTimeJdbcTypesEnabled();
+		preferNativeEnumTypes = mappingPreferences.isPreferNativeEnumTypesEnabled();
+		preferLocaleLanguageTagEnabled = mappingPreferences.isPreferLocaleLanguageTagEnabled();
+		preferredSqlTypeCodeForBoolean = mappingPreferences.getPreferredSqlTypeCodeForBoolean();
+		preferredSqlTypeCodeForDuration = mappingPreferences.getPreferredSqlTypeCodeForDuration();
+		preferredSqlTypeCodeForUuid = mappingPreferences.getPreferredSqlTypeCodeForUuid();
+		preferredSqlTypeCodeForInstant = mappingPreferences.getPreferredSqlTypeCodeForInstant();
+		preferredSqlTypeCodeForArray = mappingPreferences.getPreferredSqlTypeCodeForArray();
+		defaultTimeZoneStorageStrategy = mappingResolutionOptions.getDefaultTimeZoneStorage();
 
 		final var regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {

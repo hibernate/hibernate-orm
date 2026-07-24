@@ -241,7 +241,7 @@ public interface BootLogging extends BasicLogger {
 	void mappingEntitySecondaryTableToTable(String entityName, String tableName);
 
 	@LogMessage(level = DEBUG)
-	@Message(id = 160180, value = "Unexpected ServiceRegistry type [%s] encountered during building of MetadataSources; may cause problems later attempting to construct MetadataBuilder")
+	@Message(id = 160180, value = "Unexpected ServiceRegistry type [%s] encountered during metadata source collection; may cause problems later attempting to build metadata")
 	void unexpectedServiceRegistryType(String registryType);
 
 	@LogMessage(level = TRACE)
@@ -307,7 +307,7 @@ public interface BootLogging extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(id = 160195,
 			value = """
-					ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; \
+					ServiceRegistry passed for metadata building was a BootstrapServiceRegistry; \
 					this likely won't end well if attempt is made to build SessionFactory""")
 	void badServiceRegistry();
 

@@ -10,15 +10,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -72,9 +72,7 @@ public class PostgreSQLMultipleSchemaSequenceTest {
 
 		// 1
 		try (var registry1 = primaryServiceRegistry()) {
-			final var metadata1 = new MetadataSources( registry1 )
-					.addAnnotatedClass( Box.class )
-					.buildMetadata();
+			final var metadata1 = MetadataBuildingTestHelper.buildMetadata( registry1, Box.class );
 			try {
 				// 1.a
 				new SchemaExport()
@@ -105,9 +103,10 @@ public class PostgreSQLMultipleSchemaSequenceTest {
 
 				// 2
 				try (var ssr2 = secondaryServiceRegistry()) {
-					final MetadataImplementor metadata2 = (MetadataImplementor) new MetadataSources( ssr2 )
-							.addAnnotatedClass( Box.class )
-							.buildMetadata();
+					final MetadataImplementor metadata2 = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+							ssr2,
+							Box.class
+					);
 
 					try {
 						// 2.a
@@ -151,11 +150,11 @@ public class PostgreSQLMultipleSchemaSequenceTest {
 		}
 	}
 
-	private ServiceRegistry primaryServiceRegistry() {
+	private StandardServiceRegistry primaryServiceRegistry() {
 		return ServiceRegistryUtil.serviceRegistry();
 	}
 
-	private ServiceRegistry secondaryServiceRegistry() {
+	private StandardServiceRegistry secondaryServiceRegistry() {
 		String existingUrl = (String) Environment.getProperties().get( URL );
 		if ( existingUrl.indexOf( '?' ) == -1 ) {
 			existingUrl += "?";

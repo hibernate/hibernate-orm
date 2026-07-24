@@ -272,6 +272,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			Consumer<AttributeMapping> attributeConsumer,
 			SuccessfulCompletionCallback completionCallback,
 			MappingModelCreationProcess creationProcess) {
+		bootDescriptor.requireShapeComplete();
 		final var  creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var jdbcServices = creationContext.getJdbcServices();

@@ -14,12 +14,15 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
 	private final boolean isGeneric;
+	private final boolean reportGenericBindableJavaType;
+	private final JavaType<?> bindableJavaType;
 	private final SqmEntityDomainType<J> domainType;
 
 	public EntitySqmPathSource(
@@ -28,14 +31,44 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 			SqmEntityDomainType<J> domainType,
 			BindableType jpaBindableType,
 			boolean isGeneric) {
+		this( localPathName, pathModel, domainType, jpaBindableType, isGeneric, isGeneric );
+	}
+
+	public EntitySqmPathSource(
+			String localPathName,
+			SqmPathSource<J> pathModel,
+			SqmEntityDomainType<J> domainType,
+			BindableType jpaBindableType,
+			boolean isGeneric,
+			boolean reportGenericBindableJavaType) {
+		this( localPathName, pathModel, domainType, domainType.getExpressibleJavaType(), jpaBindableType, isGeneric,
+				reportGenericBindableJavaType );
+	}
+
+	public EntitySqmPathSource(
+			String localPathName,
+			SqmPathSource<J> pathModel,
+			SqmEntityDomainType<J> domainType,
+			JavaType<?> bindableJavaType,
+			BindableType jpaBindableType,
+			boolean isGeneric,
+			boolean reportGenericBindableJavaType) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
 		this.domainType = domainType;
+		this.bindableJavaType = bindableJavaType;
 		this.isGeneric = isGeneric;
+		this.reportGenericBindableJavaType = reportGenericBindableJavaType;
 	}
 
 	@Override
 	public SqmEntityDomainType<J> getPathType() {
 		return domainType;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Class<J> getBindableJavaType() {
+		return reportGenericBindableJavaType ? (Class<J>) Object.class : (Class<J>) bindableJavaType.getJavaTypeClass();
 	}
 
 	@Override

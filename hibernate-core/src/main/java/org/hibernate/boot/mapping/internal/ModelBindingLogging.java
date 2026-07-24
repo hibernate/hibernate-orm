@@ -1,0 +1,21 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.mapping;
+
+import org.hibernate.Internal;
+
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Logger;
+
+/// todo : find the proper min/max id range and make message-logger
+///
+/// @since 9.0
+/// @author Steve Ebersole
+@Internal
+public interface ModelBindingLogging extends BasicLogger {
+	String NAME = "org.hibernate.models.orm";
+
+	Logger MODEL_BINDING_LOGGER = Logger.getLogger( NAME );
+}

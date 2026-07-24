@@ -12,12 +12,12 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 
 /**
- * Represents the result of the first step of the process of building {@link org.hibernate.boot.MetadataSources}
+ * Represents the result of the first step of the metadata-building process.
  * reference into a {@link org.hibernate.boot.Metadata} reference.
  * <p>
  * Essentially it represents the combination of:<ol>
- *     <li>domain classes, packages and mapping files defined via MetadataSources</li>
- *     <li>attribute converters defined via MetadataBuildingOptions</li>
+ *     <li>domain classes, packages and mapping files defined by the bootstrap entry point</li>
+ *     <li>attribute converters defined via MappingResolutionOptions</li>
  *     <li>classes, converters, packages and mapping files auto-discovered as part of scanning</li>
  * </ol>
  *

@@ -9,8 +9,7 @@ import org.hibernate.MappingException;
 /**
  * Declares operations used by implementors of {@link Type} that are common to the fully-"compiled"
  * runtime mapping metadata held by a {@link org.hibernate.SessionFactory} and the incomplete metamodel
- * which exists during the {@linkplain org.hibernate.boot.model.process.spi.MetadataBuildingProcess
- * metadata building process}.
+ * which exists during metadata building.
  *
  * @see Type
  * @see org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor

@@ -9,9 +9,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -52,10 +52,9 @@ public class UniqueConstraintValidationTest {
 		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( entity )
-					.buildMetadata()
-					.buildSessionFactory()
+			org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( serviceRegistry, entity )
+			)
 					.close();
 		}
 		finally {

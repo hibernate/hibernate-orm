@@ -1,0 +1,1431 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.mapping.internal.binders;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.hibernate.annotations.CollectionIdJavaType;
+import org.hibernate.annotations.CollectionIdJdbcType;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.CollectionIdMutability;
+import org.hibernate.annotations.CollectionIdType;
+import org.hibernate.annotations.Collate;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.FractionalSeconds;
+import org.hibernate.annotations.GeneratedColumn;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.ListIndexJavaType;
+import org.hibernate.annotations.ListIndexJdbcType;
+import org.hibernate.annotations.ListIndexJdbcTypeCode;
+import org.hibernate.annotations.MapKeyJavaType;
+import org.hibernate.annotations.MapKeyJdbcType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.annotations.MapKeyMutability;
+import org.hibernate.annotations.MapKeyType;
+import org.hibernate.annotations.Nationalized;
+import org.hibernate.annotations.PartitionKey;
+import org.hibernate.annotations.TimeZoneColumn;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.AnyKeyJavaType;
+import org.hibernate.annotations.AnyKeyJdbcType;
+import org.hibernate.annotations.AnyKeyJdbcTypeCode;
+import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
+import org.hibernate.boot.internal.AnyKeyType;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
+import org.hibernate.boot.mapping.internal.context.BindingContext;
+import org.hibernate.boot.mapping.internal.context.BindingOptions;
+import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.relational.TableReference;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.Configurable;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
+import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.Property;
+import org.hibernate.models.ModelsException;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.usertype.DynamicParameterizedType;
+import org.hibernate.usertype.UserType;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+
+import static jakarta.persistence.EnumType.ORDINAL;
+import static org.hibernate.annotations.TimeZoneStorageType.AUTO;
+import static org.hibernate.annotations.TimeZoneStorageType.COLUMN;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
+
+/// Applies source-model basic-value details to an `org.hibernate.mapping.BasicValue`.
+///
+/// The same `BasicValue` mapping type is used for normal basic attributes,
+/// identifier parts, collection elements, map keys, and list indexes.  The
+/// [BasicValueSource] records which source role is being bound so this binder
+/// can read the correct annotation family, such as `@Enumerated` versus
+/// `@MapKeyEnumerated`, or normal Java/JDBC type annotations versus list-index
+/// and map-key variants.
+///
+/// Conversion is also centralized here.  That keeps explicit `@Convert`
+/// handling tied to the source descriptor rather than scattered across each
+/// caller that happens to create a basic value.
+///
+/// @since 9.0
+/// @author Steve Ebersole
+public class BasicValueSourceBinder {
+
+	public static BasicValueResolutionDetails bindBasicValue(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final var resolutionInput = BasicValueResolutionDetails.create(
+				basicValue,
+				source
+		);
+		basicValue.setMemberDetails( source.member() );
+		basicValue.setImplicitSourceJavaType( source.sourceJavaType() );
+		registerPluralAggregateElementJavaType( source, bindingState );
+		bindConversion( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindJavaType( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindJdbcType( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindMutability( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindLob( source, property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindNationalized( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindPartitionKey( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindEnumerated( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindTemporalPrecision( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindTimeZoneStorage( source.member(), property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindCustomType( source, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		bindColumnDefault( source, basicValue, bindingState, bindingContext );
+		bindCollation( source, basicValue );
+		bindFractionalSeconds( source, basicValue );
+		bindGeneratedColumn( source, basicValue, bindingState, bindingContext );
+		bindValueGeneration( source, property, basicValue, bindingContext );
+		return resolutionInput;
+	}
+
+	private static void registerPluralAggregateElementJavaType(
+			BasicValueSource source,
+			BindingState bindingState) {
+		if ( source.kind() != BasicValueSource.Kind.ATTRIBUTE || !source.member().isPlural() ) {
+			return;
+		}
+
+		final JdbcTypeCode jdbcTypeCode = source.member().getDirectAnnotationUsage( JdbcTypeCode.class );
+		if ( jdbcTypeCode == null
+				|| jdbcTypeCode.value() != SqlTypes.JSON_ARRAY && jdbcTypeCode.value() != SqlTypes.XML_ARRAY ) {
+			return;
+		}
+
+		final var elementType = source.member().getElementType();
+		if ( elementType == null ) {
+			return;
+		}
+
+		final var elementClass = elementType.determineRawClass();
+		if ( !elementClass.hasDirectAnnotationUsage( Embeddable.class ) ) {
+			return;
+		}
+
+		bindingState.addJavaTypeRegistration(
+				elementClass.toJavaClass(),
+				new EmbeddableAggregateJavaType<>( elementClass.toJavaClass(), null )
+		);
+	}
+
+	public static void bindConversion(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindConversion( source, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindConversion(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final Convert conversion = source.conversion();
+		if ( conversion != null && conversion.disableConversion() ) {
+			return;
+		}
+
+		if ( conversion != null ) {
+			validateConversionAttributeName( source, conversion );
+
+			//noinspection unchecked
+			final Class<AttributeConverter<?, ?>> javaClass = (Class<AttributeConverter<?, ?>>) conversion.converter();
+			final var converterDescriptor =
+					new RegisteredConversion( explicitConverterDomainType( source, javaClass, bindingContext ), javaClass, false )
+							.getConverterDescriptor();
+			basicValue.setJpaAttributeConverterDescriptor( converterDescriptor );
+			if ( resolutionInput != null ) {
+				resolutionInput.setAttributeConverterDescriptor( converterDescriptor );
+			}
+			return;
+		}
+
+		final ConverterDescriptor<?, ?> autoApplyConverter = resolveAutoApplyConverter(
+				source,
+				bindingState.getMetadataBuildingContext()
+		);
+		if ( autoApplyConverter != null ) {
+			basicValue.setJpaAttributeConverterDescriptor( autoApplyConverter );
+			if ( resolutionInput != null ) {
+				resolutionInput.setAttributeConverterDescriptor( autoApplyConverter );
+			}
+		}
+	}
+
+	private static ConverterDescriptor<?, ?> resolveAutoApplyConverter(
+			BasicValueSource source,
+			MetadataBuildingContext metadataBuildingContext) {
+		final var autoApplyHandler = metadataBuildingContext.getMetadataCollector()
+				.getConverterRegistry()
+				.getAttributeConverterAutoApplyHandler();
+		return switch ( source.kind() ) {
+			case ATTRIBUTE, EMBEDDABLE_MEMBER ->
+					autoApplyHandler.findAutoApplyConverterForAttribute( source.member(), metadataBuildingContext );
+			case COLLECTION_ELEMENT ->
+					autoApplyHandler.findAutoApplyConverterForCollectionElement( source.member(), metadataBuildingContext );
+			case MAP_KEY ->
+					autoApplyHandler.findAutoApplyConverterForMapKey( source.member(), metadataBuildingContext );
+			default -> null;
+		};
+	}
+
+	private static Class<?> explicitConverterDomainType(
+			BasicValueSource source,
+			Class<? extends AttributeConverter<?, ?>> converterType,
+			BindingContext bindingContext) {
+		final Class<?> rawJavaType = source.rawJavaType();
+		if ( rawJavaType == null ) {
+			return null;
+		}
+		if ( rawJavaType.isArray() ) {
+			return void.class;
+		}
+		if ( Collection.class.isAssignableFrom( rawJavaType ) ) {
+			final var converterDomainType = converterDomainType( converterType, bindingContext );
+			if ( converterDomainType == null ) {
+				return rawJavaType;
+			}
+			return converterDomainType.isAssignableFrom( rawJavaType ) ? rawJavaType : void.class;
+		}
+		return rawJavaType;
+	}
+
+	private static Class<?> converterDomainType(
+			Class<? extends AttributeConverter<?, ?>> converterType,
+			BindingContext bindingContext) {
+		final var converterDetails = bindingContext.getClassDetailsRegistry().resolveClassDetails( converterType.getName() );
+		final var converterDomainType = attributeConverterDomainType( converterDetails );
+		return converterDomainType == null ? null : converterDomainType.determineRawClass().toJavaClass();
+	}
+
+	private static TypeDetails attributeConverterDomainType(ClassDetails converterDetails) {
+		for ( TypeDetails implementedInterface : converterDetails.getImplementedInterfaces() ) {
+			final var domainType = attributeConverterDomainType( implementedInterface );
+			if ( domainType != null ) {
+				return domainType;
+			}
+		}
+
+		final var genericSuperType = converterDetails.getGenericSuperType();
+		if ( genericSuperType != null ) {
+			return attributeConverterDomainType( genericSuperType );
+		}
+
+		return null;
+	}
+
+	private static TypeDetails attributeConverterDomainType(TypeDetails typeDetails) {
+		if ( !typeDetails.isImplementor( AttributeConverter.class ) ) {
+			return null;
+		}
+
+		if ( typeDetails.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+			final var parameterizedType = typeDetails.asParameterizedType();
+			if ( AttributeConverter.class.getName().equals( parameterizedType.getRawClassDetails().getClassName() ) ) {
+				return parameterizedType.getArguments().get( 0 );
+			}
+			return attributeConverterDomainType( parameterizedType.getRawClassDetails() );
+		}
+
+		return attributeConverterDomainType( typeDetails.determineRawClass() );
+	}
+
+	private static void bindGeneratedColumn(
+			BasicValueSource source,
+			BasicValue basicValue,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final GeneratedColumn generatedColumn = getOverridableAnnotation(
+				source.member(),
+				GeneratedColumn.class,
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getModelsContext()
+		);
+		if ( generatedColumn == null ) {
+			return;
+		}
+
+		if ( basicValue.getColumnSpan() != 1 ) {
+			throw new AnnotationException(
+					"'@GeneratedColumn' may only be applied to single-column mappings but '"
+							+ source.member().getName() + "' maps to " + basicValue.getColumnSpan() + " columns"
+			);
+		}
+
+		final var selectable = basicValue.getColumn();
+		if ( selectable instanceof org.hibernate.mapping.Column column ) {
+			column.setGeneratedAs( generatedColumn.value() );
+		}
+		else {
+			throw new AnnotationException(
+					"'@GeneratedColumn' may only be applied to column mappings but '"
+							+ source.member().getName() + "' maps to a formula"
+			);
+		}
+	}
+
+	private static void bindColumnDefault(
+			BasicValueSource source,
+			BasicValue basicValue,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final ColumnDefault columnDefault = getOverridableAnnotation(
+				source.member(),
+				ColumnDefault.class,
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getModelsContext()
+		);
+		if ( columnDefault == null ) {
+			return;
+		}
+
+		column( source, basicValue, ColumnDefault.class ).setDefaultValue( columnDefault.value() );
+	}
+
+	private static void bindCollation(BasicValueSource source, BasicValue basicValue) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final Collate collate = source.member().getDirectAnnotationUsage( Collate.class );
+		if ( collate == null ) {
+			return;
+		}
+
+		for ( org.hibernate.mapping.Column column : basicValue.getColumns() ) {
+			column.setCollation( collate.value() );
+		}
+	}
+
+	@SuppressWarnings({"deprecation", "removal"})
+	private static void bindFractionalSeconds(BasicValueSource source, BasicValue basicValue) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final FractionalSeconds fractionalSeconds = source.member().getDirectAnnotationUsage( FractionalSeconds.class );
+		if ( fractionalSeconds == null ) {
+			return;
+		}
+
+		column( source, basicValue, FractionalSeconds.class ).setTemporalPrecision( fractionalSeconds.value() );
+	}
+
+	private static org.hibernate.mapping.Column column(
+			BasicValueSource source,
+			BasicValue basicValue,
+			Class<? extends Annotation> annotationType) {
+		if ( basicValue.getColumnSpan() != 1 ) {
+			throw new AnnotationException(
+					"'@" + annotationType.getSimpleName() + "' may only be applied to single-column mappings but '"
+							+ source.member().getName() + "' maps to " + basicValue.getColumnSpan() + " columns"
+			);
+		}
+
+		final var selectable = basicValue.getColumn();
+		if ( selectable instanceof org.hibernate.mapping.Column column ) {
+			return column;
+		}
+
+		throw new AnnotationException(
+				"'@" + annotationType.getSimpleName() + "' may only be applied to column mappings but '"
+						+ source.member().getName() + "' maps to a formula"
+		);
+	}
+
+	private static void bindValueGeneration(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingContext bindingContext) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) || property == null ) {
+			return;
+		}
+
+		final var generatorAnnotations = source.member().getMetaAnnotated(
+				ValueGenerationType.class,
+				bindingContext.getModelsContext()
+		);
+		if ( generatorAnnotations.isEmpty() ) {
+			return;
+		}
+		if ( generatorAnnotations.size() > 1 ) {
+			throw new AnnotationException(
+					"Property '" + property.getName() + "' has too many generator annotations: " + generatorAnnotations
+			);
+		}
+
+		property.setValueGeneratorCreator( generatorCreator( generatorAnnotations.get( 0 ) ) );
+	}
+
+	private static boolean supportsAttributeOrEmbeddableMember(BasicValueSource source) {
+		return source.kind() == BasicValueSource.Kind.ATTRIBUTE
+				|| source.kind() == BasicValueSource.Kind.EMBEDDABLE_MEMBER;
+	}
+
+	private static <A extends Annotation> GeneratorCreator generatorCreator(A annotation) {
+		@SuppressWarnings("unchecked")
+		final Class<A> annotationType = (Class<A>) annotation.annotationType();
+		final ValueGenerationType generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
+		final Class<? extends Generator> generatorClass = generatorAnnotation.generatedBy();
+		checkGeneratorClass( generatorClass );
+		return new ValueGeneratorCreator<>( annotation, annotationType, generatorClass );
+	}
+
+	private static final class ValueGeneratorCreator<A extends Annotation> implements GeneratorCreator {
+		private final String annotationTypeName;
+		private final String generatorClassName;
+		private transient A annotation;
+		private transient Class<A> annotationType;
+		private transient Class<? extends Generator> generatorClass;
+		private transient ModelsContext modelsContext;
+
+		private ValueGeneratorCreator(
+				A annotation,
+				Class<A> annotationType,
+				Class<? extends Generator> generatorClass) {
+			this.annotation = annotation;
+			this.annotationType = annotationType;
+			this.generatorClass = generatorClass;
+			this.annotationTypeName = annotationType.getName();
+			this.generatorClassName = generatorClass.getName();
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public Generator createGenerator(GeneratorCreationContext creationContext) {
+			final var contextMember = creationContext.getMemberDetails();
+			final var member = contextMember != null || creationContext.getProperty() == null
+					? contextMember
+					: creationContext.getProperty().getMemberDetails();
+			final Class<A> resolvedAnnotationType = (Class<A>) resolveClass(
+					annotationType,
+					annotationTypeName,
+					"generator annotation",
+					Annotation.class,
+					creationContext
+			);
+			final Class<? extends Generator> resolvedGeneratorClass = resolveClass(
+					generatorClass,
+					generatorClassName,
+					"generator implementation",
+					Generator.class,
+					creationContext
+			);
+			annotationType = resolvedAnnotationType;
+			generatorClass = resolvedGeneratorClass;
+			final A localizedAnnotation = annotation != null
+					? annotation
+					: member.locateAnnotationUsage( resolvedAnnotationType, modelsContext );
+			if ( localizedAnnotation == null ) {
+				throw new MappingException(
+						"Could not reconstruct generator annotation '" + annotationTypeName
+								+ "' for property '" + creationContext.getProperty().getName() + "'"
+				);
+			}
+			annotation = localizedAnnotation;
+			final Generator generator = instantiateGenerator(
+					localizedAnnotation,
+					member,
+					resolvedAnnotationType,
+					creationContext,
+					resolvedGeneratorClass
+			);
+			callInitialize( localizedAnnotation, creationContext, generator );
+			callConfigure( creationContext, generator );
+			checkVersionGenerationAlways( member, generator );
+			return generator;
+		}
+
+		@SuppressWarnings("unchecked")
+		private <T> Class<? extends T> resolveClass(
+				Class<? extends T> resolvedClass,
+				String className,
+				String archiveRole,
+				Class<T> contract,
+				GeneratorCreationContext creationContext) {
+			if ( resolvedClass != null ) {
+				return resolvedClass;
+			}
+			try {
+				final Class<?> candidate = modelsContext.getClassDetailsRegistry()
+						.resolveClassDetails( className )
+						.toJavaClass();
+				if ( !contract.isAssignableFrom( candidate ) ) {
+					throw new MappingException(
+							"Archived " + archiveRole + " class '" + className
+									+ "' does not implement '" + contract.getName() + "'"
+					);
+				}
+				return (Class<? extends T>) candidate;
+			}
+			catch (RuntimeException e) {
+				throw new MappingException(
+						"Could not resolve archived " + archiveRole + " class '" + className + "' for mapping role '"
+								+ creationContext.getProperty().getMappingRole() + "'",
+						e
+				);
+			}
+		}
+
+		@Override
+		public void reattachModelsContext(ModelsContext modelsContext) {
+			this.modelsContext = modelsContext;
+		}
+	}
+
+	private static void checkGeneratorClass(Class<? extends Generator> generatorClass) {
+		if ( !BeforeExecutionGenerator.class.isAssignableFrom( generatorClass )
+				&& !OnExecutionGenerator.class.isAssignableFrom( generatorClass ) ) {
+			throw new MappingException( "Generator class '" + generatorClass.getName()
+					+ "' must implement either 'BeforeExecutionGenerator' or 'OnExecutionGenerator'" );
+		}
+	}
+
+	private static <G extends Generator, A extends Annotation> G instantiateGenerator(
+			A annotation,
+			MemberDetails member,
+			Class<A> annotationType,
+			GeneratorCreationContext creationContext,
+			Class<? extends G> generatorClass) {
+		try {
+			G generator = member == null
+					? null
+					: construct(
+							generatorClass,
+							annotationType,
+							annotation,
+							Member.class,
+							member.toJavaMember(),
+							GeneratorCreationContext.class,
+							creationContext
+					);
+			if ( generator != null ) {
+				return generator;
+			}
+
+			generator = construct( generatorClass, annotationType, annotation, GeneratorCreationContext.class, creationContext );
+			if ( generator != null ) {
+				return generator;
+			}
+
+			generator = construct( generatorClass, annotationType, annotation );
+			if ( generator != null ) {
+				return generator;
+			}
+
+			generator = construct( generatorClass, GeneratorCreationContext.class, creationContext );
+			if ( generator != null ) {
+				return generator;
+			}
+
+			final var constructor = generatorClass.getDeclaredConstructor();
+			constructor.setAccessible( true );
+			return constructor.newInstance();
+		}
+		catch (NoSuchMethodException e) {
+			throw new org.hibernate.InstantiationException(
+					"No appropriate constructor for generator class",
+					generatorClass
+			);
+		}
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+			throw new org.hibernate.InstantiationException(
+					"Could not instantiate generator",
+					generatorClass,
+					e
+			);
+		}
+	}
+
+	private static <G> G construct(
+			Class<? extends G> target,
+			Class<?> parameterType1,
+			Object argument1,
+			Class<?> parameterType2,
+			Object argument2) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		try {
+			final var constructor = target.getDeclaredConstructor( parameterType1, parameterType2 );
+			constructor.setAccessible( true );
+			return constructor.newInstance( argument1, argument2 );
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	private static <G> G construct(
+			Class<? extends G> target,
+			Class<?> parameterType1,
+			Object argument1,
+			Class<?> parameterType2,
+			Object argument2,
+			Class<?> parameterType3,
+			Object argument3) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		try {
+			final var constructor = target.getDeclaredConstructor( parameterType1, parameterType2, parameterType3 );
+			constructor.setAccessible( true );
+			return constructor.newInstance( argument1, argument2, argument3 );
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	private static <G> G construct(
+			Class<? extends G> target,
+			Class<?> parameterType,
+			Object argument) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		try {
+			final var constructor = target.getDeclaredConstructor( parameterType );
+			constructor.setAccessible( true );
+			return constructor.newInstance( argument );
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static <A extends Annotation> void callInitialize(
+			A annotation,
+			GeneratorCreationContext creationContext,
+			Generator generator) {
+		if ( generator instanceof AnnotationBasedGenerator annotationBasedGenerator ) {
+			annotationBasedGenerator.initialize( annotation, creationContext );
+		}
+	}
+
+	private static void callConfigure(GeneratorCreationContext creationContext, Generator generator) {
+		if ( generator instanceof Configurable configurable ) {
+			configurable.configure( creationContext, new Properties() );
+		}
+		if ( generator instanceof ExportableProducer exportableProducer ) {
+			exportableProducer.registerExportables( creationContext.getDatabase() );
+		}
+		if ( generator instanceof Configurable configurable ) {
+			configurable.initialize( creationContext.getSqlStringGenerationContext() );
+		}
+	}
+
+	private static void checkVersionGenerationAlways(MemberDetails member, Generator generator) {
+		if ( member != null && member.hasDirectAnnotationUsage( jakarta.persistence.Version.class ) ) {
+			if ( !generator.generatesOnInsert() ) {
+				throw new AnnotationException(
+						"Property '" + member.getName()
+								+ "' is annotated '@Version' but has a 'Generator' which does not generate on inserts"
+				);
+			}
+			if ( !generator.generatesOnUpdate() ) {
+				throw new AnnotationException(
+						"Property '" + member.getName()
+								+ "' is annotated '@Version' but has a 'Generator' which does not generate on updates"
+				);
+			}
+		}
+	}
+
+	private static void validateConversionAttributeName(BasicValueSource source, Convert conversion) {
+		final String attributeName = conversion.attributeName();
+		if ( attributeName == null || attributeName.isEmpty() ) {
+			return;
+		}
+
+		switch ( source.kind() ) {
+			case ATTRIBUTE, IDENTIFIER -> {
+				if ( attributeName.equals( source.member().resolveAttributeName() ) ) {
+					return;
+				}
+			}
+			case MAP_KEY -> {
+				if ( "key".equals( attributeName ) ) {
+					return;
+				}
+			}
+			case COLLECTION_ELEMENT -> {
+				if ( "value".equals( attributeName ) ) {
+					return;
+				}
+			}
+			case EMBEDDABLE_MEMBER -> {
+				return;
+			}
+			default -> {
+			}
+		}
+
+		throw new ModelsException(
+				"@Convert#attributeName did not match basic value source role - "
+						+ source.member().getName() + "#" + source.kind()
+		);
+	}
+
+	private static void bindJavaType(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final var member = source.member();
+		switch ( source.kind() ) {
+				case MAP_KEY -> {
+					final var javaTypeAnn = member.getDirectAnnotationUsage( MapKeyJavaType.class );
+					if ( javaTypeAnn != null ) {
+						applyJavaType( resolutionInput, javaTypeAnn.value(), bindingState );
+					}
+				}
+				case LIST_INDEX -> {
+					final var javaTypeAnn = member.getDirectAnnotationUsage( ListIndexJavaType.class );
+					if ( javaTypeAnn != null ) {
+						applyJavaType( resolutionInput, javaTypeAnn.value(), bindingState );
+					}
+				}
+				case ANY_KEY -> {
+					final var modelsContext = bindingContext.getModelsContext();
+					final var javaTypeAnn = member.locateAnnotationUsage( AnyKeyJavaType.class, modelsContext );
+					if ( javaTypeAnn != null ) {
+						applyJavaType( resolutionInput, javaTypeAnn.value(), bindingState );
+					}
+					else {
+							final var typeAnn = member.locateAnnotationUsage( AnyKeyType.class, modelsContext );
+							if ( typeAnn != null ) {
+								applyAnyKeyType( member, resolutionInput, typeAnn.value(), bindingState );
+							}
+					}
+				}
+				case COLLECTION_ID -> {
+					final var javaTypeAnn = member.getDirectAnnotationUsage( CollectionIdJavaType.class );
+					if ( javaTypeAnn != null ) {
+						applyJavaType( resolutionInput, javaTypeAnn.value(), bindingState );
+					}
+				}
+				default -> bindJavaType( member, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+			}
+		}
+
+	private static void bindJdbcType(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final var member = source.member();
+		switch ( source.kind() ) {
+			case MAP_KEY -> {
+				final var jdbcTypeAnn = member.getDirectAnnotationUsage( MapKeyJdbcType.class );
+				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( MapKeyJdbcTypeCode.class );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
+			}
+			case LIST_INDEX -> {
+				final var jdbcTypeAnn = member.getDirectAnnotationUsage( ListIndexJdbcType.class );
+				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( ListIndexJdbcTypeCode.class );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
+			}
+			case ANY_KEY -> {
+				final var modelsContext = bindingContext.getModelsContext();
+				final var jdbcTypeAnn = member.locateAnnotationUsage( AnyKeyJdbcType.class, modelsContext );
+				final var jdbcTypeCodeAnn = member.locateAnnotationUsage( AnyKeyJdbcTypeCode.class, modelsContext );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
+			}
+			case COLLECTION_ID -> {
+				final var jdbcTypeAnn = member.getDirectAnnotationUsage( CollectionIdJdbcType.class );
+				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( CollectionIdJdbcTypeCode.class );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
+			}
+			case ANY_DISCRIMINATOR -> {
+				final var jdbcTypeAnn = member.getDirectAnnotationUsage( JdbcType.class );
+				final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( JdbcTypeCode.class );
+				bindExplicitJdbcType(
+						member,
+						basicValue,
+						resolutionInput,
+						jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+						jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+						bindingState
+				);
+			}
+			default -> bindJdbcType( member, property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+		}
+	}
+
+	public static void bindEnumerated(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindEnumerated( source, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindEnumerated(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		switch ( source.kind() ) {
+			case MAP_KEY -> {
+				final MapKeyEnumerated mapKeyEnumerated = source.member().getDirectAnnotationUsage( MapKeyEnumerated.class );
+				if ( mapKeyEnumerated != null ) {
+					validateEnumeratedType( source );
+					setEnumerationStyle( basicValue, resolutionInput, mapKeyEnumerated.value() );
+				}
+			}
+			case LIST_INDEX, COLLECTION_ID, ANY_DISCRIMINATOR, ANY_KEY -> {
+			}
+			case ATTRIBUTE, EMBEDDABLE_MEMBER, COLLECTION_ELEMENT, IDENTIFIER -> {
+				final Enumerated enumerated = source.member().getDirectAnnotationUsage( Enumerated.class );
+				if ( enumerated != null ) {
+					validateEnumeratedType( source );
+					setEnumerationStyle( basicValue, resolutionInput, enumerated.value() == null ? ORDINAL : enumerated.value() );
+				}
+			}
+		}
+	}
+
+	private static void setEnumerationStyle(
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			jakarta.persistence.EnumType enumerationStyle) {
+		basicValue.setEnumerationStyle( enumerationStyle );
+		if ( resolutionInput != null ) {
+			resolutionInput.setEnumerationStyle( enumerationStyle );
+		}
+	}
+
+	private static void validateEnumeratedType(BasicValueSource source) {
+		final Class<?> javaType = source.rawJavaType();
+		if ( javaType != null && ( javaType.isEnum() || javaType.isArray() && javaType.getComponentType().isEnum() ) ) {
+			return;
+		}
+		if ( source.kind() == BasicValueSource.Kind.ATTRIBUTE && source.member().isPlural() ) {
+			final var elementType = source.member().getElementType();
+			if ( elementType != null && elementType.determineRawClass().toJavaClass().isEnum() ) {
+				return;
+			}
+		}
+		throw new AnnotationException(
+				String.format(
+						"Property '%s.%s' is annotated '@Enumerated' but its type '%s' is not an enum",
+						source.member().getDeclaringType().getName(),
+						source.member().getName(),
+						source.type() == null ? javaType : source.type().getName()
+				)
+		);
+	}
+
+	public static void bindTemporalPrecision(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindTemporalPrecision( source, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindTemporalPrecision(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( source.kind() == BasicValueSource.Kind.MAP_KEY ) {
+			final MapKeyTemporal mapKeyTemporal = source.member().getDirectAnnotationUsage( MapKeyTemporal.class );
+			if ( mapKeyTemporal != null ) {
+				setTemporalPrecision( basicValue, resolutionInput, mapKeyTemporal.value() );
+			}
+			return;
+		}
+
+		bindTemporalPrecision( source.member(), property, basicValue, resolutionInput, bindingOptions, bindingState, bindingContext );
+	}
+
+	public static void bindJavaType(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindJavaType( member, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindJavaType(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		// todo : do we need to account for JavaTypeRegistration here?
+		final var javaTypeAnn = member.getDirectAnnotationUsage( JavaType.class );
+		if ( javaTypeAnn == null ) {
+			return;
+		}
+
+		applyJavaType( resolutionInput, javaTypeAnn.value(), bindingState );
+	}
+
+	private static void applyJavaType(
+			BasicValueResolutionDetails resolutionInput,
+			Class<? extends BasicJavaType<?>> javaTypeClass,
+			BindingState bindingState) {
+		@SuppressWarnings("unchecked")
+		final Class<BasicJavaType<?>> javaClass = (Class<BasicJavaType<?>>) javaTypeClass;
+		resolutionInput.setExplicitJavaType(
+				bindingState.getMetadataBuildingContext()
+						.getManagedBeanRegistry()
+						.getBean( javaClass )
+						.getBeanInstance()
+		);
+	}
+
+	private static void applyAnyKeyType(
+			MemberDetails member,
+			BasicValueResolutionDetails resolutionInput,
+			String typeName,
+			BindingState bindingState) {
+		final var registeredType = bindingState.getMetadataBuildingContext()
+				.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( typeName );
+		if ( registeredType == null ) {
+			throw new MappingException( "Unrecognized @AnyKeyType value - " + typeName + " - " + member.getName() );
+		}
+		resolutionInput.setExplicitJavaType( (BasicJavaType<?>) registeredType.getJavaTypeDescriptor() );
+	}
+
+	private static void bindJdbcType(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		// todo : do we need to account for JdbcTypeRegistration here?
+		final var jdbcTypeAnn = member.getDirectAnnotationUsage( JdbcType.class );
+		final var jdbcTypeCodeAnn = member.getDirectAnnotationUsage( JdbcTypeCode.class );
+		bindExplicitJdbcType(
+				member,
+				basicValue,
+					resolutionInput,
+					jdbcTypeAnn == null ? null : jdbcTypeAnn.value(),
+					jdbcTypeCodeAnn == null ? null : jdbcTypeCodeAnn.value(),
+					bindingState
+			);
+	}
+
+	private static void bindExplicitJdbcType(
+			MemberDetails member,
+			BasicValue basicValue,
+				BasicValueResolutionDetails resolutionInput,
+				Class<? extends org.hibernate.type.descriptor.jdbc.JdbcType> jdbcTypeClass,
+				Integer jdbcTypeCode,
+				BindingState bindingState) {
+		if ( jdbcTypeClass != null ) {
+			if ( jdbcTypeCode != null ) {
+				throw new AnnotationPlacementException(
+						"Illegal combination of @JdbcType and @JdbcTypeCode - " + member.getName()
+				);
+			}
+
+			@SuppressWarnings("unchecked")
+			final Class<org.hibernate.type.descriptor.jdbc.JdbcType> javaClass =
+					(Class<org.hibernate.type.descriptor.jdbc.JdbcType>) jdbcTypeClass;
+			resolutionInput.setExplicitJdbcType( instantiateJdbcType( member, javaClass ) );
+		}
+		else if ( jdbcTypeCode != null ) {
+			basicValue.setExplicitJdbcTypeCode( jdbcTypeCode );
+			resolutionInput.setConfiguredJdbcTypeCode( jdbcTypeCode );
+			final var jdbcTypeRegistry = bindingState.getMetadataBuildingContext()
+					.getTypeConfiguration()
+					.getJdbcTypeRegistry();
+			if ( jdbcTypeRegistry.getConstructor( jdbcTypeCode ) == null ) {
+				resolutionInput.setExplicitJdbcType( jdbcTypeRegistry.getDescriptor( jdbcTypeCode ) );
+			}
+		}
+	}
+
+	private static void bindMutability(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final Class<? extends MutabilityPlan<?>> mutabilityClass = switch ( source.kind() ) {
+			case COLLECTION_ID -> {
+				final var mutabilityAnn = source.member().getDirectAnnotationUsage( CollectionIdMutability.class );
+				yield mutabilityAnn == null ? null : mutabilityAnn.value();
+			}
+			case MAP_KEY -> {
+				final var mutabilityAnn = source.member().getDirectAnnotationUsage( MapKeyMutability.class );
+				yield mutabilityAnn == null ? null : mutabilityAnn.value();
+			}
+				default -> null;
+			};
+		if ( mutabilityClass == null ) {
+			return;
+		}
+
+		resolutionInput.setExplicitMutabilityPlan( instantiateMutabilityPlan( source.member(), mutabilityClass ) );
+	}
+
+	private static org.hibernate.type.descriptor.jdbc.JdbcType instantiateJdbcType(
+			MemberDetails member,
+			Class<org.hibernate.type.descriptor.jdbc.JdbcType> jdbcTypeClass) {
+		try {
+			return jdbcTypeClass.getConstructor().newInstance();
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			final ModelsException modelsException = new ModelsException( "Error instantiating local @JdbcType - " + member.getName() );
+			modelsException.addSuppressed( e );
+			throw modelsException;
+		}
+	}
+
+	private static MutabilityPlan<?> instantiateMutabilityPlan(
+			MemberDetails member,
+			Class<? extends MutabilityPlan<?>> mutabilityClass) {
+		try {
+			return mutabilityClass.getConstructor().newInstance();
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			final ModelsException modelsException = new ModelsException(
+					"Error instantiating local @CollectionIdMutability - " + member.getName()
+			);
+			modelsException.addSuppressed( e );
+			throw modelsException;
+		}
+	}
+
+	public static void bindCustomType(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindCustomType( source, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindCustomType(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final var typeUsage = customTypeUsage( source, bindingContext );
+		if ( typeUsage == null ) {
+			if ( basicValue.getJpaAttributeConverterDescriptor() == null ) {
+				final Class<?> rawJavaType = source.rawJavaType();
+				if ( rawJavaType != null ) {
+					final var registeredUserType = bindingState.findRegisteredUserType( rawJavaType );
+					if ( registeredUserType != null ) {
+						basicValue.setExplicitTypeParams( Map.of() );
+						bindDynamicParameterizedTypeParameters( source, property, basicValue, resolutionInput, registeredUserType, Map.of() );
+						basicValue.setExplicitCustomType( registeredUserType );
+					}
+				}
+			}
+			return;
+		}
+
+		final Annotation typeAnn = typeUsage.typeAnnotation();
+		basicValue.setTypeAnnotation( typeAnn );
+		if ( typeUsage.type() instanceof CollectionIdType collectionIdType ) {
+			final Map<String, String> parameters = extractParameterMap( collectionIdType.parameters() );
+			basicValue.setExplicitTypeParams( parameters );
+			bindDynamicParameterizedTypeParameters( source, property, basicValue, resolutionInput, collectionIdType.value(), parameters );
+			basicValue.setExplicitCustomType( collectionIdType.value() );
+		}
+		else if ( typeUsage.type() instanceof MapKeyType mapKeyType ) {
+			final Map<String, String> parameters = extractParameterMap( mapKeyType.parameters() );
+			basicValue.setExplicitTypeParams( parameters );
+			bindDynamicParameterizedTypeParameters( source, property, basicValue, resolutionInput, mapKeyType.value(), parameters );
+			basicValue.setExplicitCustomType( mapKeyType.value() );
+		}
+		else if ( typeUsage.type() instanceof Type type ) {
+			final Map<String, String> parameters = extractParameterMap( type.parameters() );
+			basicValue.setExplicitTypeParams( parameters );
+			bindDynamicParameterizedTypeParameters( source, property, basicValue, resolutionInput, type.value(), parameters );
+			basicValue.setExplicitCustomType( type.value() );
+		}
+	}
+
+	private static CustomTypeUsage customTypeUsage(BasicValueSource source, BindingContext bindingContext) {
+		final var modelsContext = bindingContext.getModelsContext();
+		return switch ( source.kind() ) {
+			case COLLECTION_ID -> {
+				final var collectionIdType = source.member().locateAnnotationUsage( CollectionIdType.class, modelsContext );
+				yield collectionIdType == null
+						? null
+						: new CustomTypeUsage( customTypeAnnotation( source, CollectionIdType.class, modelsContext ), collectionIdType );
+			}
+			case MAP_KEY -> {
+				final var mapKeyType = source.member().locateAnnotationUsage( MapKeyType.class, modelsContext );
+				yield mapKeyType == null
+						? null
+						: new CustomTypeUsage( customTypeAnnotation( source, MapKeyType.class, modelsContext ), mapKeyType );
+			}
+			default -> {
+				final var type = source.member().locateAnnotationUsage( Type.class, modelsContext );
+				yield type == null
+						? null
+						: new CustomTypeUsage( customTypeAnnotation( source, Type.class, modelsContext ), type );
+			}
+		};
+	}
+
+	private static Annotation customTypeAnnotation(
+			BasicValueSource source,
+			Class<? extends Annotation> type,
+			org.hibernate.models.spi.ModelsContext modelsContext) {
+		final var annotations = source.member().getMetaAnnotated( type, modelsContext );
+		return annotations == null || annotations.isEmpty() ? source.member().getDirectAnnotationUsage( type ) : annotations.get( 0 );
+	}
+
+	private record CustomTypeUsage(Annotation typeAnnotation, Annotation type) {}
+
+	@SuppressWarnings("removal")
+	private static void bindDynamicParameterizedTypeParameters(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			Class<? extends UserType<?>> customType,
+			Map<String, String> explicitParameters) {
+		if ( !DynamicParameterizedType.class.isAssignableFrom( customType ) ) {
+			return;
+		}
+
+		final Class<?> returnedClass = source.rawJavaType();
+		if ( returnedClass == null ) {
+			throw new MappingException( "Returned class name not specified for basic mapping: " + source.member().getName() );
+		}
+
+		final Map<String, Object> parameters = new HashMap<>();
+		parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClass.getName() );
+		parameters.put( DynamicParameterizedType.XPROPERTY, source.member() );
+		parameters.put( DynamicParameterizedType.PROPERTY, source.member().getName() );
+		parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
+		parameters.put(
+				DynamicParameterizedType.IS_PRIMARY_KEY,
+				Boolean.toString( source.kind() == BasicValueSource.Kind.MAP_KEY )
+		);
+		parameters.put( DynamicParameterizedType.ENTITY, source.member().getDeclaringType().getName() );
+		parameters.put( DynamicParameterizedType.ACCESS_TYPE, property.getPropertyAccessorName() );
+		parameters.putAll( explicitParameters );
+		basicValue.setTypeParameters( parameters );
+		if ( resolutionInput != null ) {
+			resolutionInput.setTypeParameters( parameters );
+		}
+	}
+
+	private static Map<String, String> extractParameterMap(org.hibernate.annotations.Parameter[] parameters) {
+		final Map<String, String> result = new HashMap<>();
+		for ( org.hibernate.annotations.Parameter parameter : parameters ) {
+			result.put( parameter.name(), parameter.value() );
+		}
+		return result;
+	}
+
+	public static void bindNationalized(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( bindingState.getMetadataBuildingContext().getBuildingPlan().useNationalizedCharacterData()
+				|| member.locateAnnotationUsage(
+						Nationalized.class,
+						bindingContext.getModelsContext()
+				) != null
+				|| extractFromPackage(
+						Nationalized.class,
+						member.getDeclaringType(),
+						bindingState.getMetadataBuildingContext()
+				) != null ) {
+			basicValue.makeNationalized();
+		}
+	}
+
+	public static void bindPartitionKey(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( member.hasDirectAnnotationUsage( PartitionKey.class ) ) {
+			basicValue.setPartitionKey( true );
+		}
+	}
+
+	public static void bindLob(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( source.kind() == BasicValueSource.Kind.MAP_KEY ) {
+			return;
+		}
+
+		bindLob( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
+	}
+
+	public static void bindLob(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( member.hasDirectAnnotationUsage( Lob.class ) ) {
+			basicValue.makeLob();
+		}
+	}
+
+	public static void bindEnumerated(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindEnumerated( member, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindEnumerated(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final Enumerated enumerated = member.getDirectAnnotationUsage( Enumerated.class );
+		if ( enumerated == null ) {
+			return;
+		}
+
+		setEnumerationStyle( basicValue, resolutionInput, enumerated.value() == null ? ORDINAL : enumerated.value() );
+	}
+
+	public static void bindTemporalPrecision(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindTemporalPrecision( member, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindTemporalPrecision(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final Temporal temporalAnn = member.getDirectAnnotationUsage( Temporal.class );
+		if ( temporalAnn == null ) {
+			return;
+		}
+
+		//noinspection deprecation
+		final TemporalType precision = temporalAnn.value();
+		setTemporalPrecision( basicValue, resolutionInput, precision );
+	}
+
+	private static void setTemporalPrecision(
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			TemporalType precision) {
+		basicValue.setTemporalPrecision( precision );
+		if ( resolutionInput != null ) {
+			resolutionInput.setTemporalPrecision( precision );
+		}
+	}
+
+	public static void bindTimeZoneStorage(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		bindTimeZoneStorage( member, property, basicValue, null, bindingOptions, bindingState, bindingContext );
+	}
+
+	private static void bindTimeZoneStorage(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BasicValueResolutionDetails resolutionInput,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final TimeZoneStorage storageAnn = member.getDirectAnnotationUsage( TimeZoneStorage.class );
+		final TimeZoneColumn columnAnn = member.getDirectAnnotationUsage( TimeZoneColumn.class );
+		if ( storageAnn != null ) {
+			final TimeZoneStorageType strategy = storageAnn.value() == null ? AUTO : storageAnn.value();
+			if ( strategy != COLUMN && columnAnn != null ) {
+				throw new AnnotationPlacementException(
+						"Illegal combination of @TimeZoneStorage(" + strategy.name() + ") and @TimeZoneColumn"
+				);
+			}
+			basicValue.setTimeZoneStorageType( strategy );
+			if ( resolutionInput != null ) {
+				resolutionInput.setTimeZoneStorageType( strategy );
+			}
+		}
+
+		if ( columnAnn != null ) {
+			final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) basicValue.getColumn();
+			column.setName( columnAnn.name().isEmpty() ? property.getName() + "_tz" : columnAnn.name() );
+			column.setSqlType( columnAnn.columnDefinition().isEmpty() ? null : columnAnn.columnDefinition() );
+			column.setOptions( columnAnn.options().isEmpty() ? null : columnAnn.options() );
+			column.setComment( columnAnn.comment().isEmpty() ? null : columnAnn.comment() );
+
+			final var tableName = columnAnn.table().isEmpty() ? null : columnAnn.table();
+			TableReference tableByName = null;
+			if ( tableName != null ) {
+				final Identifier identifier = Identifier.toIdentifier( tableName );
+				tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
+				basicValue.setTable( tableByName.binding() );
+			}
+
+			property.setInsertable( columnAnn.insertable() );
+			property.setUpdatable( columnAnn.updatable() );
+		}
+	}
+
+}

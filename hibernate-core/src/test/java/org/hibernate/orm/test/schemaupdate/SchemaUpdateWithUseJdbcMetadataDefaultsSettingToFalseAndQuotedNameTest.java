@@ -10,17 +10,20 @@ import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -30,11 +33,14 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey(value = "HHH-13788")
 @Exclude
@@ -59,20 +65,38 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 				)
 				.build();
 
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( AnotherTestEntity.class );
-
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, AnotherTestEntity.class );
 	}
 
 	@AfterEach
 	public void tearDown() {
-		new SchemaExport().setHaltOnError( true )
-				.setFormat( false )
-				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
-		StandardServiceRegistryBuilder.destroy( ssr );
+		if ( metadata != null ) {
+			new SchemaExport().setHaltOnError( true )
+					.setFormat( false )
+					.drop( EnumSet.of( TargetType.DATABASE ), metadata );
+		}
+		if ( ssr != null ) {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+	@Test
+	public void testBacktickQuotedEntityNameIsRejected() {
+		assertQuotedEntityNameRejected( BacktickQuotedEntityName.class );
+	}
+
+	@Test
+	public void testDoubleQuotedEntityNameIsRejected() {
+		assertQuotedEntityNameRejected( DoubleQuotedEntityName.class );
+	}
+
+	private void assertQuotedEntityNameRejected(Class<?> entityClass) {
+		ssr = ServiceRegistryUtil.serviceRegistry();
+		final AnnotationException exception = assertThrows(
+				AnnotationException.class,
+				() -> MetadataBuildingTestHelper.buildMetadata( ssr, entityClass )
+		);
+		assertTrue( exception.getMessage().contains( "is quoted" ) );
 	}
 
 	@ParameterizedTest
@@ -127,12 +151,25 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 		);
 	}
 
-	@Entity(name = "`Another_Test_Entity`")
+	@Entity
+	@Table(name = "`Another_Test_Entity`")
 	public static class AnotherTestEntity {
 		@Id
 		private Long id;
 
 		@Column(name = "`another_NAME`")
 		private String name;
+	}
+
+	@Entity(name = "`BacktickQuotedEntityName`")
+	public static class BacktickQuotedEntityName {
+		@Id
+		private Long id;
+	}
+
+	@Entity(name = "\"DoubleQuotedEntityName\"")
+	public static class DoubleQuotedEntityName {
+		@Id
+		private Long id;
 	}
 }

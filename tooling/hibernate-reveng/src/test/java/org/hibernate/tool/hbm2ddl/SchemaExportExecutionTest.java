@@ -5,16 +5,16 @@
 package org.hibernate.tool.hbm2ddl;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.tool.schema.TargetType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import org.hibernate.boot.spi.MetadataImplementor;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -54,9 +54,10 @@ public class SchemaExportExecutionTest {
 				.applySetting("hibernate.default_schema", "")
 				.applySetting("hibernate.default_catalog", "")
 				.build();
-		metadata = new MetadataSources(serviceRegistry)
-				.addAnnotatedClass(HelloWorld.class)
-				.buildMetadata();
+		metadata = MetadataBuildingHelper.buildMetadata(
+				serviceRegistry,
+				new MappingSources().addManagedClass(HelloWorld.class)
+		);
 	}
 
 	@AfterEach

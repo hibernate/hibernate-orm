@@ -414,7 +414,7 @@ public final class Cascade {
 						componentPropertyStyle,
 						subPropertyName,
 						anything,
-						cascadeDeleteEnabled( action, componentType, i )
+						cascadeDeleteEnabled( action, eventSource, componentType, i )
 				);
 			}
 		}
@@ -661,8 +661,13 @@ public final class Cascade {
 			&& persister.getPropertyOnDeleteActions()[i] == OnDeleteAction.CASCADE;
 	}
 
-	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, CompositeType componentType, int i) {
+	private static <T> boolean cascadeDeleteEnabled(
+			CascadingAction<T> action,
+			EventSource eventSource,
+			CompositeType componentType,
+			int i) {
 		return action.directionAffectedByCascadeDelete() == ForeignKeyDirection.TO_PARENT
+			&& eventSource.getFactory().getJdbcServices().getDialect().supportsCascadeDelete()
 			&& componentType.getOnDeleteAction( i ) == OnDeleteAction.CASCADE;
 	}
 }

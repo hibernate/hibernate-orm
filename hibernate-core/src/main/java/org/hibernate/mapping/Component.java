@@ -13,20 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.generator.Generator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
@@ -34,13 +34,13 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
-import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.persister.entity.DiscriminatorHelper;
+import org.hibernate.models.Creator;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -50,29 +50,30 @@ import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
-import static org.hibernate.mapping.MappingHelper.classForName;
-import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
+import static org.hibernate.mapping.MappingHelper.createCompositeUserType;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
  *
  * @apiNote The name of this class is historical and unfortunate. It reflects modeling a *composition*
  *          of state. It has absolutely nothing to do with modularity in software engineering.
+ *          A component remains {@link ComponentShapeState#BUILDING} while its properties and
+ *          ordering policy are being contributed. Positional consumers of its properties,
+ *          columns, or selectables must only use it after {@link #completeShape()}.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements AttributeContainer, MetaAttributable, SortableValue {
 
-	private String componentClassName;
-	private boolean embedded;
+	private ClassDetails componentClassDetails;
+	private boolean flattened;
 	private String parentProperty;
 	private PersistentClass owner;
-	private boolean dynamic;
 	private boolean isKey;
 	private transient Boolean isGeneric;
+	private transient CompositeUserType<?> compositeUserType;
 	private String roleName;
 	private MappedSuperclass mappedSuperclass;
 	private Value discriminator;
@@ -81,12 +82,13 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	private Map<String, String> subclassToSuperclass;
 
 	private final ArrayList<Property> properties = new ArrayList<>();
+	private ComponentShapeState shapeState = ComponentShapeState.BUILDING;
 	private Map<Property, String> propertyDeclaringClasses;
 	private int[] originalPropertyOrder = ArrayHelper.EMPTY_INT_ARRAY;
 	private Map<String,MetaAttribute> metaAttributes;
 
 	private Class<? extends EmbeddableInstantiator> customInstantiator;
-	private Constructor<?> instantiator;
+	private transient Constructor<?> instantiator;
 	private String[] instantiatorPropertyNames;
 
 	// cache the status of the type
@@ -96,8 +98,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	private AggregateColumn parentAggregateColumn;
 	private QualifiedName structName;
 	private String[] structColumnNames;
-	private transient Class<?> componentClass;
 	private transient Boolean simpleRecord;
+	private boolean preservePropertyOrder;
 	private String columnNamingPattern;
 
 	private boolean tableWasExplicit;
@@ -129,17 +131,17 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		this.properties.addAll( original.properties );
 		this.originalPropertyOrder = original.originalPropertyOrder == null ? null : original.originalPropertyOrder.clone();
 		this.propertyDeclaringClasses = original.propertyDeclaringClasses;
-		this.componentClassName = original.componentClassName;
-		this.componentClass = original.componentClass;
-		this.embedded = original.embedded;
+		this.componentClassDetails = original.componentClassDetails;
+		this.flattened = original.flattened;
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
-		this.dynamic = original.dynamic;
 		this.isGeneric = original.isGeneric;
+		this.compositeUserType = original.compositeUserType;
 		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>( original.metaAttributes );
 		this.isKey = original.isKey;
 		this.roleName = original.roleName;
 		this.discriminator = original.discriminator;
+		this.discriminatorType = original.discriminatorType;
 		this.discriminatorValues = original.discriminatorValues;
 		this.subclassToSuperclass = original.subclassToSuperclass;
 		this.customInstantiator = original.customInstantiator;
@@ -151,12 +153,323 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return new Component( this );
 	}
 
+	/// Creates a declaration-side component projection from the supplied
+	/// roleless properties.
+	///
+	/// The returned component has no [#getMappingRole()], and every supplied
+	/// property must likewise have no mapping role.  The component's
+	/// discriminator, when present, is copied as roleless declarative state.
+	/// Polymorphic property-declaration origin is rebuilt by matching the
+	/// supplied properties to the source properties by position.
+	///
+	/// The normal use is an independent generic embeddable declaration
+	/// template:
+	///
+	/// ```java
+	/// List<Property> declarations = appliedComponent.getProperties()
+	///         .stream()
+	///         .map( property -> property.copyForDeclaration(
+	///                 property.getValue().copy()
+	///         ) )
+	///         .toList();
+	///
+	/// Component declaration =
+	///         appliedComponent.copyForDeclaration( declarations );
+	///
+	/// assert declaration.getMappingRole() == null;
+	/// assert declaration.getProperties().stream()
+	///         .noneMatch( p -> p.getMappingRole() != null );
+	/// ```
+	///
+	/// This is used for generic embeddable templates and generic
+	/// mapped-superclass component properties.  It also builds the
+	/// mapped-superclass declaration view of an identifier mapper.  That legacy
+	/// case supplies [Property#copyForDeclarationView() declaration views]
+	/// whose properties are roleless but whose values remain shared with the
+	/// applied identifier mapping.
+	///
+	/// This method creates a declaration container, not a filtered component or
+	/// a new concrete occurrence.  Use
+	/// [#copyForPropertySelection(List)] for transient column matching,
+	/// [#copyForSameApplication()] for an alias of the current occurrence, or
+	/// [#copyForApplication(MetadataBuildingContext, MappingRole, List)] for a
+	/// distinct application in the same physical mapping context.
+	///
+	/// @param declarationProperties roleless declaration-side properties, in
+	/// source property order
+	/// @return a roleless component containing the supplied properties
+	/// @throws NullPointerException if `declarationProperties` is `null`
+	/// @throws IllegalArgumentException if a supplied property has a mapping role
+	public Component copyForDeclaration(List<Property> declarationProperties) {
+		Objects.requireNonNull( declarationProperties, "Declaration properties" );
+		final Component copy = new Component( this );
+		copy.clearProperties();
+		copy.propertyDeclaringClasses = null;
+		if ( discriminator != null ) {
+			final Value declarationDiscriminator = discriminator.copy();
+			if ( declarationDiscriminator instanceof AppliedMappingPart mappingPart
+					&& mappingPart.getMappingRole() != null ) {
+				throw new IllegalArgumentException(
+						"Declaration discriminator already has a mapping role: " + mappingPart.getMappingRole()
+				);
+			}
+			copy.discriminator = declarationDiscriminator;
+		}
+		for ( int i = 0; i < declarationProperties.size(); i++ ) {
+			final Property declarationProperty = declarationProperties.get( i );
+			if ( declarationProperty.getMappingRole() != null ) {
+				throw new IllegalArgumentException(
+						"Declaration property already has a mapping role: " + declarationProperty.getMappingRole()
+				);
+			}
+			copy.properties.add( declarationProperty );
+			if ( propertyDeclaringClasses != null && i < properties.size() ) {
+				final String declaringClass = propertyDeclaringClasses.get( properties.get( i ) );
+				if ( declaringClass != null ) {
+					if ( copy.propertyDeclaringClasses == null ) {
+						copy.propertyDeclaringClasses = new HashMap<>();
+					}
+					copy.propertyDeclaringClasses.put( declarationProperty, declaringClass );
+				}
+			}
+		}
+		return copy;
+	}
+
+	/// Creates a transient, roleless view over selected properties of this
+	/// component.
+	///
+	/// Both the `Property` objects and their values remain shared with the source
+	/// component.  The component discriminator is omitted and source property
+	/// order is preserved:
+	///
+	/// ```java
+	/// List<Property> matching = selectPropertiesByReferencedColumns(
+	///         component,
+	///         joinColumns
+	/// );
+	/// Component selection =
+	///         component.copyForPropertySelection( matching );
+	///
+	/// assert selection.getMappingRole() == null;
+	/// assert selection.getProperties().get( 0 ) == matching.get( 0 );
+	/// ```
+	///
+	/// This view is used while resolving a composite association target from
+	/// `referencedColumnName` values.  The association binder may need to treat
+	/// a subset of an embeddable's properties as one temporary value solely to
+	/// compare column order and span.
+	///
+	/// The result is neither declaration state nor an applied mapping.  It must
+	/// not be registered, installed as a property's value, or otherwise
+	/// attached to the boot mapping graph.  Use [#copyForDeclaration(List)] or
+	/// [#copyForApplication(MetadataBuildingContext, MappingRole, List)] when a
+	/// durable mapping object is required.
+	///
+	/// @param selectedProperties source properties selected for matching, in the
+	/// required comparison order
+	/// @return a transient roleless component sharing the selected properties
+	/// @throws NullPointerException if `selectedProperties` is `null`
+	public Component copyForPropertySelection(List<Property> selectedProperties) {
+		Objects.requireNonNull( selectedProperties, "Selected properties" );
+		final Component copy = new Component( this );
+		copy.clearProperties();
+		copy.propertyDeclaringClasses = null;
+		copy.discriminator = null;
+		copy.discriminatorType = null;
+		copy.discriminatorValues = null;
+		copy.preservePropertyOrder = true;
+		for ( Property selectedProperty : selectedProperties ) {
+			copy.properties.add( selectedProperty );
+			if ( propertyDeclaringClasses != null ) {
+				final String declaringClass = propertyDeclaringClasses.get( selectedProperty );
+				if ( declaringClass != null ) {
+					if ( copy.propertyDeclaringClasses == null ) {
+						copy.propertyDeclaringClasses = new HashMap<>();
+					}
+					copy.propertyDeclaringClasses.put( selectedProperty, declaringClass );
+				}
+			}
+		}
+		return copy;
+	}
+
+	/// Creates another compatibility projection of the **same** concrete
+	/// component application.
+	///
+	/// The component role, child `Property` objects, their values, and the
+	/// discriminator are shared with the source occurrence:
+	///
+	/// ```java
+	/// Component alias = identifierComponent.copyForSameApplication();
+	///
+	/// assert alias != identifierComponent;
+	/// assert alias.getMappingRole()
+	///         .equals( identifierComponent.getMappingRole() );
+	/// assert alias.getProperties().get( 0 )
+	///         == identifierComponent.getProperties().get( 0 );
+	/// ```
+	///
+	/// The primary use is an identifier-mapper compatibility projection which
+	/// exposes an existing identifier component in another legacy shape.  It is
+	/// not a second identifier mapping: retaining the original identifier and
+	/// nested-property roles is therefore required.
+	///
+	/// Use this operation only when late changes to the original properties or
+	/// values must be visible through the copy.  A component which represents a
+	/// genuinely new occurrence needs independently materialized child
+	/// properties and [#copyForApplication(MetadataBuildingContext, MappingRole,
+	/// List)].
+	///
+	/// @return a component alias retaining this component's role and children
+	public Component copyForSameApplication() {
+		final Component copy = new Component( this );
+		copy.setMappingRole( getMappingRole() );
+		return copy;
+	}
+
+	/// Creates a component for a **new** concrete application in the same
+	/// physical table and owner context as this component.
+	///
+	/// The caller supplies independently-materialized child properties.  Each
+	/// child must either be roleless or already have the role obtained by
+	/// appending its attribute name to `mappingRole`.  Roleless children are
+	/// assigned that role while they are installed:
+	///
+	/// ```java
+	/// MappingRole workAddressRole =
+	///         MappingRole.entity( Customer.class.getName() )
+	///                 .appendAttribute( "workAddress" );
+	///
+	/// List<Property> workAddressProperties = addressDeclaration.getProperties()
+	///         .stream()
+	///         .map( property -> {
+	///             MappingRole propertyRole =
+	///                     workAddressRole.appendAttribute( property.getName() );
+	///             return property.copyForApplication(
+	///                     propertyRole,
+	///                     copyValueForApplication(
+	///                             property.getValue(),
+	///                             propertyRole
+	///                     )
+	///             );
+	///         } )
+	///         .toList();
+	///
+	/// Component workAddress = addressDeclaration.copyForApplication(
+	///         buildingContext,
+	///         workAddressRole,
+	///         workAddressProperties
+	/// );
+	/// ```
+	///
+	/// This operation is used when a generic, component-valued property declared
+	/// by an entity superclass is specialized for a concrete entity subclass.
+	/// More generally, it is appropriate for a repeated embeddable or component
+	/// projection when the new occurrence retains the source component's
+	/// physical owner and table.  The component and children have independent
+	/// application identities and value state; this is unlike an identifier
+	/// mapper or synthetic alias built with [#copyForSameApplication()].
+	///
+	/// Most primary embeddable mappings are materialized directly from an
+	/// `EmbeddableContribution` instead of copied.  Component-valued collection
+	/// indexes are also new applications, but they are constructed afresh
+	/// because their physical collection table or owner context differs from
+	/// the source component.  This method must not be used for such a physical
+	/// relocation.
+	///
+	/// The copied component is registered with the metadata collector.  Its
+	/// discriminator, if any, is independently copied and assigned a
+	/// discriminator role below `mappingRole`.
+	///
+	/// @param buildingContext context whose metadata collector will own the copy
+	/// @param mappingRole stable identity of the new component occurrence
+	/// @param applicationProperties independently-materialized direct properties
+	/// in source property order
+	/// @return a registered component with the supplied application identity
+	/// @throws NullPointerException if an argument is `null`
+	/// @throws IllegalArgumentException if a property does not correspond to the
+	/// source component or belongs to another application
+	public Component copyForApplication(
+			MetadataBuildingContext buildingContext,
+			MappingRole mappingRole,
+			List<Property> applicationProperties) {
+		Objects.requireNonNull( buildingContext, "Metadata building context" );
+		Objects.requireNonNull( mappingRole, "Mapping role" );
+		Objects.requireNonNull( applicationProperties, "Application properties" );
+		if ( applicationProperties.size() != properties.size() ) {
+			throw new IllegalArgumentException(
+					"Application property count does not match source component: expected "
+							+ properties.size() + ", got " + applicationProperties.size()
+			);
+		}
+
+		final Component copy = new Component( this );
+		copy.clearProperties();
+		copy.propertyDeclaringClasses = null;
+		copy.setMappingRole( mappingRole );
+		if ( discriminator != null ) {
+			final Value applicationDiscriminator = discriminator.copy();
+			if ( applicationDiscriminator instanceof AppliedMappingPart mappingPart ) {
+				final MappingRole discriminatorRole = mappingRole.append( MappingRole.PartKind.DISCRIMINATOR );
+				if ( mappingPart.getMappingRole() != null
+						&& !discriminatorRole.equals( mappingPart.getMappingRole() ) ) {
+					throw new IllegalArgumentException(
+							"Application discriminator has a different mapping role: "
+									+ mappingPart.getMappingRole()
+					);
+				}
+				mappingPart.setMappingRole( discriminatorRole );
+			}
+			copy.discriminator = applicationDiscriminator;
+		}
+		for ( int i = 0; i < applicationProperties.size(); i++ ) {
+			final Property sourceProperty = properties.get( i );
+			final Property applicationProperty = applicationProperties.get( i );
+			if ( !sourceProperty.getName().equals( applicationProperty.getName() ) ) {
+				throw new IllegalArgumentException(
+						"Application property at position " + i + " does not match source property '"
+								+ sourceProperty.getName() + "': " + applicationProperty.getName()
+				);
+			}
+			final MappingRole propertyRole = mappingRole.appendAttribute( applicationProperty.getName() );
+			if ( applicationProperty.getMappingRole() != null
+					&& !propertyRole.equals( applicationProperty.getMappingRole() ) ) {
+				throw new IllegalArgumentException(
+						"Application property '" + applicationProperty.getName()
+								+ "' has a different mapping role: " + applicationProperty.getMappingRole()
+				);
+			}
+			if ( applicationProperty.getValue() instanceof AppliedMappingPart mappingPart
+					&& mappingPart.getMappingRole() != null
+					&& !propertyRole.equals( mappingPart.getMappingRole() ) ) {
+				throw new IllegalArgumentException(
+						"Application property value '" + applicationProperty.getName()
+								+ "' has a different mapping role: " + mappingPart.getMappingRole()
+				);
+			}
+			applicationProperty.setMappingRole( propertyRole );
+			copy.properties.add( applicationProperty );
+			if ( propertyDeclaringClasses != null ) {
+				final String declaringClass = propertyDeclaringClasses.get( sourceProperty );
+				if ( declaringClass != null ) {
+					if ( copy.propertyDeclaringClasses == null ) {
+						copy.propertyDeclaringClasses = new HashMap<>();
+					}
+					copy.propertyDeclaringClasses.put( applicationProperty, declaringClass );
+				}
+			}
+		}
+		buildingContext.getMetadataCollector().registerComponent( copy );
+		return copy;
+	}
+
 	public int getPropertySpan() {
 		return properties.size();
 	}
 
 	public List<Property> getProperties() {
-		return properties;
+		return unmodifiableList( properties );
 	}
 
 	public void setTable(Table table) {
@@ -177,18 +490,38 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public void addProperty(Property p, ClassDetails declaringClass) {
+		requireShapeBuilding();
 		properties.add( p );
+		applyPropertyMappingRole( p );
 		if ( isPolymorphic() && declaringClass != null ) {
 			if ( propertyDeclaringClasses == null ) {
 				propertyDeclaringClasses = new HashMap<>();
 			}
-			propertyDeclaringClasses.put( p, declaringClass.getName() );
+			propertyDeclaringClasses.put( p, declaringClass.getClassName() == null
+					? declaringClass.getName()
+					: declaringClass.getClassName() );
 		}
 	}
 
 	@Override
 	public void addProperty(Property p) {
 		addProperty( p, null );
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		super.setMappingRole( mappingRole );
+		if ( mappingRole != null ) {
+			for ( Property property : properties ) {
+				applyPropertyMappingRole( property );
+			}
+		}
+	}
+
+	private void applyPropertyMappingRole(Property property) {
+		if ( getMappingRole() != null && property.getMappingRole() == null ) {
+			property.setMappingRole( getMappingRole().appendAttribute( property.getName() ) );
+		}
 	}
 
 	public String getPropertyDeclaringClass(Property p) {
@@ -227,8 +560,25 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return unmodifiableList( columns );
 	}
 
+	/**
+	 * Whether this component is flattened into its owning managed type.
+	 * <p>
+	 * This is Hibernate's historical "embedded" component mode, used for
+	 * non-aggregated composite identifiers and identifier mappers where the
+	 * component's properties are exposed as properties of the owning type.
+	 */
+	public boolean isFlattened() {
+		return flattened;
+	}
+
+	/**
+	 * @deprecated Use {@link #isFlattened()}.  This method name reflects
+	 * historical Hibernate terminology and does not mean the same as JPA's
+	 * {@code @Embedded}.
+	 */
+	@Deprecated(since = "9.0")
 	public boolean isEmbedded() {
-		return embedded;
+		return isFlattened();
 	}
 
 	public AggregateColumn getAggregateColumn() {
@@ -237,6 +587,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public void setAggregateColumn(AggregateColumn aggregateColumn) {
 		this.aggregateColumn = aggregateColumn;
+		this.type = null;
 		notifyPropertiesAboutAggregateColumn( aggregateColumn, this );
 	}
 
@@ -322,7 +673,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
-	public void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner) {
+	public void checkColumnDuplication(Set<QualifiedColumnName> distinctColumns, String owner, Database database) {
 		if ( aggregateColumn == null ) {
 			if ( isPolymorphic() ) {
 				// We can allow different subtypes reusing the same columns
@@ -335,7 +686,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 								declaringClass,
 								k -> new HashSet<>( distinctColumns )
 						);
-						prop.getValue().checkColumnDuplication( set, owner );
+						prop.getValue().checkColumnDuplication( set, owner, database );
 					}
 				}
 				for ( var columns : distinctColumnsByClass.values() ) {
@@ -343,37 +694,37 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 				}
 			}
 			else {
-				checkPropertyColumnDuplication( distinctColumns, getProperties(), owner );
+				checkPropertyColumnDuplication( distinctColumns, getProperties(), owner, database );
 			}
 		}
 		else {
-			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'" );
-			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner );
+			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'", database );
+			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner, database );
 		}
 	}
 
 	public String getComponentClassName() {
-		return componentClassName;
+		if ( componentClassDetails == null ) {
+			return null;
+		}
+		final String className = componentClassDetails.getClassName();
+		return className == null ? componentClassDetails.getName() : className;
+	}
+
+	public ClassDetails getComponentClassDetails() {
+		return componentClassDetails;
 	}
 
 	public Class<?> getComponentClass() throws MappingException {
-		if ( componentClass == null ) {
-			if ( componentClassName == null ) {
-				return null;
-			}
-			else {
-				if ( dynamic ) {
-					return null;
-				}
-				try {
-					componentClass = classForName( componentClassName, getBootstrapContext() );
-				}
-				catch (ClassLoadingException e) {
-					throw new MappingException( "Embeddable class not found: " + componentClassName, e );
-				}
-			}
+		if ( componentClassDetails == null || !componentClassDetails.isRealClass() ) {
+			return null;
 		}
-		return componentClass;
+		try {
+			return componentClassDetails.toJavaClass();
+		}
+		catch (ClassLoadingException e) {
+			throw new MappingException( "Embeddable class not found: " + getComponentClassName(), e );
+		}
 	}
 
 	public PersistentClass getOwner() {
@@ -384,17 +735,37 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return parentProperty;
 	}
 
-	public void setComponentClassName(String componentClass) {
-		this.componentClassName = componentClass;
-		if ( this.dynamic ) {
-			this.roleName = componentClassName;
-		}
-		this.componentClass = null;
+	public void setComponentClassDetails(ClassDetails componentClassDetails) {
+		requireShapeBuilding();
+		this.componentClassDetails = componentClassDetails;
 		this.simpleRecord = null;
+		if ( componentClassDetails != null && !componentClassDetails.isRealClass() ) {
+			this.isGeneric = false;
+			this.roleName = componentClassDetails.getName();
+		}
 	}
 
-	public void setEmbedded(boolean embedded) {
-		this.embedded = embedded;
+	public void setComponentClassDetails(String name, boolean dynamic, MetadataBuildingContext buildingContext) {
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var deets = dynamic
+				? Creator.createDynamicClassDetails( name, modelsContext )
+				: modelsContext.getClassDetailsRegistry().resolveClassDetails( name );
+		setComponentClassDetails( deets );
+	}
+
+	public void setFlattened(boolean flattened) {
+		requireShapeBuilding();
+		this.flattened = flattened;
+	}
+
+	/**
+	 * @deprecated Use {@link #setFlattened(boolean)}.  This method name reflects
+	 * historical Hibernate terminology and does not mean "mapped by
+	 * {@code @Embedded}".
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
+	public void setEmbedded(boolean flattened) {
+		setFlattened( flattened );
 	}
 
 	public void setOwner(PersistentClass owner) {
@@ -406,23 +777,56 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public boolean isDynamic() {
-		return dynamic;
+		return componentClassDetails != null && !componentClassDetails.isRealClass();
 	}
 
-	public void setDynamic(boolean dynamic) {
-		this.dynamic = dynamic;
-		if ( dynamic ) {
-			isGeneric = false;
+	public CompositeUserType<?> getCompositeUserType() {
+		return compositeUserType;
+	}
+
+	public void setCompositeUserType(CompositeUserType<?> compositeUserType) {
+		this.compositeUserType = compositeUserType;
+		setTypeName( compositeUserType == null ? null : compositeUserType.getClass().getName() );
+		this.type = null;
+	}
+
+	/**
+	 * Recreates the transient custom-type instance and the property-access
+	 * strategy derived from it after this component has been restored.
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void reattachCompositeUserType(
+			ClassLoaderAccess classLoaderAccess,
+			ManagedBeanRegistry managedBeanRegistry,
+			boolean allowExtensionsInCdi) {
+		if ( getTypeName() == null ) {
+			return;
 		}
-	}
-
-	private CompositeUserType<?> createCompositeUserType(Component component) {
-		final var buildingContext = getBuildingContext();
-		final var bootstrapContext = buildingContext.getBootstrapContext();
-		final var clazz = classForName( CompositeUserType.class, component.getTypeName(), bootstrapContext );
-		return buildingContext.getBuildingOptions().isAllowExtensionsInCdi()
-				? bootstrapContext.getManagedBeanRegistry().getBean( clazz ).getBeanInstance()
-				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( clazz );
+		final Class<? extends CompositeUserType<?>> compositeUserTypeClass =
+				(Class<? extends CompositeUserType<?>>) (Class<?>) classLoaderAccess.classForName( getTypeName() );
+		compositeUserType = createCompositeUserType(
+				compositeUserTypeClass,
+				managedBeanRegistry,
+				allowExtensionsInCdi
+		);
+		final List<String> propertyNames = new ArrayList<>( getPropertySpan() );
+		final List<java.lang.reflect.Type> propertyTypes = new ArrayList<>( getPropertySpan() );
+		final var strategy = new PropertyAccessStrategyCompositeUserTypeImpl(
+				compositeUserType,
+				propertyNames,
+				propertyTypes
+		);
+		for ( Property property : properties ) {
+			propertyNames.add( property.getName() );
+			propertyTypes.add(
+					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
+							compositeUserType.embeddable(),
+							property.getName(),
+							false
+					).getGetter().getReturnType()
+			);
+			property.setPropertyAccessStrategy( strategy );
+		}
 	}
 
 	@Override
@@ -442,18 +846,16 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			synchronized ( this ) {
 				localType = type;
 				if ( localType == null ) {
-					// Make sure this is sorted which is important especially for synthetic components
-					// Other components should be sorted already
-					sortProperties( true );
+					// Make sure the shape is complete, which is important especially for
+					// synthetic components. Other components should already be complete.
+					completeShape( true );
 
-					final String typeName = getTypeName();
-					if ( typeName == null ) {
-						localType = isEmbedded()
+					if ( compositeUserType == null ) {
+						localType = isFlattened()
 								? new EmbeddedComponentType( this, originalPropertyOrder )
 								: new ComponentType( this, originalPropertyOrder );
 					}
 					else {
-						final CompositeUserType<?> compositeUserType = createCompositeUserType( this );
 						localType = new UserComponentType<>( this, originalPropertyOrder, compositeUserType );
 					}
 
@@ -466,8 +868,11 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName)
-		throws MappingException {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			MetadataBuildingContext buildingContext)
+			throws MappingException {
 	}
 
 	@Override
@@ -498,8 +903,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	public boolean isSame(Component other) {
 		return super.isSame( other )
 			&& Objects.equals( properties, other.properties )
-			&& Objects.equals( componentClassName, other.componentClassName )
-			&& embedded == other.embedded
+			&& Objects.equals( getComponentClassName(), other.getComponentClassName() )
+			&& flattened == other.flattened
 			&& Objects.equals( aggregateColumn, other.aggregateColumn )
 			&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
 			&& Objects.equals( structName, other.structName )
@@ -610,7 +1015,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 				return property;
 			}
 		}
-		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
+		throw new MappingException("component: " + getComponentClassName() + " property not found: " + propertyName);
 	}
 
 	public boolean matchesAllProperties(String... propertyNames) {
@@ -630,7 +1035,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public String getRoleName() {
-		return roleName;
+		return roleName != null
+				? roleName
+				: getMappingRole() == null ? null : getMappingRole().getFullPath();
 	}
 
 	public void setRoleName(String roleName) {
@@ -650,31 +1057,21 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public void setDiscriminator(Value discriminator) {
+		requireShapeBuilding();
 		this.discriminator = discriminator;
 	}
 
 	public DiscriminatorType<?> getDiscriminatorType() {
-		final var type = discriminatorType;
-		if ( type == null ) {
-			return discriminatorType = buildDiscriminatorType();
-		}
-		return type;
+		return discriminatorType;
 	}
 
-	private DiscriminatorType<?> buildDiscriminatorType() {
-		return getBuildingContext().getMetadataCollector().resolveEmbeddableDiscriminatorType( getComponentClass(), () -> {
-			final var javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
-			final var domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
-			final var discriminatorType = DiscriminatorHelper.getDiscriminatorType( this );
-			final var converter = EmbeddableDiscriminatorConverter.fromValueMappings(
-					qualify( getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
-					domainJavaType,
-					discriminatorType,
-					getDiscriminatorValues(),
-					getServiceRegistry()
-			);
-			return new DiscriminatorTypeImpl<>( discriminatorType, converter );
-		} );
+	public void setDiscriminatorType(DiscriminatorType<?> discriminatorType) {
+		requireShapeBuilding();
+		this.discriminatorType = discriminatorType;
+	}
+
+	public void reattachDiscriminatorType(DiscriminatorType<?> discriminatorType) {
+		this.discriminatorType = discriminatorType;
 	}
 
 	public boolean isPolymorphic() {
@@ -686,11 +1083,16 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public void setDiscriminatorValues(Map<Object, String> discriminatorValues) {
+		requireShapeBuilding();
 		this.discriminatorValues = discriminatorValues;
 	}
 
 	public String getSuperclass(String subclass) {
 		return subclassToSuperclass.get( subclass );
+	}
+
+	public Map<String, String> getSubclassToSuperclass() {
+		return subclassToSuperclass;
 	}
 
 	public void setSubclassToSuperclass(Map<String, String> subclassToSuperclass) {
@@ -699,14 +1101,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + '(' + componentClassName + ')';
-	}
-
-	@Override
-	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
-		return getCustomIdGeneratorCreator().isAssigned()
-				? GeneratorBinder.buildIdentifierGenerator( this, dialect, rootClass, defaults )
-				: super.createGenerator( dialect, rootClass, property, defaults );
+		return getClass().getSimpleName() + '(' + getComponentClassName() + ')';
 	}
 
 	@Internal
@@ -719,7 +1114,18 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public void clearProperties() {
+		requireShapeBuilding();
 		properties.clear();
+	}
+
+	public void replaceProperties(Function<Property, Property> replacement) {
+		requireShapeBuilding();
+		properties.replaceAll( replacement::apply );
+	}
+
+	public void removePropertiesIf(Predicate<Property> predicate) {
+		requireShapeBuilding();
+		properties.removeIf( predicate );
 	}
 
 	/**
@@ -807,12 +1213,12 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		}
 		if ( instantiatorPropertyNames != null ) {
 			if ( instantiatorPropertyNames.length < properties.size() ) {
-				throw new MappingException( "component type [" + componentClassName + "] specifies " + instantiatorPropertyNames.length + " properties for the instantiator but has " + properties.size() + " properties" );
+				throw new MappingException( "component type [" + getComponentClassName() + "] specifies " + instantiatorPropertyNames.length + " properties for the instantiator but has " + properties.size() + " properties" );
 			}
 			final HashSet<String> assignedPropertyNames = CollectionHelper.setOfSize( properties.size() );
 			for ( String instantiatorPropertyName : instantiatorPropertyNames ) {
 				if ( getProperty( instantiatorPropertyName ) == null ) {
-					throw new MappingException( "could not find property [" + instantiatorPropertyName + "] defined in the @Instantiator withing component [" + componentClassName + "]" );
+					throw new MappingException( "could not find property [" + instantiatorPropertyName + "] defined in the @Instantiator withing component [" + getComponentClassName() + "]" );
 				}
 				assignedPropertyNames.add( instantiatorPropertyName );
 			}
@@ -824,7 +1230,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 						missingProperties.add( propertyName );
 					}
 				}
-				throw new MappingException( "component type [" + componentClassName + "] has " + properties.size() + " properties but the instantiator only assigns " + assignedPropertyNames.size() + " properties. missing properties: " + missingProperties );
+				throw new MappingException( "component type [" + getComponentClassName() + "] has " + properties.size() + " properties but the instantiator only assigns " + assignedPropertyNames.size() + " properties. missing properties: " + missingProperties );
 			}
 		}
 		return true;
@@ -832,28 +1238,47 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public boolean isSorted() {
-		return originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY;
+		return shapeState == ComponentShapeState.COMPLETE;
 	}
 
 	@Override
-	public int[] sortProperties() {
-		return sortProperties( false );
+	public int[] sortProperties(Function<String, PersistentClass> entityBindingResolver) {
+		return completeShape();
 	}
 
-	private int[] sortProperties(boolean forceRetainOriginalOrder) {
-		if ( originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
+	/**
+	 * Complete this component's structural shape, choosing its final property
+	 * order and, where necessary, retaining the correspondence with the order
+	 * in which its properties were contributed.
+	 *
+	 * @return the original-to-completed property-order correspondence, or
+	 * {@code null} when no correspondence is needed
+	 */
+	public int[] completeShape() {
+		return completeShape( false );
+	}
+
+	private int[] completeShape(boolean forceRetainOriginalOrder) {
+		if ( shapeState == ComponentShapeState.COMPLETE ) {
 			return originalPropertyOrder;
+		}
+		if ( preservePropertyOrder ) {
+			originalPropertyOrder = null;
+			shapeState = ComponentShapeState.COMPLETE;
+			return null;
 		}
 		// Don't sort the properties for a simple record
 		if ( isSimpleRecord() ) {
-			return this.originalPropertyOrder = null;
+			originalPropertyOrder = null;
+			shapeState = ComponentShapeState.COMPLETE;
+			return null;
 		}
 		final int[] originalPropertyOrder;
 		// We need to capture the original property order if this is an alternate unique key or embedded component property
 		// to be able to sort the other side of the foreign key accordingly
 		// and also if the source is a XML mapping
 		// because XML mappings might refer to this through the defined order
-		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded() ) {
+		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isFlattened() ) {
 			final var originalProperties = properties.toArray( new Property[0] );
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = new int[originalProperties.length];
@@ -865,10 +1290,38 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = null;
 		}
-		return this.originalPropertyOrder = originalPropertyOrder;
+		this.originalPropertyOrder = originalPropertyOrder;
+		shapeState = ComponentShapeState.COMPLETE;
+		return originalPropertyOrder;
+	}
+
+	public ComponentShapeState getShapeState() {
+		return shapeState;
+	}
+
+	public boolean isShapeComplete() {
+		return shapeState == ComponentShapeState.COMPLETE;
+	}
+
+	private void requireShapeBuilding() {
+		if ( shapeState != ComponentShapeState.BUILDING ) {
+			throw new IllegalStateException( "Component shape is already complete: " + this );
+		}
+	}
+
+	/**
+	 * Require this component's structural shape to be complete before performing
+	 * an operation which depends on the positional order of its properties,
+	 * columns, or selectables.
+	 */
+	public void requireShapeComplete() {
+		if ( shapeState != ComponentShapeState.COMPLETE ) {
+			throw new IllegalStateException( "Component shape is not complete: " + this );
+		}
 	}
 
 	public void setSimpleRecord(boolean simpleRecord) {
+		requireShapeBuilding();
 		this.simpleRecord = simpleRecord;
 	}
 
@@ -897,6 +1350,15 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return simple;
 	}
 
+	public boolean isPreservePropertyOrder() {
+		return preservePropertyOrder;
+	}
+
+	public void setPreservePropertyOrder(boolean preservePropertyOrder) {
+		requireShapeBuilding();
+		this.preservePropertyOrder = preservePropertyOrder;
+	}
+
 	private Class<?> resolveComponentClass() {
 		try {
 			return getComponentClass();
@@ -911,6 +1373,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public void setCustomInstantiator(Class<? extends EmbeddableInstantiator> customInstantiator) {
+		requireShapeBuilding();
 		this.customInstantiator = customInstantiator;
 	}
 
@@ -923,6 +1386,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	public void setInstantiator(Constructor<?> instantiator, String[] instantiatorPropertyNames) {
+		requireShapeBuilding();
 		this.instantiator = instantiator;
 		this.instantiatorPropertyNames = instantiatorPropertyNames;
 	}
@@ -937,8 +1401,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public boolean isGeneric() {
 		if ( isGeneric == null ) {
-			isGeneric = getComponentClassName() != null
-					&& getComponentClass().getTypeParameters().length > 0;
+			final Class<?> componentClass = getComponentClass();
+			isGeneric = componentClass != null && componentClass.getTypeParameters().length > 0;
 		}
 		return isGeneric;
 	}

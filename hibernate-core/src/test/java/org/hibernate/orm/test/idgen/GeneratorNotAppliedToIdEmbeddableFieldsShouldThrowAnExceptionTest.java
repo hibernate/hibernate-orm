@@ -5,10 +5,10 @@
 package org.hibernate.orm.test.idgen;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @Jira("HHH-17653")
 public class GeneratorNotAppliedToIdEmbeddableFieldsShouldThrowAnExceptionTest {
-	protected ServiceRegistry serviceRegistry;
+	protected StandardServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 
 	@AfterEach
@@ -45,9 +45,7 @@ public class GeneratorNotAppliedToIdEmbeddableFieldsShouldThrowAnExceptionTest {
 	public void testThatAnAnnotationExceptionIsThrown() {
 		Exception exception = assertThrows( AnnotationException.class, () -> {
 			serviceRegistry = ServiceRegistryUtil.serviceRegistry();
-			metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( TestEntity.class )
-					.buildMetadata();
+			metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( serviceRegistry, TestEntity.class );
 		} );
 		assertThat( exception.getMessage() ).contains( "Property 'serialValue'" );
 	}

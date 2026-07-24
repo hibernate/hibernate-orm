@@ -53,7 +53,7 @@ public final class CallbackDefinitionResolver {
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
 
-		final var modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
+		final var modelsContext = metadataCollector.getModelsContext();
 		do {
 			final var callbackRegistration =
 					LifecycleEventHandler.from( JpaEventListenerStyle.CALLBACK, currentClazz, false );

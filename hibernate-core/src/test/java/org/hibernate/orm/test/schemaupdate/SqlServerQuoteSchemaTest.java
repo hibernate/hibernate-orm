@@ -8,8 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hamcrest.MatcherAssert;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -83,9 +83,7 @@ public class SqlServerQuoteSchemaTest {
 		var output = new File( tmpDir, "update_script.sql" );
 
 		// first, export the schema...
-		var model = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( MyEntity.class )
-				.buildMetadata();
+		var model = MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), MyEntity.class );
 
 		new SchemaUpdate()
 				.setHaltOnError( true )
@@ -104,9 +102,7 @@ public class SqlServerQuoteSchemaTest {
 		}
 
 		// then, update the schema...
-		model = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( MyEntityUpdated.class )
-				.buildMetadata();
+		model = MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), MyEntityUpdated.class );
 
 		new SchemaUpdate()
 				.setHaltOnError( true )

@@ -1,0 +1,427 @@
+= ORM 9 Design Document Audit
+:toc:
+
+This document audits the design notes in `design/9.0`.
+
+The immediate goal is to reduce stale and duplicated information.  The longer
+term goal is to make each remaining document have one clear job:
+
+* durable target design and rationale;
+* contributor orientation;
+* completed audit/reference data;
+* historical context.
+
+Current branch status, test status, and "what next?" guidance should live only
+in link:current-work-handoff.adoc[`current-work-handoff.adoc`].  Other design
+documents should not track branch health or old failure buckets.
+
+== Classification
+
+Active::
+Still describes a live design problem or cleanup target.
+
+Reference::
+Useful durable explanation or contributor orientation, but not a status tracker.
+
+Finished reference::
+Completed reference or audit data that remains useful but is no longer an
+active design note.  Keep under `finished/` when it is large enough to distract
+from active routing.
+
+Resolved::
+The main design work is implemented or the audit is mostly complete.  Keep only
+if it remains useful as a concise final-state reference.
+
+Historical::
+Rationale for an old PoC or transition.  Keep only if it prevents repeating an
+old mistake; otherwise move to git history.
+
+Archive candidate::
+Mostly status log, stale implementation narrative, or duplicate material that
+should be folded into another document before deletion.
+
+== Policy
+
+* `current-work-handoff.adoc` is the only current-status document.
+* Design documents may say whether a design is active, resolved, or historical,
+  but should not track current test health.
+* Prefer one canonical document per design area.
+* Prefer deleting old work logs once their final decisions are captured.
+* If two documents explain the same concept, keep the one that states the
+  target model most clearly and fold unique durable rationale into it.
+* Completed audits should either become concise reference tables or be archived.
+
+== Inventory
+
+[cols="2,1,3,3", options="header"]
+|===
+| Document
+| Classification
+| Still Useful For
+| Recommended Action
+
+| link:current-work-handoff.adoc[`current-work-handoff.adoc`]
+| Active
+| Current stage, branch/worktree baseline, immediate exit gate, and guardrails.
+| Keep as the only live status source.  Historical implementation and branch
+procedures belong in git history.
+
+| link:index.adoc[`index.adoc`]
+| Active
+| Entry point and document routing.
+| Keep, but simplify after this audit.  It should route by canonical area and identify archive candidates.
+
+| link:improve-bootstrap-completion-plan.adoc[`improve-bootstrap-completion-plan.adoc`]
+| Active
+| PR scope, stage dependencies, exit gates, and triggered follow-ups.
+| Keep as the canonical completion plan.  Do not put branch status in it.
+
+| link:bootstrap-api-compatibility.adoc[`bootstrap-api-compatibility.adoc`]
+| Reference
+| Removed staged builders, retained entry points, integration-hook migrations,
+and compatibility decisions.
+| Keep as the canonical API migration reference.
+
+| link:boot-model-terminology.adoc[`boot-model-terminology.adoc`]
+| Reference
+| Stable vocabulary: declaration, usage, contribution, applied, handoff, correspondence, view.
+| Keep as durable glossary.  Fold duplicate vocabulary from other docs into references to this file.
+
+| link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
+| Reference
+| Orientation for source, XML, categorization, binding, phases, pending state, package layout.
+| Keep as contributor guide.  Remove status or branch-health details if any are added later.
+
+| link:flow-notation.adoc[`flow-notation.adoc`]
+| Reference
+| Shared notation for pipeline sketches.
+| Keep only if still referenced by active docs.  Otherwise fold into the glossary or index.
+
+| link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
+| Active / Blocking
+| Durable bootstrap target: entry points, settings, source products, mapping resolution, metadata, factory handoff.
+| Keep as canonical bootstrap architecture.  Remove any status/test signal and point to handoff for current state.
+
+| link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`]
+| Active / Blocking
+| Final factory construction, `SessionFactoryImpl` constructor slimming, runtime components, custom factory producers.
+| Keep as focused construction design.  Trim constructor-audit tables once conclusions are folded into the target design.
+
+| link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`]
+| Active / Blocking
+| Ownership of mapping/type/function/session-factory customizations and `BootstrapContext` surface reduction.
+| Keep.  This remains relevant to `MappingCustomizations`, function registry ownership, and context narrowing.
+
+| link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
+| Active / Blocking
+| Generator recipe/descriptors, runtime generator creation ownership, and schema exportable compatibility.
+| Keep as the focused design note.  Serialization is no longer a reason to
+defer choosing and implementing the declarative generator handoff.
+
+| link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+| Active umbrella
+| Umbrella declaration/contribution/correspondence model across identifiers, mapped superclasses, and embeddables.
+| Keep as canonical contribution/correspondence design.  Durable material from the old proposal and applied-contribution notes has been folded here.
+
+| link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
+| Resolved foundation
+| Cross-cutting declaration, contextual usage, concrete applied-mapping, compatibility-projection, and stable-role design.
+| Keep as the canonical final-state foundation.  Route remaining
+mapped-superclass, embeddable, generic, and identifier work to their focused
+notes.
+
+| link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+| Active / Blocking
+| Long-term mapped-superclass representation and table/context ownership.
+| Keep for now, but consider merging with `applied-mapped-superclass-handoff-design.adoc` once copied-property bridge cleanup is done.
+
+| link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
+| Active / Blocking
+| Current handoff from semantic mapped-superclass usage metadata to copied `Property` compatibility.
+| Keep while bridge code exists.  Eventually fold into mapped-superclass design or resolved-contribution design.
+
+| link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+| Active / Blocking
+| Generic declaration/usage facts, concrete generic runtime/JPA/SQM behavior.
+| Keep for now.  Fold shared declaration/usage vocabulary into canonical contribution docs.
+
+| link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+| Active / Blocking
+| Embeddable declaration/application products, generic embeddables, polymorphic discriminator handoff.
+| Keep for now.  Consider merging with resolved-contribution design once embeddable bridge state settles.
+
+| link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
+| Active when required
+| IdClass, derived identity, association-valued id correspondence and selectable ordering.
+| Remove stale legacy-boot preconditions.  Implement first-class
+identifier-part correspondence only where a concrete runtime consumer cannot
+use the current role/selectable handoff correctly.
+
+| link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
+| Resolved
+| Phase-owned ordering and isolation of compatibility sorting.
+| Convert to a concise final-state reference and move under `finished/`.
+
+| link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+| Resolved / Stabilization
+| Explicit primary-key, foreign-key, unique-key, index materialization and deletion/narrowing of hidden helper hooks.
+| Keep as the final-state key-creation design.  Limit active work to remaining
+low-level compatibility-helper and naming-context narrowing.
+
+| link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
+| Active / Cross-cutting stabilization
+| Current mapping-layer audit of `MetadataBuildingContext` storage, transient parameters, capability needs, and suggested cleanup slices.
+| Keep as the canonical audit for `MetadataBuildingContext` references retained by `org.hibernate.mapping` objects.  Link from the handoff instead of duplicating the census there.
+
+| link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
+| Mostly resolved / Runtime verification
+| Aggregate intent, member-container materialization, aggregate arrays, and remaining runtime direction.
+| Keep focused runtime questions; remove stale parity/test-health narrative.
+Do not reopen the mapping design without a concrete runtime reproducer.
+
+| link:state-management-design.adoc[`state-management-design.adoc`]
+| Mostly resolved / Stabilization
+| State-management binding model, changelog direction, runtime/settings split.
+| Verify the existing bridge at runtime.  Add a first-class descriptor only if
+a concrete whole-model requirement needs it; otherwise convert to final-state
+reference.
+
+| link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+| Active / Blocking
+| Static metamodel injection plan derived from binding/materialization views.
+| Complete materialization-time plan production, embeddables, inherited
+generic attributes, field roles, and field-hiding semantics.
+
+| link:finished/annotation-coverage.adoc[`finished/annotation-coverage.adoc`]
+| Finished reference
+| Annotation coverage matrix and remaining annotation-level gaps.
+| Keep in the finished bucket as a completed audit.  Remaining deferred entries should point to active design areas rather than become current failure buckets.
+
+| link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
+| Triggered follow-up
+| Future public extension SPI replacing mapping-object-mutating binders.
+| Keep the internal facet proofs.  Do not freeze a public replacement without
+a concrete external use case after the binding/materialization boundary
+stabilizes.
+
+| link:additional-mapping-contributor-design.adoc[`additional-mapping-contributor-design.adoc`]
+| Resolved / Triggered Follow-up
+| Implemented immutable `ProcessedMappings` view for the retained late hook,
+plus the design and triggers for a possible early source-level hook.
+| Keep the implemented late boundary.  Do not add the early hook until a
+documented recategorization trigger occurs.
+
+| link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`]
+| Resolved
+| Factory-ready archive production/restoration, payload boundaries, stable
+identity, invalidation, and runtime handoff.
+| Keep as the canonical metadata archive design.
+
+| link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
+| Superseded / Historical
+| Early alternatives and rationale which led to the implemented archive.
+| Fold unique stable-identity or invalidation rationale into
+`metadata-serialization-design.adoc`, then delete or move to historical
+reference.
+|===
+
+== Consolidation Clusters
+
+=== Bootstrap Cluster
+
+Canonical target:
+
+* link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
+* link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`]
+* link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`]
+* link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
+* link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`]
+* link:bootstrap-api-compatibility.adoc[`bootstrap-api-compatibility.adoc`]
+
+Current-status material from this cluster should move to
+link:current-work-handoff.adoc[`current-work-handoff.adoc`] or be deleted.
+
+=== Contribution / Handoff Cluster
+
+Canonical target:
+
+* link:boot-model-terminology.adoc[`boot-model-terminology.adoc`]
+* link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+* link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
+
+Focused active docs:
+
+* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+* link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
+* link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+* link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
+* link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
+
+=== Mapping Integration Cluster
+
+Canonical target:
+
+* link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+
+Possible focused references:
+
+* link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
+* link:state-management-design.adoc[`state-management-design.adoc`]
+* link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+
+The old `orm-integration-notes.adoc` scratchpad has been deleted.  Its durable
+key-creation rules were folded into
+link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]; its
+source-descriptor and phase-ordering guidance was already represented by
+link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`].
+
+=== Extension And Follow-Up Cluster
+
+Resolved:
+
+* link:additional-mapping-contributor-design.adoc[
+  `additional-mapping-contributor-design.adoc`] for the late immutable
+  processed-model view.
+
+Triggered follow-up:
+
+* link:binding-extension-spi-design.adoc[
+  `binding-extension-spi-design.adoc`] for a future public structured binding
+  SPI;
+* the early source-level contributor portion of
+  `additional-mapping-contributor-design.adoc`.
+
+Superseded:
+
+* link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`] by
+  link:metadata-serialization-design.adoc[
+  `metadata-serialization-design.adoc`].
+
+None should carry current branch status.
+
+=== Finished Reference Bucket
+
+Finished reference/audit artifacts:
+
+* link:finished/annotation-coverage.adoc[`finished/annotation-coverage.adoc`]
+* deterministic attribute ordering, after the current note is reduced to its
+  final phase-owned design and moved here.
+
+== Open Question Routing
+
+Focused design notes may retain alternatives and open questions, but their
+execution scope is assigned here.  This table is authoritative when an older
+question section does not yet carry an inline disposition.
+
+[cols="2,2,4", options="header"]
+|===
+| Area
+| Scope
+| Questions To Resolve
+
+| Bootstrap customizations
+| Blocking
+| Product ownership and deterministic ordering for type, function, naming,
+mapping, cache, and factory customizations; removal of broad context transport.
+
+| Additional mapping contribution
+| Blocking / Triggered follow-up
+| Blocking: processed-model view for the retained late contributor.
+Follow-up: early source contribution, recategorization, ordering, and fixed
+points, triggered by a concrete pre-binding use case.
+
+| Binding extensions
+| Stabilization / Triggered follow-up
+| Decide the ORM 9 status of legacy `AttributeBinder` and `TypeBinder`.
+Defer a public structured replacement until a concrete external use case
+validates the stable internal facet model.
+
+| JPA static metamodel
+| Blocking
+| Materialization-time plan production, embeddables, inherited generic
+attributes, explicit field roles, field hiding, and retirement of duplicate
+runtime traversal.
+
+| Aggregate mappings
+| Stabilization
+| Verify remaining runtime consumers with focused reproducers.  A new mapping
+product is blocking only if observable runtime behavior cannot be expressed by
+the existing aggregate intent/member-container handoff.
+
+| Generators
+| Blocking
+| Choose descriptor versus source shape; preserve exportables, CDI, archive
+restoration, and identifier/value lifecycle separation.
+
+| State management
+| Stabilization
+| Verify runtime/settings handoff.  A first-class descriptor is a triggered
+follow-up unless whole-model reasoning proves necessary.
+
+| Declaration / usage / applied mapping
+| Resolved foundation
+| No umbrella redesign.  Route remaining behavior to the mapped-superclass,
+embeddable, generic, identifier, or runtime consumer which exposes it.
+
+| Mapped superclasses, embeddables, and generics
+| Blocking
+| Finish stable role-based application and runtime/JPA handoffs, including
+mixed components and generic specialization; then consolidate overlapping
+notes.
+
+| Identifier correspondence
+| Blocking only with a concrete consumer
+| Implement identifier-part correspondence where IdClass, derived-id, or
+association-valued-id runtime behavior cannot use existing role/selectable
+correspondence.  Otherwise keep as a follow-up runtime-model improvement.
+
+| Deterministic ordering
+| Resolved
+| Preserve phase-owned sorting and focused guardrails; no remaining design
+question blocks the PR.
+
+| Mapping-key creation
+| Stabilization
+| Narrow remaining low-level compatibility/naming helpers without reopening
+resolved key products and materializers.
+
+| `MetadataBuildingContext`
+| Cross-cutting stabilization
+| Remove stored broad context and phase-ownership violations by capability.
+Total reference count and compatibility constructor parameters are not
+completion metrics.
+
+| SessionFactory bootstrap/construction
+| Blocking
+| Prepare no-factory values, narrow runtime model creation context, make
+service/integrator phases explicit, remove broad contexts from the final
+construction boundary, and define the retained `SessionFactoryOptions` view.
+
+| Metadata snapshot/serialization
+| Resolved / Triggered follow-up
+| The factory-ready archive is complete.  Other general-purpose snapshot layers
+are follow-ups triggered by a concrete tooling or startup requirement.
+
+| Bootstrap API compatibility
+| Stabilization
+| Formal `Configuration` deprecation policy, replacement coverage for removed
+builder contributors, and the minimum public custom-producer settings view.
+|===
+
+== Resolved Or Mostly Resolved Items
+
+These should not remain as active status narratives:
+
+* removal of `MetadataSources`, `MetadataBuilder`, `MetadataBuilderImpl`,
+  `HibernateBootstrap`, `SessionFactoryBuilder`, and
+  `Metadata#buildSessionFactory()`;
+* replacement of the old public staged builder path with
+  `HibernatePersistenceConfiguration` / JPA bootstrap and internal
+  `BootstrapPipeline`;
+* externalization of `BasicValue.Resolution` determination;
+* removal of the old collector-driven basic-value resolver registration path;
+* materializer bridge drain for key creation, except for retained deprecated
+  compatibility helpers;
+* removal of `MetadataBuildingProcess` as a production path;
+* old broad failure-bucket and green-suite closeout narratives.

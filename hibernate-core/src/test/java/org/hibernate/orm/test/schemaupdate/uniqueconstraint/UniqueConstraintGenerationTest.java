@@ -88,7 +88,7 @@ public class UniqueConstraintGenerationTest {
 			regex = dialect.getCreateIndexString( true ) + " .* on " + tableName + " \\(" + columnName +"\\);";
 		}
 		else if ( dialect.getUniqueDelegate() instanceof CreateTableUniqueDelegate ) {
-			regex = dialect.getCreateTableString() + " " + tableName + " .* " + columnName + " .+ unique.*\\)"
+			regex = dialect.getCreateTableString() + " " + tableName + " \\(.*\\b" + columnName + "\\b .+ unique.*\\)"
 					+ dialect.getTableTypeString().toLowerCase() + ";";
 		}
 		else if ( dialect.getUniqueDelegate() instanceof AlterTableUniqueDelegate) {

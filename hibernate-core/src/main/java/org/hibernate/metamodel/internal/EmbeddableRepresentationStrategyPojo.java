@@ -23,6 +23,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
 import org.hibernate.usertype.CompositeUserType;
@@ -50,6 +51,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			EmbeddableInstantiator customInstantiator,
 			CompositeUserType<Object> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
+		bootDescriptor.requireShapeComplete();
 		embeddableJavaType = resolveEmbeddableJavaType( bootDescriptor, compositeUserType, creationContext );
 
 		final int propertySpan = bootDescriptor.getPropertySpan();
@@ -59,6 +61,9 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		final var strategySelector =
 				creationContext.getServiceRegistry()
 						.getService( StrategySelector.class );
+		final var propertyAccessStrategyResolver =
+				creationContext.getServiceRegistry()
+						.requireService( PropertyAccessStrategyResolver.class );
 
 		// We need access to the Class objects, used only during initialization
 		final var subclassesByName = getSubclassesByName( bootDescriptor, creationContext );
@@ -71,7 +76,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 							property,
 							embeddableClass,
 							customInstantiator == null,
-							strategySelector
+							strategySelector,
+							propertyAccessStrategyResolver
 					);
 			attributeNameToPositionMap.put( property.getName(), i );
 
@@ -103,6 +109,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 				instantiatorsByDiscriminator.put( discriminator.getKey(), instantiator );
 				instantiatorsByClass.put( className, instantiator );
 			}
+			registerInstantiatorAliases( bootDescriptor );
 			instantiator = null;
 		}
 		else {
@@ -179,8 +186,14 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			Property property,
 			Class<?> embeddableClass,
 			boolean requireSetters,
-			StrategySelector strategySelector) {
-		final var strategy = propertyAccessStrategy( property, embeddableClass, strategySelector );
+			StrategySelector strategySelector,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
+		final var strategy = propertyAccessStrategy(
+				property,
+				embeddableClass,
+				strategySelector,
+				propertyAccessStrategyResolver
+		);
 		if ( strategy == null ) {
 			throw new HibernateException(
 					String.format(
@@ -225,7 +238,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		if ( bootDescriptor.isPolymorphic() ) {
 			final var subclassNames = bootDescriptor.getDiscriminatorValues().values();
 			final Map<String, Class<?>> result = new HashMap<>( subclassNames.size() );
-			final var classLoaderService = creationContext.getBootstrapContext().getClassLoaderService();
+			final var classLoaderService = creationContext.getClassLoaderService();
 			for ( final String subclassName : subclassNames ) {
 				final var embeddableClass =
 						subclassName.equals( bootDescriptor.getComponentClassName() )
@@ -288,5 +301,38 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		}
 		assert instantiatorsByClass != null;
 		return instantiatorsByClass.get( className );
+	}
+
+	private void registerInstantiatorAliases(Component bootDescriptor) {
+		final Map<String, String> subclassToSuperclass = bootDescriptor.getSubclassToSuperclass();
+		if ( subclassToSuperclass == null ) {
+			return;
+		}
+		for ( String subclass : subclassToSuperclass.keySet() ) {
+			if ( instantiatorsByClass.containsKey( subclass ) ) {
+				continue;
+			}
+			final EmbeddableInstantiator instantiator = resolveSuperclassInstantiator(
+					subclass,
+					subclassToSuperclass
+			);
+			if ( instantiator != null ) {
+				instantiatorsByClass.put( subclass, instantiator );
+			}
+		}
+	}
+
+	private EmbeddableInstantiator resolveSuperclassInstantiator(
+			String subclass,
+			Map<String, String> subclassToSuperclass) {
+		String superclass = subclassToSuperclass.get( subclass );
+		while ( superclass != null ) {
+			final EmbeddableInstantiator instantiator = instantiatorsByClass.get( superclass );
+			if ( instantiator != null ) {
+				return instantiator;
+			}
+			superclass = subclassToSuperclass.get( superclass );
+		}
+		return null;
 	}
 }

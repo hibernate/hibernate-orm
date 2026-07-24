@@ -8,6 +8,8 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.tool.reveng.api.core.RevengStrategy;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class BinderContext {
@@ -28,6 +30,7 @@ public class BinderContext {
 	public final InFlightMetadataCollector metadataCollector;
 	public final RevengStrategy revengStrategy;
 	public final Properties properties;
+	private final List<CollectionAssociationFinalizer> collectionAssociationFinalizers = new ArrayList<>();
 
 	private BinderContext(
 			MetadataBuildingContext metadataBuildingContext,
@@ -38,6 +41,16 @@ public class BinderContext {
 		this.metadataCollector = metadataCollector;
 		this.revengStrategy = revengStrategy;
 		this.properties = properties;
+	}
+
+	public void addCollectionAssociationFinalizer(CollectionAssociationFinalizer finalizer) {
+		collectionAssociationFinalizers.add( finalizer );
+	}
+
+	public void finalizeCollectionAssociations() {
+		final var finalizers = List.copyOf( collectionAssociationFinalizers );
+		collectionAssociationFinalizers.clear();
+		finalizers.forEach( CollectionAssociationFinalizer::finalizeCollectionAssociation );
 	}
 
 }

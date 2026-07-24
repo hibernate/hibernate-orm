@@ -1,0 +1,355 @@
+= Additional Mapping Contributor Design
+:toc:
+
+This document captures the ORM 9 direction for mapping contributions made after
+the application sources have been inspected.
+
+The `AdditionalMappingContributor` contract runs after the primary mappings
+have been processed.  ORM 9 preserves that timing while exposing the processed
+state through the narrow immutable `ProcessedMappings` view instead of
+`InFlightMetadataCollector`.
+
+The target is to keep the late processed-mappings capability, avoid exposing the
+full mutable collector as a contributor query surface, and add a pipeline-native
+contributor contract for earlier source/model decisions.
+
+== Goals
+
+* Preserve the existing `AdditionalMappingContributor` capability to inspect
+  mappings processed so far before contributing more mappings.
+* Keep the processed-mapping view narrow and immutable.
+* Provide a new contributor contract that can make decisions from processed
+  source/categorization facts without requiring `org.hibernate.mapping` state.
+* Allow contributions through a sidecar accumulator similar to
+  `AdditionalMappingContributions`.
+* Keep source interpretation, categorization, binding, and materialization
+  phase boundaries explicit.
+* Avoid incremental mutation of categorized facts unless a later design proves
+  it is necessary and safe.
+
+== Non-Goals
+
+* Do not remove the late processed-mappings contribution capability merely to
+  make the pipeline simpler.
+* Do not expose mutable `CategorizedDomainModel` internals as a public or
+  semi-public SPI.
+* Do not require contributors to understand binding implementation records.
+* Do not introduce a fixed-point contribution loop in the initial design.
+* Do not use `org.hibernate.mapping` objects as the input model for the new
+  early contributor contract.
+
+== Current Processed-Mappings Hook
+
+The contributor contract includes:
+
+* `AdditionalMappingContributions`, the write sidecar;
+* `ProcessedMappings`, the immutable processed-state query surface;
+* `AdditionalMappingContributorContext`, a narrow contextual-services view
+  containing model, class-loading, type, and resource-location services.
+
+In the ORM 9 pipeline this hook, or its replacement, should remain late:
+
+[source]
+----
+collect sources
+categorize primary model
+bind primary model
+run legacy AdditionalMappingContributor
+categorize and bind contributed class/XML resources into the same binding state
+finalize metadata
+----
+
+This timing is deliberate.  Contributors may query mapped classes, tables,
+namespaces, registrations, or other processed mapping state that does not exist
+until after binding/materialization has populated compatibility metadata.
+
+The repository compatibility inventory found two read-side decisions in
+existing contributors: whether an entity name was already mapped, and which
+dialect/version is active.  Only the first is processed-model state.
+`ProcessedMappings` therefore exposes an immutable view of processed entities
+backed by the primary `CategorizedDomainModel`.  Its lookup and
+`getMappedEntityNames()` are explicitly keyed by Hibernate entity name; each
+`ProcessedEntity` exposes the Hibernate entity name, JPA entity name, Java
+class name, hierarchy position, access type, and declared attribute names as
+distinct concepts.  `EntityTypeMetadata` implements this narrow interface
+directly, so the processed view reuses the categorized model without
+constructing a parallel entity representation.
++
+The snapshot is constructed once and shared by all contributors in this phase.
+It contains only the primary categorized model, not mappings supplied by
+earlier `AdditionalMappingContributor` instances in the same discovery pass.
+The dialect belongs to
+`AdditionalMappingContributorContext` with the other environmental services.
+Additional processed-model lookup capabilities should still be added only
+with a focused integration use case.
+
+`AdditionalMappingContributorContext` exposes model inspection, class loading,
+resource lookup, and the type configuration without exposing
+`MetadataBuildingContext` or its mutable metadata collector.  Relational
+contributions remain on the write side:
+`AdditionalMappingContributions` owns table, sequence, auxiliary-object, and
+the narrow database materialization escape hatch needed by dialect JDBC types.
+
+== New Pipeline-Native Hook
+
+Introduce a new contract with a name such as `BootModelContributor`,
+`MappingModelContributor`, or `MappingDiscoveryContributor`.
+
+The new contract should run after source interpretation and primary
+categorization, but before final binding:
+
+[source,java]
+----
+public interface BootModelContributor {
+    void contribute(
+            MappingDiscoveryView discoveredModel,
+            BootModelContributions contributions,
+            ResourceStreamLocator resourceStreamLocator,
+            MetadataBuildingContext buildingContext);
+}
+----
+
+Names are provisional.  The important split is:
+
+`MappingDiscoveryView`::
+Read-only early processed information.
+
+`BootModelContributions`::
+Write-only sidecar for additional mapping sources.
+
+The new contributor should answer questions like "given the mappings supplied by
+the application, should I add another managed class or XML binding?"  It should
+not answer questions that require finalized table bindings, generated
+`PersistentClass` objects, or second-pass compatibility state.
+
+== Early Processed Information
+
+The best early view is a stable read-only facade over categorization results,
+not direct exposure of `CategorizedDomainModel`.
+
+The view should be backed by:
+
+* source discovery and XML overlay results;
+* hibernate-models `ClassDetails` and `MemberDetails`;
+* primary categorization facts;
+* persistence-unit global registrations collected during categorization.
+
+It should expose intentionally small query methods, for example:
+
+[source,java]
+----
+public interface MappingDiscoveryView {
+    boolean hasManagedClass(String className);
+    boolean hasEntity(String className);
+    boolean hasMappedSuperclass(String className);
+    boolean hasEmbeddable(String className);
+
+    Optional<PersistentTypeDiscovery> findEntity(String className);
+    Optional<PersistentTypeDiscovery> findManagedClass(String className);
+
+    Stream<PersistentTypeDiscovery> entities();
+    Stream<PersistentTypeDiscovery> mappedSuperclasses();
+    Stream<PersistentTypeDiscovery> embeddables();
+
+    Optional<ClassDetails> classDetails(String className);
+
+    GlobalRegistrationsDiscovery globalRegistrations();
+}
+----
+
+`PersistentTypeDiscovery` should expose classification and hierarchy facts,
+such as:
+
+* managed type kind: entity, mapped superclass, embeddable;
+* class name and `ClassDetails`;
+* entity hierarchy root and supertype/subtype relationships when applicable;
+* inheritance strategy when applicable;
+* default access type;
+* declared persistent member names and `MemberDetails`;
+* source origin or explicit/defaulted markers where contribution decisions need
+  them.
+
+`GlobalRegistrationsDiscovery` should be a read-only query facade over the
+current `GlobalRegistrations` product.  It should expose presence and lookup
+operations for registrations that commonly drive contribution decisions:
+
+* converters;
+* user types and composite user types;
+* collection types;
+* filters;
+* generators;
+* named queries and result-set mappings;
+* entity graphs;
+* auxiliary database object declarations.
+
+The public view should not expose mutable collections from
+`GlobalRegistrations`.
+
+== Contribution Sidecar
+
+The write side should mirror the source-level parts of
+`AdditionalMappingContributions`:
+
+[source,java]
+----
+public interface BootModelContributions {
+    void contributeEntity(Class<?> entityType);
+    void contributeManagedClass(ClassDetails classDetails);
+    void contributeBinding(InputStream xmlStream);
+    void contributeBinding(JaxbEntityMappingsImpl mapping);
+}
+----
+
+These operations contribute new source material, not bound mapping objects.
+
+Table, sequence, and auxiliary database object contributions are less clearly
+source-level.  There are two reasonable options:
+
+* keep them only on legacy `AdditionalMappingContributions` initially;
+* add them to the new sidecar only when there is a source-level registration
+  product that can participate in final categorization and metadata
+  materialization.
+
+The conservative initial design is to leave direct table/sequence/database
+object mutation on the late legacy hook.
+
+== Phase Order
+
+The initial pipeline-native contribution flow should be:
+
+[source]
+----
+collect application sources
+apply XML overlays and source interpretation
+categorize primary model
+run BootModelContributor against MappingDiscoveryView
+merge primary PreparedMappingSources with contributed PreparedMappingSources
+categorize merged model from scratch
+bind/materialize final categorized model
+run legacy AdditionalMappingContributor late
+finalize metadata
+----
+
+The second categorization is a full categorization of the merged source set.
+It should not selectively add categorized facts to the primary categorized
+model.
+
+== Why Full Recategorization
+
+Selective categorized mutation is attractive but fragile.  A contributed source
+can affect more than one local category:
+
+* a contributed entity can be a subclass of an existing hierarchy;
+* contributed XML can override or supplement an existing class;
+* a contributed mapped superclass can become visible to an already-categorized
+  entity;
+* package/XML defaults can affect source interpretation;
+* global converters, generators, listeners, and filters can affect later
+  binding;
+* contributor ordering can otherwise leak into hierarchy or registration
+  resolution.
+
+Full recategorization keeps those rules centralized in `DomainModelCategorizer`
+and avoids a parallel incremental categorization algorithm.
+
+The early contributor makes decisions against the primary categorized view:
+"what did the application provide?"  The final categorized model is then built
+from application plus contributor sources.
+
+== Contributor Ordering And Fixed Points
+
+The initial design should run pipeline-native contributors once.
+
+Contributors should not depend on sources contributed by other contributors in
+the same phase.  If a later use case requires contributor-to-contributor
+visibility, add an explicit ordered or fixed-point contribution phase with:
+
+* cycle detection;
+* duplicate source handling;
+* deterministic contributor ordering;
+* a documented maximum iteration or convergence rule;
+* diagnostics explaining which contributor caused each new contribution.
+
+Do not accidentally create a fixed-point loop by repeatedly recategorizing
+until no new sidecar entries appear.
+
+== Relationship To CategorizedDomainModel
+
+`CategorizedDomainModel` remains an internal phase product.
+
+The new `MappingDiscoveryView` may delegate to it, but should not expose it
+directly.  This gives the pipeline room to reshape categorization internals
+without breaking contributor contracts.
+
+The view should prefer:
+
+* stable classification queries;
+* hibernate-models `ClassDetails` / `MemberDetails` for source inspection;
+* immutable snapshots or defensive read-only wrappers;
+* explicit "not available at this phase" boundaries.
+
+It should avoid:
+
+* `org.hibernate.mapping` types;
+* mutable maps/lists from categorization;
+* binding-state implementation objects;
+* materialization sidecars;
+* runtime model objects.
+
+== Relationship To Legacy AdditionalMappingContributor
+
+Both hooks can coexist:
+
+`BootModelContributor`::
+Early, source/categorization-driven, contributes additional mapping sources.
+
+`AdditionalMappingContributor`::
+Late, processed-mapping-driven, preserves the existing behavioral capability
+through `ProcessedMappings` and writes only through
+`AdditionalMappingContributions`.
+
+Over time, integrations that only need source/categorization facts should move
+to the early hook.  Integrations needing processed entity facts, environmental
+services such as the dialect, or direct relational-object contribution remain
+on the late hook.  A request for broader collector state must first be
+expressed as a focused read-side query or write-side contribution operation.
+
+== Implementation Triggers
+
+Implement the early hook when one of these appears:
+
+* a contributor needs to decide from discovered entities, mapped superclasses,
+  embeddables, annotations, or XML overlays before binding;
+* the late legacy hook forces awkward incremental binding that would be cleaner
+  as a source-level contribution;
+* additional integrations need hibernate-models `ClassDetails` and
+  categorization facts but not `org.hibernate.mapping`;
+* a focused test shows that contributed sources should affect hierarchy,
+  package/default, global registration, or XML overlay decisions as if they had
+  been present from the beginning.
+
+Do not implement the early hook merely to remove the existing late hook.  The
+late hook remains the compatibility boundary for processed-mapping and direct
+relational-contribution behavior.
+
+== Verification Strategy
+
+Initial coverage should include:
+
+* a contributor that adds an entity based on the presence of another entity;
+* a contributor that adds XML based on a discovered annotation or class;
+* a contributed mapped superclass that affects a final entity hierarchy;
+* a contributed embeddable used by a contributed entity;
+* duplicate contribution handling;
+* proof that `AdditionalMappingContributor` sees the immutable processed entity
+  snapshot without receiving `InFlightMetadataCollector`.
+
+The focused legacy guardrail remains:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.intg.AdditionalMappingContributorTests' \
+  --tests 'org.hibernate.orm.test.intg.AdditionalMappingContributorBasicColumnTests' \
+  --console=plain
+----

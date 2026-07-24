@@ -19,6 +19,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
@@ -29,14 +31,20 @@ import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.internal.CompositeGeneratorBuilder;
+import org.hibernate.generator.internal.GeneratorTypeHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -582,7 +590,7 @@ abstract class BaseEntityPersister implements Serializable {
 			final RuntimeModelCreationContext context) {
 		final var generatorCreator = mappingProperty.getValueGeneratorCreator();
 		if ( generatorCreator != null ) {
-			final var generator = mappingProperty.createGenerator( context );
+			final var generator = createGenerator( mappingProperty, context );
 			if ( generator.generatesSometimes() ) {
 				return generator;
 			}
@@ -591,11 +599,79 @@ abstract class BaseEntityPersister implements Serializable {
 			final var builder =
 					new CompositeGeneratorBuilder( entityName, mappingProperty, context.getDialect() );
 			for ( var property : component.getProperties() ) {
-				builder.add( property.createGenerator( context ) );
+				builder.add( createGenerator( property, context ) );
 			}
 			return builder.build();
 		}
 		return null;
+	}
+
+	private static Generator createGenerator(Property property, RuntimeModelCreationContext context) {
+		final var generatorCreator = property.getValueGeneratorCreator();
+		if ( generatorCreator == null ) {
+			return null;
+		}
+		else {
+			final var creationContext = new PropertyGeneratorCreationContext( property, context );
+			final var generator = generatorCreator.createGenerator( creationContext );
+			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, creationContext );
+			return generator;
+		}
+	}
+
+	private record PropertyGeneratorCreationContext(
+			Property property,
+			RuntimeModelCreationContext context) implements GeneratorCreationContext {
+
+		@Override
+		public Database getDatabase() {
+			return context.getMetadata().getDatabase();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return context.getServiceRegistry();
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return context.getSessionFactoryOptions().getDefaultCatalog();
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return context.getSessionFactoryOptions().getDefaultSchema();
+		}
+
+		@Override
+		public PersistentClass getPersistentClass() {
+			return property.getPersistentClass();
+		}
+
+		@Override
+		public RootClass getRootClass() {
+			return property.getPersistentClass().getRootClass();
+		}
+
+		@Override
+		public Property getProperty() {
+			return property;
+		}
+
+		@Override
+		public Value getValue() {
+			return property.getValue();
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return property.getMemberDetails();
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return context.getSqlStringGenerationContext();
+		}
 	}
 
 	public Generator[] getGenerators() {

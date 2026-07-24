@@ -7,8 +7,8 @@ package org.hibernate.orm.test.jpa.metamodel;
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -52,11 +52,10 @@ public class MappedSuperclassIdClassSiblingTest {
 	@Test
 	void entitySubclassCannotDeclareAnotherId() {
 		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( ParentEntity.class )
-					.addAnnotatedClass( ChildEntityWithId.class );
-
-			assertThrows( RuntimeException.class, metadataSources::buildMetadata );
+			assertThrows(
+					RuntimeException.class,
+					() -> MetadataBuildingTestHelper.buildMetadata( ssr, ParentEntity.class, ChildEntityWithId.class )
+			);
 		}
 	}
 

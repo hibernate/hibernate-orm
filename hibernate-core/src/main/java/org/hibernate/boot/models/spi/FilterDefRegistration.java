@@ -74,7 +74,7 @@ public class FilterDefRegistration {
 	}
 
 	public FilterDefinition toFilterDefinition(MetadataBuildingContext buildingContext) {
-		final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext().getManagedBeanRegistry();
+		final ManagedBeanRegistry beanRegistry = buildingContext.getManagedBeanRegistry();
 
 		final Map<String, JdbcMapping> parameterJdbcMappings;
 		if ( CollectionHelper.isEmpty( parameterTypes ) ) {
@@ -107,7 +107,17 @@ public class FilterDefRegistration {
 				isAutoEnabled(),
 				isApplyToLoadByKey(),
 				parameterJdbcMappings,
+				parameterTypeClassNames(),
 				parameterResolvers
 		);
+	}
+
+	private Map<String, String> parameterTypeClassNames() {
+		if ( CollectionHelper.isEmpty( parameterTypes ) ) {
+			return Collections.emptyMap();
+		}
+		final Map<String, String> result = new HashMap<>();
+		parameterTypes.forEach( (name, type) -> result.put( name, type.getClassName() ) );
+		return result;
 	}
 }

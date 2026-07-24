@@ -15,13 +15,14 @@ import org.hibernate.audit.ModificationType;
 import org.hibernate.audit.internal.AuditEntityLoaderImpl;
 import org.hibernate.audit.spi.AuditEntityLoader;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
@@ -79,8 +80,8 @@ public class AuditMappingImpl implements AuditMapping {
 			String auditTableName,
 			SelectableMapping changesetIdMapping,
 			@Nullable SelectableMapping modificationTypeMapping,
-			@Nullable SelectableMapping invalidatingChangesetMapping
-	) {}
+			@Nullable SelectableMapping invalidatingChangesetMapping) {
+	}
 
 	private final Map<String, TableAuditInfo> tableAuditInfoMap;
 
@@ -91,7 +92,7 @@ public class AuditMappingImpl implements AuditMapping {
 	private final AuditStrategy auditStrategy;
 
 	private final EntityMappingType entityMappingType;
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 	private AuditEntityLoader entityLoader;
 
 	public AuditMappingImpl(
@@ -103,20 +104,21 @@ public class AuditMappingImpl implements AuditMapping {
 
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
-		this.sessionFactory = creationContext.getSessionFactory();
-		this.auditStrategy = sessionFactory.getSessionFactoryOptions().getAuditStrategy();
-		final var changesetIdJavaType = sessionFactory.getChangesetCoordinator().getIdentifierType();
+		final var changesetCoordinator = creationContext.getChangesetCoordinator();
+		this.sessionFactoryAccess = creationContext.getSessionFactoryAccess();
+		this.auditStrategy = creationContext.getSessionFactoryOptions().getAuditStrategy();
+		final var changesetIdJavaType = changesetCoordinator.getIdentifierType();
 
 		jdbcMapping = resolveJdbcMapping( typeConfiguration, changesetIdJavaType );
 		changesetIdBasicType = resolveBasicType( typeConfiguration, changesetIdJavaType );
 
-		final var dialect = sessionFactory.getJdbcServices().getDialect();
+		final var dialect = creationContext.getDialect();
 		currentTimestampFunctionName =
-				sessionFactory.getChangesetCoordinator().useServerTimestamp( dialect )
+				changesetCoordinator.useServerTimestamp( dialect )
 						? dialect.currentTimestamp()
 						: null;
 
-		maxFunctionDescriptor = resolveMaxFunction( sessionFactory );
+		maxFunctionDescriptor = resolveMaxFunction( creationContext );
 	}
 
 	private TableAuditInfo resolveInfo(String originalTableName) {
@@ -135,7 +137,7 @@ public class AuditMappingImpl implements AuditMapping {
 			if ( entityMappingType == null ) {
 				throw new IllegalStateException( "getEntityLoader() is not available for collection audit mappings" );
 			}
-			entityLoader = new AuditEntityLoaderImpl( entityMappingType, sessionFactory );
+			entityLoader = new AuditEntityLoaderImpl( entityMappingType, sessionFactoryAccess.getSessionFactory() );
 		}
 		return entityLoader;
 	}
@@ -335,10 +337,8 @@ public class AuditMappingImpl implements AuditMapping {
 		);
 	}
 
-	private static FunctionRenderer resolveMaxFunction(SessionFactoryImplementor sessionFactory) {
-		final var functionDescriptor =
-				sessionFactory.getQueryEngine().getSqmFunctionRegistry()
-						.findFunctionDescriptor( MAX );
+	private static FunctionRenderer resolveMaxFunction(RuntimeModelCreationContext creationContext) {
+		final var functionDescriptor = creationContext.getFunctionRegistry().findFunctionDescriptor( MAX );
 		if ( functionDescriptor instanceof AbstractSqmSelfRenderingFunctionDescriptor selfRendering ) {
 			return selfRendering;
 		}

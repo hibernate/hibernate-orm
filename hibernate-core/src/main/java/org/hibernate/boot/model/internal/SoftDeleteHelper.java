@@ -6,14 +6,21 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -44,20 +51,33 @@ public class SoftDeleteHelper {
 			Table table,
 			MetadataBuildingContext context) {
 		assert softDeleteConfig != null;
-		final var softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn(
-				softDeleteConfig,
-				createSoftDeleteIndicatorValue( softDeleteConfig, table, context ),
-				context
-		);
+		final BasicValue softDeleteIndicatorValue = createSoftDeleteIndicatorValue( softDeleteConfig, table, context );
+		assignMappingRole( target, softDeleteIndicatorValue );
+		final var softDeleteIndicatorColumn =
+				createSoftDeleteIndicatorColumn( softDeleteConfig, softDeleteIndicatorValue, context );
+		applyResolution( softDeleteConfig, softDeleteIndicatorColumn, context );
 		table.addColumn( softDeleteIndicatorColumn );
 		target.enableSoftDelete( softDeleteIndicatorColumn, softDeleteConfig.strategy() );
+	}
+
+	private static void assignMappingRole(SoftDeletable target, BasicValue value) {
+		if ( target instanceof Collection collection && collection.getRole() != null ) {
+			value.setMappingRole(
+					MappingRole.collection( collection.getRole() ).append( MappingRole.PartKind.SOFT_DELETE )
+			);
+		}
+		else if ( target instanceof RootClass rootClass && rootClass.getEntityName() != null ) {
+			value.setMappingRole(
+					MappingRole.entity( rootClass.getEntityName() ).append( MappingRole.PartKind.SOFT_DELETE )
+			);
+		}
 	}
 
 	private static BasicValue createSoftDeleteIndicatorValue(
 			SoftDelete softDeleteConfig,
 			Table table,
 			MetadataBuildingContext context) {
-		final var softDeleteIndicatorValue = new BasicValue( context, table );
+		final var softDeleteIndicatorValue = BasicValue.unregistered( context, table );
 		softDeleteIndicatorValue.makeSoftDelete( softDeleteConfig.strategy() );
 
 		if ( softDeleteConfig.strategy() == SoftDeleteType.TIMESTAMP ) {
@@ -66,18 +86,36 @@ public class SoftDeleteHelper {
 						"Specifying SoftDelete#converter in conjunction with SoftDeleteType.TIMESTAMP is not supported"
 				);
 			}
-			softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Instant.class );
 		}
 		else {
 			final ConverterDescriptor<Boolean,?> converterDescriptor =
 					ConverterDescriptors.of( softDeleteConfig.converter() );
 			softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
-			softDeleteIndicatorValue.setImplicitJavaTypeAccess(
-					typeConfiguration -> converterDescriptor.getRelationalValueResolvedType()
-			);
 		}
 
 		return softDeleteIndicatorValue;
+	}
+
+	private static void applyResolution(
+			SoftDelete softDeleteConfig,
+			Column softDeleteIndicatorColumn,
+			MetadataBuildingContext context) {
+		final var softDeleteIndicatorValue = (BasicValue) softDeleteIndicatorColumn.getValue();
+		final var resolutionInput = BasicValueResolutionDetails.create(
+				softDeleteIndicatorValue,
+				BasicValueSource.softDelete()
+		);
+		resolutionInput.setResolvedJavaType(
+				softDeleteConfig.strategy() == SoftDeleteType.TIMESTAMP
+						? Instant.class
+						: softDeleteIndicatorValue.getJpaAttributeConverterDescriptor().getRelationalValueResolvedType()
+		);
+		BasicValueResolutionBuilder.applyResolution(
+				resolutionInput,
+				context.getServiceComponents(),
+				MappingResolutionState.from( context ),
+				context
+		);
 	}
 
 	private static Column createSoftDeleteIndicatorColumn(
@@ -117,7 +155,7 @@ public class SoftDeleteHelper {
 			SoftDelete softDeleteConfig,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
-		final var namingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
+		final var namingStrategy = context.getBuildingPlan().getPhysicalNamingStrategy();
 		// NOTE: the argument order is strange here - the fallback value comes first
 		final String logicalColumnName = coalesce(
 				softDeleteConfig.strategy().getDefaultColumnName(),

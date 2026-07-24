@@ -6,11 +6,11 @@ package org.hibernate.orm.test.jpa.compliance;
 
 import java.util.Collections;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -86,10 +86,9 @@ public class JpaComplianceTests {
 						.applySetting( AvailableSettings.JPA_COMPLIANCE, true )
 						.build(),
 				(serviceRegistryScope) -> {
-					try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
-							serviceRegistryScope.getRegistry() )
-							.buildMetadata()
-							.buildSessionFactory()) {
+					try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+							MetadataBuildingTestHelper.buildMetadata( serviceRegistryScope.getRegistry() )
+					)) {
 						final JpaCompliance jpaCompliance = sessionFactory.getSessionFactoryOptions()
 								.getJpaCompliance();
 						assertAll( jpaCompliance, true );
@@ -110,10 +109,9 @@ public class JpaComplianceTests {
 						.applySetting( AvailableSettings.JPA_COMPLIANCE, false )
 						.build(),
 				(serviceRegistryScope) -> {
-					try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources(
-							serviceRegistryScope.getRegistry() )
-							.buildMetadata()
-							.buildSessionFactory()) {
+					try (final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+							MetadataBuildingTestHelper.buildMetadata( serviceRegistryScope.getRegistry() )
+					)) {
 						final JpaCompliance jpaCompliance = sessionFactory.getSessionFactoryOptions()
 								.getJpaCompliance();
 						assertAll( jpaCompliance, false );

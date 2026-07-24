@@ -15,6 +15,7 @@ import java.util.Set;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
@@ -31,6 +32,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -309,10 +311,12 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 	@Override
 	public String aggregateCustomWriteExpression(
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration) {
 		// We need to know what array this is STRUCT_ARRAY/JSON_ARRAY/XML_ARRAY,
 		// which we can easily get from the type code of the aggregate column
-		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		final int sqlTypeCode = aggregateColumn.getJdbcType( mappingContext ).getDefaultSqlTypeCode();
 		switch ( sqlTypeCode == ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:
@@ -329,7 +333,8 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 						aggregateColumn,
 						aggregatedColumns,
 						sb,
-						aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
+						mappingContext,
+						typeConfiguration
 				);
 				return sb.toString();
 		}
@@ -340,6 +345,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			ColumnTypeInformation aggregateColumnType,
 			List<Column> aggregatedColumns,
 			StringBuilder sb,
+			MappingContext mappingContext,
 			TypeConfiguration typeConfiguration) {
 		sb.append( aggregateColumnType.getTypeName() ).append( "()" );
 		for ( Column udtColumn : aggregatedColumns ) {
@@ -350,11 +356,12 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 						aggregateColumn,
 						aggregateColumn.getComponent().getAggregatedColumns(),
 						sb,
+						mappingContext,
 						typeConfiguration
 				);
 			}
 			else {
-				sb.append( "cast(? as " ).append( castTypeName( udtColumn, typeConfiguration ) ).append( ')' );
+				sb.append( "cast(? as " ).append( castTypeName( udtColumn, mappingContext, typeConfiguration ) ).append( ')' );
 			}
 			sb.append( ')' );
 		}
@@ -396,7 +403,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateSqlTypeCode );
 	}
 
-	private static String castTypeName(Column udtColumn, TypeConfiguration typeConfiguration) {
+	private static String castTypeName(Column udtColumn, MappingContext mappingContext, TypeConfiguration typeConfiguration) {
 		return getCastTypeName(
 				new SqlTypedMappingImpl(
 						udtColumn.getLength(),
@@ -404,7 +411,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 						udtColumn.getPrecision(),
 						udtColumn.getScale(),
 						udtColumn.getTemporalPrecision(),
-						udtColumn.getType()
+						udtColumn.getType( mappingContext )
 				),
 				typeConfiguration
 		);
@@ -572,29 +579,30 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			Namespace namespace,
 			String aggregatePath,
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			MappingResolutionOptions mappingResolutionOptions) {
 		if ( aggregateColumn.getTypeCode() != STRUCT ) {
 			return Collections.emptyList();
 		}
 		final String columnType = aggregateColumn.getTypeName();
-		final TypeConfiguration typeConfiguration = aggregateColumn.getComponent().getMetadata().getTypeConfiguration();
-		final boolean legacyXmlFormatEnabled = aggregateColumn.getValue().getBuildingContext().getBuildingOptions()
-				.isXmlFormatMapperLegacyFormatEnabled();
+		final boolean legacyXmlFormatEnabled = mappingResolutionOptions.isXmlFormatMapperLegacyFormatEnabled();
 		// The serialize and deserialize functions, as well as the transform are for supporting struct types in native queries and functions
 		var list = new ArrayList<AuxiliaryDatabaseObject>( 3 );
 		var serializerSb = new StringBuilder();
 		var deserializerSb = new StringBuilder();
 		serializerSb.append( "create function " ).append( columnType ).append( "_serializer(v " ).append( columnType ).append( ") returns xml language sql " )
 				.append( "return case when v is null then null else xmlelement(name \"").append( XmlHelper.ROOT_TAG ).append( "\"" );
-		appendSerializer( aggregatedColumns, serializerSb, "v..", legacyXmlFormatEnabled, typeConfiguration );
+		appendSerializer( aggregatedColumns, serializerSb, "v..", legacyXmlFormatEnabled, mappingContext, typeConfiguration );
 		serializerSb.append( ") end" );
 
 		deserializerSb.append( "create function " ).append( columnType ).append( "_deserializer(v xml) returns " ).append( columnType ).append( " language sql " )
 				.append( "return select " ).append( columnType ).append( "()" );
-		appendDeserializerConstructor( aggregatedColumns, deserializerSb, "", legacyXmlFormatEnabled, typeConfiguration );
+		appendDeserializerConstructor( aggregatedColumns, deserializerSb, "", legacyXmlFormatEnabled, mappingContext, typeConfiguration );
 		deserializerSb.append( " from xmltable('$" ).append( XmlHelper.ROOT_TAG ).append( "' passing v as \"" )
 				.append( XmlHelper.ROOT_TAG ).append( "\" columns" );
-		appendDeserializerColumns( aggregatedColumns, deserializerSb, ' ', "", legacyXmlFormatEnabled, typeConfiguration );
+		appendDeserializerColumns( aggregatedColumns, deserializerSb, ' ', "", legacyXmlFormatEnabled, mappingContext, typeConfiguration );
 		deserializerSb.append( ") as t" );
 		list.add(
 				new NamedAuxiliaryDatabaseObject(
@@ -631,6 +639,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			StringBuilder serializerSb,
 			String prefix,
 			boolean legacyXmlFormatEnabled,
+			MappingContext mappingContext,
 			TypeConfiguration typeConfiguration) {
 		char sep;
 		if ( aggregatedColumns.size() > 1 ) {
@@ -654,10 +663,11 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 						serializerSb,
 						prefix + udtColumn.getName() + "..",
 						legacyXmlFormatEnabled,
+						mappingContext,
 						typeConfiguration
 				);
 			}
-			else if ( needsVarcharForBitDataCast( castTypeName( udtColumn, typeConfiguration ) ) ) {
+			else if ( needsVarcharForBitDataCast( castTypeName( udtColumn, mappingContext, typeConfiguration ) ) ) {
 				if ( legacyXmlFormatEnabled ) {
 					serializerSb.append( ",cast(" ).append( prefix ).append( udtColumn.getName() ).append( " as " );
 					final long binaryLength = udtColumn.getColumnSize( null, null ).getLength();
@@ -693,29 +703,31 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			StringBuilder deserializerSb,
 			String prefix,
 			boolean legacyXmlFormatEnabled,
+			MappingContext mappingContext,
 			TypeConfiguration typeConfiguration) {
 		for ( Column udtColumn : aggregatedColumns ) {
 			deserializerSb.append( ".." ).append( udtColumn.getName() ).append( '(' );
 			if ( udtColumn.getSqlTypeCode() == STRUCT ) {
 				final AggregateColumn aggregateColumn = (AggregateColumn) udtColumn;
-				deserializerSb.append( castTypeName( udtColumn, typeConfiguration ) ).append( "()" );
+				deserializerSb.append( castTypeName( udtColumn, mappingContext, typeConfiguration ) ).append( "()" );
 				appendDeserializerConstructor(
 						aggregateColumn.getComponent().getAggregatedColumns(),
 						deserializerSb,
 						udtColumn.getName() + "_",
 						legacyXmlFormatEnabled,
+						mappingContext,
 						typeConfiguration
 				);
 				deserializerSb.append( ')' );
 			}
-			else if ( needsVarcharForBitDataCast( castTypeName( udtColumn, typeConfiguration ) ) ) {
+			else if ( needsVarcharForBitDataCast( castTypeName( udtColumn, mappingContext, typeConfiguration ) ) ) {
 				if ( legacyXmlFormatEnabled ) {
 					deserializerSb.append( "cast(t." ).append( prefix ).append( udtColumn.getName() ).append( " as " )
-							.append( castTypeName( udtColumn, typeConfiguration ) ).append( "))" );
+							.append( castTypeName( udtColumn, mappingContext, typeConfiguration ) ).append( "))" );
 				}
 				else {
 					deserializerSb.append( "cast(hextoraw(t." ).append( prefix ).append( udtColumn.getName() ).append( ") as " )
-							.append( castTypeName( udtColumn, typeConfiguration ) ).append( "))" );
+							.append( castTypeName( udtColumn, mappingContext, typeConfiguration ) ).append( "))" );
 				}
 			}
 			else {
@@ -730,6 +742,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			char sep,
 			String prefix,
 			boolean legacyXmlFormatEnabled,
+			MappingContext mappingContext,
 			TypeConfiguration typeConfiguration) {
 		for ( Column udtColumn : aggregatedColumns ) {
 			if ( udtColumn.getSqlTypeCode() == STRUCT ) {
@@ -740,13 +753,14 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 						sep,
 						udtColumn.getName() + "_",
 						legacyXmlFormatEnabled,
+						mappingContext,
 						typeConfiguration
 				);
 			}
 			else {
 				deserializerSb.append( sep );
 				deserializerSb.append( prefix ).append( udtColumn.getName() ).append( ' ' );
-				if ( needsVarcharForBitDataCast( castTypeName( udtColumn, typeConfiguration ) ) ) {
+				if ( needsVarcharForBitDataCast( castTypeName( udtColumn, mappingContext, typeConfiguration ) ) ) {
 					final long binaryLength = udtColumn.getColumnSize( null, null ).getLength();
 					final long varcharLength;
 					if ( legacyXmlFormatEnabled ) {
@@ -764,7 +778,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 					}
 				}
 				else {
-					deserializerSb.append( castTypeName( udtColumn, typeConfiguration ) );
+					deserializerSb.append( castTypeName( udtColumn, mappingContext, typeConfiguration ) );
 				}
 				deserializerSb.append( " path '/" ).append( XmlHelper.ROOT_TAG ).append( '/' ).append( udtColumn.getName() ).append( '\'' );
 			}

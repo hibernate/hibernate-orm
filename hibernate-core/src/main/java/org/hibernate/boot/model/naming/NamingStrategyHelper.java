@@ -14,8 +14,8 @@ public interface NamingStrategyHelper {
 	 * Called when the user supplied no explicit name/identifier for the given database object.
 	 * <p>
 	 * Typically, implementations will access the {@link ImplicitNamingStrategy} via
-	 * {@link MetadataBuildingContext#getBuildingOptions()} to
-	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
+	 * {@link MetadataBuildingContext#getBuildingPlan()} to
+	 * {@link org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getImplicitNamingStrategy()}
 	 * <p>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
@@ -32,8 +32,8 @@ public interface NamingStrategyHelper {
 	 * Called when the user has supplied an explicit name for the database object.
 	 * <p>
 	 * Typically implementations will access the {@link ImplicitNamingStrategy} via
-	 * {@link MetadataBuildingContext#getBuildingOptions()} to
-	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
+	 * {@link MetadataBuildingContext#getBuildingPlan()} to
+	 * {@link org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getImplicitNamingStrategy()}
 	 * <p>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
@@ -51,8 +51,8 @@ public interface NamingStrategyHelper {
 	 * Handle converting a logical name to a physical name
 	 * <p>
 	 * Typically implementations will access the {@link PhysicalNamingStrategy} via
-	 * {@link MetadataBuildingContext#getBuildingOptions()} to
-	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getPhysicalNamingStrategy()}
+	 * {@link MetadataBuildingContext#getBuildingPlan()} to
+	 * {@link org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getPhysicalNamingStrategy()}
 	 * <p>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via

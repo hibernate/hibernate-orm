@@ -116,6 +116,11 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public @Nonnull Class<T> getJavaType() {
+		if ( getModel() instanceof SqmPersistentAttribute<?, ?> attribute ) {
+			// Generic-specialized embedded attributes keep the concrete model for navigation,
+			// but expose the declaring member's Java type through the criteria path.
+			return (Class<T>) attribute.getJavaType();
+		}
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 

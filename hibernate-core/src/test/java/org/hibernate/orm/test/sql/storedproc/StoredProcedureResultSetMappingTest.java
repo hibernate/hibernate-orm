@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.sql.storedproc;
 
 import java.util.Date;
+import java.util.List;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Entity;
@@ -14,9 +15,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
@@ -126,9 +127,20 @@ public class StoredProcedureResultSetMappingTest extends BaseSessionFactoryFunct
 	}
 
 	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.applyMetadataBuilder( metadataBuilder );
-		metadataBuilder.applyAuxiliaryDatabaseObject( new ProcedureDefinition() );
+	protected MappingCustomizations metadataCustomizations() {
+		return new MappingCustomizations(
+				null,
+				null,
+				null,
+				null,
+				null,
+				List.of( new ProcedureDefinition() ),
+				null,
+				null,
+				null,
+				null,
+				null
+		);
 	}
 
 	@Test

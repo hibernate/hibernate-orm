@@ -14,7 +14,7 @@ import javax.cache.CacheManager;
 import javax.cache.configuration.MutableConfiguration;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.jcache.ConfigSettings;
@@ -34,6 +34,8 @@ import org.hibernate.orm.test.jcache.domain.PhoneNumber;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.MetadataBuildingHelper;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.tool.schema.Action;
@@ -109,9 +111,9 @@ public class TestHelper {
 				.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, missingCacheStrategy )
 				.build();
 		try {
-			return (SessionFactoryImplementor) addStandardDomainModel( new MetadataSources( ssr ) )
-					.buildMetadata()
-					.buildSessionFactory();
+			return SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingHelper.buildMetadata( ssr, standardDomainModel() )
+			);
 		}
 		catch (Throwable t) {
 			ssr.close();
@@ -126,9 +128,9 @@ public class TestHelper {
 
 		final StandardServiceRegistry ssr = ssrb.build();
 		try {
-			return (SessionFactoryImplementor) addStandardDomainModel( new MetadataSources( ssr ) )
-					.buildMetadata()
-					.buildSessionFactory();
+			return SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingHelper.buildMetadata( ssr, standardDomainModel() )
+			);
 		}
 		catch (Throwable t) {
 			ssr.close();
@@ -154,15 +156,15 @@ public class TestHelper {
 		return ssrb;
 	}
 
-	public static MetadataSources addStandardDomainModel(MetadataSources metadataSources) {
-		return metadataSources
-				.addAnnotatedClass( Event.class )
-				.addAnnotatedClass( Person.class )
-				.addAnnotatedClass( PhoneNumber.class )
-				.addAnnotatedClass( Account.class )
-				.addAnnotatedClass( HolidayCalendar.class )
-				.addAnnotatedClass( Item.class )
-				.addAnnotatedClass( VersionedItem.class );
+	public static MappingSources standardDomainModel() {
+		return new MappingSources()
+				.addManagedClass( Event.class )
+				.addManagedClass( Person.class )
+				.addManagedClass( PhoneNumber.class )
+				.addManagedClass( Account.class )
+				.addManagedClass( HolidayCalendar.class )
+				.addManagedClass( Item.class )
+				.addManagedClass( VersionedItem.class );
 	}
 
 	public static void createCache(CacheManager cacheManager, String name) {

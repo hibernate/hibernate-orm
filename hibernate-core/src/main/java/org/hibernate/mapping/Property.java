@@ -4,28 +4,21 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.generator.internal.GeneratorTypeHelper;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -52,7 +45,9 @@ import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.
  *
  * @author Gavin King
  */
-public class Property implements Serializable, MetaAttributable {
+public class Property implements Serializable, MetaAttributable, AppliedMappingPart {
+	private MappingRole mappingRole;
+	private DeclarationRole declarationRole;
 	private String name;
 	private Value value;
 	private String cascade;
@@ -65,7 +60,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean auditedExcluded;
 	private GeneratorCreator generatorCreator;
 	private String propertyAccessorName;
-	private PropertyAccessStrategy propertyAccessStrategy;
+	private transient PropertyAccessStrategy propertyAccessStrategy;
 	private boolean lazy;
 	private String lazyGroup;
 	private boolean optional;
@@ -77,6 +72,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean lob;
 	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
+	private MemberDetails memberDetails;
 
 	public boolean isBackRef() {
 		return false;
@@ -131,6 +127,19 @@ public class Property implements Serializable, MetaAttributable {
 
 	public Value getValue() {
 		return value;
+	}
+
+	public MemberDetails getMemberDetails() {
+		if ( memberDetails != null ) {
+			return memberDetails;
+		}
+		return value instanceof SimpleValue simpleValue
+				? simpleValue.getMemberDetails()
+				: null;
+	}
+
+	public void setMemberDetails(MemberDetails memberDetails) {
+		this.memberDetails = memberDetails;
 	}
 
 	public void resetInsertable(boolean insertable) {
@@ -251,6 +260,32 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setValue(Value value) {
 		this.value = value;
+		if ( value instanceof AppliedMappingPart mappingPart
+				&& mappingPart.getMappingRole() == null
+				&& mappingRole != null ) {
+			mappingPart.setMappingRole( mappingRole );
+		}
+	}
+
+	@Override
+	public MappingRole getMappingRole() {
+		return mappingRole;
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		this.mappingRole = mappingRole;
+		if ( value instanceof AppliedMappingPart mappingPart && mappingPart.getMappingRole() == null ) {
+			mappingPart.setMappingRole( mappingRole );
+		}
+	}
+
+	public DeclarationRole getDeclarationRole() {
+		return declarationRole;
+	}
+
+	public void setDeclarationRole(DeclarationRole declarationRole) {
+		this.declarationRole = declarationRole;
 	}
 
 	public boolean isUpdatable() {
@@ -316,7 +351,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
-		if ( value instanceof BasicValue basicValue && basicValue.isDisallowedWrapperArray() ) {
+		if ( value instanceof BasicValue basicValue && isDisallowedWrapperArray( basicValue, mappingContext ) ) {
 			throw new MappingException(
 					"""
 					The property %s.%s uses a wrapper type Byte[]/Character[] which indicates an issue in your domain model. \
@@ -333,6 +368,18 @@ public class Property implements Serializable, MetaAttributable {
 			);
 		}
 		return value.isValid( mappingContext );
+	}
+
+	private boolean isDisallowedWrapperArray(BasicValue basicValue, MappingContext mappingContext) {
+		return mappingContext instanceof MetadataImplementor metadata
+			&& metadata.getMappingResolutionOptions().getWrapperArrayHandling() == WrapperArrayHandling.DISALLOW
+			&& !basicValue.isLob()
+			&& isWrapperByteOrCharacterArray( basicValue );
+	}
+
+	private boolean isWrapperByteOrCharacterArray(BasicValue basicValue) {
+		final var javaTypeClass = basicValue.requireResolution().getDomainJavaType().getJavaTypeClass();
+		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
 	}
 
 	public String toString() {
@@ -404,44 +451,44 @@ public class Property implements Serializable, MetaAttributable {
 		this.selectable = selectable;
 	}
 
-	private PropertyAccess buildPropertyAccess(Class<?> clazz) {
-		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true );
+	private PropertyAccess buildPropertyAccess(Class<?> clazz, PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
+		return getPropertyAccessStrategy( clazz, propertyAccessStrategyResolver ).buildPropertyAccess( clazz, name, true );
 	}
 
 	// todo : remove
 	@Internal
-	public Getter getGetter(Class<?> clazz) throws MappingException {
-		return buildPropertyAccess( clazz ).getGetter();
+	public Getter getGetter(
+			Class<?> clazz,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
+		return buildPropertyAccess( clazz, propertyAccessStrategyResolver ).getGetter();
 	}
 
 	// todo : remove
 	@Internal
-	public Setter getSetter(Class<?> clazz) throws MappingException {
-		return buildPropertyAccess( clazz ).getSetter();
+	public Setter getSetter(
+			Class<?> clazz,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
+		return buildPropertyAccess( clazz, propertyAccessStrategyResolver ).getSetter();
 	}
 
 	// todo : remove
 	@Internal
-	public PropertyAccessStrategy getPropertyAccessStrategy(Class<?> clazz) throws MappingException {
+	public PropertyAccessStrategy getPropertyAccessStrategy(
+			Class<?> clazz,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
 		final var propertyAccessStrategy = getPropertyAccessStrategy();
 		if ( propertyAccessStrategy != null ) {
 			return propertyAccessStrategy;
 		}
 		else {
-			return getPropertyAccessStrategyResolver()
-					.resolvePropertyAccessStrategy(
-							clazz,
-							propertyAccessorName( clazz ),
-							isMapEntity( clazz )
-									? RepresentationMode.MAP
-									: RepresentationMode.POJO
-					);
+			return propertyAccessStrategyResolver.resolvePropertyAccessStrategy(
+					clazz,
+					propertyAccessorName( clazz ),
+					isMapEntity( clazz )
+							? RepresentationMode.MAP
+							: RepresentationMode.POJO
+			);
 		}
-	}
-
-	private PropertyAccessStrategyResolver getPropertyAccessStrategyResolver() {
-		return resolveServiceRegistry()
-				.requireService( PropertyAccessStrategyResolver.class );
 	}
 
 	private String propertyAccessorName(Class<?> clazz) {
@@ -460,18 +507,6 @@ public class Property implements Serializable, MetaAttributable {
 		return clazz == null || Map.class.equals( clazz );
 	}
 
-	private ServiceRegistry resolveServiceRegistry() {
-		if ( getPersistentClass() != null ) {
-			return getPersistentClass().getServiceRegistry();
-		}
-		else if ( getValue() != null ) {
-			return getValue().getServiceRegistry();
-		}
-		else {
-			throw new HibernateException( "Could not resolve ServiceRegistry" );
-		}
-	}
-
 	public boolean isNaturalIdentifier() {
 		return naturalIdentifier;
 	}
@@ -480,6 +515,19 @@ public class Property implements Serializable, MetaAttributable {
 		this.naturalIdentifier = naturalIdentifier;
 	}
 
+	/**
+	 * Whether this property represents the generic declaration-side view of an
+	 * attribute.
+	 * <p>
+	 * A generic property is the compatibility {@code Property} used for the
+	 * declaring mapped type when the source member type still contains unresolved
+	 * type variables.  For example, for {@code @MappedSuperclass class Base<T>}
+	 * declaring {@code T value}, the declaration-side property for {@code value}
+	 * is generic.
+	 * <p>
+	 * This is different from {@link #isGenericSpecialization()}, which marks a
+	 * copied property representing a concrete use of such a declaration.
+	 */
 	public boolean isGeneric() {
 		return isGeneric;
 	}
@@ -488,6 +536,23 @@ public class Property implements Serializable, MetaAttributable {
 		this.isGeneric = generic;
 	}
 
+	/**
+	 * Whether this property represents a concrete specialization of a generic
+	 * declaration-side property.
+	 * <p>
+	 * A generic-specialization property is usually a copied compatibility
+	 * {@code Property} attached to a concrete entity hierarchy after type-variable
+	 * substitution has been applied.  For example, if
+	 * {@code Customer extends Base<String>}, the copied property for
+	 * {@code Customer#value} is the specialization of the generic declaration
+	 * {@code Base<T>#value}.
+	 * <p>
+	 * This flag is a bridge for legacy {@code org.hibernate.mapping} consumers.
+	 * Newer boot binding metadata should prefer applied attribute usage metadata
+	 * when available.
+	 *
+	 * @see #isGeneric()
+	 */
 	public boolean isGenericSpecialization() {
 		return isGenericSpecialization;
 	}
@@ -528,23 +593,202 @@ public class Property implements Serializable, MetaAttributable {
 		this.returnedClassName = returnedClassName;
 	}
 
-	public Generator createGenerator(RuntimeModelCreationContext context) {
-		if ( generatorCreator == null ) {
-			return null;
-		}
-		else {
-			final var creationContext = new PropertyGeneratorCreationContext( context );
-			final var generator = generatorCreator.createGenerator( creationContext );
-			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, creationContext );
-			return generator;
-		}
-	}
-
 	public Property copy() {
 		final var property =
 				this instanceof SyntheticProperty
 						? new SyntheticProperty()
 						: new Property();
+		copyTo( property );
+		return property;
+	}
+
+	/// Creates an independent declaration-side projection using the supplied
+	/// declarative value.
+	///
+	/// A declaration describes where an attribute originates, before it is
+	/// applied to a concrete entity, component, or collection role.  The copy
+	/// therefore retains [#getDeclarationRole()] but has no
+	/// [#getMappingRole()].  The supplied value must likewise be roleless; using
+	/// an already-applied value would make a declaration appear to own state
+	/// belonging to one particular application.
+	///
+	/// For example, a generic mapped-superclass property is represented roughly
+	/// as follows:
+	///
+	/// ```java
+	/// // appliedProperty is entity:Customer#attribute:value
+	/// Value declaredValue = appliedProperty.getValue().copy();
+	/// Property declaration =
+	///         appliedProperty.copyForDeclaration( declaredValue );
+	///
+	/// assert declaration.getDeclarationRole()
+	///         .equals( appliedProperty.getDeclarationRole() );
+	/// assert declaration.getMappingRole() == null;
+	/// assert ((AppliedMappingPart) declaredValue).getMappingRole() == null;
+	/// ```
+	///
+	/// This operation is used to build generic mapped-superclass and embeddable
+	/// declaration templates, including declaration-side identifier and
+	/// component properties.  A `null` value is allowed for transitional
+	/// declaration templates whose value has not yet been materialized.
+	///
+	/// A roleless declarative value may be shared by multiple declaration-side
+	/// compatibility projections when they intentionally describe the same
+	/// declaration.  To expose an already-applied value through a legacy
+	/// declaration view, use [#copyForDeclarationView()] instead.
+	///
+	/// @param value an independently-created, roleless declarative value, or
+	/// `null` for a declaration template without a materialized value
+	/// @return a roleless property retaining this property's declaration identity
+	/// @throws IllegalArgumentException if `value` already has a mapping role
+	public Property copyForDeclaration(Value value) {
+		if ( value != null ) {
+			requireUnapplied( value, "Declaration property value" );
+		}
+		final Property property = copy();
+		property.setValue( value );
+		return property;
+	}
+
+	/// Creates a declaration-side **view** of this property's already-applied
+	/// value.
+	///
+	/// Unlike [#copyForDeclaration(Value)], this method deliberately shares
+	/// [#getValue()] with the source.  The returned `Property` retains the
+	/// declaration role and omits its own mapping role, but its value still
+	/// carries the source application's role:
+	///
+	/// ```java
+	/// Property view = appliedProperty.copyForDeclarationView();
+	///
+	/// assert view.getMappingRole() == null;
+	/// assert view.getValue() == appliedProperty.getValue();
+	/// assert ((AppliedMappingPart) view.getValue()).getMappingRole()
+	///         .equals( appliedProperty.getMappingRole() );
+	/// ```
+	///
+	/// This apparently mixed identity is intentional and narrowly scoped.  It
+	/// supports legacy declaration containers which need to expose a resolved
+	/// applied value, currently the mapped-superclass view of an identifier
+	/// mapper.  It must not be treated as independent declarative mapping state
+	/// or assigned a different application role.
+	///
+	/// @return a roleless declaration-side property sharing this property's
+	/// applied value
+	public Property copyForDeclarationView() {
+		return copy();
+	}
+
+	/// Creates another compatibility projection of the **same** concrete
+	/// attribute application.
+	///
+	/// Both the value and the mapping role are shared.  Consequently, deferred
+	/// changes to the value—such as late to-one target resolution—are visible
+	/// through both properties:
+	///
+	/// ```java
+	/// Property alias = source.copyForSameApplication();
+	///
+	/// assert alias != source;
+	/// assert alias.getValue() == source.getValue();
+	/// assert alias.getMappingRole().equals( source.getMappingRole() );
+	/// ```
+	///
+	/// Use this for a legacy alias or projection of one mapping occurrence, not
+	/// for another physical or semantic occurrence.  Current examples are the
+	/// child properties of a synthetic property-ref component and the
+	/// concrete-generic property view used while building the runtime/JPA
+	/// metamodel.  Sharing is essential for the synthetic-association case
+	/// because its source `ToOne` may be resolved after the alias is created.
+	///
+	/// Use [#copyForApplication(MappingRole, Value)] when the destination is a
+	/// genuinely distinct occurrence.
+	///
+	/// @return a property alias sharing this property's value and mapping role
+	public Property copyForSameApplication() {
+		final Property property = copy();
+		property.mappingRole = mappingRole;
+		return property;
+	}
+
+	/// Creates a property for a **new** concrete application using the supplied
+	/// independently-materialized value.
+	///
+	/// This is used when one declaration is realized at another place in the
+	/// mapping graph.  The destination role and value are installed together so
+	/// assigning the new role can never mutate the source property's value:
+	///
+	/// ```java
+	/// Value appliedValue = declaration.getValue().copy();
+	/// MappingRole role =
+	///         MappingRole.entity( Customer.class.getName() )
+	///                 .appendAttribute( "value" );
+	///
+	/// Property customerValue =
+	///         declaration.copyForApplication( role, appliedValue );
+	///
+	/// assert customerValue.getDeclarationRole()
+	///         .equals( declaration.getDeclarationRole() );
+	/// assert customerValue.getMappingRole().equals( role );
+	/// assert customerValue.getValue() == appliedValue;
+	/// ```
+	///
+	/// Current uses include specializing a generic mapped-superclass attribute
+	/// for a concrete entity and recursively copying component-valued collection
+	/// indexes for `@MapKey(name)` or an inverse map.  Those mappings have
+	/// independent type resolution, selectables, mutability, and lifecycle, so
+	/// [#copyForSameApplication()] would be incorrect.
+	///
+	/// `value` may be roleless, in which case assigning the property role also
+	/// applies it to the value, or it may already carry exactly `mappingRole`.
+	/// A value belonging to any other application is rejected.
+	///
+	/// @param mappingRole stable identity of the new concrete occurrence
+	/// @param value the independently-materialized value for that occurrence
+	/// @return a property retaining the source declaration identity and owning
+	/// the supplied application role and value
+	/// @throws NullPointerException if `mappingRole` or `value` is `null`
+	/// @throws IllegalArgumentException if `value` belongs to another mapping
+	/// application
+	public Property copyForApplication(MappingRole mappingRole, Value value) {
+		java.util.Objects.requireNonNull( mappingRole, "Mapping role" );
+		requireCompatibleApplication( value, mappingRole, "New application value" );
+		final Property property = copy();
+		property.setValue( value );
+		property.setMappingRole( mappingRole );
+		return property;
+	}
+
+	private static void requireCompatibleApplication(
+			Value value,
+			MappingRole mappingRole,
+			String description) {
+		java.util.Objects.requireNonNull( value, description );
+		if ( value instanceof AppliedMappingPart mappingPart
+				&& mappingPart.getMappingRole() != null
+				&& !mappingRole.equals( mappingPart.getMappingRole() ) ) {
+			throw new IllegalArgumentException(
+					description + " has a different mapping role: " + mappingPart.getMappingRole()
+			);
+		}
+	}
+
+	private static void requireUnapplied(Value value, String description) {
+		java.util.Objects.requireNonNull( value, description );
+		if ( value instanceof AppliedMappingPart mappingPart && mappingPart.getMappingRole() != null ) {
+			throw new IllegalArgumentException(
+					description + " already has a mapping role: " + mappingPart.getMappingRole()
+			);
+		}
+	}
+
+	public SyntheticProperty syntheticCopy() {
+		final var property = new SyntheticProperty();
+		copyTo( property );
+		return property;
+	}
+
+	private void copyTo(Property property) {
 		property.setName( getName() );
 		property.setValue( getValue() );
 		property.setCascade( getCascade() );
@@ -568,7 +812,8 @@ public class Property implements Serializable, MetaAttributable {
 		property.setGenericSpecialization( isGenericSpecialization() );
 		property.setLob( isLob() );
 		property.setReturnedClassName( getReturnedClassName() );
-		return property;
+		property.setMemberDetails( getMemberDetails() );
+		property.setDeclarationRole( getDeclarationRole() );
 	}
 
 	public void setMutable(boolean mutable) {
@@ -579,63 +824,4 @@ public class Property implements Serializable, MetaAttributable {
 		return mutable;
 	}
 
-	private class PropertyGeneratorCreationContext implements GeneratorCreationContext {
-		private final RuntimeModelCreationContext context;
-
-		public PropertyGeneratorCreationContext(RuntimeModelCreationContext context) {
-			this.context = context;
-		}
-
-		@Override
-		public Database getDatabase() {
-			return context.getMetadata().getDatabase();
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return context.getBootstrapContext().getServiceRegistry();
-		}
-
-		@Override
-		public String getDefaultCatalog() {
-			return context.getSessionFactoryOptions().getDefaultCatalog();
-		}
-
-		@Override
-		public String getDefaultSchema() {
-			return context.getSessionFactoryOptions().getDefaultSchema();
-		}
-
-		@Override
-		public PersistentClass getPersistentClass() {
-			return persistentClass;
-		}
-
-		@Override
-		public RootClass getRootClass() {
-			return persistentClass.getRootClass();
-		}
-
-		@Override
-		public Property getProperty() {
-			return Property.this;
-		}
-
-		@Override
-		public Value getValue() {
-			return value;
-		}
-
-		@Override
-		public MemberDetails getMemberDetails() {
-			return value instanceof SimpleValue simpleValue
-					? simpleValue.getMemberDetails()
-					: null; // TODO: Give Property a reference to the MemberDetails
-		}
-
-		@Override
-		public SqlStringGenerationContext getSqlStringGenerationContext() {
-			return context.getSqlStringGenerationContext();
-		}
-	}
 }

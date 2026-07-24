@@ -5,16 +5,15 @@
 package org.hibernate.tool.reveng.test.utils;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.internal.metadata.NativeMetadataDescriptor;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Properties;
 
 public class HibernateUtil {
@@ -65,16 +64,13 @@ public class HibernateUtil {
 	public static void addAnnotatedClass(
 			MetadataDescriptor metadataDescriptor,
 			Class<?> annotatedClass) {
-		try {
-			Field metadataSourcesField = metadataDescriptor
-					.getClass()
-					.getDeclaredField("metadataSources");
-			metadataSourcesField.setAccessible(true);
-			MetadataSources metadataSources =
-					(MetadataSources)metadataSourcesField.get(metadataDescriptor);
-			metadataSources.addAnnotatedClass(annotatedClass);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			throw new RuntimeException(e);
+		if ( metadataDescriptor instanceof NativeMetadataDescriptor nativeMetadataDescriptor ) {
+			nativeMetadataDescriptor.addAnnotatedClass(annotatedClass);
+		}
+		else {
+			throw new IllegalArgumentException(
+					"Annotated classes may only be added to native metadata descriptors"
+			);
 		}
 	}
 

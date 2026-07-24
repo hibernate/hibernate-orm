@@ -10,10 +10,11 @@ import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.Locale;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -189,14 +190,7 @@ public class TableCheckConstraintTest {
 	}
 
 	private void createSchema(Class<?>... annotatedClasses) {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-
-		for ( Class<?> c : annotatedClasses ) {
-			metadataSources.addAnnotatedClass( c );
-		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, annotatedClasses );
 		new SchemaExport()
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )
@@ -205,14 +199,11 @@ public class TableCheckConstraintTest {
 	}
 
 	private void createSchema(String... xmlMapping) {
-		final MetadataSources metadataSources = new MetadataSources( ssr );
-
-		for ( String xml : xmlMapping ) {
-			metadataSources.addResource( xml );
+		final MappingSources mappingSources = new MappingSources();
+		for ( String xmlMappingResource : xmlMapping ) {
+			mappingSources.addMappingResource( xmlMappingResource );
 		}
-		metadata = (MetadataImplementor) metadataSources.buildMetadata();
-		metadata.orderColumns( false );
-		metadata.validate();
+		metadata = MetadataBuildingTestHelper.buildValidatedMetadata( ssr, mappingSources );
 		new SchemaExport()
 				.setHaltOnError( true )
 				.setOutputFile( output.getAbsolutePath() )

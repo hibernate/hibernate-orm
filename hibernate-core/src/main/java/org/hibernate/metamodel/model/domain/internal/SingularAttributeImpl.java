@@ -57,6 +57,7 @@ public class SingularAttributeImpl<D,J>
 
 	private final SqmPathSource<J> sqmPathSource;
 
+	@SuppressWarnings("unchecked")
 	public SingularAttributeImpl(
 			ManagedDomainType<D> declaringType,
 			String name,
@@ -68,10 +69,37 @@ public class SingularAttributeImpl<D,J>
 			boolean isVersion,
 			boolean isOptional,
 			boolean isGeneric) {
+		this(
+				declaringType,
+				name,
+				attributeClassification,
+				attributeType,
+				attributeType.getExpressibleJavaType(),
+				relationalJavaType,
+				member,
+				isIdentifier,
+				isVersion,
+				isOptional,
+				isGeneric
+		);
+	}
+
+	public SingularAttributeImpl(
+			ManagedDomainType<D> declaringType,
+			String name,
+			AttributeClassification attributeClassification,
+			SqmDomainType<J> attributeType,
+			JavaType<?> attributeJavaType,
+			JavaType<?> relationalJavaType,
+			Member member,
+			boolean isIdentifier,
+			boolean isVersion,
+			boolean isOptional,
+			boolean isGeneric) {
 		super(
 				declaringType,
 				name,
-				attributeType.getExpressibleJavaType(),
+				(JavaType<J>) attributeJavaType,
 				attributeClassification,
 				attributeType,
 				member
@@ -84,9 +112,11 @@ public class SingularAttributeImpl<D,J>
 				name,
 				this,
 				attributeType,
+				attributeJavaType,
 				relationalJavaType,
 				SINGULAR_ATTRIBUTE,
-				isGeneric
+				isGeneric,
+				isGeneric && attributeJavaType.getJavaTypeClass() == Object.class
 		);
 	}
 
@@ -95,6 +125,7 @@ public class SingularAttributeImpl<D,J>
 			String name,
 			AttributeClassification attributeClassification,
 			SqmDomainType<J> attributeType,
+			JavaType<?> attributeJavaType,
 			JavaType<?> relationalJavaType,
 			Member member,
 			boolean isIdentifier,
@@ -107,6 +138,7 @@ public class SingularAttributeImpl<D,J>
 					name,
 					attributeClassification,
 					attributeType,
+					attributeJavaType,
 					relationalJavaType,
 					member,
 					isIdentifier,
@@ -204,6 +236,7 @@ public class SingularAttributeImpl<D,J>
 			String name,
 			AttributeClassification attributeClassification,
 			SqmDomainType<J> attributeType,
+			JavaType<?> attributeJavaType,
 			Member member,
 			boolean isGeneric) {
 		if ( !( attributeType instanceof BasicDomainType<?> ) ) {
@@ -211,6 +244,7 @@ public class SingularAttributeImpl<D,J>
 					declaringType,
 					name,
 					attributeType,
+					attributeJavaType,
 					member,
 					attributeClassification,
 					isGeneric
@@ -545,11 +579,31 @@ public class SingularAttributeImpl<D,J>
 				Member member,
 				AttributeClassification attributeClassification,
 				boolean isGeneric) {
+			this(
+					declaringType,
+					name,
+					attributeType,
+					attributeType.getExpressibleJavaType(),
+					member,
+					attributeClassification,
+					isGeneric
+			);
+		}
+
+		public Identifier(
+				ManagedDomainType<D> declaringType,
+				String name,
+				SqmDomainType<J> attributeType,
+				JavaType<?> attributeJavaType,
+				Member member,
+				AttributeClassification attributeClassification,
+				boolean isGeneric) {
 			super(
 					declaringType,
 					name,
 					attributeClassification,
 					attributeType,
+					attributeJavaType,
 					attributeType.getExpressibleJavaType(),
 					member,
 					true,

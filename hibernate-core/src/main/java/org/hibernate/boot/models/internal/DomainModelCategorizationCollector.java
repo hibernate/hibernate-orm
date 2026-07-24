@@ -9,7 +9,7 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.EntityListener;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -18,9 +18,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbeddable;
-import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
-import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
+import static org.hibernate.boot.models.internal.ManagedTypeMetadata.isEmbeddable;
+import static org.hibernate.boot.models.internal.ManagedTypeMetadata.isEntity;
+import static org.hibernate.boot.models.internal.ManagedTypeMetadata.isMappedSuperclass;
 
 /**
  * In-flight holder for various things as we process metadata sources

@@ -25,6 +25,7 @@ import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -132,7 +133,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				getManagedType(),
 				resolveAttributeOwnerBinding(),
 				mappedSuperclassTable,
-				binding::addDeclaredProperty,
+				(property, usage, secondaryTableJoin) -> binding.addDeclaredProperty( property ),
 				true,
 				false,
 				(attributeMetadata) -> !isUnresolvedGenericAttribute( attributeMetadata )
@@ -190,11 +191,21 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 						(EntityTypeMetadata) subType,
 						entityBinding,
 						entityBinding.getTable(),
-						(property, usage) -> {
-							applyMappedSuperclassProperty( property, entityBinding );
-							if ( entityBinding.getMappedSuperclassProperties().contains( property ) ) {
-								getBindingState().getBootBindingModel()
-										.addAppliedMappedSuperclassAttributeUsage( contribution, usage );
+						(property, usage, secondaryTableJoin) -> {
+							if ( applyMappedSuperclassProperty( property, entityBinding, secondaryTableJoin ) ) {
+								final var bootBindingModel = getBindingState().getBootBindingModel();
+								final var appliedMapping =
+										bootBindingModel.getAppliedAttributeMapping( property.getMappingRole() );
+								if ( appliedMapping == null ) {
+									throw new IllegalStateException(
+											"Missing applied mapped-superclass attribute mapping for role "
+													+ property.getMappingRole()
+									);
+								}
+								bootBindingModel.addAppliedMappedSuperclassAttributeMapping(
+										contribution,
+										appliedMapping
+								);
 							}
 						},
 						true,
@@ -324,7 +335,10 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		return declaredProperty;
 	}
 
-	private void applyMappedSuperclassProperty(Property property, PersistentClass entityBinding) {
+	private boolean applyMappedSuperclassProperty(
+			Property property,
+			PersistentClass entityBinding,
+			Join secondaryTableJoin) {
 		final Property identifierProperty = entityBinding.getDeclaredIdentifierProperty();
 		if ( identifierProperty != null && property.getName().equals( identifierProperty.getName() ) ) {
 			throw new MappingException( "Property '" + property.getName()
@@ -333,11 +347,17 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 					+ entityBinding.getEntityName() + "'" );
 		}
 		if ( hasDeclaredProperty( entityBinding, property.getName() ) ) {
-			return;
+			return false;
 		}
 
 		addGenericDeclaredPropertyIfNeeded( property );
-		entityBinding.addMappedSuperclassProperty( property );
+		if ( secondaryTableJoin == null ) {
+			entityBinding.addMappedSuperclassProperty( property );
+		}
+		else {
+			secondaryTableJoin.addMappedSuperclassProperty( property );
+		}
+		return true;
 	}
 
 	private void addGenericDeclaredPropertyIfNeeded(Property property) {

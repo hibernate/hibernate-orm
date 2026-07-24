@@ -14,6 +14,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
 import org.hibernate.boot.mapping.internal.relational.RelationalModelCorrespondences;
 import org.hibernate.boot.mapping.internal.relational.TableOwner;
@@ -56,6 +57,7 @@ import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -84,6 +86,12 @@ import jakarta.persistence.AttributeConverter;
 public interface BindingState {
 	/// Metadata building context for the current boot run.
 	MetadataBuildingContext getMetadataBuildingContext();
+
+	/// Class loading used while resolving reflected attribute types.
+	@Nonnull
+	default ClassLoaderService getClassLoaderService() {
+		return getMetadataBuildingContext().getClassLoaderService();
+	}
 
 	/// Stable resolution state for the current boot run.
 	@Nonnull MappingResolutionState getMappingResolutionState();
@@ -410,6 +418,9 @@ public interface BindingState {
 
 	/// Register the semantic-to-materialized handoff for an entity identifier.
 	void addEntityIdentifierHandoff(EntityIdentifierHandoff handoff);
+
+	/// Resolve an identifier handoff by its stable applied mapping role.
+	@Nullable EntityIdentifierHandoff getEntityIdentifierHandoff(MappingRole role);
 
 	/// Resolve the identifier handoff for a materialized root entity.
 	@Nullable EntityIdentifierHandoff getEntityIdentifierHandoff(RootClass rootClass);

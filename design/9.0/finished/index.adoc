@@ -10,3 +10,8 @@ link:annotation-coverage.adoc[`annotation-coverage.adoc`]::
 Completed runtime annotation coverage audit for the ORM 9 boot-model pipeline.
 Remaining entries are pointers to active design areas, not current failure
 buckets.
+
+link:deterministic-attribute-ordering-design.adoc[
+`deterministic-attribute-ordering-design.adoc`]::
+Final phase-owned ordering contract, compatibility-sort boundaries, and focused
+runtime/boot alignment guardrails.

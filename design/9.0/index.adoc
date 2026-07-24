@@ -68,12 +68,12 @@ link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
 Use this for primary-key, foreign-key, unique-key, index materialization, and
 deprecated hidden mapping side-effect hook cleanup.
 
-Current handoff/mapping-context cleanup::
+Current handoff and completed mapping-context audit::
 link:current-work-handoff.adoc[`current-work-handoff.adoc`] records the current
-`MetadataBuildingContext` cleanup focus and any immediate implementation slice.
-Use
+stage and immediate implementation slice.  Use
 link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
-for the mapping-layer context audit.
+for the completed Stage 2 mapping-layer context audit and its separately routed
+SPI follow-ups.
 
 == Reference And Deferred Areas
 
@@ -85,7 +85,6 @@ documents are still active, reference-only, deferred, or archive candidates:
 * link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
 * link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
 * link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
-* link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
 * link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
 * link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
 * link:flow-notation.adoc[`flow-notation.adoc`]
@@ -103,6 +102,8 @@ Completed reference and audit artifacts live under
 link:finished/index.adoc[`finished/`].
 
 * link:finished/annotation-coverage.adoc[`finished/annotation-coverage.adoc`]
+* link:finished/deterministic-attribute-ordering-design.adoc[
+  `finished/deterministic-attribute-ordering-design.adoc`]
 
 == Cleanup Queue
 

@@ -3,19 +3,25 @@
 
 == Status
 
-Partially implemented foundation; core identifier-part correspondence remains
-planned.
+Implemented semantic foundation; expanded identifier-part correspondence and
+direct runtime consumption remain follow-up work.
 
-Implemented adjacent pieces:
+Implemented pieces:
 
-* `IdentifierExtractionKind`;
+* `IdentifierExtractionKind`, including distinct `DIRECT`,
+  `ASSOCIATION_TARGET_ID`, and `WHOLE_TARGET_ID` semantics;
 * identifier binding/model/view products such as `IdentifierAttributeBinding`,
   `EntityIdentifierBinding`, and `EntityIdentifierBindingView`;
 * `IdentifierMappingMaterializer` as the boundary for producing the legacy
   `org.hibernate.mapping` identifier shape;
+* `EntityIdentifierHandoff`, indexed authoritatively by the identifier
+  `MappingRole`; mapping-object lookups are compatibility adapters which derive
+  that role;
 * selectable-level correspondence products, including
   `SelectableCorrespondence`, `SelectableOrderResolution`, and
-  correspondence-backed foreign-key creation.
+  correspondence-backed foreign-key creation;
+* focused boot and runtime coverage for whole-target derived identity against
+  both `@IdClass` and `@EmbeddedId` target identifiers.
 
 Not yet implemented:
 
@@ -28,9 +34,10 @@ Not yet implemented:
 * reduction of the special legacy `Component` / identifier-mapper encodings
   whose main purpose is positional compatibility.
 
-The current ORM 9 boot pipeline therefore has better identifier binding
-ownership than before, but it still uses legacy-compatible mapping objects as
-the main semantic bridge for non-aggregated identifier representation.
+The current ORM 9 boot pipeline therefore records the extraction strategy,
+virtual member, ordered selectables, and stable applied role independently from
+the legacy mapping shape.  It still uses legacy-compatible mapping objects as
+the runtime representation for non-aggregated identifiers.
 
 Identifier correspondence remains an internal boot/runtime product.  The new
 pipeline should continue to materialize the legacy-compatible identifier
@@ -335,6 +342,12 @@ Add focused boot-model tests for:
 The tests should assert the boot mapping shape, not only functional runtime
 behavior.
 
+This slice is complete.  The boot tests cover both whole-target dependent
+`@IdClass` variants and assert `WHOLE_TARGET_ID`, ordered `FK1`/`FK2`
+selectables, the compatibility component shape, and role-keyed handoff.
+Existing focused runtime tests cover all four `@IdClass`/`@EmbeddedId`
+parent/dependent combinations.
+
 === Slice 2: Add Boot Correspondence Product
 
 Introduce internal `IdentifierPartCorrespondence` and produce it from
@@ -377,12 +390,13 @@ link:design-doc-audit.adoc#_open_question_routing[
 
 == Current Recommendation
 
-Use this design as a follow-up track.  For the immediate test failure recovery,
-prefer the smallest binder-level compatibility fix that restores the old mapping
-shape without changing runtime identifier extraction, result initialization, or
-entity-key creation.
+For this PR, retain `EntityIdentifierBinding` /
+`IdentifierAttributeBinding` as the semantic boot product, including extraction
+kind and ordered selectable names, and retain `EntityIdentifierHandoff` as the
+role-keyed bridge to the compatibility mapping shape.
 
-The longer-term direction should be correspondence-backed non-aggregated
-identifier mapping, because this failure is not just a missing branch in
-`IdentifierBinder`; it exposes a real ambiguity in how boot and runtime share
-identifier representation semantics.
+Do not introduce a separate `IdentifierPartCorrespondence` merely to duplicate
+those facts while runtime conversion still consumes the legacy identifier
+component.  Slices 2 through 4 remain a coherent follow-up: introduce the
+expanded correspondence product when a concrete runtime consumer is migrated
+to it, then reduce the positional component encoding.

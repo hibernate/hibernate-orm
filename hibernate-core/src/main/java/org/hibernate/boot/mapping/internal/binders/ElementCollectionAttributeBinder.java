@@ -16,6 +16,7 @@ import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
 import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -188,7 +189,7 @@ class ElementCollectionAttributeBinder {
 		collection.setTypeUsingReflection(
 				attributeMetadata.getMember().getDeclaringType().getName(),
 				attributeMetadata.getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		CollectionShapeBinder.apply( source, collection, bindingState );
 
@@ -332,8 +333,11 @@ class ElementCollectionAttributeBinder {
 						ownerType.getAccessType(),
 						bindingContext
 				);
+		final EmbeddableMappingMaterializer materializer = new EmbeddableMappingMaterializer( bindingState );
+		final EmbeddableContribution contribution =
+				materializer.createContribution( source, bindingContext );
 		final Component component =
-				new EmbeddableMappingMaterializer( bindingState ).createCollectionElementComponent(
+				materializer.createCollectionElementComponent(
 						source,
 						collection,
 						table
@@ -347,7 +351,7 @@ class ElementCollectionAttributeBinder {
 		EmbeddableAttributeBinder.bindDiscriminator(
 				component,
 				table,
-				source,
+				contribution,
 				"element_DTYPE",
 				bindingState,
 				bindingOptions,
@@ -364,7 +368,8 @@ class ElementCollectionAttributeBinder {
 				false,
 				true,
 				true,
-				registerCollectionBindings
+				registerCollectionBindings,
+				contribution
 		);
 		if ( componentElement.compositeUserTypeClass() != null ) {
 			EmbeddableAttributeBinder.processCompositeUserType(

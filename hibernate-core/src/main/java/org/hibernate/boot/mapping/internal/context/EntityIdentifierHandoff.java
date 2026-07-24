@@ -11,6 +11,7 @@ import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
@@ -25,6 +26,11 @@ import jakarta.annotation.Nullable;
 public record EntityIdentifierHandoff(
 		EntityIdentifierBindingView identifier,
 		IdentifierBinding materializedIdentifier) {
+	public MappingRole role() {
+		return MappingRole.entity( rootClass().getEntityName() )
+				.append( MappingRole.PartKind.IDENTIFIER );
+	}
+
 	public RootClass rootClass() {
 		return materializedIdentifier.rootClass();
 	}

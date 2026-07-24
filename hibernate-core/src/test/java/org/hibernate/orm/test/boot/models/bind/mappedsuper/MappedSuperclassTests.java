@@ -41,12 +41,14 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -200,6 +202,7 @@ public class MappedSuperclassTests {
 								assertThat( contribution.consumer().getClassDetails().toJavaClass() )
 										.isEqualTo( RootConsumer.class );
 								assertThat( contribution.appliedAttributeNames() ).containsExactly( "rootCode" );
+								assertThat( contribution.appliedAttributeMappings() ).containsExactly( appliedMapping );
 								assertThat( contribution.appliedAttributeUsages() ).containsExactly( appliedMapping.usage() );
 								assertThat( appliedMapping.declaration().declarationContainer().classDetails().toJavaClass() )
 										.isEqualTo( RootContribution.class );
@@ -260,6 +263,45 @@ public class MappedSuperclassTests {
 
 	@Test
 	@ServiceRegistry
+	void appliesMappedSuperclassPropertyToSecondaryTableContribution(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( SecondaryTableConsumer.class.getName() );
+					final var secondaryTable = entityBinding.getSecondaryTable( "secondary_table_contribution_details" );
+					final Property property = secondaryTable.getProperties().get( 0 );
+					final var appliedMapping = bootBindingModel.getAppliedAttributeMapping( property.getMappingRole() );
+
+					assertThat( entityBinding.getMappedSuperclassProperties() ).isEmpty();
+					assertThat( secondaryTable.getDeclaredProperties() ).isEmpty();
+					assertThat( property.getName() ).isEqualTo( "details" );
+					assertThat( property.getMappingRole() ).isEqualTo(
+							MappingRole.entity( SecondaryTableConsumer.class.getName() )
+									.appendAttribute( "details" )
+					);
+					assertThat( appliedMapping ).isNotNull();
+					assertThat( bootBindingModel.mappedSuperclassContributions() )
+							.singleElement()
+							.satisfies( contribution ->
+									assertThat( contribution.appliedAttributeMappings() )
+											.containsExactly( appliedMapping )
+							);
+					assertHandoffMatches(
+							new MappedSuperclassHandoffResolver(
+									RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+							).findAttributeUsage( entityBinding, property ),
+							appliedMapping.usage()
+					);
+				},
+				scope.getRegistry(),
+				SecondaryTableContribution.class,
+				SecondaryTableConsumer.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void appliesMappedSuperclassBetweenEntitiesToNearestSubclassEntity(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -291,8 +333,7 @@ public class MappedSuperclassTests {
 								assertThat( contribution.consumer().getClassDetails().toJavaClass() )
 										.isEqualTo( EntityAfterContribution.class );
 								assertThat( contribution.appliedAttributeNames() ).containsExactly( "nestedCode" );
-								assertThat( contribution.appliedAttributeUsages() )
-										.containsExactly( appliedMapping.usage() );
+								assertThat( contribution.appliedAttributeMappings() ).containsExactly( appliedMapping );
 							} );
 					assertHandoffMatches(
 							new MappedSuperclassHandoffResolver(
@@ -370,10 +411,10 @@ public class MappedSuperclassTests {
 							secondAppliedMapping.usage()
 					);
 					assertThat( bootBindingModel.mappedSuperclassContributions() )
-							.extracting( "appliedAttributeUsages" )
+							.extracting( "appliedAttributeMappings" )
 							.containsExactly(
-									java.util.List.of( firstAppliedMapping.usage() ),
-									java.util.List.of( secondAppliedMapping.usage() )
+									java.util.List.of( firstAppliedMapping ),
+									java.util.List.of( secondAppliedMapping )
 							);
 				},
 				scope.getRegistry(),
@@ -545,7 +586,7 @@ public class MappedSuperclassTests {
 										.isEqualTo( GenericMappedSuper.class );
 								assertThat( contribution.consumer().getClassDetails().toJavaClass() )
 										.isEqualTo( GenericStringEntity.class );
-								assertThat( contribution.appliedAttributeUsages() ).containsExactly( usage );
+								assertThat( contribution.appliedAttributeMappings() ).containsExactly( appliedMapping );
 							} );
 					final var resolver = new MappedSuperclassHandoffResolver(
 							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
@@ -770,6 +811,20 @@ public class MappedSuperclassTests {
 
 	@Entity
 	public static class LeafConsumer extends RootConsumer {
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class SecondaryTableContribution {
+		@Id
+		private Integer id;
+
+		@Column(table = "secondary_table_contribution_details")
+		private String details;
+	}
+
+	@Entity
+	@SecondaryTable(name = "secondary_table_contribution_details")
+	public static class SecondaryTableConsumer extends SecondaryTableContribution {
 	}
 
 	@Entity

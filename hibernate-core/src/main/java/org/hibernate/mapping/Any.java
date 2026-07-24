@@ -7,6 +7,7 @@ package org.hibernate.mapping;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
@@ -251,7 +252,7 @@ public class Any extends SimpleValue {
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) {
+			ClassLoaderService classLoaderService) {
 	}
 
 	@Override

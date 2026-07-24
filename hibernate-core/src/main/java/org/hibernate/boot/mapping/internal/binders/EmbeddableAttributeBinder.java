@@ -6,20 +6,17 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
-import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -29,7 +26,6 @@ import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappingHelper;
@@ -46,7 +42,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorValue;
 
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -155,7 +150,10 @@ class EmbeddableAttributeBinder {
 			);
 		}
 		final Table componentTable = resolveComponentTable( member );
-		final Component component = new EmbeddableMappingMaterializer( bindingState ).createEmbeddedAttributeComponent(
+		final EmbeddableMappingMaterializer materializer = new EmbeddableMappingMaterializer( bindingState );
+		final EmbeddableContribution contribution =
+				materializer.createContribution( componentSource, bindingContext );
+		final Component component = materializer.createEmbeddedAttributeComponent(
 				componentSource,
 				ownerBinding,
 				componentTable,
@@ -169,7 +167,7 @@ class EmbeddableAttributeBinder {
 		if ( compositeUserType != null ) {
 			component.setCompositeUserType( compositeUserType );
 		}
-		bindDiscriminator( component, componentTable );
+		bindDiscriminator( component, componentTable, contribution );
 
 		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
 				ownerType,
@@ -182,7 +180,8 @@ class EmbeddableAttributeBinder {
 				false,
 				true,
 				true,
-				registerCollectionBindings
+				registerCollectionBindings,
+				contribution
 		);
 		if ( compositeUserType != null ) {
 			processCompositeUserType( component, compositeUserType );
@@ -257,11 +256,14 @@ class EmbeddableAttributeBinder {
 		}
 	}
 
-	private void bindDiscriminator(Component component, Table componentTable) {
+	private void bindDiscriminator(
+			Component component,
+			Table componentTable,
+			EmbeddableContribution contribution) {
 		bindDiscriminator(
 				component,
 				componentTable,
-				componentSource,
+				contribution,
 				attributeBinding.attributeName() + "_DTYPE",
 				bindingState,
 				bindingOptions,
@@ -272,25 +274,13 @@ class EmbeddableAttributeBinder {
 	static void bindDiscriminator(
 			Component component,
 			Table componentTable,
-			ComponentSource componentSource,
+			EmbeddableContribution contribution,
 			String implicitColumnName,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
 			BindingContext bindingContext) {
-		final Map<Object, String> discriminatorValues = new LinkedHashMap<>();
-		final Map<String, String> subclassToSuperclass = new LinkedHashMap<>();
-		collectDiscriminatorValue( componentSource.componentType(), discriminatorValues );
-		collectPersistentSuperclassLinks( componentSource.componentType(), subclassToSuperclass );
-		final List<ClassDetails> subtypes = collectConcreteComponentSubtypes( componentSource, bindingContext );
-		subtypes.sort( Comparator
-				.comparingInt( (ClassDetails subtype) -> hierarchyDistance( subtype, componentSource.componentType() ) )
-				.thenComparing( ClassDetails::getName ) );
-		subtypes.forEach( embeddableType -> {
-			collectDiscriminatorValue( embeddableType, discriminatorValues );
-			collectPersistentSuperclassLinks( embeddableType, subclassToSuperclass );
-		} );
-		collectRuntimeSubtypeSuperclassLinks( componentSource, bindingContext, subclassToSuperclass );
-		if ( discriminatorValues.size() <= 1 ) {
+		final var discriminatorSource = contribution.discriminator();
+		if ( !discriminatorSource.polymorphic() ) {
 			return;
 		}
 
@@ -302,9 +292,8 @@ class EmbeddableAttributeBinder {
 		}
 		discriminator.setTable( componentTable );
 		discriminator.setTypeName( String.class.getName() );
-		final ColumnSource overrideColumnSource = componentSource.discriminatorColumnSource();
-		final DiscriminatorColumn discriminatorColumn =
-				componentSource.componentType().getDirectAnnotationUsage( DiscriminatorColumn.class );
+		final var overrideColumnSource = discriminatorSource.overrideColumnSource();
+		final DiscriminatorColumn discriminatorColumn = discriminatorSource.discriminatorColumn();
 		if ( overrideColumnSource != null ) {
 			final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
 					overrideColumnSource,
@@ -347,8 +336,8 @@ class EmbeddableAttributeBinder {
 		bindingState.addPostAttributeValueResolution( () ->
 				resolveDiscriminatorType( component, bindingState.getMetadataBuildingContext() ) );
 		component.setDiscriminator( discriminator );
-		component.setDiscriminatorValues( discriminatorValues );
-		component.setSubclassToSuperclass( subclassToSuperclass );
+		component.setDiscriminatorValues( discriminatorSource.discriminatorValues() );
+		component.setSubclassToSuperclass( discriminatorSource.subclassToSuperclass() );
 	}
 
 	private static void resolveDiscriminatorType(
@@ -370,79 +359,6 @@ class EmbeddableAttributeBinder {
 					return new DiscriminatorTypeImpl<>( discriminatorType, converter );
 				} )
 		);
-	}
-
-	private static List<ClassDetails> collectConcreteComponentSubtypes(
-			ComponentSource componentSource,
-			BindingContext bindingContext) {
-		final Map<String, ClassDetails> subtypes = new LinkedHashMap<>();
-		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
-			if ( isSubtypeOf( embeddableType, componentSource.componentType() ) ) {
-				subtypes.put( className( embeddableType ), embeddableType );
-			}
-		} );
-		return new ArrayList<>( subtypes.values() );
-	}
-
-	private static void collectRuntimeSubtypeSuperclassLinks(
-			ComponentSource componentSource,
-			BindingContext bindingContext,
-			Map<String, String> subclassToSuperclass) {
-		bindingContext.getClassDetailsRegistry().forEachClassDetails( (classDetails) -> {
-			if ( isSubtypeOf( classDetails, componentSource.componentType() ) ) {
-				collectPersistentSuperclassLinks( classDetails, subclassToSuperclass );
-			}
-		} );
-	}
-
-	private static void collectDiscriminatorValue(ClassDetails embeddableType, Map<Object, String> discriminatorValues) {
-		final DiscriminatorValue discriminatorValue = embeddableType.getDirectAnnotationUsage( DiscriminatorValue.class );
-		final String value = discriminatorValue == null || StringHelper.isBlank( discriminatorValue.value() )
-				? StringHelper.unqualify( className( embeddableType ) )
-				: discriminatorValue.value();
-		discriminatorValues.put( value, className( embeddableType ).intern() );
-	}
-
-	private static void collectPersistentSuperclassLinks(
-			ClassDetails componentType,
-			Map<String, String> subclassToSuperclass) {
-		for ( ClassDetails current = componentType; current != null; current = current.getSuperClass() ) {
-			final ClassDetails superClass = current.getSuperClass();
-			if ( !isPersistentComponentSuperType( superClass ) ) {
-				return;
-			}
-			subclassToSuperclass.put( className( current ), className( superClass ) );
-		}
-	}
-
-	private static boolean isPersistentComponentSuperType(ClassDetails superClass) {
-		return superClass != null
-			&& superClass != ClassDetails.OBJECT_CLASS_DETAILS;
-	}
-
-	private static boolean isSubtypeOf(ClassDetails subtype, ClassDetails supertype) {
-		for ( ClassDetails candidate = subtype.getSuperClass(); candidate != null; candidate = candidate.getSuperClass() ) {
-			if ( className( candidate ).equals( className( supertype ) ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static int hierarchyDistance(ClassDetails subtype, ClassDetails supertype) {
-		int distance = 0;
-		for ( ClassDetails candidate = subtype; candidate != null; candidate = candidate.getSuperClass() ) {
-			if ( className( candidate ).equals( className( supertype ) ) ) {
-				return distance;
-			}
-			distance++;
-		}
-		return Integer.MAX_VALUE;
-	}
-
-	private static String className(ClassDetails classDetails) {
-		final String className = classDetails.getClassName();
-		return className == null ? classDetails.getName() : className;
 	}
 
 	private Table resolveComponentTable(MemberDetails attributeMember) {

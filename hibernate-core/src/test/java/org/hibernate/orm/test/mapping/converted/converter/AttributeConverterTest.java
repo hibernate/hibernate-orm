@@ -103,6 +103,22 @@ public class AttributeConverterTest {
 	}
 
 	@Test
+	public void testReflectionUsesExplicitClassLoaderService() {
+		try ( var serviceRegistry = ServiceRegistryUtil.serviceRegistry() ) {
+			final var buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			final var basicValue = new BasicValue( buildingContext );
+
+			basicValue.setTypeUsingReflection(
+					IrrelevantEntity.class.getName(),
+					"name",
+					buildingContext.getClassLoaderService()
+			);
+
+			assertThat( basicValue.getTypeName(), equalTo( String.class.getName() ) );
+		}
+	}
+
+	@Test
 	public void testBasicOperation() {
 		try ( var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			final var buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -113,7 +129,11 @@ public class AttributeConverterTest {
 			basicValue.setJpaAttributeConverterDescriptor(
 					ConverterDescriptors.of( new StringClobConverter() )
 			);
-			basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name", buildingContext );
+			basicValue.setTypeUsingReflection(
+					IrrelevantEntity.class.getName(),
+					"name",
+					buildingContext.getClassLoaderService()
+			);
 			final var details = BasicValueResolutionDetails.create(
 					basicValue,
 					BasicValueSource.attribute(

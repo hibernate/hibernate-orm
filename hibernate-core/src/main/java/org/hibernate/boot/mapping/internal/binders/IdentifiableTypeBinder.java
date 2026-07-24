@@ -6,7 +6,6 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -59,6 +58,18 @@ import jakarta.persistence.OneToOne;
 /// @since 9.0
 /// @author Steve Ebersole
 public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
+	@FunctionalInterface
+	protected interface BoundAttributeConsumer {
+		/// Consume a materialized attribute and own its compatibility placement.
+		///
+		/// `secondaryTableJoin` is `null` when the attribute belongs to the
+		/// primary table.
+		void accept(
+				Property property,
+				AttributeUsageBinding usage,
+				Join secondaryTableJoin);
+	}
+
 	private final IdentifiableTypeMetadata superType;
 	private final EntityHierarchy.HierarchyRelation hierarchyRelation;
 
@@ -200,7 +211,14 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				ownerType,
 				attributeOwnerBinding,
 				primaryTable,
-				(property, usage) -> propertyConsumer.accept( property ),
+				(property, usage, secondaryTableJoin) -> {
+					if ( secondaryTableJoin == null ) {
+						propertyConsumer.accept( property );
+					}
+					else {
+						secondaryTableJoin.addProperty( property );
+					}
+				},
 				includePluralAttributes,
 				registerCollectionBindings,
 				attributeFilter
@@ -213,7 +231,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			IdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
 			Table primaryTable,
-			BiConsumer<Property, AttributeUsageBinding> propertyConsumer,
+			BoundAttributeConsumer propertyConsumer,
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings,
 			Predicate<AttributeMetadata> attributeFilter) {
@@ -259,11 +277,11 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			attributeBinders.add( attributeBinder );
 			final Table attributeTable = value.getTable();
 			if ( attributeTable == primaryTable || value instanceof org.hibernate.mapping.Collection ) {
-				propertyConsumer.accept( property, attributeBinding.usageBinding() );
+				propertyConsumer.accept( property, attributeBinding.usageBinding(), null );
 			}
 			else {
 				final Join join = findJoin( attributeOwnerBinding, attributeTable );
-				join.addProperty( property );
+				propertyConsumer.accept( property, attributeBinding.usageBinding(), join );
 			}
 			getBindingState().addAttributeCustomMapping(
 					CustomMappingBinder.attributeBinding(

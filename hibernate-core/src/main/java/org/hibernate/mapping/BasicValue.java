@@ -178,13 +178,13 @@ public class BasicValue extends SimpleValue {
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) throws MappingException {
+			ClassLoaderService classLoaderService) throws MappingException {
 		if ( resolution != null ) {
 			throw new IllegalStateException( "BasicValue already resolved" );
 		}
 		this.ownerName = className;
 		this.propertyName = propertyName;
-		super.setTypeUsingReflection( className, propertyName, buildingContext );
+		super.setTypeUsingReflection( className, propertyName, classLoaderService );
 	}
 
 	public void setEnumerationStyle(EnumType enumerationStyle) {

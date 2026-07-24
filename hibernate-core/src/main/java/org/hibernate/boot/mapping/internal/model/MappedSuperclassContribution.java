@@ -26,7 +26,7 @@ public class MappedSuperclassContribution {
 	private final MappedSuperclassTypeMetadata declaration;
 	private final IdentifiableTypeMetadata consumer;
 	private final EntityTypeMetadata nearestEntityConsumer;
-	private final List<AttributeUsageBinding> appliedAttributeUsages = new ArrayList<>();
+	private final List<AppliedAttributeMapping> appliedAttributeMappings = new ArrayList<>();
 
 	public MappedSuperclassContribution(
 			MappedSuperclassTypeMetadata declaration,
@@ -49,19 +49,27 @@ public class MappedSuperclassContribution {
 		return nearestEntityConsumer;
 	}
 
-	/// Should not be called directly.  Instead, use [BootBindingModel#addAppliedMappedSuperclassAttributeUsage]
-	AttributeUsageBinding addAppliedAttributeUsage(AttributeUsageBinding usage) {
-		appliedAttributeUsages.add( usage );
-		return usage;
+	/// Should not be called directly.  Instead, use [BootBindingModel#addAppliedMappedSuperclassAttributeMapping]
+	AppliedAttributeMapping addAppliedAttributeMapping(AppliedAttributeMapping mapping) {
+		appliedAttributeMappings.add( mapping );
+		return mapping;
+	}
+
+	/// The concrete attribute applications contributed to the consuming entity,
+	/// in declaration order.
+	public List<AppliedAttributeMapping> appliedAttributeMappings() {
+		return List.copyOf( appliedAttributeMappings );
 	}
 
 	public List<AttributeUsageBinding> appliedAttributeUsages() {
-		return List.copyOf( appliedAttributeUsages );
+		return appliedAttributeMappings.stream()
+				.map( AppliedAttributeMapping::usage )
+				.toList();
 	}
 
 	public List<String> appliedAttributeNames() {
-		return appliedAttributeUsages.stream()
-				.map( AttributeUsageBinding::attributeName )
+		return appliedAttributeMappings.stream()
+				.map( mapping -> mapping.usage().attributeName() )
 				.toList();
 	}
 }

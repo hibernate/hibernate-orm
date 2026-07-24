@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.type.ManyToOneType;
@@ -167,7 +168,7 @@ public class OneToMany implements Value, AppliedMappingPart {
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) {
+			ClassLoaderService classLoaderService) {
 	}
 
 	@Override

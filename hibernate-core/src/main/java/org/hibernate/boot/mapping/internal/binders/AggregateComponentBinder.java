@@ -57,7 +57,7 @@ final class AggregateComponentBinder {
 		aggregateValue.setTypeUsingReflection(
 				source.sourceMember().getDeclaringType().getName(),
 				source.sourceMember().resolveAttributeName(),
-				state.getMetadataBuildingContext()
+				state.getClassLoaderService()
 		);
 		final var resolutionInput = BasicValueResolutionDetails.create(
 				aggregateValue,

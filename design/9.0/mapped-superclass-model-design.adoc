@@ -323,6 +323,11 @@ flattened `PersistentClass` compatibility view, but applies mapped-superclass
 declared properties only to the nearest consuming entity boundary and uses
 separate `Property` copies per consuming entity.
 +
+Secondary-table placement follows the same boundary: the declaration remains
+on the mapped-superclass binding, while the role-bearing concrete application
+is placed in the consuming entity's `Join` and retained by its
+`MappedSuperclassContribution`.
++
 The mapping model now also exposes a direct `IdentifiableTypeClass` supertype /
 subtype graph for `PersistentClass` and `MappedSuperclass`.  `PersistentClass`
 still keeps entity-inheritance helpers such as `getSuperclass()` and

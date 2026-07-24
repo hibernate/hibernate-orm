@@ -280,6 +280,13 @@ Work::
   retain broad context, prioritizing `SimpleValue` and explicit
   value-resolution, database, class-loading, bean, naming, and custom-type
   capabilities.
++
+  Completed: mapping values no longer retain or expose
+  `MetadataBuildingContext`; `Value#setTypeUsingReflection(...)` receives
+  `ClassLoaderService`, and value resolution/custom-type compatibility receive
+  phase-owned inputs explicitly.  Empty context-taking compatibility
+  constructors are not retained state.  Naming-source and
+  `UserTypeCreationContext` SPI narrowing remain separate follow-ups.
 
 Exit gate::
 Mapped-superclass, embeddable, generic, identifier, and copy/materialization
@@ -425,6 +432,17 @@ all of these groups for the complete final test run.
   --tests 'org.hibernate.orm.test.annotations.generics.GenericsTest' \
   --tests 'org.hibernate.orm.test.jpa.metamodel.GenericsTest' \
   --tests 'org.hibernate.orm.test.jpa.metamodel.MappedSuperclassIdClassSiblingTest' \
+  --console=plain
+----
+
+=== Deterministic Ordering
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.bind.DeterministicOrderingTests' \
+  --tests 'org.hibernate.orm.test.inheritance.SingleTableNativeQueryTest' \
+  --tests 'org.hibernate.orm.test.inheritance.EmbeddableInheritanceHierarchyOrderTest' \
   --console=plain
 ----
 

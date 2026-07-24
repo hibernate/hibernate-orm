@@ -595,13 +595,14 @@ public class IdentifierBinder {
 			AttributeMetadata idAttribute,
 			MemberDetails idClassMember,
 			boolean wholeDerivedIdClass) {
+		if ( wholeDerivedIdClass ) {
+			return IdentifierExtractionKind.WHOLE_TARGET_ID;
+		}
 		if ( idClassMemberStoresAssociation( idAttribute, idClassMember ) ) {
 			return IdentifierExtractionKind.DIRECT;
 		}
 		if ( idAttribute.getNature() == AttributeNature.TO_ONE ) {
-			return wholeDerivedIdClass
-					? IdentifierExtractionKind.WHOLE_TARGET_ID
-					: IdentifierExtractionKind.ASSOCIATION_TARGET_ID;
+			return IdentifierExtractionKind.ASSOCIATION_TARGET_ID;
 		}
 		return IdentifierExtractionKind.DIRECT;
 	}

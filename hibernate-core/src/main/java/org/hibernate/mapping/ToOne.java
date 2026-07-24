@@ -5,6 +5,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.type.MappingContext;
@@ -106,12 +107,12 @@ public abstract sealed class ToOne
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) throws MappingException {
+			ClassLoaderService classLoaderService) throws MappingException {
 		if ( referencedEntityName == null ) {
 			referencedEntityName = reflectedPropertyClass(
 					className,
 					propertyName,
-					buildingContext.getClassLoaderService()
+					classLoaderService
 			).getName();
 		}
 	}

@@ -62,11 +62,13 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.mapping.AppliedMappingPart;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -167,10 +169,7 @@ public class BindingStateImpl implements BindingState {
 	private final Map<ClassDetails, ManagedTypeBinder> typeBinders = new HashMap<>();
 	private final Map<ClassDetails, IdentifiableTypeBinder> typeBindersBySuper = new HashMap<>();
 	private final Map<EntityTypeMetadata, IdentifierBinding> entityIdentifierBindings = new HashMap<>();
-	private final Map<RootClass, EntityIdentifierHandoff> entityIdentifierHandoffsByRoot =
-			new IdentityHashMap<>();
-	private final Map<KeyValue, EntityIdentifierHandoff> entityIdentifierHandoffsByValue =
-			new IdentityHashMap<>();
+	private final Map<MappingRole, EntityIdentifierHandoff> entityIdentifierHandoffsByRole = new HashMap<>();
 	private final java.util.List<EntityIdentifierHandoff> entityIdentifierHandoffList =
 			new java.util.ArrayList<>();
 
@@ -468,19 +467,28 @@ public class BindingStateImpl implements BindingState {
 
 	@Override
 	public void addEntityIdentifierHandoff(EntityIdentifierHandoff handoff) {
-		entityIdentifierHandoffsByRoot.put( handoff.rootClass(), handoff );
-		entityIdentifierHandoffsByValue.put( handoff.value(), handoff );
+		entityIdentifierHandoffsByRole.put( handoff.role(), handoff );
 		entityIdentifierHandoffList.add( handoff );
 	}
 
 	@Override
+	public EntityIdentifierHandoff getEntityIdentifierHandoff(MappingRole role) {
+		return entityIdentifierHandoffsByRole.get( role );
+	}
+
+	@Override
 	public EntityIdentifierHandoff getEntityIdentifierHandoff(RootClass rootClass) {
-		return entityIdentifierHandoffsByRoot.get( rootClass );
+		return getEntityIdentifierHandoff(
+				MappingRole.entity( rootClass.getEntityName() )
+						.append( MappingRole.PartKind.IDENTIFIER )
+		);
 	}
 
 	@Override
 	public EntityIdentifierHandoff getEntityIdentifierHandoff(KeyValue identifierValue) {
-		return entityIdentifierHandoffsByValue.get( identifierValue );
+		return identifierValue instanceof AppliedMappingPart appliedMappingPart
+				? getEntityIdentifierHandoff( appliedMappingPart.getMappingRole() )
+				: null;
 	}
 
 	@Override

@@ -13,7 +13,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.CompositeType;
@@ -146,7 +146,7 @@ public interface Value extends Serializable {
 	void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) throws MappingException;
+			ClassLoaderService classLoaderService) throws MappingException;
 
 	Object accept(ValueVisitor visitor);
 

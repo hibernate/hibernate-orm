@@ -1,6 +1,11 @@
 = Boot Model Snapshot And Restoration Design
 :toc:
 
+Status: superseded by the factory-ready archive contract in
+link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`].
+Retain this note only while unique stable-identity or invalidation rationale is
+being folded into the canonical design.
+
 This document captures design considerations for storing and restoring boot-time
 model state in ORM 9.
 
@@ -265,6 +270,9 @@ This avoids re-walking source or runtime-domain structures just to rediscover
 static metamodel field names.
 
 == Open Questions
+
+These are not PR-blocking questions.  They are historical alternatives or
+triggered follow-ups after the implemented metadata archive.
 
 * Which snapshot layer should be implemented first: finalized binding snapshot,
   resolved mapping snapshot, or a smaller side-product snapshot such as static

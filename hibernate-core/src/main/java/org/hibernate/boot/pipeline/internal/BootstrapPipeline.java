@@ -1,6 +1,7 @@
 package org.hibernate.boot.pipeline.internal;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,7 +26,9 @@ import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -253,6 +256,8 @@ public class BootstrapPipeline {
 			);
 			standardServiceRegistry = bootstrapRequest.standardServiceRegistry();
 			final var typeConfiguration = new TypeConfiguration();
+			final var mappingResolutionOptions =
+					new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
 			final var bootstrapContext = createBootstrapContext(
 					bootstrapRequest.bootstrapSettings(),
 					standardServiceRegistry,
@@ -262,13 +267,14 @@ public class BootstrapPipeline {
 					bootstrapRequest.bootstrapSettings(),
 					bootstrapRequest.mappingSettings(),
 					bootstrapRequest.mappingSources(),
-					MappingCustomizations.NONE,
+					bootstrapRequest.mappingCustomizations(),
+					bootstrapRequest.functionCustomizations(),
 					bootstrapContext,
-					bootstrapContext.getMappingResolutionOptions()
+					mappingResolutionOptions
 			);
 			populateFunctionRegistry(
 					resolvedMapping.metadata().getFunctionRegistry(),
-					MappingCustomizations.NONE,
+					bootstrapRequest.functionCustomizations(),
 					standardServiceRegistry,
 					typeConfiguration
 			);
@@ -312,6 +318,8 @@ public class BootstrapPipeline {
 		Objects.requireNonNull( request );
 		final var typeConfiguration = new TypeConfiguration();
 		final var standardServiceRegistry = getStandardServiceRegistry( request.serviceRegistry() );
+		final var mappingResolutionOptions =
+				new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
 		final var bootstrapContext = createBootstrapContext(
 				request.bootstrapSettings(),
 				standardServiceRegistry,
@@ -322,12 +330,13 @@ public class BootstrapPipeline {
 				request.mappingSettings(),
 				request.mappingSources(),
 				request.mappingCustomizations(),
+				request.functionCustomizations(),
 				bootstrapContext,
-				bootstrapContext.getMappingResolutionOptions()
+				mappingResolutionOptions
 		);
 		populateFunctionRegistry(
 				resolvedMapping.metadata().getFunctionRegistry(),
-				request.mappingCustomizations(),
+				request.functionCustomizations(),
 				standardServiceRegistry,
 				typeConfiguration
 		);
@@ -349,7 +358,8 @@ public class BootstrapPipeline {
 						bootstrapRequest.bootstrapSettings(),
 						bootstrapRequest.mappingSettings(),
 						bootstrapRequest.mappingSources(),
-						MappingCustomizations.NONE,
+						bootstrapRequest.mappingCustomizations(),
+						bootstrapRequest.functionCustomizations(),
 						sessionFactorySettings,
 						bootstrapRequest.standardServiceRegistry(),
 						new SessionFactoryObserver[] { ServiceRegistryCloser.INSTANCE }
@@ -359,6 +369,10 @@ public class BootstrapPipeline {
 
 	private static void generateSchema(EntryPointBootstrapRequest bootstrapRequest) {
 		final var typeConfiguration = new TypeConfiguration();
+		final var mappingResolutionOptions = new MappingResolutionOptionsImpl(
+				bootstrapRequest.standardServiceRegistry(),
+				typeConfiguration
+		);
 		final var bootstrapContext = createBootstrapContext(
 				bootstrapRequest.bootstrapSettings(),
 				bootstrapRequest.standardServiceRegistry(),
@@ -368,13 +382,14 @@ public class BootstrapPipeline {
 				bootstrapRequest.bootstrapSettings(),
 				bootstrapRequest.mappingSettings(),
 				bootstrapRequest.mappingSources(),
-				MappingCustomizations.NONE,
+				bootstrapRequest.mappingCustomizations(),
+				bootstrapRequest.functionCustomizations(),
 				bootstrapContext,
-				bootstrapContext.getMappingResolutionOptions()
+				mappingResolutionOptions
 		);
 		populateFunctionRegistry(
 				resolvedMapping.metadata().getFunctionRegistry(),
-				MappingCustomizations.NONE,
+				bootstrapRequest.functionCustomizations(),
 				bootstrapRequest.standardServiceRegistry(),
 				typeConfiguration
 		);
@@ -416,7 +431,9 @@ public class BootstrapPipeline {
 				bootstrapSettings,
 				mappingSettings,
 				standardServiceRegistry,
-				mappingSources
+				mappingSources,
+				mappingCustomizations( bootstrapSettings.configurationValues() ),
+				FunctionRegistryCustomizations.NONE
 		);
 	}
 
@@ -448,7 +465,28 @@ public class BootstrapPipeline {
 						persistenceUnitDescriptor,
 						bootstrapSettings,
 						contributionDiscoveryContext
-				)
+				),
+				mappingCustomizations( bootstrapSettings.configurationValues() ),
+				FunctionRegistryCustomizations.NONE
+		);
+	}
+
+	@SuppressWarnings("removal")
+	private static MappingCustomizations mappingCustomizations(Map<String, Object> configurationValues) {
+		final var setting = configurationValues.get( JpaSettings.TYPE_CONTRIBUTORS );
+		if ( setting == null ) {
+			return MappingCustomizations.NONE;
+		}
+		if ( setting instanceof TypeContributorList contributorList ) {
+			return new MappingCustomizations(
+					Map.of(),
+					contributorList.getTypeContributors(),
+					List.of()
+			);
+		}
+		throw new PersistenceException(
+				"Setting '" + JpaSettings.TYPE_CONTRIBUTORS
+						+ "' must implement " + TypeContributorList.class.getName()
 		);
 	}
 
@@ -478,9 +516,7 @@ public class BootstrapPipeline {
 			ResolvedBootstrapSettings bootstrapSettings,
 			StandardServiceRegistry serviceRegistry,
 			TypeConfiguration typeConfiguration) {
-		final var buildingPlan = new MappingResolutionOptionsImpl( serviceRegistry );
-		final var bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingPlan, typeConfiguration );
-		buildingPlan.setBootstrapContext( bootstrapContext );
+		final var bootstrapContext = new BootstrapContextImpl( serviceRegistry, typeConfiguration );
 		if ( bootstrapSettings.jpaBootstrap() ) {
 			bootstrapContext.markAsJpaBootstrap();
 		}
@@ -499,10 +535,10 @@ public class BootstrapPipeline {
 
 	private static void populateFunctionRegistry(
 			SqmFunctionRegistry functionRegistry,
-			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations,
 			org.hibernate.service.ServiceRegistry serviceRegistry,
 			TypeConfiguration typeConfiguration) {
-		FunctionRegistryCoordinator.populate( functionRegistry, mappingCustomizations, serviceRegistry, typeConfiguration );
+		FunctionRegistryCoordinator.populate( functionRegistry, functionCustomizations, serviceRegistry, typeConfiguration );
 	}
 
 	private static Map<String, Object> configurationValues(PersistenceConfiguration persistenceConfiguration) {
@@ -571,7 +607,9 @@ public class BootstrapPipeline {
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMappingSettings mappingSettings,
 			StandardServiceRegistry standardServiceRegistry,
-			MappingSources mappingSources) {
+			MappingSources mappingSources,
+			MappingCustomizations mappingCustomizations,
+			FunctionRegistryCustomizations functionCustomizations) {
 	}
 
 	private static class ServiceRegistryCloser implements SessionFactoryObserver {

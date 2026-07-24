@@ -6,7 +6,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
@@ -27,8 +26,7 @@ public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 	}
 
 	public BootstrapContextImpl(StandardServiceRegistry serviceRegistry) {
-		final MappingResolutionOptions buildingPlan = new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl( serviceRegistry );
-		delegate = new org.hibernate.boot.internal.BootstrapContextImpl( serviceRegistry, buildingPlan );
+		delegate = new org.hibernate.boot.internal.BootstrapContextImpl( serviceRegistry );
 	}
 
 	@Override
@@ -54,11 +52,6 @@ public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 	@Override
 	public BeanInstanceProducer getCustomTypeProducer() {
 		return delegate.getCustomTypeProducer();
-	}
-
-	@Override
-	public MappingResolutionOptions getMappingResolutionOptions() {
-		return delegate.getMappingResolutionOptions();
 	}
 
 	@Override

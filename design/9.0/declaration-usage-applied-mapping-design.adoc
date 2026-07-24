@@ -696,6 +696,12 @@ This design does not:
 
 == Open Questions
 
+The declaration/usage/application model and stable roles are an implemented
+foundation.  These questions are focused follow-ups unless a Stage 2 runtime
+handoff exposes a concrete correctness gap.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
+
 * Whether generalized `MappingRole` replaces `NavigableRole` directly or is
   introduced as a boot-time precursor.
 * Whether roles live directly on `Value` or on a new shared applied-mapping

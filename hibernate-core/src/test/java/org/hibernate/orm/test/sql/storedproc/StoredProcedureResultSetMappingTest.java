@@ -130,8 +130,6 @@ public class StoredProcedureResultSetMappingTest extends BaseSessionFactoryFunct
 				null,
 				null,
 				null,
-				null,
-				null,
 				List.of( new ProcedureDefinition() ),
 				null,
 				null,

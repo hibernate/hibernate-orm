@@ -17,7 +17,5 @@ public interface FormatMapperCreationContext {
 		return getBootstrapContext().getClassLoaderService();
 	}
 
-	default MappingResolutionOptions getMappingResolutionOptions() {
-		return getBootstrapContext().getMappingResolutionOptions();
-	}
+	MappingResolutionOptions getMappingResolutionOptions();
 }

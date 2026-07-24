@@ -3,6 +3,7 @@ package org.hibernate.testing.orm.domain;
 import java.util.EnumSet;
 
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.dialect.Dialect;
 
@@ -27,6 +28,10 @@ public interface DomainModelDescriptor {
 
 	default MappingCustomizations metadataCustomizations() {
 		return MappingCustomizations.NONE;
+	}
+
+	default FunctionRegistryCustomizations functionCustomizations() {
+		return FunctionRegistryCustomizations.NONE;
 	}
 
 	/**

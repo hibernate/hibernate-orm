@@ -108,8 +108,6 @@ public class PostgresRefCursorSupportTest extends BaseSessionFactoryFunctionalTe
 				null,
 				null,
 				null,
-				null,
-				null,
 				List.of( ProcedureDefinitions.INSTANCE ),
 				null,
 				null,

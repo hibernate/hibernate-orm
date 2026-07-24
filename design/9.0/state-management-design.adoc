@@ -12,9 +12,8 @@ create auxiliary columns and tables, change primary-key and foreign-key behavior
 register changeset services, and feed runtime mappings used by query filtering,
 mutation decomposition, and audit APIs.
 
-If ORM 9 replaces `MetadataBuildingProcess` with the new pipeline, then state
-management should become an explicit pipeline product rather than a set of
-side-effects hidden inside entity and collection binding.
+State management should become an explicit pipeline product rather than a set
+of side effects hidden inside entity and collection binding.
 
 == Scope
 
@@ -250,18 +249,10 @@ primary-key flags, and partitioning flags.  That is useful metadata, but it is
 closer to the applied mapping result than the normalized source plan.
 
 Descriptor state should not be attached to `PersistentClass`, `Collection`, or
-other shared `org.hibernate.mapping` contracts while `MetadataBuildingProcess`
-remains an active boot path.  Doing so would create two possible sources of
-truth: descriptors populated by the new pipeline and legacy side-effect state
-populated by legacy boot.  Until that split is removed, descriptor-like state
-should live inside the new pipeline as source contributions or resolved plans
-and should be projected into the legacy mapping shape.
-
-The trigger to move this proposed model onto the boot mapping objects is when
-the descriptor can become authoritative for all supported boot paths, or when
-`MetadataBuildingProcess` has been removed far enough that runtime and schema
-consumers no longer need to handle both descriptor-populated and
-side-effect-populated mappings.
+other shared `org.hibernate.mapping` contracts as a parallel source of truth.
+Descriptor-like state should live as an explicit source contribution or
+resolved plan and be projected into the compatibility mapping shape until
+runtime and schema consumers can make it authoritative.
 
 == Changelog Model
 
@@ -446,12 +437,16 @@ requires whole-model reasoning, for example package defaults, changelog-driven
 changeset-id type resolution, or validation of combinations before table
 mutation.
 
-The proposed boot mapping descriptors should wait until the legacy
-`MetadataBuildingProcess` path is removed or no longer exposes the same shared
-mapping objects to runtime/schema consumers.  At that point the descriptor can
-become the authoritative boot-model state rather than a parallel representation.
+The proposed boot mapping descriptors should wait until runtime and schema
+consumers can use them as authoritative boot-model state rather than as a
+parallel representation.
 
 == Open Questions
+
+These are stabilization questions.  A first-class descriptor is a triggered
+follow-up unless concrete whole-model runtime behavior requires it.  See
+link:design-doc-audit.adoc#_open_question_routing[
+the centralized scope routing].
 
 How much commonality should exist between temporal, audit, changelog, and soft
 delete state management?
@@ -463,12 +458,10 @@ flattening temporal and audit into an abstraction that hides their differences.
 
 Where should state-management descriptors live?
 
-During the `MetadataBuildingProcess` transition, descriptors should not live
-directly on existing shared mapping contracts.  The safe transitional option is
-to store descriptor-like source or resolved state inside the new pipeline and
-project it into `Stateful` and other existing mapping state for compatibility.
-After legacy boot removal, descriptors can move onto the boot mapping model and
-become authoritative.
+Descriptors should not live directly on existing shared mapping contracts as
+parallel state.  The safe option is to store descriptor-like source or resolved
+state in the explicit pipeline and project it into `Stateful` and other
+existing mapping state until consumers make the descriptor authoritative.
 
 What should replace `Stateful` long term?
 

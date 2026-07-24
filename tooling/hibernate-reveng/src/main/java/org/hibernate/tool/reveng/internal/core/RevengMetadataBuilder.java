@@ -22,6 +22,7 @@ import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.internal.core.binder.BinderContext;
 import org.hibernate.tool.reveng.internal.core.binder.RootClassBinder;
 import org.hibernate.tool.reveng.internal.core.reader.DatabaseReader;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import java.util.Properties;
@@ -58,12 +59,12 @@ public class RevengMetadataBuilder {
 		this.serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings(properties)
 				.build();
+		final TypeConfiguration typeConfiguration = new TypeConfiguration();
 		MappingResolutionOptionsImpl metadataBuildingOptions =
-				new MappingResolutionOptionsImpl(serviceRegistry);
+				new MappingResolutionOptionsImpl(serviceRegistry, typeConfiguration);
 		BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
-				metadataBuildingOptions);
-		metadataBuildingOptions.setBootstrapContext(bootstrapContext);
+				typeConfiguration);
 		this.metadataCollector =
 				new InFlightMetadataCollectorImpl(
 						bootstrapContext,

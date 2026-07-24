@@ -32,11 +32,10 @@ The current ORM 9 boot pipeline therefore has better identifier binding
 ownership than before, but it still uses legacy-compatible mapping objects as
 the main semantic bridge for non-aggregated identifier representation.
 
-While `MetadataBuildingProcess` remains an active boot path, identifier
-correspondence should remain an internal boot/runtime product unless legacy boot
-also populates the same state.  The new pipeline should continue to materialize
-the legacy-compatible identifier mapping shape until correspondence can be the
-authoritative representation for all supported boot paths.
+Identifier correspondence remains an internal boot/runtime product.  The new
+pipeline should continue to materialize the legacy-compatible identifier
+mapping shape until a concrete runtime consumer proves correspondence can be
+the authoritative representation for that behavior.
 
 == Relationship To Key Creation
 
@@ -359,6 +358,13 @@ property shapes, synthetic id-class properties, and property-access tricks whose
 only job is to preserve positional compatibility.
 
 == Open Questions
+
+These questions are blocking only where a concrete IdClass, derived-id, or
+association-valued-id runtime consumer cannot use the existing stable-role and
+selectable correspondence correctly.  Otherwise they are post-PR runtime-model
+follow-ups, as routed by
+link:design-doc-audit.adoc#_open_question_routing[
+`design-doc-audit.adoc`].
 
 * Should correspondence be attached to `Component`, `PersistentClass`, or a new
   identifier-specific boot product?

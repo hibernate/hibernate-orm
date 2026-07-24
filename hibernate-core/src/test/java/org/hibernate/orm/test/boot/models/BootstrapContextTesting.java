@@ -8,7 +8,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -33,7 +32,6 @@ import static org.hibernate.boot.internal.BootstrapContextImpl.createModelBuildi
 public class BootstrapContextTesting implements BootstrapContext {
 
 	private final StandardServiceRegistry serviceRegistry;
-	private final MappingResolutionOptions metadataBuildingOptions;
 
 	private final TypeConfiguration typeConfiguration;
 	private final MutableJpaCompliance jpaCompliance;
@@ -55,9 +53,8 @@ public class BootstrapContextTesting implements BootstrapContext {
 	public BootstrapContextTesting(
 			IndexView jandexIndex,
 			StandardServiceRegistry serviceRegistry,
-			MappingResolutionOptions metadataBuildingOptions) {
+			TypeConfiguration typeConfiguration) {
 		this.serviceRegistry = serviceRegistry;
-		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
@@ -76,7 +73,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
-		this.typeConfiguration = new TypeConfiguration();
+		this.typeConfiguration = typeConfiguration;
 		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 
 		this.managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
@@ -108,11 +105,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 	@Override
 	public BeanInstanceProducer getCustomTypeProducer() {
 		return beanInstanceProducer;
-	}
-
-	@Override
-	public MappingResolutionOptions getMappingResolutionOptions() {
-		return metadataBuildingOptions;
 	}
 
 	@Override

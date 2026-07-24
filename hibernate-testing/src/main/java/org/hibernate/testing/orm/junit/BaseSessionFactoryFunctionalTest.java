@@ -16,6 +16,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -98,7 +99,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 		final MetadataImplementor metadata = MetadataBuildingHelper.buildMetadata(
 				serviceRegistry,
 				mappingSources,
-				metadataCustomizations()
+				metadataCustomizations(),
+				functionCustomizations()
 		);
 		if ( overrideCacheStrategy() && getCacheConcurrencyStrategy() != null ) {
 			applyCacheSettings( metadata );
@@ -150,6 +152,10 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	protected MappingCustomizations metadataCustomizations() {
 		return MappingCustomizations.NONE;
+	}
+
+	protected FunctionRegistryCustomizations functionCustomizations() {
+		return FunctionRegistryCustomizations.NONE;
 	}
 
 	protected void applyMetadataSources(MappingSources mappingSources) {

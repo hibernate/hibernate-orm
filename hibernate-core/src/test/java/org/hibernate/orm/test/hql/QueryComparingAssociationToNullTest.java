@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import org.hibernate.community.dialect.DerbyDialect;
 
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -36,6 +37,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SkipForDialect( dialectClass = DerbyDialect.class, reason = "it does not like '= null'")
 @SkipForDialect( dialectClass = InformixDialect.class, reason = "it does not like '= null'")
 @SkipForDialect( dialectClass = SpannerDialect.class, reason = "it does not like '= null'")
+@SkipForDialect( dialectClass = DB2zDialect.class, reason = "it does not like '= null'")
 public class QueryComparingAssociationToNullTest {
 
 	@Test

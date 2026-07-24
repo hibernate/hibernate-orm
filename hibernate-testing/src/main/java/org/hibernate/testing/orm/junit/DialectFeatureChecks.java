@@ -49,6 +49,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -767,7 +768,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsSubqueryInOnClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			// TiDB db does not support subqueries for ON condition
-			return !( dialect instanceof TiDBDialect );
+			return !( dialect instanceof TiDBDialect || dialect instanceof DB2zDialect );
 		}
 	}
 
@@ -1464,7 +1465,8 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsTimestampWithDateComparison implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof SpannerDialect || dialect instanceof SpannerPostgreSQLDialect );
+			return !( dialect instanceof SpannerDialect || dialect instanceof SpannerPostgreSQLDialect
+					|| dialect instanceof DB2zDialect || dialect instanceof DerbyDialect);
 		}
 	}
 

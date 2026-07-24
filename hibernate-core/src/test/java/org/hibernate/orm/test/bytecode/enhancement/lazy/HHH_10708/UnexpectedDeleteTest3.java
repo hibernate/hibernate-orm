@@ -5,6 +5,8 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -110,7 +112,7 @@ public class UnexpectedDeleteTest3 {
 			this.id = id;
 		}
 
-		@CollectionTable(name = "NAMES")
+		@CollectionTable(name = "NAMES", joinColumns = @JoinColumn(name = "parent_id"))
 		@ElementCollection
 		Set<String> getNames() {
 			return Collections.unmodifiableSet( names );
@@ -121,6 +123,7 @@ public class UnexpectedDeleteTest3 {
 		}
 
 		@ManyToMany( fetch = FetchType.LAZY, targetEntity = Child.class )
+		@JoinTable(joinColumns = @JoinColumn(name = "parent_id"))
 		Set<Child> getChildren() {
 			return Collections.unmodifiableSet( children );
 		}

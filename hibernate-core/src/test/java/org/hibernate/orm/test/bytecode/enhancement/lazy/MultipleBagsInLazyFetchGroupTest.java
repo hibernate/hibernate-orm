@@ -13,6 +13,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -73,11 +74,11 @@ public class MultipleBagsInLazyFetchGroupTest {
 
 		String text;
 
-		@CollectionTable(name = "SOME_STRINGS")
+		@CollectionTable(name = "SOME_STRINGS", joinColumns = @JoinColumn(name = "STRINGS_ENTITY_ID"))
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings;
 
-		@CollectionTable(name = "SOME_STRINGS_TWO")
+		@CollectionTable(name = "SOME_STRINGS_TWO", joinColumns = @JoinColumn(name = "STRINGS_ENTITY_ID"))
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings2;
 	}

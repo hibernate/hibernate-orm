@@ -64,6 +64,9 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
 				buffer.append( " on delete " ).append( onDeleteAction.toSqlString() );
 			}
+			else {
+				appendDefaultOnDeleteAction( foreignKey, metadata, buffer );
+			}
 		}
 
 		if ( isNotEmpty( foreignKey.getOptions() ) ) {
@@ -85,6 +88,10 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 				? dialect.getAddForeignKeyConstraintString( constraintName, keyDefinition )
 				: dialect.getAddForeignKeyConstraintString( constraintName, columnNames,
 						targetTableName, targetColumnNames, foreignKey.isReferenceToPrimaryKey() );
+	}
+
+	protected void appendDefaultOnDeleteAction(ForeignKey foreignKey, Metadata metadata, StringBuilder buffer) {
+		// No-op
 	}
 
 	private String quotedConstraintName(ForeignKey foreignKey, Metadata metadata) {

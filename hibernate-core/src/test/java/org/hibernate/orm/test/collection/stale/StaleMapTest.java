@@ -4,10 +4,12 @@
  */
 package org.hibernate.orm.test.collection.stale;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -61,10 +63,13 @@ public class StaleMapTest {
 			} );
 		} );
 	}
-	static @Entity class StaleMapTestEntity {
+
+	@Entity(name = "StaleMapTestEntity")
+	static class StaleMapTestEntity {
 		@GeneratedValue @Id
 		long id;
 		@ElementCollection
+		@CollectionTable(name = "stale_map_test_strings", joinColumns = @JoinColumn(name = "stale_map_test_id"))
 		Map<Integer,String> intStringMap = new HashMap<>();
 	}
 }

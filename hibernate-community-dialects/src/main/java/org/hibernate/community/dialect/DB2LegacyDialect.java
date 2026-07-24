@@ -459,21 +459,31 @@ public class DB2LegacyDialect extends Dialect {
 		) );
 
 		functionFactory.windowFunctions();
-		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
-			functionFactory.listagg( null );
+		registerListagg( functionFactory );
+		registerJsonFunctions( functionFactory );
+		registerXmlFunctions( functionFactory );
 
-			if ( getDB2Version().isSameOrAfter( 11 ) ) {
-				functionFactory.jsonValue_db2();
-				functionFactory.jsonQuery_no_passing();
-				functionFactory.jsonExists_no_passing();
-				functionFactory.jsonObject_db2();
-				functionFactory.jsonArray_db2();
-				functionFactory.jsonArrayAgg_db2();
-				functionFactory.jsonObjectAgg_db2();
-				functionFactory.jsonTable_db2( getMaximumSeriesSize() );
-			}
+		functionFactory.unnest_db2( getMaximumSeriesSize() );
+		if ( supportsRecursiveCTE() ) {
+			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
 		}
 
+		functionFactory.hex( "hex(?1)" );
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.sha( "hash(?1, 2)" );
+			functionFactory.md5( "hash(?1, 0)" );
+
+			functionFactory.regexpLike();
+		}
+	}
+
+	protected void registerListagg(CommonFunctionFactory functionFactory) {
+		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {
+			functionFactory.listagg( null );
+		}
+	}
+
+	protected void registerXmlFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
 		functionFactory.xmlforest();
@@ -489,18 +499,18 @@ public class DB2LegacyDialect extends Dialect {
 		}
 		functionFactory.xmlagg();
 		functionFactory.xmltable_db2();
+	}
 
-		functionFactory.unnest_db2( getMaximumSeriesSize() );
-		if ( supportsRecursiveCTE() ) {
-			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
-		}
-
-		functionFactory.hex( "hex(?1)" );
+	protected void registerJsonFunctions(CommonFunctionFactory functionFactory) {
 		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			functionFactory.sha( "hash(?1, 2)" );
-			functionFactory.md5( "hash(?1, 0)" );
-
-			functionFactory.regexpLike();
+			functionFactory.jsonValue_db2();
+			functionFactory.jsonQuery_no_passing();
+			functionFactory.jsonExists_no_passing();
+			functionFactory.jsonObject_db2();
+			functionFactory.jsonArray_db2();
+			functionFactory.jsonArrayAgg_db2();
+			functionFactory.jsonObjectAgg_db2();
+			functionFactory.jsonTable_db2( getMaximumSeriesSize() );
 		}
 	}
 

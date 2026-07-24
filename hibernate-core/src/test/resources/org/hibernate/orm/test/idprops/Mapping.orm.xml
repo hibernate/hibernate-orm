@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.idprops.Person"
+            access="PROPERTY" metadata-complete="true">
+        <table name="T_ID_PERSON"/>
+        <attributes>
+            <id name="pk">
+                <column name="PK"/>
+            </id>
+            <basic name="name">
+                <column name="NAME"/>
+            </basic>
+            <basic name="id">
+                <column name="ID_NON_ID"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.idprops.Order"
+            access="PROPERTY" metadata-complete="true">
+        <table name="T_ID_ORDER"/>
+        <attributes>
+            <id name="number">
+                <column name="PK"/>
+            </id>
+            <basic name="placed">
+                <column name="ORDR_DT"/>
+                <temporal>TIMESTAMP</temporal>
+            </basic>
+            <many-to-one name="orderee"
+                         target-entity="org.hibernate.orm.test.idprops.Person">
+                <join-column name="ORDEREE"/>
+            </many-to-one>
+            <one-to-many name="lineItems"
+                         target-entity="org.hibernate.orm.test.idprops.LineItem"
+                         mapped-by="pk.order"
+                         orphan-removal="true"
+                         classification="SET">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.idprops.LineItem"
+            access="PROPERTY" metadata-complete="true">
+        <table name="T_ID_LINE_ITEM"/>
+        <attributes>
+            <embedded-id name="pk"/>
+            <basic name="quantity">
+                <column name="QTY"/>
+            </basic>
+            <basic name="id">
+                <column name="ID_NON_ID2"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.idprops.LineItemPK"
+                access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <many-to-one name="order"
+                         target-entity="org.hibernate.orm.test.idprops.Order">
+                <join-column name="ORDR_ID"/>
+            </many-to-one>
+            <basic name="productCode">
+                <column name="PROD_CODE"/>
+            </basic>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>

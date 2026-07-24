@@ -17,7 +17,7 @@ import org.hibernate.orm.test.manytomanyassociationclass.User;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/manytomanyassociationclass/compositeid/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/manytomanyassociationclass/compositeid/Mappings.orm.xml"
 )
 public class ManyToManyAssociationClassCompositeIdTest extends AbstractManyToManyAssociationClassTest {
 

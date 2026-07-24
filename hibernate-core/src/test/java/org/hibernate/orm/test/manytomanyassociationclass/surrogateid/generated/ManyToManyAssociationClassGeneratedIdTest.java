@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/manytomanyassociationclass/surrogateid/generated/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/manytomanyassociationclass/surrogateid/generated/Mappings.orm.xml"
 )
 public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override

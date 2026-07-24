@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/onetoone/nopojo/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/onetoone/nopojo/Person.orm.xml"
 )
 @SessionFactory(
 		generateStatistics = true

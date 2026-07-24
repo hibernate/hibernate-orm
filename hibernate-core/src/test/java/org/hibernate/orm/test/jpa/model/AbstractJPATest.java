@@ -27,9 +27,9 @@ public abstract class AbstractJPATest extends BaseSessionFactoryFunctionalTest {
 	@Override
 	protected String[] getOrmXmlFiles() {
 		return new String[] {
-				"org/hibernate/orm/test/jpa/model/Part.hbm.xml",
-				"org/hibernate/orm/test/jpa/model/Item.hbm.xml",
-				"org/hibernate/orm/test/jpa/model/MyEntity.hbm.xml"
+				"org/hibernate/orm/test/jpa/model/Part.orm.xml",
+				"org/hibernate/orm/test/jpa/model/Item.orm.xml",
+				"org/hibernate/orm/test/jpa/model/MyEntity.orm.xml"
 		};
 	}
 

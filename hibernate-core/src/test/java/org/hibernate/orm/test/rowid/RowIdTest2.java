@@ -26,7 +26,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
  */
 @RequiresDialect(value = OracleDialect.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/rowid/Point.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/rowid/Point.orm.xml"
 )
 @SessionFactory(
 		exportSchema = false

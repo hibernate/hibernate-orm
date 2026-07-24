@@ -21,9 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/orphan/one2one/fk/reversed/bidirectional/Mapping.hbm.xml"
-)
+@DomainModel(annotatedClasses = {Employee.class, EmployeeInfo.class})
 @SessionFactory
 public class DeleteOneToOneOrphansTest {
 

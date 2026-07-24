@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/connections/Silly.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/connections/Silly.orm.xml"
 )
 @SessionFactory
 public abstract class ConnectionManagementTestCase {

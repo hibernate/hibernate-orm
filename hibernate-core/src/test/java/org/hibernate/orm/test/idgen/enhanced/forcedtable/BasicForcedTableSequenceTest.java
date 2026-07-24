@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.idgen.enhanced.forcedtable;
 
 
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/enhanced/forcedtable/Basic.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/enhanced/forcedtable/Basic.orm.xml")
 @SessionFactory
 public class BasicForcedTableSequenceTest {
 
@@ -28,8 +29,9 @@ public class BasicForcedTableSequenceTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate() ).isInstanceOf( SequenceStyleGenerator.class );
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate();
 		assertThat( generator.getDatabaseStructure() ).isInstanceOf( TableStructure.class );
 		assertThat( generator.getOptimizer() ).isInstanceOf( NoopOptimizer.class );
 

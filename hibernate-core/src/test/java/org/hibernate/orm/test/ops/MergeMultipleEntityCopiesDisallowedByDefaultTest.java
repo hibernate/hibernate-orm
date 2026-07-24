@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @JiraKey(value = "HHH-9106")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ops/Hoarder.hbm.xml"
+		annotatedClasses = {Hoarder.class, Item.class, Category.class, SubItem.class, SubCategory.class}
 )
 @SessionFactory
 public class MergeMultipleEntityCopiesDisallowedByDefaultTest {

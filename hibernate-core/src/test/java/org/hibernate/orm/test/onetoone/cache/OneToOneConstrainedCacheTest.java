@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Wolfgang Voelkl, michael
  */
 @DomainModel(
-		xmlMappings = { "org/hibernate/orm/test/onetoone/cache/Object2.hbm.xml", "org/hibernate/orm/test/onetoone/cache/MainObject.hbm.xml" }
+		xmlMappings = { "org/hibernate/orm/test/onetoone/cache/Object2.orm.xml", "org/hibernate/orm/test/onetoone/cache/MainObject.orm.xml" }
 )
 @SessionFactory
 public class OneToOneConstrainedCacheTest {

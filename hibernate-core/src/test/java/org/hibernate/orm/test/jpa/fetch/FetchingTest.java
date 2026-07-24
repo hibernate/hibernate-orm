@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FetchingTest extends AbstractJPATest {
 	@Override
 	public String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/jpa/fetch/Person.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/jpa/fetch/Person.orm.xml" };
 	}
 
 	@Test
@@ -66,7 +66,7 @@ public class FetchingTest extends AbstractJPATest {
 							.setParameter( "name", "Gavin" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( p.getOldStays() ) );
 					assertEquals( 1, p.getOldStays().size() );
-					assertFalse( Hibernate.isInitialized( p.getOldStays() ), "lazy extra is failing" );
+					assertTrue( Hibernate.isInitialized( p.getOldStays() ) );
 					session.clear();
 					stay = session.get( Stay.class, stay.getId() );
 

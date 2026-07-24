@@ -29,8 +29,8 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/typeparameters/Typedef.hbm.xml",
-				"org/hibernate/orm/test/typeparameters/Widget.hbm.xml"
+				"org/hibernate/orm/test/typeparameters/Typedef.orm.xml",
+				"org/hibernate/orm/test/typeparameters/Widget.orm.xml"
 		}
 )
 @SessionFactory

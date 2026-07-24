@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/propertyref/inheritence/discrim/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/propertyref/inheritence/discrim/Person.orm.xml"
 )
 @SessionFactory
 public class SubclassPropertyRefTest {

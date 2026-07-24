@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Gavin King
  */
 @SkipForDialect(dialectClass = SybaseDialect.class, majorVersion = 15)
-@DomainModel(xmlMappings = "org/hibernate/orm/test/mixed/Item.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/mixed/Item.orm.xml")
 @SessionFactory
 public class MixedTest {
 

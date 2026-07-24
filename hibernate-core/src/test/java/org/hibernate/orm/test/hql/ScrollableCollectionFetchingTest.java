@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/hql/Animal.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/hql/Animal.orm.xml"
 )
 @SessionFactory
 public class ScrollableCollectionFetchingTest {

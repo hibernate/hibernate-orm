@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/id/SQLServer2012Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/id/SQLServer2012Person.mapping.xml"
 )
 @SessionFactory
 public class SQLServer2012SequenceGeneratorTest {

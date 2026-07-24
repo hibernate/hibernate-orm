@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/idprops/Mapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/idprops/Mapping.orm.xml"
 )
 @SessionFactory
 public class IdentifierPropertyReferencesTest {

@@ -13,8 +13,8 @@ public class Plan implements Serializable {
 	private long id;
 	private long version;
 	private String description;
-	private Set contracts;
-	private Set infos;
+	private Set<Contract> contracts;
+	private Set<Info> infos;
 	private Owner owner;
 
 	public Plan() {
@@ -23,8 +23,8 @@ public class Plan implements Serializable {
 
 	public Plan(String description) {
 		this.description = description;
-		contracts = new HashSet();
-		infos = new HashSet();
+		contracts = new HashSet<>();
+		infos = new HashSet<>();
 	}
 
 	public long getVersion() {
@@ -51,11 +51,11 @@ public class Plan implements Serializable {
 		this.description = description;
 	}
 
-	public Set getContracts() {
+	public Set<Contract> getContracts() {
 		return contracts;
 	}
 
-	public void setContracts(Set contracts) {
+	public void setContracts(Set<Contract> contracts) {
 		this.contracts = contracts;
 	}
 
@@ -92,11 +92,11 @@ public class Plan implements Serializable {
 		}
 	}
 
-	public Set getInfos() {
+	public Set<Info> getInfos() {
 		return infos;
 	}
 
-	public void setInfos(Set infos) {
+	public void setInfos(Set<Info> infos) {
 		this.infos = infos;
 	}
 

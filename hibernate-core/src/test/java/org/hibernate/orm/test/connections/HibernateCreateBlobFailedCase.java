@@ -26,7 +26,7 @@ import static org.hibernate.Hibernate.getLobHelper;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/connections/Silly.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/connections/Silly.orm.xml"
 )
 @SessionFactory
 @ServiceRegistry(

@@ -3,17 +3,30 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless.fetching;
+
 import java.util.Date;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
+@Entity
 public class Task {
+	@Id
+	@GeneratedValue
 	private Long id;
 	private String description;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "\"user\"")
 	private User user;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "\"resource\"")
 	private Resource resource;
 	private Date dueDate;
 	private Date startDate;

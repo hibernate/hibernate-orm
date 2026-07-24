@@ -25,7 +25,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.action.queue.spi.meta.ColumnDescriptor;
-import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
@@ -193,7 +192,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-	protected EntityTableDescriptor[] buildTableDescriptors() {
+	protected void buildTableDescriptors() {
 		var builder = createTableDescriptorBuilder(
 				tableName,
 				0,
@@ -211,7 +210,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		} );
 
 		// Union subclass has only one table, so entity-wide flag equals table flag
-		return new EntityTableDescriptor[] { builder.build( builder.isSelfReferential ) };
+		buildRuntimeTableDescriptor( builder, builder.isSelfReferential );
 	}
 
 	protected void validateGenerator() {

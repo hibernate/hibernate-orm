@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel(annotatedClasses = { Book.class })
@@ -145,6 +146,36 @@ class BookDaoTest {
 			int deleted = dao.deleteByIsbn( "isbn-del" );
 			assertEquals( 1, deleted );
 			assertEquals( 0, dao.countBooks() );
+		} );
+	}
+
+	@Test
+	void testHqlFindByIsbnNullable(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			session.insert( new Book( "isbn-kotlin", "Kotlin Programming", "Author K", 100 ) );
+		} );
+		scope.inStatelessTransaction( session -> {
+			var dao = new _BookDao( session );
+			Book found = dao.findByIsbnNullable( "isbn-kotlin" );
+			assertNotNull( found );
+			assertEquals( "Kotlin Programming", found.getTitle() );
+			Book notFound = dao.findByIsbnNullable( "nonexistent" );
+			assertNull( notFound );
+		} );
+	}
+
+	@Test
+	void testHqlFindByIsbnNullableJspecify(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			session.insert( new Book( "isbn-jspecify", "JSpecify Programming", "Author J", 100 ) );
+		} );
+		scope.inStatelessTransaction( session -> {
+			var dao = new _BookDao( session );
+			Book found = dao.findByIsbnNullableJspecify( "isbn-jspecify" );
+			assertNotNull( found );
+			assertEquals( "JSpecify Programming", found.getTitle() );
+			Book notFound = dao.findByIsbnNullableJspecify( "nonexistent" );
+			assertNull( notFound );
 		} );
 	}
 

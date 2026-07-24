@@ -28,13 +28,13 @@ import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.query.sqm.tree.spi.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.spi.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.spi.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.spi.domain.SqmMappedSuperclassDomainType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
@@ -213,7 +213,7 @@ public class SqmMappingModelHelper {
 			if ( referencedPathSource instanceof EntityDomainType<?> entityDomainType ) {
 				return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
-			assert referencedPathSource instanceof SqmCteTable<?>;
+			assert referencedPathSource instanceof AnonymousTupleType<?>;
 			return null;
 		}
 		final var lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );

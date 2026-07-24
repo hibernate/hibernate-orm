@@ -45,9 +45,9 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -257,13 +257,19 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 							final TableGroup parentTableGroup = querySpec.getFromClause().queryTableGroups(
 									tg -> tg.findTableGroupJoin( functionTableGroup ) == null ? null : tg
 							);
-							final TableGroupJoin join = parentTableGroup.findTableGroupJoin( functionTableGroup );
+							final PredicateContainer predicateContainer;
+							if ( parentTableGroup != null ) {
+								predicateContainer = parentTableGroup.findTableGroupJoin( functionTableGroup );
+							}
+							else {
+								predicateContainer = querySpec;
+							}
 							final Expression lhs = createExpression( tableQualifier, idColumns );
 							final Expression rhs = createExpression(
 									functionTableGroup.getPrimaryTableReference().getIdentificationVariable(),
 									idColumns
 							);
-							join.applyPredicate( new ComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs ) );
+							predicateContainer.applyPredicate( new ComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs ) );
 
 							final String tableName = cteName;
 							final List<CteColumn> cteColumns = List.of(

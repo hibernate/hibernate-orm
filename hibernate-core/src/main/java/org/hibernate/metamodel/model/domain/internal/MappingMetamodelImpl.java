@@ -627,8 +627,10 @@ public class MappingMetamodelImpl
 				for ( int i = 0; i < componentCount; i++ ) {
 					components[i] = resolveMappingExpressible( tupleType.get( i ), tableGroupLocator );
 				}
-				final var tupleMappingModelExpressible =
-						new TupleMappingModelExpressible( components );
+				final var tupleMappingModelExpressible = new TupleMappingModelExpressible(
+						tupleType instanceof ArrayTupleType ? null : tupleType.getComponentNames(),
+						components
+				);
 				final var existingMappingModelExpressible =
 						tupleTypeCache.putIfAbsent( tupleType, tupleMappingModelExpressible );
 				return existingMappingModelExpressible == null

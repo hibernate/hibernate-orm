@@ -113,9 +113,8 @@ public class H2ArrayToStringFunction extends ArrayToStringFunction {
 				}
 				sqlAppender.append( "cast(" );
 			}
-			sqlAppender.append( "array_get(" );
 			arrayExpression.accept( walker );
-			sqlAppender.append( ",i.idx)" );
+			sqlAppender.append( "[i.idx]" );
 			if ( needsCast ) {
 				sqlAppender.append( " as varchar)" );
 				if ( ddlTypeCode == SqlTypes.BOOLEAN ) {

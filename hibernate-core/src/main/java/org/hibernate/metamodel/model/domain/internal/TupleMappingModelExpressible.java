@@ -5,10 +5,13 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 
@@ -17,10 +20,12 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
  */
 public class TupleMappingModelExpressible implements MappingModelExpressible<Object[]> {
 
+	private final @Nullable String[] componentNames;
 	private final MappingModelExpressible<?>[] components;
 	private final JdbcMapping[] mappings;
 
-	public TupleMappingModelExpressible(MappingModelExpressible<?>[] components) {
+	public TupleMappingModelExpressible(@Nullable List<String> componentNames, MappingModelExpressible<?>[] components) {
+		this.componentNames = componentNames == null ? null : componentNames.toArray( new String[0] );
 		this.components = components;
 		final ArrayList<JdbcMapping> results = new ArrayList<>();
 		forEachJdbcType( 0, (index, jdbcMapping) -> results.add( jdbcMapping ) );
@@ -30,6 +35,14 @@ public class TupleMappingModelExpressible implements MappingModelExpressible<Obj
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		return mappings[ index ];
+	}
+
+	public @Nullable MappingModelExpressible<?> findComponentMappingModelExpressible(String componentName) {
+		if ( componentNames == null ) {
+			return null;
+		}
+		final int index = ArrayHelper.indexOf( componentNames, componentName );
+		return index == -1 ? null : components[ index ];
 	}
 
 	@Override

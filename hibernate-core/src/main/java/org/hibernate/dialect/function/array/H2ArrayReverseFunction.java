@@ -36,9 +36,9 @@ public class H2ArrayReverseFunction extends AbstractArrayReverseFunction {
 
 		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(array_get(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( ",i.idx) order by i.idx desc) from system_range(1," );
+		sqlAppender.append( "[i.idx] order by i.idx desc) from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") i(idx) where i.idx<=coalesce(cardinality(" );
 		arrayExpression.accept( walker );

@@ -134,6 +134,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processQueryRenames() {
+		final var importedRenames = domainModelSource.getGlobalRegistrations().getImportedRenames();
+		for ( var entry : importedRenames.entrySet() ) {
+			rootMetadataBuildingContext.getMetadataCollector().addImport( entry.getKey(), entry.getValue() );
+		}
 	}
 
 	@Override

@@ -15,7 +15,7 @@ import jakarta.persistence.OneToMany;
 /**
  * Blown precision on related entity when &#064;JoinColumn is used.
  *
- * @see ANN-748
+ * @see <a href="https://hibernate.atlassian.net/browse/ANN-748">ANN-748</a>
  * @author Andrew C. Oliver andyspam@osintegrators.com
  */
 @Entity

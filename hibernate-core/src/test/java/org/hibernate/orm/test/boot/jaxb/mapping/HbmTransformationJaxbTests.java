@@ -26,9 +26,11 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
@@ -777,6 +779,91 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-20709" )
+	public void testCollectionFetchJoinLazyTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-fetch-join-lazy/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
+					.filter( e -> "User".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( userEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
+
+			final JaxbOneToManyImpl emailAddresses = userEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( emailAddresses.getName() ).isEqualTo( "emailAddresses" );
+			assertThat( emailAddresses.getFetchMode() )
+					.as( "Lazy collection with fetch='join' should not have fetch-mode=JOIN" )
+					.isNotEqualTo( org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl.JOIN );
+			assertThat( emailAddresses.getFetch() )
+					.as( "Collection with default lazy='true' should have fetch=LAZY" )
+					.isEqualTo( jakarta.persistence.FetchType.LAZY );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20712" )
+	public void testOnDeleteCascadeTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/on-delete-toone/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "Child".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( childEntity.getAttributes().getManyToOneAttributes() ).hasSize( 1 );
+
+			final JaxbManyToOneImpl parentManyToOne = childEntity.getAttributes().getManyToOneAttributes().get( 0 );
+			assertThat( parentManyToOne.getName() ).isEqualTo( "parent" );
+			assertThat( parentManyToOne.getOnDelete() )
+					.as( "many-to-one with on-delete='cascade' should have on-delete=CASCADE" )
+					.isEqualTo( org.hibernate.annotations.OnDeleteAction.CASCADE );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20709" )
+	public void testCollectionFetchJoinEagerTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-fetch-join-eager/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
+					.filter( e -> "User".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( userEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
+
+			final JaxbOneToManyImpl emailAddresses = userEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( emailAddresses.getName() ).isEqualTo( "emailAddresses" );
+			assertThat( emailAddresses.getFetchMode() )
+					.as( "Eager collection with fetch='join' should have fetch-mode=JOIN" )
+					.isEqualTo( org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl.JOIN );
+			assertThat( emailAddresses.getFetch() )
+					.as( "Collection with lazy='false' should have fetch=EAGER" )
+					.isEqualTo( jakarta.persistence.FetchType.EAGER );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20711" )
+	public void testIdClassTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/id-class/hbm.xml", scope, (transformed) -> {
+			final JaxbEntityImpl customerEntity = transformed.getEntities().stream()
+					.filter( e -> "Customer".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( customerEntity.getIdClass() )
+					.as( "Entity with composite-id class should have id-class" )
+					.isNotNull();
+			assertThat( customerEntity.getIdClass().getClazz() )
+					.as( "id-class should reference the fully qualified CustomerId class" )
+					.isEqualTo( "org.hibernate.orm.test.idclass.CustomerId" );
+
+			assertThat( customerEntity.getAttributes().getIdAttributes() )
+					.as( "Entity should have 2 id attributes" )
+					.hasSize( 2 );
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,
@@ -1217,6 +1304,92 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20715" )
+	public void testUnmappedSuperclassGeneratesMappedSuperclass(ServiceRegistryScope scope) {
+		// ConcreteEntity and AnotherEntity both extend AbstractBase (a plain Java class, not an entity).
+		// The hbm.xml maps properties (id, version, name, relatedBase) declared on AbstractBase.
+		// The transformer should generate a single <mapped-superclass> for AbstractBase,
+		// move the inherited attributes there, and mark unmapped superclass properties as transient.
+		transformAndVerify( "xml/jaxb/mapping/unmapped-superclass/hbm.xml", scope, (transformed) -> {
+			// A single mapped-superclass should be generated even though two entities share the same superclass
+			assertThat( transformed.getMappedSuperclasses() )
+					.as( "Exactly one <mapped-superclass> should be generated for the shared AbstractBase" )
+					.hasSize( 1 );
+
+			final JaxbMappedSuperclassImpl mappedSuperclass = transformed.getMappedSuperclasses().get( 0 );
+			assertThat( mappedSuperclass.getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.unmappedsuperclass.AbstractBase" );
+			assertThat( mappedSuperclass.isMetadataComplete() ).isTrue();
+
+			final var superAttrs = mappedSuperclass.getAttributes();
+
+			// Id attribute should be on the mapped-superclass
+			assertThat( superAttrs.getIdAttributes() )
+					.extracting( JaxbIdImpl::getName )
+					.containsExactly( "id" );
+
+			// Version attribute should be on the mapped-superclass
+			assertThat( superAttrs.getVersion() )
+					.as( "version should be moved to the mapped-superclass" )
+					.isNotNull();
+			assertThat( superAttrs.getVersion().getName() )
+					.isEqualTo( "version" );
+
+			// Basic attribute 'name' should be on the mapped-superclass
+			assertThat( superAttrs.getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "name" );
+
+			// Many-to-one attribute 'relatedBase' should be on the mapped-superclass
+			assertThat( superAttrs.getManyToOneAttributes() )
+					.extracting( JaxbManyToOneImpl::getName )
+					.containsExactly( "relatedBase" );
+
+			// Unmapped property should be declared as transient
+			assertThat( superAttrs.getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.contains( "unmappedProperty" );
+
+			// --- ConcreteEntity assertions ---
+			final JaxbEntityImpl concreteEntity = transformed.getEntities().stream()
+					.filter( e -> "ConcreteEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			// Inherited attributes should NOT be on the entity
+			assertThat( concreteEntity.getAttributes().getIdAttributes() )
+					.as( "Entity should not have id — inherited from mapped-superclass" )
+					.isEmpty();
+			assertThat( concreteEntity.getAttributes().getVersion() )
+					.as( "Entity should not have version — inherited from mapped-superclass" )
+					.isNull();
+			assertThat( concreteEntity.getAttributes().getManyToOneAttributes() )
+					.as( "Entity should not have relatedBase — inherited from mapped-superclass" )
+					.isEmpty();
+
+			// Entity's own attribute should remain
+			assertThat( concreteEntity.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "description" );
+
+			// --- AnotherEntity assertions ---
+			final JaxbEntityImpl anotherEntity = transformed.getEntities().stream()
+					.filter( e -> "AnotherEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			// Inherited attributes should NOT be on the entity
+			assertThat( anotherEntity.getAttributes().getIdAttributes() ).isEmpty();
+			assertThat( anotherEntity.getAttributes().getVersion() ).isNull();
+
+			// Entity's own attribute should remain
+			assertThat( anotherEntity.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "code" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20697" )
 	public void testNonAggregatedCompositeIdColumnsNotUnique(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/inverse-composite-key/hbm.xml", scope, transformed -> {
@@ -1234,6 +1407,61 @@ public class HbmTransformationJaxbTests {
 							.isNotEqualTo( true );
 				}
 			}
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20699" )
+	public void testCompositeKeyManyToOneFetchLazy(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/composite-key-many-to-one-fetch/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl addressEntity = transformed.getEntities().stream()
+					.filter( e -> "Address".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( addressEntity.getAttributes().getManyToOneAttributes() )
+					.hasSize( 1 );
+
+			final JaxbManyToOneImpl personManyToOne = addressEntity.getAttributes().getManyToOneAttributes().get( 0 );
+			assertThat( personManyToOne.getName() ).isEqualTo( "person" );
+			assertThat( personManyToOne.isId() ).isTrue();
+			assertThat( personManyToOne.getFetch() )
+					.as( "Composite-id key-many-to-one should have fetch=LAZY" )
+					.isEqualTo( jakarta.persistence.FetchType.LAZY );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20717" )
+	public void testImportWithoutRenameDefaultsToUnqualifiedClassName(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/import-no-rename/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getHqlImports() ).hasSize( 1 );
+			final JaxbHqlImportImpl hqlImport = (JaxbHqlImportImpl) transformed.getHqlImports().get( 0 );
+			assertThat( hqlImport.getClazz() ).isEqualTo( "Animal" );
+			assertThat( hqlImport.getRename() )
+					.as( "When hbm.xml import has no rename, transformer should default to unqualified class name" )
+					.isEqualTo( "Animal" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20703" )
+	public void testCollectionTypeTypedefResolution(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-type-typedef/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+
+			assertThat( entity.getAttributes().getElementCollectionAttributes() ).hasSize( 1 );
+			final var elementCollection = entity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( elementCollection.getName() ).isEqualTo( "values" );
+			assertThat( elementCollection.getCollectionType() )
+					.as( "collection-type referencing a typedef should be resolved" )
+					.isNotNull();
+			assertThat( elementCollection.getCollectionType().getType() )
+					.as( "collection-type should use the typedef class, not the typedef name" )
+					.isEqualTo( "org.hibernate.orm.test.mapping.collections.custom.parameterized.DefaultableListType" );
+			assertThat( elementCollection.getCollectionType().getParameters() )
+					.as( "collection-type should include typedef parameters" )
+					.hasSize( 1 );
 		} );
 	}
 }

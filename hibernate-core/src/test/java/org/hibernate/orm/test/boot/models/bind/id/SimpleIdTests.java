@@ -32,6 +32,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.mapping.MappingRole;
 
 import org.junit.jupiter.api.Test;
 
@@ -194,6 +195,16 @@ public class SimpleIdTests {
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
 					assertThat( entityIdentifierBinding.attribute( "id2" ).extractionKind() )
 							.isEqualTo( IdentifierExtractionKind.DIRECT );
+					final MappingRole identifierRole = MappingRole.entity( AggregatedIdEntity.class.getName() )
+							.append( MappingRole.PartKind.IDENTIFIER );
+					final var appliedIdentifier = context.getBindingState().getBootBindingModel()
+							.getAppliedEmbeddableMapping( identifierRole );
+					assertThat( appliedIdentifier ).isNotNull();
+					assertThat( appliedIdentifier.componentType().toJavaClass() ).isEqualTo( AggregatedIdEntity.Pk.class );
+					assertThat( appliedIdentifier.findAttribute( "id1" ).containerRole() )
+							.isEqualTo( identifierRole );
+					assertThat( appliedIdentifier.findAttribute( "id2" ).containerRole() )
+							.isEqualTo( identifierRole );
 
 					final var handoff = context.getBindingState().getEntityIdentifierHandoff( entityBinding );
 					assertThat( handoff ).isNotNull();
@@ -255,7 +266,23 @@ public class SimpleIdTests {
 				(context) -> {
 					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
 							.getEntityBinding( NonAggregatedIdEntity.class.getName() );
-					assertThat( entityBinding.getIdentifier() ).isInstanceOf( Component.class );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final Component identifierMapper = entityBinding.getIdentifierMapper();
+					final MappingRole identifierRole = MappingRole.entity( NonAggregatedIdEntity.class.getName() )
+							.append( MappingRole.PartKind.IDENTIFIER );
+					final MappingRole identifierMapperRole = MappingRole.entity( NonAggregatedIdEntity.class.getName() )
+							.append( MappingRole.PartKind.IDENTIFIER_MAPPER );
+
+					assertThat( identifier.getMappingRole() ).isEqualTo( identifierRole );
+					assertThat( identifierMapper.getMappingRole() ).isEqualTo( identifierMapperRole );
+					assertThat( identifier.getProperties() )
+							.allSatisfy( property -> assertThat( property.getMappingRole() )
+									.isEqualTo( identifierRole.appendAttribute( property.getName() ) ) );
+					assertThat( identifierMapper.getProperties() )
+							.allSatisfy( property -> assertThat( property.getMappingRole() )
+									.isEqualTo( identifierMapperRole.appendAttribute( property.getName() ) ) );
+					assertThat( entityBinding.getProperty( "_identifierMapper" ).getMappingRole() )
+							.isEqualTo( identifierMapperRole );
 					assertThat( entityBinding.hasEmbeddedIdentifier() ).isFalse();
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
@@ -295,10 +322,26 @@ public class SimpleIdTests {
 							.getEntityBinding( EmbeddedIdClassEntity.class.getName() );
 					final Component identifier = (Component) entityBinding.getIdentifier();
 					final Component identifierMapper = entityBinding.getIdentifierMapper();
+					final MappingRole identifierRole = MappingRole.entity( EmbeddedIdClassEntity.class.getName() )
+							.append( MappingRole.PartKind.IDENTIFIER );
+					final MappingRole identifierMapperRole = MappingRole.entity( EmbeddedIdClassEntity.class.getName() )
+							.append( MappingRole.PartKind.IDENTIFIER_MAPPER );
+					final Component identifierCode = (Component) identifier.getProperty( "code" ).getValue();
+					final Component identifierMapperCode =
+							(Component) identifierMapper.getProperty( "code" ).getValue();
 
 					assertThat( entityBinding.hasEmbeddedIdentifier() ).isFalse();
-					assertThat( identifier.getProperty( "code" ).getValue() ).isInstanceOf( Component.class );
-					assertThat( identifierMapper.getProperty( "code" ).getValue() ).isInstanceOf( Component.class );
+					assertThat( identifier.getMappingRole() ).isEqualTo( identifierRole );
+					assertThat( identifierMapper.getMappingRole() ).isEqualTo( identifierMapperRole );
+					assertThat( identifier.getProperty( "code" ).getMappingRole() )
+							.isEqualTo( identifierRole.appendAttribute( "code" ) );
+					assertThat( identifierMapper.getProperty( "code" ).getMappingRole() )
+							.isEqualTo( identifierMapperRole.appendAttribute( "code" ) );
+					assertThat( identifierMapperCode ).isNotSameAs( identifierCode );
+					assertThat( identifierMapperCode.getMappingRole() )
+							.isEqualTo( identifierCode.getMappingRole() );
+					assertThat( identifierMapperCode.getProperty( "part" ) )
+							.isSameAs( identifierCode.getProperty( "part" ) );
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "code_part", "local_id" );
@@ -527,6 +570,8 @@ public class SimpleIdTests {
 					assertThat( entityBinding.hasEmbeddedIdentifier() ).isFalse();
 					assertThat( identifier.getProperty( "parent" ).getValue() ).isInstanceOf( org.hibernate.mapping.BasicValue.class );
 					assertThat( identifierMapper.getProperty( "parent" ).getValue() ).isSameAs( parent );
+					assertThat( parent.getMappingRole() )
+							.isEqualTo( identifierMapper.getMappingRole().appendAttribute( "parent" ) );
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "parent_id", "child_id" );
@@ -752,6 +797,8 @@ public class SimpleIdTests {
 					assertThat( parent.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "parent_parent_id" );
+					assertThat( parent.getMappingRole() )
+							.isEqualTo( identifierMapper.getMappingRole().appendAttribute( "parent" ) );
 					assertThat( parent.getMappedByProperty() ).isEqualTo( "parent" );
 					assertThat( parent.isConstrained() ).isTrue();
 				},

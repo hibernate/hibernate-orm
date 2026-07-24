@@ -74,9 +74,11 @@ runtime, schema, and integration consumers.
 | `Audited#code` is declared once with declared type `T`.
 
 | `*Usage`
-| A declaration as seen from one concrete consuming type, path, or role.
-| `Audited#code` used by `Customer` has resolved type `String`; the same
-  declaration used by `Order` has resolved type `Integer`.
+| A declaration interpreted in one consuming type, path, or role.  The
+  consumer may itself be a declaration-relative context; a final concrete
+  result is an applied mapping.
+| `Audited#code` used by `Customer` has resolved type `String`; `Base.box`
+  may also describe an embeddable usage before `Base` is applied to an entity.
 
 | `*Contribution`
 | A declaration applied into a larger model context.
@@ -92,10 +94,10 @@ runtime, schema, and integration consumers.
 | `*Handoff`
 | A bridge from boot-model semantic facts to a compatibility object or later
   phase.
-| `MappedSuperclassPropertyHandoff` links the copied legacy `Property` for
-  `Customer#code` to its `AttributeUsageBinding` and owning contribution;
-  `EntityIdentifierHandoff` links an identifier view to its materialized
-  `IdentifierBinding`.
+| `MappedSuperclassHandoffResolver` correlates the copied legacy `Property`
+  for `Customer#code` with its `AppliedAttributeMapping` through their common
+  `MappingRole`; `EntityIdentifierHandoff` links an identifier view to its
+  materialized `IdentifierBinding`.
 
 | `*Correspondence`
 | A product that relates two model parts that should not be matched by object
@@ -159,7 +161,11 @@ only exist after applying `Audited` to `Customer` or `Order`.
 
 === Usage
 
-A usage is a declaration interpreted in a concrete consuming context.
+A usage is a declaration interpreted in a consuming context.  That context may
+be a concrete entity, as in this example, or another declaration-relative
+usage such as an embeddable declared by a generic mapped superclass.  Use
+*applied mapping* when the usage has been applied to its final entity,
+collection, identifier, or relational mapping context.
 
 For `Customer`, the usage of `Audited#code` says:
 
@@ -245,10 +251,10 @@ objects:
 * `NaturalIdPropertyHandoff`, `CollationPropertyHandoff`,
   `TenantIdPropertyHandoff`, and `VersionPropertyHandoff` link source
   contribution/binding views to the materialized `Property`;
-* `EmbeddableComponentHandoff` links an embeddable contribution to the
-  materialized `Component`;
-* `MappedSuperclassPropertyHandoff` links mapped-superclass usage metadata to
-  the copied compatibility `Property`.
+* `AppliedEmbeddableMapping` links an embeddable contribution to the intrinsic
+  role of the materialized `Component` and its applied attributes;
+* `MappedSuperclassHandoffResolver` links mapped-superclass usage metadata to
+  the copied compatibility `Property` through its intrinsic mapping role.
 
 === Correspondence
 
@@ -330,10 +336,9 @@ having usage type `String`.
 No.
 
 The applied `AttributeUsageBinding` is semantic boot metadata.  It exists even
-if the future mapping model no longer needs copied mapped-superclass properties.
-
-`MappedSuperclassPropertyHandoff` exists because the current runtime and
-compatibility model still need a copied `Property`.
+if the future mapping model no longer needs copied mapped-superclass
+properties.  The copied `Property` and `AppliedAttributeMapping` share a
+`MappingRole`, so no identity handoff DTO is needed.
 
 === Is A Copied Property The Semantic Attribute?
 

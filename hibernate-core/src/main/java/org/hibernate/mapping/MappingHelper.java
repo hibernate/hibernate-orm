@@ -19,6 +19,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.usertype.AnnotationBasedUserType;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -32,6 +33,20 @@ public final class MappingHelper {
 	private final static Properties EMPTY_PROPERTIES = new Properties();
 
 	private MappingHelper() {
+	}
+
+	/**
+	 * Creates the live extension instance for a declaratively specified
+	 * {@link CompositeUserType}, consistently for normal boot and archive
+	 * restoration.
+	 */
+	public static CompositeUserType<?> createCompositeUserType(
+			Class<? extends CompositeUserType<?>> implementation,
+			ManagedBeanRegistry managedBeanRegistry,
+			boolean allowExtensionsInCdi) {
+		return allowExtensionsInCdi
+				? managedBeanRegistry.getBean( implementation ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implementation );
 	}
 
 	public static ManagedBean<? extends UserCollectionType> createUserTypeBean(
@@ -117,7 +132,19 @@ public final class MappingHelper {
 	}
 
 	static Class<?> classForName(String typeName, ClassLoaderAccess classLoaderAccess) {
-		return classLoaderAccess.classForName( typeName );
+		if ( classLoaderAccess != null ) {
+			return classLoaderAccess.classForName( typeName );
+		}
+		return classForName( typeName );
+	}
+
+	static Class<?> classForName(String typeName) {
+		try {
+			return Class.forName( typeName );
+		}
+		catch (ClassNotFoundException e) {
+			throw new MappingException( "Class '" + typeName + "' could not be loaded", e );
+		}
 	}
 
 	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, ClassLoaderAccess classLoaderAccess) {

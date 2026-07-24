@@ -215,7 +215,7 @@ public class MappingMetamodelImpl
 				determineJpaMetaModelPopulationSetting( settings ),
 				bootModel.getNamedEntityGraphs().values(),
 				context,
-				context.getBootBindingModel()
+				context.getRuntimeMappingHandoff().staticMetamodelInjectionSource()
 		);
 	}
 

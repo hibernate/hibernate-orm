@@ -4,31 +4,36 @@
  */
 package org.hibernate.metamodel.internal;
 
+
 import java.util.Objects;
 
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
-import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 
 import jakarta.annotation.Nullable;
 
-/// Resolves applied embeddable contribution metadata from legacy component
-/// mapping objects during runtime/JPA metamodel creation.
+/// Resolves applied embeddable metadata by stable mapping role during
+/// runtime/JPA metamodel creation.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public class EmbeddableHandoffResolver {
-	private final BootBindingModel bootBindingModel;
+	private final RuntimeMappingHandoff runtimeMappingHandoff;
 
-	public EmbeddableHandoffResolver(BootBindingModel bootBindingModel) {
-		this.bootBindingModel = Objects.requireNonNull( bootBindingModel );
+	public EmbeddableHandoffResolver(RuntimeMappingHandoff runtimeMappingHandoff) {
+		this.runtimeMappingHandoff = Objects.requireNonNull( runtimeMappingHandoff );
 	}
 
 	/// Resolve the applied component-member usage that produced the materialized
-	/// property, when the boot binding model has a handoff for the component.
-	public @Nullable ComponentMemberBinding findMemberBinding(Component component, Property property) {
-		return bootBindingModel.findEmbeddableMemberBinding( component, property.getName() );
+	/// property, when the runtime handoff has an applied product for the
+	/// component's intrinsic role.
+	public @Nullable AttributeUsageHandoff findMemberBinding(Component component, Property property) {
+		final var role = property.getMappingRole() != null
+				? property.getMappingRole()
+				: component.getMappingRole() == null
+						? null
+						: component.getMappingRole().appendAttribute( property.getName() );
+		return runtimeMappingHandoff.findAttribute( role );
 	}
 
 	/// Determines whether an embeddable attribute should be registered as a
@@ -51,14 +56,11 @@ public class EmbeddableHandoffResolver {
 				|| superclassProperty != null && superclassProperty.isGeneric();
 	}
 
-	private static boolean isConcreteGenericUsage(@Nullable ComponentMemberBinding memberBinding) {
+	private static boolean isConcreteGenericUsage(@Nullable AttributeUsageHandoff memberBinding) {
 		if ( memberBinding == null ) {
 			return false;
 		}
-		return AttributeTypeCorrespondence.isConcreteGenericUsage(
-				memberBinding.declaration().member().getType(),
-				memberBinding.resolvedType()
-		);
+		return memberBinding.isConcreteGenericUsage();
 	}
 
 	/// Transitional fallback to the legacy mapping flag.

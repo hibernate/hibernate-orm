@@ -25,7 +25,6 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
@@ -634,7 +633,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
 			RuntimeModelCreationContext runtimeModelCreationContext,
-			BootBindingModel bootBindingModel) {
+			JpaStaticMetamodelInjectionSource staticMetamodelInjectionSource) {
 		bootMetamodel.getImports()
 				.forEach( (key, value) -> nameToImportMap.put( key,
 						new ImportInfo( value, null ) ) );
@@ -648,7 +647,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				jpaMetaModelPopulationSetting,
 				runtimeModelCreationContext,
 				runtimeModelCreationContext.getClassLoaderService(),
-				bootBindingModel == null ? null : JpaStaticMetamodelInjectionSource.from( bootBindingModel )
+				staticMetamodelInjectionSource
 		);
 
 

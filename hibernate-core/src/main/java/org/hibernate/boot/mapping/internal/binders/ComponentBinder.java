@@ -22,9 +22,10 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetai
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
-import org.hibernate.boot.mapping.internal.context.EmbeddableComponentHandoff;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
+import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
+import org.hibernate.boot.mapping.internal.model.AppliedEmbeddableMapping;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
@@ -63,6 +64,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.mapping.MappingRole;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.FetchType;
@@ -185,12 +187,19 @@ public class ComponentBinder {
 						: identifierColumns != null ? identifierColumns : columns;
 		final EmbeddableContributionView contributionView =
 				embeddableMappingMaterializer.createContributionView( source, context );
-		state.addEmbeddableComponentHandoff( new EmbeddableComponentHandoff( contributionView, ownerBinding, component ) );
 		final List<ComponentMemberBinding> members = new ArrayList<>( contributionView.members() );
 		if ( component.isPolymorphic() ) {
 			source.subclassMembers( context )
 					.forEach( (member) -> members.add( ComponentMemberBinding.from( source, member, state, context ) ) );
 		}
+		final List<AppliedAttributeMapping> appliedAttributes = createAppliedAttributes( component, members );
+		final AppliedEmbeddableMapping appliedEmbeddable = component.getMappingRole() == null
+				? null
+				: new AppliedEmbeddableMapping(
+						contributionView.contribution(),
+						component.getMappingRole(),
+						appliedAttributes
+				);
 		for ( int i = 0; i < members.size(); i++ ) {
 			final ComponentMemberBinding componentMember = members.get( i );
 			final MemberDetails member = componentMember.member();
@@ -203,7 +212,7 @@ public class ComponentBinder {
 
 			if ( isPluralMember( source, componentMember ) ) {
 				validatePluralMemberAllowed( source, componentMember );
-				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
+				final Property property = createProperty( component, componentMember, appliedAttributes );
 				final Collection collection = bindPluralMember(
 						ownerType,
 						ownerBinding,
@@ -222,7 +231,7 @@ public class ComponentBinder {
 			}
 
 			if ( isToOneMember( member ) ) {
-				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
+				final Property property = createProperty( component, componentMember, appliedAttributes );
 				final ToOneValueIntent toOneValueIntent = componentMember.toOneValueIntent();
 				final Value value = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
 						? bindAssociationIdentifierMember(
@@ -270,7 +279,7 @@ public class ComponentBinder {
 			if ( componentMember.anyValueIntent() != null ) {
 				final AnyValueIntent anyValueIntent = componentMember.anyValueIntent();
 				final AnySource anySource = anyValueIntent.source();
-				final Property property = propertyMappingMaterializer.createProperty( attributeName, member );
+				final Property property = createProperty( component, componentMember, appliedAttributes );
 				final Value value = new AnyValueBinder(
 						options,
 						state,
@@ -312,9 +321,11 @@ public class ComponentBinder {
 						source.componentType().getClassName(),
 						attributeName
 				);
+				nestedComponent.setMappingRole( nestedRole( component, attributeName ) );
 				embeddableMappingMaterializer.prepareComponentForBinding( nestedComponent, nestedSource );
 
-				final Property property = propertyMappingMaterializer.createProperty( attributeName, nestedComponent, member );
+				final Property property =
+						createProperty( component, componentMember, nestedComponent, appliedAttributes );
 				if ( source.kind() != ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
 					property.setOptional( true );
 				}
@@ -355,7 +366,7 @@ public class ComponentBinder {
 				continue;
 			}
 
-			final Property property = propertyMappingMaterializer.createProperty( attributeName, null, member );
+			final Property property = createProperty( component, componentMember, appliedAttributes );
 			final MaterializedBasicValue basicValue = basicValueMappingMaterializer.createComponentMemberBasicValue(
 					source,
 					componentMember,
@@ -389,7 +400,70 @@ public class ComponentBinder {
 			}
 		}
 		state.addComponentCustomMapping( CustomMappingBinder.typeBinding( source.componentType(), component, state, context ) );
+		for ( AppliedAttributeMapping appliedAttribute : appliedAttributes ) {
+			state.getBootBindingModel().addAppliedAttributeMapping( appliedAttribute );
+		}
+		if ( appliedEmbeddable != null ) {
+			state.getBootBindingModel().addAppliedEmbeddableMapping( appliedEmbeddable );
+		}
 		return columns;
+	}
+
+	private static List<AppliedAttributeMapping> createAppliedAttributes(
+			Component component,
+			List<ComponentMemberBinding> members) {
+		if ( component.getMappingRole() == null ) {
+			return List.of();
+		}
+		final List<AppliedAttributeMapping> result = new ArrayList<>( members.size() );
+		for ( ComponentMemberBinding member : members ) {
+			if ( !member.member().hasDirectAnnotationUsage( org.hibernate.annotations.Parent.class ) ) {
+				result.add(
+						new AppliedAttributeMapping(
+								member,
+								component.getMappingRole().appendAttribute( member.attributeName() )
+						)
+				);
+			}
+		}
+		return List.copyOf( result );
+	}
+
+	private Property createProperty(
+			Component component,
+			ComponentMemberBinding member,
+			List<AppliedAttributeMapping> appliedAttributes) {
+		final MappingRole role = nestedRole( component, member.attributeName() );
+		return role == null
+				? propertyMappingMaterializer.createProperty( member, null )
+				: propertyMappingMaterializer.createProperty( findAppliedAttribute( role, appliedAttributes ) );
+	}
+
+	private Property createProperty(
+			Component component,
+			ComponentMemberBinding member,
+			Value value,
+			List<AppliedAttributeMapping> appliedAttributes) {
+		final Property property = createProperty( component, member, appliedAttributes );
+		property.setValue( value );
+		return property;
+	}
+
+	private static AppliedAttributeMapping findAppliedAttribute(
+			MappingRole role,
+			List<AppliedAttributeMapping> appliedAttributes) {
+		for ( AppliedAttributeMapping appliedAttribute : appliedAttributes ) {
+			if ( appliedAttribute.role().equals( role ) ) {
+				return appliedAttribute;
+			}
+		}
+		throw new IllegalStateException( "No applied attribute mapping prepared for role: " + role );
+	}
+
+	private static MappingRole nestedRole(Component component, String attributeName) {
+		return component.getMappingRole() == null
+				? null
+				: component.getMappingRole().appendAttribute( attributeName );
 	}
 
 	private void deferAttributeBinders(MemberDetails member, PersistentClass ownerBinding, Property property) {
@@ -446,16 +520,13 @@ public class ComponentBinder {
 			return;
 		}
 
-		final Property genericProperty = specializedProperty.copy();
+		final Value genericValue = specializedProperty.getValue() instanceof BasicValue basicValue
+				? genericBasicValue( basicValue, state.getMetadataBuildingContext() )
+				: specializedProperty.getValue().copy();
+		final Property genericProperty = specializedProperty.copyForDeclaration( genericValue );
 		genericProperty.setGeneric( true );
 		genericProperty.setGenericSpecialization( false );
 		genericProperty.setReturnedClassName( componentMember.member().getType().getName() );
-		if ( specializedProperty.getValue() instanceof BasicValue basicValue ) {
-			genericProperty.setValue( genericBasicValue( basicValue, state.getMetadataBuildingContext() ) );
-		}
-		else {
-			genericProperty.setValue( specializedProperty.getValue().copy() );
-		}
 		mappedSuperclass.addDeclaredProperty( genericProperty );
 	}
 

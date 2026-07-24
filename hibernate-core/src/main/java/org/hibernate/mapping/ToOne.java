@@ -52,6 +52,20 @@ public abstract sealed class ToOne
 		this.foreignKeyColumnMappings = original.foreignKeyColumnMappings;
 	}
 
+	/**
+	 * Creates an independently materialized projection of this association for
+	 * the supplied concrete mapping role.
+	 * <p>
+	 * The association mapping state and selectable mappings are copied, while
+	 * the destination role identifies the distinct application represented by
+	 * the copy.
+	 */
+	public final ToOne copyForApplication(MappingRole mappingRole) {
+		final ToOne copy = (ToOne) copy();
+		copy.setMappingRole( Objects.requireNonNull( mappingRole, "Mapping role" ) );
+		return copy;
+	}
+
 	@Override
 	public FetchStyle getFetchStyle() {
 		return fetchStyle;
@@ -190,7 +204,7 @@ public abstract sealed class ToOne
 							? entityBinding.getIdentifier()
 							: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
 			if ( value instanceof Component component ) {
-				final var originalPropertyOrder = component.sortProperties();
+				final var originalPropertyOrder = component.completeShape();
 				if ( !sorted ) {
 					if ( originalPropertyOrder != null ) {
 						sortColumns( originalPropertyOrder );

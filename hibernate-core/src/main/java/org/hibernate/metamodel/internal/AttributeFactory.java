@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.internal;
 
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -11,7 +12,6 @@ import java.util.HashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
@@ -21,7 +21,6 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.RepresentationMode;
@@ -409,7 +408,7 @@ public class AttributeFactory {
 	private static DomainType<?> basicDomainType(ValueContext typeContext, MetadataContext context) {
 		final Value hibernateValue = typeContext.getHibernateValue();
 		if ( typeContext.getJpaBindableType().isPrimitive()
-				&& ( (SimpleValue) hibernateValue ).getJpaAttributeConverterDescriptor() == null ) {
+				&& ( (BasicValue) hibernateValue ).resolve().getValueConverter() == null ) {
 			// Special BasicDomainType necessary for primitive types in the JPA metamodel.
 			// When a converted is applied to the attribute we already resolve to the correct type
 			final var type = typeContext.getJpaBindableType();
@@ -433,12 +432,9 @@ public class AttributeFactory {
 			DomainType<?> metaModelType,
 			MetadataContext context) {
 		if ( typeContext.getValueClassification() == ValueClassification.BASIC ) {
-			final var value = (SimpleValue) typeContext.getHibernateValue();
-			final var descriptor = value.getJpaAttributeConverterDescriptor();
-			if ( descriptor != null ) {
-				return context.getJavaTypeRegistry().resolveDescriptor(
-						descriptor.getRelationalValueResolvedType()
-				);
+			final var resolution = ( (BasicValue) typeContext.getHibernateValue() ).resolve();
+			if ( resolution.getValueConverter() != null ) {
+				return resolution.getRelationalJavaType();
 			}
 		}
 		return metaModelType.getExpressibleJavaType();
@@ -466,7 +462,7 @@ public class AttributeFactory {
 		};
 	}
 
-	private static AttributeUsageBinding resolveAppliedAttributeUsage(
+	private static AttributeUsageHandoff resolveAppliedAttributeUsage(
 			AttributeContext<?> attributeContext,
 			Property propertyMapping,
 			MetadataContext context) {

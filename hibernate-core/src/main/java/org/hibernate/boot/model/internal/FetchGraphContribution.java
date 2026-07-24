@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.io.Serializable;
 import java.util.List;
 
 import jakarta.persistence.FetchOption;
@@ -27,7 +28,7 @@ record FetchGraphContribution(
 		String graphName,
 		String attributeName,
 		String[] subgraphNames,
-		List<FetchOption> options) {
+		List<FetchOption> options) implements Serializable {
 	boolean appliesTo(String namedGraph) {
 		return graphName.equals( namedGraph );
 	}

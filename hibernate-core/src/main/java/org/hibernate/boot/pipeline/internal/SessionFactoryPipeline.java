@@ -12,7 +12,6 @@ import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.internal.SessionFactoryObserverFactory;
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
@@ -22,6 +21,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 
 /// Builds a runtime SessionFactoryImplementor from resolved boot products.
 ///
@@ -77,7 +77,7 @@ public class SessionFactoryPipeline {
 			StandardServiceRegistry serviceRegistry,
 			SessionFactoryOptionsCollector optionsCollector) {
 		final var unwrappedMetadata = unwrapMetadata( metadata );
-		final var bootBindingModel = requireBootBindingModel( metadata );
+		final var runtimeMappingHandoff = requireRuntimeMappingHandoff( metadata );
 		final var optionsBuilder = new SessionFactoryOptionsBuilder(
 				serviceRegistry,
 				unwrappedMetadata.getBootstrapContext()
@@ -90,16 +90,16 @@ public class SessionFactoryPipeline {
 				unwrappedMetadata,
 				optionsCollector.buildOptions( optionsBuilder ),
 				unwrappedMetadata.getBootstrapContext(),
-				bootBindingModel
+				runtimeMappingHandoff
 		);
 	}
 
-	private static BootBindingModel requireBootBindingModel(MetadataImplementor metadata) {
+	private static RuntimeMappingHandoff requireRuntimeMappingHandoff(MetadataImplementor metadata) {
 		if ( metadata instanceof ResolvedMappingImplementor resolvedMapping ) {
-			return resolvedMapping.getResolvedMapping().bindingState().getBootBindingModel();
+			return resolvedMapping.getResolvedMapping().runtimeMappingHandoff();
 		}
 		throw new IllegalArgumentException(
-				"SessionFactory construction requires resolved mapping exposing a BootBindingModel"
+				"SessionFactory construction requires resolved mapping exposing a runtime mapping handoff"
 		);
 	}
 
@@ -167,15 +167,13 @@ public class SessionFactoryPipeline {
 			if ( options.getServiceRegistry() != constructionSettings.serviceRegistry() ) {
 				throw new IllegalStateException( "SessionFactoryOptions adapter used the wrong service registry" );
 			}
-			final var metadataBuildingContext = resolvedMapping.bindingState().getMetadataBuildingContext();
-			metadata.getTypeConfiguration().scope( metadataBuildingContext );
 			return SessionFactoryConstructionCoordinator.buildSessionFactory(
 					metadata,
 					constructionSettings,
 					identity,
 					options,
 					metadata.getBootstrapContext(),
-					resolvedMapping.bindingState().getBootBindingModel()
+					resolvedMapping.runtimeMappingHandoff()
 			);
 		}
 		throw new IllegalArgumentException(

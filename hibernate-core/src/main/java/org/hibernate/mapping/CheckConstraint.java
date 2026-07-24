@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
@@ -13,7 +14,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gavin King
  */
-public class CheckConstraint {
+public class CheckConstraint implements Serializable {
 	private String name;
 	private String constraint;
 	private String options;

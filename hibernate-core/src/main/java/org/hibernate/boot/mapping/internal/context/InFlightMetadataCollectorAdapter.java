@@ -23,6 +23,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
@@ -96,6 +97,11 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	@Override
 	public Iterable<PersistentClass> getEntityBindings() {
 		return metadataCollector.getEntityBindings();
+	}
+
+	@Override
+	public void addMappedSuperclass(ClassDetails mappedSuperclassClass, MappedSuperclass mappedSuperclass) {
+		metadataCollector.addMappedSuperclass( mappedSuperclassClass, mappedSuperclass );
 	}
 
 	@Override

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.internal;
 
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -11,7 +12,6 @@ import java.lang.reflect.Method;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
-import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -56,15 +56,15 @@ public class AttributeTypeCorrespondence {
 			Property propertyMapping,
 			ManagedDomainType<?> ownerType,
 			Member member,
-			AttributeUsageBinding attributeUsage,
+			AttributeUsageHandoff attributeUsage,
 			ModelsContext modelsContext) {
 		this.propertyMapping = propertyMapping;
 		this.ownerType = ownerType;
 		this.member = member;
 		this.memberDetails = attributeUsage.member();
 		this.relativeTypeContainer = relativeTypeContainer( ownerType, modelsContext );
-		this.declaredType = attributeUsage.declaration().member().getType();
-		this.usageType = attributeUsage.resolvedType();
+		this.declaredType = attributeUsage.declaredType();
+		this.usageType = attributeUsage.usageType();
 	}
 
 	private static ClassDetails relativeTypeContainer(
@@ -104,7 +104,7 @@ public class AttributeTypeCorrespondence {
 		return isConcreteGenericUsage( declaredType, usageType );
 	}
 
-	static boolean isConcreteGenericUsage(TypeDetails declarationType, TypeDetails usageType) {
+	public static boolean isConcreteGenericUsage(TypeDetails declarationType, TypeDetails usageType) {
 		if ( declarationType == null || usageType == null ) {
 			return false;
 		}

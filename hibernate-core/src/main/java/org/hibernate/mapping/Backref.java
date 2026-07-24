@@ -39,7 +39,7 @@ public class Backref extends Property {
 		return false;
 	}
 
-	private PropertyAccessStrategy propertyAccessStrategy;
+	private transient PropertyAccessStrategy propertyAccessStrategy;
 
 	@Override
 	public PropertyAccessStrategy getPropertyAccessStrategy(

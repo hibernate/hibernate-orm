@@ -12,12 +12,12 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
-import org.hibernate.models.internal.MutableClassDetailsRegistry;
-import org.hibernate.models.internal.jdk.JdkClassDetails;
+import org.hibernate.models.Creator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.RegistryPrimer;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.MutableClassDetailsRegistry;
 
 
 /**
@@ -48,7 +48,7 @@ public class ModelsHelper {
 	private static void registerPrimitive(Class<?> theClass, ModelsContext buildingContext) {
 		buildingContext.getClassDetailsRegistry()
 				.as( MutableClassDetailsRegistry.class )
-				.addClassDetails( new JdkClassDetails( theClass, buildingContext ) );
+				.addClassDetails( Creator.createJdkClassDetails( theClass, buildingContext ) );
 
 	}
 

@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.query;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
@@ -11,8 +14,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.JpaReference;
-
-import java.util.Map;
 
 /**
  * Boot-model representation of named queries.
@@ -29,7 +30,7 @@ import java.util.Map;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface NamedQueryDefinition<T> extends JpaReference {
+public interface NamedQueryDefinition<T> extends JpaReference, Serializable {
 	/**
 	 * The name under which the query is to be registered.
 	 */

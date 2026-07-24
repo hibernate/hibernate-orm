@@ -4,12 +4,12 @@
  */
 package org.hibernate.metamodel.internal;
 
+
 import java.lang.reflect.Member;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.hibernate.mapping.Property;
-import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -46,7 +46,7 @@ public class AttributeTypeCorrespondenceRegistry {
 			Property propertyMapping,
 			ManagedDomainType<?> ownerType,
 			Member member,
-			AttributeUsageBinding attributeUsage) {
+			AttributeUsageHandoff attributeUsage) {
 		if ( attributeUsage == null ) {
 			return resolve( propertyMapping, ownerType, member );
 		}

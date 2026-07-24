@@ -48,10 +48,13 @@ BindingCoordinator.coordinateBinding(...)
 BindingState / binding products / pending work
         |
         v
+declarations / usages / applied mappings
+        |
+        v
 materializers
         |
         v
-org.hibernate.mapping
+org.hibernate.mapping with intrinsic semantic roles
 ----
 
 Source collection is the input-assembly step.  It gathers explicit persistence
@@ -152,6 +155,11 @@ facts rather than mutable binding collections.
 
 | link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/sources/package-info.java[`o.h.boot.mapping.internal.sources`]
 | Source descriptors that normalize annotation/XML facts for binders
+
+| link:../../hibernate-core/src/main/java/org/hibernate/mapping/package-info.java[`o.h.mapping`]
+| The materialized boot mapping graph. Concrete mapping occurrences carry
+intrinsic `MappingRole` identity; attribute projections may also carry their
+source `DeclarationRole`.
 |===
 
 
@@ -401,6 +409,200 @@ The categorized model describes what should be bound.  The binding state is the
 mutable place where semantic binding products, compatibility mapping shells, and
 pending bindings are recorded.  Options and context provide boot-time services
 and configuration.
+
+
+== Declaration, Usage, and Application
+
+An attribute must be understood at three related but distinct levels. Keeping
+these levels separate is especially important for mapped superclasses,
+embeddables, generic attributes, and any mapping object which must be copied.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Concept
+| Question answered
+| Binding product
+| Stable identity
+
+| Declaration
+| Which source member declared this persistent attribute?
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeDeclarationBinding.java[`AttributeDeclarationBinding`]
+| link:../../hibernate-core/src/main/java/org/hibernate/mapping/DeclarationRole.java[`DeclarationRole`]
+
+| Usage
+| How is that declaration interpreted in this type and path context?
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeUsageBinding.java[`AttributeUsageBinding`]
+| Retains its declaration and usage-relative path/type facts
+
+| Application
+| Where does that interpreted usage occur in the concrete mapping graph?
+| link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedAttributeMapping.java[`AppliedAttributeMapping`],
+link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedEmbeddableMapping.java[`AppliedEmbeddableMapping`]
+| link:../../hibernate-core/src/main/java/org/hibernate/mapping/MappingRole.java[`MappingRole`]
+|===
+
+For a direct, non-generic entity attribute, all three may contain nearly the
+same facts. They remain conceptually distinct because that is not true in the
+general case:
+
+[source,java]
+----
+@MappedSuperclass
+class Base<T> {
+    T value;
+}
+
+@Entity
+class Customer extends Base<UUID> {
+}
+
+@Entity
+class Report extends Base<String> {
+}
+----
+
+There is one declaration of `Base.value`. Its declaration role is:
+
+[source,text]
+----
+type:Base#attribute:value
+----
+
+There are two usages because `T` resolves differently for `Customer` and
+`Report`, and two applications because the attribute occurs at two concrete
+mapping locations:
+
+[source,text]
+----
+entity:Customer#attribute:value
+entity:Report#attribute:value
+----
+
+The same rule applies when one embeddable declaration is embedded more than
+once. Each embedded occurrence has its own applied component role, and each
+direct member has a role relative to that component. Nested embeddables,
+embedded identifiers, collection elements, map keys, and aggregate components
+are all concrete applications, not additional declarations.
+
+=== Stable Semantic Roles
+
+`DeclarationRole` and `MappingRole` live in `org.hibernate.mapping` because
+they identify source provenance and concrete occurrences of the resolved boot
+mapping graph. They are internal contracts, not supported user-facing mapping
+API.
+
+A `DeclarationRole` consists of the declaring type name and local attribute
+name. A `MappingRole` consists of:
+
+* a typed root, such as entity, mapped superclass, or collection;
+* typed parts such as attribute, identifier, discriminator, key, element,
+  index, join, or soft-delete value;
+* names only for parts whose kind requires one.
+
+Create roles through the typed factories and append operations:
+
+[source,java]
+----
+MappingRole customerAddress =
+        MappingRole.entity( "Customer" ).appendAttribute( "address" );
+
+MappingRole city =
+        customerAddress.appendAttribute( "city" );
+
+MappingRole orderElement =
+        MappingRole.collection( "Customer.orders" )
+                .append( MappingRole.PartKind.ELEMENT );
+----
+
+Do not assemble role strings manually. `getFullPath()` is the canonical
+diagnostic and archive rendering, not a second identity model.
+
+link:../../hibernate-core/src/main/java/org/hibernate/mapping/AppliedMappingPart.java[`AppliedMappingPart`]
+is implemented by durable compatibility projections such as `Property`,
+`SimpleValue`, `Component`, `Collection`, `Join`, and collection parts. A
+concrete applied `Property` and its applied `Value` normally carry the same
+attribute role. Component members derive their roles from the component role;
+collection key, element, index, and identifier values derive theirs from the
+collection role.
+
+Declaration-side compatibility projections deliberately have no
+`MappingRole`. They retain `DeclarationRole` when they project a real source
+attribute. Temporary property-selection views have neither a new application
+nor a new declaration.
+
+`BootBindingModel` indexes applied semantic products by `MappingRole`.
+Runtime/JPA metamodel handoff and archive creation should query that index or a
+role-keyed snapshot. Do not add an identity map from `Property` or `Component`
+to semantic binding state.
+
+=== Materialization and Copying
+
+A materializer receives or creates the applied semantic product before
+attaching the compatibility projection. It must pass the application role into
+the `Property`, `Value`, component, collection, or join it materializes and
+propagate derived roles recursively.
+
+Copying a mapping object must state the semantic relationship between source
+and destination:
+
+[cols="1,2", options="header"]
+|===
+| Operation
+| Use
+
+| `Property#copyForDeclaration(value)` /
+  `Component#copyForDeclaration(properties)`
+| Build independent declaration-side state. The supplied values/properties
+must be roleless.
+
+| `Property#copyForDeclarationView()`
+| Build the exceptional compatibility declaration view which deliberately
+shares an already-applied value, such as an identifier-mapper view.
+
+| `Property#copyForSameApplication()` /
+  `Component#copyForSameApplication()`
+| Build a transient alias of the same concrete occurrence. The existing value
+and application role are retained.
+
+| `Property#copyForApplication(role, value)` /
+  `Component#copyForApplication(context, role, properties)` /
+  `ToOne#copyForApplication(role)`
+| Materialize a genuinely different concrete occurrence. The destination role
+is required and mutable mapping values must be independently copied.
+
+| `Component#copyForPropertySelection(properties)`
+| Build a temporary, roleless view used only while matching properties or
+columns. It must never be attached to the mapping graph.
+|===
+
+For example, applying the same embeddable declaration to `homeAddress` and
+`workAddress` requires two independently materialized components:
+
+[source,java]
+----
+MappingRole homeRole =
+        MappingRole.entity( "Customer" ).appendAttribute( "homeAddress" );
+MappingRole workRole =
+        MappingRole.entity( "Customer" ).appendAttribute( "workAddress" );
+
+Component home = declaration.copyForApplication(
+        buildingContext,
+        homeRole,
+        materializeMembers( declaration, homeRole )
+);
+Component work = declaration.copyForApplication(
+        buildingContext,
+        workRole,
+        materializeMembers( declaration, workRole )
+);
+----
+
+Do not use a generic `copy()` at a declaration/application boundary. First
+decide whether the destination is declaration state, an alias of the same
+application, a new application, or a transient selection view.
+
+For the complete rationale and migration details, see
+link:declaration-usage-applied-mapping-design.adoc[Declaration, Usage, and Applied Mapping Design].
 
 
 == Binding Steps
@@ -742,8 +944,11 @@ A useful workflow:
 7. Materialize mapping objects through an existing materializer, or add a narrow
    resolved product plus materializer when the work creates physical mapping
    artifacts such as keys, constraints, indexes, or compatibility values.
-8. Add focused tests for both the produced mapping object and the phase-ordering
-   edge case.
+8. For an attribute mapping, identify or create its declaration, interpret a
+   usage in the current context, register its applied mapping by
+   `MappingRole`, and materialize the compatibility projection with that role.
+9. Add focused tests for the produced mapping object, declaration/application
+   roles, and the phase-ordering edge case.
 
 Useful questions:
 
@@ -838,6 +1043,27 @@ once and carry it forward explicitly.
 object during categorization, so binders can consume it without re-reading raw
 annotations or XML.
 
+Do not use mapping-object identity to correlate a concrete `Property`,
+`Component`, collection part, or value with its binding product.
+
+*Do instead:* assign its intrinsic `MappingRole` while materializing it and use
+the role-keyed applied mapping registry.
+
+Do not reuse an applied `Property` or mutable `Value` when the destination is a
+different entity, embeddable occurrence, identifier mapper, collection part, or
+other concrete application. That would give one object graph two semantic
+identities.
+
+*Do instead:* use the appropriate `copyForApplication(...)` operation with the
+destination role and independently copied child/value state.
+
+Do not assign a `MappingRole` to a declaration-side compatibility projection or
+a temporary property-selection view.
+
+*Do instead:* retain only `DeclarationRole` for real declaration projections,
+and keep transient selection views roleless and detached from the mapping
+graph.
+
 
 == Where To Start In Code
 
@@ -848,6 +1074,10 @@ Start with the pipeline:
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/categorize/CategorizedDomainModel.java[`CategorizedDomainModel`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/BindingCoordinator.java[`BindingCoordinator`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/binders/TypeBindingPhase.java[`TypeBindingPhase`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeDeclarationBinding.java[`AttributeDeclarationBinding`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AttributeUsageBinding.java[`AttributeUsageBinding`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedAttributeMapping.java[`AppliedAttributeMapping`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/mapping/internal/model/AppliedEmbeddableMapping.java[`AppliedEmbeddableMapping`]
 
 Then follow the feature-specific binder:
 

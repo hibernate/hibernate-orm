@@ -25,6 +25,20 @@ import java.util.Locale;
  */
 public interface MappingSettings {
 	/**
+	 * Enables capture of the additional declarative boot state required to
+	 * {@linkplain org.hibernate.boot.serial.MetadataSerialization store and restore}
+	 * a factory-ready mapping.
+	 * <p>
+	 * This must be enabled while the mapping is built. Enabling it only when
+	 * serialization is attempted is too late because type-resolution inputs
+	 * are otherwise discarded as mapping resolution completes.
+	 *
+	 * @settingDefault {@code false}
+	 * @since 9.0
+	 */
+	String METADATA_SERIALIZATION_ENABLED = "hibernate.boot.metadata_serialization.enabled";
+
+	/**
 	 * A default database catalog name to use for unqualified database
 	 * object (table, sequence, ...) names
 	 *

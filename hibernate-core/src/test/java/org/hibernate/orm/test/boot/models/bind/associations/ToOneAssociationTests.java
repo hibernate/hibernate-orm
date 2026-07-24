@@ -11,6 +11,7 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaClass;
+import org.hibernate.mapping.AppliedMappingPart;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -24,6 +25,7 @@ import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
+import org.hibernate.mapping.MappingRole;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -67,6 +69,16 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
  */
 @SuppressWarnings("removal")
 public class ToOneAssociationTests {
+	private static void assertIndexMappingRoles(org.hibernate.mapping.Map collection, Component index) {
+		final MappingRole indexRole = collection.getMappingRole().append( MappingRole.PartKind.INDEX );
+		assertThat( index.getMappingRole() ).isEqualTo( indexRole );
+		assertThat( index.getProperties() ).allSatisfy( property -> {
+			final MappingRole propertyRole = indexRole.appendAttribute( property.getName() );
+			assertThat( property.getMappingRole() ).isEqualTo( propertyRole );
+			assertThat( ((AppliedMappingPart) property.getValue()).getMappingRole() ).isEqualTo( propertyRole );
+		} );
+	}
+
 	@Test
 	@ServiceRegistry
 	void testImplicitManyToOne(ServiceRegistryScope scope) {
@@ -147,6 +159,75 @@ public class ToOneAssociationTests {
 				scope.getRegistry(),
 				SelfReferentialManyToOneNonPkOwner.class
 		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testSyntheticAssociationTargetMappingRoles(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass ownerBinding = context.getMetadataCollector()
+							.getEntityBinding( SyntheticAssociationOwner.class.getName() );
+					final ManyToOne association = (ManyToOne) ownerBinding.getProperty( "target" ).getValue();
+					final PersistentClass targetBinding = context.getMetadataCollector()
+							.getEntityBinding( SyntheticAssociationTarget.class.getName() );
+
+					assertThat( association.isReferenceToPrimaryKey() ).isFalse();
+					assertSyntheticApplication(
+							targetBinding,
+							association.getReferencedPropertyName(),
+							"code",
+							"region"
+					);
+				},
+				scope.getRegistry(),
+				SyntheticAssociationTarget.class,
+				SyntheticAssociationOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testSyntheticCollectionTableKeyMappingRoles(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass ownerBinding = context.getMetadataCollector()
+							.getEntityBinding( SyntheticTableKeyOwner.class.getName() );
+					final Collection collection = (Collection) ownerBinding.getProperty( "labels" ).getValue();
+
+					assertSyntheticApplication(
+							ownerBinding,
+							collection.getReferencedPropertyName(),
+							"code",
+							"region"
+					);
+				},
+				scope.getRegistry(),
+				SyntheticTableKeyOwner.class
+		);
+	}
+
+	private static void assertSyntheticApplication(
+			PersistentClass owner,
+			String propertyName,
+			String... sourcePropertyNames) {
+		final Property syntheticProperty = owner.getProperty( propertyName );
+		final MappingRole mappingRole = MappingRole.entity( owner.getEntityName() ).appendAttribute( propertyName );
+		assertThat( syntheticProperty.isSynthetic() ).isTrue();
+		assertThat( syntheticProperty.getMappingRole() ).isEqualTo( mappingRole );
+		assertThat( syntheticProperty.getValue() ).isInstanceOf( Component.class );
+		final Component component = (Component) syntheticProperty.getValue();
+		assertThat( component.getMappingRole() ).isEqualTo( mappingRole );
+		assertThat( component.getProperties() )
+				.extracting( Property::getName )
+				.containsExactly( sourcePropertyNames );
+		assertThat( component.getProperties() ).allSatisfy( property -> {
+			final Property sourceProperty = owner.getProperty( property.getName() );
+			assertThat( property.getMappingRole() ).isEqualTo( sourceProperty.getMappingRole() );
+			assertThat( ((AppliedMappingPart) property.getValue()).getMappingRole() )
+					.isEqualTo( sourceProperty.getMappingRole() );
+			assertThat( property.getValue() ).isSameAs( sourceProperty.getValue() );
+		} );
 	}
 
 	@Test
@@ -1016,6 +1097,7 @@ public class ToOneAssociationTests {
 					assertThat( index.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "city", "country" );
+					assertIndexMappingRoles( collection, index );
 				},
 				scope.getRegistry(),
 				ManyToManyComponentPropertyMapKeyParent.class,
@@ -1266,6 +1348,7 @@ public class ToOneAssociationTests {
 					assertThat( inverseIndex.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "city", "country" );
+					assertIndexMappingRoles( inverseCollection, inverseIndex );
 				},
 				scope.getRegistry(),
 				MappedByManyToManyComponentPropertyMapKeyParent.class,
@@ -1734,6 +1817,56 @@ public class ToOneAssociationTests {
 		@Id
 		private Integer id;
 		private String name;
+	}
+
+	@Entity(name = "SyntheticAssociationTarget")
+	@Table(
+			name = "synthetic_association_targets",
+			uniqueConstraints = @jakarta.persistence.UniqueConstraint(columnNames = { "code", "region" })
+	)
+	public static class SyntheticAssociationTarget {
+		@Id
+		private Integer id;
+		@jakarta.persistence.Column(name = "code")
+		private String code;
+		@jakarta.persistence.Column(name = "region")
+		private String region;
+	}
+
+	@Entity(name = "SyntheticAssociationOwner")
+	@Table(name = "synthetic_association_owners")
+	public static class SyntheticAssociationOwner {
+		@Id
+		private Integer id;
+		@jakarta.persistence.ManyToOne
+		@JoinColumns({
+				@JoinColumn(name = "target_code", referencedColumnName = "code"),
+				@JoinColumn(name = "target_region", referencedColumnName = "region")
+		})
+		private SyntheticAssociationTarget target;
+	}
+
+	@Entity(name = "SyntheticTableKeyOwner")
+	@Table(
+			name = "synthetic_table_key_owners",
+			uniqueConstraints = @jakarta.persistence.UniqueConstraint(columnNames = { "code", "region" })
+	)
+	public static class SyntheticTableKeyOwner {
+		@Id
+		private Integer id;
+		@jakarta.persistence.Column(name = "code")
+		private String code;
+		@jakarta.persistence.Column(name = "region")
+		private String region;
+		@jakarta.persistence.ElementCollection
+		@jakarta.persistence.CollectionTable(
+				name = "synthetic_table_key_labels",
+				joinColumns = {
+						@JoinColumn(name = "owner_code", referencedColumnName = "code"),
+						@JoinColumn(name = "owner_region", referencedColumnName = "region")
+				}
+		)
+		private Set<String> labels;
 	}
 
 	@Entity(name="CascadeToOneTarget")

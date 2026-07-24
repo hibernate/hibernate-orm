@@ -19,19 +19,28 @@ import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.AppliedMappingPart;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.internal.IdentifierHandoffResolver;
+import org.hibernate.metamodel.internal.MappedSuperclassHandoffResolver;
+import org.hibernate.metamodel.internal.AttributeUsageHandoff;
+import org.hibernate.boot.serial.internal.RuntimeMappingHandoffSnapshot;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchyRoot;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchySuper;
+import org.hibernate.mapping.DeclarationRole;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.InheritanceType;
@@ -41,6 +50,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.buildHierarchyMetadata;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.checkDomainModel;
 
@@ -101,6 +111,12 @@ public class MappedSuperclassTests {
 					assertThat( rootBinding.getIdentifier() ).isNotNull();
 					assertThat( rootBinding.getIdentifierProperty() ).isNotNull();
 					assertThat( rootBinding.getIdentifierProperty().getColumns() ).hasSize( 1 );
+					assertThat( ( (AppliedMappingPart) rootBinding.getIdentifier() ).getMappingRole() )
+							.isEqualTo( MappingRole.entity( HierarchyRoot.class.getName() )
+									.append( MappingRole.PartKind.IDENTIFIER ) );
+					assertThat( rootBinding.getVersion().getMappingRole() )
+							.isEqualTo( MappingRole.entity( HierarchyRoot.class.getName() )
+									.append( MappingRole.PartKind.VERSION ) );
 
 					assertThat( hierarchyView ).isNotNull();
 					assertThat( hierarchyView.root().classDetails().toJavaClass() ).isEqualTo( HierarchyRoot.class );
@@ -124,7 +140,7 @@ public class MappedSuperclassTests {
 
 					final JpaStaticMetamodelInjectionSource.ManagedTypeReference superTypeReference =
 							metamodelInjectionSource.managedTypes().get( 0 );
-					assertThat( superTypeReference.sourceView().classDetails().toJavaClass() )
+					assertThat( superTypeReference.classDetails().toJavaClass() )
 							.isEqualTo( HierarchySuper.class );
 					assertThat( superTypeReference.kind() )
 							.isEqualTo( ManagedTypeBinding.Kind.MAPPED_SUPERCLASS );
@@ -172,36 +188,65 @@ public class MappedSuperclassTests {
 					final Property rootCode = localProperty( rootBinding, "rootCode" );
 					assertThat( rootBinding.getDeclaredProperties() ).doesNotContain( rootCode );
 					assertThat( rootBinding.getMappedSuperclassProperties() ).containsExactly( rootCode );
-					assertThat( rootBinding.getMappedSuperclassPropertyOrigin( rootCode ) ).isSameAs( contributionBinding );
-					final var handoff = context.getBindingState().getMappedSuperclassPropertyHandoff( rootCode );
-					assertThat( handoff ).isNotNull();
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoff( rootBinding, rootCode ) )
-							.isSameAs( handoff );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoff( leafBinding, rootCode ) )
-							.isNull();
-					assertThat( handoff.owner() ).isSameAs( rootBinding );
-					assertThat( handoff.property() ).isSameAs( rootCode );
-					assertThat( handoff.contribution().declaration().getClassDetails().toJavaClass() )
-							.isEqualTo( RootContribution.class );
-					assertThat( handoff.contribution().consumer().getClassDetails().toJavaClass() )
-							.isEqualTo( RootConsumer.class );
-					assertThat( handoff.contribution().appliedAttributeNames() ).containsExactly( "rootCode" );
-					assertThat( handoff.contribution().appliedAttributeUsages() )
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var appliedMapping =
+							bootBindingModel.getAppliedAttributeMapping( rootCode.getMappingRole() );
+					assertThat( appliedMapping ).isNotNull();
+					assertThat( bootBindingModel.mappedSuperclassContributions() )
 							.singleElement()
-							.satisfies( (attributeUsage) -> {
-								assertThat( attributeUsage.attributeName() ).isEqualTo( "rootCode" );
-								assertThat( attributeUsage ).isSameAs( handoff.attributeUsage() );
-								assertThat( attributeUsage.declaration().declarationContainer().classDetails().toJavaClass() )
+							.satisfies( (contribution) -> {
+								assertThat( contribution.declaration().getClassDetails().toJavaClass() )
 										.isEqualTo( RootContribution.class );
-								assertThat( ( (ManagedTypeBinding) attributeUsage.usageContainer() )
+								assertThat( contribution.consumer().getClassDetails().toJavaClass() )
+										.isEqualTo( RootConsumer.class );
+								assertThat( contribution.appliedAttributeNames() ).containsExactly( "rootCode" );
+								assertThat( contribution.appliedAttributeUsages() ).containsExactly( appliedMapping.usage() );
+								assertThat( appliedMapping.declaration().declarationContainer().classDetails().toJavaClass() )
+										.isEqualTo( RootContribution.class );
+								assertThat( ( (ManagedTypeBinding) appliedMapping.usage().usageContainer() )
 										.classDetails()
 										.toJavaClass() )
 										.isEqualTo( RootConsumer.class );
 							} );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( handoff.contribution() ) )
-							.containsExactly( handoff );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( rootBinding ) )
-							.containsExactly( handoff );
+					final var resolver = new MappedSuperclassHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					);
+					assertHandoffMatches(
+							resolver.findAttributeUsage( rootBinding, rootCode ),
+							appliedMapping.usage()
+					);
+					assertHandoffMatches(
+							resolver.findAttributeUsage( leafBinding, rootCode ),
+							appliedMapping.usage()
+					);
+					final Property declarationCopy =
+							rootCode.copyForDeclaration( rootCode.getValue().copy() );
+					assertThat( declarationCopy.getDeclarationRole() ).isEqualTo( rootCode.getDeclarationRole() );
+					assertThat( declarationCopy.getMappingRole() ).isNull();
+					assertThat( declarationCopy.getValue() ).isNotSameAs( rootCode.getValue() );
+					assertThat( ( (AppliedMappingPart) declarationCopy.getValue() ).getMappingRole() ).isNull();
+					assertThatThrownBy( () -> rootCode.copyForDeclaration( rootCode.getValue() ) )
+							.isInstanceOf( IllegalArgumentException.class )
+							.hasMessageContaining( rootCode.getMappingRole().getFullPath() );
+					final Property declarationView = rootCode.copyForDeclarationView();
+					assertThat( declarationView.getDeclarationRole() ).isEqualTo( rootCode.getDeclarationRole() );
+					assertThat( declarationView.getMappingRole() ).isNull();
+					assertThat( declarationView.getValue() ).isSameAs( rootCode.getValue() );
+					final Property sameApplicationCopy = rootCode.copyForSameApplication();
+					assertThat( sameApplicationCopy.getMappingRole() ).isEqualTo( rootCode.getMappingRole() );
+					assertThat( sameApplicationCopy.getValue() ).isSameAs( rootCode.getValue() );
+					final var copiedValue = rootCode.getValue().copy();
+					final MappingRole otherApplicationRole =
+							MappingRole.entity( "OtherRoot" ).appendAttribute( rootCode.getName() );
+					final Property otherApplication =
+							rootCode.copyForApplication( otherApplicationRole, copiedValue );
+					assertThat( otherApplication.getDeclarationRole() ).isEqualTo( rootCode.getDeclarationRole() );
+					assertThat( otherApplication.getMappingRole() ).isEqualTo( otherApplicationRole );
+					assertThat( otherApplication.getValue() ).isSameAs( copiedValue );
+					assertThat( ( (AppliedMappingPart) copiedValue ).getMappingRole() )
+							.isEqualTo( otherApplicationRole );
+					assertThat( ( (AppliedMappingPart) rootCode.getValue() ).getMappingRole() )
+							.isEqualTo( rootCode.getMappingRole() );
 					assertThat( countLocalProperties( rootBinding, "rootCode" ) ).isEqualTo( 1 );
 					assertThat( countLocalProperties( leafBinding, "rootCode" ) ).isEqualTo( 0 );
 					assertThat( countClosureProperties( leafBinding, "rootCode" ) ).isEqualTo( 1 );
@@ -234,20 +279,27 @@ public class MappedSuperclassTests {
 					final Property nestedCode = localProperty( appliedBinding, "nestedCode" );
 					assertThat( appliedBinding.getDeclaredProperties() ).doesNotContain( nestedCode );
 					assertThat( appliedBinding.getMappedSuperclassProperties() ).containsExactly( nestedCode );
-					assertThat( appliedBinding.getMappedSuperclassPropertyOrigin( nestedCode ) ).isSameAs( contributionBinding );
-					final var handoff = context.getBindingState().getMappedSuperclassPropertyHandoff( nestedCode );
-					assertThat( handoff ).isNotNull();
-					assertThat( handoff.owner() ).isSameAs( appliedBinding );
-					assertThat( handoff.property() ).isSameAs( nestedCode );
-					assertThat( handoff.contribution().declaration().getClassDetails().toJavaClass() )
-							.isEqualTo( ContributionBetweenEntities.class );
-					assertThat( handoff.contribution().consumer().getClassDetails().toJavaClass() )
-							.isEqualTo( EntityAfterContribution.class );
-					assertThat( handoff.contribution().appliedAttributeNames() ).containsExactly( "nestedCode" );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( handoff.contribution() ) )
-							.containsExactly( handoff );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( appliedBinding ) )
-							.containsExactly( handoff );
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var appliedMapping =
+							bootBindingModel.getAppliedAttributeMapping( nestedCode.getMappingRole() );
+					assertThat( appliedMapping ).isNotNull();
+					assertThat( bootBindingModel.mappedSuperclassContributions() )
+							.singleElement()
+							.satisfies( (contribution) -> {
+								assertThat( contribution.declaration().getClassDetails().toJavaClass() )
+										.isEqualTo( ContributionBetweenEntities.class );
+								assertThat( contribution.consumer().getClassDetails().toJavaClass() )
+										.isEqualTo( EntityAfterContribution.class );
+								assertThat( contribution.appliedAttributeNames() ).containsExactly( "nestedCode" );
+								assertThat( contribution.appliedAttributeUsages() )
+										.containsExactly( appliedMapping.usage() );
+							} );
+					assertHandoffMatches(
+							new MappedSuperclassHandoffResolver(
+									RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+							).findAttributeUsage( appliedBinding, nestedCode ),
+							appliedMapping.usage()
+					);
 					assertThat( countLocalProperties( rootBinding, "nestedCode" ) ).isEqualTo( 0 );
 					assertThat( countLocalProperties( appliedBinding, "nestedCode" ) ).isEqualTo( 1 );
 					assertThat( countLocalProperties( leafBinding, "nestedCode" ) ).isEqualTo( 0 );
@@ -282,36 +334,184 @@ public class MappedSuperclassTests {
 					assertThat( firstAppliedProperty ).isNotNull();
 					assertThat( secondAppliedProperty ).isNotNull();
 					assertThat( firstAppliedProperty ).isNotSameAs( secondAppliedProperty );
+					assertThat( firstAppliedProperty.getDeclarationRole() )
+							.isEqualTo( new DeclarationRole( SharedContribution.class.getName(), "sharedCode" ) );
+					assertThat( secondAppliedProperty.getDeclarationRole() )
+							.isEqualTo( firstAppliedProperty.getDeclarationRole() );
+					assertThat( firstAppliedProperty.getMappingRole() )
+							.isEqualTo( MappingRole.entity( FirstSharedRoot.class.getName() )
+									.appendAttribute( "sharedCode" ) );
+					assertThat( secondAppliedProperty.getMappingRole() )
+							.isEqualTo( MappingRole.entity( SecondSharedRoot.class.getName() )
+									.appendAttribute( "sharedCode" ) );
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var firstAppliedMapping =
+							bootBindingModel.getAppliedAttributeMapping( firstAppliedProperty.getMappingRole() );
+					final var secondAppliedMapping =
+							bootBindingModel.getAppliedAttributeMapping( secondAppliedProperty.getMappingRole() );
+					assertThat( firstAppliedMapping ).isNotNull();
+					assertThat( secondAppliedMapping ).isNotNull();
+					assertThat( firstAppliedMapping ).isNotSameAs( secondAppliedMapping );
+					assertThat( firstAppliedMapping.usage() ).isNotSameAs( secondAppliedMapping.usage() );
+					assertThat( firstAppliedMapping.declaration() ).isSameAs( secondAppliedMapping.declaration() );
+					assertThat( firstAppliedMapping.declarationRole() )
+							.isEqualTo( new DeclarationRole( SharedContribution.class.getName(), "sharedCode" ) );
 					assertThat( firstRootBinding.getMappedSuperclassProperties() ).containsExactly( firstAppliedProperty );
 					assertThat( secondRootBinding.getMappedSuperclassProperties() ).containsExactly( secondAppliedProperty );
-					assertThat( firstRootBinding.getMappedSuperclassPropertyOrigin( firstAppliedProperty ) )
-							.isSameAs( firstContribution );
-					assertThat( secondRootBinding.getMappedSuperclassPropertyOrigin( secondAppliedProperty ) )
-							.isSameAs( secondContribution );
-					final var firstHandoff = context.getBindingState()
-							.getMappedSuperclassPropertyHandoff( firstAppliedProperty );
-					final var secondHandoff = context.getBindingState()
-							.getMappedSuperclassPropertyHandoff( secondAppliedProperty );
-					assertThat( firstHandoff ).isNotNull();
-					assertThat( secondHandoff ).isNotNull();
-					assertThat( firstHandoff ).isNotSameAs( secondHandoff );
-					assertThat( firstHandoff.owner() ).isSameAs( firstRootBinding );
-					assertThat( secondHandoff.owner() ).isSameAs( secondRootBinding );
-					assertThat( firstHandoff.property() ).isSameAs( firstAppliedProperty );
-					assertThat( secondHandoff.property() ).isSameAs( secondAppliedProperty );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( firstHandoff.contribution() ) )
-							.containsExactly( firstHandoff );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( secondHandoff.contribution() ) )
-							.containsExactly( secondHandoff );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( firstRootBinding ) )
-							.containsExactly( firstHandoff );
-					assertThat( context.getBindingState().getMappedSuperclassPropertyHandoffs( secondRootBinding ) )
-							.containsExactly( secondHandoff );
+					final var resolver = new MappedSuperclassHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					);
+					assertHandoffMatches(
+							resolver.findAttributeUsage( firstRootBinding, firstAppliedProperty ),
+							firstAppliedMapping.usage()
+					);
+					assertHandoffMatches(
+							resolver.findAttributeUsage( secondRootBinding, secondAppliedProperty ),
+							secondAppliedMapping.usage()
+					);
+					assertThat( bootBindingModel.mappedSuperclassContributions() )
+							.extracting( "appliedAttributeUsages" )
+							.containsExactly(
+									java.util.List.of( firstAppliedMapping.usage() ),
+									java.util.List.of( secondAppliedMapping.usage() )
+							);
 				},
 				scope.getRegistry(),
 				SharedContribution.class,
 				FirstSharedRoot.class,
 				SecondSharedRoot.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void mappedSuperclassComponentSeparatesDeclarationAndAppliedRoles(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final MappedSuperclass declaration =
+							metadataCollector.getMappedSuperclass( SharedEmbeddedContribution.class );
+					final PersistentClass first =
+							metadataCollector.getEntityBinding( FirstEmbeddedRoot.class.getName() );
+					final PersistentClass second =
+							metadataCollector.getEntityBinding( SecondEmbeddedRoot.class.getName() );
+
+					final Property declarationProperty = declaration.getDeclaredProperties()
+							.stream()
+							.filter( (property) -> property.getName().equals( "details" ) )
+							.findFirst()
+							.orElseThrow();
+					final Component declarationComponent = (Component) declarationProperty.getValue();
+					final Component firstComponent = (Component) first.getProperty( "details" ).getValue();
+					final Component secondComponent = (Component) second.getProperty( "details" ).getValue();
+
+					assertThat( declarationProperty.getDeclarationRole() )
+							.isEqualTo( new DeclarationRole( SharedEmbeddedContribution.class.getName(), "details" ) );
+					assertThat( declarationProperty.getMappingRole() ).isNull();
+					assertThat( declarationComponent.getMappingRole() ).isNull();
+					assertThat( firstComponent.getMappingRole() )
+							.isEqualTo( MappingRole.entity( FirstEmbeddedRoot.class.getName() )
+									.appendAttribute( "details" ) );
+					assertThat( secondComponent.getMappingRole() )
+							.isEqualTo( MappingRole.entity( SecondEmbeddedRoot.class.getName() )
+									.appendAttribute( "details" ) );
+					assertThat( firstComponent.getProperty( "value" ).getMappingRole() )
+							.isEqualTo( firstComponent.getMappingRole().appendAttribute( "value" ) );
+					assertThat( secondComponent.getProperty( "value" ).getMappingRole() )
+							.isEqualTo( secondComponent.getMappingRole().appendAttribute( "value" ) );
+					final Component declarationCopy = firstComponent.copyForDeclaration(
+							firstComponent.getProperties()
+									.stream()
+									.map( (property) -> property.copyForDeclaration( property.getValue().copy() ) )
+									.toList()
+					);
+					assertThat( declarationCopy.getMappingRole() ).isNull();
+					assertThat( declarationCopy.getProperties() )
+							.noneMatch( (property) -> property.getMappingRole() != null );
+					final Component sameApplicationCopy = firstComponent.copyForSameApplication();
+					assertThat( sameApplicationCopy.getMappingRole() ).isEqualTo( firstComponent.getMappingRole() );
+					assertThat( sameApplicationCopy.getProperties() )
+							.containsExactlyElementsOf( firstComponent.getProperties() );
+					final MappingRole otherApplicationRole =
+							MappingRole.entity( FirstEmbeddedRoot.class.getName() )
+									.appendAttribute( "otherDetails" );
+					final java.util.List<Property> otherApplicationProperties =
+							firstComponent.getProperties()
+									.stream()
+									.map( (property) -> property.copyForApplication(
+											otherApplicationRole.appendAttribute( property.getName() ),
+											property.getValue().copy()
+									) )
+									.toList();
+					final Component otherApplication = firstComponent.copyForApplication(
+							context.getBindingState().getMetadataBuildingContext(),
+							otherApplicationRole,
+							otherApplicationProperties
+					);
+					assertThat( otherApplication.getMappingRole() ).isEqualTo( otherApplicationRole );
+					assertThat( otherApplication.getTable() ).isSameAs( firstComponent.getTable() );
+					assertThat( otherApplication.getOwner() ).isSameAs( firstComponent.getOwner() );
+					assertThat( otherApplication.getProperties() ).containsExactlyElementsOf( otherApplicationProperties );
+					assertThat( otherApplication.getProperties().get( 0 ) )
+							.isNotSameAs( firstComponent.getProperties().get( 0 ) );
+					assertThat( otherApplication.getProperties().get( 0 ).getValue() )
+							.isNotSameAs( firstComponent.getProperties().get( 0 ).getValue() );
+					assertThat( otherApplication.getProperties().get( 0 ).getMappingRole() )
+							.isEqualTo( otherApplicationRole.appendAttribute(
+									otherApplication.getProperties().get( 0 ).getName()
+							) );
+					assertThatThrownBy( () -> firstComponent.copyForApplication(
+							context.getBindingState().getMetadataBuildingContext(),
+							otherApplicationRole,
+							firstComponent.getProperties()
+					) )
+							.isInstanceOf( IllegalArgumentException.class )
+							.hasMessageContaining( "different mapping role" );
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					assertThat( bootBindingModel.getAppliedAttributeMapping(
+							MappingRole.mappedSuperclass( SharedEmbeddedContribution.class.getName() )
+									.appendAttribute( "details" )
+					) ).isNull();
+					assertThat( bootBindingModel.getAppliedEmbeddableMapping(
+							MappingRole.mappedSuperclass( SharedEmbeddedContribution.class.getName() )
+									.appendAttribute( "details" )
+					) ).isNull();
+					final var firstAppliedDetails =
+							bootBindingModel.getAppliedAttributeMapping( firstComponent.getMappingRole() );
+					final var secondAppliedDetails =
+							bootBindingModel.getAppliedAttributeMapping( secondComponent.getMappingRole() );
+					assertThat( firstAppliedDetails ).isNotNull();
+					assertThat( secondAppliedDetails ).isNotNull();
+					assertThat( firstAppliedDetails.declaration() ).isSameAs( secondAppliedDetails.declaration() );
+					final var firstAppliedComponent =
+							bootBindingModel.getAppliedEmbeddableMapping( firstComponent.getMappingRole() );
+					final var secondAppliedComponent =
+							bootBindingModel.getAppliedEmbeddableMapping( secondComponent.getMappingRole() );
+					assertThat( firstAppliedComponent ).isNotNull();
+					assertThat( secondAppliedComponent ).isNotNull();
+					assertThat( firstAppliedComponent ).isNotSameAs( secondAppliedComponent );
+					assertThat( firstAppliedComponent.componentType() )
+							.isSameAs( secondAppliedComponent.componentType() );
+					assertThat( firstAppliedComponent.findAttribute( "value" ) )
+							.isSameAs( bootBindingModel.getAppliedAttributeMapping(
+									firstComponent.getMappingRole().appendAttribute( "value" )
+							) );
+					assertThat( secondAppliedComponent.findAttribute( "value" ) )
+							.isSameAs( bootBindingModel.getAppliedAttributeMapping(
+									secondComponent.getMappingRole().appendAttribute( "value" )
+							) );
+					assertThat( bootBindingModel.getAppliedAttributeMapping(
+							firstComponent.getMappingRole().appendAttribute( "value" )
+					).containerRole() ).isEqualTo( firstComponent.getMappingRole() );
+					assertThat( bootBindingModel.getAppliedAttributeMapping(
+							secondComponent.getMappingRole().appendAttribute( "value" )
+					).containerRole() ).isEqualTo( secondComponent.getMappingRole() );
+				},
+				scope.getRegistry(),
+				SharedEmbeddedContribution.class,
+				SharedDetails.class,
+				FirstEmbeddedRoot.class,
+				SecondEmbeddedRoot.class
 		);
 	}
 
@@ -327,46 +527,42 @@ public class MappedSuperclassTests {
 					final PersistentClass persistentClass =
 							metadataCollector.getEntityBinding( GenericStringEntity.class.getName() );
 					final Property genericValueProperty = persistentClass.getProperty( "genericValue" );
-					final var handoff = context.getBindingState()
-							.getMappedSuperclassPropertyHandoff( genericValueProperty );
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var appliedMapping =
+							bootBindingModel.getAppliedAttributeMapping( genericValueProperty.getMappingRole() );
 
 					assertThat( usage ).isInstanceOf( StandardAttributeUsageBinding.class );
 					assertThat( usage.declaration() ).isInstanceOf( IdentifiableAttributeDeclarationBinding.class );
 					assertThat( usage.declaration() ).isSameAs( superBinding.declaredAttributes().get( 0 ) );
 					assertThat( usage.resolvedType().determineRawClass().toJavaClass() ).isEqualTo( String.class );
-					assertThat( handoff ).isNotNull();
-					assertThat( context.getBindingState()
-							.getMappedSuperclassPropertyHandoff( persistentClass, genericValueProperty ) )
-							.isSameAs( handoff );
-					assertThat( handoff.attributeUsage() ).isSameAs( usage );
-					assertThat( handoff.attributeUsage().declaration() ).isSameAs( usage.declaration() );
-					assertThat( handoff.contribution().declaration().getClassDetails().toJavaClass() )
-							.isEqualTo( GenericMappedSuper.class );
-					assertThat( handoff.contribution().consumer().getClassDetails().toJavaClass() )
-							.isEqualTo( GenericStringEntity.class );
-					final var nearestEntityClassDetails =
-							handoff.contribution().nearestEntityConsumer().getClassDetails();
-					assertThat( context.getBindingState()
-							.getBootBindingModel()
-							.findAppliedMappedSuperclassAttributeUsage(
-									nearestEntityClassDetails.getName(),
-									"genericValue"
-							) )
-							.isSameAs( handoff.attributeUsage() );
-					assertThat( context.getBindingState()
-							.getBootBindingModel()
-							.findAppliedMappedSuperclassAttributeUsage(
-									nearestEntityClassDetails.getClassName(),
-									"genericValue"
-							) )
-							.isSameAs( handoff.attributeUsage() );
-					assertThat( context.getBindingState()
-							.getBootBindingModel()
-							.findAppliedMappedSuperclassAttributeUsage(
-									GenericStringEntity.class.getName(),
-									"genericValue"
-							) )
-							.isSameAs( handoff.attributeUsage() );
+					assertThat( appliedMapping ).isNotNull();
+					assertThat( appliedMapping.usage() ).isSameAs( usage );
+					assertThat( appliedMapping.declaration() ).isSameAs( usage.declaration() );
+					assertThat( bootBindingModel.mappedSuperclassContributions() )
+							.singleElement()
+							.satisfies( (contribution) -> {
+								assertThat( contribution.declaration().getClassDetails().toJavaClass() )
+										.isEqualTo( GenericMappedSuper.class );
+								assertThat( contribution.consumer().getClassDetails().toJavaClass() )
+										.isEqualTo( GenericStringEntity.class );
+								assertThat( contribution.appliedAttributeUsages() ).containsExactly( usage );
+							} );
+					final var resolver = new MappedSuperclassHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					);
+					assertHandoffMatches(
+							resolver.findAttributeUsage( persistentClass, genericValueProperty ),
+							usage
+					);
+					final Property declarationProperty = metadataCollector
+							.getMappedSuperclass( GenericMappedSuper.class )
+							.getDeclaredProperties()
+							.get( 0 );
+					assertThat( declarationProperty.getMappingRole() ).isNull();
+					assertHandoffMatches(
+							resolver.findAttributeUsage( persistentClass, declarationProperty ),
+							usage
+					);
 					assertThat( entityBinding.declaredAttributes() )
 							.extracting( "attributeName" )
 							.doesNotContain( "genericValue" );
@@ -382,18 +578,22 @@ public class MappedSuperclassTests {
 
 	@Test
 	@ServiceRegistry
-	void genericMappedSuperclassToOneAttributesAreIndexedByEntityName(ServiceRegistryScope scope) {
+	void genericMappedSuperclassToOneAttributesAreIndexedByMappingRole(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
 					final var bootBindingModel = context.getBindingState().getBootBindingModel();
-					final AttributeUsageBinding childUsage = bootBindingModel.findAppliedMappedSuperclassAttributeUsage(
-							"ToOneParent",
-							"child"
-					);
-					final AttributeUsageBinding parentUsage = bootBindingModel.findAppliedMappedSuperclassAttributeUsage(
-							"ToOneChild",
-							"parent"
-					);
+					final PersistentClass parent =
+							context.getMetadataCollector().getEntityBinding( ToOneParent.class.getName() );
+					final PersistentClass child =
+							context.getMetadataCollector().getEntityBinding( ToOneChild.class.getName() );
+					final Property childProperty = parent.getProperty( "child" );
+					final Property parentProperty = child.getProperty( "parent" );
+					final AttributeUsageBinding childUsage = bootBindingModel
+							.getAppliedAttributeMapping( childProperty.getMappingRole() )
+							.usage();
+					final AttributeUsageBinding parentUsage = bootBindingModel
+							.getAppliedAttributeMapping( parentProperty.getMappingRole() )
+							.usage();
 
 					assertThat( childUsage ).isNotNull();
 					assertThat( childUsage.resolvedType().determineRawClass().toJavaClass() )
@@ -401,6 +601,11 @@ public class MappedSuperclassTests {
 					assertThat( parentUsage ).isNotNull();
 					assertThat( parentUsage.resolvedType().determineRawClass().toJavaClass() )
 							.isEqualTo( ToOneParent.class );
+					final var resolver = new MappedSuperclassHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					);
+					assertHandoffMatches( resolver.findAttributeUsage( parent, childProperty ), childUsage );
+					assertHandoffMatches( resolver.findAttributeUsage( child, parentProperty ), parentUsage );
 				},
 				scope.getRegistry(),
 				GenericToOneParent.class,
@@ -424,8 +629,21 @@ public class MappedSuperclassTests {
 					assertThat( superBinding.getDeclaredProperties() )
 							.filteredOn( (property) -> property.getName().equals( "genericChildren" ) )
 							.singleElement()
-							.satisfies( (property) -> assertThat( property.isGeneric() ).isTrue() );
-					assertThat( entityBinding.getProperty( "genericChildren" ).isGeneric() ).isFalse();
+							.satisfies( (property) -> {
+								assertThat( property.isGeneric() ).isTrue();
+								assertThat( property.getMappingRole() ).isNull();
+								assertThat( ( (org.hibernate.mapping.Collection) property.getValue() ).getMappingRole() )
+										.isNull();
+							} );
+					final Property appliedProperty = entityBinding.getProperty( "genericChildren" );
+					final org.hibernate.mapping.Collection appliedCollection =
+							(org.hibernate.mapping.Collection) appliedProperty.getValue();
+					assertThat( appliedProperty.isGeneric() ).isFalse();
+					assertThat( appliedProperty.getMappingRole() )
+							.isEqualTo( MappingRole.entity( GenericCollectionEntity.class.getName() )
+									.appendAttribute( "genericChildren" ) );
+					assertThat( appliedCollection.getMappingRole() )
+							.isEqualTo( MappingRole.collection( appliedCollection.getRole() ) );
 				},
 				scope.getRegistry(),
 				GenericCollectionMappedSuper.class,
@@ -451,7 +669,9 @@ public class MappedSuperclassTests {
 					assertThat( identifierBinding.identifierMember() ).isNotNull();
 					assertThat( identifierBinding.identifierMember().getType().getTypeKind() )
 							.isEqualTo( TypeDetails.Kind.TYPE_VARIABLE );
-					assertThat( new IdentifierHandoffResolver( bootBindingModel )
+					assertThat( new IdentifierHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					)
 							.isConcreteGenericIdentifier( persistentClass, identifierProperty ) )
 							.isTrue();
 				},
@@ -478,7 +698,9 @@ public class MappedSuperclassTests {
 					assertThat( identifierBinding.identifierMember() ).isNotNull();
 					assertThat( identifierBinding.identifierMember().getType().getTypeKind() )
 							.isEqualTo( TypeDetails.Kind.TYPE_VARIABLE );
-					assertThat( new IdentifierHandoffResolver( bootBindingModel )
+					assertThat( new IdentifierHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					)
 							.isConcreteGenericIdentifier( persistentClass, identifierProperty ) )
 							.isTrue();
 				},
@@ -524,6 +746,15 @@ public class MappedSuperclassTests {
 				.filter( (usage) -> usage.attributeName().equals( attributeName ) )
 				.findFirst()
 				.orElseThrow();
+	}
+
+	private static void assertHandoffMatches(
+			AttributeUsageHandoff handoff,
+			AttributeUsageBinding usage) {
+		assertThat( handoff ).isNotNull();
+		assertThat( handoff.member() ).isSameAs( usage.member() );
+		assertThat( handoff.declaredType() ).isSameAs( usage.declaration().member().getType() );
+		assertThat( handoff.usageType() ).isSameAs( usage.resolvedType() );
 	}
 
 	@jakarta.persistence.MappedSuperclass
@@ -573,6 +804,28 @@ public class MappedSuperclassTests {
 
 	@Entity
 	public static class SecondSharedRoot extends SharedContribution {
+	}
+
+	@Embeddable
+	public static class SharedDetails {
+		private String value;
+	}
+
+	@jakarta.persistence.MappedSuperclass
+	public static class SharedEmbeddedContribution {
+		@Id
+		private Integer id;
+
+		@Embedded
+		private SharedDetails details;
+	}
+
+	@Entity
+	public static class FirstEmbeddedRoot extends SharedEmbeddedContribution {
+	}
+
+	@Entity
+	public static class SecondEmbeddedRoot extends SharedEmbeddedContribution {
 	}
 
 	@jakarta.persistence.MappedSuperclass

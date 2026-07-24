@@ -184,6 +184,9 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setVersion(Property version) {
 		this.version = version;
+		if ( version != null && getEntityName() != null ) {
+			version.setMappingRole( MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.VERSION ) );
+		}
 	}
 
 	@Override
@@ -218,6 +221,11 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setDiscriminator(Value discriminator) {
 		this.discriminator = discriminator;
+		if ( discriminator instanceof AppliedMappingPart mappingPart && getEntityName() != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.DISCRIMINATOR )
+			);
+		}
 	}
 
 	public void setEmbeddedIdentifier(boolean embeddedIdentifier) {
@@ -226,12 +234,21 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
+		if ( identifier instanceof AppliedMappingPart mappingPart && getEntityName() != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.IDENTIFIER )
+			);
+		}
 	}
 
 	public void setIdentifierProperty(Property identifierProperty) {
 		this.identifierProperty = identifierProperty;
 		identifierProperty.setPersistentClass( this );
-
+		if ( getEntityName() != null ) {
+			identifierProperty.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.IDENTIFIER )
+			);
+		}
 	}
 
 	public void setMutable(boolean mutable) {

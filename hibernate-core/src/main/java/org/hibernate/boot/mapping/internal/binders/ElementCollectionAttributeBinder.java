@@ -32,13 +32,13 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.CollectionTable;
@@ -338,6 +338,9 @@ class ElementCollectionAttributeBinder {
 						collection,
 						table
 				);
+		if ( !registerCollectionBindings ) {
+			component.setMappingRole( null );
+		}
 		if ( componentElement.compositeUserTypeClass() != null ) {
 			component.setCompositeUserType( componentElement.compositeUserType() );
 		}
@@ -360,7 +363,8 @@ class ElementCollectionAttributeBinder {
 				(ignored, column) -> table.addColumn( column ),
 				false,
 				true,
-				true
+				true,
+				registerCollectionBindings
 		);
 		if ( componentElement.compositeUserTypeClass() != null ) {
 			EmbeddableAttributeBinder.processCompositeUserType(
@@ -410,9 +414,11 @@ class ElementCollectionAttributeBinder {
 
 	private CompositeUserType<?> instantiateCompositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
-		return bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
-				? bindingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
-				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
+		return MappingHelper.createCompositeUserType(
+				compositeUserTypeClass,
+				bindingContext.getManagedBeanRegistry(),
+				bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
+		);
 	}
 
 	private BasicValue bindBasicElementValue(CollectionSource source, Table table) {

@@ -19,7 +19,7 @@ public final class ManyToOne extends ToOne {
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
 	private Boolean nullable;
-	private final TypeConfiguration typeConfiguration;
+	private transient TypeConfiguration typeConfiguration;
 
 	private transient ManyToOneType resolvedType;
 
@@ -56,6 +56,11 @@ public final class ManyToOne extends ToOne {
 			);
 		}
 		return resolvedType;
+	}
+
+	public void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
+		this.resolvedType = null;
 	}
 
 	public Object accept(ValueVisitor visitor) {

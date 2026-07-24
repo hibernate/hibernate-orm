@@ -23,6 +23,7 @@ import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
 import org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
@@ -30,6 +31,7 @@ import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.AppliedMappingPart;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
@@ -40,6 +42,8 @@ import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.mapping.DeclarationRole;
+import org.hibernate.mapping.MappingRole;
 
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +58,7 @@ import jakarta.persistence.JoinColumn;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.checkDomainModel;
 
 /**
@@ -148,6 +153,29 @@ public class AttributeBindingModelTests {
 
 					final PersistentClass entityBinding = context.getMetadataCollector()
 							.getEntityBinding( AttributeBoundEntity.class.getName() );
+					final Property nameProperty = entityBinding.getProperty( "name" );
+					final MappingRole nameRole = MappingRole.entity( AttributeBoundEntity.class.getName() )
+							.appendAttribute( "name" );
+					assertThat( nameProperty.getMappingRole() ).isEqualTo( nameRole );
+					assertThat( ( (AppliedMappingPart) nameProperty.getValue() ).getMappingRole() ).isEqualTo( nameRole );
+					assertThat( nameProperty.getDeclarationRole() )
+							.isEqualTo( new DeclarationRole( AttributeBoundEntity.class.getName(), "name" ) );
+					final var appliedName = context.getBindingState().getBootBindingModel()
+							.getAppliedAttributeMapping( nameRole );
+					assertThat( appliedName ).isNotNull();
+					assertThat( appliedName.usage() ).isSameAs( name.usageBinding() );
+					assertThat( appliedName.declaration() ).isSameAs( name.declaration() );
+					assertThat( appliedName.declarationRole() ).isEqualTo( name.declaration().declarationRole() );
+					assertThat( appliedName.containerRole() )
+							.isEqualTo( MappingRole.entity( AttributeBoundEntity.class.getName() ) );
+					assertThat( appliedName.resolvedType() ).isSameAs( name.resolvedType() );
+					assertThatThrownBy( () -> context.getBindingState().getBootBindingModel()
+							.addAppliedAttributeMapping( new AppliedAttributeMapping( name.usageBinding(), nameRole ) ) )
+							.isInstanceOf( IllegalStateException.class )
+							.hasMessageContaining( nameRole.getFullPath() );
+					assertThat( ( (AppliedMappingPart) entityBinding.getIdentifier() ).getMappingRole() )
+							.isEqualTo( MappingRole.entity( AttributeBoundEntity.class.getName() )
+									.append( MappingRole.PartKind.IDENTIFIER ) );
 					assertThat( entityBinding.getProperty( "code" ).isNaturalIdentifier() ).isTrue();
 					assertThat( entityBinding.getProperty( "code" ).isUpdatable() ).isTrue();
 

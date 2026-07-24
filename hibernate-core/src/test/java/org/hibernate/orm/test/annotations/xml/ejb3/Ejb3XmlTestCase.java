@@ -17,12 +17,12 @@ import org.hibernate.boot.mapping.internal.xml.XmlProcessingResult;
 import org.hibernate.boot.mapping.internal.xml.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.ModelsConfiguration;
 
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
@@ -32,7 +32,7 @@ import jakarta.persistence.Transient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
-import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.SIMPLE_CLASS_LOADING;
 
 /**
  * Test superclass to provide utility methods for testing the mapping of JPA
@@ -90,13 +90,11 @@ public abstract class Ejb3XmlTestCase  {
 				persistenceUnitMetadata
 		);
 
-		final ModelsContext modelBuildingContext = new BasicModelsContextImpl(
-				SIMPLE_CLASS_LOADING,
-				false,
-				(contributions, inFlightContext) -> {
-					OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
-				}
-		);
+		final ModelsContext modelBuildingContext = new ModelsConfiguration()
+				.setClassLoading( SIMPLE_CLASS_LOADING )
+				.setRegistryPrimer( (contributions, inFlightContext) ->
+						OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation ) )
+				.bootstrap();
 		final BootstrapContext bootstrapContext = new BootstrapContextImpl();
 		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl(
 				modelBuildingContext,

@@ -17,6 +17,7 @@ import org.hibernate.boot.mapping.internal.materialize.AttributeOptionsMappingMa
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
+import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
@@ -33,6 +34,7 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Formula;
@@ -42,6 +44,8 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.mapping.MappingRole;
 
 import jakarta.annotation.Nullable;
 
@@ -116,10 +120,13 @@ public class AttributeBinder {
 		this.bindingOptions = bindingOptions;
 		this.bindingContext = bindingContext;
 
-		this.binding = new PropertyMappingMaterializer().createProperty(
-				attributeBinding.attributeName(),
-				attributeBinding.member()
-		);
+		final MappingRole mappingRole = determineMappingRole( ownerType, attributeBinding );
+		final AppliedAttributeMapping appliedMapping = mappingRole == null
+				? null
+				: new AppliedAttributeMapping( attributeBinding.usageBinding(), mappingRole );
+		this.binding = appliedMapping == null
+				? new PropertyMappingMaterializer().createProperty( attributeBinding.usageBinding(), null )
+				: new PropertyMappingMaterializer().createProperty( appliedMapping );
 
 		final ValueIntent valueIntent = attributeBinding.valueIntent();
 		if ( valueIntent instanceof BasicValueIntent ) {
@@ -136,7 +143,7 @@ public class AttributeBinder {
 						bindingContext,
 						registerCollectionBindings
 				).bind( binding );
-					binding.setValue( componentValue );
+				binding.setValue( componentValue );
 				handleGenericComponentProperty(
 						binding,
 						attributeMetadata.getMember(),
@@ -208,6 +215,9 @@ public class AttributeBinder {
 					modelBinders,
 					registerCollectionBindings
 			);
+			if ( !( ownerType instanceof EntityTypeMetadata ) ) {
+				collectionValue.setMappingRole( null );
+			}
 			binding.setValue( collectionValue );
 			binding.setLazy( collectionValue.isLazy() );
 			binding.setOptional( true );
@@ -225,10 +235,33 @@ public class AttributeBinder {
 		applyCollation( binding );
 		StateManagementBindingPhase.registerProperty( attributeBinding.member(), binding, bindingState );
 		applyLazyGroup( binding );
+		if ( appliedMapping != null ) {
+			bindingState.getBootBindingModel().addAppliedAttributeMapping( appliedMapping );
+		}
 	}
 
 	public Property getBinding() {
 		return binding;
+	}
+
+	private static MappingRole determineMappingRole(
+			IdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding) {
+		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+			return MappingRole.entity( entityType.getEntityName() )
+					.appendAttribute( attributeBinding.attributeName() );
+		}
+
+		// A parameterized embeddable resolved at a mapped-superclass site is a
+		// concrete usage, even though its compatibility projection is retained
+		// by the mapped-superclass graph.
+		if ( attributeBinding.embeddedValueIntent() != null
+				&& attributeBinding.resolvedType().getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+			return MappingRole.mappedSuperclass( ownerType.getClassDetails().getName() )
+					.appendAttribute( attributeBinding.attributeName() );
+		}
+
+		return null;
 	}
 
 	public Table getTable() {
@@ -387,7 +420,7 @@ public class AttributeBinder {
 			@SuppressWarnings("unused") BindingOptions bindingOptions,
 			@SuppressWarnings("unused") BindingState bindingState,
 			@SuppressWarnings("unused") BindingContext bindingContext) {
-		basicValue.setImplicitSourceJavaType( BasicValue.SourceJavaType.from( member.getType(), null ) );
+		basicValue.setImplicitSourceJavaType( org.hibernate.boot.serial.internal.SourceJavaType.from( member.getType(), null ) );
 	}
 
 	public static ProcessedSelectable processSelectable(

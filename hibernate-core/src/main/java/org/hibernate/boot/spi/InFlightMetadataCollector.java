@@ -320,7 +320,9 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	AnnotatedClassType addClassType(ClassDetails classDetails);
 	AnnotatedClassType getClassType(ClassDetails classDetails);
 
+	void addMappedSuperclass(ClassDetails type, MappedSuperclass mappedSuperclass);
 	void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass);
+	MappedSuperclass getMappedSuperclass(ClassDetails type);
 	MappedSuperclass getMappedSuperclass(Class<?> type);
 
 	PropertyData getPropertyAnnotatedWithMapsId(ClassDetails persistentClassDetails, String propertyName);

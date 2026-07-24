@@ -4,10 +4,15 @@
  */
 package org.hibernate.boot.mapping.internal.materialize;
 
+import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.AppliedMappingPart;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.mapping.DeclarationRole;
+import org.hibernate.mapping.MappingRole;
 
 import jakarta.persistence.Access;
 
@@ -28,7 +33,25 @@ public class PropertyMappingMaterializer {
 		final Property property = new Property();
 		property.setName( name );
 		property.setMemberDetails( member );
+		property.setDeclarationRole( new DeclarationRole( member.getDeclaringType().getName(), name ) );
 		bindPropertyAccessor( member, property );
+		return property;
+	}
+
+	public Property createProperty(AttributeUsageBinding usage, MappingRole mappingRole) {
+		final Property property = createProperty( usage.attributeName(), usage.member() );
+		property.setDeclarationRole( usage.declaration().declarationRole() );
+		property.setMappingRole( mappingRole );
+		return property;
+	}
+
+	public Property createProperty(AppliedAttributeMapping appliedMapping) {
+		return createProperty( appliedMapping.usage(), appliedMapping.role() );
+	}
+
+	public Property createProperty(AttributeUsageBinding usage, MappingRole mappingRole, Value value) {
+		final Property property = createProperty( usage, mappingRole );
+		property.setValue( value );
 		return property;
 	}
 
@@ -52,6 +75,9 @@ public class PropertyMappingMaterializer {
 		property.setInsertable( false );
 		property.setPropertyAccessorName( EMBEDDED.getExternalName() );
 		property.setValue( identifierMapper );
+		if ( identifierMapper instanceof AppliedMappingPart mappingPart ) {
+			property.setMappingRole( mappingPart.getMappingRole() );
+		}
 		return property;
 	}
 

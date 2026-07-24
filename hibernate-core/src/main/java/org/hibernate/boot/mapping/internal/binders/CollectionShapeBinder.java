@@ -530,7 +530,10 @@ class CollectionShapeBinder {
 
 		final var sortComparator = source.sortComparator();
 		if ( sortComparator != null ) {
-			collection.setComparatorClassName( sortComparator.value().getName() );
+			collection.setComparatorClassDetails(
+					source.modelsContext().getClassDetailsRegistry()
+							.resolveClassDetails( sortComparator.value().getName() )
+			);
 		}
 	}
 

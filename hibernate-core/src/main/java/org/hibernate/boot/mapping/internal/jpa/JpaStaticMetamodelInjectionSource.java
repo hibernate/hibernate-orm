@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.jpa;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -22,16 +24,20 @@ import org.hibernate.boot.mapping.internal.view.StandardManagedTypeView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
 import org.hibernate.models.spi.ClassDetails;
 
-/// View-backed source for JPA static metamodel injection.
+/// Immutable handoff plan for JPA static metamodel injection.
 ///
-/// This is the first non-materialization consumer of the boot binding model.  It
-/// records the managed classes and static metamodel field references selected
-/// from binding/view facts, leaving runtime `Attribute` resolution and
-/// reflective field injection to [JpaStaticMetamodelInjection].
+/// The plan is extracted once from binding facts and retains only managed
+/// [ClassDetails], managed-type kind, field name, and field role. It leaves
+/// runtime `Attribute` resolution and reflective field injection to
+/// [JpaStaticMetamodelInjection]. Its data-only form also allows the same plan
+/// to participate in a metadata archive without retaining binding views.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> managedTypes) {
+public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> managedTypes) implements Serializable {
+	@Serial
+	private static final long serialVersionUID = 1L;
+
 	public JpaStaticMetamodelInjectionSource {
 		managedTypes = List.copyOf( managedTypes );
 	}
@@ -79,19 +85,23 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 			VersionBindingView versionBinding) {
 		final List<FieldReference> fields = new ArrayList<>();
 		for ( AttributeDeclarationBindingView attribute : managedTypeView.declaredAttributeViews() ) {
-			fields.add( new DeclaredAttributeFieldReference( attribute ) );
+			fields.add( new DeclaredAttributeFieldReference( attribute.attributeName() ) );
 		}
 		if ( entityIdentifierBinding != null ) {
 			for ( var attribute : entityIdentifierBinding.attributes() ) {
-				fields.add( new IdentifierFieldReference( entityIdentifierBinding, attribute ) );
+				final var representationMember = attribute.idRepresentationMember();
+				fields.add( new IdentifierFieldReference(
+						representationMember == null
+								? attribute.attributeName()
+								: representationMember.resolveAttributeName()
+				) );
 			}
 		}
 		if ( versionBinding != null ) {
-			fields.add( new VersionFieldReference( versionBinding ) );
+			fields.add( new VersionFieldReference( versionBinding.attributeName() ) );
 		}
 		return new ManagedTypeReference(
-				managedTypeView,
-				managedTypeView.classDetails().toJavaClass(),
+				managedTypeView.classDetails(),
 				managedTypeView.kind(),
 				fields
 		);
@@ -114,12 +124,15 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 	}
 
 	public record ManagedTypeReference(
-			ManagedTypeView sourceView,
-			Class<?> javaType,
+			ClassDetails classDetails,
 			ManagedTypeBinding.Kind kind,
-			List<FieldReference> fields) {
+			List<FieldReference> fields) implements Serializable {
 		public ManagedTypeReference {
 			fields = List.copyOf( fields );
+		}
+
+		public Class<?> javaType() {
+			return classDetails.toJavaClass();
 		}
 
 		public Set<String> fieldNames() {
@@ -131,7 +144,7 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 		}
 	}
 
-	public sealed interface FieldReference
+	public sealed interface FieldReference extends Serializable
 			permits DeclaredAttributeFieldReference, IdentifierFieldReference, VersionFieldReference {
 		String fieldName();
 
@@ -144,12 +157,9 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 		VERSION_ATTRIBUTE
 	}
 
-	public record DeclaredAttributeFieldReference(
-			AttributeDeclarationBindingView sourceView) implements FieldReference {
-		@Override
-		public String fieldName() {
-			return sourceView.attributeName();
-		}
+	public record DeclaredAttributeFieldReference(String fieldName) implements FieldReference {
+		@Serial
+		private static final long serialVersionUID = 1L;
 
 		@Override
 		public FieldRole role() {
@@ -157,16 +167,9 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 		}
 	}
 
-	public record IdentifierFieldReference(
-			EntityIdentifierBindingView sourceView,
-			EntityIdentifierBindingView.Attribute attribute) implements FieldReference {
-		@Override
-		public String fieldName() {
-			final var representationMember = attribute.idRepresentationMember();
-			return representationMember == null
-					? attribute.attributeName()
-					: representationMember.resolveAttributeName();
-		}
+	public record IdentifierFieldReference(String fieldName) implements FieldReference {
+		@Serial
+		private static final long serialVersionUID = 1L;
 
 		@Override
 		public FieldRole role() {
@@ -174,13 +177,9 @@ public record JpaStaticMetamodelInjectionSource(List<ManagedTypeReference> manag
 		}
 	}
 
-	public record VersionFieldReference(
-			VersionBindingView sourceView) implements FieldReference {
-		@Override
-		public String fieldName() {
-			return sourceView.attributeName();
-		}
-
+	public record VersionFieldReference(String fieldName) implements FieldReference {
+		@Serial
+		private static final long serialVersionUID = 1L;
 		@Override
 		public FieldRole role() {
 			return FieldRole.VERSION_ATTRIBUTE;

@@ -65,6 +65,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 			StandardServiceRegistry serviceRegistry,
 			MappingResolutionOptions metadataBuildingOptions,
 			TypeConfiguration typeConfiguration) {
+		this( serviceRegistry, metadataBuildingOptions, typeConfiguration, null );
+	}
+
+	public BootstrapContextImpl(
+			StandardServiceRegistry serviceRegistry,
+			MappingResolutionOptions metadataBuildingOptions,
+			TypeConfiguration typeConfiguration,
+			ModelsContext restoredModelsContext) {
 		this.serviceRegistry = serviceRegistry;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
@@ -91,7 +99,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 		managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
-		modelsContext = createModelBuildingContext( classLoaderService, configService );
+		modelsContext = restoredModelsContext == null
+				? createModelBuildingContext( classLoaderService, configService )
+				: restoredModelsContext;
 	}
 
 	@Override

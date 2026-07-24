@@ -44,7 +44,8 @@ import org.hibernate.boot.models.annotations.internal.OverriddenSQLUpdateAnnotat
 import org.hibernate.boot.models.annotations.internal.OverriddenSQLUpdatesAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverrideVersionAnnotation;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
-import org.hibernate.models.internal.OrmAnnotationDescriptor;
+import org.hibernate.models.Creator;
+import org.hibernate.models.spi.MutableAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 
 import static org.hibernate.models.spi.AnnotationTarget.Kind;
@@ -53,215 +54,215 @@ import static org.hibernate.models.spi.AnnotationTarget.Kind;
  * @author Steve Ebersole
  */
 public interface DialectOverrideAnnotations {
-	OrmAnnotationDescriptor<DialectOverride.Checks, OverriddenChecksAnnotation> DIALECT_OVERRIDE_CHECKS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.Checks, OverriddenChecksAnnotation> DIALECT_OVERRIDE_CHECKS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.Checks.class,
 			OverriddenChecksAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.Check, OverriddenCheckAnnotation> DIALECT_OVERRIDE_CHECK = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.Check, OverriddenCheckAnnotation> DIALECT_OVERRIDE_CHECK = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.Check.class,
 			OverriddenCheckAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_CHECKS
 	);
-	OrmAnnotationDescriptor<DialectOverride.ColumnDefaults, OverriddenColumnDefaultsAnnotation> DIALECT_OVERRIDE_COLUMN_DEFAULTS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.ColumnDefaults, OverriddenColumnDefaultsAnnotation> DIALECT_OVERRIDE_COLUMN_DEFAULTS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.ColumnDefaults.class,
 			OverriddenColumnDefaultsAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.ColumnDefault, OverriddenColumnDefaultAnnotation> DIALECT_OVERRIDE_COLUMN_DEFAULT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.ColumnDefault, OverriddenColumnDefaultAnnotation> DIALECT_OVERRIDE_COLUMN_DEFAULT = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.ColumnDefault.class,
 			OverriddenColumnDefaultAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false,
 			DIALECT_OVERRIDE_COLUMN_DEFAULTS
 	);
-	OrmAnnotationDescriptor<DialectOverride.GeneratedColumns, OverriddenGeneratedColumnsAnnotation> DIALECT_OVERRIDE_GENERATED_COLUMNS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.GeneratedColumns, OverriddenGeneratedColumnsAnnotation> DIALECT_OVERRIDE_GENERATED_COLUMNS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.GeneratedColumns.class,
 			OverriddenGeneratedColumnsAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.GeneratedColumn, OverriddenGeneratedColumnAnnotation> DIALECT_OVERRIDE_GENERATED_COLUMN = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.GeneratedColumn, OverriddenGeneratedColumnAnnotation> DIALECT_OVERRIDE_GENERATED_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.GeneratedColumn.class,
 			OverriddenGeneratedColumnAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false,
 			DIALECT_OVERRIDE_GENERATED_COLUMNS
 	);
-	OrmAnnotationDescriptor<DialectOverride.DiscriminatorFormulas, OverriddenDiscriminatorFormulasAnnotation> DIALECT_OVERRIDE_DISCRIMINATOR_FORMULAS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.DiscriminatorFormulas, OverriddenDiscriminatorFormulasAnnotation> DIALECT_OVERRIDE_DISCRIMINATOR_FORMULAS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.DiscriminatorFormulas.class,
 			OverriddenDiscriminatorFormulasAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.DiscriminatorFormula, OverriddenDiscriminatorFormulaAnnotation> DIALECT_OVERRIDE_DISCRIMINATOR_FORMULA = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.DiscriminatorFormula, OverriddenDiscriminatorFormulaAnnotation> DIALECT_OVERRIDE_DISCRIMINATOR_FORMULA = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.DiscriminatorFormula.class,
 			OverriddenDiscriminatorFormulaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_DISCRIMINATOR_FORMULAS
 	);
-	OrmAnnotationDescriptor<FetchProfileOverrides, FetchProfileOverridesAnnotation> FETCH_PROFILE_OVERRIDES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FetchProfileOverrides, FetchProfileOverridesAnnotation> FETCH_PROFILE_OVERRIDES = Creator.createCompleteAnnotationDescriptor(
 			FetchProfileOverrides.class,
 			FetchProfileOverridesAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<FetchProfileOverride, FetchProfileOverrideAnnotation> FETCH_PROFILE_OVERRIDE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FetchProfileOverride, FetchProfileOverrideAnnotation> FETCH_PROFILE_OVERRIDE = Creator.createCompleteAnnotationDescriptor(
 			FetchProfileOverride.class,
 			FetchProfileOverrideAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false,
 			FETCH_PROFILE_OVERRIDES
 	);
-	OrmAnnotationDescriptor<DialectOverride.FilterOverrides, OverriddenFilterOverridesAnnotation> DIALECT_OVERRIDE_FILTER_OVERRIDES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.FilterOverrides, OverriddenFilterOverridesAnnotation> DIALECT_OVERRIDE_FILTER_OVERRIDES = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.FilterOverrides.class,
 			OverriddenFilterOverridesAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.Filters, OverriddenFiltersAnnotation> DIALECT_OVERRIDE_FILTERS = new OrmAnnotationDescriptor<DialectOverride.Filters, OverriddenFiltersAnnotation>(
+	MutableAnnotationDescriptor<DialectOverride.Filters, OverriddenFiltersAnnotation> DIALECT_OVERRIDE_FILTERS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.Filters.class,
 			OverriddenFiltersAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_FILTER_OVERRIDES
 	);
-	OrmAnnotationDescriptor<DialectOverride.FilterDefOverrides, OverriddenFilterDefOverridesAnnotation> DIALECT_OVERRIDE_FILTER_DEF_OVERRIDES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.FilterDefOverrides, OverriddenFilterDefOverridesAnnotation> DIALECT_OVERRIDE_FILTER_DEF_OVERRIDES = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.FilterDefOverrides.class,
 			OverriddenFilterDefOverridesAnnotation.class,
 			EnumSet.of( Kind.PACKAGE, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.FilterDefs, OverriddenFilterDefsAnnotation> DIALECT_OVERRIDE_FILTER_DEFS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.FilterDefs, OverriddenFilterDefsAnnotation> DIALECT_OVERRIDE_FILTER_DEFS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.FilterDefs.class,
 			OverriddenFilterDefsAnnotation.class,
 			EnumSet.of( Kind.PACKAGE, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_FILTER_DEF_OVERRIDES
 	);
-	OrmAnnotationDescriptor<DialectOverride.Formulas, OverriddenFormulasAnnotation> DIALECT_OVERRIDE_FORMULAS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.Formulas, OverriddenFormulasAnnotation> DIALECT_OVERRIDE_FORMULAS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.Formulas.class,
 			OverriddenFormulasAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.Formula, OverriddenFormulaAnnotation> DIALECT_OVERRIDE_FORMULA = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.Formula, OverriddenFormulaAnnotation> DIALECT_OVERRIDE_FORMULA = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.Formula.class,
 			OverriddenFormulaAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false,
 			DIALECT_OVERRIDE_FORMULAS
 	);
-	OrmAnnotationDescriptor<DialectOverride.JoinFormulas, OverriddenJoinFormulasAnnotation> DIALECT_OVERRIDE_JOIN_FORMULAS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.JoinFormulas, OverriddenJoinFormulasAnnotation> DIALECT_OVERRIDE_JOIN_FORMULAS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.JoinFormulas.class,
 			OverriddenJoinFormulasAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.JoinFormula, OverriddenJoinFormulaAnnotation> DIALECT_OVERRIDE_JOIN_FORMULA = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.JoinFormula, OverriddenJoinFormulaAnnotation> DIALECT_OVERRIDE_JOIN_FORMULA = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.JoinFormula.class,
 			OverriddenJoinFormulaAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false,
 			DIALECT_OVERRIDE_JOIN_FORMULAS
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLInserts, OverriddenSQLInsertsAnnotation> DIALECT_OVERRIDE_SQL_INSERTS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLInserts, OverriddenSQLInsertsAnnotation> DIALECT_OVERRIDE_SQL_INSERTS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLInserts.class,
 			OverriddenSQLInsertsAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLInsert, OverriddenSQLInsertAnnotation> DIALECT_OVERRIDE_SQL_INSERT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLInsert, OverriddenSQLInsertAnnotation> DIALECT_OVERRIDE_SQL_INSERT = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLInsert.class,
 			OverriddenSQLInsertAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_SQL_INSERTS
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLUpdates, OverriddenSQLUpdatesAnnotation> DIALECT_OVERRIDE_SQL_UPDATES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLUpdates, OverriddenSQLUpdatesAnnotation> DIALECT_OVERRIDE_SQL_UPDATES = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLUpdates.class,
 			OverriddenSQLUpdatesAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLUpdate, OverriddenSQLUpdateAnnotation> DIALECT_OVERRIDE_SQL_UPDATE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLUpdate, OverriddenSQLUpdateAnnotation> DIALECT_OVERRIDE_SQL_UPDATE = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLUpdate.class,
 			OverriddenSQLUpdateAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_SQL_UPDATES
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLDeletes, OverriddenSQLDeletesAnnotation> DIALECT_OVERRIDE_SQL_DELETES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLDeletes, OverriddenSQLDeletesAnnotation> DIALECT_OVERRIDE_SQL_DELETES = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLDeletes.class,
 			OverriddenSQLDeletesAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLDelete, OverriddenSQLDeleteAnnotation> DIALECT_OVERRIDE_SQL_DELETE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLDelete, OverriddenSQLDeleteAnnotation> DIALECT_OVERRIDE_SQL_DELETE = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLDelete.class,
 			OverriddenSQLDeleteAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_SQL_DELETES
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLDeleteAlls, OverriddenSQLDeleteAllsAnnotation> DIALECT_OVERRIDE_SQL_DELETE_ALLS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLDeleteAlls, OverriddenSQLDeleteAllsAnnotation> DIALECT_OVERRIDE_SQL_DELETE_ALLS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLDeleteAlls.class,
 			OverriddenSQLDeleteAllsAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLDeleteAll, OverriddenSQLDeleteAllAnnotation> DIALECT_OVERRIDE_SQL_DELETE_ALL = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLDeleteAll, OverriddenSQLDeleteAllAnnotation> DIALECT_OVERRIDE_SQL_DELETE_ALL = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLDeleteAll.class,
 			OverriddenSQLDeleteAllAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_SQL_DELETE_ALLS
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLOrders, OverriddenSQLOrdersAnnotation> DIALECT_OVERRIDE_SQL_ORDERS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLOrders, OverriddenSQLOrdersAnnotation> DIALECT_OVERRIDE_SQL_ORDERS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLOrders.class,
 			OverriddenSQLOrdersAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLOrder, OverriddenSQLOrderAnnotation> DIALECT_OVERRIDE_SQL_ORDER = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLOrder, OverriddenSQLOrderAnnotation> DIALECT_OVERRIDE_SQL_ORDER = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLOrder.class,
 			OverriddenSQLOrderAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false,
 			DIALECT_OVERRIDE_SQL_ORDERS
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLRestrictions, OverriddenSQLRestrictionsAnnotation> DIALECT_OVERRIDE_SQL_RESTRICTIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLRestrictions, OverriddenSQLRestrictionsAnnotation> DIALECT_OVERRIDE_SQL_RESTRICTIONS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLRestrictions.class,
 			OverriddenSQLRestrictionsAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLRestriction, OverriddenSQLRestrictionAnnotation> DIALECT_OVERRIDE_SQL_RESTRICTION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLRestriction, OverriddenSQLRestrictionAnnotation> DIALECT_OVERRIDE_SQL_RESTRICTION = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLRestriction.class,
 			OverriddenSQLRestrictionAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_SQL_RESTRICTIONS
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLSelects, OverriddenSQLSelectsAnnotation> DIALECT_OVERRIDE_SQL_SELECTS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLSelects, OverriddenSQLSelectsAnnotation> DIALECT_OVERRIDE_SQL_SELECTS = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLSelects.class,
 			OverriddenSQLSelectsAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DialectOverride.SQLSelect, OverriddenSQLSelectAnnotation> DIALECT_OVERRIDE_SQL_SELECT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.SQLSelect, OverriddenSQLSelectAnnotation> DIALECT_OVERRIDE_SQL_SELECT = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.SQLSelect.class,
 			OverriddenSQLSelectAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD, Kind.CLASS ),
 			false,
 			DIALECT_OVERRIDE_SQL_SELECTS
 	);
-	OrmAnnotationDescriptor<DialectOverride.Version, OverrideVersionAnnotation> DIALECT_OVERRIDE_VERSION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DialectOverride.Version, OverrideVersionAnnotation> DIALECT_OVERRIDE_VERSION = Creator.createCompleteAnnotationDescriptor(
 			DialectOverride.Version.class,
 			OverrideVersionAnnotation.class,
 			EnumSet.allOf( Kind.class ),

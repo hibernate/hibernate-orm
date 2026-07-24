@@ -16,13 +16,14 @@ import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.usertype.CompositeUserType;
 
 import static org.hibernate.internal.util.StringHelper.count;
@@ -82,6 +83,7 @@ public class EmbeddableMappingMaterializer {
 
 	public Component createCollectionElementComponent(ComponentSource source, Collection collection, Table table) {
 		final Component component = new Component( state.getMetadataBuildingContext(), collection );
+		component.setMappingRole( MappingRole.collection( collection.getRole() ).append( MappingRole.PartKind.ELEMENT ) );
 		component.setFlattened( true );
 		applyComponentType( component, source.componentType() );
 		applyComponentMappedSuperclass( component, source.componentType() );
@@ -92,6 +94,7 @@ public class EmbeddableMappingMaterializer {
 
 	public Component createMapKeyComponent(ComponentSource source, Collection collection, Table table) {
 		final Component component = new Component( state.getMetadataBuildingContext(), collection );
+		component.setMappingRole( MappingRole.collection( collection.getRole() ).append( MappingRole.PartKind.INDEX ) );
 		component.setFlattened( true );
 		applyComponentType( component, source.componentType() );
 		applyComponentMappedSuperclass( component, source.componentType() );
@@ -115,14 +118,12 @@ public class EmbeddableMappingMaterializer {
 				component.setMappedSuperclass( mappedSuperTypeBinder.getTypeBinding() );
 				return;
 			}
-			if ( candidate.isRealClass() ) {
-				final MappedSuperclass mappedSuperclass = state.getMetadataBuildingContext()
-						.getMetadataCollector()
-						.getMappedSuperclass( candidate.toJavaClass() );
-				if ( mappedSuperclass != null ) {
-					component.setMappedSuperclass( mappedSuperclass );
-					return;
-				}
+			final MappedSuperclass mappedSuperclass = state.getMetadataBuildingContext()
+					.getMetadataCollector()
+					.getMappedSuperclass( candidate );
+			if ( mappedSuperclass != null ) {
+				component.setMappedSuperclass( mappedSuperclass );
+				return;
 			}
 		}
 	}
@@ -200,8 +201,10 @@ public class EmbeddableMappingMaterializer {
 	private CompositeUserType<?> instantiateCompositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
 		final var buildingContext = state.getMetadataBuildingContext();
-		return buildingContext.getBuildingPlan().isAllowExtensionsInCdi()
-				? buildingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
-				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
+		return MappingHelper.createCompositeUserType(
+				compositeUserTypeClass,
+				buildingContext.getManagedBeanRegistry(),
+				buildingContext.getBuildingPlan().isAllowExtensionsInCdi()
+		);
 	}
 }

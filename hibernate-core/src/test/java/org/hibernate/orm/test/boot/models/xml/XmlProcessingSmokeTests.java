@@ -24,7 +24,6 @@ import org.hibernate.boot.mapping.internal.xml.XmlDocumentContextImpl;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentImpl;
 import org.hibernate.boot.mapping.internal.xml.XmlPreProcessingResultImpl;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
-import org.hibernate.models.internal.StringTypeDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
@@ -34,6 +33,7 @@ import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -48,7 +48,7 @@ import static jakarta.persistence.AccessType.FIELD;
 import static jakarta.persistence.CascadeType.PERSIST;
 import static jakarta.persistence.CascadeType.REMOVE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.SIMPLE_CLASS_LOADING;
 
 /**
  * @author Steve Ebersole
@@ -139,7 +139,7 @@ public class XmlProcessingSmokeTests {
 	void testSimpleGlobalXmlProcessing(ServiceRegistryScope scope) {
 		final MetadataBuildingContextTestingImpl metadataBuildingContext =
 				new MetadataBuildingContextTestingImpl( scope.getRegistry() );
-		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
+		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringJavaType.class );
 		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
 
 		final JaxbEntityMappingsImpl xmlMapping = XmlHelper.loadMapping( "mappings/models/globals.xml", SIMPLE_CLASS_LOADING );
@@ -166,7 +166,7 @@ public class XmlProcessingSmokeTests {
 		final GlobalRegistrationsImpl globalRegistrations = collector.getGlobalRegistrations();
 		assertThat( globalRegistrations.getJavaTypeRegistrations() ).hasSize( 1 );
 		assertThat( globalRegistrations.getJavaTypeRegistrations().get(0).getDescriptor().getClassName() )
-				.isEqualTo( StringTypeDescriptor.class.getName() );
+				.isEqualTo( StringJavaType.class.getName() );
 
 		assertThat( globalRegistrations.getJdbcTypeRegistrations() ).hasSize( 1 );
 		assertThat( globalRegistrations.getJdbcTypeRegistrations().get(0).getDescriptor().getClassName() )
@@ -188,7 +188,7 @@ public class XmlProcessingSmokeTests {
 	void testGlobalNamedQueryHints(ServiceRegistryScope scope) {
 		final MetadataBuildingContextTestingImpl metadataBuildingContext =
 				new MetadataBuildingContextTestingImpl( scope.getRegistry() );
-		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
+		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringJavaType.class );
 		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
 
 		final JaxbEntityMappingsImpl xmlMapping = XmlHelper.loadMapping(

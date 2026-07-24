@@ -31,8 +31,6 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
-import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
-
 /// Resolves association targets that do not point at the target primary key.
 ///
 /// An owning to-one can reference a unique property instead of the target
@@ -263,24 +261,20 @@ class AssociationTargetBinder {
 			Property componentProperty,
 			List<Property> selectedProperties) {
 		final Component component = (Component) componentProperty.getValue();
-		final Component copy = component.copy();
-		copy.clearProperties();
-		copy.setDiscriminator( null );
-		copy.setDiscriminatorType( null );
-		copy.setDiscriminatorValues( null );
-		copy.setPreservePropertyOrder( true );
+		final ArrayList<Property> selectedSubProperties = new ArrayList<>();
 		for ( Property subProperty : component.getProperties() ) {
 			if ( selectedProperties.contains( subProperty ) ) {
-				copy.addProperty( cloneProperty( targetBinding, subProperty ) );
+				selectedSubProperties.add( subProperty );
 			}
 		}
+		final Component selection = component.copyForPropertySelection( selectedSubProperties );
 
 		final SyntheticProperty result = new SyntheticProperty();
 		result.setName( componentProperty.getName() );
 		result.setPersistentClass( targetBinding );
 		result.setUpdatable( false );
 		result.setInsertable( false );
-		result.setValue( copy );
+		result.setValue( selection );
 		result.setPropertyAccessorName( componentProperty.getPropertyAccessorName() );
 		return result;
 	}
@@ -381,60 +375,14 @@ class AssociationTargetBinder {
 			List<Property> properties,
 			String syntheticPropertyName,
 			String sourceRole) {
-		final Component component = new Component(
-				metadataBuildingContext(),
-				targetBinding
+		final var syntheticProperty = SyntheticPropertyMappingProjection.create(
+				targetBinding,
+				properties,
+				syntheticPropertyName,
+				metadataBuildingContext()
 		);
-		component.setComponentClassDetails( targetBinding.getClassName(), false, metadataBuildingContext() );
-		component.setFlattened( true );
-		component.setPreservePropertyOrder( true );
-		for ( Property property : properties ) {
-			component.addProperty( cloneProperty( targetBinding, property ) );
-		}
-
-		final SyntheticProperty syntheticProperty = new SyntheticProperty();
-		syntheticProperty.setName( syntheticPropertyName );
-		syntheticProperty.setPersistentClass( targetBinding );
-		syntheticProperty.setUpdatable( false );
-		syntheticProperty.setInsertable( false );
-		syntheticProperty.setValue( component );
-		syntheticProperty.setPropertyAccessorName( EMBEDDED.getExternalName() );
-		targetBinding.addProperty( syntheticProperty );
-		materializeUniqueKey( component, sourceRole );
+		materializeUniqueKey( (Component) syntheticProperty.getValue(), sourceRole );
 		return syntheticProperty;
-	}
-
-	private Property cloneProperty(PersistentClass ownerBinding, Property property) {
-		if ( property.isComposite() ) {
-			final Component component = (Component) property.getValue();
-			final Component copy;
-			if ( property.isSynthetic() ) {
-				copy = component.copy();
-			}
-			else {
-				copy = new Component( metadataBuildingContext(), component );
-				copy.setComponentClassDetails( component.getComponentClassDetails() );
-				copy.setFlattened( component.isFlattened() );
-				for ( Property subProperty : component.getProperties() ) {
-					copy.addProperty( cloneProperty( ownerBinding, subProperty ) );
-				}
-				copy.sortProperties();
-			}
-			final SyntheticProperty result = new SyntheticProperty();
-			result.setName( property.getName() );
-			result.setPersistentClass( ownerBinding );
-			result.setUpdatable( false );
-			result.setInsertable( false );
-			result.setValue( copy );
-			result.setPropertyAccessorName( property.getPropertyAccessorName() );
-			return result;
-		}
-		final Property clone = property.copy();
-		clone.setInsertable( false );
-		clone.setUpdatable( false );
-		clone.setNaturalIdentifier( false );
-		clone.setPersistentClass( ownerBinding );
-		return clone;
 	}
 
 	private String syntheticPropertyName(AssociationTargetBinding associationTargetBinding) {

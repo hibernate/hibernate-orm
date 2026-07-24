@@ -444,6 +444,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			boolean[] insertability,
 			boolean[] updateability,
 			MappingModelCreationProcess creationProcess) {
+		bootDescriptor.requireShapeComplete();
 // for some reason I cannot get this to work, though only a single test fails - `CompositeElementTest`
 //		return finishInitialization(
 //				getNavigableRole(),

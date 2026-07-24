@@ -180,7 +180,7 @@ class DerivedIdentifierBinder {
 
 	private List<Column> sortedColumns(Value value, List<Column> fallbackColumns) {
 		if ( value instanceof Component component ) {
-			component.sortProperties();
+			component.completeShape();
 			return component.getColumns();
 		}
 		return fallbackColumns;

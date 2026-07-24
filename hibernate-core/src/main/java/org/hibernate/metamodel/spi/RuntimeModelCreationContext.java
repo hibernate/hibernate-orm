@@ -6,7 +6,6 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -27,6 +26,7 @@ import org.hibernate.metamodel.internal.EmbeddableHandoffResolver;
 import org.hibernate.metamodel.internal.IdentifierHandoffResolver;
 import org.hibernate.metamodel.internal.MappedSuperclassHandoffResolver;
 import org.hibernate.metamodel.internal.RuntimeModelHandoffResolvers;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -106,10 +106,10 @@ public interface RuntimeModelCreationContext {
 		return getBootModel();
 	}
 
-	BootBindingModel getBootBindingModel();
+	RuntimeMappingHandoff getRuntimeMappingHandoff();
 
 	default RuntimeModelHandoffResolvers getHandoffResolvers() {
-		return RuntimeModelHandoffResolvers.create( getBootBindingModel() );
+		return RuntimeModelHandoffResolvers.create( getRuntimeMappingHandoff() );
 	}
 
 	default MappedSuperclassHandoffResolver getMappedSuperclassHandoffResolver() {

@@ -24,6 +24,7 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.mapping.MappingRole;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AccessType;
@@ -50,10 +51,9 @@ public class BootBindingModel {
 	private final List<NaturalIdContribution> naturalIdContributions = new ArrayList<>();
 	private final List<CollationContribution> collationContributions = new ArrayList<>();
 	private final List<MappedSuperclassContribution> mappedSuperclassContributions = new ArrayList<>();
-	private final Map<String, Map<String, AttributeUsageBinding>> appliedMappedSuperclassAttributeUsages =
-			new LinkedHashMap<>();
+	private final Map<MappingRole, AppliedAttributeMapping> appliedAttributeMappings = new LinkedHashMap<>();
+	private final Map<MappingRole, AppliedEmbeddableMapping> appliedEmbeddableMappings = new LinkedHashMap<>();
 	private final List<EmbeddableContribution> embeddableContributions = new ArrayList<>();
-	private final Map<Object, EmbeddableContribution> embeddableContributionsByComponent = new LinkedHashMap<>();
 
 	public void addManagedTypeBinding(ManagedTypeBinding binding) {
 		managedTypeBindings.put( binding.classDetails(), binding );
@@ -65,6 +65,46 @@ public class BootBindingModel {
 
 	public Collection<ManagedTypeBinding> managedTypeBindings() {
 		return managedTypeBindings.values();
+	}
+
+	/// Registers one concrete attribute application by its intrinsic mapping
+	/// role.
+	public void addAppliedAttributeMapping(AppliedAttributeMapping appliedMapping) {
+		final AppliedAttributeMapping previous = appliedAttributeMappings.putIfAbsent(
+				appliedMapping.role(),
+				appliedMapping
+		);
+		if ( previous != null && previous != appliedMapping ) {
+			throw new IllegalStateException( "Duplicate applied attribute mapping role: " + appliedMapping.role() );
+		}
+	}
+
+	public @Nullable AppliedAttributeMapping getAppliedAttributeMapping(MappingRole role) {
+		return appliedAttributeMappings.get( role );
+	}
+
+	public Collection<AppliedAttributeMapping> appliedAttributeMappings() {
+		return List.copyOf( appliedAttributeMappings.values() );
+	}
+
+	/// Registers one concrete embeddable application by its intrinsic mapping
+	/// role.
+	public void addAppliedEmbeddableMapping(AppliedEmbeddableMapping appliedMapping) {
+		final AppliedEmbeddableMapping previous = appliedEmbeddableMappings.putIfAbsent(
+				appliedMapping.role(),
+				appliedMapping
+		);
+		if ( previous != null && previous != appliedMapping ) {
+			throw new IllegalStateException( "Duplicate applied embeddable mapping role: " + appliedMapping.role() );
+		}
+	}
+
+	public @Nullable AppliedEmbeddableMapping getAppliedEmbeddableMapping(MappingRole role) {
+		return appliedEmbeddableMappings.get( role );
+	}
+
+	public Collection<AppliedEmbeddableMapping> appliedEmbeddableMappings() {
+		return List.copyOf( appliedEmbeddableMappings.values() );
 	}
 
 	public void addEntityHierarchyBinding(EntityTypeMetadata rootType, EntityHierarchyBinding binding) {
@@ -316,11 +356,6 @@ public class BootBindingModel {
 	 */
 	public void addMappedSuperclassContribution(MappedSuperclassContribution contribution) {
 		mappedSuperclassContributions.add( contribution );
-		contribution.appliedAttributeUsages()
-				.forEach( (attributeUsage) -> indexAppliedMappedSuperclassAttributeUsage(
-						contribution,
-						attributeUsage
-				) );
 	}
 
 	public List<MappedSuperclassContribution> mappedSuperclassContributions() {
@@ -338,66 +373,22 @@ public class BootBindingModel {
 	}
 
 	/**
-	 * Registers an applied mapped-superclass attribute usage and updates the
-	 * lookup index.
+	 * Registers an applied mapped-superclass attribute usage with its
+	 * contribution.
 	 * <p>
 	 * Callers should use this method instead of mutating
-	 * {@link MappedSuperclassContribution} directly so that lookup by nearest
-	 * entity consumer name remains consistent.
+	 * {@link MappedSuperclassContribution} directly.  The corresponding
+	 * {@link AppliedAttributeMapping} is independently registered in the
+	 * intrinsic role index while the attribute is materialized.
 	 */
 	public AttributeUsageBinding addAppliedMappedSuperclassAttributeUsage(
 			MappedSuperclassContribution contribution,
 			AttributeUsageBinding attributeUsage) {
-		final var addedUsage = contribution.addAppliedAttributeUsage( attributeUsage );
-		indexAppliedMappedSuperclassAttributeUsage( contribution, addedUsage );
-		return addedUsage;
-	}
-
-	/**
-	 * Finds an applied mapped-superclass attribute usage by nearest concrete
-	 * entity consumer name and attribute name.
-	 * <p>
-	 * The index accepts entity-name, JPA entity-name, {@code ClassDetails#getName()}
-	 * and {@code ClassDetails#getClassName()} forms for the nearest entity
-	 * consumer, matching the compatibility behavior of the previous scan-based
-	 * lookup.
-	 */
-	public @Nullable AttributeUsageBinding findAppliedMappedSuperclassAttributeUsage(
-			String nearestEntityConsumerName,
-			String attributeName) {
-		final var entityUsages = appliedMappedSuperclassAttributeUsages.get( nearestEntityConsumerName );
-		return entityUsages == null ? null : entityUsages.get( attributeName );
-	}
-
-	private void indexAppliedMappedSuperclassAttributeUsage(
-			MappedSuperclassContribution contribution,
-			AttributeUsageBinding attributeUsage) {
-		final var nearestEntityConsumer = contribution.nearestEntityConsumer();
-		indexAppliedMappedSuperclassAttributeUsage( nearestEntityConsumer.getEntityName(), attributeUsage );
-		indexAppliedMappedSuperclassAttributeUsage( nearestEntityConsumer.getJpaEntityName(), attributeUsage );
-		final var classDetails = contribution.nearestEntityConsumer().getClassDetails();
-		indexAppliedMappedSuperclassAttributeUsage( classDetails.getName(), attributeUsage );
-		indexAppliedMappedSuperclassAttributeUsage( classDetails.getClassName(), attributeUsage );
-	}
-
-	private void indexAppliedMappedSuperclassAttributeUsage(
-			String nearestEntityConsumerName,
-			AttributeUsageBinding attributeUsage) {
-		if ( nearestEntityConsumerName == null ) {
-			return;
-		}
-		appliedMappedSuperclassAttributeUsages.computeIfAbsent(
-				nearestEntityConsumerName,
-				(name) -> new LinkedHashMap<>()
-		).putIfAbsent( attributeUsage.attributeName(), attributeUsage );
+		return contribution.addAppliedAttributeUsage( attributeUsage );
 	}
 
 	public void addEmbeddableContribution(EmbeddableContribution contribution) {
 		embeddableContributions.add( contribution );
-	}
-
-	public void addEmbeddableComponentHandoff(EmbeddableContributionView contribution, Object component) {
-		embeddableContributionsByComponent.put( component, contribution.contribution() );
 	}
 
 	public List<EmbeddableContribution> embeddableContributions() {
@@ -408,21 +399,4 @@ public class BootBindingModel {
 		return new EmbeddableContributionView( contribution );
 	}
 
-	public @Nullable EmbeddableContributionView findEmbeddableContribution(Object component) {
-		final EmbeddableContribution contribution = embeddableContributionsByComponent.get( component );
-		return contribution == null ? null : embeddableContributionView( contribution );
-	}
-
-	public @Nullable ComponentMemberBinding findEmbeddableMemberBinding(Object component, String attributeName) {
-		final EmbeddableContribution contribution = embeddableContributionsByComponent.get( component );
-		if ( contribution == null ) {
-			return null;
-		}
-		for ( ComponentMemberBinding member : contribution.members() ) {
-			if ( member.attributeName().equals( attributeName ) ) {
-				return member;
-			}
-		}
-		return null;
-	}
 }

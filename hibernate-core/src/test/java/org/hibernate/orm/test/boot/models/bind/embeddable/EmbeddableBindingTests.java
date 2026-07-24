@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.boot.models.bind.embeddable;
 
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.AppliedMappingPart;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -15,6 +16,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Set;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
+import org.hibernate.boot.mapping.internal.model.AppliedEmbeddableMapping;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
@@ -22,8 +24,12 @@ import org.hibernate.boot.mapping.internal.model.EmbeddableAttributeDeclarationB
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
-import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
+import org.hibernate.metamodel.internal.EmbeddableHandoffResolver;
+import org.hibernate.metamodel.internal.AttributeUsageHandoff;
+import org.hibernate.boot.serial.internal.RuntimeMappingHandoffSnapshot;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
+import org.hibernate.mapping.DeclarationRole;
+import org.hibernate.mapping.MappingRole;
 
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
@@ -104,6 +110,37 @@ public class EmbeddableBindingTests {
 					final PersistentClass entityBinding = context.getMetadataCollector()
 							.getEntityBinding( ComponentFactsEntity.class.getName() );
 					final Component facts = (Component) entityBinding.getProperty( "facts" ).getValue();
+					final MappingRole factsRole = MappingRole.entity( ComponentFactsEntity.class.getName() )
+							.appendAttribute( "facts" );
+					assertThat( facts.getMappingRole() ).isEqualTo( factsRole );
+					assertThat( facts.getProperty( "city" ).getMappingRole() )
+							.isEqualTo( factsRole.appendAttribute( "city" ) );
+					assertThat( ( (AppliedMappingPart) facts.getProperty( "city" ).getValue() ).getMappingRole() )
+							.isEqualTo( factsRole.appendAttribute( "city" ) );
+					assertThat( facts.getProperty( "city" ).getDeclarationRole() )
+							.isEqualTo( new DeclarationRole( ComponentFacts.class.getName(), "city" ) );
+					final var appliedCity = context.getBindingState().getBootBindingModel()
+							.getAppliedAttributeMapping( factsRole.appendAttribute( "city" ) );
+					assertThat( appliedCity ).isNotNull();
+					assertThat( appliedCity.usage() ).isSameAs( city );
+					assertThat( appliedCity.declaration() ).isSameAs( city.declaration() );
+					assertThat( appliedCity.containerRole() ).isEqualTo( factsRole );
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var appliedFacts = bootBindingModel.getAppliedEmbeddableMapping( factsRole );
+					assertThat( appliedFacts ).isNotNull();
+					assertThat( appliedFacts.contribution() ).isSameAs( contribution );
+					assertThat( appliedFacts.componentType().toJavaClass() ).isEqualTo( ComponentFacts.class );
+					assertThat( appliedFacts.findAttribute( "city" ) ).isSameAs( appliedCity );
+					assertThat( appliedFacts.attributes() ).contains( appliedCity );
+					assertThatThrownBy( () -> bootBindingModel.addAppliedEmbeddableMapping(
+							new AppliedEmbeddableMapping(
+									appliedFacts.contribution(),
+									appliedFacts.role(),
+									appliedFacts.attributes()
+							)
+					) )
+							.isInstanceOf( IllegalStateException.class )
+							.hasMessageContaining( factsRole.getFullPath() );
 					assertThat( facts.getProperty( "city" ).getValue().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "home_city" );
@@ -180,6 +217,18 @@ public class EmbeddableBindingTests {
 
 					assertThat( labelsCollection ).isInstanceOf( List.class );
 					assertThat( labelsCollection.getRole() ).isEqualTo( ComponentPluralOwner.class.getName() + ".facts.labels" );
+					assertThat( facts.getProperty( "labels" ).getMappingRole() )
+							.isEqualTo( MappingRole.entity( ComponentPluralOwner.class.getName() )
+									.appendAttribute( "facts" )
+									.appendAttribute( "labels" ) );
+					assertThat( labelsCollection.getMappingRole() )
+							.isEqualTo( MappingRole.collection( labelsCollection.getRole() ) );
+					assertThat( ( (AppliedMappingPart) labelsCollection.getElement() ).getMappingRole() )
+							.isEqualTo( MappingRole.collection( labelsCollection.getRole() )
+									.append( MappingRole.PartKind.ELEMENT ) );
+					assertThat( ( (AppliedMappingPart) ( (List) labelsCollection ).getIndex() ).getMappingRole() )
+							.isEqualTo( MappingRole.collection( labelsCollection.getRole() )
+									.append( MappingRole.PartKind.INDEX ) );
 					assertThat( context.getMetadataCollector().getCollectionBinding( labelsCollection.getRole() ) )
 							.isSameAs( labelsCollection );
 					assertThat( partsCollection ).isInstanceOf( List.class );
@@ -219,12 +268,24 @@ public class EmbeddableBindingTests {
 					final Component details = (Component) facts.getProperty( "details" ).getValue();
 					final org.hibernate.mapping.Collection labelsCollection =
 							(org.hibernate.mapping.Collection) details.getProperty( "labels" ).getValue();
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var appliedFacts =
+							bootBindingModel.getAppliedEmbeddableMapping( facts.getMappingRole() );
+					final var appliedDetails =
+							bootBindingModel.getAppliedEmbeddableMapping( details.getMappingRole() );
 
 					assertThat( labelsCollection ).isInstanceOf( List.class );
 					assertThat( labelsCollection.getRole() )
 							.isEqualTo( NestedComponentPluralOwner.class.getName() + ".facts.details.labels" );
 					assertThat( context.getMetadataCollector().getCollectionBinding( labelsCollection.getRole() ) )
 							.isSameAs( labelsCollection );
+					assertThat( appliedFacts ).isNotNull();
+					assertThat( appliedDetails ).isNotNull();
+					assertThat( appliedFacts.findAttribute( "details" ).role() )
+							.isEqualTo( details.getMappingRole() );
+					assertThat( appliedDetails.role() )
+							.isEqualTo( appliedFacts.findAttribute( "details" ).role() );
+					assertThat( appliedDetails.findAttribute( "labels" ).usage() ).isSameAs( labels );
 				},
 				scope.getRegistry(),
 				NestedComponentPluralOwner.class
@@ -346,9 +407,17 @@ public class EmbeddableBindingTests {
 					final PersistentClass entityBinding = context.getMetadataCollector()
 							.getEntityBinding( GenericAmountEntity.class.getName() );
 					final Component component = (Component) entityBinding.getProperty( "price" ).getValue();
-					assertThat( context.getBindingState().getBootBindingModel()
-							.findEmbeddableMemberBinding( component, "amount" ) )
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var appliedEmbeddable =
+							bootBindingModel.getAppliedEmbeddableMapping( component.getMappingRole() );
+					assertThat( appliedEmbeddable.findAttribute( "amount" ).usage() )
 							.isSameAs( amount );
+					assertHandoffMatches(
+							new EmbeddableHandoffResolver(
+									RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+							).findMemberBinding( component, component.getProperty( "amount" ) ),
+							amount
+					);
 				},
 				scope.getRegistry(),
 				GenericAmountEntity.class
@@ -386,23 +455,19 @@ public class EmbeddableBindingTests {
 							.extracting( ComponentMemberBinding::attributeName )
 							.containsExactly( "line1", "zipCode" );
 
-					final var contributionView = new EmbeddableContributionView( contribution );
-					final var handoff = context.getBindingState().getEmbeddableComponentHandoff( component );
-					assertThat( handoff ).isNotNull();
-					assertThat( handoff.component() ).isSameAs( component );
-					assertThat( handoff.owner() ).isSameAs( entityBinding );
-					assertThat( handoff.contribution().contribution() ).isSameAs( contribution );
-					assertThat( handoff.pathPrefix() ).isEmpty();
-					assertThat( context.getBindingState().getEmbeddableComponentHandoffs( contributionView ) )
-							.containsExactly( handoff );
-					assertThat( context.getBindingState().getEmbeddableComponentHandoffs( entityBinding ) )
-							.containsExactly( handoff );
-
 					final var bootBindingModel = context.getBindingState().getBootBindingModel();
-					assertThat( bootBindingModel.findEmbeddableContribution( component ).contribution() )
-							.isSameAs( contribution );
-					assertThat( bootBindingModel.findEmbeddableMemberBinding( component, "line1" ) )
+					final var appliedEmbeddable =
+							bootBindingModel.getAppliedEmbeddableMapping( component.getMappingRole() );
+					assertThat( appliedEmbeddable ).isNotNull();
+					assertThat( appliedEmbeddable.contribution() ).isSameAs( contribution );
+					assertThat( appliedEmbeddable.findAttribute( "line1" ).usage() )
 							.isSameAs( componentMember( contribution.members(), "line1" ) );
+					assertHandoffMatches(
+							new EmbeddableHandoffResolver(
+									RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+							).findMemberBinding( component, component.getProperty( "line1" ) ),
+							componentMember( contribution.members(), "line1" )
+					);
 				},
 				scope.getRegistry(),
 				ExplicitEmbeddedEntity.class
@@ -458,6 +523,11 @@ public class EmbeddableBindingTests {
 							.getEntityBinding( SecondaryTableEmbeddedEntity.class.getName() );
 					assertThat( entityBinding.getJoins() ).hasSize( 1 );
 					final Join join = entityBinding.getJoins().get( 0 );
+					final MappingRole joinRole = MappingRole.entity( SecondaryTableEmbeddedEntity.class.getName() )
+							.append( MappingRole.PartKind.JOIN, join.getTable().getName() );
+					assertThat( join.getMappingRole() ).isEqualTo( joinRole );
+					assertThat( ( (AppliedMappingPart) join.getKey() ).getMappingRole() )
+							.isEqualTo( joinRole.append( MappingRole.PartKind.KEY ) );
 					assertThat( entityBinding.getUnjoinedProperties() )
 							.extracting( org.hibernate.mapping.Property::getName )
 							.isEmpty();
@@ -542,14 +612,17 @@ public class EmbeddableBindingTests {
 					assertThat( contributions.get( 1 ).pathPrefix() ).isEqualTo( "location." );
 					assertThat( contributions.get( 1 ).namingPathPrefix() ).isEqualTo( "address.location." );
 
-					final var addressHandoff = context.getBindingState().getEmbeddableComponentHandoff( address );
-					final var locationHandoff = context.getBindingState().getEmbeddableComponentHandoff( location );
-					assertThat( addressHandoff ).isNotNull();
-					assertThat( locationHandoff ).isNotNull();
-					assertThat( addressHandoff.contribution().contribution() ).isSameAs( contributions.get( 0 ) );
-					assertThat( locationHandoff.contribution().contribution() ).isSameAs( contributions.get( 1 ) );
-					assertThat( context.getBindingState().getEmbeddableComponentHandoffs( entityBinding ) )
-							.containsExactly( addressHandoff, locationHandoff );
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var appliedAddress =
+							bootBindingModel.getAppliedEmbeddableMapping( address.getMappingRole() );
+					final var appliedLocation =
+							bootBindingModel.getAppliedEmbeddableMapping( location.getMappingRole() );
+					assertThat( appliedAddress ).isNotNull();
+					assertThat( appliedLocation ).isNotNull();
+					assertThat( appliedAddress.contribution() ).isSameAs( contributions.get( 0 ) );
+					assertThat( appliedLocation.contribution() ).isSameAs( contributions.get( 1 ) );
+					assertThat( appliedAddress.findAttribute( "location" ).role() )
+							.isEqualTo( appliedLocation.role() );
 				},
 				scope.getRegistry(),
 				NestedEmbeddedEntity.class
@@ -741,6 +814,15 @@ public class EmbeddableBindingTests {
 				CompositeCountry.class,
 				NestedCompositeAssociationOverrideJoinTableEntity.class
 		);
+	}
+
+	private static void assertHandoffMatches(
+			AttributeUsageHandoff handoff,
+			AttributeUsageBinding usage) {
+		assertThat( handoff ).isNotNull();
+		assertThat( handoff.member() ).isSameAs( usage.member() );
+		assertThat( handoff.declaredType() ).isSameAs( usage.declaration().member().getType() );
+		assertThat( handoff.usageType() ).isSameAs( usage.resolvedType() );
 	}
 
 	@Entity(name = "ExplicitEmbeddedEntity")

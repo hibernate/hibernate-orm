@@ -107,7 +107,17 @@ public class FilterDefRegistration {
 				isAutoEnabled(),
 				isApplyToLoadByKey(),
 				parameterJdbcMappings,
+				parameterTypeClassNames(),
 				parameterResolvers
 		);
+	}
+
+	private Map<String, String> parameterTypeClassNames() {
+		if ( CollectionHelper.isEmpty( parameterTypes ) ) {
+			return Collections.emptyMap();
+		}
+		final Map<String, String> result = new HashMap<>();
+		parameterTypes.forEach( (name, type) -> result.put( name, type.getClassName() ) );
+		return result;
 	}
 }

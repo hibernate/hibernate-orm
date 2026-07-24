@@ -1915,8 +1915,18 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
+		public void addMappedSuperclass(ClassDetails type, MappedSuperclass mappedSuperclass) {
+
+		}
+
+		@Override
 		public void addMappedSuperclass(Class<?> type, MappedSuperclass mappedSuperclass) {
 
+		}
+
+		@Override
+		public MappedSuperclass getMappedSuperclass(ClassDetails type) {
+			return null;
 		}
 
 		@Override

@@ -30,7 +30,7 @@ dependencies {
     api libs.jakarta.jpa
     api libs.jakarta.jta
 
-    implementation libs.hibernateModels
+    api libs.hibernateModels
     implementation libs.byteBuddy
 
     implementation libs.jakarta.jaxbApi

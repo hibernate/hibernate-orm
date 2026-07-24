@@ -9,7 +9,7 @@ import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import org.hibernate.models.internal.AnnotationHelper;
+import org.hibernate.models.spi.AnnotationHelper;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationTarget;
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -11,7 +12,7 @@ import java.util.Objects;
  *
  * @author Gavin King
  */
-public class CheckConstraint {
+public class CheckConstraint implements Serializable {
 	private String name;
 	private String constraint;
 	private String options;

@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.xml;
 
+
 import java.util.List;
 
 import org.hibernate.annotations.SqlFragmentAlias;
@@ -29,8 +30,7 @@ public class FilterProcessing {
 
 		final SqlFragmentAlias[] result = new SqlFragmentAlias[jaxbAliases.size()];
 		for ( int i = 0; i < jaxbAliases.size(); i++ ) {
-			final SqlFragmentAliasAnnotation alias = HibernateAnnotations.SQL_FRAGMENT_ALIAS.createUsage(
-					xmlDocumentContext.getModelsContext()
+			final SqlFragmentAliasAnnotation alias = HibernateAnnotations.SQL_FRAGMENT_ALIAS.createUsage( xmlDocumentContext.getModelsContext()
 			);
 			result[i] = alias;
 

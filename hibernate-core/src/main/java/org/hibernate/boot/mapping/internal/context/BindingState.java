@@ -38,8 +38,6 @@ import org.hibernate.boot.mapping.internal.binders.StateManagementBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.TableForeignKeyBinding;
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
-import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
-import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
@@ -54,7 +52,6 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
@@ -134,7 +131,7 @@ public interface BindingState {
 	@Nonnull Iterable<PersistentClass> getEntityBindings();
 
 	/// Register a mapped-superclass binding for eventual publication to the metadata collector.
-	void addMappedSuperclass(Class<?> mappedSuperclassClass, MappedSuperclass mappedSuperclass);
+	void addMappedSuperclass(ClassDetails mappedSuperclassClass, MappedSuperclass mappedSuperclass);
 
 	/// Register a collection binding for eventual publication to the metadata collector.
 	void addCollectionBinding(Collection collection);
@@ -351,22 +348,6 @@ public interface BindingState {
 	/// Run property and collection state-management work.
 	void runStateManagementPropertyAndCollectionBindings();
 
-	/// Register the contribution handoff for a materialized mapped-superclass property.
-	void addMappedSuperclassPropertyHandoff(MappedSuperclassPropertyHandoff handoff);
-
-	/// Resolve the contribution handoff for a materialized mapped-superclass property.
-	@Nullable MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(Property property);
-
-	/// Resolve the contribution handoff for a materialized mapped-superclass property on a specific owner.
-	@Nullable MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(PersistentClass owner, Property property);
-
-	/// Resolve materialized property handoffs for one mapped-superclass contribution.
-	List<MappedSuperclassPropertyHandoff> getMappedSuperclassPropertyHandoffs(
-			MappedSuperclassContributionView contribution);
-
-	/// Resolve materialized mapped-superclass property handoffs for one nearest entity owner.
-	List<MappedSuperclassPropertyHandoff> getMappedSuperclassPropertyHandoffs(PersistentClass owner);
-
 	/// Register the contribution handoff for a materialized natural-id property.
 	void addNaturalIdPropertyHandoff(NaturalIdPropertyHandoff handoff);
 
@@ -408,18 +389,6 @@ public interface BindingState {
 
 	/// Resolve the materialized version handoff for one semantic binding.
 	@Nullable VersionPropertyHandoff getVersionPropertyHandoff(VersionBindingView binding);
-
-	/// Register the contribution handoff for a materialized embeddable component.
-	void addEmbeddableComponentHandoff(EmbeddableComponentHandoff handoff);
-
-	/// Resolve the contribution handoff for a materialized embeddable component.
-	@Nullable EmbeddableComponentHandoff getEmbeddableComponentHandoff(Component component);
-
-	/// Resolve materialized component handoffs for one embeddable contribution.
-	List<EmbeddableComponentHandoff> getEmbeddableComponentHandoffs(EmbeddableContributionView contribution);
-
-	/// Resolve materialized embeddable component handoffs for one entity owner.
-	List<EmbeddableComponentHandoff> getEmbeddableComponentHandoffs(PersistentClass owner);
 
 	/// Queue collection state-management work.
 	void addStateManagementCollectionBinding(StateManagementBindingPhase.CollectionMapping binding);

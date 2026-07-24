@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import jakarta.persistence.EntityResult;
@@ -17,7 +18,7 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class ConstructorResultJpaAnnotation implements ConstructorResult {
+public class ConstructorResultJpaAnnotation implements ConstructorResult, Serializable {
 
 	private java.lang.Class<?> targetClass;
 	private jakarta.persistence.ColumnResult[] columns;

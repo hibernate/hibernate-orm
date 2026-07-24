@@ -68,6 +68,7 @@ import org.hibernate.type.descriptor.java.LongJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
@@ -1119,6 +1120,13 @@ public class ElementCollectionBindingTests {
 					assertThat( element.getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "line1", "zipCode" );
+					final MappingRole elementRole = MappingRole.collection( collection.getRole() )
+							.append( MappingRole.PartKind.ELEMENT );
+					final var appliedElement = context.getBindingState().getBootBindingModel()
+							.getAppliedEmbeddableMapping( elementRole );
+					assertThat( appliedElement ).isNotNull();
+					assertThat( appliedElement.componentType().toJavaClass() ).isEqualTo( Address.class );
+					assertThat( appliedElement.findAttribute( "line1" ).containerRole() ).isEqualTo( elementRole );
 				},
 				scope.getRegistry(),
 				EmbeddableElementOwner.class

@@ -18,7 +18,8 @@ import org.hibernate.boot.models.annotations.internal.CollectionClassificationXm
 import org.hibernate.boot.models.annotations.internal.ExtendsXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
-import org.hibernate.models.internal.OrmAnnotationDescriptor;
+import org.hibernate.models.Creator;
+import org.hibernate.models.spi.MutableAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 
 import static org.hibernate.models.spi.AnnotationTarget.Kind;
@@ -27,31 +28,31 @@ import static org.hibernate.models.spi.AnnotationTarget.Kind;
  * @author Steve Ebersole
  */
 public interface XmlAnnotations {
-	OrmAnnotationDescriptor<Abstract, AbstractXmlAnnotation> ABSTRACT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Abstract, AbstractXmlAnnotation> ABSTRACT = Creator.createCompleteAnnotationDescriptor(
 			Abstract.class,
 			AbstractXmlAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyKeyType, AnyKeyTypeXmlAnnotation> ANY_KEY_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyKeyType, AnyKeyTypeXmlAnnotation> ANY_KEY_TYPE = Creator.createCompleteAnnotationDescriptor(
 			AnyKeyType.class,
 			AnyKeyTypeXmlAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = Creator.createCompleteAnnotationDescriptor(
 			CollectionClassification.class,
 			CollectionClassificationXmlAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<Extends, ExtendsXmlAnnotation> EXTENDS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Extends, ExtendsXmlAnnotation> EXTENDS = Creator.createCompleteAnnotationDescriptor(
 			Extends.class,
 			ExtendsXmlAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Target, TargetXmlAnnotation> TARGET = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Target, TargetXmlAnnotation> TARGET = Creator.createCompleteAnnotationDescriptor(
 			Target.class,
 			TargetXmlAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),

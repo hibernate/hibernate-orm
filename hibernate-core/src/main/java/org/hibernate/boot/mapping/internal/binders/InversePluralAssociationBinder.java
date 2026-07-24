@@ -33,6 +33,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.mapping.MappingRole;
 
 import jakarta.persistence.MapKey;
 
@@ -493,14 +494,31 @@ class InversePluralAssociationBinder {
 			InversePluralAssociationBinding inverseBinding,
 			org.hibernate.mapping.Map inverseMap,
 			Value owningIndex) {
+		return copyIndexValue(
+				inverseBinding,
+				inverseMap,
+				owningIndex,
+				MappingRole.collection( inverseMap.getRole() ).append( MappingRole.PartKind.INDEX )
+		);
+	}
+
+	private Value copyIndexValue(
+			InversePluralAssociationBinding inverseBinding,
+			org.hibernate.mapping.Map inverseMap,
+			Value owningIndex,
+			MappingRole mappingRole) {
 		if ( owningIndex instanceof BasicValue owningBasicIndex ) {
-			return copyBasicIndex( inverseMap, owningBasicIndex );
+			final BasicValue copy = copyBasicIndex( inverseMap, owningBasicIndex );
+			copy.setMappingRole( mappingRole );
+			return copy;
 		}
 		if ( owningIndex instanceof ManyToOne owningToOneIndex ) {
-			return copyManyToOneIndex( inverseBinding, inverseMap, owningToOneIndex );
+			final ManyToOne copy = copyManyToOneIndex( inverseBinding, inverseMap, owningToOneIndex );
+			copy.setMappingRole( mappingRole );
+			return copy;
 		}
 		if ( owningIndex instanceof Component owningComponentIndex ) {
-			return copyComponentIndex( inverseBinding, inverseMap, owningComponentIndex );
+			return copyComponentIndex( inverseBinding, inverseMap, owningComponentIndex, mappingRole );
 		}
 		throw new UnsupportedOperationException(
 				"Inverse map-valued @ManyToMany is only implemented for basic, to-one, and component owning map keys - "
@@ -511,20 +529,25 @@ class InversePluralAssociationBinder {
 	private Component copyComponentIndex(
 			InversePluralAssociationBinding inverseBinding,
 			org.hibernate.mapping.Map inverseMap,
-			Component owningIndex) {
+			Component owningIndex,
+			MappingRole mappingRole) {
 		final Component inverseIndex = new Component( bindingState.getMetadataBuildingContext(), inverseMap );
 		inverseIndex.setComponentClassDetails( owningIndex.getComponentClassDetails() );
 		inverseIndex.setFlattened( owningIndex.isFlattened() );
 		inverseIndex.setRoleName( owningIndex.getRoleName() );
+		inverseIndex.setMappingRole( mappingRole );
 		for ( Property property : owningIndex.getProperties() ) {
-			final Property copy = property.copy();
-			copy.setValue( copyIndexValue( inverseBinding, inverseMap, property.getValue() ) );
+			final MappingRole propertyRole = mappingRole.appendAttribute( property.getName() );
+			final Property copy = property.copyForApplication(
+					propertyRole,
+					copyIndexValue( inverseBinding, inverseMap, property.getValue(), propertyRole )
+			);
 			copy.setInsertable( false );
 			copy.setUpdatable( false );
 			copy.setPersistentClass( inverseMap.getOwner() );
 			inverseIndex.addProperty( copy );
 		}
-		inverseIndex.sortProperties();
+		inverseIndex.completeShape();
 		return inverseIndex;
 	}
 

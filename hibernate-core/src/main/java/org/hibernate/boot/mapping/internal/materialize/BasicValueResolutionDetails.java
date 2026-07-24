@@ -9,9 +9,12 @@ import java.util.Properties;
 
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder.BasicValueRole;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.serial.internal.BasicValueRestorationRecipe;
+import org.hibernate.boot.serial.internal.SourceJavaType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
@@ -71,6 +74,111 @@ public class BasicValueResolutionDetails {
 		return new BasicValueResolutionDetails( value, source );
 	}
 
+	@SuppressWarnings("unchecked")
+	public static BasicValueResolutionDetails fromRecipe(
+			BasicValue value,
+			BasicValueRestorationRecipe recipe,
+			MappingResolutionServices services) {
+		final BasicValueResolutionDetails details = new BasicValueResolutionDetails( value, recipe.source() );
+		details.typeParameters = recipe.typeParameters();
+		details.explicitTypeName = recipe.explicitTypeName();
+		details.timeZoneStorageType = recipe.timeZoneStorageType();
+		details.enumerationStyle = recipe.enumerationStyle();
+		details.temporalPrecision = recipe.temporalPrecision();
+		details.jdbcTypeCode = recipe.jdbcTypeCode();
+		if ( recipe.converter() != null ) {
+			details.attributeConverterDescriptor = recipe.converter().resolve( services );
+		}
+		if ( recipe.resolvedJavaTypeName() != null ) {
+			details.resolvedJavaType = resolveClass(
+					recipe.resolvedJavaTypeName(),
+					"resolved Java type",
+					services
+			);
+		}
+		if ( recipe.explicitJavaTypeDescriptorClassName() != null ) {
+			details.explicitJavaType = instantiateManaged(
+					recipe.explicitJavaTypeDescriptorClassName(),
+					BasicJavaType.class,
+					services
+			);
+		}
+		if ( recipe.explicitJdbcTypeDescriptorClassName() != null ) {
+			details.explicitJdbcType = instantiateManaged(
+					recipe.explicitJdbcTypeDescriptorClassName(),
+					JdbcType.class,
+					services
+			);
+		}
+		if ( recipe.explicitMutabilityPlanClassName() != null ) {
+			details.explicitMutabilityPlan = instantiateManaged(
+					recipe.explicitMutabilityPlanClassName(),
+					MutabilityPlan.class,
+					services
+			);
+		}
+		details.attributeImmutable = recipe.attributeImmutable();
+		if ( recipe.attributeMutabilityPlanClassName() != null ) {
+			final Class<?> mutabilityPlanClass = resolveClass(
+					recipe.attributeMutabilityPlanClassName(),
+					"attribute MutabilityPlan",
+					services
+			);
+			if ( !MutabilityPlan.class.isAssignableFrom( mutabilityPlanClass ) ) {
+				throw new IllegalArgumentException(
+						"Archived attribute MutabilityPlan class "
+								+ recipe.attributeMutabilityPlanClassName()
+								+ " does not implement " + MutabilityPlan.class.getName()
+				);
+			}
+			details.attributeMutabilityPlanClass =
+					(Class<? extends MutabilityPlan<?>>) mutabilityPlanClass;
+		}
+		return details;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> T instantiateManaged(
+			String className,
+			Class<T> contract,
+			MappingResolutionServices services) {
+		final Class<?> descriptorClass = resolveClass(
+				className,
+				contract.getSimpleName() + " descriptor",
+				services
+		);
+		if ( !contract.isAssignableFrom( descriptorClass ) ) {
+			throw new IllegalArgumentException(
+					"Archived descriptor " + className + " does not implement " + contract.getName()
+			);
+		}
+		try {
+			return services.getManagedBeanRegistry().getBean( (Class<T>) descriptorClass ).getBeanInstance();
+		}
+		catch (RuntimeException e) {
+			throw new IllegalStateException(
+					"Could not instantiate archived " + contract.getSimpleName()
+							+ " descriptor class '" + className + "'",
+					e
+			);
+		}
+	}
+
+	private static Class<?> resolveClass(
+			String className,
+			String role,
+			MappingResolutionServices services) {
+		try {
+			return services.getClassLoaderService().classForTypeName( className );
+		}
+		catch (RuntimeException e) {
+			throw new IllegalStateException(
+					"Could not resolve archived " + role + " class '" + className + "'",
+					e
+			);
+		}
+	}
+
 	public BasicValue value() {
 		return value;
 	}
@@ -91,7 +199,7 @@ public class BasicValueResolutionDetails {
 		return source.kind();
 	}
 
-	public BasicValue.SourceJavaType getSourceJavaType() {
+	public SourceJavaType getSourceJavaType() {
 		return source.sourceJavaType();
 	}
 

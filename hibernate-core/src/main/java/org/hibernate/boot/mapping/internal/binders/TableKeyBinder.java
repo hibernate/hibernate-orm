@@ -51,7 +51,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
-import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -60,8 +59,6 @@ import org.hibernate.models.ModelsException;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
-
-import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 
 /// Binds table keys that depend on an already-bound entity hierarchy identifier.
 ///
@@ -995,50 +992,14 @@ public class TableKeyBinder {
 			List<Property> properties,
 			String syntheticPropertyName,
 			String sourceRole) {
-		final Component component = new Component( metadataBuildingContext(), ownerBinding );
-		component.setComponentClassDetails( ownerBinding.getClassName(), false, metadataBuildingContext() );
-		component.setFlattened( true );
-		component.setPreservePropertyOrder( true );
-		for ( Property property : properties ) {
-			component.addProperty( cloneProperty( ownerBinding, property ) );
-		}
-
-		final SyntheticProperty syntheticProperty = new SyntheticProperty();
-		syntheticProperty.setName( syntheticPropertyName );
-		syntheticProperty.setPersistentClass( ownerBinding );
-		syntheticProperty.setUpdatable( false );
-		syntheticProperty.setInsertable( false );
-		syntheticProperty.setValue( component );
-		syntheticProperty.setPropertyAccessorName( EMBEDDED.getExternalName() );
-		ownerBinding.addProperty( syntheticProperty );
-		materializeUniqueKey( component, sourceRole );
+		final var syntheticProperty = SyntheticPropertyMappingProjection.create(
+				ownerBinding,
+				properties,
+				syntheticPropertyName,
+				metadataBuildingContext()
+		);
+		materializeUniqueKey( (Component) syntheticProperty.getValue(), sourceRole );
 		return syntheticProperty;
-	}
-
-	private Property cloneProperty(PersistentClass ownerBinding, Property property) {
-		if ( property.isComposite() ) {
-			final Component component = (Component) property.getValue();
-			final Component copy = new Component( metadataBuildingContext(), component );
-			copy.setComponentClassDetails( component.getComponentClassDetails() );
-			copy.setFlattened( component.isFlattened() );
-			for ( Property subProperty : component.getProperties() ) {
-				copy.addProperty( cloneProperty( ownerBinding, subProperty ) );
-			}
-			copy.sortProperties();
-			final SyntheticProperty result = new SyntheticProperty();
-			result.setName( property.getName() );
-			result.setPersistentClass( ownerBinding );
-			result.setUpdatable( false );
-			result.setInsertable( false );
-			result.setValue( copy );
-			result.setPropertyAccessorName( property.getPropertyAccessorName() );
-			return result;
-		}
-		final SyntheticProperty clone = property.syntheticCopy();
-		clone.setNaturalIdentifier( false );
-		clone.setInsertable( false );
-		clone.setUpdatable( false );
-		return clone;
 	}
 
 	private String syntheticPropertyName(PersistentClass ownerBinding, String sourceRole) {

@@ -51,7 +51,7 @@ public final class ForeignKeyMappingMaterializer {
 		}
 
 		if ( property.getValue() instanceof Component component ) {
-			component.sortProperties();
+			component.completeShape();
 		}
 
 		if ( value.isConstrained() && !hasAuxiliaryColumnInPrimaryKey( referencedClass ) ) {

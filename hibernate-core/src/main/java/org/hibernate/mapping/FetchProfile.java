@@ -4,10 +4,11 @@
  */
 package org.hibernate.mapping;
 
+import java.io.Serializable;
+import java.util.LinkedHashSet;
+
 import jakarta.persistence.FetchType;
 import org.hibernate.annotations.FetchMode;
-
-import java.util.LinkedHashSet;
 
 /**
  * A mapping model object representing a {@link org.hibernate.annotations.FetchProfile}.
@@ -16,7 +17,7 @@ import java.util.LinkedHashSet;
  *
  * @see org.hibernate.engine.profile.FetchProfile
  */
-public class FetchProfile {
+public class FetchProfile implements Serializable {
 
 	private final String name;
 	private final MetadataSource source;
@@ -83,7 +84,7 @@ public class FetchProfile {
 	/**
 	 * An individual association fetch within the given profile.
 	 */
-	public static class Fetch {
+	public static class Fetch implements Serializable {
 		private final String entity;
 		private final String association;
 		private final FetchMode method;

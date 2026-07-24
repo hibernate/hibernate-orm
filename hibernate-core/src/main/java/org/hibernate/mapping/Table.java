@@ -12,8 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -41,6 +39,17 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
  * @author Gavin King
  */
 public class Table implements Serializable, ContributableDatabaseObject {
+	@FunctionalInterface
+	public interface InitCommandProducer
+			extends java.util.function.Function<SqlStringGenerationContext, InitCommand>, Serializable {
+	}
+
+	@FunctionalInterface
+	public interface ResyncCommandProducer
+			extends java.util.function.BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>,
+				Serializable {
+	}
+
 	private final String contributor;
 
 	private Identifier catalog;
@@ -67,9 +76,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private String options;
 	private String extraDeclarations;
 
-	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
-	private List<BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>> resyncCommandProducers;
-	private List<Function<SqlStringGenerationContext, InitCommand>> resetCommandProducers;
+	private List<InitCommandProducer> initCommandProducers;
+	private List<ResyncCommandProducer> resyncCommandProducers;
+	private List<InitCommandProducer> resetCommandProducers;
 
 	@Deprecated(since="6.2", forRemoval = true)
 	public Table() {
@@ -749,14 +758,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	/**
-	 * @deprecated Use {@link #addInitCommand(Function)} instead.
+	 * @deprecated Use {@link #addInitCommand(InitCommandProducer)} instead.
 	 */
 	@Deprecated
 	public void addInitCommand(InitCommand command) {
 		addInitCommand( ignored -> command );
 	}
 
-	public void addInitCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+	public void addInitCommand(InitCommandProducer commandProducer) {
 		if ( initCommandProducers == null ) {
 			initCommandProducers = new ArrayList<>();
 		}
@@ -772,7 +781,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						.toList();
 	}
 
-	public void addResyncCommand(BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand> commandProducer) {
+	public void addResyncCommand(ResyncCommandProducer commandProducer) {
 		if ( resyncCommandProducers == null ) {
 			resyncCommandProducers = new ArrayList<>();
 		}
@@ -788,7 +797,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 						.toList();
 	}
 
-	public void addResetCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+	public void addResetCommand(InitCommandProducer commandProducer) {
 		if ( resetCommandProducers == null ) {
 			resetCommandProducers = new ArrayList<>();
 		}

@@ -24,6 +24,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
@@ -79,6 +80,7 @@ public interface MetadataCollector {
 	Iterable<PersistentClass> getEntityBindings();
 
 	/// Register a mapped-superclass binding.
+	void addMappedSuperclass(ClassDetails mappedSuperclassClass, MappedSuperclass mappedSuperclass);
 	void addMappedSuperclass(Class<?> mappedSuperclassClass, MappedSuperclass mappedSuperclass);
 
 	/// Register a collection binding.

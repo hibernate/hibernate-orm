@@ -4,10 +4,10 @@
  */
 package org.hibernate.boot.pipeline.internal;
 
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 import org.hibernate.metamodel.spi.DelayedSessionFactoryReference;
 
 /// Builds the constructor plan for ORM's default SessionFactory construction
@@ -26,7 +26,7 @@ public final class SessionFactoryConstructionPlanBuilder {
 				state.identity(),
 				state.options(),
 				state.bootstrapContext(),
-				state.bootBindingModel(),
+				state.runtimeMappingHandoff(),
 				new DelayedSessionFactoryReference(),
 				buildRuntimeComponents( state ),
 				StandardServiceComponentsBuilder.build( state.options() )
@@ -51,14 +51,14 @@ public final class SessionFactoryConstructionPlanBuilder {
 			MetadataImplementor metadata,
 			SessionFactoryOptions options,
 			BootstrapContext bootstrapContext,
-			BootBindingModel bootBindingModel) {
+			RuntimeMappingHandoff runtimeMappingHandoff) {
 		return new SessionFactoryConstructionPlan(
 				metadata,
 				null,
 				null,
 				options,
 				bootstrapContext,
-				bootBindingModel,
+				runtimeMappingHandoff,
 				new DelayedSessionFactoryReference(),
 				SessionFactoryRuntimeComponentsBuilder.build( metadata, options, bootstrapContext ),
 				StandardServiceComponentsBuilder.build( options )

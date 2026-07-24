@@ -23,8 +23,9 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_
  *
  * @author Gavin King
  */
-public class OneToMany implements Value {
-	private final TypeConfiguration typeConfiguration;
+public class OneToMany implements Value, AppliedMappingPart {
+	private MappingRole mappingRole;
+	private transient TypeConfiguration typeConfiguration;
 	private final Table referencingTable;
 
 	private String referencedEntityName;
@@ -37,6 +38,7 @@ public class OneToMany implements Value {
 	}
 
 	private OneToMany(OneToMany original) {
+		this.mappingRole = original.mappingRole;
 		this.typeConfiguration = original.typeConfiguration;
 		this.referencingTable = original.referencingTable;
 		this.referencedEntityName = original.referencedEntityName;
@@ -47,6 +49,20 @@ public class OneToMany implements Value {
 	@Override
 	public Value copy() {
 		return new OneToMany( this );
+	}
+
+	@Override
+	public MappingRole getMappingRole() {
+		return mappingRole;
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		this.mappingRole = mappingRole;
+	}
+
+	public void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	public PersistentClass getAssociatedClass() {

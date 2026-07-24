@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.models.spi.ModelsContext;
@@ -13,7 +14,7 @@ import jakarta.persistence.Convert;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class ConvertJpaAnnotation implements Convert {
+public class ConvertJpaAnnotation implements Convert, Serializable {
 
 	private java.lang.Class<? extends jakarta.persistence.AttributeConverter> converter;
 	private String attributeName;

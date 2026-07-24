@@ -157,7 +157,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.action.queue.internal.decompose.entity.DeleteDecomposer;
@@ -3009,7 +3008,9 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachTableDetails(Consumer<TableDetails> consumer) {
-		CollectionHelper.forEach( getTableMappings(), consumer );
+		for ( TableMapping tableMapping : getTableMappings() ) {
+			consumer.accept( tableMapping );
+		}
 	}
 
 	/**

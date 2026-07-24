@@ -879,7 +879,7 @@ class ToOneAttributeBinder {
 	private static List<Column> referencedPropertyColumns(TargetEntityBinding target, String referencedPropertyName) {
 		final Property property = target.typeBinder().getTypeBinding().getReferencedProperty( referencedPropertyName );
 		if ( property.getValue() instanceof Component component ) {
-			component.sortProperties();
+			component.completeShape();
 		}
 		return new ArrayList<>( property.getColumns() );
 	}

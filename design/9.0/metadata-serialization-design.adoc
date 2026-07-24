@@ -1,0 +1,274 @@
+= Metadata Serialization and the Mapping-Resolution Boundary
+:toc:
+
+This note defines the ORM 9 boundary for restoring an archived boot model and
+continuing from that model into runtime `SessionFactory` construction.
+
+== Decision
+
+`MetadataArchive#restore(...)` is factory-ready, not inspection-only.
+
+Restoration returns `RestoredMetadata`, not a bare `Metadata`. It exposes the
+public `Metadata` inspection view through `getMetadata()` and retains the
+resolved-mapping product needed by `buildSessionFactory()`. The internal
+`ResolvedMappingImplementor` and runtime handoff are not part of the public
+archive API.
+
+Raw archive reading remains data-only.  Class loading, Hibernate Models
+restoration, service attachment, type resolution, and runtime-handoff
+reconstruction happen only during explicit restoration.
+
+Archive production is opt-in through
+`hibernate.boot.metadata_serialization.enabled`. When disabled, normal mapping
+resolution does not allocate a serialization collector or retain
+`BasicValueResolutionDetails`. When enabled, those details are retained by
+basic-value identity, but stable roles, immutable restoration recipes, and the
+resolution-environment fingerprint are created only when
+`MetadataSerialization.serialize(...)` is called.
+
+== Resolved Mapping Boundary
+
+Normal mapping resolution produces:
+
+[source]
+----
+CategorizedDomainModel
+    -> BindingState / BootBindingModel
+    -> MetadataImpl
+    -> ResolvedMapping
+        -> ResolvedMappingImplementor (legacy Metadata view)
+----
+
+The archive preserves the declarative `MetadataState` alongside snapshots of
+the derived mapping resolution and runtime handoff facts. Restoration therefore
+reconstructs the complete `ResolvedMapping` product without retaining
+`BootBindingModel`.
+
+The mapping graph deliberately treats products such as
+`BasicValue.Resolution` as derived state. Restoration rebuilds those products
+from declarative recipes before exposing the result for inspection or
+SessionFactory construction.
+
+== Archive Representation
+
+`MetadataArchive` is opaque. Its standard implementation writes:
+
+[source]
+----
+ORM archive header, format version (currently 1), and Hibernate ORM version
+ModelsArchive
+SerializedResolvedMapping
+    MetadataState
+    MappingResolutionSnapshot
+    RuntimeMappingHandoffSnapshot
+----
+
+The ORM header is validated before restoration and unsupported format versions
+are rejected. The producer's exact Hibernate ORM version is stored in the
+header and must match the consumer. The serialized payload has a defensive size
+limit. The format is still unreleased, so format version 1 may evolve until the
+ORM 9 contract is published.
+
+`MetadataSerialization.read(...)` reconstructs only this data representation.
+It does not restore Hibernate Models, load mapped application classes, attach
+services, or create runtime mapping state.
+
+Archives are trusted build artifacts. They contain Java-serialized Hibernate
+and Hibernate Models state and must not be accepted from an untrusted network,
+tenant, or user. Format validation, payload bounds, and payload-class
+guardrails detect corruption and architectural boundary violations; they do
+not turn the archive into a safe untrusted-data interchange format.
+
+== Snapshot Products
+
+Factory-ready restoration uses three explicit archive products:
+
+`MetadataState`::
+The declarative `org.hibernate.mapping` graph and completed metadata
+registrations.
+
+`MappingResolutionSnapshot`::
+Stable recipes sufficient to reconstruct derived mapping resolutions in a new
+`TypeConfiguration`, dialect, service, and class-loading environment.  A basic
+value recipe records type names, Java/type references, converter declarations,
+temporal/enumeration settings, JDBC preferences, parameters, and its stable
+mapping role.  It does not serialize live `BasicType`, `JavaType`, `JdbcType`,
+converter instances, or `BasicValue.Resolution` implementations.
+
+Applied basic values have unique intrinsic `MappingRole` keys. Multiple
+equivalent roleless declaration projections may share one traversal-derived
+fallback role; the snapshot stores one declarative recipe for that role and
+restoration applies it to every such projection.
+
+An attribute-converter declaration records the managed converter class and any
+effective domain-type override which influenced resolution.  Auto-apply and
+overrideability are converter-selection concerns and are not retained after a
+converter has been selected for a mapping value.  Descriptors which retain a
+caller-provided converter instance, or which otherwise cannot be reconstructed
+from managed class and type declarations, cause archive creation to fail.
+
+The live resolved mapping does not eagerly contain this snapshot. Its optional
+serialization capture state retains `BasicValueResolutionDetails`; archive
+serialization freezes those details into `BasicValueRestorationRecipe` values
+and immediately writes the resulting snapshot.
+
+`RuntimeMappingHandoffSnapshot`::
+The finalized facts from the boot binding model which are still consumed while
+building the runtime and JPA metamodels.  These include applied
+mapped-superclass usages, embeddable usages, identifier specialization facts,
+and the static-metamodel injection plan.  The snapshot uses stable managed-type
+and attribute/role keys, not mapping-object identity and not mutable
+`BindingState`.
+
+Mapped-superclass declaration binding may materialize compatibility
+`Component` templates in addition to the concrete component occurrences
+applied to entity mappings. These are classified explicitly while binding.
+The declaration component retained by the finalized mapping graph remains a
+runtime handoff because generic metamodel construction consumes it; superseded
+declaration copies are excluded. A concrete runtime occurrence without a
+stable mapping role is always rejected.
+
+The archive must not serialize `CategorizedDomainModel`, mutable `BindingState`,
+or `BootBindingModel` as implementation graphs.  They are construction-phase
+products.  Only their finalized runtime handoff facts belong in the archive.
+
+`ResolvedMapping` consequently exposes the immutable runtime handoff as an
+independent downstream product. A normal live resolution adapts its completed
+`BootBindingModel` to the handoff contract, while archive restoration supplies
+the immutable snapshot implementation directly.
+
+The runtime handoff snapshot is also the handoff used by normal live factory
+construction, so it is not serialization-only retained state. The opt-in cost
+specific to archive production is the `MappingResolutionDetailsCollector` and
+its retained `BasicValueResolutionDetails`.
+
+== Restoration Flow
+
+[source]
+----
+read MetadataArchive                          data only
+    -> restore ModelsArchive                  restored ModelsContext
+    -> restore MetadataState                  live mapping graph
+    -> attach services and class loading
+    -> resolve MappingResolutionSnapshot      derived mapping/type state
+    -> restore RuntimeMappingHandoffSnapshot  immutable runtime handoff
+    -> create restored ResolvedMapping
+    -> return RestoredMetadata
+        -> inspect Metadata
+        -> build SessionFactory
+----
+
+Resolution must use the supplied restoration environment.  It must not reuse
+dialect-sensitive or service-backed instances captured in the producer
+process.
+
+`RestoredMetadata#buildSessionFactory()` uses the same
+`StandardServiceRegistry` supplied to `restore(...)`. The caller owns that
+registry and the returned `SessionFactory`. A restored product does not retain
+the producer-side resolution-details collector and is not itself an archive
+production source.
+
+== Generator Interaction
+
+Bound generator declarations are part of declarative metadata state. The
+current mapping model retains archive-safe `GeneratorCreator` recipes and
+localized annotation state, and creates runtime generators only when supplied
+a runtime `GeneratorCreationContext`.
+
+Generator recipes may depend on the reconstructed type resolution of their
+mapped value, but they must not retain `MetadataBuildingContext`,
+`ModelsContext`, bean containers, service registries, mapping values, or
+members as hidden closure state.  Annotation localization, including
+`@GenericGenerator` localization, occurs during source binding.
+
+The proposed explicit generator-descriptor abstraction is a follow-on design
+described in `generator-descriptor-design.adoc`; it is not part of the metadata
+archive contract.
+
+== Compatibility and Validation
+
+Restoration rejects an archive when its resolution recipes cannot be
+reconstructed in the supplied environment. Compatibility checks include:
+
+* the ORM archive header, exact format version, exact Hibernate ORM version,
+  plus validation performed by the Hibernate Models archive;
+* the exact dialect class;
+* preferred JDBC type codes and type-affecting mapping options captured by
+  `MappingResolutionEnvironmentFingerprint`;
+* complete, unique stable roles for every archived basic-value recipe and
+  embeddable runtime handoff;
+* successful resolution of declarative converter, user-type, Java-type,
+  JDBC-type, mutability-plan, and generator classes or registration names in
+  the consumer environment.
+
+Instance-only type strategies with no declarative reconstruction form are
+rejected during archive production. Explicit live SQL function descriptors are
+also rejected; functions contributed through `FunctionContributor` are rebuilt
+while restoring. The first format intentionally rejects uncertain
+compatibility rather than silently constructing a semantically different
+runtime model.
+
+There is intentionally no forward or backward archive compatibility promise
+across Hibernate ORM versions. Within one exact ORM version, restoration also
+requires a compatible mapping environment as described above. A malformed or
+incompatible archive fails with `MetadataSerializationException`; invalid API
+arguments fail with `IllegalArgumentException`, and attempting to serialize a
+mapping built without opt-in capture fails with `IllegalStateException`.
+
+A `CompositeUserType` applied to a component is represented declaratively by
+its implementation class name. The live user-type instance and the component
+property-access strategy derived from it are transient mapping state.
+Restoration recreates both, honoring the same
+`hibernate.cdi.extensions` setting used during normal metadata binding. Thus,
+archive restoration does not retain the producer-side instance or change
+whether CDI participates in creating the extension.
+
+== Public API Boundary
+
+The public archive API is intentionally small. `MetadataSerialization` creates
+and reads an opaque `MetadataArchive`; the archive writes itself and restores
+against a `StandardServiceRegistry`. Snapshot records, capture state, graph
+indexes, and restoration contexts live in `org.hibernate.boot.serial.internal`.
+There is no public serialization SPI in the first version.
+
+`MetadataArchive#restore(...)` returns `RestoredMetadata`, which exposes the
+restored `Metadata` for inspection and provides the supported public transition
+to `SessionFactory` construction. The internal resolved mapping and runtime
+handoff remain implementation details. Factory settings come from the supplied
+service registry; there is no serialization-specific factory builder or
+customization SPI.
+
+== Verification Boundary
+
+The archive tests write and read real bytes and verify that:
+
+* every indexed `BasicValue` has a reconstructed resolution;
+* named queries, result-set mappings, graphs, filters, collection comparators,
+  polymorphic embeddables, and generator declarations survive restoration;
+* the public `RestoredMetadata` product builds and closes a `SessionFactory`;
+* a persist/query round trip exercises converters, generators, collections,
+  and JDBC mappings;
+* specialized generic mapped-superclass attributes and identifiers, generic
+  embeddable usages, and static metamodel injection reach the runtime model;
+* missing, unknown, or duplicate stable roles, missing recipes,
+  instance-only descriptors, and incompatible resolution environments fail
+  explicitly.
+
+Direct Java serialization of individual `org.hibernate.mapping` objects is not
+part of this contract. Those objects may contain transient derived or
+service-backed state; `MetadataArchive` is the supported serialization form.
+
+== Guardrails
+
+* `MetadataArchive` is opaque and data-only until explicit restoration.
+* Archives are trusted, version-exact build artifacts, not untrusted input.
+* The public archive contract does not expose Java `Externalizable` mechanics.
+* Restored metadata is factory-ready.
+* Mutable binding and categorization graphs are not archive formats.
+* Derived type objects and service-backed strategies are reconstructed, not
+  serialized.
+* Snapshot references use stable semantic keys rather than object identity.
+* Runtime construction consumes explicit restored products and does not rerun
+  source discovery or annotation binding.
+* Consumers build a factory through `RestoredMetadata`, without depending on
+  `org.hibernate.boot.pipeline.internal`.

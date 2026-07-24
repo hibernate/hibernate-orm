@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.models.spi.ModelsContext;
@@ -16,7 +17,7 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class NamedSubgraphJpaAnnotation implements NamedSubgraph {
+public class NamedSubgraphJpaAnnotation implements NamedSubgraph, Serializable {
 	private String name;
 	private java.lang.Class<?> type;
 	private jakarta.persistence.NamedAttributeNode[] attributeNodes;

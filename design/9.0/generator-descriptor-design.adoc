@@ -1,272 +1,510 @@
 = Generator Descriptor Design
 :toc:
 
-This note captures the ORM 9 design direction for generator creation across
-mapping-model and runtime-model construction.
+Status: Deferred. Identifier-generator descriptor/source and UUID-interpretation
+decisions are intentionally postponed while boot-model serialization work
+continues in other areas.
 
-The immediate trigger is the cleanup of `org.hibernate.mapping` objects that
-were creating generators directly.  Identifier generator creation was moved out
-of `SimpleValue` / `KeyValue`, but value generator creation on `Property`
-raises a separate phase-ownership question.
+This note defines the ORM 9 direction for representing bound generator
+declarations and creating runtime `Generator` instances.
 
-== Problem Statement
+The immediate goal is to replace opaque, serializable `GeneratorCreator`
+closures with explicit declarative descriptors. The descriptor is a
+boot/runtime handoff product: source binding creates it, mapping objects retain
+it, schema tooling consumes its exportable contribution, and runtime-model
+construction asks it to create the runtime generator.
 
-Hibernate currently mixes at least three generator concerns:
+== Post-Rebase Baseline
 
-* discovering and binding the generator declaration from annotations, XML, or
-  programmatic mapping;
-* creating the runtime `Generator` instance used by entity persisters and
-  mutation coordinators;
-* collecting schema exportables contributed by legacy
-  `ExportableProducer` identifier generators.
+The deprecated `ForeignGenerator`, `UUIDHexGenerator`, `GUIDGenerator`, and
+`org.hibernate.id.UUIDGenerator` classes have been removed.
 
-Historically, these concerns were hidden behind mapping objects such as
-`SimpleValue`, `Component`, and `Property`.  That made mapping objects depend
-on broad construction context and service access, and it made generator
-instantiation happen earlier than we really want.
+The surviving generator paths are now materially clearer:
 
-The pressure is especially visible for CDI integration.  If creating a
-generator means asking the bean container for a managed instance, then creating
-generators during boot mapping construction pulls runtime/bean lifecycle
-concerns into the wrong phase.
+* `GenerationType.UUID` and implicit UUID generation are handled directly by
+  `GeneratorAnnotationHelper#handleUuidStrategy(...)` using
+  `org.hibernate.id.uuid.UuidGenerator`. They do not pass through a legacy
+  strategy string.
+* Derived identifiers are mapping semantics. `@MapsId` and related derived-id
+  bindings install an internal insert-only `BeforeExecutionGenerator` which
+  obtains the associated identifier through
+  `IdentifierGeneratorHelper#getForeignId(...)`. They do not use a `foreign`
+  strategy.
+* `@GenericGenerator` is no longer a named legacy strategy declaration. It is
+  an `@IdGeneratorType(GenericGeneratorGeneration.class)` annotation with a
+  required generator `type` and declarative parameters. It is a migrational
+  bridge to a dedicated user-defined `@IdGeneratorType` annotation.
+* Sequence, table, identity, UUID, annotation-based custom, and derived-id
+  generation all have direct semantic interpretations.
+* XML generic-generator registrations and some programmatic/named-definition
+  paths still use `IdentifierGeneratorDefinition`, a strategy class name, and
+  a parameter map.
 
-== Current Branch Posture
+`GeneratorStrategies` has been reduced accordingly. Its remaining named
+compatibility inputs are `native`, `assigned`, `enhanced-sequence`, `sequence`,
+`enhanced-table`, `table`, `identity`, `increment`, and `select`, plus an
+arbitrary generator class name. It also still converts some JPA generation
+types to class-name strings for existing definition-based paths. It is now
+clearly compatibility machinery, not the architecture for new binding code.
 
-Further structural refactoring of identifier generation should wait until the
-separate base-branch PR removing `@GenericGenerator`, `ForeignGenerator`, and
-`UUIDHexGenerator` is integrated.  That PR changes the set of compatibility
-inputs that still need to be represented, and it should substantially reduce
-the importance of legacy strategy-name interpretation as an architectural
-center.
+== Current Runtime Shape
 
-Until then, this branch should avoid building a large abstraction around the
-current `GeneratorStrategies` flow.  Small cleanups are still useful when they
-remove broad context reach-through or stale compatibility bridges, but the
-descriptor shape should be finalized against the post-removal generator API.
+The mapping graph already avoids retaining runtime generator instances:
 
-Derived identifiers are an important data point.  A derived identifier is
-mapping semantics, not a user-selected generator strategy.  The branch now
-follows the conceptual approach used by `main`: `@MapsId`/derived identifier
-binding installs an internal insert-only `BeforeExecutionGenerator` which calls
-`IdentifierGeneratorHelper#getForeignId(...)`, instead of representing the
-mapping as the legacy `foreign` generator.  That keeps derived-id behavior
-available even when `ForeignGenerator` is removed as a public/legacy generator
-class.
+* `SimpleValue` retains a `GeneratorCreator` for identifier generation;
+* `Property` retains a `GeneratorCreator` for version and ordinary generated
+  values;
+* metadata finalization creates identifier generators to discover and register
+  schema exportables;
+* `SessionFactory` construction creates the runtime identifier and value
+  generators from the retained creators.
 
-== Generator Type Interpretation
+This phase split is directionally correct, but `GeneratorCreator` is too opaque
+to be the durable representation. Most creator instances are lambdas which
+capture annotations, class names, configuration maps, or derived-id facts.
+Archive support made the problem visible by requiring these closures to be
+serializable and, for annotation-based identifiers, by requiring a transient
+`ModelsContext` to be reattached after restoration.
 
-The current identifier-generator flow still has too many paths which interpret
-"what generator should be used" in slightly different forms:
+The descriptor work should preserve the phase split while making the retained
+state explicit and inspectable.
 
-* JPA `GenerationType` is converted to a legacy strategy string by
-  `GeneratorStrategies#generatorStrategy(...)`;
-* named `@SequenceGenerator` and `@TableGenerator` declarations become
-  `IdentifierGeneratorDefinition` instances with strategy names and parameter
-  maps;
-* `@IdGeneratorType` bypasses most of the string strategy flow and installs a
-  `GeneratorCreator` directly;
-* legacy names such as `native`, `sequence`, `table`, `identity`, `increment`,
-  `select`, and `guid` are interpreted by `GeneratorStrategies`;
-* XML and global registrations have historically also fed generic strategy
-  strings into the same path;
-* `@MapsId` / derived identifiers should not participate in this strategy-name
-  flow at all.
+== Decisions
 
-This makes `GeneratorStrategies` look more central than it should be.  It is
-really a compatibility adapter for legacy strategy names and a temporary bridge
-between declaration binding and runtime generator creation.  It should not
-become the target architecture.
+=== Descriptors are declarative boot state
 
-The descriptor direction should centralize generator interpretation around a
-bound generator recipe.  Source binding should interpret the user's declaration
-once, producing a role-aware descriptor such as:
+A descriptor records the already-interpreted generator declaration. It may
+retain:
 
-* identity identifier generator;
-* sequence-backed identifier generator;
-* table-backed identifier generator;
-* UUID identifier generator;
-* custom `@IdGeneratorType` generator;
-* compatibility legacy strategy generator, only for names still supported after
-  the base-branch generator-removal PR;
-* derived identifier generator, represented by derived-id mapping semantics and
-  the association property it derives from.
+* a localized dynamic annotation implementation;
+* a generator class or declarative class name;
+* immutable configuration parameters;
+* built-in semantic facts such as identity, UUID, sequence, table, assigned,
+  or derived-id generation;
+* stable role information needed for diagnostics.
 
-After the `@GenericGenerator` / `ForeignGenerator` / `UUIDHexGenerator` removal
-PR is integrated, we should audit `GeneratorStrategies` again.  The likely
-target is to reduce it to a narrow legacy-name interpreter or delete it
-entirely if all surviving supported inputs can bind directly to descriptors.
-The important rule is that arbitrary strategy strings should not remain the
-main internal representation if the public API no longer exposes that concept
-broadly.
+A descriptor must not retain a `MetadataBuildingContext`, `BootstrapContext`,
+`ModelsContext`, bean container, service registry, mapping graph object,
+runtime `Generator`, or other service-backed instance. The existing
+`GeneratorCreationContext` supplies the mapping value, root entity, property,
+member, database, services, and SQL-generation context when creation is
+requested.
+
+Annotation selection and localization, including localization of a
+`@GenericGenerator` declared on a generic mapped superclass, must finish during
+binding. Runtime creation must not repeat source discovery or require
+`GeneratorCreator#reattachModelsContext(...)`.
+
+=== Identifier and value descriptors are separate contracts
+
+Identifier generators have schema-exportable and identifier-specific timing
+responsibilities which ordinary value generators do not. The initial design
+should therefore use separate contracts rather than forcing both through one
+large interface:
+
+[source,java]
+----
+interface IdentifierGeneratorDescriptor {
+    Generator createGenerator(GeneratorCreationContext context);
+    void contributeExportables(GeneratorCreationContext context);
+}
+
+interface ValueGeneratorDescriptor {
+    Generator createGenerator(GeneratorCreationContext context);
+}
+----
+
+The exact names may be shortened if implementation experience suggests a
+better vocabulary, but the role split is intentional. Shared instantiation,
+initialization, configuration, CDI, and validation code belongs in internal
+support, not in a public common supertype.
+
+These are internal contracts. Implementations belong under an internal boot
+generator package; they are not new public generator SPIs.
+
+=== Use the existing creation context first
+
+`GeneratorCreationContext` already carries the runtime inputs used by current
+generator creation. The first descriptor implementation should consume it
+directly. Introducing another runtime creation context before a concrete
+missing input is identified would add vocabulary without improving the phase
+boundary.
+
+The context may be narrowed later if the descriptor implementations reveal a
+stable smaller service bundle.
+
+=== Preserve current CDI behavior
+
+Annotation-based and named custom generators currently use the configured bean
+container when one is available. The descriptor refactoring should preserve
+that behavior. Disallowing CDI-managed identifier generators would be a
+separate compatibility decision and is not required by this design.
+
+== Bound Descriptor Forms
+
+Source binding should normalize declarations into a small set of explicit
+descriptor forms.
+
+Annotation-based identifier descriptor::
+Retains the localized generator annotation, its annotation type, and the class
+declared by `@IdGeneratorType`. This covers dedicated custom generator
+annotations and `@GenericGenerator`; the latter retains its delegate class and
+parameters in the localized annotation.
+
+Sequence and table identifier descriptors::
+Retain the normalized JPA declaration and fallback allocation facts. They
+create `SequenceStyleGenerator` or `org.hibernate.id.enhanced.TableGenerator`
+without converting the declaration to an arbitrary strategy string.
+
+Identity and UUID identifier descriptors::
+Represent these built-in semantics directly. UUID generation uses
+`org.hibernate.id.uuid.UuidGenerator` and its localized configuration.
+
+Assigned identifier descriptor::
+Represents application-assigned identifiers explicitly rather than by testing
+a creator implementation or string name.
+
+Derived identifier descriptor::
+Retains the declaring entity and association attribute needed by
+`IdentifierGeneratorHelper#getForeignId(...)`. It remains internal mapping
+semantics and is never interpreted as a named generator strategy.
+
+Legacy named-strategy descriptor::
+Retains the surviving strategy class name and immutable parameters for XML,
+programmatic, or compatibility definition paths. Only this descriptor uses
+`GeneratorStrategies` and class-name loading.
+
+Annotation-based value descriptor::
+Retains the localized value-generation annotation, annotation type, and class
+declared by `@ValueGenerationType`. Runtime creation performs the existing
+constructor selection, initialization, configuration, and version-timing
+validation.
 
 == Phase Ownership
 
-Generator binding and generator instantiation should not be owned by the same
-object just because they are both "generator work".
-
 Mapping-model binding owns::
-Interpreting source declarations and recording the generator recipe.  This is
-where annotation/XML/programmatic input is normalized into stable boot mapping
-facts.
+Selecting and localizing the declaration, validating mutually exclusive
+annotations, normalizing parameters, choosing the descriptor form, and storing
+it on the mapped value or property.
+
+Metadata finalization and schema tooling own::
+Asking identifier descriptors to contribute schema exportables. They must not
+rediscover source annotations or strategy declarations.
 
 Runtime-model construction owns::
-Creating runtime `Generator` instances from those recipes.  This is where
-`GeneratorCreationContext`, managed-bean access, runtime services, runtime
-metadata, and factory settings naturally belong.
+Creating runtime generator instances from descriptors and an explicit
+`GeneratorCreationContext`, then validating runtime-dependent generator facts.
 
-Schema tooling owns::
-Consuming schema exportable contributions.  This currently intersects with
-runtime generator creation because legacy custom identifier generators may
-implement `ExportableProducer`.
+Mapping objects are descriptor carriers. They do not create generators and do
+not recover creation services from retained boot contexts.
 
-`GeneratorBinder` is part of mapping-model binding.  It should bind generator
-declarations and produce generator recipes.  It should not become the long-term
-home for runtime value-generator instantiation simply to remove a method from
-`Property`.
+== Identifier Exportables
 
-== Proposed Descriptor
+Identifier generation remains the harder case because `Configurable` and
+`ExportableProducer` define an ordered lifecycle:
 
-Introduce a generator descriptor product that represents the bound generator
-recipe without necessarily creating the runtime generator instance.
+[source]
+----
+instantiate -> configure -> register exportables -> initialize
+----
 
-Working name:
+The initial descriptor implementation should preserve this lifecycle exactly.
+For a custom or legacy generator, `contributeExportables(...)` may instantiate
+and configure a temporary generator, register its exportables, and discard it.
+Runtime construction creates a separate runtime instance, as it does today.
+
+Built-in sequence and table descriptors should ultimately contribute their
+known database objects directly from the bound recipe. That avoids temporary
+runtime-generator creation during metadata finalization. It is an optimization
+and ownership improvement, not a prerequisite for replacing creator closures.
+
+Archive restoration does not rerun source binding or metadata finalization.
+The restored `Database` already contains the exported relational objects;
+runtime generator creation proceeds from the restored descriptor and mapping
+graph.
+
+== Relationship to `IdentifierGeneratorDefinition`
+
+`IdentifierGeneratorDefinition` remains the string-and-parameter compatibility
+representation for named definitions. It should not become the descriptor
+supertype.
+
+As direct sequence, table, and annotation-based binding moves to descriptors,
+uses of `IdentifierGeneratorDefinition` should contract toward the remaining
+XML/programmatic named-definition boundary. A definition is interpreted once
+into a descriptor; runtime construction should not interpret it again.
+
+Similarly, `GeneratorStrategies#generatorStrategy(...)` should disappear from
+direct semantic binding paths. `GeneratorStrategies#generatorClass(...)` and
+`mapLegacyNamedGenerator(...)` remain available only to the legacy
+named-strategy descriptor while those inputs are supported.
+
+== Alternative: An Identifier Generator Source Fact
+
+The descriptor design above treats the retained object primarily as a recipe
+for creating and preparing a `Generator`. A stronger alternative is to make
+the retained object the fully interpreted source fact for identifier
+generation. For discussion, call this object `IdentifierGeneratorSource`.
+
+[source]
+----
+declaration -> IdentifierGeneratorSource -> schema export
+                                      \-> runtime Generator
+----
+
+Under this model, annotation, XML, and programmatic declarations are
+interpreted once during mapping-model binding. The resulting source manages
+the later phase boundary:
+
+. metadata binding creates the source;
+. schema tooling asks the source to contribute exportables, if any; and
+. `SessionFactory` construction asks the source to create and initialize the
+  runtime generator, possibly obtaining that generator from CDI.
+
+The source is still declarative boot state. It may retain the resolved
+generator class, immutable custom parameters, resolved sequence or table
+names, allocation and optimizer facts, identifier type and timing facts, and
+other stable configuration. It must not retain boot contexts, model contexts,
+services, mapping graph objects, bean instances, or runtime generators.
+
+=== Possible contract shape
+
+A minimal behavioral contract could combine export contribution and runtime
+creation:
 
 [source,java]
 ----
-GeneratorDescriptor
+interface IdentifierGeneratorSource extends Serializable {
+    void contributeExportables(GeneratorExportContext context);
+    Generator createGenerator(GeneratorCreationContext context);
+}
 ----
 
-The descriptor should be a boot/runtime handoff product.  It records enough
-information to later create a runtime generator with an explicit creation
-context.
-
-Candidate responsibilities:
-
-* identify whether the descriptor is for an identifier, version, or ordinary
-  generated property;
-* retain the source role, declaring type, property, value, and member details
-  needed by `GeneratorCreationContext`;
-* retain the resolved generator creator/factory, generator class, annotation
-  metadata, legacy strategy, and configuration parameters;
-* expose generator timing facts that are knowable without constructing the
-  generator, if available;
-* create the runtime `Generator` from a runtime-model construction context.
-
-The descriptor should not expose `MetadataBuildingContext`, `BootstrapContext`,
-or raw service lookup as stored mapping-object state.
-
-== Runtime Creation Context
-
-The descriptor's terminal operation should be runtime-oriented, for example:
+However, CDI lifecycle should preferably remain owned by Hibernate. A source
+which obtains CDI beans itself would have to understand bean-container
+lifecycle and release semantics. A more constrained contract would instead
+describe the runtime class and initialize the instance supplied by Hibernate:
 
 [source,java]
 ----
-Generator createGenerator(RuntimeGeneratorCreationContext context);
+interface IdentifierGeneratorSource<G extends Generator> extends Serializable {
+    Class<G> getGeneratorClass();
+    void contributeExportables(GeneratorExportContext context);
+    void initializeGenerator(G generator, GeneratorCreationContext context);
+}
 ----
 
-The exact context name is open, but it should be narrower and more phase-aware
-than passing `RuntimeModelCreationContext` everywhere by default.
+The exact contract requires more work. In particular, on-execution generators,
+assigned identifiers, and built-in generators which need no instantiated
+runtime object during schema tooling might not all benefit from a single
+generic shape. The important distinction is that the source owns interpreted
+configuration while Hibernate owns runtime instance acquisition.
 
-Likely inputs include:
+Creating a custom source from an annotation would also require a source
+factory contract, for example:
 
-* `Database`;
-* `ServiceRegistry` or a narrower service bundle if practical;
-* `SqlStringGenerationContext`;
-* default catalog and schema;
-* persistent class / root class / property / value;
-* `MemberDetails`;
-* type information needed by generator validation.
+[source,java]
+----
+interface AnnotationBasedIdentifierGeneratorSource<A extends Annotation> {
+    IdentifierGeneratorSource<?> createSource(
+            A annotation,
+            IdentifierGeneratorSourceCreationContext context);
+}
+----
 
-The important direction is that the context is supplied by the runtime-model
-construction phase, not recovered from `org.hibernate.mapping` objects.
+The creation context must provide enough mapping, dialect, naming, and type
+information to interpret the declaration. The returned source must copy the
+required facts and not retain the context.
 
-== Identifier Generators And Exportables
+=== Lifecycle improvement
 
-Identifier generators are harder than ordinary value generators because schema
-tooling must still see exportable contributions from generators such as
-sequence/table generators and from legacy custom generators implementing
-`ExportableProducer`.
+For a source-aware generator, exportable registration no longer requires a
+temporary runtime generator:
 
-There are two possible target shapes:
+[source]
+----
+metadata:        interpret declaration -> source
+schema tooling:  source -> register exportables
+runtime:         source -> obtain generator through Hibernate/CDI
+                        -> initialize generator
+                        -> retain generator
+----
 
-Descriptor exposes exportables without creating the runtime generator::
-This is ideal for built-in generators whose schema contribution is known from
-the bound recipe.  For example, a descriptor for a sequence-backed generator can
-contribute the sequence object directly from its resolved parameters.
+This removes duplicate generator construction and avoids replaying
+configuration merely to discover relational objects. It also ensures that CDI
+is a runtime concern unless source creation itself explicitly requires a
+separate boot-time service.
 
-Descriptor creates a generator for exportable discovery when required::
-This is the compatibility fallback for legacy/custom generators where the only
-known way to discover exportables is to instantiate the generator and ask
-whether it implements `ExportableProducer`.
+The source/runtime boundary must nevertheless preserve any ordering required
+by a runtime implementation. A source-aware runtime generator must receive all
+state it previously derived from `configure()` and `registerExportables()`
+before `Configurable#initialize(...)` or first use. Moving export registration
+to the source must not silently omit instance initialization formerly
+performed as a side effect of `registerExportables(...)`.
 
-The second form should be treated as a compatibility bridge, not the desired
-architecture.  It preserves schema tooling while allowing built-in generators
-to move toward descriptor-owned exportable contribution.
+=== Compatibility with existing custom generators
 
-== CDI Policy
+Existing custom generators cannot in general be converted automatically into
+pure source facts. Their exportable structure may be calculated by constructors,
+`AnnotationBasedGenerator#initialize(...)`, `Configurable#configure(...)`, or
+`ExportableProducer#registerExportables(...)` operating on the generator
+instance.
 
-If we choose to disallow CDI-managed identifier generators, this design becomes
-simpler because schema tooling and identifier-generator creation can remain
-closer together without crossing a managed-bean lifecycle boundary.
+Existing `@IdGeneratorType` and named-strategy generators should therefore be
+adapted by an internal legacy source. It retains the localized annotation or
+class name and immutable parameters, and preserves the current lifecycle:
 
-That policy decision is separate from the descriptor shape.  Even if CDI-hosted
-identifier generators are disallowed, the descriptor is still useful because it
-keeps mapping objects as carriers of stable generator facts rather than owners
-of generator instantiation.
+* during schema tooling it may instantiate, initialize, configure, register
+  exportables, and discard a temporary generator;
+* during runtime construction it creates a separate instance and performs the
+  complete required lifecycle before retaining it.
 
-Ordinary value generators are the better place to preserve CDI-hosted generator
-creation because they are naturally created during runtime-model construction
-and do not have the same schema-exportable pressure.
+The lifecycle of one generator instance must never be divided between the two
+phases. In particular, Hibernate must not invoke `registerExportables(...)` on
+a temporary instance and assume that a different runtime instance can proceed
+directly to `Configurable#initialize(...)`.
 
-== Property Value Generators
+This adapter gives existing custom generator implementations zero mandatory
+changes. They do not need to be serializable and do not implement the source
+contract, but they do not receive the cleaner source-aware lifecycle.
 
-`Property` exposes the bound generator recipe through
-`getValueGeneratorCreator()`.  That is the useful compatibility shape for now:
-the mapping object carries the recipe, but does not create the runtime
-generator.
+=== Opt-in custom source SPI
 
-`Property#createGenerator(RuntimeModelCreationContext)` was removed.  Runtime
-entity-persister construction now asks the `Property` for its
-`GeneratorCreator` and creates the runtime `Generator` with an explicit
-runtime-side `GeneratorCreationContext`.
+Source-aware custom generation should initially be opt-in rather than changing
+the meaning of `@IdGeneratorType`. A possible incubating meta-annotation is:
 
-Do not move this work "back" to `GeneratorBinder`.  That would move runtime
-generator creation into a mapping-model binding helper and blur the phase
-boundary in the opposite direction.
+[source,java]
+----
+@IdGeneratorSourceType(CustomSequenceSource.class)
+@Retention(RUNTIME)
+@Target(ANNOTATION_TYPE)
+public @interface CustomSequence {
+    // declarative configuration
+}
+----
 
-== Open Questions
+The resulting compatibility model is:
 
-* What is the final package/name for the descriptor:
-  `GeneratorDescriptor`, `GeneratorRecipe`, `BoundGenerator`, or a role-specific
-  split?
-* Should identifier and value generators share one descriptor contract, or
-  should identifier descriptors expose schema/exportable behavior separately?
-* Which generator timing facts can be known from descriptors without
-  constructing the generator?
-* What is the exact policy for CDI-hosted identifier generators?
-* Where should descriptor-driven runtime creation live:
-  runtime-model construction, persister construction, or a small
-  generator-runtime coordinator?
-* After the base-branch generator-removal PR is integrated, which legacy
-  strategy names remain as supported compatibility inputs, and should they be
-  represented as descriptor inputs or rejected with migration guidance?
-* Should `GeneratorStrategies` survive as a narrow compatibility adapter, or
-  should generator-source binding produce descriptors directly with no
-  intermediate strategy string?
+* built-in identifier generation uses internal source implementations;
+* a new source-aware annotation uses its declared source factory;
+* existing `@IdGeneratorType` annotations use the legacy source adapter;
+* `@GenericGenerator` uses the legacy source adapter because it declares a
+  runtime generator class and generic parameters; and
+* named XML and programmatic strategies use the legacy named-strategy source.
+
+This avoids forcing source/archive concerns into the existing custom
+`Generator` SPI. If experience with the opt-in contract is successful, ORM 9
+may later reconsider whether `@IdGeneratorType` itself should select a source
+instead of a runtime generator.
+
+=== Benefits and costs
+
+Compared with a construction descriptor, the source-fact model:
+
+* interprets declarations once and makes the result inspectable;
+* provides a natural archive product;
+* allows schema tooling to operate without runtime or CDI instances;
+* avoids duplicate construction and configuration for source-aware generators;
+* exposes timing, identity, and exportable facts without executing user
+  generator code; and
+* gives built-in sequence and table generation a cleaner ownership boundary.
+
+Its costs are:
+
+* a new custom extension contract alongside the existing generator SPI;
+* an archive-compatibility obligation for user-defined source state;
+* careful definition of which state a source may retain;
+* possible duplication between source configuration and runtime generator
+  initialization;
+* difficulty supporting generators whose exportable structure depends on CDI
+  injection or other runtime services; and
+* permanent compatibility machinery for arbitrary existing generators.
+
+The source-fact model is highly feasible for built-in generators and as an
+opt-in custom SPI. It is not feasible as a transparent pure-source replacement
+for every existing custom generator. A hybrid architecture using native
+sources plus a legacy adapter is therefore the realistic form of this
+alternative.
+
+== Implementation Sequence
+
+Before beginning this sequence, choose whether the retained identifier contract
+is the internal construction descriptor described first or the hybrid
+`IdentifierGeneratorSource` model. The first three steps otherwise risk
+creating a short-lived descriptor API which is immediately replaced by the
+source SPI. The value-generator work is independent and may continue to use a
+construction descriptor even if identifier generation adopts sources.
+
+. Introduce the internal identifier and value descriptor contracts and change
+  `SimpleValue` / `Property` to retain them instead of `GeneratorCreator`.
+. Replace `GeneratorBinder.IdentifierGeneratorCreator` with an explicit
+  annotation-based identifier descriptor. Complete annotation localization at
+  binding time and remove generator-related `ModelsContext` reattachment from
+  metadata restoration. This slice covers all `@IdGeneratorType` annotations,
+  including the reworked `@GenericGenerator`.
+. Replace annotation-based value-generator lambdas with an explicit value
+  descriptor using the same declarative annotation approach.
+. Add direct descriptors for UUID, identity, assigned, and derived identifiers.
+. Add sequence and table descriptors, initially preserving the existing
+  generator-based exportable lifecycle.
+. Confine remaining class-name and parameter-map handling to a legacy
+  named-strategy descriptor, then remove `GeneratorStrategies` calls from
+  direct JPA and annotation binding paths.
+. Move built-in sequence/table exportable contribution into their descriptors
+  once the descriptor boundary is stable.
+
+Each step must preserve both normal factory construction and the metadata
+archive-to-factory round trip.
+
+== Verification
+
+Descriptor coverage should include:
+
+* `GenerationType.IDENTITY`, `SEQUENCE`, `TABLE`, `UUID`, and UUID selected by
+  `AUTO` identifier type;
+* local, type-level, package-level, inherited, and generic-mapped-superclass
+  `@IdGeneratorType` declarations;
+* `@GenericGenerator` with a custom generator class and parameters;
+* an annotation-based ordinary value generator and version generator;
+* assigned and derived identifiers;
+* named sequence/table definitions and the surviving legacy named strategies;
+* a custom `ExportableProducer` generator;
+* CDI and non-CDI instantiation paths;
+* live metadata-to-factory and serialized metadata-to-factory construction.
+
+Archive inspection should assert that descriptors retain only declarative
+state and require no post-restoration `ModelsContext` attachment.
+
+== Remaining Questions
+
+* Should identifier descriptors remain internal construction recipes, or
+  should `IdentifierGeneratorSource` become the primary retained boot fact?
+* If source-aware custom generation is exposed, should it use a new
+  `@IdGeneratorSourceType` meta-annotation or evolve `@IdGeneratorType` in ORM
+  9?
+* Should a source create the runtime generator, or should Hibernate acquire it
+  through CDI and pass it back to the source for initialization?
+* Should the descriptor methods retain the name `createGenerator`, or should
+  identifier creation distinguish schema-discovery and runtime purposes more
+  explicitly?
+* Which generator timing facts can be validated entirely during binding and
+  stored on the descriptor without instantiating user code?
+* Which programmatic APIs still require arbitrary strategy class names after
+  direct annotation and JPA binding no longer use them?
+* Can built-in sequence/table descriptors contribute exportables without any
+  compatibility-visible change in naming or optimizer behavior?
 
 == Guardrails
 
-* Mapping objects may carry generator recipes as compatibility facts, but they
-  should not create runtime generators.
-* `GeneratorBinder` should remain on the source/binding side of the pipeline.
-* Runtime generator creation should receive context explicitly from the
-  runtime-model construction phase.
-* Schema exportable discovery must remain available for schema tooling.
-* Compatibility instantiation of legacy `ExportableProducer` generators is
-  acceptable as a bridge, but built-in generators should move toward descriptor
-  exportable contribution.
-* Derived identifiers should be modeled as derived-id mapping semantics, not as
-  the legacy `foreign` generator strategy.
-* `GeneratorStrategies` should not be treated as the architectural center of
-  generator binding; it is compatibility machinery unless the post-removal API
-  proves otherwise.
+* Descriptors retain declarations, never live generator instances or service
+  objects.
+* Mapping objects carry descriptors but do not instantiate generators.
+* Binding completes annotation selection and localization once.
+* Runtime creation receives context explicitly.
+* Identifier and value descriptors remain separate where their lifecycle
+  responsibilities differ.
+* Schema exportable discovery remains available for custom generators.
+* `@GenericGenerator` follows the `@IdGeneratorType` descriptor path; it is not
+  reintroduced as a named strategy string.
+* Derived identifiers remain derived-id mapping semantics.
+* `GeneratorStrategies` is restricted to surviving compatibility inputs.

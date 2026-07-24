@@ -50,7 +50,7 @@ public class EnhancedComponent extends Component implements EnhancedValue {
 		setComponentClassDetails( ModelsHelper.resolveClassDetails(
 				componentClassName,
 				modelsContext.getClassDetailsRegistry(),
-				() -> new GeneratedComponentClassDetails( componentClassName, modelsContext )
+				() -> GeneratedComponentClassDetails.create( componentClassName, modelsContext )
 		) );
 	}
 
@@ -60,5 +60,11 @@ public class EnhancedComponent extends Component implements EnhancedValue {
 		// since at the point when we are building these, a corresponding class is not yet created
 		// (so can't even think about it being compiled and able to load via any classloader) ...
 		return Object.class;
+	}
+
+	@Override
+	public boolean isDynamic() {
+		// This component represents a Java class that the exporter will generate.
+		return false;
 	}
 }

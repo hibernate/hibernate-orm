@@ -4,13 +4,13 @@
  */
 package org.hibernate.metamodel.internal;
 
+
 import java.lang.reflect.Member;
 import java.util.Objects;
 
-import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -28,24 +28,24 @@ import jakarta.annotation.Nullable;
  * concrete usage-side type/member.  This resolver centralizes the transition:
  * callers ask questions in terms of their current {@code Property} and nearest
  * concrete entity consumer, while this class prefers applied
- * {@link AttributeUsageBinding} metadata and falls back to copied-property
+	 * {@link AttributeUsageHandoff} metadata and falls back to copied-property
  * bridge state only where needed for compatibility.
  *
  * @since 9.0
  * @author Steve Ebersole
  */
 public class MappedSuperclassHandoffResolver {
-	private final BootBindingModel bootBindingModel;
+	private final RuntimeMappingHandoff runtimeMappingHandoff;
 
-	public MappedSuperclassHandoffResolver(BootBindingModel bootBindingModel) {
-		this.bootBindingModel = Objects.requireNonNull( bootBindingModel );
+	public MappedSuperclassHandoffResolver(RuntimeMappingHandoff runtimeMappingHandoff) {
+		this.runtimeMappingHandoff = Objects.requireNonNull( runtimeMappingHandoff );
 	}
 
 	/**
 	 * Finds the applied mapped-superclass attribute usage for the given runtime
 	 * managed type and copied compatibility property.
 	 */
-	public @Nullable AttributeUsageBinding findAttributeUsage(
+	public @Nullable AttributeUsageHandoff findAttributeUsage(
 			ManagedDomainType<?> nearestEntityConsumer,
 			Property property) {
 		return findAttributeUsage( nearestEntityConsumer.getTypeName(), property );
@@ -55,7 +55,7 @@ public class MappedSuperclassHandoffResolver {
 	 * Finds the applied mapped-superclass attribute usage for the given entity
 	 * persister and copied compatibility property.
 	 */
-	public @Nullable AttributeUsageBinding findAttributeUsage(
+	public @Nullable AttributeUsageHandoff findAttributeUsage(
 			EntityPersister nearestEntityConsumer,
 			Property property) {
 		return findAttributeUsage( nearestEntityConsumer.getEntityName(), property );
@@ -65,27 +65,28 @@ public class MappedSuperclassHandoffResolver {
 	 * Finds the applied mapped-superclass attribute usage for the given boot
 	 * entity mapping and copied compatibility property.
 	 */
-	public @Nullable AttributeUsageBinding findAttributeUsage(
+	public @Nullable AttributeUsageHandoff findAttributeUsage(
 			PersistentClass nearestEntityConsumer,
 			Property property) {
-		return findAttributeUsage( nearestEntityConsumer.getClassName(), property );
+		return findAttributeUsage( nearestEntityConsumer.getEntityName(), property );
 	}
 
 	/**
-	 * Finds the applied mapped-superclass attribute usage by nearest concrete
-	 * entity consumer name and attribute name.
+	 * Finds the applied mapped-superclass attribute usage by stable mapping
+	 * role.
 	 * <p>
-	 * The consumer name identifies the concrete hierarchy context in which the
-	 * mapped-superclass declaration was applied.  The property name identifies
-	 * the attribute copied into the legacy mapping model for that context.
+	 * Applied compatibility properties carry their intrinsic role.  A
+	 * declaration-side mapped-superclass property does not represent a concrete
+	 * application, so its role is derived from the nearest concrete entity
+	 * consumer and attribute name.
 	 */
-	public @Nullable AttributeUsageBinding findAttributeUsage(
+	public @Nullable AttributeUsageHandoff findAttributeUsage(
 			String nearestEntityConsumerName,
 			Property property) {
-		return bootBindingModel.findAppliedMappedSuperclassAttributeUsage(
-				nearestEntityConsumerName,
-				property.getName()
-		);
+		final MappingRole role = property.getMappingRole() == null
+				? MappingRole.entity( nearestEntityConsumerName ).appendAttribute( property.getName() )
+				: property.getMappingRole();
+		return runtimeMappingHandoff.findAttribute( role );
 	}
 
 	/**
@@ -131,14 +132,11 @@ public class MappedSuperclassHandoffResolver {
 		return null;
 	}
 
-	private static boolean isConcreteGenericUsage(AttributeUsageBinding attributeUsage) {
+	private static boolean isConcreteGenericUsage(AttributeUsageHandoff attributeUsage) {
 		if ( attributeUsage == null ) {
 			return false;
 		}
-		return AttributeTypeCorrespondence.isConcreteGenericUsage(
-				attributeUsage.declaration().member().getType(),
-				attributeUsage.resolvedType()
-		);
+		return attributeUsage.isConcreteGenericUsage();
 	}
 
 	/**

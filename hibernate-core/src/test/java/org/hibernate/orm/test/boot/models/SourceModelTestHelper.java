@@ -21,11 +21,11 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
-import org.hibernate.models.internal.BasicModelsContextImpl;
-import org.hibernate.models.jandex.internal.JandexIndexerHelper;
-import org.hibernate.models.jandex.internal.JandexModelsContextImpl;
+import org.hibernate.models.UnknownClassException;
+import org.hibernate.models.jandex.Settings;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
+import org.hibernate.models.spi.ModelsConfiguration;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.jboss.jandex.ClassInfo;
@@ -37,12 +37,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
+import java.util.ServiceLoader;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.forEachOrmAnnotation;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
-import static org.hibernate.models.internal.BaseLineJavaTypes.forEachJavaType;
-import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
 /**
  * Test helper for creating source-model contexts and applying XML overlays.
@@ -51,6 +51,42 @@ import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOAD
  * @author Steve Ebersole
  */
 public class SourceModelTestHelper {
+	public static final ClassLoading SIMPLE_CLASS_LOADING = new ClassLoading() {
+		private final ClassLoader classLoader = SourceModelTestHelper.class.getClassLoader();
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public <T> Class<T> classForName(String name) {
+			try {
+				return (Class<T>) Class.forName( name, false, classLoader );
+			}
+			catch (ClassNotFoundException e) {
+				throw new UnknownClassException( "Unable to load class " + name, e );
+			}
+		}
+
+		@Override
+		public <T> Class<T> findClassForName(String name) {
+			try {
+				return classForName( name );
+			}
+			catch (UnknownClassException e) {
+				return null;
+			}
+		}
+
+		@Override
+		public URL locateResource(String resourceName) {
+			return classLoader.getResource( resourceName );
+		}
+
+		@Override
+		public <S> Collection<S> loadJavaServices(Class<S> serviceType) {
+			return ServiceLoader.load( serviceType, classLoader ).stream()
+					.map( ServiceLoader.Provider::get )
+					.toList();
+		}
+	};
 
 	public static ModelsContext createBuildingContext(Class<?>... modelClasses) {
 		return createBuildingContext( SIMPLE_CLASS_LOADING, modelClasses );
@@ -69,22 +105,16 @@ public class SourceModelTestHelper {
 			Index jandexIndex,
 			ClassLoading classLoadingAccess,
 			Class<?>... modelClasses) {
-		final ModelsContext ctx;
-
-		if ( jandexIndex == null ) {
-			ctx = new BasicModelsContextImpl(
-					classLoadingAccess,
-					false,
-					(contributions, buildingContext1) -> forEachOrmAnnotation( contributions::registerAnnotation )
-			);
+		final ModelsConfiguration configuration = new ModelsConfiguration()
+				.setClassLoading( classLoadingAccess )
+				.setRegistryPrimer( (contributions, buildingContext1) ->
+						forEachOrmAnnotation( contributions::registerAnnotation ) );
+		if ( jandexIndex != null ) {
+			configuration.configValue( Settings.INDEX_PARAM, jandexIndex );
 		}
-		else {
-			ctx = new JandexModelsContextImpl(
-					jandexIndex,
-					false,
-					classLoadingAccess,
-					(contributions, buildingContext1) -> forEachOrmAnnotation( contributions::registerAnnotation )
-			);
+		final ModelsContext ctx = configuration.bootstrap();
+
+		if ( jandexIndex != null ) {
 
 			for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
 				ctx.getClassDetailsRegistry().resolveClassDetails( knownClass.name().toString() );
@@ -109,16 +139,10 @@ public class SourceModelTestHelper {
 
 	public static Index buildJandexIndex(ClassLoading classLoadingAccess, Class<?>... modelClasses) {
 		final Indexer indexer = new Indexer();
-		forEachJavaType( (javaType) -> JandexIndexerHelper.apply( javaType, indexer, classLoadingAccess ) );
-		forEachOrmAnnotation( (descriptor) -> JandexIndexerHelper.apply( descriptor.getAnnotationType(), indexer, classLoadingAccess ) );
+		forEachOrmAnnotation( descriptor -> indexClass( descriptor.getAnnotationType(), indexer ) );
 
 		for ( Class<?> modelClass : modelClasses ) {
-			try {
-				indexer.indexClass( modelClass );
-			}
-			catch (IOException e) {
-				throw new RuntimeException( e );
-			}
+			indexClass( modelClass, indexer );
 		}
 
 		return indexer.complete();
@@ -229,15 +253,18 @@ public class SourceModelTestHelper {
 
 	private static ModelsContext createModelsContext(
 			IndexView jandexIndex, ClassLoaderServiceLoading classLoading) {
-		return jandexIndex == null
-				? new BasicModelsContextImpl( classLoading, false, ModelsHelper::preFillRegistries )
-				: new JandexModelsContextImpl( jandexIndex, false, classLoading, ModelsHelper::preFillRegistries );
+		final ModelsConfiguration configuration = new ModelsConfiguration()
+				.setClassLoading( classLoading )
+				.setRegistryPrimer( ModelsHelper::preFillRegistries );
+		if ( jandexIndex != null ) {
+			configuration.configValue( Settings.INDEX_PARAM, jandexIndex );
+		}
+		return configuration.bootstrap();
 	}
 
 	private static IndexView buildJandexIndex(ClassLoaderServiceLoading classLoading, List<String> classNames) {
 		final Indexer indexer = new Indexer();
-		forEachJavaType( (javaType) -> JandexIndexerHelper.apply( javaType, indexer, classLoading ) );
-		forEachOrmAnnotation( (descriptor) -> JandexIndexerHelper.apply( descriptor.getAnnotationType(), indexer, classLoading ) );
+		forEachOrmAnnotation( descriptor -> indexClass( descriptor.getAnnotationType(), indexer ) );
 
 		classNames.forEach( (className) -> {
 			final URL classUrl = classLoading.locateResource( className.replace( '.', '/' ) + ".class" );
@@ -253,5 +280,14 @@ public class SourceModelTestHelper {
 		} );
 
 		return indexer.complete();
+	}
+
+	private static void indexClass(Class<?> type, Indexer indexer) {
+		try {
+			indexer.indexClass( type );
+		}
+		catch (IOException e) {
+			throw new RuntimeException( e );
+		}
 	}
 }

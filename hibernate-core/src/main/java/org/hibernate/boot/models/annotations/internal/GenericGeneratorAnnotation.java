@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -19,7 +20,7 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class GenericGeneratorAnnotation implements GenericGenerator {
+public class GenericGeneratorAnnotation implements GenericGenerator, Serializable {
 	private Class<? extends Generator> type;
 	private Parameter[] parameters;
 

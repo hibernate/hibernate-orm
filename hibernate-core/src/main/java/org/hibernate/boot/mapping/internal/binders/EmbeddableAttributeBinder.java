@@ -29,10 +29,10 @@ import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -162,6 +162,7 @@ class EmbeddableAttributeBinder {
 				ownerType.getClassDetails().getClassName(),
 				attributeBinding.attributeName()
 		);
+		component.setMappingRole( property.getMappingRole() );
 		final CompositeUserType<?> compositeUserType = compositeUserTypeClass == null
 				? null
 				: instantiateCompositeUserType( compositeUserTypeClass );
@@ -226,13 +227,15 @@ class EmbeddableAttributeBinder {
 
 	private CompositeUserType<?> instantiateCompositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
-		return bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
-				? bindingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
-				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
+		return MappingHelper.createCompositeUserType(
+				compositeUserTypeClass,
+				bindingContext.getManagedBeanRegistry(),
+				bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
+		);
 	}
 
 	static void processCompositeUserType(Component component, CompositeUserType<?> compositeUserType) {
-		component.sortProperties();
+		component.completeShape();
 		final List<String> sortedPropertyNames = new ArrayList<>( component.getPropertySpan() );
 		final List<Type> sortedPropertyTypes = new ArrayList<>( component.getPropertySpan() );
 		final var strategy = new PropertyAccessStrategyCompositeUserTypeImpl(
@@ -292,6 +295,11 @@ class EmbeddableAttributeBinder {
 		}
 
 		final BasicValue discriminator = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), componentTable );
+		if ( component.getMappingRole() != null ) {
+			discriminator.setMappingRole(
+					component.getMappingRole().append( org.hibernate.mapping.MappingRole.PartKind.DISCRIMINATOR )
+			);
+		}
 		discriminator.setTable( componentTable );
 		discriminator.setTypeName( String.class.getName() );
 		final ColumnSource overrideColumnSource = componentSource.discriminatorColumnSource();

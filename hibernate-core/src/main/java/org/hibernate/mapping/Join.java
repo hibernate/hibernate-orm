@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  *
  * @author Gavin King
  */
-public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializable {
+public class Join implements AttributeContainer, AuxiliaryTableHolder, AppliedMappingPart, Serializable {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
@@ -35,6 +35,7 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 	private Map<String, Column> auxiliaryColumns;
 	private KeyValue key;
 	private PersistentClass persistentClass;
+	private MappingRole mappingRole;
 	private boolean inverse;
 	private boolean optional;
 	private boolean disableForeignKeyCreation;
@@ -84,6 +85,7 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 
 	public void setTable(Table table) {
 		this.table = table;
+		assignMappingRole();
 	}
 
 	@Override
@@ -115,6 +117,7 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 
 	public void setKey(KeyValue key) {
 		this.key = key;
+		assignMappingRole();
 	}
 
 	public PersistentClass getPersistentClass() {
@@ -123,6 +126,32 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 
 	public void setPersistentClass(PersistentClass persistentClass) {
 		this.persistentClass = persistentClass;
+		assignMappingRole();
+	}
+
+	@Override
+	public MappingRole getMappingRole() {
+		return mappingRole;
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		this.mappingRole = mappingRole;
+		if ( key instanceof AppliedMappingPart mappingPart ) {
+			mappingPart.setMappingRole( mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.KEY ) );
+		}
+	}
+
+	private void assignMappingRole() {
+		if ( persistentClass != null
+				&& persistentClass.getEntityName() != null
+				&& table != null
+				&& table.getName() != null ) {
+			setMappingRole(
+					MappingRole.entity( persistentClass.getEntityName() )
+							.append( MappingRole.PartKind.JOIN, table.getName() )
+			);
+		}
 	}
 
 	public void disableForeignKeyCreation() {

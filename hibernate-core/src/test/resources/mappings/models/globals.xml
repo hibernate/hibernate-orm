@@ -16,7 +16,7 @@
         </persistence-unit-defaults>
     </persistence-unit-metadata>
 
-    <java-type class="java.lang.String" descriptor="org.hibernate.models.internal.StringTypeDescriptor"/>
+    <java-type class="java.lang.String" descriptor="org.hibernate.type.descriptor.java.StringJavaType"/>
     <jdbc-type code="-1" descriptor="org.hibernate.type.descriptor.jdbc.ClobJdbcType"/>
     <user-type class="java.util.UUID" descriptor="org.hibernate.orm.test.boot.models.xml.MyUserType"/>
 

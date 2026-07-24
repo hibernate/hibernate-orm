@@ -54,20 +54,19 @@ public final class GenericComponentHelper {
 			MemberDetails memberDetails,
 			MetadataBuildingContext context,
 		boolean includeUndeclaredProperties) {
-		final Component copy = component.copy();
+		final java.util.List<Property> declarationProperties = includeUndeclaredProperties
+				? component.getProperties()
+						.stream()
+						.map( (property) -> genericPropertyCopy( property, context ) )
+						.toList()
+				: java.util.List.of();
+		final Component copy = component.copyForDeclaration( declarationProperties );
 		copy.setComponentClassDetails( memberDetails.getType().determineRawClass() );
 		copy.setGeneric( false );
-		if ( !includeUndeclaredProperties ) {
-			copy.getProperties().clear();
-		}
-		else {
-			copy.getProperties().replaceAll( (property) -> genericPropertyCopy( property, context ) );
-		}
 		return copy;
 	}
 
 	private static Property genericPropertyCopy(Property property, MetadataBuildingContext context) {
-		final Property copy = property.copy();
 		final var value = property.getValue().copy();
 		if ( value instanceof BasicValue basicValue ) {
 			final var details = BasicValueResolutionDetails.create(
@@ -83,7 +82,7 @@ public final class GenericComponentHelper {
 					context
 			);
 		}
-		copy.setValue( value );
+		final Property copy = property.copyForDeclaration( value );
 		if ( property.isGenericSpecialization() ) {
 			copy.setGeneric( true );
 			copy.setGenericSpecialization( false );

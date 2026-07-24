@@ -356,7 +356,7 @@ public class IdentifierMappingMaterializer {
 				final Property idClassProperty = createProperty( idAttribute.getName(), idClassComponent, idClassMember );
 				mappingParts.idValue().addProperty( idClassProperty );
 
-				final Component identifierMapperComponent = idClassComponent.copy();
+				final Component identifierMapperComponent = idClassComponent.copyForSameApplication();
 				final Property mapperProperty = createProperty( idAttribute.getName(), identifierMapperComponent, member );
 				mapperProperty.setInsertable( false );
 				mapperProperty.setUpdatable( false );
@@ -598,7 +598,9 @@ public class IdentifierMappingMaterializer {
 				deferAttributeBinders( member, typeBinding, rootProperty );
 
 				if ( hasIdClass ) {
-					final ToOne identifierMapperToOne = (ToOne) toOne.copy();
+					final ToOne identifierMapperToOne = toOne.copyForApplication(
+							identifierMapper.getMappingRole().appendAttribute( idAttribute.getName() )
+					);
 					identifierMapperValue.set( identifierMapperToOne );
 					final Property mapperProperty = createProperty( idAttribute.getName(), identifierMapperToOne, member );
 					mapperProperty.setInsertable( false );
@@ -782,7 +784,7 @@ public class IdentifierMappingMaterializer {
 		final Property idClassProperty = createProperty( idAttribute.getName(), idClassComponent, idClassMember );
 		mappingParts.idValue().addProperty( idClassProperty );
 
-		final Component identifierMapperComponent = idClassComponent.copy();
+		final Component identifierMapperComponent = idClassComponent.copyForSameApplication();
 		final Property mapperProperty = createProperty( idAttribute.getName(), identifierMapperComponent, member );
 		mapperProperty.setInsertable( false );
 		mapperProperty.setUpdatable( false );
@@ -833,7 +835,9 @@ public class IdentifierMappingMaterializer {
 		applyToOneIdentifierPropertyOptions( idAttribute, type, rootProperty, associationMember );
 		deferAttributeBinders( member, typeBinding, rootProperty );
 
-		final ToOne identifierMapperToOne = (ToOne) toOne.copy();
+		final ToOne identifierMapperToOne = toOne.copyForApplication(
+				mappingParts.identifierMapper().getMappingRole().appendAttribute( idAttribute.getName() )
+		);
 		identifierMapperValue.set( identifierMapperToOne );
 		final Property mapperProperty = createProperty( idAttribute.getName(), identifierMapperToOne, member );
 		mapperProperty.setInsertable( false );
@@ -1383,8 +1387,13 @@ public class IdentifierMappingMaterializer {
 	private static void applyIdentifierPropertyValueGenerator(Property property, MemberDetails member) {
 		final UuidGenerator uuidGenerator = member.getDirectAnnotationUsage( UuidGenerator.class );
 		if ( uuidGenerator != null ) {
-			property.setValueGeneratorCreator( creationContext ->
-					new org.hibernate.id.uuid.UuidGenerator( uuidGenerator, member ) );
+			property.setValueGeneratorCreator( creationContext -> {
+				final MemberDetails contextMember = creationContext.getMemberDetails();
+				return new org.hibernate.id.uuid.UuidGenerator(
+						uuidGenerator,
+						contextMember == null ? creationContext.getProperty().getMemberDetails() : contextMember
+				);
+			} );
 			return;
 		}
 

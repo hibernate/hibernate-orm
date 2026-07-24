@@ -13,6 +13,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SPI;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.boot.serial.internal.SourceJavaType;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.TimeZoneStorageType;
@@ -20,6 +21,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -34,7 +36,6 @@ import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -58,7 +59,8 @@ public class BasicValue extends SimpleValue {
 
 	private String explicitTypeName;
 	private Map<String,String> explicitLocalTypeParams;
-	private Class<? extends UserType<?>> explicitCustomType;
+	private transient Class<? extends UserType<?>> explicitCustomType;
+	private String explicitCustomTypeName;
 
 	private SourceJavaType implicitSourceJavaType;
 
@@ -139,6 +141,8 @@ public class BasicValue extends SimpleValue {
 		this.explicitLocalTypeParams =
 				original.explicitLocalTypeParams == null ? null
 						: new HashMap<>( original.explicitLocalTypeParams );
+		this.explicitCustomType = original.explicitCustomType;
+		this.explicitCustomTypeName = original.explicitCustomTypeName;
 		this.implicitSourceJavaType = original.implicitSourceJavaType;
 		this.enumerationStyle = original.enumerationStyle;
 		this.temporalPrecision = original.temporalPrecision;
@@ -213,10 +217,12 @@ public class BasicValue extends SimpleValue {
 		super.setJpaAttributeConverterDescriptor( descriptor );
 	}
 
+	@Internal
 	public void setImplicitSourceJavaType(SourceJavaType implicitSourceJavaType) {
 		this.implicitSourceJavaType = implicitSourceJavaType;
 	}
 
+	@Internal
 	public SourceJavaType getImplicitSourceJavaType() {
 		return implicitSourceJavaType;
 	}
@@ -441,48 +447,6 @@ public class BasicValue extends SimpleValue {
 		}
 	}
 
-	public interface SourceJavaType {
-		TypeDetails typeDetails();
-
-		Class<?> rawJavaClass();
-
-		java.lang.reflect.Type asReflectType();
-
-		static SourceJavaType from(TypeDetails typeDetails, Class<?> explicitJavaType) {
-			return new SourceJavaType() {
-				@Override
-				public TypeDetails typeDetails() {
-					return typeDetails;
-				}
-
-				@Override
-				public Class<?> rawJavaClass() {
-					if ( explicitJavaType != null ) {
-						return explicitJavaType;
-					}
-					if ( typeDetails == null ) {
-						return null;
-					}
-					return typeDetails.determineRawClass().toJavaClass();
-				}
-
-				@Override
-				public java.lang.reflect.Type asReflectType() {
-					if ( explicitJavaType != null ) {
-						return explicitJavaType;
-					}
-					if ( typeDetails == null ) {
-						return null;
-					}
-					if ( typeDetails.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
-						return ParameterizedTypeImpl.from( typeDetails.asParameterizedType() );
-					}
-					return rawJavaClass();
-				}
-			};
-		}
-	}
-
 	@Internal
 	public static TimeZoneStorageStrategy timeZoneStorageStrategy(
 			TimeZoneStorageType timeZoneStorageType,
@@ -531,7 +495,32 @@ public class BasicValue extends SimpleValue {
 			}
 			else {
 				this.explicitCustomType = explicitCustomType;
+				this.explicitCustomTypeName = explicitCustomType.getName();
 			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public void reattachExplicitCustomType(ClassLoaderAccess classLoaderAccess) {
+		if ( explicitCustomTypeName == null ) {
+			return;
+		}
+		try {
+			final Class<?> customTypeClass = classLoaderAccess.classForName( explicitCustomTypeName );
+			if ( !UserType.class.isAssignableFrom( customTypeClass ) ) {
+				throw new MappingException(
+						"Archived custom type class '" + explicitCustomTypeName
+								+ "' does not implement '" + UserType.class.getName() + "'"
+				);
+			}
+			explicitCustomType = (Class<? extends UserType<?>>) customTypeClass;
+		}
+		catch (RuntimeException e) {
+			throw new MappingException(
+					"Could not resolve archived UserType class '" + explicitCustomTypeName
+							+ "' for mapping role '" + getMappingRole() + "'",
+					e
+			);
 		}
 	}
 

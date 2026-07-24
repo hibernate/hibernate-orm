@@ -559,7 +559,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		@Override
 		public Dialect getDialect() {
 			return sessionFactory == null
-					? metadataBuildingContext.getMetadataCollector().getDatabase().getDialect()
+					? metadataBuildingContext.getServiceComponents().getJdbcServices().getDialect()
 					: sessionFactory.getJdbcServices().getDialect();
 		}
 

@@ -25,6 +25,7 @@ import org.hibernate.boot.mapping.internal.context.GlobalMappingDefaultsImpl;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.serial.internal.MappingResolutionDetailsCollector;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
@@ -56,6 +57,7 @@ import static org.hibernate.cfg.MappingSettings.FORCE_DISCRIMINATOR_IN_SELECTS_B
 import static org.hibernate.cfg.MappingSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS;
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS;
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_NAMING_STRATEGY;
+import static org.hibernate.cfg.MappingSettings.METADATA_SERIALIZATION_ENABLED;
 import static org.hibernate.cfg.MappingSettings.PHYSICAL_NAMING_STRATEGY;
 import static org.hibernate.cfg.MappingSettings.USE_NATIONALIZED_CHARACTER_DATA;
 import static org.hibernate.cfg.MappingSettings.XML_FORMAT_MAPPER_LEGACY_FORMAT;
@@ -102,12 +104,20 @@ public class MappingResolutionOptionsImpl
 	private final boolean xmlMappingEnabled;
 	private final boolean allowExtensionsInCdi;
 	private final boolean xmlFormatMapperLegacyFormat;
+	private final boolean metadataSerializationEnabled;
+	private final MappingResolutionDetailsCollector resolutionDetailsCollector;
 
 	public MappingResolutionOptionsImpl(StandardServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 
 		final var strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		final var configService = serviceRegistry.requireService( ConfigurationService.class );
+		metadataSerializationEnabled = configService.getSetting(
+				METADATA_SERIALIZATION_ENABLED,
+				BOOLEAN,
+				false
+		);
+		resolutionDetailsCollector = metadataSerializationEnabled ? new MappingResolutionDetailsCollector() : null;
 
 		mappingDefaults = new GlobalMappingDefaultsImpl( serviceRegistry );
 
@@ -171,6 +181,16 @@ public class MappingResolutionOptionsImpl
 				BOOLEAN,
 				false
 		);
+	}
+
+	@Override
+	public boolean isMetadataSerializationEnabled() {
+		return metadataSerializationEnabled;
+	}
+
+	@Override
+	public MappingResolutionDetailsCollector getResolutionDetailsCollector() {
+		return resolutionDetailsCollector;
 	}
 
 	private static boolean isNoConstraintByDefault(ConfigurationService configService) {

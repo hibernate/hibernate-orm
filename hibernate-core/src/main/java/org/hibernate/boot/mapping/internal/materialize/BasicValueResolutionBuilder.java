@@ -119,6 +119,7 @@ public final class BasicValueResolutionBuilder {
 			details.value().applyResolution( details.value().getResolution(), state );
 			return;
 		}
+		state.captureResolutionDetails( details );
 		final BasicValue.Resolution<?> resolution = buildResolution( details, services, state, buildingContext );
 		if ( resolution == null ) {
 			throw new IllegalStateException( "Unable to resolve BasicValue: " + details.value() );
@@ -1278,7 +1279,7 @@ public final class BasicValueResolutionBuilder {
 					? jdbcTypeCode
 					: getDialect().getAggregateSupport()
 							.aggregateComponentSqlTypeCode(
-									aggregateColumn.getJdbcType( state.metadataCollector() )
+									aggregateColumn.getJdbcType( state.mappingContext() )
 											.getDefaultSqlTypeCode(),
 									jdbcTypeCode
 							);

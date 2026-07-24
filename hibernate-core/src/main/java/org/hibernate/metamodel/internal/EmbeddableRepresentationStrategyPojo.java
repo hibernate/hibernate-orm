@@ -51,6 +51,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			EmbeddableInstantiator customInstantiator,
 			CompositeUserType<Object> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
+		bootDescriptor.requireShapeComplete();
 		embeddableJavaType = resolveEmbeddableJavaType( bootDescriptor, compositeUserType, creationContext );
 
 		final int propertySpan = bootDescriptor.getPropertySpan();

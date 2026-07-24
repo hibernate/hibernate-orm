@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionRequest;
 import org.hibernate.boot.pipeline.spi.SessionFactoryProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -23,6 +22,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 
 import static java.lang.String.join;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -47,14 +47,14 @@ public final class SessionFactoryConstructionCoordinator {
 			SessionFactoryConstructionIdentity identity,
 			SessionFactoryOptions options,
 			BootstrapContext bootstrapContext,
-			BootBindingModel bootBindingModel) {
+			RuntimeMappingHandoff runtimeMappingHandoff) {
 		final var state = new SessionFactoryConstructionState(
 				metadata,
 				resolvedSettings,
 				identity,
 				options,
 				bootstrapContext,
-				bootBindingModel
+				runtimeMappingHandoff
 		);
 		final var request = new ConstructionRequest( state );
 		final var producer = resolveProducer( producerSelectionContext( request.getServiceRegistry() ) );
@@ -70,12 +70,12 @@ public final class SessionFactoryConstructionCoordinator {
 			MetadataImplementor metadata,
 			SessionFactoryOptions options,
 			BootstrapContext bootstrapContext,
-			BootBindingModel bootBindingModel) {
+			RuntimeMappingHandoff runtimeMappingHandoff) {
 		final var state = SessionFactoryConstructionState.legacy(
 				metadata,
 				options,
 				bootstrapContext,
-				bootBindingModel
+				runtimeMappingHandoff
 		);
 		final var request = new ConstructionRequest( state );
 		final var producer = resolveProducer( producerSelectionContext( request.getServiceRegistry() ) );

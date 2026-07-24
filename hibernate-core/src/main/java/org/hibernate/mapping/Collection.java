@@ -17,6 +17,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -47,17 +48,17 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  * @author Gavin King
  */
 public abstract sealed class Collection
-		implements Fetchable, Value, Filterable, SoftDeletable
-		permits Set, Bag,
-				IndexedCollection, // List, Map
-				IdentifierCollection { // IdentifierBag only built-in implementation
+		implements Fetchable, Value, AppliedMappingPart, Filterable, SoftDeletable
+		permits Set, Bag, IndexedCollection, IdentifierCollection {
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
 
-	private final ClassLoaderAccess classLoaderAccess;
-	private final ManagedBeanRegistry managedBeanRegistry;
-	private final boolean allowExtensionsInCdi;
+	private MappingRole mappingRole;
+	// Runtime bootstrap service; never part of the serialized boot-model graph.
+	private transient ClassLoaderAccess classLoaderAccess;
+	private transient ManagedBeanRegistry managedBeanRegistry;
+	private transient boolean allowExtensionsInCdi;
 	private final PersistentClass owner;
 
 	private KeyValue key;
@@ -83,7 +84,8 @@ public abstract sealed class Collection
 	private String referencedPropertyName;
 	private String mappedByProperty;
 	private boolean sorted;
-	private Comparator<?> comparator;
+	private transient Comparator<?> comparator;
+	private ClassDetails comparatorClassDetails;
 	private String comparatorClassName;
 	private boolean orphanDelete;
 	private int batchSize = -1;
@@ -92,9 +94,9 @@ public abstract sealed class Collection
 
 	private String typeName;
 	private Properties typeParameters;
-	private Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver;
-	private CollectionType cachedCollectionType;
-	private CollectionSemantics<?,?> cachedCollectionSemantics;
+	private transient Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver;
+	private transient CollectionType cachedCollectionType;
+	private transient CollectionSemantics<?,?> cachedCollectionSemantics;
 
 	private final List<FilterConfiguration> filters = new ArrayList<>();
 	private final List<FilterConfiguration> manyToManyFilters = new ArrayList<>();
@@ -168,6 +170,7 @@ public abstract sealed class Collection
 		this.mappedByProperty = original.mappedByProperty;
 		this.sorted = original.sorted;
 		this.comparator = original.comparator;
+		this.comparatorClassDetails = original.comparatorClassDetails;
 		this.comparatorClassName = original.comparatorClassName;
 		this.orphanDelete = original.orphanDelete;
 		this.batchSize = original.batchSize;
@@ -196,8 +199,56 @@ public abstract sealed class Collection
 		this.cachedCollectionSemantics = original.cachedCollectionSemantics;
 	}
 
+	@Override
+	public MappingRole getMappingRole() {
+		return mappingRole;
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		this.mappingRole = mappingRole;
+		if ( key instanceof AppliedMappingPart keyPart ) {
+			keyPart.setMappingRole( mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.KEY ) );
+		}
+		if ( element instanceof AppliedMappingPart elementPart ) {
+			elementPart.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.ELEMENT )
+			);
+		}
+	}
+
 	protected ClassLoaderAccess getClassLoaderAccess() {
 		return classLoaderAccess;
+	}
+
+	public void reattachRuntimeServices(
+			ClassLoaderAccess classLoaderAccess,
+			ManagedBeanRegistry managedBeanRegistry,
+			boolean allowExtensionsInCdi) {
+		this.classLoaderAccess = classLoaderAccess;
+		this.managedBeanRegistry = managedBeanRegistry;
+		this.allowExtensionsInCdi = allowExtensionsInCdi;
+		if ( typeName != null ) {
+			final Class<? extends UserCollectionType> userCollectionTypeClass;
+			try {
+				userCollectionTypeClass = classForName( UserCollectionType.class, typeName, classLoaderAccess );
+			}
+			catch (RuntimeException e) {
+				throw new MappingException(
+						"Could not restore custom collection type '" + typeName + "' for collection '" + role + "'",
+						e
+				);
+			}
+			customTypeBeanResolver = () -> createUserTypeBean(
+					role,
+					userCollectionTypeClass,
+					PropertiesHelper.map( typeParameters ),
+					managedBeanRegistry,
+					allowExtensionsInCdi
+			);
+		}
+		cachedCollectionType = null;
+		cachedCollectionSemantics = null;
 	}
 
 	public boolean isSet() {
@@ -229,8 +280,10 @@ public abstract sealed class Collection
 	}
 
 	public Comparator<?> getComparator() {
-		if ( comparator == null && comparatorClassName != null ) {
-			final var clazz = classForName( Comparator.class, comparatorClassName, classLoaderAccess );
+		if ( comparator == null && ( comparatorClassDetails != null || comparatorClassName != null ) ) {
+			final Class<? extends Comparator> clazz = comparatorClassDetails == null
+					? classForName( Comparator.class, comparatorClassName, classLoaderAccess )
+					: comparatorClassDetails.toJavaClass().asSubclass( Comparator.class );
 			try {
 				comparator = clazz.getConstructor().newInstance();
 			}
@@ -301,10 +354,16 @@ public abstract sealed class Collection
 
 	public void setElement(Value element) {
 		this.element = element;
+		if ( element instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( role ).append( MappingRole.PartKind.ELEMENT ) );
+		}
 	}
 
 	public void setKey(KeyValue key) {
 		this.key = key;
+		if ( key instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( role ).append( MappingRole.PartKind.KEY ) );
+		}
 	}
 
 	public void setOrderBy(String orderBy) {
@@ -323,6 +382,15 @@ public abstract sealed class Collection
 
 	public void setRole(String role) {
 		this.role = role;
+		if ( role != null ) {
+			mappingRole = MappingRole.collection( role );
+			if ( key instanceof AppliedMappingPart keyPart ) {
+				keyPart.setMappingRole( mappingRole.append( MappingRole.PartKind.KEY ) );
+			}
+			if ( element instanceof AppliedMappingPart elementPart ) {
+				elementPart.setMappingRole( mappingRole.append( MappingRole.PartKind.ELEMENT ) );
+			}
+		}
 	}
 
 	public void setSorted(boolean sorted) {
@@ -924,10 +992,20 @@ public abstract sealed class Collection
 
 	public void setComparatorClassName(String comparatorClassName) {
 		this.comparatorClassName = comparatorClassName;
+		this.comparatorClassDetails = null;
 	}
 
 	public String getComparatorClassName() {
-		return comparatorClassName;
+		return comparatorClassDetails == null ? comparatorClassName : comparatorClassDetails.getClassName();
+	}
+
+	public ClassDetails getComparatorClassDetails() {
+		return comparatorClassDetails;
+	}
+
+	public void setComparatorClassDetails(ClassDetails comparatorClassDetails) {
+		this.comparatorClassDetails = comparatorClassDetails;
+		this.comparatorClassName = comparatorClassDetails == null ? null : comparatorClassDetails.getClassName();
 	}
 
 	public String getMappedByProperty() {

@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model;
 
+import java.io.Serializable;
 import jakarta.persistence.NamedEntityGraph;
 
 import java.util.Objects;
@@ -14,7 +15,7 @@ import java.util.Objects;
  * @author Steve Ebersole
  */
 public record NamedEntityGraphDefinition
-		(String name, String entityName, Source source, NamedGraphCreator graphCreator) {
+		(String name, String entityName, Source source, NamedGraphCreator graphCreator) implements Serializable {
 	public enum Source { JPA, PARSED }
 
 	public NamedEntityGraphDefinition {

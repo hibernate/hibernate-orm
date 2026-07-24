@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.relational;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,10 +41,10 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
  *
  * @author Steve Ebersole
  */
-public class Namespace {
+public class Namespace implements Serializable {
 
-	private final PhysicalNamingStrategy physicalNamingStrategy;
-	private final JdbcEnvironment jdbcEnvironment;
+	private transient PhysicalNamingStrategy physicalNamingStrategy;
+	private transient JdbcEnvironment jdbcEnvironment;
 	private final Name name;
 	private final Name physicalName;
 
@@ -323,7 +324,12 @@ public class Namespace {
 		return sequences.values();
 	}
 
-	public record Name(Identifier catalog, Identifier schema) implements Comparable<Name> {
+	void reattach(PhysicalNamingStrategy physicalNamingStrategy, JdbcEnvironment jdbcEnvironment) {
+		this.physicalNamingStrategy = physicalNamingStrategy;
+		this.jdbcEnvironment = jdbcEnvironment;
+	}
+
+	public record Name(Identifier catalog, Identifier schema) implements Comparable<Name>, Serializable {
 
 		@Deprecated(since = "7")
 		public Identifier getCatalog() {

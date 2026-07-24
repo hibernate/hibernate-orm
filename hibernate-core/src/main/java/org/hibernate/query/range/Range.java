@@ -190,7 +190,7 @@ public interface Range<U> {
 	 * with case-sensitivity.
 	 */
 	static Range<String> suffix(String suffix) {
-		return pattern( suffix, true );
+		return suffix( suffix, true );
 	}
 
 	/**

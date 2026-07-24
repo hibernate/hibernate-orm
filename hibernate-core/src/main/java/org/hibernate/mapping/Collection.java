@@ -9,6 +9,7 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
@@ -739,7 +740,7 @@ public abstract sealed class Collection
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) {
+			ClassLoaderService classLoaderService) {
 	}
 
 	public String getCacheRegionName() {

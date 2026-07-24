@@ -109,8 +109,8 @@ runtime, schema, and integration consumers.
 
 | `*View`
 | A read-only projection over mutable/internal binding state.
-| `MappedSuperclassContributionView` exposes contribution facts without
-  exposing mutable binder internals.
+| `EntityHierarchyView` exposes hierarchy facts without exposing mutable binder
+  internals.
 
 | `compatibility`
 | The legacy `org.hibernate.mapping` shape still consumed by existing runtime,
@@ -288,9 +288,8 @@ Other current correspondence products are more relational:
 Views expose selected binding-model facts without exposing mutable binder
 internals.
 
-For example, `MappedSuperclassContributionView` lets materialization or tests
-inspect a contribution without mutating the underlying
-`MappedSuperclassContribution`.
+For example, `EntityHierarchyView` lets materialization or tests inspect a
+hierarchy without mutating the underlying `EntityHierarchyBinding`.
 
 Views are useful during the transition because the boot model is still being
 populated and projected into legacy mapping objects in phases.
@@ -299,7 +298,7 @@ Current views include managed-type views such as `EntityHierarchyView`,
 `EntityView`, `MappedSuperclassView`, and `EmbeddableView`, plus focused views
 such as `EntityIdentifierBindingView`, `VersionBindingView`,
 `TenantIdBindingView`, `NaturalIdContributionView`,
-`CollationContributionView`, and `EmbeddableContributionView`.
+and `CollationContributionView`.
 
 == Naming Rules Of Thumb
 

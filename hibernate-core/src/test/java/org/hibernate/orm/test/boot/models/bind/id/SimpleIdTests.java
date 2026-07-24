@@ -114,6 +114,8 @@ public class SimpleIdTests {
 					assertThat( handoff.columns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "id" );
+					assertThat( context.getBindingState().getEntityIdentifierHandoff( handoff.role() ) )
+							.isSameAs( handoff );
 					assertThat( context.getBindingState().getEntityIdentifierHandoff( entityBinding.getIdentifier() ) )
 							.isSameAs( handoff );
 				},
@@ -658,6 +660,34 @@ public class SimpleIdTests {
 
 	@Test
 	@ServiceRegistry
+	void testWholeDerivedIdClassFromIdClassTarget(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> assertWholeTargetIdClassBinding(
+						context,
+						org.hibernate.orm.test.annotations.derivedidentities.e5.a.MedicalHistory.class
+				),
+				scope.getRegistry(),
+				org.hibernate.orm.test.annotations.derivedidentities.e5.a.Person.class,
+				org.hibernate.orm.test.annotations.derivedidentities.e5.a.MedicalHistory.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testWholeDerivedIdClassFromEmbeddedIdTarget(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> assertWholeTargetIdClassBinding(
+						context,
+						org.hibernate.orm.test.annotations.derivedidentities.e6.a.MedicalHistory.class
+				),
+				scope.getRegistry(),
+				org.hibernate.orm.test.annotations.derivedidentities.e6.a.Person.class,
+				org.hibernate.orm.test.annotations.derivedidentities.e6.a.MedicalHistory.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testEmbeddedMapsId(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -921,6 +951,40 @@ public class SimpleIdTests {
 			throw new AssertionError( "Could not locate identifier contribution for " + entityClass.getName() );
 		}
 		return entityIdentifierBindingView;
+	}
+
+	private static void assertWholeTargetIdClassBinding(
+			DomainModelCheckContext context,
+			Class<?> entityClass) {
+		final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+				.getEntityBinding( entityClass.getName() );
+		final Component identifier = (Component) entityBinding.getIdentifier();
+		final EntityIdentifierBindingView identifierBinding = entityIdentifierBinding( context, entityClass );
+		final EntityIdentifierBindingView.Attribute patient = identifierBinding.attribute( "patient" );
+
+		assertThat( identifierBinding.idAttributeNames() ).containsExactly( "patient" );
+		assertThat( patient ).isNotNull();
+		assertThat( patient.extractionKind() ).isEqualTo( IdentifierExtractionKind.WHOLE_TARGET_ID );
+		assertThat( patient.virtualMember().resolveAttributeName() ).isEqualTo( "patient" );
+		assertThat( patient.selectableNames() ).containsExactly( "FK1", "FK2" );
+		assertThat( identifier.getProperties() )
+				.extracting( org.hibernate.mapping.Property::getName )
+				.containsExactly( "patient" );
+		assertThat( identifier.getColumns() )
+				.extracting( org.hibernate.mapping.Column::getName )
+				.containsExactly( "FK1", "FK2" );
+		assertThat( entityBinding.getIdentifierMapper() ).isSameAs( identifier );
+
+		final var handoff = context.getBindingState().getEntityIdentifierHandoff( entityBinding );
+		assertThat( handoff ).isNotNull();
+		assertThat( handoff.identifier().binding() ).isSameAs( identifierBinding.binding() );
+		assertThat( handoff.value() ).isSameAs( identifier );
+		assertThat( handoff.identifierMapper() ).isSameAs( identifier );
+		assertThat( handoff.columns() )
+				.extracting( org.hibernate.mapping.Column::getName )
+				.containsExactly( "FK1", "FK2" );
+		assertThat( context.getBindingState().getEntityIdentifierHandoff( handoff.role() ) )
+				.isSameAs( handoff );
 	}
 
 	private static EntityView entityView(

@@ -471,7 +471,7 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) throws MappingException {
+			ClassLoaderService classLoaderService) throws MappingException {
 		// NOTE: this is called as the last piece in setting SimpleValue type information,
 		//       and implementations rely on that fact, using it as a signal that all
 		//       the information it is going to get is already specified at this point
@@ -484,7 +484,7 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 					throw new MappingException(
 							"Attribute types for a dynamic entity must be explicitly specified: " + propertyName );
 				}
-				typeName = getClass( className, propertyName, buildingContext ).getName();
+				typeName = reflectedPropertyClass( className, propertyName, classLoaderService ).getName();
 				// TODO: To fully support isNationalized here we need to do the process hinted at above
 				// 		 essentially, much of the BasicValueResolutionBuilder converter handling wrt
 				// 		 resolving a (1) JdbcType, a (2) JavaType and dynamically building a BasicType
@@ -499,10 +499,6 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 		// otherwise assume either
 		// (a) explicit type was specified or
 		// (b) determine was already performed
-	}
-
-	private Class<?> getClass(String className, String propertyName, MetadataBuildingContext buildingContext) {
-		return reflectedPropertyClass( className, propertyName, buildingContext.getClassLoaderService() );
 	}
 
 	public boolean isTypeSpecified() {

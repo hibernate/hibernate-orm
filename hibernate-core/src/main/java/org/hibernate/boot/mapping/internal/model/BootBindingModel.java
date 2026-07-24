@@ -11,11 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
-import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.mapping.internal.view.EntityHierarchyView;
 import org.hibernate.boot.mapping.internal.view.EntityView;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
-import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
@@ -362,29 +360,24 @@ public class BootBindingModel {
 		return List.copyOf( mappedSuperclassContributions );
 	}
 
-	public List<MappedSuperclassContributionView> mappedSuperclassContributionViews(IdentifiableTypeMetadata consumer) {
-		final ArrayList<MappedSuperclassContributionView> result = new ArrayList<>();
-		for ( MappedSuperclassContribution contribution : mappedSuperclassContributions ) {
-			if ( contribution.consumer() == consumer ) {
-				result.add( new MappedSuperclassContributionView( contribution ) );
-			}
-		}
-		return result;
-	}
-
 	/**
-	 * Registers an applied mapped-superclass attribute usage with its
+	 * Registers an applied mapped-superclass attribute mapping with its
 	 * contribution.
 	 * <p>
 	 * Callers should use this method instead of mutating
-	 * {@link MappedSuperclassContribution} directly.  The corresponding
-	 * {@link AppliedAttributeMapping} is independently registered in the
-	 * intrinsic role index while the attribute is materialized.
+	 * {@link MappedSuperclassContribution} directly.  The mapping must already
+	 * be registered in the intrinsic role index while the attribute is
+	 * materialized.
 	 */
-	public AttributeUsageBinding addAppliedMappedSuperclassAttributeUsage(
+	public AppliedAttributeMapping addAppliedMappedSuperclassAttributeMapping(
 			MappedSuperclassContribution contribution,
-			AttributeUsageBinding attributeUsage) {
-		return contribution.addAppliedAttributeUsage( attributeUsage );
+			AppliedAttributeMapping appliedMapping) {
+		if ( getAppliedAttributeMapping( appliedMapping.role() ) != appliedMapping ) {
+			throw new IllegalArgumentException(
+					"Mapped-superclass attribute mapping is not registered for role " + appliedMapping.role()
+			);
+		}
+		return contribution.addAppliedAttributeMapping( appliedMapping );
 	}
 
 	public void addEmbeddableContribution(EmbeddableContribution contribution) {
@@ -393,10 +386,6 @@ public class BootBindingModel {
 
 	public List<EmbeddableContribution> embeddableContributions() {
 		return List.copyOf( embeddableContributions );
-	}
-
-	public EmbeddableContributionView embeddableContributionView(EmbeddableContribution contribution) {
-		return new EmbeddableContributionView( contribution );
 	}
 
 }

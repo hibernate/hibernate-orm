@@ -60,16 +60,18 @@ contribution produced the usage.
 `BootBindingModel` owns two complementary products:
 
 * `MappedSuperclassContribution` retains ordered contribution provenance and
-  its applied usages;
+  its role-bearing `AppliedAttributeMapping` applications;
 * the global `MappingRole -> AppliedAttributeMapping` index resolves a
   compatibility projection to its semantic application.
 
 There is no separate mapped-superclass identity map or
-`MappedSuperclassPropertyHandoff`.  Applied usages are registered with their
+`MappedSuperclassPropertyHandoff`.  Applied mappings are registered with their
 contribution through
-`BootBindingModel#addAppliedMappedSuperclassAttributeUsage(...)`, while the
-`AppliedAttributeMapping` is registered in the global role index during
-attribute materialization.
+`BootBindingModel#addAppliedMappedSuperclassAttributeMapping(...)` after the
+same `AppliedAttributeMapping` is registered in the global role index during
+attribute materialization.  Contribution traversal therefore retains the
+stable application role instead of depending on copied `Property` membership
+or identity.
 
 The copied `Property` is still important, but it is not the source of semantic
 truth.  New code should avoid deriving declaration/usage meaning only from the
@@ -157,6 +159,16 @@ where they are really standing in for applied mapped-superclass metadata.
 
 Completed targets:
 
+* store role-bearing `AppliedAttributeMapping` values in each
+  `MappedSuperclassContribution` and remove the copied-property membership
+  test from contribution registration;
+* remove the unused contribution-view lookup which selected consumers by
+  categorized-model object identity;
+* keep mapped-superclass declaration storage independent of physical table
+  placement, while placing each concrete application in either the entity's
+  primary compatibility property list or its secondary-table `Join`; both
+  placements retain the same role-bearing `AppliedAttributeMapping` in the
+  contribution;
 * centralize `AttributeFactory` lookup logic for applied mapped-superclass
   metadata through `MappedSuperclassHandoffResolver`;
 * prefer applied usage member/type for concrete runtime attribute resolution;

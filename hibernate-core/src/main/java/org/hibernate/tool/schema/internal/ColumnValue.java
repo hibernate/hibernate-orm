@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
@@ -122,7 +122,7 @@ public class ColumnValue implements Value {
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) {
+			ClassLoaderService classLoaderService) {
 	}
 
 	@Override

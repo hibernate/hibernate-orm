@@ -157,10 +157,10 @@ notes.
 identifier-part correspondence only where a concrete runtime consumer cannot
 use the current role/selectable handoff correctly.
 
-| link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
+| link:finished/deterministic-attribute-ordering-design.adoc[`finished/deterministic-attribute-ordering-design.adoc`]
 | Resolved
 | Phase-owned ordering and isolation of compatibility sorting.
-| Convert to a concise final-state reference and move under `finished/`.
+| Finished reference.  Reopen only for a concrete ordering regression.
 
 | link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
 | Resolved / Stabilization
@@ -169,9 +169,12 @@ use the current role/selectable handoff correctly.
 low-level compatibility-helper and naming-context narrowing.
 
 | link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
-| Active / Cross-cutting stabilization
-| Current mapping-layer audit of `MetadataBuildingContext` storage, transient parameters, capability needs, and suggested cleanup slices.
-| Keep as the canonical audit for `MetadataBuildingContext` references retained by `org.hibernate.mapping` objects.  Link from the handoff instead of duplicating the census there.
+| Resolved / Stage 2 reference
+| Final mapping-layer audit of `MetadataBuildingContext` storage, transient
+parameters, and completed capability splits.
+| Keep as the evidence that mapping values no longer retain or expose broad
+context.  Naming-source and `UserTypeCreationContext` SPI questions are
+separate follow-ups.
 
 | link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
 | Mostly resolved / Runtime verification
@@ -305,8 +308,8 @@ None should carry current branch status.
 Finished reference/audit artifacts:
 
 * link:finished/annotation-coverage.adoc[`finished/annotation-coverage.adoc`]
-* deterministic attribute ordering, after the current note is reduced to its
-  final phase-owned design and moved here.
+* link:finished/deterministic-attribute-ordering-design.adoc[
+  `finished/deterministic-attribute-ordering-design.adoc`]
 
 == Open Question Routing
 
@@ -387,10 +390,10 @@ question blocks the PR.
 resolved key products and materializers.
 
 | `MetadataBuildingContext`
-| Cross-cutting stabilization
-| Remove stored broad context and phase-ownership violations by capability.
-Total reference count and compatibility constructor parameters are not
-completion metrics.
+| Resolved / follow-up only
+| Mapping objects no longer retain or expose broad context.  Total reference
+count and compatibility constructor parameters are not completion metrics.
+Treat naming-source and `UserTypeCreationContext` SPI narrowing separately.
 
 | SessionFactory bootstrap/construction
 | Blocking

@@ -98,7 +98,7 @@ class AnyValueBinder {
 		any.setTypeUsingReflection(
 				source.member().getDeclaringType().getName(),
 				propertyName,
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		return any;
 	}

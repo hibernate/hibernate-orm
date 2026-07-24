@@ -7,6 +7,7 @@ package org.hibernate.mapping;
 import java.util.function.Function;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.Type;
 
@@ -52,7 +53,7 @@ public class DependantValue extends SimpleValue implements SortableValue {
 	public void setTypeUsingReflection(
 			String className,
 			String propertyName,
-			MetadataBuildingContext buildingContext) {
+			ClassLoaderService classLoaderService) {
 	}
 
 	@Override

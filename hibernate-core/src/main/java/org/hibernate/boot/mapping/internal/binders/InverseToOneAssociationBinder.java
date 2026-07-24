@@ -191,7 +191,7 @@ class InverseToOneAssociationBinder {
 		value.setTypeUsingReflection(
 				inverseBinding.ownerType().getClassDetails().getClassName(),
 				inverseBinding.attributeMetadata().getName(),
-				bindingState.getMetadataBuildingContext()
+				bindingState.getClassLoaderService()
 		);
 		value.setFetchStyle( inverseBinding.value().getFetchStyle() );
 		value.setLazy( inverseBinding.value().isLazy() );

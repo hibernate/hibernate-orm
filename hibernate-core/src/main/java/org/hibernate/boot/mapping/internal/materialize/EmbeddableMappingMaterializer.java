@@ -11,7 +11,6 @@ import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
 import org.hibernate.boot.mapping.internal.binders.MappedSuperTypeBinder;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
-import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.mapping.Collection;
@@ -33,10 +32,10 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 /// source facts.
 ///
 /// This is the first embeddable-side bridge toward the horizontal
-/// binding/view/materialization flow.  The semantic source facts are captured as
-/// an [EmbeddableContribution], exposed through an [EmbeddableContributionView],
-/// and then used to create/configure the mutable `org.hibernate.mapping`
-/// [Component] instances required by current boot/runtime consumers.
+/// binding/materialization flow.  The semantic source facts are captured as an
+/// [EmbeddableContribution] and then used to create/configure the mutable
+/// `org.hibernate.mapping` [Component] instances required by current
+/// boot/runtime consumers.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -47,10 +46,10 @@ public class EmbeddableMappingMaterializer {
 		this.state = state;
 	}
 
-	public EmbeddableContributionView createContributionView(ComponentSource source, BindingContext bindingContext) {
+	public EmbeddableContribution createContribution(ComponentSource source, BindingContext bindingContext) {
 		final EmbeddableContribution contribution = EmbeddableContribution.from( source, state, bindingContext );
 		state.getBootBindingModel().addEmbeddableContribution( contribution );
-		return state.getBootBindingModel().embeddableContributionView( contribution );
+		return contribution;
 	}
 
 	public Component createEmbeddedAttributeComponent(
@@ -63,7 +62,7 @@ public class EmbeddableMappingMaterializer {
 		applyComponentType( component, source.componentType() );
 		applyComponentMappedSuperclass( component, source.componentType() );
 		component.setTable( table );
-		component.setTypeUsingReflection( ownerClassName, attributeName, state.getMetadataBuildingContext() );
+		component.setTypeUsingReflection( ownerClassName, attributeName, state.getClassLoaderService() );
 		return component;
 	}
 
@@ -77,7 +76,7 @@ public class EmbeddableMappingMaterializer {
 		applyComponentType( component, source.componentType() );
 		applyComponentMappedSuperclass( component, source.componentType() );
 		component.setTable( table );
-		component.setTypeUsingReflection( ownerClassName, attributeName, state.getMetadataBuildingContext() );
+		component.setTypeUsingReflection( ownerClassName, attributeName, state.getClassLoaderService() );
 		return component;
 	}
 

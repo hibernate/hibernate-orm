@@ -45,6 +45,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -61,6 +62,8 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * @author Steve Ebersole
@@ -426,6 +429,183 @@ public class EmbeddableBindingTests {
 
 	@Test
 	@ServiceRegistry
+	void testPolymorphicContributionOwnsSubtypeMembers(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( PolymorphicEmbeddableEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "value" ).getValue();
+					final var contribution = bootBindingModel.embeddableContributions()
+							.stream()
+							.filter( candidate -> candidate.componentType().getName()
+									.equals( PolymorphicValue.class.getName() ) )
+							.findFirst()
+							.orElseThrow();
+					final var appliedMapping =
+							bootBindingModel.getAppliedEmbeddableMapping( component.getMappingRole() );
+					final var contributedMemberNames = contribution.members()
+							.stream()
+							.map( ComponentMemberBinding::attributeName )
+							.toList();
+					final var discriminatorSource = contribution.discriminator();
+
+					assertThat( component.isPolymorphic() ).isTrue();
+					assertThat( discriminatorSource.polymorphic() ).isTrue();
+					assertThat( discriminatorSource.discriminatorColumn().name() )
+							.isEqualTo( "polymorphic_value_type" );
+					assertThat( discriminatorSource.discriminatorValues() )
+							.containsExactly(
+									entry( unqualify( PolymorphicValue.class.getName() ), PolymorphicValue.class.getName() ),
+									entry(
+											unqualify( FirstPolymorphicValue.class.getName() ),
+											FirstPolymorphicValue.class.getName()
+									),
+									entry(
+											unqualify( SecondPolymorphicValue.class.getName() ),
+											SecondPolymorphicValue.class.getName()
+									)
+							);
+					assertThat( discriminatorSource.subclassToSuperclass() )
+							.containsExactly(
+									entry( FirstPolymorphicValue.class.getName(), PolymorphicValue.class.getName() ),
+									entry( SecondPolymorphicValue.class.getName(), PolymorphicValue.class.getName() )
+							);
+					assertThat( component.getDiscriminatorValues() )
+							.isEqualTo( discriminatorSource.discriminatorValues() );
+					assertThat( component.getSubclassToSuperclass() )
+							.isEqualTo( discriminatorSource.subclassToSuperclass() );
+					assertThat( ( (AppliedMappingPart) component.getDiscriminator() ).getMappingRole() )
+							.isEqualTo( component.getMappingRole().append( MappingRole.PartKind.DISCRIMINATOR ) );
+					assertThat( contributedMemberNames )
+							.containsExactlyInAnyOrder( "baseValue", "firstValue", "secondValue" );
+					assertThat( contribution.members() )
+							.extracting( member -> member.declaringType().getName() )
+							.containsExactlyInAnyOrder(
+									PolymorphicValue.class.getName(),
+									FirstPolymorphicValue.class.getName(),
+									SecondPolymorphicValue.class.getName()
+							);
+					assertThat( appliedMapping.contribution() ).isSameAs( contribution );
+					assertThat( appliedMapping.attributes() )
+							.extracting( mapping -> mapping.usage().attributeName() )
+							.containsExactlyElementsOf( contributedMemberNames );
+					assertThat( appliedMapping.attributes() )
+							.extracting( mapping -> mapping.role() )
+							.containsExactlyElementsOf(
+									contributedMemberNames.stream()
+											.map( component.getMappingRole()::appendAttribute )
+											.toList()
+							);
+				},
+				scope.getRegistry(),
+				PolymorphicValue.class,
+				FirstPolymorphicValue.class,
+				SecondPolymorphicValue.class,
+				PolymorphicEmbeddableEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testGenericMappedSuperclassAndPolymorphicSubtypeShareAppliedMapping(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( GenericPolymorphicEmbeddableEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "value" ).getValue();
+					final var contribution = bootBindingModel.embeddableContributions()
+							.stream()
+							.filter( candidate -> candidate.componentType().getName()
+									.equals( GenericPolymorphicValue.class.getName() ) )
+							.findFirst()
+							.orElseThrow();
+					final var appliedMapping =
+							bootBindingModel.getAppliedEmbeddableMapping( component.getMappingRole() );
+					final ComponentMemberBinding amount = componentMember( contribution.members(), "amount" );
+					final ComponentMemberBinding subtypeValue =
+							componentMember( contribution.members(), "subtypeValue" );
+
+					assertThat( contribution.discriminator().polymorphic() ).isTrue();
+					assertThat( contribution.discriminator().discriminatorColumn().name() )
+							.isEqualTo( "generic_polymorphic_type" );
+					assertThat( contribution.members() )
+							.extracting( ComponentMemberBinding::attributeName )
+							.containsExactlyInAnyOrder( "amount", "baseValue", "subtypeValue" );
+					assertThat( amount ).isInstanceOf( AttributeUsageBinding.class );
+					assertThat( amount.resolvedType().determineRawClass().toJavaClass() )
+							.isEqualTo( java.math.BigDecimal.class );
+					assertThat( subtypeValue.declaringType().getName() )
+							.isEqualTo( GenericPolymorphicSubtype.class.getName() );
+					assertThat( appliedMapping.contribution() ).isSameAs( contribution );
+					assertThat( appliedMapping.findAttribute( "amount" ).usage() ).isSameAs( amount );
+					assertThat( appliedMapping.findAttribute( "subtypeValue" ).usage() ).isSameAs( subtypeValue );
+
+					final var resolver = new EmbeddableHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					);
+					assertHandoffMatches(
+							resolver.findMemberBinding( component, component.getProperty( "amount" ) ),
+							amount
+					);
+					assertHandoffMatches(
+							resolver.findMemberBinding( component, component.getProperty( "subtypeValue" ) ),
+							subtypeValue
+					);
+				},
+				scope.getRegistry(),
+				GenericPolymorphicValue.class,
+				GenericPolymorphicSubtype.class,
+				GenericPolymorphicEmbeddableEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testNestedPolymorphicDiscriminatorUsesNestedContribution(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( NestedPolymorphicEntity.class.getName() );
+					final Component container = (Component) entityBinding.getProperty( "container" ).getValue();
+					final Component nested = (Component) container.getProperty( "nested" ).getValue();
+					final var contribution = bootBindingModel.embeddableContributions()
+							.stream()
+							.filter( candidate -> candidate.componentType().getName()
+									.equals( NestedPolymorphicValue.class.getName() ) )
+							.findFirst()
+							.orElseThrow();
+					final var discriminatorSource = contribution.discriminator();
+
+					assertThat( discriminatorSource.polymorphic() ).isTrue();
+					assertThat( discriminatorSource.discriminatorColumn().name() )
+							.isEqualTo( "nested_polymorphic_type" );
+					assertThat( nested.isPolymorphic() ).isTrue();
+					assertThat( nested.getDiscriminator() ).isNotNull();
+					assertThat( nested.getDiscriminator().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "nested_polymorphic_type" );
+					assertThat( ( (AppliedMappingPart) nested.getDiscriminator() ).getMappingRole() )
+							.isEqualTo( nested.getMappingRole().append( MappingRole.PartKind.DISCRIMINATOR ) );
+					assertThat( nested.getDiscriminatorValues() )
+							.isEqualTo( discriminatorSource.discriminatorValues() );
+					assertThat( nested.getSubclassToSuperclass() )
+							.isEqualTo( discriminatorSource.subclassToSuperclass() );
+					assertThat( bootBindingModel.getAppliedEmbeddableMapping( nested.getMappingRole() ).contribution() )
+							.isSameAs( contribution );
+				},
+				scope.getRegistry(),
+				NestedPolymorphicContainer.class,
+				NestedPolymorphicValue.class,
+				NestedPolymorphicSubtype.class,
+				NestedPolymorphicEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testExplicitEmbedded(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
@@ -491,6 +671,69 @@ public class EmbeddableBindingTests {
 							.containsExactly( "line1", "zipCode" );
 				},
 				scope.getRegistry(),
+				ImplicitEmbeddedEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testExplicitAndImplicitEmbeddedShareDeclarationButNotApplication(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final PersistentClass explicitEntity = context.getMetadataCollector()
+							.getEntityBinding( ExplicitEmbeddedEntity.class.getName() );
+					final PersistentClass implicitEntity = context.getMetadataCollector()
+							.getEntityBinding( ImplicitEmbeddedEntity.class.getName() );
+					final Component explicitComponent =
+							(Component) explicitEntity.getProperty( "address" ).getValue();
+					final Component implicitComponent =
+							(Component) implicitEntity.getProperty( "address" ).getValue();
+					final var explicitApplication =
+							bootBindingModel.getAppliedEmbeddableMapping( explicitComponent.getMappingRole() );
+					final var implicitApplication =
+							bootBindingModel.getAppliedEmbeddableMapping( implicitComponent.getMappingRole() );
+					final var explicitLine = explicitApplication.findAttribute( "line1" );
+					final var implicitLine = implicitApplication.findAttribute( "line1" );
+
+					assertThat( bootBindingModel.embeddableContributions() ).hasSize( 2 );
+					assertThat( bootBindingModel.embeddableContributions() )
+							.extracting( contribution -> contribution.kind() )
+							.containsOnly( ComponentSource.Kind.EMBEDDED_ATTRIBUTE );
+					assertThat( bootBindingModel.embeddableContributions() )
+							.extracting( contribution -> contribution.componentType().getName() )
+							.containsOnly( Address.class.getName() );
+					assertThat( explicitApplication.contribution() )
+							.isNotSameAs( implicitApplication.contribution() );
+					assertThat( explicitApplication.role() )
+							.isEqualTo( MappingRole.entity( explicitEntity.getEntityName() ).appendAttribute( "address" ) );
+					assertThat( implicitApplication.role() )
+							.isEqualTo( MappingRole.entity( implicitEntity.getEntityName() ).appendAttribute( "address" ) );
+					assertThat( explicitApplication.role() ).isNotEqualTo( implicitApplication.role() );
+					assertThat( explicitLine.declaration() ).isSameAs( implicitLine.declaration() );
+					assertThat( explicitLine.usage() ).isNotSameAs( implicitLine.usage() );
+					assertThat( explicitLine.role() ).isNotEqualTo( implicitLine.role() );
+
+					final var resolver = new EmbeddableHandoffResolver(
+							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
+					);
+					assertHandoffMatches(
+							resolver.findMemberBinding(
+									explicitComponent,
+									explicitComponent.getProperty( "line1" )
+							),
+							explicitLine.usage()
+					);
+					assertHandoffMatches(
+							resolver.findMemberBinding(
+									implicitComponent,
+									implicitComponent.getProperty( "line1" )
+							),
+							implicitLine.usage()
+					);
+				},
+				scope.getRegistry(),
+				ExplicitEmbeddedEntity.class,
 				ImplicitEmbeddedEntity.class
 		);
 	}
@@ -1259,6 +1502,82 @@ public class EmbeddableBindingTests {
 
 	@Embeddable
 	public static class GenericAmount extends GenericAmountBase<java.math.BigDecimal> {
+	}
+
+	@Embeddable
+	@DiscriminatorColumn(name = "polymorphic_value_type")
+	public static class PolymorphicValue {
+		private String baseValue;
+	}
+
+	@Embeddable
+	public static class FirstPolymorphicValue extends PolymorphicValue {
+		private String firstValue;
+	}
+
+	@Embeddable
+	public static class SecondPolymorphicValue extends PolymorphicValue {
+		private String secondValue;
+	}
+
+	@Entity
+	public static class PolymorphicEmbeddableEntity {
+		@Id
+		private Integer id;
+
+		@Embedded
+		private PolymorphicValue value;
+	}
+
+	@MappedSuperclass
+	public static class GenericPolymorphicBase<T extends Number> {
+		private T amount;
+	}
+
+	@Embeddable
+	@DiscriminatorColumn(name = "generic_polymorphic_type")
+	public static class GenericPolymorphicValue extends GenericPolymorphicBase<java.math.BigDecimal> {
+		private String baseValue;
+	}
+
+	@Embeddable
+	public static class GenericPolymorphicSubtype extends GenericPolymorphicValue {
+		private String subtypeValue;
+	}
+
+	@Entity
+	public static class GenericPolymorphicEmbeddableEntity {
+		@Id
+		private Integer id;
+
+		@Embedded
+		private GenericPolymorphicValue value;
+	}
+
+	@Embeddable
+	public static class NestedPolymorphicContainer {
+		@Embedded
+		private NestedPolymorphicValue nested;
+	}
+
+	@Embeddable
+	@DiscriminatorColumn(name = "nested_polymorphic_type")
+	public static class NestedPolymorphicValue {
+		private String nestedBaseValue;
+	}
+
+	@Embeddable
+	public static class NestedPolymorphicSubtype extends NestedPolymorphicValue {
+		private String nestedSubtypeValue;
+	}
+
+	@Entity
+	public static class NestedPolymorphicEntity {
+		@Id
+		private Integer id;
+
+		@Embedded
+		private NestedPolymorphicContainer container;
 	}
 
 	public static class CityConverter implements AttributeConverter<String, String> {

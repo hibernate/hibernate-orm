@@ -357,7 +357,16 @@ tasks.withType( Test.class ).configureEach { test ->
 tasks.named( "javadoc", Javadoc ) {
     configure(options) {
         overview = rootProject.file( "shared/javadoc/overview.html" )
-        exclude( "**/internal/**", "org/hibernate/boot/jaxb/**", "org/hibernate/tuple/**", "org/hibernate/grammars/hql/**" )
+        exclude(
+                "**/internal/**",
+                "org/hibernate/boot/jaxb/**",
+                "org/hibernate/tuple/**",
+                "org/hibernate/grammars/hql/**",
+                "org/hibernate/dialect/sql/ast/**",
+                "org/hibernate/query/sqm/**",
+                "org/hibernate/sql/**",
+                "org/hibernate/type/format/**"
+        )
     }
 }
 

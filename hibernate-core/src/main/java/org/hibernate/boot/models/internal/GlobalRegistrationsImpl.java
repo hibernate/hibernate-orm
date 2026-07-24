@@ -30,6 +30,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFetchProfileImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterDefImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJdbcTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeStatementImpl;
@@ -126,6 +127,7 @@ import static org.hibernate.boot.models.HibernateAnnotations.TYPE_REGISTRATION;
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.collectResultClasses;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifyConditionallyIfNot;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
@@ -689,6 +691,16 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 							? explicitRename
 							: unqualify( classDetails.getName() );
 			collectImportRename( rename, classDetails.getName() );
+		}
+	}
+
+	public void collectHqlImports(List<JaxbHqlImportImpl> hqlImports, String packageName) {
+		for ( var hqlImport : hqlImports ) {
+			final String className = qualifyConditionallyIfNot( packageName, hqlImport.getClazz() );
+			final String rename = hqlImport.getRename() != null
+					? hqlImport.getRename()
+					: unqualify( className );
+			collectImportRename( rename, className );
 		}
 	}
 

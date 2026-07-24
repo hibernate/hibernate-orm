@@ -198,6 +198,9 @@ public class CacheLoadHelper {
 							instanceToLoad,
 							entityKey
 					);
+			if ( entity == null ) {
+				return null;
+			}
 			if ( !persister.isInstance( entity ) ) {
 				// Clean up the inconsistent return class entity from the persistence context
 				final var persistenceContext = source.getPersistenceContext();
@@ -266,10 +269,12 @@ public class CacheLoadHelper {
 		if ( instanceToLoad != null ) {
 			entity = instanceToLoad;
 		}
+		else if ( oldHolder != null && oldHolder.getEntity() != null ) {
+			return oldHolder.getEntityEntry() != null && oldHolder.getEntityEntry().getStatus().isDeletedOrGone() ? null
+					: oldHolder.getEntity();
+		}
 		else {
-			entity = oldHolder != null && oldHolder.getEntity() != null
-					? oldHolder.getEntity()
-					: source.instantiate( subclassPersister, entityId );
+			entity = source.instantiate( subclassPersister, entityId );
 		}
 
 		if ( isPersistentAttributeInterceptable( entity ) ) {

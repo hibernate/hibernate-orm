@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.Origin;
@@ -58,6 +59,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToAnyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapKeyBasicType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
@@ -126,6 +128,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbGeneratedValueImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbHqlImportImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbInheritanceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
@@ -776,7 +779,9 @@ public class HbmXmlTransformer {
 				final var ormImport = new JaxbHqlImportImpl();
 				ormRoot.getHqlImports().add( ormImport );
 				ormImport.setClazz( hbmImport.getClazz() );
-				ormImport.setRename( hbmImport.getRename() );
+				final String rename = hbmImport.getRename();
+				// In hbm.xml rename is optional and defaults to the unqualified class name
+				ormImport.setRename( rename != null ? rename : StringHelper.unqualify( hbmImport.getClazz() ) );
 			}
 		}
 	}
@@ -1903,6 +1908,10 @@ public class HbmXmlTransformer {
 
 		jaxbManyToOne.setForeignKey( transformForeignKey( hbmNode.getForeignKey() ) );
 
+		if ( hbmNode.getOnDelete() == JaxbHbmOnDeleteEnum.CASCADE ) {
+			jaxbManyToOne.setOnDelete( OnDeleteAction.CASCADE );
+		}
+
 		if ( hbmNode.getNotFound() != null ) {
 			jaxbManyToOne.setNotFound( interpretNotFoundAction( hbmNode.getNotFound() ) );
 		}
@@ -2050,15 +2059,37 @@ public class HbmXmlTransformer {
 				target::setAccess,
 				target::setAttributeAccessor
 		);
-		target.setFetchMode( convert( source.getFetch(), source.getOuterJoin() ) );
-		target.setFetch( convert( source.getLazy() ) );
+		final var fetchMode = convert( source.getFetch(), source.getOuterJoin() );
+		final var fetchType = convert( source.getLazy() );
+		// In hbm.xml, fetch="join" and lazy="true" are independent: the collection stays lazy
+		// and uses join fetching only when initialized. In orm.xml, fetch-mode="JOIN" maps to
+		// @Fetch(FetchMode.JOIN) which forces eager loading (CollectionBinder overrides lazy to
+		// false for JOIN). Since a lazy collection uses a separate SELECT regardless of fetch
+		// style, we drop fetch-mode="JOIN" for lazy collections to preserve the lazy semantics.
+		if ( fetchMode != JaxbPluralFetchModeImpl.JOIN || fetchType != FetchType.LAZY ) {
+			target.setFetchMode( fetchMode );
+		}
+		target.setFetch( fetchType );
 		target.setOptimisticLock( source.isOptimisticLock() );
 		target.setMutable( source.isMutable() );
 
 		if ( isNotEmpty( source.getCollectionType() ) ) {
 			final var jaxbCollectionUserType = new JaxbCollectionUserTypeImpl();
 			target.setCollectionType( jaxbCollectionUserType );
-			jaxbCollectionUserType.setType( source.getCollectionType() );
+			// resolve typedef alias to the actual implementation class and transfer parameters
+			final var typeDef = transformationState.getTypeDefMap().get( source.getCollectionType() );
+			if ( typeDef != null ) {
+				jaxbCollectionUserType.setType( typeDef.getClazz() );
+				for ( var param : typeDef.getConfigParameters() ) {
+					final var jaxbParam = new JaxbConfigurationParameterImpl();
+					jaxbParam.setName( param.getName() );
+					jaxbParam.setValue( param.getValue() );
+					jaxbCollectionUserType.getParameters().add( jaxbParam );
+				}
+			}
+			else {
+				jaxbCollectionUserType.setType( source.getCollectionType() );
+			}
 		}
 
 		if ( source instanceof JaxbHbmSetType set ) {
@@ -3255,7 +3286,7 @@ public class HbmXmlTransformer {
 		}
 
 		jaxbKyManyToOne.setOptional( false );
-		jaxbKyManyToOne.setFetch( FetchType.EAGER );
+		jaxbKyManyToOne.setFetch( FetchType.LAZY );
 		jaxbKyManyToOne.setFetchMode( JaxbSingularFetchModeImpl.SELECT );
 		jaxbKyManyToOne.setNotFound( NotFoundAction.EXCEPTION );
 
@@ -3369,7 +3400,9 @@ public class HbmXmlTransformer {
 			JaxbHbmCompositeIdType hbmCompositeId,
 			Component idClassMapping,
 			JaxbEntityImpl mappingXmlEntity) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		final var idClass = new JaxbIdClassImpl();
+		idClass.setClazz( getFullyQualifiedClassName( hbmCompositeId.getClazz() ) );
+		mappingXmlEntity.setIdClass( idClass );
 	}
 
 	private JaxbIdImpl transformNonAggregatedKeyProperty(

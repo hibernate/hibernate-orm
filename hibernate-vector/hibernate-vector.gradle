@@ -10,6 +10,21 @@ plugins {
 
 description = 'Hibernate\'s extensions for vector support'
 
+jar {
+    manifest {
+        attributes(
+                'Import-Package': [
+                        // Oracle JDBC Vector type: used only when running against Oracle
+                        'oracle.*;resolution:=optional',
+                        // MS SQL Server JDBC Vector type: used only when running against SQL Server
+                        'microsoft.*;resolution:=optional',
+                        // All other referenced packages are required
+                        '*'
+                ].join(',')
+        )
+    }
+}
+
 dependencies {
     api project( ':hibernate-core' )
 

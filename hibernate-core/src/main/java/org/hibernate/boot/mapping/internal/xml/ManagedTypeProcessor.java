@@ -36,11 +36,7 @@ import org.hibernate.boot.mapping.internal.xml.attr.BasicIdAttributeProcessing;
 import org.hibernate.boot.mapping.internal.xml.attr.CommonAttributeProcessing;
 import org.hibernate.boot.mapping.internal.xml.attr.EmbeddedIdAttributeProcessing;
 import org.hibernate.models.ModelsException;
-import org.hibernate.models.internal.ClassTypeDetailsImpl;
-import org.hibernate.models.internal.ModelsClassLogging;
-import org.hibernate.models.internal.dynamic.DynamicClassDetails;
-import org.hibernate.models.rendering.internal.RenderingTargetCollectingImpl;
-import org.hibernate.models.rendering.internal.SimpleRenderer;
+import org.hibernate.models.Creator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
@@ -109,10 +105,10 @@ public class ManagedTypeProcessor {
 							// we expect the super to have been processed first.
 							// not worth the effort to support the delay
 							superClass = classDetailsRegistry.getClassDetails( jaxbEntity.getExtends() );
-							superType = new ClassTypeDetailsImpl( superClass, TypeDetails.Kind.CLASS );
+							superType = TypeDetails.classType( superClass );
 						}
 
-						return new DynamicClassDetails(
+						return Creator.createDynamicClassDetails(
 								jaxbEntity.getName(),
 								null,
 								jaxbEntity.isAbstract() != null && jaxbEntity.isAbstract(),
@@ -373,12 +369,9 @@ public class ManagedTypeProcessor {
 
 	private static void renderClass(MutableClassDetails classDetails, XmlDocumentContext xmlDocumentContext) {
 		if ( XML_PROCESS_LOGGER.isTraceEnabled() ) {
-			final var collectingTarget = new RenderingTargetCollectingImpl();
-			new SimpleRenderer( collectingTarget )
-					.renderClass( classDetails, xmlDocumentContext.getModelsContext() );
 			XML_PROCESS_LOGGER.tracef( "Class annotations from XML for %s:\n%s",
 					classDetails.getName(),
-					collectingTarget.toString() );
+					classDetails.render( xmlDocumentContext.getModelsContext() ) );
 		}
 	}
 
@@ -622,7 +615,7 @@ public class ManagedTypeProcessor {
 			memberAdjuster.adjust( memberDetails, jaxbEmbeddedId, xmlDocumentContext );
 		}
 		else {
-			ModelsClassLogging.MODELS_CLASS_LOGGER.debugf(
+			XML_PROCESS_LOGGER.debugf(
 					"Identifiable type [%s] contained no <id/> nor <embedded-id/>",
 					classDetails.getName()
 			);
@@ -727,7 +720,7 @@ public class ManagedTypeProcessor {
 					jaxbEmbeddable.getName(),
 					xmlDocumentContext,
 					classDetailsRegistry,
-					() -> new DynamicClassDetails( jaxbEmbeddable.getName(),
+					() -> Creator.createDynamicClassDetails( jaxbEmbeddable.getName(),
 							xmlDocumentContext.getModelsContext() )
 			);
 			classAccessType = AccessType.FIELD;

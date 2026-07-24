@@ -78,6 +78,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
@@ -211,7 +212,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			importName = StringHelper.unqualifyEntityName( entityName );
 		}
 
-		binding.setClassName( classDetails.getClassName() );
+		binding.setClassDetails( classDetails );
 		binding.setEntityName( entityName );
 		binding.setJpaEntityName( importName );
 
@@ -496,12 +497,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 
 		final TypeDetails resolvedType = attribute.getMember().resolveRelativeType( getManagedType().getClassDetails() );
-		final Property actualProperty = declaredProperty.copy();
-		actualProperty.setGeneric( false );
-		actualProperty.setGenericSpecialization( true );
-		actualProperty.setReturnedClassName( resolvedType.getName() );
-
-		final var value = declaredProperty.getValue().copy();
+		final MappingRole mappingRole =
+				MappingRole.entity( binding.getEntityName() ).appendAttribute( declaredProperty.getName() );
+		final var value = copyValueForApplication( declaredProperty.getValue(), mappingRole );
 		applyResolvedGenericType( value, resolvedType );
 		if ( value instanceof BasicValue basicValue && declaredProperty.getValue() instanceof BasicValue originalBasicValue ) {
 			copyBasicValueDetails( basicValue, originalBasicValue );
@@ -513,10 +511,39 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 								getBindingState().getMetadataBuildingContext().getServiceComponents(),
 								getBindingState().getMappingResolutionState()
 						)
-				);
+			);
 		}
-		actualProperty.setValue( value );
+		final Property actualProperty = declaredProperty.copyForApplication(
+				mappingRole,
+				value
+		);
+		actualProperty.setGeneric( false );
+		actualProperty.setGenericSpecialization( true );
+		actualProperty.setReturnedClassName( resolvedType.getName() );
 		binding.addProperty( actualProperty );
+	}
+
+	private org.hibernate.mapping.Value copyValueForApplication(
+			org.hibernate.mapping.Value source,
+			MappingRole mappingRole) {
+		if ( source instanceof Component component ) {
+			final List<Property> applicationProperties = component.getProperties()
+					.stream()
+					.map( (property) -> {
+						final MappingRole propertyRole = mappingRole.appendAttribute( property.getName() );
+						return property.copyForApplication(
+								propertyRole,
+								copyValueForApplication( property.getValue(), propertyRole )
+						);
+					} )
+					.toList();
+			return component.copyForApplication(
+					getBindingState().getMetadataBuildingContext(),
+					mappingRole,
+					applicationProperties
+			);
+		}
+		return source.copy();
 	}
 
 	private boolean hasDeclaredProperty(String propertyName) {
@@ -1282,6 +1309,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		assert softDeleteAnn != null;
 
 		final BasicValue softDeleteIndicatorValue = BasicValue.unregistered( getBindingState().getMetadataBuildingContext(), table );
+		softDeleteIndicatorValue.setMappingRole(
+				MappingRole.entity( getTypeBinding().getEntityName() ).append( MappingRole.PartKind.SOFT_DELETE )
+		);
 		softDeleteIndicatorValue.makeSoftDelete( softDeleteAnn.strategy() );
 		final java.lang.reflect.Type indicatorJavaType;
 		if ( softDeleteAnn.strategy() == SoftDeleteType.TIMESTAMP ) {

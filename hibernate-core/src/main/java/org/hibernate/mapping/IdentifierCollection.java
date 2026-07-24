@@ -44,6 +44,31 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
+		if ( identifier instanceof AppliedMappingPart mappingPart && getRole() != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.collection( getRole() ).append( MappingRole.PartKind.COLLECTION_IDENTIFIER )
+			);
+		}
+	}
+
+	@Override
+	public void setRole(String role) {
+		super.setRole( role );
+		if ( identifier instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.collection( role ).append( MappingRole.PartKind.COLLECTION_IDENTIFIER )
+			);
+		}
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		super.setMappingRole( mappingRole );
+		if ( identifier instanceof AppliedMappingPart mappingPart ) {
+			mappingPart.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.COLLECTION_IDENTIFIER )
+			);
+		}
 	}
 
 	public final boolean isIdentified() {

@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.models.spi.ModelsContext;
@@ -13,7 +14,7 @@ import jakarta.persistence.FieldResult;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class FieldResultJpaAnnotation implements FieldResult {
+public class FieldResultJpaAnnotation implements FieldResult, Serializable {
 	private String name;
 	private String column;
 

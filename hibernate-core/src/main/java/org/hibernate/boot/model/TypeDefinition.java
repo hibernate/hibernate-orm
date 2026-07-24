@@ -64,7 +64,7 @@ public class TypeDefinition implements Serializable {
 	private final String[] registrationKeys;
 	private final Map<String,String> parameters;
 
-	private BasicValue.Resolution<?> reusableResolution;
+	private transient BasicValue.Resolution<?> reusableResolution;
 
 
 	public TypeDefinition(

@@ -15,9 +15,12 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -48,14 +51,26 @@ public class SoftDeleteHelper {
 			Table table,
 			MetadataBuildingContext context) {
 		assert softDeleteConfig != null;
-		final var softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn(
-				softDeleteConfig,
-				createSoftDeleteIndicatorValue( softDeleteConfig, table, context ),
-				context
-		);
+		final BasicValue softDeleteIndicatorValue = createSoftDeleteIndicatorValue( softDeleteConfig, table, context );
+		assignMappingRole( target, softDeleteIndicatorValue );
+		final var softDeleteIndicatorColumn =
+				createSoftDeleteIndicatorColumn( softDeleteConfig, softDeleteIndicatorValue, context );
 		applyResolution( softDeleteConfig, softDeleteIndicatorColumn, context );
 		table.addColumn( softDeleteIndicatorColumn );
 		target.enableSoftDelete( softDeleteIndicatorColumn, softDeleteConfig.strategy() );
+	}
+
+	private static void assignMappingRole(SoftDeletable target, BasicValue value) {
+		if ( target instanceof Collection collection && collection.getRole() != null ) {
+			value.setMappingRole(
+					MappingRole.collection( collection.getRole() ).append( MappingRole.PartKind.SOFT_DELETE )
+			);
+		}
+		else if ( target instanceof RootClass rootClass && rootClass.getEntityName() != null ) {
+			value.setMappingRole(
+					MappingRole.entity( rootClass.getEntityName() ).append( MappingRole.PartKind.SOFT_DELETE )
+			);
+		}
 	}
 
 	private static BasicValue createSoftDeleteIndicatorValue(

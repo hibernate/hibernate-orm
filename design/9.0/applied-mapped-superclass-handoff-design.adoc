@@ -19,7 +19,9 @@ Mapped-superclass attributes now have an explicit declaration-to-usage handoff:
 ----
 AttributeDeclarationBinding
         -> AttributeUsageBinding
-        -> MappedSuperclassPropertyHandoff
+        -> AppliedAttributeMapping (MappingRole)
+        -> Property (same MappingRole)
+        -> MappedSuperclassHandoffResolver
         -> runtime metamodel consumers
 ----
 
@@ -33,8 +35,11 @@ The pipeline separates semantic model facts from compatibility projection:
   type after generic substitution.
   When stored by a `MappedSuperclassContribution`, it is the applied
   mapped-superclass attribute usage.
-* `MappedSuperclassPropertyHandoff` links the applied metadata to the copied
-  legacy `Property` materialized for `PersistentClass` compatibility.
+* `AppliedAttributeMapping` gives the concrete usage a stable `MappingRole`.
+  The copied legacy `Property` materialized for `PersistentClass`
+  compatibility carries the same role.
+* `MappedSuperclassHandoffResolver` uses that role to recover the applied
+  metadata without an object-identity correspondence.
 * Runtime metamodel consumers should prefer the applied metadata when they need
   declaration/usage type or member facts.
 
@@ -52,21 +57,19 @@ It answers questions such as:
 The owning `MappedSuperclassContribution` answers which mapped-superclass
 contribution produced the usage.
 
-`BootBindingModel` owns indexed lookup for applied mapped-superclass attribute
-usages.  Applied usages should be registered through
-`BootBindingModel#addAppliedMappedSuperclassAttributeUsage(...)` so the
-contribution's ordered provenance/list state and the owner-qualified lookup
-index remain consistent.  The lookup accepts both `ClassDetails#getName()` and
-`ClassDetails#getClassName()` for the nearest concrete entity consumer.
+`BootBindingModel` owns two complementary products:
 
-`MappedSuperclassPropertyHandoff` is a compatibility bridge.
+* `MappedSuperclassContribution` retains ordered contribution provenance and
+  its applied usages;
+* the global `MappingRole -> AppliedAttributeMapping` index resolves a
+  compatibility projection to its semantic application.
 
-It answers questions such as:
-
-* which copied `Property` represents the applied attribute for legacy
-  consumers;
-* which nearest entity owner received the copied property;
-* which semantic attribute usage corresponds to that copied property.
+There is no separate mapped-superclass identity map or
+`MappedSuperclassPropertyHandoff`.  Applied usages are registered with their
+contribution through
+`BootBindingModel#addAppliedMappedSuperclassAttributeUsage(...)`, while the
+`AppliedAttributeMapping` is registered in the global role index during
+attribute materialization.
 
 The copied `Property` is still important, but it is not the source of semantic
 truth.  New code should avoid deriving declaration/usage meaning only from the
@@ -135,12 +138,14 @@ resolve the applied metadata through
 `RuntimeModelCreationContext#getMappedSuperclassHandoffResolver()` and then use
 that metadata for semantic choices.
 
-The desired lookup order is:
+The lookup order is:
 
-* resolve owner-qualified mapped-superclass property handoff when available;
-* use `MappedSuperclassPropertyHandoff#attributeUsage()` for semantic facts;
-* fall back to boot-model lookup by nearest entity consumer and attribute name;
-* finally fall back to legacy copied `Property` bridge facts.
+* use the copied applied property's intrinsic `MappingRole`;
+* for a declaration-side mapped-superclass property, derive the concrete role
+  from the nearest entity consumer and attribute name;
+* resolve `AppliedAttributeMapping` through the global role index;
+* finally fall back to legacy copied `Property` bridge facts when there is no
+  applied mapping.
 
 This keeps the bridge localized and prevents `Property#isGenericSpecialization`
 from spreading as the semantic test for mapped-superclass generic usage.
@@ -150,7 +155,7 @@ from spreading as the semantic test for mapped-superclass generic usage.
 The next code slices should retire ad hoc generic-specialization checks only
 where they are really standing in for applied mapped-superclass metadata.
 
-Near-term targets:
+Completed targets:
 
 * centralize `AttributeFactory` lookup logic for applied mapped-superclass
   metadata through `MappedSuperclassHandoffResolver`;
@@ -159,8 +164,13 @@ Near-term targets:
   `MappedSuperclassHandoffResolver`, which prefers applied usage metadata and
   keeps `Property#isGenericSpecialization()` localized as a compatibility
   fallback;
+* remove `MappedSuperclassPropertyHandoff`, its `BindingState` identity map,
+  and the parallel entity-alias/attribute-name lookup index;
 * keep public generic-domain compatibility assertions in place while concrete
   resolved model assertions use usage type;
+
+Remaining targets:
+
 * leave lower-level mapping checks such as column-duplication filtering on
   copied-property compatibility until schema/runtime consumers have equivalent
   applied metadata access.

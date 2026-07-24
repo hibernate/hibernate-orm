@@ -1829,8 +1829,7 @@ public class XmlAnnotationHelper {
 				HibernateAnnotations.SQL_INSERTS,
 				xmlDocumentContext.getModelsContext()
 		);
-		final SQLInsertAnnotation sqlInsert = HibernateAnnotations.SQL_INSERT.createUsage(
-				xmlDocumentContext.getModelsContext()
+		final SQLInsertAnnotation sqlInsert = HibernateAnnotations.SQL_INSERT.createUsage( xmlDocumentContext.getModelsContext()
 		);
 		applyCustomSql( jaxbSecondaryTable.getSqlInsert(), sqlInsert, jaxbSecondaryTable.getName() );
 
@@ -1856,8 +1855,7 @@ public class XmlAnnotationHelper {
 				HibernateAnnotations.SQL_UPDATES,
 				xmlDocumentContext.getModelsContext()
 		);
-		final SQLUpdateAnnotation sqlUpdate = HibernateAnnotations.SQL_UPDATE.createUsage(
-				xmlDocumentContext.getModelsContext()
+		final SQLUpdateAnnotation sqlUpdate = HibernateAnnotations.SQL_UPDATE.createUsage( xmlDocumentContext.getModelsContext()
 		);
 		applyCustomSql( jaxbSecondaryTable.getSqlUpdate(), sqlUpdate, jaxbSecondaryTable.getName() );
 
@@ -1883,8 +1881,7 @@ public class XmlAnnotationHelper {
 				HibernateAnnotations.SQL_DELETES,
 				xmlDocumentContext.getModelsContext()
 		);
-		final SQLDeleteAnnotation sqlDelete = HibernateAnnotations.SQL_DELETE.createUsage(
-				xmlDocumentContext.getModelsContext()
+		final SQLDeleteAnnotation sqlDelete = HibernateAnnotations.SQL_DELETE.createUsage( xmlDocumentContext.getModelsContext()
 		);
 		applyCustomSql( jaxbSecondaryTable.getSqlDelete(), sqlDelete, jaxbSecondaryTable.getName() );
 

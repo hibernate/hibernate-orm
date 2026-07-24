@@ -9,7 +9,6 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.context.MappedSuperclassPropertyHandoff;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
@@ -18,7 +17,6 @@ import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializ
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassContribution;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
-import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
@@ -98,7 +96,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		}
 
 		this.binding = new MappedSuperclass( superMappedSuper, superEntity, getTable() );
-		this.binding.setMappedClass( type.getClassDetails().toJavaClass() );
+		this.binding.setClassDetails( type.getClassDetails() );
 		if ( superMappedSuper != null ) {
 			superMappedSuper.addSubType( binding );
 		}
@@ -183,7 +181,6 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 						(EntityTypeMetadata) subType
 				);
 				getBindingState().getBootBindingModel().addMappedSuperclassContribution( contribution );
-				final var contributionView = new MappedSuperclassContributionView( contribution );
 				// Transitional contribution-lite bridge: until PersistentClass derives inherited mapped-superclass
 				// state by traversing applied contributions, bind each declared property only into the nearest
 				// consuming entity.  Entity subclasses then inherit it through the normal entity closure.
@@ -196,16 +193,8 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 						(property, usage) -> {
 							applyMappedSuperclassProperty( property, entityBinding );
 							if ( entityBinding.getMappedSuperclassProperties().contains( property ) ) {
-								final var attributeUsage = getBindingState().getBootBindingModel()
+								getBindingState().getBootBindingModel()
 										.addAppliedMappedSuperclassAttributeUsage( contribution, usage );
-								getBindingState().addMappedSuperclassPropertyHandoff(
-										new MappedSuperclassPropertyHandoff(
-												contributionView,
-												attributeUsage,
-												entityBinding,
-												property
-										)
-								);
 							}
 						},
 						true,
@@ -253,14 +242,13 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private Component createDeclaredIdentifierMapper(Component identifierMapper, KeyMapping idMapping) {
-		final Component declaredIdentifierMapper = identifierMapper.copy();
-		declaredIdentifierMapper.clearProperties();
+		final java.util.List<Property> declaredProperties = new java.util.ArrayList<>();
 		for ( Property property : identifierMapper.getProperties() ) {
 			if ( declaresAttribute( property.getName(), idMapping ) ) {
-				declaredIdentifierMapper.addProperty( property );
+				declaredProperties.add( property.copyForDeclarationView() );
 			}
 		}
-		return declaredIdentifierMapper;
+		return identifierMapper.copyForDeclaration( declaredProperties );
 	}
 
 	private boolean declaresKeyAttribute(KeyMapping keyMapping) {
@@ -306,11 +294,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		}
 
 		final MemberDetails member = attribute.getMember();
-		final Property declaredProperty = identifierProperty.copy();
-		declaredProperty.setGeneric( true );
-		declaredProperty.setReturnedClassName( member.getType().getName() );
-
-		final Value declaredValue = identifierProperty.getValue().copy();
+		Value declaredValue = identifierProperty.getValue().copy();
 		if ( declaredValue instanceof Component component ) {
 			component.setComponentClassDetails( member.getType().determineRawClass() );
 			final Class<?> componentClass = component.getComponentClass();
@@ -318,24 +302,25 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				component.clearProperties();
 			}
 			else {
-				final var propertyIterator = component.getProperties().iterator();
 				final var propertyAccessStrategyResolver =
 						getBindingContext().getServiceRegistry().requireService( PropertyAccessStrategyResolver.class );
-				while ( propertyIterator.hasNext() ) {
+				component.removePropertiesIf( property -> {
 					try {
-						propertyIterator.next().getGetter( componentClass, propertyAccessStrategyResolver );
+						property.getGetter( componentClass, propertyAccessStrategyResolver );
+						return false;
 					}
 					catch (PropertyNotFoundException e) {
-						propertyIterator.remove();
+						return true;
 					}
-				}
+				} );
 			}
 		}
 		else if ( identifierProperty.getValue() instanceof BasicValue basicValue ) {
-			declaredProperty.setValue( genericBasicValue( basicValue ) );
-			return declaredProperty;
+			declaredValue = genericBasicValue( basicValue );
 		}
-		declaredProperty.setValue( declaredValue );
+		final Property declaredProperty = identifierProperty.copyForDeclaration( declaredValue );
+		declaredProperty.setGeneric( true );
+		declaredProperty.setReturnedClassName( member.getType().getName() );
 		return declaredProperty;
 	}
 
@@ -352,7 +337,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		}
 
 		addGenericDeclaredPropertyIfNeeded( property );
-		entityBinding.addMappedSuperclassProperty( property, binding );
+		entityBinding.addMappedSuperclassProperty( property );
 	}
 
 	private void addGenericDeclaredPropertyIfNeeded(Property property) {
@@ -363,12 +348,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 			return;
 		}
 
-		final Property genericProperty = property.copy();
-		genericProperty.setGeneric( true );
-		genericProperty.setGenericSpecialization( false );
-		genericProperty.setReturnedClassName( attribute.getMember().getType().getName() );
-
-		final Value genericValue = property.getValue().copy();
+		Value genericValue = property.getValue().copy();
 		if ( genericValue instanceof ToOne toOne ) {
 			toOne.setReferencedEntityName( attribute.getMember().getType().getName() );
 			toOne.setTypeName( attribute.getMember().getType().getName() );
@@ -386,16 +366,15 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				);
 				metadataCollector.registerGenericComponent( genericComponent );
 			}
-			genericProperty.setValue( genericComponent );
-			binding.addDeclaredProperty( genericProperty );
-			return;
+			genericValue = genericComponent;
 		}
 		else if ( property.getValue() instanceof BasicValue basicValue ) {
-			genericProperty.setValue( genericBasicValue( basicValue ) );
-			binding.addDeclaredProperty( genericProperty );
-			return;
+			genericValue = genericBasicValue( basicValue );
 		}
-		genericProperty.setValue( genericValue );
+		final Property genericProperty = property.copyForDeclaration( genericValue );
+		genericProperty.setGeneric( true );
+		genericProperty.setGenericSpecialization( false );
+		genericProperty.setReturnedClassName( attribute.getMember().getType().getName() );
 		binding.addDeclaredProperty( genericProperty );
 	}
 

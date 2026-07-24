@@ -38,7 +38,7 @@ class CollectionMappingHelper {
 				? null
 				: customType.customTypeBeanResolver();
 
-		return switch ( classification ) {
+		final Collection collection = switch ( classification ) {
 			case SET, ORDERED_SET, SORTED_SET -> new org.hibernate.mapping.Set(
 					customTypeBeanResolver,
 					ownerBinding,
@@ -82,6 +82,11 @@ class CollectionMappingHelper {
 				yield array;
 			}
 		};
+		if ( customType != null ) {
+			collection.setTypeName( customType.implementation().getName() );
+			collection.setTypeParameters( customType.parameters() );
+		}
+		return collection;
 	}
 
 	private static CustomCollectionType resolveCustomCollectionType(
@@ -99,6 +104,8 @@ class CollectionMappingHelper {
 					);
 			return new CustomCollectionType(
 					customTypeBeanResolver.get().getBeanInstance().getClassification(),
+					collectionType.type(),
+					extractParameters( collectionType.parameters() ),
 					customTypeBeanResolver
 			);
 		}
@@ -111,6 +118,8 @@ class CollectionMappingHelper {
 		final CollectionClassification classification = registrationClassification( source, bindingState );
 		return new CustomCollectionType(
 				classification,
+				registration.implementation(),
+				registration.parameters(),
 				() -> createUserTypeBean(
 						source.member().getDeclaringType().getName() + "#" + source.member().getName(),
 						registration.implementation(),
@@ -173,6 +182,8 @@ class CollectionMappingHelper {
 
 	private record CustomCollectionType(
 			CollectionClassification classification,
+			Class<? extends UserCollectionType> implementation,
+			Map<String, String> parameters,
 			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver) {
 	}
 }

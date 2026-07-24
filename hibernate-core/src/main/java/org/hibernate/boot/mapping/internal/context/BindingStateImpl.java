@@ -45,8 +45,6 @@ import org.hibernate.boot.mapping.internal.relational.SecondaryTable;
 import org.hibernate.boot.mapping.internal.relational.TableOwner;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
-import org.hibernate.boot.mapping.internal.view.EmbeddableContributionView;
-import org.hibernate.boot.mapping.internal.view.MappedSuperclassContributionView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
@@ -65,7 +63,6 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
@@ -140,8 +137,6 @@ public class BindingStateImpl implements BindingState {
 			new java.util.ArrayList<>();
 	private final java.util.List<StateManagementBindingPhase.PropertyExclusions> stateManagementPropertyBindings =
 			new java.util.ArrayList<>();
-	private final Map<Property, MappedSuperclassPropertyHandoff> mappedSuperclassPropertyHandoffs =
-			new IdentityHashMap<>();
 	private final Map<Property, NaturalIdPropertyHandoff> naturalIdPropertyHandoffs =
 			new IdentityHashMap<>();
 	private final java.util.List<NaturalIdPropertyHandoff> naturalIdPropertyHandoffList =
@@ -161,10 +156,6 @@ public class BindingStateImpl implements BindingState {
 	private final Map<Property, VersionPropertyHandoff> versionPropertyHandoffsByProperty =
 			new IdentityHashMap<>();
 	private final java.util.List<VersionPropertyHandoff> versionPropertyHandoffList =
-			new java.util.ArrayList<>();
-	private final Map<Component, EmbeddableComponentHandoff> embeddableComponentHandoffs =
-			new IdentityHashMap<>();
-	private final java.util.List<EmbeddableComponentHandoff> embeddableComponentHandoffList =
 			new java.util.ArrayList<>();
 	private final java.util.List<StateManagementBindingPhase.CollectionMapping> stateManagementCollectionBindings =
 			new java.util.ArrayList<>();
@@ -287,7 +278,7 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addMappedSuperclass(Class<?> mappedSuperclassClass, MappedSuperclass mappedSuperclass) {
+	public void addMappedSuperclass(ClassDetails mappedSuperclassClass, MappedSuperclass mappedSuperclass) {
 		metadataCollector.addMappedSuperclass( mappedSuperclassClass, mappedSuperclass );
 	}
 
@@ -449,7 +440,7 @@ public class BindingStateImpl implements BindingState {
 		}
 		else if ( binder instanceof MappedSuperTypeBinder mappedSuperBinder ) {
 			addMappedSuperclass(
-					mappedSuperBinder.getManagedType().getClassDetails().toJavaClass(),
+					mappedSuperBinder.getManagedType().getClassDetails(),
 					mappedSuperBinder.getTypeBinding()
 			);
 		}
@@ -743,39 +734,6 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addMappedSuperclassPropertyHandoff(MappedSuperclassPropertyHandoff handoff) {
-		mappedSuperclassPropertyHandoffs.put( handoff.property(), handoff );
-	}
-
-	@Override
-	public MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(Property property) {
-		return mappedSuperclassPropertyHandoffs.get( property );
-	}
-
-	@Override
-	public MappedSuperclassPropertyHandoff getMappedSuperclassPropertyHandoff(PersistentClass owner, Property property) {
-		final MappedSuperclassPropertyHandoff handoff = getMappedSuperclassPropertyHandoff( property );
-		return handoff != null && handoff.owner() == owner ? handoff : null;
-	}
-
-	@Override
-	public List<MappedSuperclassPropertyHandoff> getMappedSuperclassPropertyHandoffs(
-			MappedSuperclassContributionView contribution) {
-		return mappedSuperclassPropertyHandoffs.values()
-				.stream()
-				.filter( handoff -> handoff.contribution().contribution() == contribution.contribution() )
-				.toList();
-	}
-
-	@Override
-	public List<MappedSuperclassPropertyHandoff> getMappedSuperclassPropertyHandoffs(PersistentClass owner) {
-		return mappedSuperclassPropertyHandoffs.values()
-				.stream()
-				.filter( handoff -> handoff.owner() == owner )
-				.toList();
-	}
-
-	@Override
 	public void addNaturalIdPropertyHandoff(NaturalIdPropertyHandoff handoff) {
 		naturalIdPropertyHandoffs.put( handoff.property(), handoff );
 		naturalIdPropertyHandoffList.add( handoff );
@@ -866,35 +824,6 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addEmbeddableComponentHandoff(EmbeddableComponentHandoff handoff) {
-		embeddableComponentHandoffs.put( handoff.component(), handoff );
-		embeddableComponentHandoffList.add( handoff );
-		bootBindingModel.addEmbeddableComponentHandoff( handoff.contribution(), handoff.component() );
-	}
-
-	@Override
-	public EmbeddableComponentHandoff getEmbeddableComponentHandoff(Component component) {
-		return embeddableComponentHandoffs.get( component );
-	}
-
-	@Override
-	public List<EmbeddableComponentHandoff> getEmbeddableComponentHandoffs(
-			EmbeddableContributionView contribution) {
-		return embeddableComponentHandoffList
-				.stream()
-				.filter( handoff -> handoff.contribution().contribution() == contribution.contribution() )
-				.toList();
-	}
-
-	@Override
-	public List<EmbeddableComponentHandoff> getEmbeddableComponentHandoffs(PersistentClass owner) {
-		return embeddableComponentHandoffList
-				.stream()
-				.filter( handoff -> handoff.owner() == owner )
-				.toList();
-	}
-
-	@Override
 	public void addStateManagementCollectionBinding(StateManagementBindingPhase.CollectionMapping binding) {
 		stateManagementCollectionBindings.add( binding );
 	}
@@ -963,6 +892,7 @@ public class BindingStateImpl implements BindingState {
 				registration.autoEnabled(),
 				registration.applyToLoadByKey(),
 				extractParameterMap( registration ),
+				extractParameterTypeClassNames( registration ),
 				extractParameterResolvers( registration )
 		) );
 	}
@@ -977,6 +907,17 @@ public class BindingStateImpl implements BindingState {
 		parameters.forEach( (name, typeDetails) -> {
 			result.put( name, FilterDefBinder.resolveFilterParamType( typeDetails.toJavaClass(), metadataBuildingContext ) );
 		} );
+		return result;
+	}
+
+	private Map<String, String> extractParameterTypeClassNames(FilterDefRegistration registration) {
+		final Map<String, ClassDetails> parameters = registration.parameterTypes();
+		if ( CollectionHelper.isEmpty( parameters ) ) {
+			return Collections.emptyMap();
+		}
+
+		final Map<String, String> result = new HashMap<>();
+		parameters.forEach( (name, typeDetails) -> result.put( name, typeDetails.getClassName() ) );
 		return result;
 	}
 

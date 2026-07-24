@@ -100,7 +100,7 @@ public class AnnotationHelper {
 
 						@Override
 						public Dialect getDialect() {
-							return context.getMetadataCollector().getDatabase().getDialect();
+							return context.getServiceComponents().getJdbcServices().getDialect();
 						}
 					}
 			);

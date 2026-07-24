@@ -105,20 +105,17 @@ public class JoinColumnProcessing {
 				joinColumnsOrFormulasUsage.value( joinColumnOrFormulaList );
 
 				for ( int i = 0; i < jaxbJoinColumnsOrFormulas.size(); i++ ) {
-					final JoinColumnOrFormulaAnnotation joinColumnOrFormulaUsage = HibernateAnnotations.JOIN_COLUMN_OR_FORMULA.createUsage(
-							xmlDocumentContext.getModelsContext() );
+					final JoinColumnOrFormulaAnnotation joinColumnOrFormulaUsage = HibernateAnnotations.JOIN_COLUMN_OR_FORMULA.createUsage( xmlDocumentContext.getModelsContext() );
 					joinColumnOrFormulaList[i] = joinColumnOrFormulaUsage;
 
 					final Serializable jaxbJoinColumnOrFormula = jaxbJoinColumnsOrFormulas.get( i );
 					if ( jaxbJoinColumnOrFormula instanceof JaxbJoinColumnImpl jaxbJoinColumn ) {
-						final JoinColumnJpaAnnotation joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage(
-								xmlDocumentContext.getModelsContext() );
+						final JoinColumnJpaAnnotation joinColumnUsage = JpaAnnotations.JOIN_COLUMN.createUsage( xmlDocumentContext.getModelsContext() );
 						joinColumnOrFormulaUsage.column( joinColumnUsage );
 						joinColumnUsage.apply( jaxbJoinColumn, xmlDocumentContext );
 					}
 					else if ( jaxbJoinColumnOrFormula instanceof String jaxbJoinFormula ) {
-						final JoinFormulaAnnotation joinFormulaUsage = HibernateAnnotations.JOIN_FORMULA.createUsage(
-								xmlDocumentContext.getModelsContext() );
+						final JoinFormulaAnnotation joinFormulaUsage = HibernateAnnotations.JOIN_FORMULA.createUsage( xmlDocumentContext.getModelsContext() );
 						joinColumnOrFormulaUsage.formula( joinFormulaUsage );
 						joinFormulaUsage.value( jaxbJoinFormula );
 					}
@@ -152,8 +149,7 @@ public class JoinColumnProcessing {
 
 			for ( int i = 0; i < jaxbJoinColumns.size(); i++ ) {
 				final Serializable jaxbJoinColumnOrFormula = jaxbJoinColumns.get( i );
-				final JoinColumnJpaAnnotation joinColumnUsage = JOIN_COLUMN.createUsage(
-						xmlDocumentContext.getModelsContext() );
+				final JoinColumnJpaAnnotation joinColumnUsage = JOIN_COLUMN.createUsage( xmlDocumentContext.getModelsContext() );
 				joinColumn[i] = joinColumnUsage;
 				joinColumnUsage.apply( (JaxbJoinColumnImpl) jaxbJoinColumnOrFormula, xmlDocumentContext );
 			}

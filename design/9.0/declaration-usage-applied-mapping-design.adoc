@@ -1,0 +1,710 @@
+= Declaration, Usage, and Applied-Mapping Design
+:toc:
+
+This note defines the cross-cutting ORM 9 model for distinguishing source
+declarations, contextual usages, and concrete applied mappings.  It also
+defines how those semantic products relate to the legacy
+`org.hibernate.mapping` graph and how they receive stable identity.
+
+This is the canonical target design for this distinction.  The following notes
+remain useful for narrower concerns:
+
+* link:boot-model-terminology.adoc[`boot-model-terminology.adoc`] defines the
+  shared vocabulary;
+* link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+  describes the wider contribution and correspondence model;
+* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+  describes hierarchy-specific mapped-superclass application;
+* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+  describes embedding-site-specific contribution state;
+* link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`]
+  describes the current archive boundary which exposed several of the
+  ambiguities addressed here.
+
+== Motivation
+
+The same source declaration may have different meanings at different usage
+sites.
+
+Consider:
+
+[source,java]
+----
+@Embeddable
+class Box<T> {
+    T value;
+}
+
+@MappedSuperclass
+class Base<T> {
+    @Embedded
+    Box<T> box;
+}
+
+@Entity
+class Customer extends Base<String> {
+}
+----
+
+There is one declaration of `Base#box` and one declaration of `Box#value`.
+There is a declaration-relative usage of `Box<T>` at `Base.box`, followed by a
+concrete application to `Customer`, where `T` resolves to `String` and table,
+column, converter, and other relational decisions become final.
+
+The current compatibility mapping graph represents several of these concepts
+using `Property` and `Component`.  Mapped-superclass binding can consequently
+materialize both declaration-side component templates and concrete component
+occurrences.  Runtime handoff code must then classify the objects and infer
+which surviving components represent real mapping occurrences.
+
+That classification is a necessary compatibility repair, but it should not be
+the primary semantic model.
+
+== Core Decision
+
+The semantic binding model owns declarations, usages, and applied mappings.
+`org.hibernate.mapping` objects are materialized projections of that model.
+
+The complete semantic definitions should not be duplicated as flags and
+loosely-related fields on `Property`, `Component`, or other `Value`
+implementations.  Mapping objects instead carry:
+
+* intrinsic stable mapping identity when they represent an applied mapping;
+* declaration provenance where it is useful for inspection or compatibility;
+* stable role-based correlation to semantic binding objects during migration.
+
+The target flow is:
+
+[source]
+----
+source annotations / XML
+        -> declarations
+        -> contextual usages
+        -> applied mappings
+        -> org.hibernate.mapping compatibility projections
+        -> schema and runtime models
+----
+
+Direct entity attributes are still modeled uniformly even when their
+declaration, usage, and application have a one-to-one relationship.
+
+== Semantic Products
+
+=== Declaration
+
+A declaration records facts which are true independently of a consumer:
+
+* declaration container;
+* declared attribute name and source member;
+* declared type, including unresolved type variables;
+* source access and broad attribute nature;
+* annotations, XML, and other declarative mapping facts.
+
+A declaration does not own a concrete entity table, embedding path, generic
+specialization, applied override, or runtime mapping role.
+
+Illustrative contract:
+
+[source,java]
+----
+interface AttributeDeclaration {
+    DeclarationRole role();
+    ManagedTypeDeclaration container();
+    String name();
+    MemberDetails member();
+    TypeDetails declaredType();
+    AttributeNature nature();
+}
+----
+
+`AttributeDeclarationBinding` is the current binding-model form of this
+concept.
+
+=== Usage
+
+A usage interprets a declaration within another semantic context.  It records:
+
+* the declaration being used;
+* the usage container and usage-relative path;
+* the type-variable environment visible at that site;
+* source-member interpretation for the site;
+* effective source-level overrides and value intent.
+
+A usage may be relative to a non-concrete declaration.  For example,
+`Base.box` is a meaningful usage of `Box<T>` even before `Base<T>` is applied
+to `Customer`.
+
+Illustrative contract:
+
+[source,java]
+----
+interface AttributeUsage {
+    UsageRole role();
+    AttributeDeclaration declaration();
+    AttributeUsageContainer container();
+    TypeVariableScope typeEnvironment();
+    ValueIntent valueIntent();
+}
+----
+
+The current `AttributeUsageBinding`, `ComponentMemberBinding`, and
+`EmbeddableContribution` already capture much of this state.  Some current
+usage objects also contain applied-mapping facts; migration should separate
+those responsibilities where the distinction is observable.
+
+=== Applied Mapping
+
+An applied mapping is the concrete result of applying a usage to a final
+entity, collection, identifier, join, or other relational mapping context.
+It records:
+
+* the source usage and declaration;
+* the concrete mapping container;
+* resolved generic/member type;
+* intrinsic stable mapping role;
+* table, selectable, and storage mapping;
+* selected converter, custom type, mutability, and other interpreted
+  declarations;
+* the applied nested mapping structure.
+
+Illustrative contract:
+
+[source,java]
+----
+record AppliedAttributeMapping(
+        AttributeUsageBinding usage,
+        MappingRole role) {
+    AttributeDeclarationBinding declaration();
+    DeclarationRole declarationRole();
+    MappingRole containerRole();
+    TypeDetails resolvedType();
+}
+----
+
+This is the minimal semantic core.  The declaration, declaration role,
+concrete container role, and resolved type are derived without retaining a
+`Property`, `Value`, or other compatibility mapping projection.
+
+An applied embeddable groups the direct attribute applications made within one
+concrete component role:
+
+[source,java]
+----
+record AppliedEmbeddableMapping(
+        EmbeddableContribution contribution,
+        MappingRole role,
+        List<AppliedAttributeMapping> attributes) {
+}
+----
+
+Each direct attribute must have the embeddable role as its `containerRole`.
+A nested embeddable is a separate product whose role is also the role of the
+corresponding direct attribute.  This represents nesting without retaining
+semantic-object or compatibility-projection links.
+
+As more interpretation moves out of `org.hibernate.mapping`, the product can
+grow value-specific applied state:
+
+[source,java]
+----
+interface AppliedValueMapping {
+    MappingRole role();
+    RelationalValueMapping relationalMapping();
+    InterpretedTypeMapping interpretedType();
+}
+----
+
+One usage may produce multiple applied mappings.  For example, a
+mapped-superclass usage may be applied independently to several entity
+hierarchies with different generic substitutions and table contexts.
+
+== Example Product Graph
+
+For the example above, the semantic graph is:
+
+[source]
+----
+AttributeDeclaration Base#box : Box<T>
+AttributeDeclaration Box#value : T
+
+AttributeUsage Base.box
+    declaration-relative component usage : Box<T>
+    nested usage : Box#value as T
+
+AppliedAttributeMapping Customer.box
+    source usage : Base.box
+    resolved component type : Box<String>
+    mapping role : entity:Customer#attribute:box
+
+AppliedAttributeMapping Customer.box.value
+    declaration : Box#value
+    resolved type : String
+    mapping role : entity:Customer#attribute:box.value
+----
+
+The declaration-relative usage and concrete application are different
+semantic objects even if compatibility materialization temporarily creates a
+`Component` for each.
+
+== Relationship to `org.hibernate.mapping`
+
+=== `Property`
+
+A `Property` attached to a concrete entity/component mapping is the
+compatibility projection corresponding to an `AppliedAttributeMapping`.  It is
+not the source declaration.  The two correlate through their common
+`MappingRole`; the applied product does not need to retain the `Property`, and
+the `Property` does not need a back-reference to the applied product.
+
+During migration it carries the semantic identity needed for that
+correlation:
+
+[source,java]
+----
+class Property {
+    private MappingRole mappingRole;
+    private DeclarationRole declarationRole;
+
+    // existing compatibility mapping state
+}
+----
+
+`BootBindingModel` indexes applied attributes by `MappingRole` and rejects
+duplicate concrete roles.  Correctness therefore does not depend on Java object
+identity or a transient cross-link.
+
+`PropertyMappingMaterializer` consumes the applied attribute product for
+concrete projections, while declaration-side projections continue to consume a
+usage with a null mapping role during the compatibility transition.
+
+Declaration-side `Property` objects exposed through `MappedSuperclass` remain
+compatibility projections.  If callers must distinguish these projections
+during migration, that distinction should be explicit:
+
+[source,java]
+----
+enum MappingProjectionNature {
+    DECLARATION,
+    APPLIED
+}
+----
+
+This enum is compatibility metadata.  It does not replace the semantic
+declaration/usage/applied objects.
+
+=== `Component`
+
+A concrete `Component` is the compatibility projection corresponding to an
+applied embeddable mapping occurrence.  It receives the same mapping role when
+materialized:
+
+[source,java]
+----
+class Component {
+    private MappingRole mappingRole;
+
+    // existing compatibility state
+}
+----
+
+`BootBindingModel` indexes the immutable applied product by that role.  Neither
+side retains a reference to the other.
+
+An embeddable Java type declaration is not itself a concrete `Component`.
+Where compatibility APIs require a declaration-side component projection, it
+has declaration provenance but no concrete applied-mapping role.
+
+This removes the need to infer semantic kind from whether a component copy
+happens to survive in the finalized mapping graph.
+
+=== Other `Value` Implementations
+
+Stable identity belongs on `Value`, or on a shared mapping-part contract, not
+only on `Property`.  Important mappings do not always have a containing
+property:
+
+* entity identifier and discriminator;
+* collection key, element, index, and collection identifier;
+* join key;
+* embeddable discriminator;
+* soft-delete value.
+
+Nested values derive their role from their applied container and local mapping
+part.  Mapping-object copies must either preserve the same projection identity
+intentionally or receive a newly-derived applied role.  Copying must never
+silently duplicate a concrete role.
+
+=== Construction-Time Identity
+
+The semantic binding model knows declaration and applied-mapping identity before
+materializing a compatibility mapping projection.  This identity should
+therefore be construction-time state rather than something inferred from later
+graph attachment.
+
+`DeclarationRole` is known whenever a mapping property projects a source
+attribute declaration.  Synthetic properties may legitimately have no
+declaration role.
+
+`MappingRole` is known for every concrete applied occurrence:
+
+* entity attributes derive it from the entity and attribute path;
+* nested embeddable members derive it from the containing component role;
+* identifiers, versions, and discriminators derive it from the entity role;
+* collection parts derive it from the collection role;
+* join keys derive it from the entity and join role;
+* soft-delete values derive it from their entity or collection target.
+
+Declaration-side compatibility projections, including mapped-superclass and
+embeddable templates retained for compatibility APIs, deliberately have no
+`MappingRole`.
+
+This does not include a parameterized embeddable usage resolved in the context
+of a mapped superclass.  Although the legacy `Component` is retained by the
+mapped-superclass graph, it represents a concrete specialization of the
+embeddable declaration and is therefore an applied mapping.  Such a component
+and its members use a `MAPPED_SUPERCLASS`-rooted role.  This distinction is
+needed, for example, to correlate the concrete generic embeddable model with its
+resolved member usages without retaining a component-identity handoff.
+
+The semantic products should make these decisions immutable immediately:
+
+[source,java]
+----
+record AppliedAttributeMapping(
+        AttributeUsageBinding usage,
+        MappingRole role) {
+}
+----
+
+The long-term compatibility projection API should likewise receive identity
+when the object is created:
+
+[source,java]
+----
+new Property( declarationRole, mappingRole );
+new Component( ..., mappingRole );
+new BasicValue( ..., mappingRole );
+----
+
+Here `mappingRole` is nullable only for a declaration-side projection.
+
+The current `org.hibernate.mapping` API still supports zero-argument
+construction, programmatic mutation, and order-dependent assembly such as
+calling `Collection#setRole`, `setElement`, and `setIndex` in different orders.
+Its role fields therefore cannot become final in one step without either
+breaking compatibility or preserving parallel mutable construction paths.
+
+The migration is:
+
+. add role-aware constructors used by the new materializers;
+. retain internal compatibility setters temporarily, but make them assign-once
+  and reject reassignment to a different role;
+. make copying explicit about semantic intent, for example
+  `copyForDeclaration(value)`, `copyForSameApplication()`, and
+  `copyForApplication(newRole, value)`;
+. isolate legacy/programmatic construction;
+. make compatibility-projection role fields final once all ORM construction
+  flows use the role-aware path.
+
+A copy must never temporarily share a value carrying the original applied role
+while presenting itself as a declaration or different applied occurrence.
+Requiring the destination role at the copy boundary makes this invariant
+explicit.
+
+The first explicit copy slice implements that boundary for `Property` and
+`Component`:
+
+* `Property#copyForDeclaration(value)` requires a roleless declarative value
+  and retains only declaration identity; that value may be shared by
+  compatibility projections of the same declarative value so deferred
+  resolution is not duplicated.  A null value is permitted for transitional
+  generic declaration templates which intentionally have no materialized
+  value;
+* `Property#copyForDeclarationView()` is the explicit legacy bridge for a
+  roleless declaration property which must share an already-applied value,
+  notably the mapped-superclass identifier-mapper view; it is not independent
+  declarative mapping state;
+* `Property#copyForSameApplication()` is reserved for transient compatibility
+  projections and retains the existing value and mapping role;
+* `Property#copyForApplication(role, value)` atomically installs a roleless
+  copied value and its new application role, avoiding mutation of the source
+  value;
+* `Component#copyForDeclaration(properties)` requires roleless copied
+  properties and rebuilds polymorphic declaration provenance;
+* `Component#copyForSameApplication()` retains the existing component role and
+  shared properties;
+* `Component#copyForApplication(context, role, properties)` registers a new
+  component application, independently copies its discriminator, and installs
+  independently materialized child properties relative to the destination
+  role.  It retains the source component's physical table and owner context;
+  a component moved to a collection table or another owner must instead be
+  constructed for that destination.
+
+Identifier mappers are compatibility projections, not second physical
+applications.  A separately constructed identifier-mapper component has its
+own `IDENTIFIER_MAPPER` role and assigns child roles relative to that root.
+When an identifier component is shallowly projected into the mapper shape,
+`copyForSameApplication()` retains the component and nested-property
+application roles while the containing mapper property has its
+`IDENTIFIER_MAPPER`-relative role.  When the identifier component itself is
+also used as the mapper, installing the mapper must not replace its canonical
+`IDENTIFIER` role.
+
+An identifier-mapper `ToOne` is different: it is an independently materialized
+association projection whose role is the mapper attribute role.
+`ToOne#copyForApplication(role)` copies the association mapping state and
+selectables while assigning that destination role at the copy boundary.
+
+Component-valued collection indexes created for `@MapKey(name)` and inverse
+mapped-by maps are also new applications.  Their values and recursively copied
+properties receive roles relative to the destination collection's `INDEX`
+role.
+
+Synthetic property-ref components installed on an entity are compatibility
+projections with a generated entity-attribute role.  The synthetic property
+and component share that role, while their child properties are
+same-application aliases of the original mapped attributes and retain the
+original values and roles.  Sharing is essential because association-target
+resolution may complete a source `ToOne` after the synthetic projection is
+assembled.  Association-target and table-key binding use the same projection
+materializer so this identity and lifecycle policy cannot diverge.
+
+A partial component assembled only while matching referenced columns is not an
+applied mapping.  It is an explicitly transient property-selection view: the
+selected source properties remain shared, the view has no mapping role, and it
+must never be attached to the boot mapping graph.
+
+Legacy `copy()` remains available for compatibility, but the identifier-mapper,
+collection-index, and synthetic-association call sites are now expressed using
+operations that identify their projection nature and destination role.
+
+== Stable Semantic Identity
+
+Two identities are needed.
+
+=== Declaration Role
+
+`DeclarationRole` identifies source meaning:
+
+[source]
+----
+type:org.example.Base#attribute:box
+type:org.example.Box#attribute:value
+----
+
+Multiple applied mappings may refer to the same declaration role.
+
+=== Mapping Role
+
+`MappingRole` identifies one concrete applied mapping:
+
+[source]
+----
+entity:Customer#attribute:box
+entity:Customer#attribute:box.value
+entity:Customer#identifier
+collection:Customer.orders#element.address.city
+----
+
+The role must distinguish root and part kinds, not merely concatenate
+untyped strings.  An illustrative structure is:
+
+[source,java]
+----
+record MappingRoot(MappingRootKind kind, String name) {}
+
+enum MappingRootKind {
+    ENTITY,
+    MAPPED_SUPERCLASS,
+    COLLECTION
+}
+
+record MappingPart(MappingPartKind kind, String name) {}
+
+enum MappingPartKind {
+    ATTRIBUTE,
+    IDENTIFIER,
+    IDENTIFIER_MAPPER,
+    VERSION,
+    DISCRIMINATOR,
+    JOIN,
+    KEY,
+    ELEMENT,
+    INDEX,
+    COLLECTION_IDENTIFIER,
+    SOFT_DELETE
+}
+----
+
+The exact representation may be optimized, but equality and serialization
+must preserve the typed semantic structure.
+
+=== Relationship to `NavigableRole`
+
+`NavigableRole` is the closest existing abstraction and is directionally the
+right model:
+
+* immutable and serializable;
+* hierarchical;
+* value-based;
+* already used as runtime mapping-model identity.
+
+Its current contract is tailored to the runtime mapping metamodel: roots are
+entities or collections, equality is based on the rendered path, and special
+runtime path rules such as identifier-mapper elision are built into rendering.
+Boot mapping identity also needs mapped-superclass/declaration roots and
+unambiguous typed parts such as key, element, discriminator, and soft-delete.
+
+The preferred direction is to generalize `NavigableRole` into a shared
+`MappingRole` abstraction, consistent with the rename already suggested by
+`NavigableRole` Javadoc.  If compatibility prevents that immediately, a
+boot-time `MappingRole` may be introduced first with an explicit conversion to
+runtime `NavigableRole`.
+
+A plain dotted string is not the target representation.  The strings currently
+created by `MappingModelGraphIndex` are useful canonical renderings, but the
+role should be assigned intrinsically during applied-mapping materialization
+instead of reconstructed later by graph traversal.
+
+== Materialization
+
+Materialization consumes applied semantic products:
+
+[source,java]
+----
+Component materialize(AppliedEmbeddableMapping applied) {
+    Component component = new Component(...);
+    component.setMappingRole( applied.role() );
+    component.setDeclarationRole( applied.declaration().role() );
+
+    for ( AppliedAttributeMapping attribute : applied.attributes() ) {
+        Property property = materializeProperty( attribute );
+        property.setMappingRole( attribute.role() );
+        property.setDeclarationRole( attribute.declaration().role() );
+        component.addProperty( property );
+    }
+
+    return component;
+}
+----
+
+Roles are therefore available to:
+
+* mapping resolution registration;
+* runtime-model and JPA-metamodel handoff;
+* archive creation and restoration;
+* diagnostics and duplicate detection;
+* schema and selectable correspondence.
+
+`MappingModelGraphIndex` becomes a validation/indexing mechanism over
+intrinsically-identified objects rather than the authority which invents roles
+after binding.
+
+== Runtime and Serialization Consequences
+
+Runtime consumers should progressively consume applied semantic mappings when
+they need declaration member/type, concrete usage type, generic specialization,
+or contribution provenance.  They may continue to consume
+`Property`/`Component` for compatibility relational state during migration.
+
+Once applied mappings are the runtime handoff:
+
+* component-identity handoff maps disappear;
+* declaration templates cannot be mistaken for runtime occurrences;
+* `RuntimeMappingHandoffSnapshot` shrinks or becomes an archive form of the
+  applied model;
+* opt-in basic-value resolution capture can identify its inputs and restored
+  targets by intrinsic mapping role instead of mapping-object identity;
+* archive references use intrinsic roles without rediscovering graph paths.
+
+The embeddable and mapped-superclass runtime/JPA metamodel handoffs are
+completed examples.  `EmbeddableHandoffResolver` resolves the applied component
+and attribute by their intrinsic roles.  `MappedSuperclassHandoffResolver`
+resolves an applied attribute by its property's role, deriving the role from
+the concrete entity consumer only for declaration-side properties.  The former
+component and property identity DTOs/indexes, as well as the mapped-superclass
+entity-alias index, are no longer needed.
+
+This design does not require serializing live resolutions, services, extension
+instances, or transient semantic-object links retained by compatibility
+projections.
+
+Basic-value restoration state remains conditional on archive support being
+enabled.  A normal boot which has not opted into metadata store/restore does not
+retain additional resolution inputs.  An opted-in boot retains
+`BasicValueResolutionDetails` until store time, when it creates immutable
+`BasicValueRestorationRecipe` instances for the archive.  Moving those inputs
+onto always-present applied basic-value mappings is a possible later
+consolidation, but only if it does not impose an unacceptable memory cost on
+boots which never create an archive.
+
+== Incremental Implementation
+
+The migration should proceed in slices:
+
+. Introduce `DeclarationRole` and a typed `MappingRole`, defining canonical
+  rendering and equality.
+. Assign mapping roles while materializing entity attributes, identifiers,
+  joins, and collection parts.
+. Assign roles recursively while materializing embeddable mappings.
+. Validate intrinsic roles through `MappingModelGraphIndex`; retain its current
+  traversal as a compatibility fallback temporarily.
+. Introduce the minimal `AppliedAttributeMapping`, with a concrete usage and
+  final mapping identity, and register ordinary, mapped-superclass, and nested
+  embeddable applications by role.
+. Introduce the corresponding applied embeddable product, freezing its direct
+  applied attributes and registering entity, identifier, collection-part, and
+  nested component occurrences by role.
+. Make mapped-superclass and embeddable semantic products explicitly
+  distinguish declaration-relative usage from concrete application and
+  register the remaining applied products by role.
+. Treat parameterized embeddable usages resolved at a mapped-superclass site as
+  concrete applications, even while their compatibility projections remain in
+  the mapped-superclass graph.
+. Change materializers to consume applied products and pass their identity
+  through role-aware mapping-object constructors.
+. Replace ambiguous mapping-object copies with explicit declaration and applied
+  copy operations.  `Property`, `ToOne`, and `Component` now expose the
+  required declaration, same-application, new-application, and
+  transient-selection operations.  Identifier-mapper, synthetic-association,
+  and collection-index projections use these explicit boundaries.
+. Change runtime metamodel consumers to query applied mappings by role.
+. Remove component-template classification and identity-keyed handoff maps
+  after all consumers use the semantic distinction.
+. When metadata store/restore is enabled, retain
+  `BasicValueResolutionDetails` during resolution and derive immutable
+  `BasicValueRestorationRecipe` instances at store time.  Keep this capture out
+  of normal boot unless an always-present representation can be shown not to
+  impose material overhead.
+
+The first implementation slices are role definition, intrinsic role
+assignment, and the minimal applied-attribute registry.  Stable identity is
+required before handoff maps can safely move away from mapping-object identity.
+
+== Non-Goals
+
+This design does not:
+
+* immediately remove `Property`, `Component`, `PersistentClass`, or other
+  public/compatibility mapping objects;
+* make `org.hibernate.mapping` itself the full source binding model;
+* serialize runtime mapping-model implementations;
+* require every direct entity attribute to allocate visibly distinct
+  declaration, usage, and application objects when an implementation can
+  preserve the same semantics compactly;
+* decide the eventual public API, if any, for semantic boot-model inspection.
+
+== Open Questions
+
+* Whether generalized `MappingRole` replaces `NavigableRole` directly or is
+  introduced as a boot-time precursor.
+* Whether roles live directly on `Value` or on a new shared applied-mapping
+  contract implemented by mapping objects.
+* Whether declaration-side compatibility projections require an explicit
+  `MappingProjectionNature` after semantic handoffs are complete.
+* Whether the always-present applied model can replace
+  `RuntimeMappingHandoffSnapshot` without unacceptable normal-boot memory cost,
+  and whether it can eventually host opt-in basic-value resolution capture
+  without adding state to boots which never create an archive.
+* Which programmatic mapping mutation points are allowed to create or replace
+  roles after the semantic model is finalized.

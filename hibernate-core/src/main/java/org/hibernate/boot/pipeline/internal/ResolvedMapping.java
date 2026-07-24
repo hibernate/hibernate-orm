@@ -4,19 +4,17 @@
  */
 package org.hibernate.boot.pipeline.internal;
 
-import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.serial.internal.MappingResolutionDetailsCollector;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 
-/// Resolved ORM boot metadata and associated boot-model products.
-/// This product keeps the ORM metadata handoff explicit while preserving the
-/// intermediate boot-model products needed by later SessionFactory bootstrap
-/// experiments.
+/// Factory-ready ORM boot product containing the finalized mapping graph, the
+/// optional serialization capture state and its immutable runtime handoff.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public record ResolvedMapping(
 		MetadataImplementor metadata,
-		CategorizedDomainModel categorizedDomainModel,
-		BindingState bindingState) {
+		MappingResolutionDetailsCollector mappingResolutionDetailsCollector,
+		RuntimeMappingHandoff runtimeMappingHandoff) {
 }

@@ -42,6 +42,27 @@ public sealed abstract class IndexedCollection extends Collection permits Map, L
 
 	public void setIndex(Value index) {
 		this.index = index;
+		if ( index instanceof AppliedMappingPart mappingPart && getRole() != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( getRole() ).append( MappingRole.PartKind.INDEX ) );
+		}
+	}
+
+	@Override
+	public void setRole(String role) {
+		super.setRole( role );
+		if ( index instanceof AppliedMappingPart mappingPart && role != null ) {
+			mappingPart.setMappingRole( MappingRole.collection( role ).append( MappingRole.PartKind.INDEX ) );
+		}
+	}
+
+	@Override
+	public void setMappingRole(MappingRole mappingRole) {
+		super.setMappingRole( mappingRole );
+		if ( index instanceof AppliedMappingPart mappingPart ) {
+			mappingPart.setMappingRole(
+					mappingRole == null ? null : mappingRole.append( MappingRole.PartKind.INDEX )
+			);
+		}
 	}
 
 	public final boolean isIndexed() {

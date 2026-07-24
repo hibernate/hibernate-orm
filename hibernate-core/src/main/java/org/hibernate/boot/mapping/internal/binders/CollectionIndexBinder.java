@@ -28,6 +28,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantBasicValue;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -35,7 +36,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.ModelsException;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.MapKey;
@@ -255,9 +256,11 @@ class CollectionIndexBinder {
 	private static CompositeUserType<?> instantiateCompositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			BindingContext bindingContext) {
-		return bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
-				? bindingContext.getManagedBeanRegistry().getBean( compositeUserTypeClass ).getBeanInstance()
-				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
+		return MappingHelper.createCompositeUserType(
+				compositeUserTypeClass,
+				bindingContext.getManagedBeanRegistry(),
+				bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
+		);
 	}
 
 	private static void bindComponentMapKey(
@@ -439,6 +442,19 @@ class CollectionIndexBinder {
 			org.hibernate.mapping.Map collection,
 			Value targetPropertyValue,
 			BindingState bindingState) {
+		return createPropertyMapKeyValue(
+				collection,
+				targetPropertyValue,
+				bindingState,
+				MappingRole.collection( collection.getRole() ).append( MappingRole.PartKind.INDEX )
+		);
+	}
+
+	private static Value createPropertyMapKeyValue(
+			org.hibernate.mapping.Map collection,
+			Value targetPropertyValue,
+			BindingState bindingState,
+			MappingRole mappingRole) {
 		if ( targetPropertyValue instanceof BasicValue basicValue ) {
 			final DependantBasicValue index = new DependantBasicValue(
 					bindingState.getMetadataBuildingContext(),
@@ -453,6 +469,7 @@ class CollectionIndexBinder {
 			bindingState.addPostAttributeValueResolution(
 					() -> index.applyReferencedResolution( bindingState.getMappingResolutionState() )
 			);
+			index.setMappingRole( mappingRole );
 			return index;
 		}
 		if ( targetPropertyValue instanceof ManyToOne manyToOne ) {
@@ -475,6 +492,7 @@ class CollectionIndexBinder {
 			for ( Column column : manyToOne.getColumns() ) {
 				index.addColumn( column.clone(), false, false );
 			}
+			index.setMappingRole( mappingRole );
 			return index;
 		}
 		if ( targetPropertyValue instanceof Component component ) {
@@ -482,15 +500,24 @@ class CollectionIndexBinder {
 			index.setComponentClassDetails( component.getComponentClassDetails() );
 			index.setFlattened( component.isFlattened() );
 			index.setRoleName( component.getRoleName() );
+			index.setMappingRole( mappingRole );
 			for ( Property property : component.getProperties() ) {
-				final Property copy = property.copy();
-				copy.setValue( createPropertyMapKeyValue( collection, property.getValue(), bindingState ) );
+				final MappingRole propertyRole = mappingRole.appendAttribute( property.getName() );
+				final Property copy = property.copyForApplication(
+						propertyRole,
+						createPropertyMapKeyValue(
+								collection,
+								property.getValue(),
+								bindingState,
+								propertyRole
+						)
+				);
 				copy.setInsertable( false );
 				copy.setUpdatable( false );
 				copy.setPersistentClass( collection.getOwner() );
 				index.addProperty( copy );
 			}
-			index.sortProperties();
+			index.completeShape();
 			return index;
 		}
 		throw new UnsupportedOperationException(

@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
@@ -23,7 +24,8 @@ import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collec
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstraintCollector, IndexCollector {
+public class TableGeneratorJpaAnnotation
+		implements TableGenerator, UniqueConstraintCollector, IndexCollector, Serializable {
 	private String name;
 	private String table;
 	private String catalog;

@@ -48,8 +48,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MutableClassDetailsRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
@@ -221,10 +221,14 @@ public class MappingResolutionPipeline {
 		);
 		applyQueryImports( mappingCustomizations, metadataBuildingContext );
 		final MetadataImplementor metadata = finalizeMetadata( metadataBuildingContext );
+		final var resolutionDetailsCollector = bindingState.getMappingResolutionState().resolutionDetailsCollector();
 		return new ResolvedMapping(
 				metadata,
-				categorizedDomainModel,
-				bindingState
+				resolutionDetailsCollector,
+				org.hibernate.boot.serial.internal.RuntimeMappingHandoffSnapshot.from(
+						bindingState.getBootBindingModel(),
+						metadata
+				)
 		);
 	}
 

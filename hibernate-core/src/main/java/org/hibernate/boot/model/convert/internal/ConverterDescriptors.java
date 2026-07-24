@@ -48,4 +48,19 @@ public class ConverterDescriptors {
 		final var converterClass = (Class<? extends AttributeConverter<X, Y>>) converterType;
 		return new ConverterDescriptorImpl<>( converterClass, domainTypeToMatch, relationalType, autoApply );
 	}
+
+	/**
+	 * Whether the descriptor creates its converter through the managed-bean registry.
+	 */
+	public static boolean usesManagedBeanRegistry(ConverterDescriptor<?, ?> descriptor) {
+		return descriptor instanceof ClassBasedConverterDescriptor<?, ?>
+			|| descriptor instanceof ConverterDescriptorImpl<?, ?>;
+	}
+
+	/**
+	 * Whether the descriptor retains a caller-provided converter instance.
+	 */
+	public static boolean usesProvidedInstance(ConverterDescriptor<?, ?> descriptor) {
+		return descriptor instanceof InstanceBasedConverterDescriptor<?, ?>;
+	}
 }

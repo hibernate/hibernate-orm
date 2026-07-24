@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.models.spi.ModelsContext;
@@ -13,7 +14,7 @@ import jakarta.persistence.NamedAttributeNode;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class NamedAttributeNodeJpaAnnotation implements NamedAttributeNode {
+public class NamedAttributeNodeJpaAnnotation implements NamedAttributeNode, Serializable {
 	private String value;
 	private String subgraph;
 	private String keySubgraph;

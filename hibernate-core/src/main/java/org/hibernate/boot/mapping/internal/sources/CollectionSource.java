@@ -43,15 +43,12 @@ import org.hibernate.boot.mapping.internal.sources.ToOneSource.JoinColumnOrFormu
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.models.internal.CollectionElementSwitch;
-import org.hibernate.models.internal.ClassTypeDetailsImpl;
-import org.hibernate.models.internal.MapKeySwitch;
-import org.hibernate.models.internal.MapValueSwitch;
-import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.Creator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.models.spi.TypeDetailsHelper;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -281,15 +278,14 @@ public record CollectionSource(
 		}
 		final MapKeyClass mapKeyClass = member.getDirectAnnotationUsage( MapKeyClass.class );
 		if ( mapKeyClass != null && mapKeyClass.value() != void.class && modelsContext != null ) {
-			return new ClassTypeDetailsImpl(
+			return TypeDetails.classType(
 					modelsContext.getClassDetailsRegistry()
-							.resolveClassDetails( mapKeyClass.value().getName() ),
-					TypeDetails.Kind.CLASS
+							.resolveClassDetails( mapKeyClass.value().getName() )
 			);
 		}
 		final TypeDetails memberMapKeyType = member.getMapKeyType();
 		if ( ownerType != null && collectionType != null ) {
-			final TypeDetails extractedMapKeyType = MapKeySwitch.extractMapKeyType( collectionType );
+			final TypeDetails extractedMapKeyType = TypeDetailsHelper.extractMapKeyType( collectionType );
 			if ( !isObjectType( extractedMapKeyType ) ) {
 				return extractedMapKeyType;
 			}
@@ -301,7 +297,7 @@ public record CollectionSource(
 		if ( memberMapKeyType != null ) {
 			return ownerType == null ? memberMapKeyType : resolveRelativeType( memberMapKeyType, ownerType );
 		}
-		return collectionType == null ? null : MapKeySwitch.extractMapKeyType( collectionType );
+		return collectionType == null ? null : TypeDetailsHelper.extractMapKeyType( collectionType );
 	}
 
 	private static boolean isObjectType(TypeDetails typeDetails) {
@@ -320,10 +316,9 @@ public record CollectionSource(
 		}
 		final ElementCollection elementCollection = member.getDirectAnnotationUsage( ElementCollection.class );
 		if ( elementCollection != null && elementCollection.targetClass() != void.class && modelsContext != null ) {
-			return new ClassTypeDetailsImpl(
+			return TypeDetails.classType(
 					modelsContext.getClassDetailsRegistry()
-							.resolveClassDetails( elementCollection.targetClass().getName() ),
-					TypeDetails.Kind.CLASS
+							.resolveClassDetails( elementCollection.targetClass().getName() )
 			);
 		}
 		if ( collectionType != null ) {
@@ -480,16 +475,15 @@ public record CollectionSource(
 		}
 		final Class<?> rawClass = collectionType.determineRawClass().toJavaClass();
 		if ( rawClass.isArray() && modelsContext != null ) {
-			return new ClassTypeDetailsImpl(
+			return TypeDetails.classType(
 					modelsContext.getClassDetailsRegistry()
-							.resolveClassDetails( rawClass.getComponentType().getName() ),
-					TypeDetails.Kind.CLASS
+							.resolveClassDetails( rawClass.getComponentType().getName() )
 			);
 		}
 		if ( collectionType.isImplementor( java.util.Map.class ) ) {
-			return MapValueSwitch.extractMapValueType( collectionType );
+			return TypeDetailsHelper.extractMapValueType( collectionType );
 		}
-		return CollectionElementSwitch.extractCollectionElementType( collectionType );
+		return TypeDetailsHelper.extractCollectionElementType( collectionType );
 	}
 
 	private static JoinTable effectiveJoinTable(MemberDetails member, AssociationOverride associationOverride) {
@@ -517,18 +511,16 @@ public record CollectionSource(
 		}
 		final ManyToMany manyToMany = member.getDirectAnnotationUsage( ManyToMany.class );
 		if ( manyToMany != null && manyToMany.targetEntity() != void.class && modelsContext != null ) {
-			return new ClassTypeDetailsImpl(
+			return TypeDetails.classType(
 					modelsContext.getClassDetailsRegistry()
-							.resolveClassDetails( manyToMany.targetEntity().getName() ),
-					TypeDetails.Kind.CLASS
+							.resolveClassDetails( manyToMany.targetEntity().getName() )
 			);
 		}
 		final OneToMany oneToMany = member.getDirectAnnotationUsage( OneToMany.class );
 		if ( oneToMany != null && oneToMany.targetEntity() != void.class && modelsContext != null ) {
-			return new ClassTypeDetailsImpl(
+			return TypeDetails.classType(
 					modelsContext.getClassDetailsRegistry()
-							.resolveClassDetails( oneToMany.targetEntity().getName() ),
-					TypeDetails.Kind.CLASS
+							.resolveClassDetails( oneToMany.targetEntity().getName() )
 			);
 		}
 		return fallback;
@@ -539,9 +531,9 @@ public record CollectionSource(
 		final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
 				targetName,
 				modelsContext.getClassDetailsRegistry(),
-				() -> new DynamicClassDetails( targetName, modelsContext )
+				() -> Creator.createDynamicClassDetails( targetName, modelsContext )
 		);
-		return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
+		return TypeDetails.classType( classDetails );
 	}
 
 	private static CollectionClassification determineClassification(MemberDetails member, TypeDetails collectionType) {

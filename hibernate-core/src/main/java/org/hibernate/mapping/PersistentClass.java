@@ -18,6 +18,7 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -26,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,11 +66,12 @@ public abstract sealed class PersistentClass
 	public static final String NOT_NULL_DISCRIMINATOR_MAPPING = "not null";
 
 	private final String contributor;
-	private final ClassLoaderAccess classLoaderAccess;
+	private transient ClassLoaderAccess classLoaderAccess;
 	private final List<IdentifiableTypeClass> subTypes = new ArrayList<>();
 
 	private String entityName;
 
+	private ClassDetails classDetails;
 	private String className;
 	private transient Class<?> mappedClass;
 
@@ -84,7 +85,6 @@ public abstract sealed class PersistentClass
 	private final List<Property> properties = new ArrayList<>();
 	private final List<Property> declaredProperties = new ArrayList<>();
 	private final List<Property> mappedSuperclassProperties = new ArrayList<>();
-	private final Map<Property, MappedSuperclass> mappedSuperclassPropertyOrigins = new IdentityHashMap<>();
 	private final List<Subclass> subclasses = new ArrayList<>();
 	private final List<Property> subclassProperties = new ArrayList<>();
 	private final List<Table> subclassTables = new ArrayList<>();
@@ -129,12 +129,27 @@ public abstract sealed class PersistentClass
 	}
 
 	public String getClassName() {
-		return className;
+		return classDetails == null ? className : classDetails.getClassName();
+	}
+
+	public ClassDetails getClassDetails() {
+		return classDetails;
+	}
+
+	public void setClassDetails(ClassDetails classDetails) {
+		this.classDetails = classDetails;
+		this.className = classDetails == null ? null : classDetails.getClassName();
+		this.mappedClass = null;
 	}
 
 	public void setClassName(String className) {
+		this.classDetails = null;
 		this.className = className == null ? null : className.intern();
 		this.mappedClass = null;
+	}
+
+	public void reattachClassLoaderAccess(ClassLoaderAccess classLoaderAccess) {
+		this.classLoaderAccess = classLoaderAccess;
 	}
 
 	public String getProxyInterfaceName() {
@@ -151,17 +166,17 @@ public abstract sealed class PersistentClass
 	}
 
 	public Class<?> getMappedClass() throws MappingException {
-		if ( className == null ) {
+		if ( getClassName() == null ) {
 			return null;
 		}
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = getClassForName( className );
+				mappedClass = getClassForName( getClassName() );
 			}
 			return mappedClass;
 		}
 		catch (ClassLoadingException e) {
-			throw new MappingException( "entity class not found: " + className, e );
+			throw new MappingException( "entity class not found: " + getClassName(), e );
 		}
 	}
 
@@ -1065,6 +1080,11 @@ public abstract sealed class PersistentClass
 
 	public void setIdentifierMapper(Component handle) {
 		this.identifierMapper = handle;
+		if ( handle != null && handle.getMappingRole() == null && getEntityName() != null ) {
+			handle.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.IDENTIFIER_MAPPER )
+			);
+		}
 	}
 
 	private Boolean hasNaturalId;
@@ -1097,15 +1117,8 @@ public abstract sealed class PersistentClass
 	}
 
 	public void addMappedSuperclassProperty(Property property) {
-		addMappedSuperclassProperty( property, null );
-	}
-
-	public void addMappedSuperclassProperty(Property property, MappedSuperclass origin) {
 		properties.add( property );
 		mappedSuperclassProperties.add( property );
-		if ( origin != null ) {
-			mappedSuperclassPropertyOrigins.put( property, origin );
-		}
 		property.setPersistentClass( this );
 	}
 
@@ -1114,15 +1127,12 @@ public abstract sealed class PersistentClass
 	 * contributions.
 	 * <p>
 	 * These properties are also exposed through compatibility APIs such as
-	 * {@link #getProperties()}.  This method keeps their mapped-superclass origin
-	 * distinguishable from declared entity properties.
+	 * {@link #getProperties()}. This method keeps their application category
+	 * distinguishable from declared entity properties; each property's source
+	 * declaration is identified by {@link Property#getDeclarationRole()}.
 	 */
 	public List<Property> getMappedSuperclassProperties() {
 		return unmodifiableList( mappedSuperclassProperties );
-	}
-
-	public MappedSuperclass getMappedSuperclassPropertyOrigin(Property property) {
-		return mappedSuperclassPropertyOrigins.get( property );
 	}
 
 	public MappedSuperclass getSuperMappedSuperclass() {

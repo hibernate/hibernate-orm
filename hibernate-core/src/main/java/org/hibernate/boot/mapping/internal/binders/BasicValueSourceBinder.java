@@ -69,6 +69,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -433,10 +434,7 @@ public class BasicValueSourceBinder {
 			);
 		}
 
-		property.setValueGeneratorCreator( generatorCreator(
-				source.member(),
-				generatorAnnotations.get( 0 )
-		) );
+		property.setValueGeneratorCreator( generatorCreator( generatorAnnotations.get( 0 ) ) );
 	}
 
 	private static boolean supportsAttributeOrEmbeddableMember(BasicValueSource source) {
@@ -444,21 +442,115 @@ public class BasicValueSourceBinder {
 				|| source.kind() == BasicValueSource.Kind.EMBEDDABLE_MEMBER;
 	}
 
-	private static <A extends Annotation> GeneratorCreator generatorCreator(
-			MemberDetails member,
-			A annotation) {
+	private static <A extends Annotation> GeneratorCreator generatorCreator(A annotation) {
 		@SuppressWarnings("unchecked")
 		final Class<A> annotationType = (Class<A>) annotation.annotationType();
 		final ValueGenerationType generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
 		final Class<? extends Generator> generatorClass = generatorAnnotation.generatedBy();
 		checkGeneratorClass( generatorClass );
-		return (creationContext) -> {
-			final Generator generator = instantiateGenerator( annotation, member, annotationType, creationContext, generatorClass );
-			callInitialize( annotation, creationContext, generator );
+		return new ValueGeneratorCreator<>( annotation, annotationType, generatorClass );
+	}
+
+	private static final class ValueGeneratorCreator<A extends Annotation> implements GeneratorCreator {
+		private final String annotationTypeName;
+		private final String generatorClassName;
+		private transient A annotation;
+		private transient Class<A> annotationType;
+		private transient Class<? extends Generator> generatorClass;
+		private transient ModelsContext modelsContext;
+
+		private ValueGeneratorCreator(
+				A annotation,
+				Class<A> annotationType,
+				Class<? extends Generator> generatorClass) {
+			this.annotation = annotation;
+			this.annotationType = annotationType;
+			this.generatorClass = generatorClass;
+			this.annotationTypeName = annotationType.getName();
+			this.generatorClassName = generatorClass.getName();
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public Generator createGenerator(GeneratorCreationContext creationContext) {
+			final var contextMember = creationContext.getMemberDetails();
+			final var member = contextMember != null || creationContext.getProperty() == null
+					? contextMember
+					: creationContext.getProperty().getMemberDetails();
+			final Class<A> resolvedAnnotationType = (Class<A>) resolveClass(
+					annotationType,
+					annotationTypeName,
+					"generator annotation",
+					Annotation.class,
+					creationContext
+			);
+			final Class<? extends Generator> resolvedGeneratorClass = resolveClass(
+					generatorClass,
+					generatorClassName,
+					"generator implementation",
+					Generator.class,
+					creationContext
+			);
+			annotationType = resolvedAnnotationType;
+			generatorClass = resolvedGeneratorClass;
+			final A localizedAnnotation = annotation != null
+					? annotation
+					: member.locateAnnotationUsage( resolvedAnnotationType, modelsContext );
+			if ( localizedAnnotation == null ) {
+				throw new MappingException(
+						"Could not reconstruct generator annotation '" + annotationTypeName
+								+ "' for property '" + creationContext.getProperty().getName() + "'"
+				);
+			}
+			annotation = localizedAnnotation;
+			final Generator generator = instantiateGenerator(
+					localizedAnnotation,
+					member,
+					resolvedAnnotationType,
+					creationContext,
+					resolvedGeneratorClass
+			);
+			callInitialize( localizedAnnotation, creationContext, generator );
 			callConfigure( creationContext, generator );
 			checkVersionGenerationAlways( member, generator );
 			return generator;
-		};
+		}
+
+		@SuppressWarnings("unchecked")
+		private <T> Class<? extends T> resolveClass(
+				Class<? extends T> resolvedClass,
+				String className,
+				String archiveRole,
+				Class<T> contract,
+				GeneratorCreationContext creationContext) {
+			if ( resolvedClass != null ) {
+				return resolvedClass;
+			}
+			try {
+				final Class<?> candidate = modelsContext.getClassDetailsRegistry()
+						.resolveClassDetails( className )
+						.toJavaClass();
+				if ( !contract.isAssignableFrom( candidate ) ) {
+					throw new MappingException(
+							"Archived " + archiveRole + " class '" + className
+									+ "' does not implement '" + contract.getName() + "'"
+					);
+				}
+				return (Class<? extends T>) candidate;
+			}
+			catch (RuntimeException e) {
+				throw new MappingException(
+						"Could not resolve archived " + archiveRole + " class '" + className + "' for mapping role '"
+								+ creationContext.getProperty().getMappingRole() + "'",
+						e
+				);
+			}
+		}
+
+		@Override
+		public void reattachModelsContext(ModelsContext modelsContext) {
+			this.modelsContext = modelsContext;
+		}
 	}
 
 	private static void checkGeneratorClass(Class<? extends Generator> generatorClass) {
@@ -476,15 +568,17 @@ public class BasicValueSourceBinder {
 			GeneratorCreationContext creationContext,
 			Class<? extends G> generatorClass) {
 		try {
-			G generator = construct(
-					generatorClass,
-					annotationType,
-					annotation,
-					Member.class,
-					member.toJavaMember(),
-					GeneratorCreationContext.class,
-					creationContext
-			);
+			G generator = member == null
+					? null
+					: construct(
+							generatorClass,
+							annotationType,
+							annotation,
+							Member.class,
+							member.toJavaMember(),
+							GeneratorCreationContext.class,
+							creationContext
+					);
 			if ( generator != null ) {
 				return generator;
 			}
@@ -594,7 +688,7 @@ public class BasicValueSourceBinder {
 	}
 
 	private static void checkVersionGenerationAlways(MemberDetails member, Generator generator) {
-		if ( member.hasDirectAnnotationUsage( jakarta.persistence.Version.class ) ) {
+		if ( member != null && member.hasDirectAnnotationUsage( jakarta.persistence.Version.class ) ) {
 			if ( !generator.generatesOnInsert() ) {
 				throw new AnnotationException(
 						"Property '" + member.getName()

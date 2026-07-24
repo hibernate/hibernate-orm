@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.boot.models;
 
 import org.hibernate.models.AnnotationAccessException;
-import org.hibernate.models.jandex.internal.JandexClassDetails;
+import org.hibernate.models.jandex.spi.JandexModelsContext;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -30,6 +30,7 @@ public class SourceModelTestHelperSmokeTests {
 	@Test
 	void testIt() {
 		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( AnEntity.class );
+		assertThat( buildingContext ).isInstanceOf( JandexModelsContext.class );
 
 		final AnnotationDescriptor<Entity> entityAnnDescriptor = buildingContext
 				.getAnnotationDescriptorRegistry()
@@ -40,7 +41,7 @@ public class SourceModelTestHelperSmokeTests {
 				.getClassDetailsRegistry()
 				.findClassDetails( AnEntity.class.getName() );
 		assertThat( classDetails ).isNotNull();
-		assertThat( classDetails ).isInstanceOf( JandexClassDetails.class );
+		assertThat( classDetails.wasBuiltFromReflection() ).isFalse();
 
 		final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( Entity.class );
 		assertThat( entityAnnotation ).isNotNull();

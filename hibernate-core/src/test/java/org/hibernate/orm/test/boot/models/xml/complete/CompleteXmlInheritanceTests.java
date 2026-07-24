@@ -21,7 +21,7 @@ import jakarta.persistence.Inheritance;
 
 import static jakarta.persistence.InheritanceType.JOINED;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
+import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.SIMPLE_CLASS_LOADING;
 import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.buildJandexIndex;
 import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBuildingContext;
 

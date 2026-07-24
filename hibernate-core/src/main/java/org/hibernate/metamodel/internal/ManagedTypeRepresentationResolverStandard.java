@@ -105,7 +105,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			return new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
 		}
 		else if ( bootDescriptor.isRecord() ) {
-			if ( bootDescriptor.sortProperties() == null ) {
+			if ( bootDescriptor.completeShape() == null ) {
 				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
 			}
 			else {
@@ -116,7 +116,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			}
 		}
 		else if ( bootDescriptor.getInstantiator() != null ) {
-			bootDescriptor.sortProperties();
+			bootDescriptor.completeShape();
 			return EmbeddableInstantiatorPojoIndirecting.of(
 					bootDescriptor.getPropertyNames(),
 					bootDescriptor.getInstantiator(),

@@ -86,7 +86,7 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 		final var dialect = database.getDialect();
 		final var aggregateSupport = dialect.getAggregateSupport();
 
-		final int[] originalOrder = component.sortProperties();
+		final int[] originalOrder = component.completeShape();
 		final List<Column> aggregatedColumns = aggregatedColumns();
 		final AggregateColumn aggregateColumn = component.getAggregateColumn();
 

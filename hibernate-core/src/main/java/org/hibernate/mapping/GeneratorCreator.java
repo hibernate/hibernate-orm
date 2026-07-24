@@ -4,10 +4,13 @@
  */
 package org.hibernate.mapping;
 
+import java.io.Serializable;
+
 import org.hibernate.Internal;
 import org.hibernate.generator.Assigned;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * Instantiates a {@link Generator}.
@@ -18,11 +21,18 @@ import org.hibernate.generator.GeneratorCreationContext;
  */
 @Internal
 @FunctionalInterface
-public interface GeneratorCreator {
+public interface GeneratorCreator extends Serializable {
 	/**
 	 * Create the generator.
 	 */
 	Generator createGenerator(GeneratorCreationContext context);
+
+	/**
+	 * Reattach the Models context used to interpret retained boot-model annotations
+	 * after this creator has been deserialized.
+	 */
+	default void reattachModelsContext(ModelsContext modelsContext) {
+	}
 
 	/**
 	 * Does this object create instances of {@link Assigned}?

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping">
+    <class name="JoinedSubclassFkBase" table="JS_FK_BASE">
+        <id name="id" type="int">
+            <column name="BASE_ID"/>
+            <generator class="native"/>
+        </id>
+        <property name="name">
+            <column name="NAME"/>
+        </property>
+        <joined-subclass name="JoinedSubclassFkChild" table="JS_FK_CHILD">
+            <key foreign-key="FK_CHILD_BASE">
+                <column name="CHILD_BASE_ID"/>
+            </key>
+            <property name="detail"/>
+        </joined-subclass>
+    </class>
+</hibernate-mapping>

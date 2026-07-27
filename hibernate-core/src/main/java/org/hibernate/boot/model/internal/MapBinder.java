@@ -52,6 +52,7 @@ import jakarta.persistence.MapKeyJoinColumns;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.MAP_KEY;
+import static org.hibernate.boot.model.internal.BinderHelper.resolveContainerForeignKey;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -435,7 +436,7 @@ public class MapBinder extends CollectionBinder {
 	private jakarta.persistence.ForeignKey getMapKeyForeignKey(MemberDetails property) {
 		final var mapKeyJoinColumns = property.getDirectAnnotationUsage( MapKeyJoinColumns.class );
 		if ( mapKeyJoinColumns != null ) {
-			return mapKeyJoinColumns.foreignKey();
+			return resolveContainerForeignKey( mapKeyJoinColumns.foreignKey(), mapKeyJoinColumns.value() );
 		}
 
 		final var mapKeyJoinColumn = property.getDirectAnnotationUsage( MapKeyJoinColumn.class );

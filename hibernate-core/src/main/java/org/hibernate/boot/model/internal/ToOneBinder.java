@@ -47,6 +47,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getFetchStyle;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
+import static org.hibernate.boot.model.internal.BinderHelper.resolveContainerForeignKey;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
 import static org.hibernate.boot.model.internal.PropertyBinder.isNonnull;
@@ -674,7 +675,7 @@ public class ToOneBinder {
 			return joinColumn.foreignKey();
 		}
 		else if ( joinColumns != null ) {
-			return joinColumns.foreignKey();
+			return resolveContainerForeignKey( joinColumns.foreignKey(), joinColumns.value() );
 		}
 		else {
 			return null;

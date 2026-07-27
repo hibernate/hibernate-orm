@@ -1,0 +1,78 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.schemaupdate.inheritance;
+
+import org.hamcrest.MatcherAssert;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.schema.TargetType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.util.EnumSet;
+
+import static org.hamcrest.core.Is.is;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
+@JiraKey("HHH-20725")
+@ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
+public class ForeignKeyNameOrmXmlTest {
+
+	@Test
+	@DomainModel(xmlMappings = {
+			"org/hibernate/orm/test/schemaupdate/inheritance/Employee.orm.xml",
+			"org/hibernate/orm/test/schemaupdate/inheritance/Person.orm.xml",
+			"org/hibernate/orm/test/schemaupdate/inheritance/Manager.orm.xml",
+			"org/hibernate/orm/test/schemaupdate/inheritance/Payment.orm.xml"
+	})
+	public void testJoinedSubclassForeignKeyNameFromOrmXml(
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		final var scriptFile = new File( tmpDir, "update_script.sql" );
+
+		final var metadata = modelScope.getDomainModel();
+		metadata.orderColumns( false );
+		metadata.validate();
+
+		new SchemaUpdate()
+				.setHaltOnError( true )
+				.setOutputFile( scriptFile.getAbsolutePath() )
+				.setDelimiter( ";" )
+				.setFormat( true )
+				.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
+		MatcherAssert.assertThat( fileContent.toLowerCase().contains( "fk_emp_per" ), is( true ) );
+	}
+
+	@Test
+	@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/inheritance/Payment.orm.xml")
+	public void testSecondaryTableForeignKeyNameFromOrmXml(
+			DomainModelScope modelScope,
+			@TempDir File tmpDir) throws Exception {
+		final var scriptFile = new File( tmpDir, "update_script.sql" );
+
+		final var metadata = modelScope.getDomainModel();
+		metadata.orderColumns( false );
+		metadata.validate();
+
+		new SchemaUpdate()
+				.setHaltOnError( true )
+				.setOutputFile( scriptFile.getAbsolutePath() )
+				.setDelimiter( ";" )
+				.setFormat( true )
+				.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
+
+		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
+		MatcherAssert.assertThat( fileContent.toLowerCase().contains( "fk_cc_pay" ), is( true ) );
+	}
+}

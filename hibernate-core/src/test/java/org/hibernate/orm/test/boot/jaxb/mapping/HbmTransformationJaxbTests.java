@@ -218,6 +218,48 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20723" )
+	public void testJoinedSubclassForeignKeyNameWithNestedColumn(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/joined-subclass-fk/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "JoinedSubclassFkChild".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( childEntity.getPrimaryKeyJoinColumns() ).hasSize( 1 );
+
+			final var joinColumn = childEntity.getPrimaryKeyJoinColumns().get( 0 );
+			assertThat( joinColumn.getName() )
+					.as( "Column name from nested <column> element should be preserved" )
+					.isEqualTo( "CHILD_BASE_ID" );
+			assertThat( joinColumn.getForeignKey() )
+					.as( "Foreign key should be set" )
+					.isNotNull();
+			assertThat( joinColumn.getForeignKey().getName() )
+					.as( "Foreign key name from <key foreign-key='...'> should be preserved" )
+					.isEqualTo( "FK_CHILD_BASE" );
+		} );
+	}
+
+	@Test
+	public void testJoinedSubclassMultipleKeyColumns(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/joined-subclass-composite-key/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "JoinedSubclassCompositeChild".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( childEntity.getPrimaryKeyJoinColumns() )
+					.as( "All <column> elements in the composite <key> should be transferred" )
+					.hasSize( 2 );
+			assertThat( childEntity.getPrimaryKeyJoinColumns().get( 0 ).getName() )
+					.isEqualTo( "CHILD_TENANT_ID" );
+			assertThat( childEntity.getPrimaryKeyJoinColumns().get( 1 ).getName() )
+					.isEqualTo( "CHILD_BASE_ID" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20566" )
 	public void testJoinedSubclassInheritanceStrategy(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/joined-subclass/hbm.xml", scope, transformed -> {

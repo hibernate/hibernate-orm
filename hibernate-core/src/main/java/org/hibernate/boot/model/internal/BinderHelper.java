@@ -6,9 +6,12 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -67,7 +70,6 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.forEach;
-import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
@@ -989,6 +991,30 @@ public class BinderHelper {
 			referencedClass = referencedClass.getSuperPersistentClass();
 		}
 		return false;
+	}
+
+	static ForeignKey resolveContainerForeignKey(ForeignKey containerFk, MapKeyJoinColumn[] columns) {
+		return resolveContainerForeignKey( containerFk, columns.length != 0 ? columns[0].foreignKey() : null );
+	}
+
+	static ForeignKey resolveContainerForeignKey(ForeignKey containerFk, JoinColumn[] columns) {
+		return resolveContainerForeignKey( containerFk, columns.length != 0 ? columns[0].foreignKey() : null );
+	}
+
+	static ForeignKey resolveContainerForeignKey(ForeignKey containerFk, PrimaryKeyJoinColumn[] columns) {
+		return resolveContainerForeignKey( containerFk, columns.length != 0 ? columns[0].foreignKey() : null );
+	}
+
+	static ForeignKey resolveContainerForeignKey(ForeignKey containerFk, ForeignKey... columnFks) {
+		if ( containerFk != null && !isEmpty( containerFk.name() ) ) {
+			return containerFk;
+		}
+		for ( var columnFk : columnFks ) {
+			if ( columnFk != null && !isEmpty( columnFk.name() ) ) {
+				return columnFk;
+			}
+		}
+		return containerFk;
 	}
 
 	static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {

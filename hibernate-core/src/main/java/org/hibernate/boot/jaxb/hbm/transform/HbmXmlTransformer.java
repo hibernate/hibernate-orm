@@ -861,11 +861,7 @@ public class HbmXmlTransformer {
 
 		final var key = hbmSubclass.getKey();
 		if ( key != null ) {
-			final var joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
-			// todo (7.0) : formula and multiple columns
-			joinColumn.setName( key.getColumnAttribute() );
-			subclassEntity.getPrimaryKeyJoinColumns().add( joinColumn );
-			joinColumn.setForeignKey( transformForeignKey( key.getForeignKey() ) );
+			transferKeyColumns( key, subclassEntity.getPrimaryKeyJoinColumns() );
 		}
 
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
@@ -3990,6 +3986,28 @@ public class HbmXmlTransformer {
 		mappingEntity.getSecondaryTables().add( secondaryTable );
 	}
 
+
+	private void transferKeyColumns(JaxbHbmKeyType key, List<JaxbPrimaryKeyJoinColumnImpl> targetColumns) {
+		final String columnName = key.getColumnAttribute();
+		if ( columnName != null || key.getColumn().size() <= 1 ) {
+			final var joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
+			if ( columnName == null && !key.getColumn().isEmpty() ) {
+				joinColumn.setName( key.getColumn().get( 0 ).getName() );
+			}
+			else {
+				joinColumn.setName( columnName );
+			}
+			joinColumn.setForeignKey( transformForeignKey( key.getForeignKey() ) );
+			targetColumns.add( joinColumn );
+		}
+		else {
+			for ( JaxbHbmColumnType column : key.getColumn() ) {
+				final var joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
+				joinColumn.setName( column.getName() );
+				targetColumns.add( joinColumn );
+			}
+		}
+	}
 
 	// ToOne
 	private void transferFetchable(

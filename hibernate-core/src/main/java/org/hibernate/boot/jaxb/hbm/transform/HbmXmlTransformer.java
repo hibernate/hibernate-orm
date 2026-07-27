@@ -3977,11 +3977,7 @@ public class HbmXmlTransformer {
 		secondaryTable.setOwned( !hbmJoin.isInverse() );
 		final JaxbHbmKeyType key = hbmJoin.getKey();
 		if ( key != null ) {
-			final var joinColumn = new JaxbPrimaryKeyJoinColumnImpl();
-			joinColumn.setName( key.getColumnAttribute() );
-			secondaryTable.getPrimaryKeyJoinColumn().add( joinColumn );
-
-			joinColumn.setForeignKey( transformForeignKey( key.getForeignKey() ) );
+			transferKeyColumns( key, secondaryTable.getPrimaryKeyJoinColumn() );
 		}
 		mappingEntity.getSecondaryTables().add( secondaryTable );
 	}

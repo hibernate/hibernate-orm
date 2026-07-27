@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.schemaupdate.joinedsubclass</package>
+    <entity class="org.hibernate.orm.test.schemaupdate.inheritance.Payment" metadata-complete="true">
+        <table name="PAYMENT"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-column name="PAYMENT_TYPE" discriminator-type="STRING"/>
+        <attributes>
+            <id name="id">
+                <column name="PAYMENT_ID"/>
+            </id>
+            <basic name="amount">
+                <column name="AMOUNT"/>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="org.hibernate.orm.test.schemaupdate.inheritance.CreditCardPayment" metadata-complete="true">
+        <extends>org.hibernate.orm.test.schemaupdate.inheritance.Payment</extends>
+        <secondary-table name="CREDIT_PAYMENT" optional="false" owned="true">
+            <primary-key-join-column name="PAYMENT_ID">
+                <foreign-key name="FK_CC_PAY"/>
+            </primary-key-join-column>
+        </secondary-table>
+        <discriminator-value>CREDIT</discriminator-value>
+        <attributes>
+            <basic name="creditCardType">
+                <column name="CCTYPE" table="CREDIT_PAYMENT"/>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

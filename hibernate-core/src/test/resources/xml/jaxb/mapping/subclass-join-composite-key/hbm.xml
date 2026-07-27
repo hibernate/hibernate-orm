@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping">
+    <class name="SubclassJoinCompositeBase" table="SJ_CK_BASE">
+        <composite-id>
+            <key-property name="tenantId" type="int" column="TENANT_ID"/>
+            <key-property name="id" type="long" column="BASE_ID"/>
+        </composite-id>
+        <discriminator column="DISC_TYPE" type="string"/>
+        <property name="name" column="NAME"/>
+        <subclass name="SubclassJoinCompositeChild" discriminator-value="CHILD">
+            <join table="SJ_CK_CHILD">
+                <key>
+                    <column name="CHILD_COL_1"/>
+                    <column name="CHILD_COL_2"/>
+                </key>
+                <property name="detail" column="DETAIL"/>
+            </join>
+        </subclass>
+    </class>
+</hibernate-mapping>

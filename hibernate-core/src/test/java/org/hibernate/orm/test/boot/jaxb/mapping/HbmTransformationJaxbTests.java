@@ -1287,6 +1287,57 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20724" )
+	public void testSubclassJoinForeignKeyNameTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/subclass-join-fk/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "SubclassJoinFkChild".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( childEntity.getSecondaryTables() ).hasSize( 1 );
+
+			final var secondaryTable = childEntity.getSecondaryTables().get( 0 );
+			assertThat( secondaryTable.getName() ).isEqualTo( "SJ_FK_CHILD" );
+			assertThat( secondaryTable.getPrimaryKeyJoinColumn() ).hasSize( 1 );
+
+			final var joinColumn = secondaryTable.getPrimaryKeyJoinColumn().get( 0 );
+			assertThat( joinColumn.getName() )
+					.isEqualTo( "CHILD_BASE_ID" );
+			assertThat( joinColumn.getForeignKey() )
+					.as( "Foreign key should be set on the join column from <key foreign-key='...'>" )
+					.isNotNull();
+			assertThat( joinColumn.getForeignKey().getName() )
+					.as( "Foreign key name should be preserved" )
+					.isEqualTo( "FK_CHILD_SJ" );
+		} );
+	}
+
+	@Test
+	public void testSecondaryTableMultipleKeyColumns(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/subclass-join-composite-key/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "SubclassJoinCompositeChild".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( childEntity.getSecondaryTables() ).hasSize( 1 );
+
+			final var secondaryTable = childEntity.getSecondaryTables().get( 0 );
+			assertThat( secondaryTable.getName() ).isEqualTo( "SJ_CK_CHILD" );
+			assertThat( secondaryTable.getPrimaryKeyJoinColumn() )
+					.as( "All <column> elements in the composite <key> should be transferred" )
+					.hasSize( 2 );
+			assertThat( secondaryTable.getPrimaryKeyJoinColumn().get( 0 ).getName() )
+					.isEqualTo( "CHILD_COL_1" );
+			assertThat( secondaryTable.getPrimaryKeyJoinColumn().get( 1 ).getName() )
+					.isEqualTo( "CHILD_COL_2" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20687" )
 	public void testSharedPkOneToOneTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/one-to-one-shared-pk/hbm.xml", scope, transformed -> {

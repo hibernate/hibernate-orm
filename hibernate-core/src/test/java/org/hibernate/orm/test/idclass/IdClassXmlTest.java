@@ -31,28 +31,28 @@ public class IdClassXmlTest {
 
 	@Test
 	public void testIdClass(SessionFactoryScope factoryScope) {
-		factoryScope.inTransaction( (s) -> {
+		factoryScope.inTransaction( s -> {
 			var customer = new FavoriteCustomer("JBoss", "RouteOne", "Detroit");
 			s.persist(customer);
 		} );
 
 		var customerId = new CustomerId("JBoss", "RouteOne");
 
-		factoryScope.inTransaction( (s) -> {
+		factoryScope.inTransaction( s -> {
 			var customer = s.find( Customer.class, customerId );
 			assertEquals( "Detroit", customer.getAddress() );
 			assertEquals( customerId.getCustomerName(), customer.getCustomerName() );
 			assertEquals( customerId.getOrgName(), customer.getOrgName() );
 		} );
 
-		factoryScope.inTransaction( (s) -> {
+		factoryScope.inTransaction( s -> {
 			var customer = s.createQuery("from Customer where id.customerName = 'RouteOne'", Customer.class).uniqueResult();
 			assertEquals( "Detroit", customer.getAddress() );
 			assertEquals( customerId.getCustomerName(), customer.getCustomerName() );
 			assertEquals( customerId.getOrgName(), customer.getOrgName() );
 		} );
 
-		factoryScope.inTransaction( (s) -> {
+		factoryScope.inTransaction( s -> {
 			var customer = s.createQuery("from Customer where customerName = 'RouteOne'", Customer.class).uniqueResult();
 			assertEquals( "Detroit", customer.getAddress() );
 			assertEquals( customerId.getCustomerName(), customer.getCustomerName() );

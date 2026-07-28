@@ -261,11 +261,12 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	/// a subset of an embeddable's properties as one temporary value solely to
 	/// compare column order and span.
 	///
-	/// The result is neither declaration state nor an applied mapping.  It must
-	/// not be registered, installed as a property's value, or otherwise
-	/// attached to the boot mapping graph.  Use [#copyForDeclaration(List)] or
-	/// [#copyForApplication(MetadataBuildingContext, MappingRole, List)] when a
-	/// durable mapping object is required.
+	/// The result is neither declaration state nor a distinct applied mapping.
+	/// It may be installed beneath a transient compatibility projection, but
+	/// must not be independently registered as a new component application.
+	/// Use [#copyForDeclaration(List)] or
+	/// [#copyForApplication(MetadataBuildingContext, MappingRole, List)] when an
+	/// independently registered mapping object is required.
 	///
 	/// @param selectedProperties source properties selected for matching, in the
 	/// required comparison order
@@ -279,6 +280,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		copy.discriminator = null;
 		copy.discriminatorType = null;
 		copy.discriminatorValues = null;
+		copy.type = null;
+		copy.instantiator = null;
+		copy.instantiatorPropertyNames = null;
 		copy.preservePropertyOrder = true;
 		for ( Property selectedProperty : selectedProperties ) {
 			copy.properties.add( selectedProperty );

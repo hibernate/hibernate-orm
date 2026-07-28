@@ -16,6 +16,8 @@ import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.MappingRole;
+import org.hibernate.mapping.PreparedGenerator;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.query.named.spi.NamedObjectRepository;
@@ -75,5 +77,29 @@ public interface MetadataImplementor extends Metadata {
 	Component getGenericComponent(Class<?> componentClass);
 
 	DiscriminatorType<?> resolveEmbeddableDiscriminatorType(Class<?> embeddableClass, Supplier<DiscriminatorType<?>> supplier);
+
+	/**
+	 * Consume an identifier generator prepared while the relational model was
+	 * finalized for the named root entity.
+	 */
+	default PreparedGenerator<?> consumePreparedEntityIdentifierGenerator(String rootEntityName) {
+		return null;
+	}
+
+	/**
+	 * Consume an identifier generator prepared while the relational model was
+	 * finalized for the named collection role.
+	 */
+	default PreparedGenerator<?> consumePreparedCollectionIdentifierGenerator(String collectionRole) {
+		return null;
+	}
+
+	/**
+	 * Consume a value generator prepared while the relational model was
+	 * finalized for the given applied property role.
+	 */
+	default PreparedGenerator<?> consumePreparedValueGenerator(MappingRole propertyRole) {
+		return null;
+	}
 
 }

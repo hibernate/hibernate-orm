@@ -600,9 +600,6 @@ Do not use a generic `copy()` at a declaration/application boundary. First
 decide whether the destination is declaration state, an alias of the same
 application, a new application, or a transient selection view.
 
-For the complete rationale and migration details, see
-link:declaration-usage-applied-mapping-design.adoc[Declaration, Usage, and Applied Mapping Design].
-
 
 == Binding Steps
 

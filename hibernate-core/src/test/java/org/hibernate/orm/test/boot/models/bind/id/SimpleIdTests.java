@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.model.internal.DerivedIdentifierGeneratorDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -26,6 +27,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelCheckContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -404,9 +406,11 @@ public class SimpleIdTests {
 				(context) -> {
 					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
 							.getEntityBinding( MapsIdChild.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
 					final ManyToOne parent = (ManyToOne) entityBinding.getProperty( "parent" ).getValue();
+					final SimpleValue derivedIdentifierValue =
+							(SimpleValue) identifier.getProperty( "parentId" ).getValue();
 
-					assertThat( entityBinding.getIdentifier() ).isInstanceOf( Component.class );
 					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )
 							.containsExactly( "parent_id", "child_id" );
@@ -417,6 +421,11 @@ public class SimpleIdTests {
 					assertThat( parent.getColumnUpdateability() ).containsExactly( false );
 					assertThat( entityBinding.getProperty( "parent" ).isOptional() ).isFalse();
 					assertThat( entityBinding.getTable().getForeignKeyCollection() ).hasSize( 1 );
+					assertThat( derivedIdentifierValue.getCustomIdGeneratorCreator() )
+							.isEqualTo( new DerivedIdentifierGeneratorDescriptor(
+									MapsIdChild.class.getName(),
+									"parent"
+							) );
 				},
 				scope.getRegistry(),
 				MapsIdParent.class,

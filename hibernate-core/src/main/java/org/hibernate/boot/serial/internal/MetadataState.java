@@ -30,6 +30,7 @@ import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -43,7 +44,6 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
@@ -85,6 +85,7 @@ public final class MetadataState implements Serializable {
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
+	private final List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions;
 	private final Database database;
 
 	private MetadataState(MetadataImpl metadata) {
@@ -120,6 +121,8 @@ public final class MetadataState implements Serializable {
 		namedProcedureCallMap = metadata.getNamedProcedureCallMap();
 		sqlResultSetMappingMap = metadata.getSqlResultSetMappingMap();
 		namedEntityGraphMap = metadata.getNamedEntityGraphMap();
+		persistenceUnitLifecycleCallbackDefinitions =
+				metadata.getPersistenceUnitLifecycleCallbackDefinitions();
 		database = metadata.getDatabase();
 	}
 
@@ -191,7 +194,8 @@ public final class MetadataState implements Serializable {
 				restoredTypeDefinitionMap, restoredFilterDefinitionMap, fetchProfileMap, imports,
 				idGeneratorDefinitionMap, namedQueryMap, namedNativeQueryMap,
 				namedProcedureCallMap, sqlResultSetMappingMap, namedEntityGraphMap,
-				restoredFunctionRegistry, Map.of(), database, restoredContext
+				restoredFunctionRegistry, Map.of(), persistenceUnitLifecycleCallbackDefinitions,
+				database, restoredContext
 		);
 	}
 
@@ -280,12 +284,6 @@ public final class MetadataState implements Serializable {
 					basicValue.reattachTypeAnnotation( modelsContext );
 				} );
 		visited.stream()
-				.filter( SimpleValue.class::isInstance )
-				.map( SimpleValue.class::cast )
-				.forEach( simpleValue -> {
-					simpleValue.getCustomIdGeneratorCreator().reattachModelsContext( modelsContext );
-				} );
-		visited.stream()
 				.filter( Component.class::isInstance )
 				.map( Component.class::cast )
 				.forEach( component -> component.reattachCompositeUserType(
@@ -305,10 +303,6 @@ public final class MetadataState implements Serializable {
 			ModelsContext modelsContext,
 			Set<Value> visited) {
 		properties.forEach( property -> {
-			final var generatorCreator = property.getValueGeneratorCreator();
-			if ( generatorCreator != null ) {
-				generatorCreator.reattachModelsContext( modelsContext );
-			}
 			reattachValue( property.getValue(), typeConfiguration, modelsContext, visited );
 		} );
 	}

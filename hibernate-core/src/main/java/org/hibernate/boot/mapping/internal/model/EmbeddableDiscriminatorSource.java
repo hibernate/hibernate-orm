@@ -47,7 +47,9 @@ public record EmbeddableDiscriminatorSource(
 		final Map<String, String> subclassToSuperclass = new LinkedHashMap<>();
 		collectDiscriminatorValue( componentSource.componentType(), discriminatorValues );
 		collectPersistentSuperclassLinks( componentSource.componentType(), subclassToSuperclass );
-		final List<ClassDetails> subtypes = collectConcreteComponentSubtypes( componentSource, bindingContext );
+		final List<ClassDetails> subtypes = componentSource.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
+				? new ArrayList<>()
+				: collectConcreteComponentSubtypes( componentSource, bindingContext );
 		subtypes.sort( Comparator
 				.comparingInt( (ClassDetails subtype) -> hierarchyDistance( subtype, componentSource.componentType() ) )
 				.thenComparing( ClassDetails::getName ) );
@@ -55,7 +57,9 @@ public record EmbeddableDiscriminatorSource(
 			collectDiscriminatorValue( embeddableType, discriminatorValues );
 			collectPersistentSuperclassLinks( embeddableType, subclassToSuperclass );
 		} );
-		collectRuntimeSubtypeSuperclassLinks( componentSource, bindingContext, subclassToSuperclass );
+		if ( componentSource.kind() != ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
+			collectRuntimeSubtypeSuperclassLinks( componentSource, bindingContext, subclassToSuperclass );
+		}
 		return new EmbeddableDiscriminatorSource(
 				discriminatorValues,
 				subclassToSuperclass,

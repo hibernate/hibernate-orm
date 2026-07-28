@@ -97,17 +97,14 @@ final class AggregateComponentBinder {
 		}
 		component.setAggregateColumn( aggregateColumn );
 
-		state.addComponentAggregateFinalization(
-				ComponentBinding.aggregate(
-						memberTarget.table(),
-						ownerBinding.getEntityName(),
-						component,
-						source.componentType(),
-						source.sourceMember().resolveAttributeName(),
-						state.getMetadataBuildingContext(),
-						plan.memberContainer()
-				)
-		);
+		state.addAggregateComponentBinding( new AggregateComponentBinding(
+				ownerBinding.getEntityName(),
+				component,
+				source.componentType(),
+				source.sourceMember().resolveAttributeName(),
+				state.getMetadataBuildingContext(),
+				plan.memberContainer()
+		) );
 	}
 
 }

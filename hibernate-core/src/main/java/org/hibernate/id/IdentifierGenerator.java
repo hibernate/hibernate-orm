@@ -9,7 +9,6 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -86,8 +85,9 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Configura
 	 * Configure this instance, given the value of parameters
 	 * specified by the user as {@code &lt;param&gt;} elements.
 	 * <p>
-	 * This method is called just once, following instantiation,
-	 * and before {@link #registerExportables(Database)}.
+	 * This method is called just once, following instantiation, and before
+	 * {@link ExportableProducer#registerExportables} when this generator also
+	 * implements {@link ExportableProducer}.
 	 *
 	 * @param type The id property type descriptor
 	 * @param parameters param values, keyed by parameter name
@@ -99,20 +99,6 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Configura
 	@SuppressWarnings("removal")
 	@Override @Deprecated( since = "7.0", forRemoval = true )
 	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) {}
-
-	/**
-	 * Register database objects used by this identifier generator,
-	 * for example, a sequence or tables.
-	 * <p>
-	 * This method is called just once, after
-	 * {@link #configure(GeneratorCreationContext, Properties)}.
-	 *
-	 * @param database The database instance
-	 *
-	 * @deprecated Implement {@link ExportableProducer} instead.
-	 */
-	@Deprecated(since = "8.0", forRemoval = true)
-	default void registerExportables(Database database) {}
 
 	/**
 	 * Generate a new identifier.

@@ -5,21 +5,33 @@
 package org.hibernate.orm.test.boot.models.bind.state;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Changelog;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -149,6 +161,152 @@ class StateManagementBindingTests {
 		}
 	}
 
+	@Test
+	void testEntityRuntimeMappings() {
+		try ( var serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting( StateManagementSettings.TEMPORAL_TABLE_STRATEGY, "SINGLE_TABLE" )
+				.build() ) {
+			BindingTestingHelper.checkDomainModel(
+					(context) -> {
+						try ( var sessionFactory = SessionFactoryUtil.buildSessionFactory( context.getMetadata() ) ) {
+							final var mappingMetamodel = sessionFactory.getMappingMetamodel();
+
+							final var temporalEntity = mappingMetamodel.getEntityDescriptor( TemporalEntity.class );
+							final var temporalMapping = temporalEntity.getTemporalMapping();
+							assertThat( temporalMapping ).isNotNull();
+							assertThat( temporalMapping.getStartingColumnMapping().getSelectionExpression() )
+									.isEqualTo( "valid_from" );
+							assertThat( temporalMapping.getEndingColumnMapping().getSelectionExpression() )
+									.isEqualTo( "valid_to" );
+
+							final var auditedEntity = mappingMetamodel.getEntityDescriptor( AuditedEntity.class );
+							final var auditMapping = auditedEntity.getAuditMapping();
+							assertThat( auditMapping ).isNotNull();
+							assertThat( auditMapping.getChangesetIdMapping( "audited_entities" ).getSelectionExpression() )
+									.isEqualTo( "REV" );
+							assertThat( auditMapping.getModificationTypeMapping( "audited_entities" ).getSelectionExpression() )
+									.isEqualTo( "REVTYPE" );
+						}
+					},
+					serviceRegistry,
+					TemporalEntity.class,
+					AuditedEntity.class
+			);
+		}
+	}
+
+	@Test
+	void testCollectionRuntimeMappings() {
+		try ( var serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting( StateManagementSettings.TEMPORAL_TABLE_STRATEGY, "SINGLE_TABLE" )
+				.build() ) {
+			BindingTestingHelper.checkDomainModel(
+					(context) -> {
+						try ( var sessionFactory = SessionFactoryUtil.buildSessionFactory( context.getMetadata() ) ) {
+							final var mappingMetamodel = sessionFactory.getMappingMetamodel();
+
+							final var temporalEntity = mappingMetamodel.getEntityDescriptor( TemporalEntity.class );
+							final var temporalValues =
+									(PluralAttributeMapping) temporalEntity.findAttributeMapping( "values" );
+							assertThat( temporalValues.getTemporalMapping() ).isNotNull();
+							assertThat(
+									temporalValues.getTemporalMapping()
+											.getStartingColumnMapping()
+											.getContainingTableExpression()
+							).isEqualTo( "temporal_entity_values" );
+
+							final var auditedEntity = mappingMetamodel.getEntityDescriptor( AuditedEntity.class );
+							final var auditedValues =
+									(PluralAttributeMapping) auditedEntity.findAttributeMapping( "values" );
+							assertThat( auditedValues.getAuditMapping() ).isNotNull();
+							assertThat(
+									auditedValues.getAuditMapping()
+											.getChangesetIdMapping( "audited_entity_values" )
+											.getContainingTableExpression()
+							).isEqualTo( "audited_entity_values_AUD" );
+						}
+					},
+					serviceRegistry,
+					TemporalEntity.class,
+					AuditedEntity.class
+			);
+		}
+	}
+
+	@Test
+	void testRuntimeMutationHandoff() {
+		try ( var serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting( StateManagementSettings.TEMPORAL_TABLE_STRATEGY, "SINGLE_TABLE" )
+				.applySetting(
+						StateManagementSettings.CHANGESET_ID_SUPPLIER,
+						TestChangesetIdentifierSupplier.class.getName()
+				)
+				.applySetting( SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" )
+				.build() ) {
+			BindingTestingHelper.checkDomainModel(
+					(context) -> {
+						try ( var sessionFactory = SessionFactoryUtil.buildSessionFactory( context.getMetadata() ) ) {
+							sessionFactory.inTransaction( (session) -> {
+								final var temporal = new TemporalEntity();
+								temporal.id = 1L;
+								temporal.included = "initial";
+								temporal.values.add( "one" );
+								session.persist( temporal );
+
+								final var audited = new AuditedEntity();
+								audited.id = 1L;
+								audited.name = "initial";
+								audited.values.add( "one" );
+								session.persist( audited );
+							} );
+
+							sessionFactory.inTransaction( (session) -> {
+								final var temporal = session.find( TemporalEntity.class, 1L );
+								temporal.included = "updated";
+								temporal.values.add( "two" );
+
+								final var audited = session.find( AuditedEntity.class, 1L );
+								audited.name = "updated";
+								audited.values.add( "two" );
+							} );
+
+							sessionFactory.inTransaction( (session) -> {
+								final var temporal = session.find( TemporalEntity.class, 1L );
+								assertThat( temporal.included ).isEqualTo( "updated" );
+								assertThat( temporal.values ).containsExactlyInAnyOrder( "one", "two" );
+
+								final var audited = session.find( AuditedEntity.class, 1L );
+								assertThat( audited.name ).isEqualTo( "updated" );
+								assertThat( audited.values ).containsExactlyInAnyOrder( "one", "two" );
+
+								final Number temporalRows = (Number) session
+										.createNativeQuery( "select count(*) from temporal_entities" )
+										.getSingleResult();
+								final Number auditRows = (Number) session
+										.createNativeQuery( "select count(*) from audited_entities_AUD" )
+										.getSingleResult();
+
+								assertThat( temporalRows.longValue() ).isEqualTo( 2L );
+								assertThat( auditRows.longValue() ).isEqualTo( 2L );
+							} );
+						}
+					},
+					serviceRegistry,
+					TemporalEntity.class,
+					AuditedEntity.class
+			);
+		}
+	}
+
+	public static class TestChangesetIdentifierSupplier implements ChangesetIdentifierSupplier<Long> {
+		private static final AtomicLong SEQUENCE = new AtomicLong();
+
+		@Override
+		public Long generateIdentifier(SharedSessionContract session) {
+			return SEQUENCE.incrementAndGet();
+		}
+	}
+
 	@Entity
 	@Table(name = "temporal_entities")
 	@Temporal(rowStart = "valid_from", rowEnd = "valid_to")
@@ -163,6 +321,11 @@ class StateManagementBindingTests {
 
 		@Audited.Excluded
 		private String auditedExcluded;
+
+		@ElementCollection
+		@CollectionTable(name = "temporal_entity_values", joinColumns = @JoinColumn(name = "entity_id"))
+		@Column(name = "state_value")
+		private Set<String> values = new HashSet<>();
 	}
 
 	@Entity
@@ -173,6 +336,11 @@ class StateManagementBindingTests {
 		private Long id;
 
 		private String name;
+
+		@ElementCollection
+		@CollectionTable(name = "audited_entity_values", joinColumns = @JoinColumn(name = "entity_id"))
+		@Column(name = "state_value")
+		private Set<String> values = new HashSet<>();
 	}
 
 	@Entity

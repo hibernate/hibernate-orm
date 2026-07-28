@@ -13,4 +13,6 @@ import org.hibernate.models.spi.MemberDetails;
 @Remove
 public interface GlobalRegistrar {
 	void collectIdGenerators(MemberDetails memberDetails);
+
+	void addPersistenceUnitLifecycleEventHandler(PersistenceUnitLifecycleEventHandler listener);
 }

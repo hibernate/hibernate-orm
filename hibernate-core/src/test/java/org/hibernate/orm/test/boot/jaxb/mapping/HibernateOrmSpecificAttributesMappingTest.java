@@ -17,7 +17,7 @@ import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.internal.TenantIdGeneration;
 import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.GeneratorDescriptor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -36,7 +36,7 @@ public class HibernateOrmSpecificAttributesMappingTest {
 	public void verifyMapping(DomainModelScope scope) {
 		scope.withHierarchy( HibernateOrmSpecificAttributesMappingTest.MyEntity.class, (entityDescriptor) -> {
 			Property identifierProperty = entityDescriptor.getIdentifierProperty();
-			GeneratorCreator generatorCreator = identifierProperty.getValueGeneratorCreator();
+			GeneratorDescriptor generatorCreator = identifierProperty.getValueGeneratorCreator();
 			assertThat( generatorCreator ).isNotNull();
 			Generator generator = generatorCreator.createGenerator( new CustomTenantGeneratorContext( identifierProperty ) );
 			assertThat( generator )
@@ -61,7 +61,7 @@ public class HibernateOrmSpecificAttributesMappingTest {
 
 		scope.withHierarchy( HibernateOrmSpecificAttributesMappingTest.MyEntityWithTenantId.class, (entityDescriptor) -> {
 			Property tenantId = entityDescriptor.getProperty( "tenantId" );
-			GeneratorCreator valueGeneratorCreator = tenantId.getValueGeneratorCreator();
+			GeneratorDescriptor valueGeneratorCreator = tenantId.getValueGeneratorCreator();
 			assertThat( valueGeneratorCreator ).isNotNull();
 			Generator generator = valueGeneratorCreator.createGenerator( new CustomTenantGeneratorContext( tenantId ) );
 

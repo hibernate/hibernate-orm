@@ -52,7 +52,7 @@ final class EntityConstraintFinalizer {
 		final var check = new StringBuilder();
 		check.append( selectables.get( 0 ).getText( dialect ) );
 		if ( subclass.isDiscriminatorValueNull() ) {
-			check.append( " is " );
+			check.append( " is not " );
 		}
 		else if ( subclass.isDiscriminatorValueNotNull() ) {
 			// Can't enforce this for now, because "not null" really means

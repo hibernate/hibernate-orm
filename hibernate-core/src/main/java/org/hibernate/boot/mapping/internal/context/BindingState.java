@@ -21,6 +21,7 @@ import org.hibernate.boot.mapping.internal.relational.TableOwner;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
+import org.hibernate.boot.mapping.internal.binders.AggregateComponentBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTargetBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
@@ -323,11 +324,11 @@ public interface BindingState {
 	/// Run and clear queued custom component mapping work.
 	void runComponentCustomMappings();
 
-	/// Queue aggregate component finalization work.
-	void addComponentAggregateFinalization(ComponentBindingPhase.AggregateFinalization binding);
+	/// Register the data-only handoff for one aggregate component.
+	void addAggregateComponentBinding(AggregateComponentBinding binding);
 
-	/// Run and clear queued aggregate component finalization work.
-	void runComponentAggregateFinalizations();
+	/// Aggregate components awaiting post-resolution schema/runtime materialization.
+	List<AggregateComponentBinding> aggregateComponentBindings();
 
 	/// Queue custom attribute/value mapping work for the attribute custom-mapping phase.
 	void addAttributeCustomMapping(AttributeBindingPhase.CustomMapping binding);

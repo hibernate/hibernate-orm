@@ -15,10 +15,12 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
+import org.hibernate.boot.models.spi.PersistenceUnitLifecycleEventHandler;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.ModelsException;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -165,7 +167,16 @@ public class DomainModelCategorizationCollector {
 		getGlobalRegistrations().collectNamedEntityGraphRegistrations( classDetails );
 		getGlobalRegistrations().collectImportRename( classDetails );
 		if ( classDetails.hasDirectAnnotationUsage( EntityListener.class ) ) {
-			JpaEventListener.listenerMethods( classDetails ).forEach( getGlobalRegistrations()::addJpaEventListener );
+			final var listeners = JpaEventListener.listenerMethodsOrEmpty( classDetails );
+			final var persistenceUnitListener = PersistenceUnitLifecycleEventHandler.from( classDetails );
+			listeners.forEach( getGlobalRegistrations()::addJpaEventListener );
+			if ( persistenceUnitListener.hasCallbackMethods() ) {
+				getGlobalRegistrations().addPersistenceUnitLifecycleEventHandler( persistenceUnitListener );
+			}
+			if ( listeners.isEmpty() && !persistenceUnitListener.hasCallbackMethods() ) {
+				throw new ModelsException( "Mapping for entity-listener specified no callback methods - "
+						+ classDetails.getClassName() );
+			}
 		}
 	}
 

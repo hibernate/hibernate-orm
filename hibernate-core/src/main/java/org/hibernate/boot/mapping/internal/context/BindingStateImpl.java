@@ -22,6 +22,7 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.mapping.internal.model.BootBindingModel;
+import org.hibernate.boot.mapping.internal.binders.AggregateComponentBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTableBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationIdentifierBinding;
 import org.hibernate.boot.mapping.internal.binders.AssociationTargetBinding;
@@ -130,8 +131,7 @@ public class BindingStateImpl implements BindingState {
 	private final java.util.List<ForeignKeyBinding> foreignKeyBindings = new java.util.ArrayList<>();
 	private final java.util.List<TableForeignKeyBinding> tableForeignKeyBindings = new java.util.ArrayList<>();
 	private final java.util.List<ComponentBindingPhase.CustomMapping> componentCustomMappings = new java.util.ArrayList<>();
-	private final java.util.List<ComponentBindingPhase.AggregateFinalization> componentAggregateFinalizations =
-			new java.util.ArrayList<>();
+	private final java.util.List<AggregateComponentBinding> aggregateComponentBindings = new java.util.ArrayList<>();
 	private final java.util.List<AttributeBindingPhase.CustomMapping> attributeCustomMappings = new java.util.ArrayList<>();
 	private final java.util.List<AttributeBindingPhase.ValueResolution> attributeValueResolutions = new java.util.ArrayList<>();
 	private final java.util.List<AttributeBindingPhase.PostValueResolution> postAttributeValueResolutions = new java.util.ArrayList<>();
@@ -509,15 +509,13 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addComponentAggregateFinalization(ComponentBindingPhase.AggregateFinalization binding) {
-		componentAggregateFinalizations.add( binding );
+	public void addAggregateComponentBinding(AggregateComponentBinding binding) {
+		aggregateComponentBindings.add( binding );
 	}
 
 	@Override
-	public void runComponentAggregateFinalizations() {
-		final var pendingBindings = List.copyOf( componentAggregateFinalizations );
-		componentAggregateFinalizations.clear();
-		pendingBindings.forEach( ComponentBindingPhase.AggregateFinalization::finishAggregateMapping );
+	public List<AggregateComponentBinding> aggregateComponentBindings() {
+		return List.copyOf( aggregateComponentBindings );
 	}
 
 	@Override

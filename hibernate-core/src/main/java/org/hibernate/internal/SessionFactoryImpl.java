@@ -85,7 +85,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
@@ -437,7 +436,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return PersistenceUnitLifecycleCallbacks.from(
 				definitions,
 				definitions.isEmpty()
-						? managedBeanRegistry
+						? standardServiceComponents.managedBeanRegistry()
 						: serviceRegistry.requireService( ManagedBeanRegistry.class )
 		);
 	}
@@ -1744,16 +1743,20 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				return existing;
 			}
 			else {
-				final var idGenerator = GeneratorBinder.createIdentifierGenerator(
-						persistentClass.getIdentifier(),
-						getDialect(),
-						persistentClass.getRootClass(),
-						persistentClass.getIdentifierProperty(),
-						getGeneratorSettings(),
-						getBootModel().getDatabase(),
-						getServiceRegistry(),
-						getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
-				);
+				final var preparedGenerator =
+						getBootModel().consumePreparedEntityIdentifierGenerator( rootName );
+				final var idGenerator = preparedGenerator == null
+						? GeneratorBinder.createIdentifierGenerator(
+								persistentClass.getIdentifier(),
+								getDialect(),
+								persistentClass.getRootClass(),
+								persistentClass.getIdentifierProperty(),
+								getGeneratorSettings(),
+								getBootModel().getDatabase(),
+								getServiceRegistry(),
+								getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
+						)
+						: preparedGenerator.getGenerator();
 				getGenerators().put( rootName, idGenerator );
 				return idGenerator;
 			}

@@ -253,6 +253,41 @@ class ToOneAttributeBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		return bindToOneValue(
+				ownerType,
+				ownerBinding,
+				ownerClassName,
+				propertyName,
+				implicitNamingPath,
+				member,
+				resolvedType,
+				property,
+				primaryTable,
+				associationOverride,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				true
+		);
+	}
+
+	static Value bindToOneValue(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			String ownerClassName,
+			String propertyName,
+			AttributePath implicitNamingPath,
+			MemberDetails member,
+			TypeDetails resolvedType,
+			Property property,
+			Table primaryTable,
+			AssociationOverride associationOverride,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			boolean registerTableColumns) {
 		final ToOneSource source = ToOneSource.create(
 				member,
 				ownerClassName,
@@ -305,7 +340,8 @@ class ToOneAttributeBinder {
 				modelBinders,
 				bindingOptions,
 				bindingState,
-				bindingContext
+				bindingContext,
+				registerTableColumns
 		);
 	}
 
@@ -371,7 +407,8 @@ class ToOneAttributeBinder {
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
-			BindingContext bindingContext) {
+			BindingContext bindingContext,
+			boolean registerTableColumns) {
 		final TargetEntityBinding target = resolveTargetEntityBinding( source, bindingState, bindingContext );
 		final JoinTable joinTable = source.joinTable();
 		final Table associationTable = joinTable == null
@@ -450,7 +487,8 @@ class ToOneAttributeBinder {
 					source,
 					ownerClassName + "." + propertyName,
 					bindingOptions,
-					bindingState
+					bindingState,
+					registerTableColumns
 			);
 			if ( referenceToPrimaryKey ) {
 				value.setSorted( true );
@@ -488,7 +526,8 @@ class ToOneAttributeBinder {
 						source,
 						ownerClassName + "." + propertyName,
 						bindingOptions,
-						bindingState
+						bindingState,
+						registerTableColumns
 				);
 			}
 			bindingState.addDerivedIdentifierBinding( new DerivedIdentifierBinding(
@@ -766,7 +805,8 @@ class ToOneAttributeBinder {
 			ToOneSource source,
 			String sourceRole,
 			BindingOptions bindingOptions,
-			BindingState bindingState) {
+			BindingState bindingState,
+			boolean registerTableColumns) {
 		final List<Column> targetColumns = referenceToPrimaryKey
 				? referencedPrimaryKeyColumns( joinColumnAnns, target, database )
 				: referencedPropertyColumns.isEmpty() ? target.identifierColumns() : referencedPropertyColumns;
@@ -822,19 +862,21 @@ class ToOneAttributeBinder {
 			if ( !optional ) {
 				column.setNullable( false );
 			}
-			table.addColumn( column );
-			ColumnBinder.registerColumnNameBinding(
-					table,
-					ColumnBinder.columnName(
-							ColumnSource.from( joinColumnAnn == null ? null : joinColumnAnn.column() ),
-							implicitName
-					),
-					column,
-					bindingOptions,
-					bindingState
-			);
-			if ( joinColumnAnn == null || joinColumnAnn.column() == null ) {
-				registerImplicitTerminalColumnAlias( table, source, targetColumnName, column, bindingState );
+			if ( registerTableColumns ) {
+				table.addColumn( column );
+				ColumnBinder.registerColumnNameBinding(
+						table,
+						ColumnBinder.columnName(
+								ColumnSource.from( joinColumnAnn == null ? null : joinColumnAnn.column() ),
+								implicitName
+						),
+						column,
+						bindingOptions,
+						bindingState
+				);
+				if ( joinColumnAnn == null || joinColumnAnn.column() == null ) {
+					registerImplicitTerminalColumnAlias( table, source, targetColumnName, column, bindingState );
+				}
 			}
 			final boolean sharedIdentifierColumn = isSharedIdentifierColumn( column, sharedIdentifierColumns, database );
 			value.addColumn(

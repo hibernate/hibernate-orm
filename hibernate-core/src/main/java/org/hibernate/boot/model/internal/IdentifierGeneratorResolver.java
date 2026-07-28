@@ -23,7 +23,7 @@ import jakarta.persistence.TableGenerator;
 
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.findLocalizedMatch;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleSequenceGenerator;
-import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.resolveLegacyGeneratorClass;
 
 /**
  * Resolver for identifier generators associated with an entity.
@@ -309,11 +309,11 @@ public class IdentifierGeneratorResolver extends AbstractEntityIdGeneratorResolv
 		}
 
 		final String generator = generatedValue.generator();
-		final var legacyNamedGenerator = mapLegacyNamedGenerator( generator, buildingContext );
+		final var legacyNamedGenerator = resolveLegacyGeneratorClass( generator, buildingContext );
 		if ( legacyNamedGenerator != null ) {
 			//generator settings
 			GeneratorBinder.createGeneratorFrom(
-					new IdentifierGeneratorDefinition( generator, legacyNamedGenerator.getName() ),
+					new IdentifierGeneratorDefinition( generator, legacyNamedGenerator ),
 					idValue,
 					buildingContext
 			);

@@ -13,10 +13,11 @@ import org.hibernate.mapping.Table;
 /**
  * Binder-side target for component member materialization.
  * <p>
- * Normal component members target the owner or collection table.  Aggregate
- * component members have a logical aggregate-member target, but this first
- * bridge still delegates to the same table path while the legacy
- * {@code Component}/{@code AggregateColumn} projection remains authoritative.
+ * Normal component members target the owner or collection table. Aggregate
+ * component members target their logical aggregate-member container; their
+ * mapping values retain the containing table reference required by the legacy
+ * runtime projection, but their member columns are not registered with that
+ * physical table.
  *
  * @since 9.0
  * @author Steve Ebersole

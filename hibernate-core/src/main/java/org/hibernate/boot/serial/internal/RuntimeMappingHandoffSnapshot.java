@@ -65,7 +65,7 @@ public final class RuntimeMappingHandoffSnapshot implements RuntimeMappingHandof
 						.stream()
 						.map( appliedMapping -> appliedMapping.role() )
 						.collect( java.util.stream.Collectors.toUnmodifiableSet() ),
-				JpaStaticMetamodelInjectionSource.from( bootBindingModel )
+				bootBindingModel.staticMetamodelInjectionSource()
 		);
 		return result.resolveAgainst( metadata );
 	}

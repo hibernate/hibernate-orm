@@ -77,7 +77,7 @@ public class BasicAttributeProcessing {
 		if ( jaxbBasic.isMutable() != null && !jaxbBasic.isMutable() ) {
 			memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.IMMUTABLE,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 		}
 		XmlAnnotationHelper.applyTemporal( jaxbBasic.getTemporal(), memberDetails, xmlDocumentContext );

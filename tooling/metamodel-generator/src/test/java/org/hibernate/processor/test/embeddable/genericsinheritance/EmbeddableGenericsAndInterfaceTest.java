@@ -32,5 +32,11 @@ class EmbeddableGenericsAndInterfaceTest {
 				UserEntity.class,
 				"user should be inherited"
 		);
+		assertAttributeTypeInMetaModelFor(
+				ExampleEmbedded.class,
+				"value",
+				String.class,
+				"concrete generic attributes should hide the mapped-superclass declaration field"
+		);
 	}
 }

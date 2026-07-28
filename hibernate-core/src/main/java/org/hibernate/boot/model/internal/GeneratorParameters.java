@@ -266,7 +266,7 @@ public class GeneratorParameters {
 			TableGenerator tableGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
 		definitionBuilder.setName( tableGeneratorAnnotation.name() );
-		definitionBuilder.setStrategy( org.hibernate.id.enhanced.TableGenerator.class.getName() );
+		definitionBuilder.setGeneratorClass( org.hibernate.id.enhanced.TableGenerator.class );
 		definitionBuilder.addParam( CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 
 		final String catalog = tableGeneratorAnnotation.catalog();
@@ -322,7 +322,7 @@ public class GeneratorParameters {
 			SequenceGenerator sequenceGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
 		definitionBuilder.setName( sequenceGeneratorAnnotation.name() );
-		definitionBuilder.setStrategy( SequenceStyleGenerator.class.getName() );
+		definitionBuilder.setGeneratorClass( SequenceStyleGenerator.class );
 
 		final String catalog = sequenceGeneratorAnnotation.catalog();
 		if ( isNotBlank( catalog ) ) {

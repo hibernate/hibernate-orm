@@ -5,6 +5,7 @@
 package org.hibernate.boot.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -24,6 +26,7 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -37,7 +40,9 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PreparedGenerator;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
@@ -88,6 +93,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions;
 	private final Database database;
+	private final transient Map<String, PreparedGenerator<?>> preparedEntityIdentifierGenerators;
+	private final transient Map<String, PreparedGenerator<?>> preparedCollectionIdentifierGenerators;
+	private final transient Map<MappingRole, PreparedGenerator<?>> preparedValueGenerators;
 
 	public MetadataImpl(
 			UUID uuid,
@@ -113,6 +121,63 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions,
 			Database database,
 			BootstrapContext bootstrapContext) {
+		this(
+				uuid,
+				metadataBuildingOptions,
+				entityBindingMap,
+				composites,
+				genericComponentsMap,
+				embeddableDiscriminatorTypesMap,
+				mappedSuperclassMap,
+				collectionBindingMap,
+				typeDefinitionMap,
+				filterDefinitionMap,
+				fetchProfileMap,
+				imports,
+				idGeneratorDefinitionMap,
+				namedQueryMap,
+				namedNativeQueryMap,
+				namedProcedureCallMap,
+				sqlResultSetMappingMap,
+				namedEntityGraphMap,
+				functionRegistry,
+				sqlFunctionMap,
+				persistenceUnitLifecycleCallbackDefinitions,
+				database,
+				null,
+				null,
+				null,
+				bootstrapContext
+		);
+	}
+
+	public MetadataImpl(
+			UUID uuid,
+			MappingResolutionOptions metadataBuildingOptions,
+			Map<String, PersistentClass> entityBindingMap,
+			List<Component> composites,
+			Map<Class<?>, Component> genericComponentsMap,
+			Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap,
+			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
+			Map<String, Collection> collectionBindingMap,
+			Map<String, TypeDefinition> typeDefinitionMap,
+			Map<String, FilterDefinition> filterDefinitionMap,
+			Map<String, FetchProfile> fetchProfileMap,
+			Map<String, String> imports,
+			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
+			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
+			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
+			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
+			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
+			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
+			SqmFunctionRegistry functionRegistry,
+			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
+			List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions,
+			Database database,
+			Map<String, PreparedGenerator<?>> preparedEntityIdentifierGenerators,
+			Map<String, PreparedGenerator<?>> preparedCollectionIdentifierGenerators,
+			Map<MappingRole, PreparedGenerator<?>> preparedValueGenerators,
+			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
 		this.entityBindingMap = entityBindingMap;
@@ -135,7 +200,31 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.sqlFunctionMap = sqlFunctionMap;
 		this.persistenceUnitLifecycleCallbackDefinitions = persistenceUnitLifecycleCallbackDefinitions;
 		this.database = database;
+		this.preparedEntityIdentifierGenerators = preparedEntityIdentifierGenerators;
+		this.preparedCollectionIdentifierGenerators = preparedCollectionIdentifierGenerators;
+		this.preparedValueGenerators = preparedValueGenerators;
 		this.bootstrapContext = bootstrapContext;
+	}
+
+	@Override
+	public PreparedGenerator<?> consumePreparedEntityIdentifierGenerator(String rootEntityName) {
+		return preparedEntityIdentifierGenerators == null
+				? null
+				: preparedEntityIdentifierGenerators.remove( rootEntityName );
+	}
+
+	@Override
+	public PreparedGenerator<?> consumePreparedCollectionIdentifierGenerator(String collectionRole) {
+		return preparedCollectionIdentifierGenerators == null
+				? null
+				: preparedCollectionIdentifierGenerators.remove( collectionRole );
+	}
+
+	@Override
+	public PreparedGenerator<?> consumePreparedValueGenerator(MappingRole propertyRole) {
+		return preparedValueGenerators == null || propertyRole == null
+				? null
+				: preparedValueGenerators.remove( propertyRole );
 	}
 
 	@Override

@@ -84,6 +84,39 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 
 	@Internal
 	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator.Style style,
+			Class<? extends UuidValueGenerator> algorithm,
+			MemberDetails memberDetails) {
+		generator = determineValueGenerator(
+				style,
+				algorithm,
+				memberDetails.getDeclaringType().getName(),
+				memberDetails.getName()
+		);
+		final var javaType = determineProperJavaType( memberDetails.getType().determineRawClass().toJavaClass() );
+		generatedType = javaType.getJavaTypeClass();
+		valueTransformer = javaType.getUuidValueTransformer();
+	}
+
+	@Internal
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator.Style style,
+			Class<? extends UuidValueGenerator> algorithm,
+			MemberDetails memberDetails,
+			GeneratorCreationContext creationContext) {
+		generator = determineValueGenerator(
+				style,
+				algorithm,
+				memberDetails.getDeclaringType().getName(),
+				memberDetails.getName()
+		);
+		final var javaType = determineProperJavaType( creationContext );
+		generatedType = javaType.getJavaTypeClass();
+		valueTransformer = javaType.getUuidValueTransformer();
+	}
+
+	@Internal
+	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
 		generator = determineValueGenerator( config, idMember.getDeclaringClass().getName(), idMember.getName() );
@@ -155,30 +188,41 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			return StandardRandomStrategy.INSTANCE;
 		}
 		else {
-			// there is an annotation
-			final var style = config.style();
-			if ( config.algorithm() != UuidValueGenerator.class ) {
-				// the annotation specified a custom algorithm
-				if ( style != AUTO ) {
-					throw new MappingException(
-							String.format(
-									Locale.ROOT,
-									"Style [%s] should not be specified with custom UUID value generator: %s.%s",
-									style.name(),
-									memberDeclaringClassName,
-									memberName
-							)
-					);
-				}
-				return instantiateCustomGenerator( config.algorithm() );
-			}
-			return switch ( style ) {
-				case TIME -> new CustomVersionOneStrategy();
-				case VERSION_6 -> UuidVersion6Strategy.INSTANCE;
-				case VERSION_7 -> UuidVersion7Strategy.INSTANCE;
-				default -> StandardRandomStrategy.INSTANCE;
-			};
+			return determineValueGenerator(
+					config.style(),
+					config.algorithm(),
+					memberDeclaringClassName,
+					memberName
+			);
 		}
+	}
+
+	private static UuidValueGenerator determineValueGenerator(
+			org.hibernate.annotations.UuidGenerator.Style style,
+			Class<? extends UuidValueGenerator> algorithm,
+			String memberDeclaringClassName,
+			String memberName) {
+		if ( algorithm != UuidValueGenerator.class ) {
+			// the annotation specified a custom algorithm
+			if ( style != AUTO ) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Style [%s] should not be specified with custom UUID value generator: %s.%s",
+								style.name(),
+								memberDeclaringClassName,
+								memberName
+						)
+				);
+			}
+			return instantiateCustomGenerator( algorithm );
+		}
+		return switch ( style ) {
+			case TIME -> new CustomVersionOneStrategy();
+			case VERSION_6 -> UuidVersion6Strategy.INSTANCE;
+			case VERSION_7 -> UuidVersion7Strategy.INSTANCE;
+			default -> StandardRandomStrategy.INSTANCE;
+		};
 	}
 
 	private static UuidValueGenerator instantiateCustomGenerator(Class<? extends UuidValueGenerator> algorithmClass) {

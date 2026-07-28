@@ -9,7 +9,7 @@ import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.GeneratorDescriptor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -34,7 +34,7 @@ class OrmXmlGeneratedTest {
 			);
 
 			PersistentClass entityBinding = metadata.getEntityBinding( Tractor.class.getName() );
-			GeneratorCreator generator = entityBinding
+			GeneratorDescriptor generator = entityBinding
 					.getProperty( "serialNumber" )
 					.getValueGeneratorCreator();
 

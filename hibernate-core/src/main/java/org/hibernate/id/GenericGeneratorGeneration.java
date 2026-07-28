@@ -41,7 +41,7 @@ import org.hibernate.resource.beans.internal.Helper;
 @Internal
 public class GenericGeneratorGeneration
 		implements IdentifierGenerator, OnExecutionGenerator, BulkInsertionCapableIdentifierGenerator,
-				AnnotationBasedGenerator<GenericGenerator> {
+				AnnotationBasedGenerator<GenericGenerator>, ExportableProducer {
 	private Generator delegate;
 
 	@Internal
@@ -79,11 +79,19 @@ public class GenericGeneratorGeneration
 		if ( delegate instanceof Configurable configurable ) {
 			configurable.configure( context, collectParameters( annotation, context ) );
 		}
+	}
+
+	@Override
+	public void registerExportables(org.hibernate.boot.model.relational.Database database) {
 		if ( delegate instanceof ExportableProducer exportableProducer ) {
-			exportableProducer.registerExportables( context.getDatabase() );
+			exportableProducer.registerExportables( database );
 		}
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
 		if ( delegate instanceof Configurable configurable ) {
-			configurable.initialize( context.getSqlStringGenerationContext() );
+			configurable.initialize( context );
 		}
 	}
 

@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CompositeTypeRegistration;
@@ -36,6 +37,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
@@ -117,14 +119,14 @@ public class GlobalRegistrationBindingTests {
 					final var metadataCollector = context.getMetadataCollector();
 
 					final var sequenceGenerator = metadataCollector.getIdentifierGenerator( "global_seq" );
-					assertThat( sequenceGenerator.getStrategy() ).isEqualTo( SequenceStyleGenerator.class.getName() );
+					assertThat( sequenceGenerator.getGeneratorClass() ).isEqualTo( SequenceStyleGenerator.class );
 					assertThat( sequenceGenerator.getParameters() )
 							.containsEntry( SEQUENCE_PARAM, "global_sequence" )
 							.containsEntry( INITIAL_PARAM, "7" )
 							.containsEntry( INCREMENT_PARAM, "13" );
 					final var tableGenerator = metadataCollector.getIdentifierGenerator( "global_table" );
-					assertThat( tableGenerator.getStrategy() )
-							.isEqualTo( org.hibernate.id.enhanced.TableGenerator.class.getName() );
+					assertThat( tableGenerator.getGeneratorClass() )
+							.isEqualTo( org.hibernate.id.enhanced.TableGenerator.class );
 					assertThat( tableGenerator.getParameters() )
 							.containsEntry( TABLE_PARAM, "global_id_table" )
 							.containsEntry( SEGMENT_COLUMN_PARAM, "segment_name" )
@@ -135,8 +137,11 @@ public class GlobalRegistrationBindingTests {
 					final var genericGenerator = metadataCollector.getIdentifierGenerator(
 							GlobalIdentifierGenerator.class.getName()
 					);
-					assertThat( genericGenerator.getStrategy() ).isEqualTo( GlobalIdentifierGenerator.class.getName() );
+					assertThat( genericGenerator.getGeneratorClass() ).isEqualTo( GlobalIdentifierGenerator.class );
 					assertThat( genericGenerator.getParameters() ).containsEntry( "role", "global" );
+					assertThat( ( (IdentifierGeneratorDefinition) SerializationHelper.clone( genericGenerator ) )
+							.getGeneratorClass() )
+							.isEqualTo( GlobalIdentifierGenerator.class );
 
 					assertThat( metadataCollector.getAttributeConverterManager()
 							.findRegisteredConversion( GlobalConverted.class ) ).isNotNull();

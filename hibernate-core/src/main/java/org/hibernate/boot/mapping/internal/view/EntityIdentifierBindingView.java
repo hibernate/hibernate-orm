@@ -29,6 +29,10 @@ public record EntityIdentifierBindingView(EntityIdentifierBinding binding) {
 		return binding.owner();
 	}
 
+	public boolean idClass() {
+		return binding.idClass();
+	}
+
 	public List<Attribute> attributes() {
 		return binding.attributes().stream()
 				.map( Attribute::new )

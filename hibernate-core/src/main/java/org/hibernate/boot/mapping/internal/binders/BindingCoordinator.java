@@ -37,9 +37,11 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.internal.GeneratorParameters;
+import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.mapping.ModelBindingLogging;
 import org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding;
 import org.hibernate.boot.mapping.internal.model.EntityTypeBinding;
@@ -380,7 +382,7 @@ public class BindingCoordinator {
 		runComponentCustomMappingPhase();
 		runAttributeCustomMappingPhase();
 		runAttributeValueResolutionPhase();
-		runComponentAggregateFinalizationPhase();
+		finalizeAggregateMappings();
 		StateManagementBindingPhase.processPropertiesAndCollections( bindingState );
 		runPhase( binders, TypeBindingPhase.Finalization.class, TypeBindingPhase.Finalization::finalizeBinding );
 
@@ -396,16 +398,16 @@ public class BindingCoordinator {
 		bindingState.runComponentCustomMappings();
 	}
 
-	private void runComponentAggregateFinalizationPhase() {
-		bindingState.runComponentAggregateFinalizations();
-	}
-
 	private void runAttributeCustomMappingPhase() {
 		bindingState.runAttributeCustomMappings();
 	}
 
 	private void runAttributeValueResolutionPhase() {
 		bindingState.runAttributeValueResolutions();
+	}
+
+	private void finalizeAggregateMappings() {
+		bindingState.aggregateComponentBindings().forEach( AggregateMappingFinalizer::finish );
 	}
 
 	private void registerCategorizedDeclarationContainers() {
@@ -864,8 +866,13 @@ public class BindingCoordinator {
 
 	private void processEventListeners(GlobalRegistrations globalRegistrations) {
 		// JPA event listeners are consumed by EntityTypeMetadata#getCompleteJpaEventListeners()
-		// during entity metadata binding.  There is no separate mapping collector
-		// registration to apply here.
+		// during entity metadata binding.
+		final var registrar = bindingState.getMetadataBuildingContext()
+				.getMetadataCollector()
+				.getGlobalRegistrations()
+				.as( GlobalRegistrar.class );
+		globalRegistrations.getPersistenceUnitLifecycleEventHandlers()
+				.forEach( registrar::addPersistenceUnitLifecycleEventHandler );
 	}
 
 	private void processFilterDefinitions(GlobalRegistrations globalRegistrations) {
@@ -894,7 +901,12 @@ public class BindingCoordinator {
 		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		definitionBuilder.setName( registration.name() );
 		if ( isNotEmpty( registration.strategy() ) ) {
-			definitionBuilder.setStrategy( registration.strategy() );
+			definitionBuilder.setGeneratorClass(
+					GeneratorStrategies.resolveGeneratorClass(
+							registration.strategy(),
+							bindingState.getMetadataBuildingContext()
+					)
+			);
 		}
 		definitionBuilder.addParams( registration.parameters() );
 		return definitionBuilder.build();

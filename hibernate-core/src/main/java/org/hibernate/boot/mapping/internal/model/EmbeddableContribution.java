@@ -66,10 +66,12 @@ public class EmbeddableContribution {
 				.stream()
 				.map( member -> ComponentMemberBinding.from( source, member, bindingState, bindingContext ) )
 				.forEach( members::add );
-		source.subclassMembers( bindingContext )
-				.stream()
-				.map( member -> ComponentMemberBinding.from( source, member, bindingState, bindingContext ) )
-				.forEach( members::add );
+		if ( source.kind() != ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
+			source.subclassMembers( bindingContext )
+					.stream()
+					.map( member -> ComponentMemberBinding.from( source, member, bindingState, bindingContext ) )
+					.forEach( members::add );
+		}
 		return new EmbeddableContribution(
 				source.kind(),
 				source.sourceMember(),

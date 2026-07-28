@@ -19,15 +19,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @JiraKey(value = "HHH-12076")
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/query/hhh12076/Claim.hbm.xml",
-				"org/hibernate/query/hhh12076/EwtAssessmentExtension.hbm.xml",
-				"org/hibernate/query/hhh12076/Extension.hbm.xml",
-				"org/hibernate/query/hhh12076/GapAssessmentExtension.hbm.xml",
-				"org/hibernate/query/hhh12076/Settlement.hbm.xml",
-				"org/hibernate/query/hhh12076/SettlementExtension.hbm.xml",
-				"org/hibernate/query/hhh12076/SettlementTask.hbm.xml",
-				"org/hibernate/query/hhh12076/Task.hbm.xml",
-				"org/hibernate/query/hhh12076/TaskStatus.hbm.xml",
+				"org/hibernate/query/hhh12076/Claim.orm.xml",
+				"org/hibernate/query/hhh12076/EwtAssessmentExtension.orm.xml",
+				"org/hibernate/query/hhh12076/Extension.orm.xml",
+				"org/hibernate/query/hhh12076/GapAssessmentExtension.orm.xml",
+				"org/hibernate/query/hhh12076/Settlement.orm.xml",
+				"org/hibernate/query/hhh12076/SettlementExtension.orm.xml",
+				"org/hibernate/query/hhh12076/SettlementTask.orm.xml",
+				"org/hibernate/query/hhh12076/Task.orm.xml",
+				"org/hibernate/query/hhh12076/TaskStatus.orm.xml",
 		}
 )
 @SessionFactory

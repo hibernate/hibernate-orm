@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"),
 		}
 )
 public class OneToOneCacheTest {

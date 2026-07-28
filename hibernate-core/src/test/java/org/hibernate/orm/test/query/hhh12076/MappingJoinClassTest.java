@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		}
 )
 @SessionFactory
-public class HbmMappingJoinClassTest {
+public class MappingJoinClassTest {
 
 	@BeforeEach
 	protected void prepareTest(SessionFactoryScope scope) {

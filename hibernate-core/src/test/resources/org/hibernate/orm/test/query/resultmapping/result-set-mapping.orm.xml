@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <named-native-query name="hbm-implicit-resultset" result-set-mapping="hbm-implicit-resultset-implicitResultSetMapping">
+        <query>select id as hbm_id,
+            name_first_part as hbm_name_first,
+            name_second_part as hbm_name_second
+            from entity_with_embedded</query>
+    </named-native-query>
+    <sql-result-set-mapping name="hbm-resultset-entity-complete">
+        <entity-result entity-class="org.hibernate.orm.test.query.resultmapping.EntityWithEmbedded">
+            <field-result name="id" column="hbm_id"/>
+            <field-result name="compoundName.firstPart" column="hbm_name_first"/>
+            <field-result name="compoundName.secondPart" column="hbm_name_second"/>
+        </entity-result>
+    </sql-result-set-mapping>
+    <sql-result-set-mapping name="hbm-resultset-entity-partial">
+        <entity-result entity-class="org.hibernate.orm.test.query.resultmapping.EntityWithEmbedded">
+            <field-result name="compoundName.firstPart" column="hbm_name_first"/>
+            <field-result name="compoundName.secondPart" column="hbm_name_second"/>
+        </entity-result>
+    </sql-result-set-mapping>
+    <sql-result-set-mapping name="hbm-resultset-scalar-complete">
+        <column-result name="hbm_id"/>
+        <column-result name="hbm_name_first"/>
+        <column-result name="hbm_name_second"/>
+    </sql-result-set-mapping>
+    <sql-result-set-mapping name="hbm-implicit-resultset-implicitResultSetMapping">
+        <entity-result entity-class="org.hibernate.orm.test.query.resultmapping.EntityWithEmbedded">
+            <field-result name="id" column="hbm_id"/>
+            <field-result name="compoundName.firstPart" column="hbm_name_first"/>
+            <field-result name="compoundName.secondPart" column="hbm_name_second"/>
+        </entity-result>
+    </sql-result-set-mapping>
+</entity-mappings>

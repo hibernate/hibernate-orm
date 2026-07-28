@@ -70,7 +70,7 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 	private transient ConverterDescriptor<?,?> attributeConverterDescriptor;
 	private transient Type type;
 
-	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
+	private GeneratorDescriptor customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
 
 	public SimpleValue(MetadataBuildingContext buildingContext) {
 	}
@@ -272,12 +272,12 @@ public abstract class SimpleValue implements KeyValue, AppliedMappingPart {
 	}
 
 	@Internal
-	public void setCustomIdGeneratorCreator(GeneratorCreator customIdGeneratorCreator) {
+	public void setCustomIdGeneratorCreator(GeneratorDescriptor customIdGeneratorCreator) {
 		this.customIdGeneratorCreator = customIdGeneratorCreator;
 	}
 
 	@Internal
-	public GeneratorCreator getCustomIdGeneratorCreator() {
+	public GeneratorDescriptor getCustomIdGeneratorCreator() {
 		return customIdGeneratorCreator;
 	}
 

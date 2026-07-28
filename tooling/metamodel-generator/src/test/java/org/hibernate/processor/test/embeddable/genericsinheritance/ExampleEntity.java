@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 public class ExampleEntity {
 	private int id;
 
-	private ExampleEmbedded<?> exampleEmbedded;
+	private ExampleEmbedded exampleEmbedded;
 
 	@Id
 	@GeneratedValue
@@ -22,10 +22,10 @@ public class ExampleEntity {
 	}
 
 	@Embedded
-	public ExampleEmbedded<?> getExampleEmbedded() {
+	public ExampleEmbedded getExampleEmbedded() {
 		return exampleEmbedded;
 	}
-	public void setExampleEmbedded(ExampleEmbedded<?> exampleEmbedded) {
+	public void setExampleEmbedded(ExampleEmbedded exampleEmbedded) {
 		this.exampleEmbedded = exampleEmbedded;
 	}
 }

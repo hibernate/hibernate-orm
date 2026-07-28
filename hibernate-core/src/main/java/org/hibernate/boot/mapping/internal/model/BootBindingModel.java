@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.mapping.internal.view.EntityHierarchyView;
 import org.hibernate.boot.mapping.internal.view.EntityView;
@@ -36,6 +37,8 @@ import jakarta.persistence.MappedSuperclass;
 /// @since 9.0
 /// @author Steve Ebersole
 public class BootBindingModel {
+	private final JpaStaticMetamodelInjectionSource.Builder staticMetamodelInjectionPlan =
+			new JpaStaticMetamodelInjectionSource.Builder();
 	private final Map<ClassDetails, ManagedTypeBinding> managedTypeBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, EntityHierarchyBinding> entityHierarchyBindings = new LinkedHashMap<>();
 	private final Map<EntityTypeMetadata, EntityIdentifierBinding> entityIdentifierBindings = new LinkedHashMap<>();
@@ -51,6 +54,7 @@ public class BootBindingModel {
 
 	public void addManagedTypeBinding(ManagedTypeBinding binding) {
 		managedTypeBindings.put( binding.classDetails(), binding );
+		staticMetamodelInjectionPlan.addManagedType( binding );
 	}
 
 	public ManagedTypeBinding getManagedTypeBinding(ClassDetails classDetails) {
@@ -59,6 +63,16 @@ public class BootBindingModel {
 
 	public Collection<ManagedTypeBinding> managedTypeBindings() {
 		return managedTypeBindings.values();
+	}
+
+	public void addDeclaredAttribute(
+			ManagedTypeBinding declaringType,
+			AttributeDeclarationBinding attributeDeclaration) {
+		declaringType.addDeclaredAttribute( attributeDeclaration );
+		staticMetamodelInjectionPlan.addDeclaredAttribute(
+				declaringType,
+				attributeDeclaration.attributeName()
+		);
 	}
 
 	/// Registers one concrete attribute application by its intrinsic mapping
@@ -91,6 +105,12 @@ public class BootBindingModel {
 		if ( previous != null && previous != appliedMapping ) {
 			throw new IllegalStateException( "Duplicate applied embeddable mapping role: " + appliedMapping.role() );
 		}
+		for ( AppliedAttributeMapping attribute : appliedMapping.attributes() ) {
+			staticMetamodelInjectionPlan.addConcreteGenericAttribute(
+					appliedMapping.componentType(),
+					attribute
+			);
+		}
 	}
 
 	public @Nullable AppliedEmbeddableMapping getAppliedEmbeddableMapping(MappingRole role) {
@@ -103,6 +123,7 @@ public class BootBindingModel {
 
 	public void addEntityHierarchyBinding(EntityTypeMetadata rootType, EntityHierarchyBinding binding) {
 		entityHierarchyBindings.put( rootType, binding );
+		staticMetamodelInjectionPlan.addHierarchy( binding );
 	}
 
 	public @Nullable EntityHierarchyBinding getEntityHierarchyBinding(EntityTypeMetadata rootType) {
@@ -163,7 +184,7 @@ public class BootBindingModel {
 				accessType,
 				nature
 		);
-		managedTypeBinding.addDeclaredAttribute( declarationBinding );
+		addDeclaredAttribute( managedTypeBinding, declarationBinding );
 		return declarationBinding;
 	}
 
@@ -207,6 +228,7 @@ public class BootBindingModel {
 
 	public void addEntityIdentifierBinding(EntityTypeMetadata rootType, EntityIdentifierBinding entityIdentifierBinding) {
 		entityIdentifierBindings.put( rootType, entityIdentifierBinding );
+		staticMetamodelInjectionPlan.addIdentifier( rootType.getClassDetails(), entityIdentifierBinding );
 		indexEntityIdentifierBinding( rootType.getEntityName(), entityIdentifierBinding );
 		indexEntityIdentifierBinding( rootType.getJpaEntityName(), entityIdentifierBinding );
 		indexEntityIdentifierBinding( rootType.getClassDetails().getName(), entityIdentifierBinding );
@@ -253,6 +275,13 @@ public class BootBindingModel {
 
 	public void addVersionBinding(EntityTypeMetadata rootType, VersionBinding versionBinding) {
 		versionBindings.put( rootType, versionBinding );
+		staticMetamodelInjectionPlan.addVersion( versionBinding );
+	}
+
+	/// Static-metamodel injection work accumulated alongside semantic binding
+	/// and mapping materialization.
+	public JpaStaticMetamodelInjectionSource staticMetamodelInjectionSource() {
+		return staticMetamodelInjectionPlan.build();
 	}
 
 	public @Nullable VersionBinding getVersionBinding(EntityTypeMetadata rootType) {
@@ -373,6 +402,10 @@ public class BootBindingModel {
 					"Mapped-superclass attribute mapping is not registered for role " + appliedMapping.role()
 			);
 		}
+		staticMetamodelInjectionPlan.addConcreteGenericAttribute(
+				contribution.consumer().getClassDetails(),
+				appliedMapping
+		);
 		return contribution.addAppliedAttributeMapping( appliedMapping );
 	}
 

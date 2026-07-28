@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.models.spi.PersistenceUnitLifecycleEventHandler;
 
 
 /// Persistence-unit scoped registrations collected while categorizing annotations
@@ -21,6 +22,9 @@ import org.hibernate.boot.model.NamedEntityGraphDefinition;
 public interface GlobalRegistrations {
 	/// Entity listener registrations declared for the persistence unit.
 	List<JpaEventListener> getEntityListenerRegistrations();
+
+	/// Persistence-unit lifecycle listener registrations.
+	List<PersistenceUnitLifecycleEventHandler> getPersistenceUnitLifecycleEventHandlers();
 
 	/// Attribute converter registrations.
 	List<ConversionRegistration> getConverterRegistrations();

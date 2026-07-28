@@ -85,7 +85,10 @@ public class VersionBinder {
 					managedType.getClassDetails().getName() + "." + attributeName,
 					attributeName
 			);
-			managedTypeBinding.addDeclaredAttribute( declarationBinding );
+			bindingState.getBootBindingModel().addDeclaredAttribute(
+					managedTypeBinding,
+					declarationBinding
+			);
 		}
 
 		final AttributeUsageBinding usageBinding = new StandardAttributeUsageBinding(

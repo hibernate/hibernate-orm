@@ -6,8 +6,10 @@ import org.hibernate.Internal;
 import org.hibernate.Remove;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -19,14 +21,13 @@ import static java.util.Collections.singletonMap;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
-import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorStrategy;
 import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
- * Models the definition of an {@linkplain org.hibernate.id.IdentityGenerator identifier generator}
+ * Models a named identifier-generator definition.
  *
  * @implSpec Should be immutable.
  *
@@ -37,41 +38,31 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 @Remove
 public class IdentifierGeneratorDefinition implements Serializable {
 	private final String name;
-	private final String strategy;
+	private final Class<? extends Generator> generatorClass;
 	private final Map<String, String> parameters;
 
 	public IdentifierGeneratorDefinition(
 			final String name,
-			final String strategy,
+			final Class<? extends Generator> generatorClass,
 			final Map<String, String> parameters) {
 		this.name = name;
-		this.strategy = strategy;
+		this.generatorClass = Objects.requireNonNull( generatorClass, "generatorClass" );
 		this.parameters = isEmpty( parameters )
 				? emptyMap()
 				: unmodifiableMap( parameters );
 	}
 
-	public IdentifierGeneratorDefinition(
-			final String name,
-			final Map<String, String> parameters) {
-		this( name, name, parameters );
-	}
-
-	public IdentifierGeneratorDefinition(String name) {
-		this( name, name );
-	}
-
-	public IdentifierGeneratorDefinition(String name, String strategy) {
+	public IdentifierGeneratorDefinition(String name, Class<? extends Generator> generatorClass) {
 		this.name = name;
-		this.strategy = strategy;
+		this.generatorClass = Objects.requireNonNull( generatorClass, "generatorClass" );
 		this.parameters = emptyMap();
 	}
 
 	/**
-	 * @return identifier generator strategy
+	 * @return the identifier generator implementation class
 	 */
-	public String getStrategy() {
-		return strategy;
+	public Class<? extends Generator> getGeneratorClass() {
+		return generatorClass;
 	}
 
 	/**
@@ -91,7 +82,6 @@ public class IdentifierGeneratorDefinition implements Serializable {
 	@Internal
 	public static IdentifierGeneratorDefinition createImplicit(
 			String name,
-			TypeDetails idType,
 			String generatorName,
 			GenerationType generationType) {
 		// If we were unable to locate an actual matching named generator assume
@@ -102,7 +92,9 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			case TABLE -> buildTableGeneratorDefinition( name );
 			case AUTO -> new IdentifierGeneratorDefinition(
 					name,
-					generatorStrategy( generationType, generatorName, idType ),
+					"increment".equalsIgnoreCase( generatorName )
+							? IncrementGenerator.class
+							: SequenceStyleGenerator.class,
 					singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
 			);
 			case IDENTITY, UUID -> throw new AnnotationException(
@@ -142,27 +134,27 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		}
 
 		return Objects.equals(name, that.name)
-			&& Objects.equals(strategy, that.strategy)
+			&& Objects.equals(generatorClass, that.generatorClass)
 			&& Objects.equals(parameters, that.parameters);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( name, strategy, parameters );
+		return Objects.hash( name, generatorClass, parameters );
 	}
 
 	@Override
 	public String toString() {
 		return "IdentifierGeneratorDefinition{" +
 				"name='" + name + '\'' +
-				", strategy='" + strategy + '\'' +
+				", generatorClass=" + generatorClass.getName() +
 				", parameters=" + parameters +
 				'}';
 	}
 
 	public static class Builder {
 		private String name;
-		private String strategy;
+		private Class<? extends Generator> generatorClass;
 		private Map<String, String> parameters;
 
 		public String getName() {
@@ -173,12 +165,12 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			this.name = name;
 		}
 
-		public String getStrategy() {
-			return strategy;
+		public Class<? extends Generator> getGeneratorClass() {
+			return generatorClass;
 		}
 
-		public void setStrategy(String strategy) {
-			this.strategy = strategy;
+		public void setGeneratorClass(Class<? extends Generator> generatorClass) {
+			this.generatorClass = generatorClass;
 		}
 
 		public void addParam(String name, String value) {
@@ -197,7 +189,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		}
 
 		public IdentifierGeneratorDefinition build() {
-			return new IdentifierGeneratorDefinition( name, strategy, parameters );
+			return new IdentifierGeneratorDefinition( name, generatorClass, parameters );
 		}
 	}
 }

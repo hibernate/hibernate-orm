@@ -243,8 +243,16 @@ public class JpaEventListener {
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
 			JaxbEntityListenerImpl jaxbMapping) {
+		return from( consumerType, listenerClassDetails, jaxbMapping, false );
+	}
+
+	static JpaEventListener from(
+			JpaEventListenerStyle consumerType,
+			ClassDetails listenerClassDetails,
+			JaxbEntityListenerImpl jaxbMapping,
+			boolean allowEmpty) {
 		if ( isImplicitMethodMappings( jaxbMapping ) ) {
-			return from( consumerType, listenerClassDetails );
+			return from( consumerType, listenerClassDetails, allowEmpty );
 		}
 
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
@@ -354,7 +362,9 @@ public class JpaEventListener {
 				postLoadMethod.get()
 		);
 
-		errorIfEmpty( jpaEventListener );
+		if ( !allowEmpty ) {
+			errorIfEmpty( jpaEventListener );
+		}
 
 		return jpaEventListener;
 	}
@@ -397,6 +407,13 @@ public class JpaEventListener {
 
 	/// Create a listener descriptor from annotation-declared callback methods.
 	public static JpaEventListener from(JpaEventListenerStyle consumerType, ClassDetails listenerClassDetails) {
+		return from( consumerType, listenerClassDetails, false );
+	}
+
+	private static JpaEventListener from(
+			JpaEventListenerStyle consumerType,
+			ClassDetails listenerClassDetails,
+			boolean allowEmpty) {
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preInsertMethod = new MutableObject<>();
@@ -489,17 +506,24 @@ public class JpaEventListener {
 				postUpsertMethod.get(),
 				postLoadMethod.get()
 		);
-		errorIfEmpty( jpaEventListener );
+		if ( !allowEmpty ) {
+			errorIfEmpty( jpaEventListener );
+		}
 		return jpaEventListener;
 	}
 
 	public static List<JpaEventListener> listenerMethods(ClassDetails listenerClassDetails) {
-		final List<JpaEventListener> descriptors = new ArrayList<>();
-		collectListenerMethods( listenerClassDetails, null, descriptors );
+		final List<JpaEventListener> descriptors = listenerMethodsOrEmpty( listenerClassDetails );
 		if ( descriptors.isEmpty() ) {
 			throw new ModelsException( "Mapping for entity-listener specified no callback methods - "
 					+ listenerClassDetails.getClassName() );
 		}
+		return descriptors;
+	}
+
+	static List<JpaEventListener> listenerMethodsOrEmpty(ClassDetails listenerClassDetails) {
+		final List<JpaEventListener> descriptors = new ArrayList<>();
+		collectListenerMethods( listenerClassDetails, null, descriptors );
 		return descriptors;
 	}
 

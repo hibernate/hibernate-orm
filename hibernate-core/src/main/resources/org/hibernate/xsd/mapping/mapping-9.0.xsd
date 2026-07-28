@@ -735,6 +735,8 @@
 
                 <xsd:group ref="orm:basic-type-group" />
             </xsd:choice>
+            <!-- hbm : is the state of this property considered mutable : ! @Immutable -->
+            <xsd:element name="mutable" type="xsd:boolean" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
@@ -1451,6 +1453,26 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
+            <xsd:element name="post-create" type="orm:lifecycle-callback" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+
+                        @Target({METHOD}) @Retention(RUNTIME)
+                        public @interface PostCreate {}
+
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="pre-close" type="orm:lifecycle-callback" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+
+                        @Target({METHOD}) @Retention(RUNTIME)
+                        public @interface PreClose {}
+
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
         </xsd:sequence>
         <xsd:attribute name="class" type="xsd:string" use="required"/>
     </xsd:complexType>
@@ -1655,6 +1677,7 @@
             <xsd:element name="unsaved-value" type="xsd:string" minOccurs="0"/>
 
             <xsd:group ref="orm:basic-type-group" />
+            <xsd:element name="mutable" type="xsd:boolean" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>

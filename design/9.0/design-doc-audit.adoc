@@ -112,88 +112,111 @@ and compatibility decisions.
 | Ownership of mapping/type/function/session-factory customizations and `BootstrapContext` surface reduction.
 | Keep.  This remains relevant to `MappingCustomizations`, function registry ownership, and context narrowing.
 
-| link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
-| Active / Blocking
-| Generator recipe/descriptors, runtime generator creation ownership, and schema exportable compatibility.
-| Keep as the focused design note.  Serialization is no longer a reason to
-defer choosing and implementing the declarative generator handoff.
+| `generator-descriptor-design.adoc`
+| Removed / Implemented
+| Generator descriptors, runtime generator creation ownership, and schema-exportable compatibility.
+| The Stage 3 implementation, contract Javadocs, completion plan, and current
+handoff retain the completed decisions.  The obsolete proposal was deleted.
 
-| link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
-| Active umbrella
-| Umbrella declaration/contribution/correspondence model across identifiers, mapped superclasses, and embeddables.
-| Keep as canonical contribution/correspondence design.  Durable material from the old proposal and applied-contribution notes has been folded here.
+| `resolved-contribution-model-design.adoc`
+| Removed / Implemented
+| Umbrella declaration/usage/application/contribution/correspondence model
+across identifiers, mapped superclasses, and embeddables.
+| The binding model, materializers, handoff contracts, contract Javadocs, boot
+model terminology, and contributor guide retain the completed design.  The
+obsolete migration proposal was deleted.
 
-| link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
-| Resolved foundation
+| `declaration-usage-applied-mapping-design.adoc`
+| Removed / Consolidated
 | Cross-cutting declaration, contextual usage, concrete applied-mapping, compatibility-projection, and stable-role design.
-| Keep as the canonical final-state foundation.  Route remaining
-mapped-superclass, embeddable, generic, and identifier work to their focused
-notes.
+| Its durable semantic levels, applied-product invariants, stable identity, and
+projection-copy rules are reflected by the implemented binding model and
+contributor guide; the redundant document was deleted.
 
-| link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
-| Active / Blocking
+| `mapped-superclass-model-design.adoc`
+| Removed / Consolidated
 | Long-term mapped-superclass representation and table/context ownership.
-| Keep for now, but consider merging with `applied-mapped-superclass-handoff-design.adoc` once copied-property bridge cleanup is done.
+| The implemented hierarchy-specific contribution, table ownership,
+role-based handoff, direct identifiable-type graph, and compatibility
+projection rules remain in the binding model, handoff contracts, and
+contributor guide.  The speculative mapping-class replacement proposal was
+deleted.
 
-| link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
-| Active / Blocking
-| Current handoff from semantic mapped-superclass usage metadata to copied `Property` compatibility.
-| Keep while bridge code exists.  Eventually fold into mapped-superclass design or resolved-contribution design.
+| `applied-mapped-superclass-handoff-design.adoc`
+| Removed / Implemented
+| Role-based handoff from semantic mapped-superclass usage metadata to runtime consumers.
+| The implemented role-based handoff, Stage 2 completion plan, contract
+Javadocs, and current handoff retain the completed decisions.  The obsolete
+transition note was deleted.
 
-| link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
-| Active / Blocking
+| `generic-inheritance-model-design.adoc`
+| Removed / Consolidated
 | Generic declaration/usage facts, concrete generic runtime/JPA/SQM behavior.
-| Keep for now.  Fold shared declaration/usage vocabulary into canonical contribution docs.
+| Declaration/usage semantics live in the boot-model terminology, binding
+contracts, and contributor guide.  Concrete static-metamodel field hiding is
+covered by its implementation and tests.  The obsolete bridge proposal was
+deleted.
 
-| link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
-| Active / Blocking
+| `embeddable-contribution-model-design.adoc`
+| Removed / Consolidated
 | Embeddable declaration/application products, generic embeddables, polymorphic discriminator handoff.
-| Keep for now.  Consider merging with resolved-contribution design once embeddable bridge state settles.
+| Its completed contribution/application model and `Component` compatibility
+boundary remain in the binding contracts, materializers, and contributor
+guide.  Record-component member relationships are tracked independently by
+https://github.com/hibernate/hibernate-models/issues/280[Hibernate Models issue
+280].
 
-| link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
-| Active when required
+| `identifier-correspondence-model-design.adoc`
+| Removed / Rejected
 | IdClass, derived identity, association-valued id correspondence and selectable ordering.
-| Remove stale legacy-boot preconditions.  Implement first-class
-identifier-part correspondence only where a concrete runtime consumer cannot
-use the current role/selectable handoff correctly.
+| The implemented identifier binding, extraction-kind, role handoff, target-id
+conversion, and selectable correspondence already separate semantic values
+from JDBC decomposition.  The speculative multi-part boot DTO was deleted; a
+future unsupported shape should drive an executable runtime conversion plan.
 
 | link:finished/deterministic-attribute-ordering-design.adoc[`finished/deterministic-attribute-ordering-design.adoc`]
 | Resolved
 | Phase-owned ordering and isolation of compatibility sorting.
 | Finished reference.  Reopen only for a concrete ordering regression.
 
-| link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
-| Resolved / Stabilization
+| `mapping-key-creation-design.adoc`
+| Removed / Consolidated
 | Explicit primary-key, foreign-key, unique-key, index materialization and deletion/narrowing of hidden helper hooks.
-| Keep as the final-state key-creation design.  Limit active work to remaining
-low-level compatibility-helper and naming-context narrowing.
+| The implemented resolved-product/materializer boundary, selectable-order
+rules, table-registry ownership, and retained compatibility helpers remain in
+the implementation, contract Javadocs, and contributor guide.  The slice log
+was deleted.
 
-| link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
-| Resolved / Stage 2 reference
+| `metadata-building-context-audit.adoc`
+| Removed / Completed
 | Final mapping-layer audit of `MetadataBuildingContext` storage, transient
 parameters, and completed capability splits.
-| Keep as the evidence that mapping values no longer retain or expose broad
-context.  Naming-source and `UserTypeCreationContext` SPI questions are
-separate follow-ups.
+| The completed conclusion remains in the Stage 2 plan and current handoff.
+The historical audit log was deleted; naming-source and
+`UserTypeCreationContext` SPI questions remain separate follow-ups.
 
 | link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
-| Mostly resolved / Runtime verification
-| Aggregate intent, member-container materialization, aggregate arrays, and remaining runtime direction.
-| Keep focused runtime questions; remove stale parity/test-health narrative.
-Do not reopen the mapping design without a concrete runtime reproducer.
+| Resolved boot design / Triggered runtime follow-up
+| Authoritative runtime storage descriptor, aggregate access strategy, and
+consumer migration across SQL selection, assembly, JDBC access, and mutation.
+| Keep as the canonical runtime aggregate design.  The boot-time mapping design
+is complete; do not reopen it without a concrete unsupported mapping shape.
 
-| link:state-management-design.adoc[`state-management-design.adoc`]
-| Mostly resolved / Stabilization
+| `state-management-design.adoc`
+| Removed / Resolved
 | State-management binding model, changelog direction, runtime/settings split.
-| Verify the existing bridge at runtime.  Add a first-class descriptor only if
-a concrete whole-model requirement needs it; otherwise convert to final-state
-reference.
+| The Stage 3 runtime audit found the existing
+`StateManagement`/`AuxiliaryMapping`/`TemporalMapping`/`AuditMapping` boundary
+sufficient.  The rejected descriptor proposal was deleted; future work
+requires a concrete feature trigger.
 
-| link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
-| Active / Blocking
+| `jpa-metamodel-view-materialization-design.adoc`
+| Removed / Consolidated
 | Static metamodel injection plan derived from binding/materialization views.
-| Complete materialization-time plan production, embeddables, inherited
-generic attributes, field roles, and field-hiding semantics.
+| The implemented materialization-time plan, archive-safe handoff, field
+roles, generic field hiding, and runtime injection boundary remain in the
+implementation, handoff contracts, and tests.  The completed proposal was
+deleted.
 
 | link:finished/annotation-coverage.adoc[`finished/annotation-coverage.adoc`]
 | Finished reference
@@ -220,12 +243,11 @@ documented recategorization trigger occurs.
 identity, invalidation, and runtime handoff.
 | Keep as the canonical metadata archive design.
 
-| link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
-| Superseded / Historical
+| `boot-model-snapshot-design.adoc`
+| Removed / Superseded
 | Early alternatives and rationale which led to the implemented archive.
-| Fold unique stable-identity or invalidation rationale into
-`metadata-serialization-design.adoc`, then delete or move to historical
-reference.
+| Stable-identity and validation decisions are retained by
+`metadata-serialization-design.adoc`; the obsolete proposal was deleted.
 |===
 
 == Consolidation Clusters
@@ -237,7 +259,6 @@ Canonical target:
 * link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
 * link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`]
 * link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`]
-* link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
 * link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`]
 * link:bootstrap-api-compatibility.adoc[`bootstrap-api-compatibility.adoc`]
 
@@ -249,34 +270,21 @@ link:current-work-handoff.adoc[`current-work-handoff.adoc`] or be deleted.
 Canonical target:
 
 * link:boot-model-terminology.adoc[`boot-model-terminology.adoc`]
-* link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
-* link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
-
-Focused active docs:
-
-* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
-* link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
-* link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
-* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
-* link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
-* link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
+* link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
 
 === Mapping Integration Cluster
 
 Canonical target:
 
-* link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+* link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
 
 Possible focused references:
 
 * link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
-* link:state-management-design.adoc[`state-management-design.adoc`]
-* link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
 
 The old `orm-integration-notes.adoc` scratchpad has been deleted.  Its durable
-key-creation rules were folded into
-link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]; its
-source-descriptor and phase-ordering guidance was already represented by
+key-creation rules are reflected by the implemented materializers; its
+source-descriptor and phase-ordering guidance is represented by
 link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`].
 
 === Extension And Follow-Up Cluster
@@ -295,11 +303,9 @@ Triggered follow-up:
 * the early source-level contributor portion of
   `additional-mapping-contributor-design.adoc`.
 
-Superseded:
-
-* link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`] by
-  link:metadata-serialization-design.adoc[
-  `metadata-serialization-design.adoc`].
+The superseded boot-model snapshot proposal was deleted after its durable
+stable-identity and validation decisions were retained by
+link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`].
 
 None should carry current branch status.
 
@@ -341,26 +347,33 @@ Defer a public structured replacement until a concrete external use case
 validates the stable internal facet model.
 
 | JPA static metamodel
-| Blocking
-| Materialization-time plan production, embeddables, inherited generic
-attributes, explicit field roles, field hiding, and retirement of duplicate
-runtime traversal.
+| Stabilization
+| Implemented materialization-time plan production, embeddable and inherited
+generic roles, processor/runtime field hiding, and resolved-pipeline retirement
+of duplicate runtime traversal.  Remaining legacy entry-point cleanup is
+follow-up.
 
 | Aggregate mappings
-| Stabilization
-| Verify remaining runtime consumers with focused reproducers.  A new mapping
-product is blocking only if observable runtime behavior cannot be expressed by
-the existing aggregate intent/member-container handoff.
+| Resolved boot design / Triggered runtime follow-up
+| Boot-time intent, member-container, value-plan, and finalization work is
+complete.  Remaining work is an authoritative runtime storage descriptor and
+access strategy, followed by staged migration of SQL selection, assembly, JDBC,
+and mutation consumers.
 
 | Generators
-| Blocking
-| Choose descriptor versus source shape; preserve exportables, CDI, archive
-restoration, and identifier/value lifecycle separation.
+| Resolved / Implemented
+| The common declarative `GeneratorDescriptor` covers identifier and value
+generation, archive restoration, gated CDI access, schema export, and deferred
+runtime creation.  Generator classes now declare exportable capability
+directly.
 
 | State management
-| Stabilization
-| Verify runtime/settings handoff.  A first-class descriptor is a triggered
-follow-up unless whole-model reasoning proves necessary.
+| Resolved / Triggered follow-up
+| Runtime/settings handoff verified through `StateManagement`,
+`AuxiliaryMapping`, `TemporalMapping`, and `AuditMapping`, including focused
+new-pipeline mutation execution.  Add a new contribution/resolution product
+only if a concrete whole-model source requirement cannot use the existing
+projection.
 
 | Declaration / usage / applied mapping
 | Resolved foundation
@@ -374,10 +387,10 @@ mixed components and generic specialization; then consolidate overlapping
 notes.
 
 | Identifier correspondence
-| Blocking only with a concrete consumer
-| Implement identifier-part correspondence where IdClass, derived-id, or
-association-valued-id runtime behavior cannot use existing role/selectable
-correspondence.  Otherwise keep as a follow-up runtime-model improvement.
+| Resolved
+| Do not add a parallel multi-part boot DTO.  If a concrete runtime identifier
+shape cannot use semantic target-id conversion plus selectable decomposition,
+introduce an executable runtime conversion plan with that consumer.
 
 | Deterministic ordering
 | Resolved

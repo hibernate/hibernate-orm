@@ -320,7 +320,10 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 					sourceType.getClassDetails().getName() + "." + attributeName,
 					attributeName
 			);
-			declaringTypeBinding.addDeclaredAttribute( attributeBinding );
+			getBindingState().getBootBindingModel().addDeclaredAttribute(
+					declaringTypeBinding,
+					attributeBinding
+			);
 			final StandardAttributeUsageBinding usageBinding = createAttributeUsage(
 					attributeBinding,
 					ownerType,
@@ -524,7 +527,10 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				sourceType.getClassDetails().getName() + "." + attributeName,
 				attributeName
 		);
-		declaringTypeBinding.addDeclaredAttribute( attributeBinding );
+		getBindingState().getBootBindingModel().addDeclaredAttribute(
+				declaringTypeBinding,
+				attributeBinding
+		);
 		return attributeBinding;
 	}
 

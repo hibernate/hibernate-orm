@@ -443,7 +443,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return PersistenceUnitLifecycleCallbacks.from(
 				definitions,
 				definitions.isEmpty()
-						? managedBeanRegistry
+						? standardServiceComponents.managedBeanRegistry()
 						: serviceRegistry.requireService( ManagedBeanRegistry.class )
 		);
 	}
@@ -1783,16 +1783,20 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				return existing;
 			}
 			else {
-				final var idGenerator = GeneratorBinder.createIdentifierGenerator(
-						persistentClass.getIdentifier(),
-						getDialect(),
-						persistentClass.getRootClass(),
-						persistentClass.getIdentifierProperty(),
-						getGeneratorSettings(),
-						getBootModel().getDatabase(),
-						getServiceRegistry(),
-						getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
-				);
+				final var preparedGenerator =
+						getBootModel().consumePreparedEntityIdentifierGenerator( rootName );
+				final var idGenerator = preparedGenerator == null
+						? GeneratorBinder.createIdentifierGenerator(
+								persistentClass.getIdentifier(),
+								getDialect(),
+								persistentClass.getRootClass(),
+								persistentClass.getIdentifierProperty(),
+								getGeneratorSettings(),
+								getBootModel().getDatabase(),
+								getServiceRegistry(),
+								getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
+						)
+						: preparedGenerator.getGenerator();
 				getGenerators().put( rootName, idGenerator );
 				return idGenerator;
 			}

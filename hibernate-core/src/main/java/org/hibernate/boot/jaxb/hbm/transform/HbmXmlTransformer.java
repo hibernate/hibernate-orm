@@ -1618,7 +1618,31 @@ public class HbmXmlTransformer {
 			if ( column.getLength() != null ) {
 				jaxbColumn.setLength( column.getLength().intValue() );
 			}
+			else if ( discriminatorType == DiscriminatorType.STRING ) {
+				final Integer length = determineDiscriminatorLength( bootEntityInfo.getPersistentClass() );
+				if ( length != null ) {
+					jaxbColumn.setLength( length );
+				}
+			}
 		}
+	}
+
+	// The JPA default for @DiscriminatorColumn.length is 31. HBM mappings have no such
+	// limit and often use fully-qualified class names as discriminator values. When the
+	// longest value exceeds 31 we must set the length explicitly to avoid truncation.
+	private static Integer determineDiscriminatorLength(PersistentClass rootClass) {
+		int maxLength = 0;
+		final String rootValue = rootClass.getDiscriminatorValue();
+		if ( rootValue != null ) {
+			maxLength = rootValue.length();
+		}
+		for ( var subclass : rootClass.getSubclasses() ) {
+			final String value = subclass.getDiscriminatorValue();
+			if ( value != null && value.length() > maxLength ) {
+				maxLength = value.length();
+			}
+		}
+		return maxLength > 31 ? maxLength : null;
 	}
 
 	private static DiscriminatorType determineDiscriminatorType(Value discriminatorBinding) {

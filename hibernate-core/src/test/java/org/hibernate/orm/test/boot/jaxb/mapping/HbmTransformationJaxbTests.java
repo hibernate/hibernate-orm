@@ -1287,6 +1287,26 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20726" )
+	public void testDiscriminatorColumnLengthForLongValues(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/discriminator-length/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl baseEntity = transformed.getEntities().stream()
+					.filter( e -> "DiscriminatorLengthBase".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( baseEntity.getDiscriminatorColumn() ).isNotNull();
+			assertThat( baseEntity.getDiscriminatorColumn().getLength() )
+					.as( "Discriminator column length should accommodate the longest discriminator value" )
+					.isGreaterThanOrEqualTo(
+							"org.hibernate.orm.test.boot.jaxb.mapping.DiscriminatorLengthChild".length()
+					);
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20724" )
 	public void testSubclassJoinForeignKeyNameTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/subclass-join-fk/hbm.xml", scope, transformed -> {

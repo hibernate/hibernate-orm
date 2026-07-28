@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
  */
 @RequiresDialectFeature(feature = NativeSqlAndQuotedIdentifiersTest.LocalDialectCheck.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/sql/hand/quotedidentifiers/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/sql/hand/quotedidentifiers/Mappings.orm.xml"
 )
 @SessionFactory
 public class NativeSqlAndQuotedIdentifiersTest {

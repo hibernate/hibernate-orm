@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping">
+    <class name="DiscriminatorLengthBase" table="DISC_LENGTH_BASE">
+        <id name="id" type="long" column="ID">
+            <generator class="native"/>
+        </id>
+        <discriminator column="DISC_TYPE" type="string"/>
+        <property name="name" column="NAME"/>
+        <subclass name="DiscriminatorLengthChild"
+                  discriminator-value="org.hibernate.orm.test.boot.jaxb.mapping.DiscriminatorLengthChild">
+            <property name="detail" column="DETAIL"/>
+        </subclass>
+    </class>
+</hibernate-mapping>

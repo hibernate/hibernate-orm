@@ -11,6 +11,7 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public class ExampleSuperClassEmbedded<T> {
 	private UserEntity user;
+	private T value;
 
 	@ManyToOne( fetch = FetchType.LAZY )
 	public UserEntity getUser() {
@@ -18,5 +19,13 @@ public class ExampleSuperClassEmbedded<T> {
 	}
 	public void setUser(UserEntity user) {
 		this.user = user;
+	}
+
+	public T getValue() {
+		return value;
+	}
+
+	public void setValue(T value) {
+		this.value = value;
 	}
 }

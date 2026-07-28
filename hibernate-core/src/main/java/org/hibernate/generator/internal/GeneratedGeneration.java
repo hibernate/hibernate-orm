@@ -34,23 +34,45 @@ public class GeneratedGeneration implements OnExecutionGenerator {
 	private Class<?> generatedType;
 
 	public GeneratedGeneration(EnumSet<EventType> eventTypes) {
-		this.eventTypes = eventTypes;
-		writable = false;
-		sql = null;
+		this( eventTypes, false, "", null );
 	}
 
 	public GeneratedGeneration(Generated annotation) {
-		eventTypes = fromArray( annotation.event() );
-		sql = isEmpty( annotation.sql() ) ? null : new String[] { annotation.sql() };
-		writable = annotation.writable();
-		if ( sql != null && writable ) {
+		this(
+				fromArray( annotation.event() ),
+				annotation.writable(),
+				annotation.sql(),
+				null
+		);
+	}
+
+	/**
+	 * Constructs a generator from normalized {@link Generated} declaration
+	 * values.
+	 *
+	 * @since 9.0
+	 */
+	public GeneratedGeneration(
+			EnumSet<EventType> eventTypes,
+			boolean writable,
+			String sql,
+			Class<?> generatedType) {
+		this.eventTypes = eventTypes.clone();
+		this.sql = isEmpty( sql ) ? null : new String[] { sql };
+		this.writable = writable;
+		this.generatedType = generatedType;
+		if ( this.sql != null && writable ) {
 			throw new AnnotationException( "A field marked '@Generated(writable=true)' may not specify explicit 'sql'" );
 		}
 	}
 
 	public GeneratedGeneration(Generated annotation, GeneratorCreationContext context) {
-		this( annotation );
-		generatedType = context.getType().getReturnedClass();
+		this(
+				fromArray( annotation.event() ),
+				annotation.writable(),
+				annotation.sql(),
+				context.getType().getReturnedClass()
+		);
 	}
 
 	@Override

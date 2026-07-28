@@ -788,7 +788,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 		) );
 	}
 
-	private void addPersistenceUnitLifecycleEventHandler(PersistenceUnitLifecycleEventHandler listener) {
+	@Override
+	public void addPersistenceUnitLifecycleEventHandler(PersistenceUnitLifecycleEventHandler listener) {
 		if ( persistenceUnitLifecycleEventHandlers == null ) {
 			persistenceUnitLifecycleEventHandlers = new ArrayList<>();
 		}

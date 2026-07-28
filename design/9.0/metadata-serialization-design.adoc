@@ -171,7 +171,7 @@ production source.
 == Generator Interaction
 
 Bound generator declarations are part of declarative metadata state. The
-current mapping model retains archive-safe `GeneratorCreator` recipes and
+mapping model retains archive-safe `GeneratorDescriptor` instances and
 localized annotation state, and creates runtime generators only when supplied
 a runtime `GeneratorCreationContext`.
 
@@ -181,9 +181,9 @@ mapped value, but they must not retain `MetadataBuildingContext`,
 members as hidden closure state.  Annotation localization, including
 `@GenericGenerator` localization, occurs during source binding.
 
-The proposed explicit generator-descriptor abstraction is a follow-on design
-described in `generator-descriptor-design.adoc`; it is not part of the metadata
-archive contract.
+The implemented generator descriptors retain declarative, archive-safe state.
+Prepared managed beans and generator instances remain construction-scoped and
+are not part of the metadata archive contract.
 
 == Compatibility and Validation
 

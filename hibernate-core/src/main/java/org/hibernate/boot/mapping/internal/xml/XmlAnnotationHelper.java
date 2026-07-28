@@ -697,7 +697,7 @@ public class XmlAnnotationHelper {
 	private static Class<? extends Generator> generatorClass(
 			JaxbGenericIdGeneratorImpl jaxbGenerator,
 			XmlDocumentContext xmlDocumentContext) {
-		return GeneratorStrategies.generatorClass(
+		return GeneratorStrategies.resolveGeneratorClass(
 				jaxbGenerator.getClazz(),
 				xmlDocumentContext.getJdbcServices().getDialect(),
 				xmlDocumentContext.getClassLoaderService()

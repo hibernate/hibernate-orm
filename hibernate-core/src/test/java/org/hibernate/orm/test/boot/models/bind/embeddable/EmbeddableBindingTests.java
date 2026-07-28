@@ -14,6 +14,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Set;
+import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.AppliedEmbeddableMapping;
@@ -69,6 +70,36 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  * @author Steve Ebersole
  */
 public class EmbeddableBindingTests {
+	@Test
+	@ServiceRegistry
+	void testEmbeddableMappedSuperclassStaticMetamodelPlan(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final var source = context.getBindingState()
+							.getBootBindingModel()
+							.staticMetamodelInjectionSource();
+					assertThat( source.managedTypes() )
+							.filteredOn( (type) -> type.javaType() == org.hibernate.orm.test.metamodel.Measurement.class )
+							.singleElement()
+							.satisfies( (type) -> assertThat( type.fieldNames() ).contains( "unit" ) );
+					assertThat( source.managedTypes() )
+							.filteredOn( (type) -> type.javaType() == org.hibernate.orm.test.metamodel.Height.class )
+							.singleElement()
+							.satisfies( (type) -> assertThat( type.fieldNames() ).contains( "height" ) );
+					assertThat( source.managedTypes() )
+							.filteredOn( (type) -> type.javaType() == org.hibernate.orm.test.metamodel.Weight.class )
+							.singleElement()
+							.satisfies( (type) -> assertThat( type.fieldNames() ).contains( "weight" ) );
+				},
+				scope.getRegistry(),
+				org.hibernate.orm.test.metamodel.Person.class,
+				org.hibernate.orm.test.metamodel.Height.class,
+				org.hibernate.orm.test.metamodel.Measurement.class,
+				org.hibernate.orm.test.metamodel.WeightClass.class,
+				org.hibernate.orm.test.metamodel.Weight.class
+		);
+	}
+
 	@Test
 	@ServiceRegistry
 	void testComponentMemberBindingFacts(ServiceRegistryScope scope) {
@@ -129,6 +160,25 @@ public class EmbeddableBindingTests {
 					assertThat( appliedCity.declaration() ).isSameAs( city.declaration() );
 					assertThat( appliedCity.containerRole() ).isEqualTo( factsRole );
 					final var bootBindingModel = context.getBindingState().getBootBindingModel();
+					final var staticMetamodelSource = bootBindingModel.staticMetamodelInjectionSource();
+					final var embeddableMetamodelReference = staticMetamodelSource.managedTypes()
+							.stream()
+							.filter( (candidate) -> candidate.javaType() == ComponentFacts.class )
+							.findFirst()
+							.orElseThrow();
+					assertThat( embeddableMetamodelReference.fieldNames() )
+							.containsExactlyInAnyOrder( "city", "code", "cityFormula", "collated", "country" );
+					assertThat( embeddableMetamodelReference.fields() )
+							.allSatisfy( (field) -> {
+								assertThat( field )
+										.isInstanceOf(
+												JpaStaticMetamodelInjectionSource.EmbeddableDeclaredAttributeFieldReference.class
+										);
+								assertThat( field.role() )
+										.isEqualTo(
+												JpaStaticMetamodelInjectionSource.FieldRole.EMBEDDABLE_DECLARED_ATTRIBUTE
+										);
+							} );
 					final var appliedFacts = bootBindingModel.getAppliedEmbeddableMapping( factsRole );
 					assertThat( appliedFacts ).isNotNull();
 					assertThat( appliedFacts.contribution() ).isSameAs( contribution );
@@ -415,6 +465,18 @@ public class EmbeddableBindingTests {
 							bootBindingModel.getAppliedEmbeddableMapping( component.getMappingRole() );
 					assertThat( appliedEmbeddable.findAttribute( "amount" ).usage() )
 							.isSameAs( amount );
+					final var staticMetamodelSource = bootBindingModel.staticMetamodelInjectionSource();
+					assertThat( staticMetamodelSource )
+							.isEqualTo( JpaStaticMetamodelInjectionSource.from( bootBindingModel ) );
+					assertThat( staticMetamodelSource.managedTypes() )
+							.filteredOn( type -> type.javaType().equals( GenericAmount.class ) )
+							.singleElement()
+							.satisfies( type -> assertThat( type.fields() )
+									.contains(
+											new JpaStaticMetamodelInjectionSource.ConcreteGenericAttributeFieldReference(
+													"amount"
+											)
+									) );
 					assertHandoffMatches(
 							new EmbeddableHandoffResolver(
 									RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )

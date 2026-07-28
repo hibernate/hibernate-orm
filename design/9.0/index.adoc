@@ -49,31 +49,15 @@ link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.ado
 link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`],
 link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`],
 and
-link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`],
-plus
 link:metadata-serialization-design.adoc[`metadata-serialization-design.adoc`].
 
 Boot-model vocabulary and contributor orientation::
 link:boot-model-terminology.adoc[`boot-model-terminology.adoc`] and
 link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`].
 
-Contribution and correspondence model::
-link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`],
-link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`],
-with focused notes for mapped superclasses, generic inheritance, embeddables,
-identifiers, and deterministic ordering.
-
-Mapping integration and hidden side effects::
-link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`].
-Use this for primary-key, foreign-key, unique-key, index materialization, and
-deprecated hidden mapping side-effect hook cleanup.
-
-Current handoff and completed mapping-context audit::
+Current handoff::
 link:current-work-handoff.adoc[`current-work-handoff.adoc`] records the current
-stage and immediate implementation slice.  Use
-link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
-for the completed Stage 2 mapping-layer context audit and its separately routed
-SPI follow-ups.
+stage and immediate implementation slice.
 
 == Reference And Deferred Areas
 
@@ -82,19 +66,8 @@ documents are still active, reference-only, deferred, or archive candidates:
 
 * link:additional-mapping-contributor-design.adoc[`additional-mapping-contributor-design.adoc`]
 * link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
-* link:applied-mapped-superclass-handoff-design.adoc[`applied-mapped-superclass-handoff-design.adoc`]
 * link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
-* link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
-* link:declaration-usage-applied-mapping-design.adoc[`declaration-usage-applied-mapping-design.adoc`]
-* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
 * link:flow-notation.adoc[`flow-notation.adoc`]
-* link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
-* link:generator-descriptor-design.adoc[`generator-descriptor-design.adoc`]
-* link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
-* link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
-* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
-* link:metadata-building-context-audit.adoc[`metadata-building-context-audit.adoc`]
-* link:state-management-design.adoc[`state-management-design.adoc`]
 
 == Finished References
 

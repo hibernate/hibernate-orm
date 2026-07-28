@@ -9,12 +9,13 @@ link:design-doc-audit.adoc[`design-doc-audit.adoc`].
 
 == Current Objective
 
-Date: 2026-07-24.
+Date: 2026-07-28.
 
 Stage 0, "Establish The Review Baseline", Stage 1, "Close Bootstrap Inputs And
 Customization Ownership", and Stage 2, "Finish The Semantic Boot-Mapping
-Handoff", are complete.  The next active work is Stage 3, "Complete
-Runtime-Sensitive Mapping Products".
+Handoff", are complete.  Stage 3, "Complete Runtime-Sensitive Mapping
+Products", is complete.  The next active work is Stage 4, "Finish
+SessionFactory Construction Boundaries".
 
 The first Stage 2 mapped-superclass cleanup stores role-bearing
 `AppliedAttributeMapping` values directly in each
@@ -53,9 +54,12 @@ Whole-target association identifiers now retain
 `DIRECT`, and focused boot tests assert the ordered selectables and compatibility
 mapping shape.  `EntityIdentifierHandoff` is now indexed by the stable
 identifier `MappingRole`; its `RootClass` and `KeyValue` lookups derive that role
-as compatibility adapters.  Because the focused runtime matrix passes, the
-larger multi-part `IdentifierPartCorrespondence` product and direct runtime
-consumption are routed to follow-up rather than duplicated in this PR.
+as compatibility adapters.  Because the focused runtime matrix passes, no
+parallel multi-part boot correspondence product is retained.  Association
+values convert through the target `EntityIdentifierMapping`, while selectable
+correspondence independently owns JDBC expansion and order.  A future
+unsupported identifier shape should drive an executable runtime conversion
+plan rather than a speculative boot DTO.
 Deterministic attribute ordering is also closed.  Semantic contribution and
 selectable order remain binding products; component, mapped-superclass, and
 entity alphabetical ordering is an explicit compatibility projection completed
@@ -70,6 +74,110 @@ custom-user-type compatibility receive phase-owned inputs directly; empty
 context-taking mapping constructors are compatibility signatures rather than
 retained state.  Naming-source and `UserTypeCreationContext` SPI narrowing are
 routed to follow-up.
+
+The first Stage 3 slices now produce the JPA static
+metamodel injection plan during semantic binding and mapping materialization.
+`BootBindingModel` accumulates managed-type, hierarchy, declared-attribute,
+identifier, and version field references as those facts are registered.
+`RuntimeMappingHandoffSnapshot` carries the resulting immutable plan directly
+for both live bootstrap and metadata restoration instead of reconstructing it
+from the completed binding model.
+
+Embeddable declarations now contribute explicit
+`EMBEDDABLE_DECLARED_ATTRIBUTE` entries.  Id-class representation members are
+added even when they bypass ordinary component-member binding.  Runtime
+injection follows embeddable descriptor finalization and resolves
+mapped-superclass declarations through the applied embeddable hierarchy where
+necessary.  Focused plan and runtime tests cover ordinary embeddables,
+mapped-superclass inheritance, and id-class embeddables.
+
+Concrete generic field hiding is now implemented across generation and runtime
+population.  The annotation processor resolves inherited generic members in
+the concrete subtype and emits a same-named declared field.  Applied
+mapped-superclass and embeddable usages add
+`CONCRETE_GENERIC_ATTRIBUTE` plan entries, whose runtime resolution uses the
+declared concrete-generic attribute and requires exact subtype-field lookup.
+The superclass declaration field remains independently populated.  Focused
+processor, boot-plan, runtime injection, and typed Criteria tests cover the
+contract.
+
+The Stage 3 aggregate runtime-consumer audit is complete.  Scalar aggregates,
+aggregate arrays, nested aggregates, and UDT/STRUCT order retain the existing
+intent/member-container/value-plan handoff and its legacy-compatible projection.
+Focused SessionFactory coverage now also verifies JSON/XML collection elements,
+map values, and map keys.  That coverage exposed one runtime projection bug:
+the aggregate selectable used the component owner's entity table.  It now uses
+the materialized aggregate column's table, preserving collection-table
+ownership and eliminating the table-group recursion without a new aggregate
+product.  The aggregate `ComponentBinding` callback phase has also been retired:
+binders now record data-only `AggregateComponentBinding` products, and the
+coordinator invokes a single explicit `AggregateMappingFinalizer` after member
+value resolution.  Basic, to-one, and `@Any` aggregate member columns target the
+logical member container without temporary physical-table registration, so no
+late column-removal repair remains.
+
+The Stage 3 state-management runtime audit is complete.  The existing runtime
+model is already explicit: `AuxiliaryMapping` owns query restrictions and
+auxiliary-table selection, specialized `TemporalMapping` and `AuditMapping`
+expose feature state, and `StateManagement` selects graph and legacy mutation
+integrations.  Focused new-pipeline SessionFactory and execution coverage now
+verifies entity and collection runtime mappings plus temporal/audit insert,
+update, current-state query, and collection mutation.  No additional
+`StateManagementDescriptor` or whole-model handoff is needed.
+
+The Stage 3 generator descriptor migration is complete.  ORM 9 no longer makes
+`IdentifierGenerator` an `ExportableProducer`; schema-producing implementations
+declare that capability explicitly.  `SimpleValue` and `Property` now retain
+the common declarative `GeneratorDescriptor`, while the deprecated
+`GeneratorCreator` name remains only as a compatibility alias.
+
+Annotation-based identifier and value descriptors expose their effective
+generator class before instantiation and prepare generators through a
+noncached `ManagedBean` lookup with Hibernate fallback construction.
+Nonexportable before-execution identifier generators remain deferred.
+Exportable identifier and value generators are prepared during relational
+model finalization and handed to runtime construction as the same
+construction-scoped `PreparedGenerator`; identified collections use the same
+identifier handoff.  The live registries are transient, so metadata archives
+retain descriptors and relational state but never managed beans or generator
+instances.  On-execution identifier generators remain an explicit early-access
+compatibility case because identity-column requirements affect the relational
+model.
+
+Focused tests cover deferred nonexportable identifiers, single-instance
+identifier export/runtime use, and single-instance value-generator
+export/runtime use.
++
+The legacy named-strategy form is now class-bearing, resolves its effective
+generator class during binding, retains immutable parameters, and preserves
+the managed reference used for export/runtime handoff.  Identity and UUID are
+direct descriptors: identity applies column semantics without early
+instantiation, while UUID stores normalized style and algorithm facts.
+Sequence and table now use direct class-bearing descriptors with normalized
+JPA settings and construction-scoped managed references.  Managed references
+are stabilized when obtained so the configured/exported instance is
+necessarily the instance handed to runtime construction.  Derived identifiers
+now use a direct, archive-safe descriptor in both binding pipelines; its
+nonexportable runtime generator remains deferred until SessionFactory
+construction.  UUID and `@Generated` value generation in the compatibility
+materializer now also retain direct descriptors with normalized declaration
+facts.  Custom annotation-backed identifier and value descriptors now retain
+serializable snapshots of their localized declarations.  Archive restoration
+reconstructs annotation interfaces, classes, enums, nested annotations, and
+arrays through the construction environment's class loader, and no longer
+reattaches `ModelsContext` to generators.  Binding-time precedence remains
+member, entity, declaring type, then package, including mapped-superclass
+`@GenericGenerator` overrides.
++
+`@NativeGenerator` now exposes the effective dialect-selected generator class
+for phase scheduling while retaining the existing `NativeGenerator` runtime
+wrapper.  Sequence, table, and identity selections therefore participate in
+relational preparation as required, while UUID remains deferred.  Direct JPA
+binding no longer translates `GenerationType` through `GeneratorStrategies`;
+the remaining strategy-name interpretation is confined to XML,
+programmatic/named-definition, and other legacy compatibility inputs.
+`IdentifierGeneratorDefinition` itself is now class-bearing, so those source
+strings are resolved before entering the retained metadata model.
 
 The first Stage 1 slice established function precedence in
 `FunctionRegistryCoordinator`: dialect baseline, then all contributors by
@@ -193,9 +301,9 @@ link:metadata-serialization-design.adoc[
 * no serialization-specific capture allocation when archive production is
   disabled.
 
-The older `boot-model-snapshot-design.adoc` proposal is superseded by this
-implemented contract except for any durable rationale explicitly folded into
-the canonical serialization note.
+The earlier boot-model snapshot proposal was deleted after its durable
+stable-identity and validation decisions were folded into this implemented
+contract.
 
 == Remaining Stages
 

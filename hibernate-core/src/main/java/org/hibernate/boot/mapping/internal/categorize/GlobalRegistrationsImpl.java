@@ -55,6 +55,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeRegistrationImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnnotation;
+import org.hibernate.boot.models.spi.PersistenceUnitLifecycleEventHandler;
 import org.hibernate.boot.mapping.internal.xml.QueryProcessing;
 import org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
@@ -64,6 +65,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
@@ -105,6 +107,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private final Dialect dialect;
 
 	private List<JpaEventListener> jpaEventListeners;
+	private List<PersistenceUnitLifecycleEventHandler> persistenceUnitLifecycleEventHandlers;
 	private List<ConversionRegistration> converterRegistrations;
 	private Set<JpaConverterRegistration> jpaConverters;
 	private List<JavaTypeRegistration> javaTypeRegistrations;
@@ -156,6 +159,11 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	@Override
 	public List<JpaEventListener> getEntityListenerRegistrations() {
 		return jpaEventListeners == null ? emptyList() : jpaEventListeners;
+	}
+
+	@Override
+	public List<PersistenceUnitLifecycleEventHandler> getPersistenceUnitLifecycleEventHandlers() {
+		return persistenceUnitLifecycleEventHandlers == null ? emptyList() : persistenceUnitLifecycleEventHandlers;
 	}
 
 	@Override
@@ -1240,9 +1248,22 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			final JpaEventListener listener = JpaEventListener.from(
 					JpaEventListenerStyle.LISTENER,
 					classDetails,
-					jaxbEntityListener
+					jaxbEntityListener,
+					true
 			);
-			addJpaEventListener( listener );
+			final PersistenceUnitLifecycleEventHandler persistenceUnitListener =
+					PersistenceUnitLifecycleEventHandler.from( classDetails, jaxbEntityListener );
+			if ( listener.hasCallbackMethods() ) {
+				addJpaEventListener( listener );
+			}
+			if ( persistenceUnitListener.hasCallbackMethods() ) {
+				addPersistenceUnitLifecycleEventHandler( persistenceUnitListener );
+			}
+			if ( !listener.hasCallbackMethods() && !persistenceUnitListener.hasCallbackMethods() ) {
+				throw new ModelsException(
+						"Mapping for entity-listener specified no callback methods - " + classDetails.getClassName()
+				);
+			}
 		} );
 	}
 
@@ -1252,6 +1273,14 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		jpaEventListeners.add( listener );
+	}
+
+	public void addPersistenceUnitLifecycleEventHandler(PersistenceUnitLifecycleEventHandler listener) {
+		if ( persistenceUnitLifecycleEventHandlers == null ) {
+			persistenceUnitLifecycleEventHandlers = new ArrayList<>();
+		}
+
+		persistenceUnitLifecycleEventHandlers.add( listener );
 	}
 
 

@@ -20,7 +20,6 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,17 +36,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18490" )
 public class GenericEmbeddableSuperclassMetamodelTest {
-	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	@Test
 	public void test(EntityManagerFactoryScope scope) {
+		assertConcreteGenericStaticMetamodelFields();
 		scope.inTransaction( entityManager -> {
 			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 			final CriteriaQuery<Tuple> cq = cb.createTupleQuery();
 			final Root<Parent> from = cq.from( Parent.class );
 
-			final Path someStringPath = from.get( Parent_.someString ).get( SomeString_.value );
-			final Path someNumberPath = from.get( Parent_.someNumber ).get( SomeNumber_.value );
-			final Path timestampPath = from.get( Parent_.date ).get( CreationDate_.value );
+			final Expression<String> someStringPath = from.get( Parent_.someString ).get( SomeString_.value );
+			final Expression<Integer> someNumberPath = from.get( Parent_.someNumber ).get( SomeNumber_.value );
+			final Expression<Date> timestampPath = from.get( Parent_.date ).get( CreationDate_.value );
 			final Expression<Integer> maxNumber = cb.max( someNumberPath );
 			final Expression<Date> maxTimestamp = cb.function( "max", Date.class, timestampPath );
 			cq.select( cb.tuple( someStringPath, maxTimestamp, maxNumber ) );
@@ -60,6 +59,28 @@ public class GenericEmbeddableSuperclassMetamodelTest {
 			assertThat( result.get( 1, Date.class ) ).isNotNull();
 			assertThat( result.get( 2, Object.class ) ).isEqualTo( 42 );
 		} );
+	}
+
+	private static void assertConcreteGenericStaticMetamodelFields() {
+		assertThat( AbstractValueObject_.value ).isNotNull();
+		assertThat( SomeString_.value )
+				.isNotNull()
+				.isNotSameAs( AbstractValueObject_.value );
+		assertThat( SomeNumber_.value )
+				.isNotNull()
+				.isNotSameAs( AbstractValueObject_.value );
+		assertThat( CreationDate_.value )
+				.isNotNull()
+				.isNotSameAs( AbstractValueObject_.value );
+		assertThat( SomeString_.class.getDeclaredFields() )
+				.extracting( java.lang.reflect.Field::getName )
+				.contains( "value" );
+		assertThat( SomeNumber_.class.getDeclaredFields() )
+				.extracting( java.lang.reflect.Field::getName )
+				.contains( "value" );
+		assertThat( CreationDate_.class.getDeclaredFields() )
+				.extracting( java.lang.reflect.Field::getName )
+				.contains( "value" );
 	}
 
 	@BeforeAll

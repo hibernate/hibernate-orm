@@ -26,7 +26,7 @@ import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handle
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.locatePackageInfoDetails;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createGeneratorFrom;
 import static org.hibernate.boot.model.internal.GeneratorParameters.identityTablesString;
-import static org.hibernate.boot.model.internal.GeneratorStrategies.mapLegacyNamedGenerator;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.resolveLegacyGeneratorClass;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
 import static org.hibernate.id.OptimizableGenerator.IMPLICIT_NAME_BASE;
@@ -172,13 +172,13 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdentifierGen
 		final String nameFromGeneratedValue = generatedValue.generator();
 		if ( !nameFromGeneratedValue.isBlank() ) {
 			final var legacyNamedGenerator =
-					mapLegacyNamedGenerator( nameFromGeneratedValue, buildingContext );
+					resolveLegacyGeneratorClass( nameFromGeneratedValue, buildingContext );
 			if ( legacyNamedGenerator != null ) {
 				final var configuration = buildLegacyGeneratorConfig();
 				//noinspection unchecked,rawtypes
 				createGeneratorFrom(
 						new IdentifierGeneratorDefinition( nameFromGeneratedValue,
-								legacyNamedGenerator.getName(), configuration ),
+								legacyNamedGenerator, configuration ),
 						idValue,
 						(Map) configuration,
 						buildingContext

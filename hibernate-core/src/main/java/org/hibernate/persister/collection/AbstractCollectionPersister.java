@@ -682,8 +682,10 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
-		final Generator generator =
-				GeneratorBinder.createIdentifierGenerator(
+		final var preparedGenerator =
+				context.getBootModel().consumePreparedCollectionIdentifierGenerator( collection.getRole() );
+		final Generator generator = preparedGenerator == null
+				? GeneratorBinder.createIdentifierGenerator(
 						collection.getIdentifier(),
 						context.getDialect(),
 						null,
@@ -692,7 +694,8 @@ public abstract class AbstractCollectionPersister
 						context.getBootModel().getDatabase(),
 						context.getServiceRegistry(),
 						context.getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
-				);
+				)
+				: preparedGenerator.getGenerator();
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}

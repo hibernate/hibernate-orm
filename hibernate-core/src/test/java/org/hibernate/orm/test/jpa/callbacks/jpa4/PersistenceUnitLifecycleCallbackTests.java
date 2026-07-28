@@ -16,8 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PostCreate;
 import jakarta.persistence.PreClose;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.models.ModelsException;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -74,10 +74,11 @@ public class PersistenceUnitLifecycleCallbackTests {
 
 	@Test
 	void persistenceUnitLifecycleCallbackSignaturesAreValidated(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( BasicEntity.class )
-				.addAnnotatedClass( InvalidPersistenceUnitListener.class )
-				.buildMetadata() )
+		assertThatThrownBy( () -> MetadataBuildingTestHelper.buildMetadata(
+				registryScope.getRegistry(),
+				BasicEntity.class,
+				InvalidPersistenceUnitListener.class
+		) )
 				.isInstanceOf( ModelsException.class )
 				.hasMessageContaining( "must return void and have one parameter" )
 				.hasMessageContaining( EntityManagerFactory.class.getSimpleName() )

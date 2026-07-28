@@ -10,7 +10,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -26,18 +25,25 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidGenerator;
+import org.hibernate.id.uuid.UuidValueGenerator;
 import org.hibernate.internal.util.GenericsHelper;
+import org.hibernate.mapping.GeneratorDescriptor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PreparedGenerator;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.resource.beans.internal.Helper;
+import org.hibernate.resource.beans.spi.ManagedBean;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
@@ -62,6 +68,32 @@ import static org.hibernate.internal.util.StringHelper.qualifier;
  * @author Steve Ebersole
  */
 public class GeneratorAnnotationHelper {
+	private static final GeneratorDescriptor IDENTITY_GENERATOR_DESCRIPTOR =
+			new GeneratorDescriptor() {
+				@Override
+				public Generator createGenerator(GeneratorCreationContext context) {
+					// Composite-id preparation reaches the nested descriptor through
+					// generator creation instead of the top-level relational hook.
+					applyRelationalModel( context );
+					return new IdentityGenerator();
+				}
+
+				@Override
+				public Class<? extends Generator> getGeneratorClass(GeneratorCreationContext context) {
+					return IdentityGenerator.class;
+				}
+
+				@Override
+				public void applyRelationalModel(GeneratorCreationContext context) {
+					((SimpleValue) context.getValue()).setColumnToIdentity();
+				}
+
+				@Override
+				public boolean requiresBootPreparation(GeneratorCreationContext context) {
+					return false;
+				}
+			};
+
 	public static <A extends Annotation> A findLocalizedMatch(
 			AnnotationDescriptor<A> generatorAnnotationType,
 			MemberDetails idMember,
@@ -197,48 +229,32 @@ public class GeneratorAnnotationHelper {
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
 		final int fallbackAllocationSize = fallbackAllocationSize( generatorAnnotation, buildingContext );
-		idValue.setCustomIdGeneratorCreator( creationContext -> {
-			final var memberDetails = creationContext.getMemberDetails();
-			final var sequenceStyleGenerator =
-					instantiateGenerator( beanContainer( creationContext ), SequenceStyleGenerator.class );
-			prepareForUse(
-					sequenceStyleGenerator,
-					generatorAnnotation,
-					memberDetails,
-					properties -> {
-						if ( generatorAnnotation != null ) {
-							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
-						}
-						else if ( nameFromGeneratedValue != null ) {
-							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
-						}
-						// we need to better handle the default allocation size here
-						properties.put( INCREMENT_PARAM, fallbackAllocationSize );
-					},
-					generatorAnnotation == null
-							? null
-							: (a, properties) ->
-									applySequenceGeneratorConfiguration( generatorAnnotation, properties ),
-					creationContext
-			);
-			return sequenceStyleGenerator;
-		} );
+		idValue.setCustomIdGeneratorCreator(
+				new SequenceGeneratorDescriptor(
+						generatorAnnotation == null ? nameFromGeneratedValue : generatorAnnotation.name(),
+						fallbackAllocationSize,
+						sequenceConfiguration( generatorAnnotation )
+				)
+		);
 	}
 
-	private static void applySequenceGeneratorConfiguration(
-			SequenceGenerator generatorAnnotation,
-			Properties properties) {
-		SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put );
+	private static Map<String, String> sequenceConfiguration(SequenceGenerator generatorAnnotation) {
+		if ( generatorAnnotation == null ) {
+			return Map.of();
+		}
+		final Map<String, String> configuration = new LinkedHashMap<>();
+		SequenceStyleGenerator.applyConfiguration( generatorAnnotation, configuration::put );
 		if ( !generatorAnnotation.sequenceName().isEmpty()
 				&& !generatorAnnotation.sequenceName().contains( "." )
 				&& generatorAnnotation.schema().isEmpty() ) {
-			properties.remove( SCHEMA );
+			configuration.put( SCHEMA, null );
 		}
 		if ( !generatorAnnotation.sequenceName().isEmpty()
 				&& !generatorAnnotation.sequenceName().contains( "." )
 				&& generatorAnnotation.catalog().isEmpty() ) {
-			properties.remove( CATALOG );
+			configuration.put( CATALOG, null );
 		}
+		return configuration;
 	}
 
 	public static void handleTableGenerator(
@@ -248,38 +264,115 @@ public class GeneratorAnnotationHelper {
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
 		final int fallbackAllocationSize = fallbackAllocationSize( generatorAnnotation, buildingContext );
-		idValue.setCustomIdGeneratorCreator( creationContext -> {
-			final var memberDetails = creationContext.getMemberDetails();
-			final var tableGenerator =
-					instantiateGenerator( beanContainer( creationContext ),
-							org.hibernate.id.enhanced.TableGenerator.class );
-			prepareForUse(
-					tableGenerator,
+		final Map<String, String> configuration = new LinkedHashMap<>();
+		if ( generatorAnnotation != null ) {
+			org.hibernate.id.enhanced.TableGenerator.applyConfiguration(
 					generatorAnnotation,
-					memberDetails,
-					properties -> {
-						if ( generatorAnnotation != null ) {
-							properties.put( GENERATOR_NAME, generatorAnnotation.name() );
-						}
-						else if ( nameFromGeneratedValue != null ) {
-							properties.put( GENERATOR_NAME, nameFromGeneratedValue );
-						}
-						// we need to better handle the default allocation size here
-						properties.put(
-								INCREMENT_PARAM,
-								fallbackAllocationSize
-						);
-					},
-					generatorAnnotation == null
-							? null
-							: (a, properties) -> org.hibernate.id.enhanced.TableGenerator.applyConfiguration(
-									generatorAnnotation,
-									properties::put
-							),
-					creationContext
+					configuration::put
 			);
-			return tableGenerator;
-		} );
+		}
+		idValue.setCustomIdGeneratorCreator(
+				new TableGeneratorDescriptor(
+						generatorAnnotation == null ? nameFromGeneratedValue : generatorAnnotation.name(),
+						fallbackAllocationSize,
+						configuration
+				)
+		);
+	}
+
+	private abstract static class BuiltInGeneratorDescriptor<G extends Generator>
+			implements GeneratorDescriptor {
+		private final String generatorName;
+		private final int fallbackAllocationSize;
+		private final Map<String, String> configuration;
+
+		private BuiltInGeneratorDescriptor(
+				String generatorName,
+				int fallbackAllocationSize,
+				Map<String, String> configuration) {
+			this.generatorName = generatorName;
+			this.fallbackAllocationSize = fallbackAllocationSize;
+			this.configuration =
+					Collections.unmodifiableMap( new LinkedHashMap<>( configuration ) );
+		}
+
+		@Override
+		public Generator createGenerator(GeneratorCreationContext context) {
+			return prepareGenerator( context ).getGenerator();
+		}
+
+		@Override
+		public PreparedGenerator<G> prepareGenerator(GeneratorCreationContext context) {
+			final Class<G> generatorClass = implementationClass();
+			final ManagedBean<G> managedBean = Helper.getManagedBean(
+					beanContainer( context ),
+					generatorClass,
+					false,
+					true,
+					() -> instantiateGenerator( null, generatorClass )
+			);
+			final G generator = managedBean.getBeanInstance();
+			final Properties properties =
+					new Properties( context.getDatabase().getDialect().getDefaultProperties() );
+			if ( generatorName != null ) {
+				properties.put( GENERATOR_NAME, generatorName );
+			}
+			properties.put( INCREMENT_PARAM, fallbackAllocationSize );
+			collectBaselineProperties(
+					context,
+					properties::setProperty,
+					context.getServiceRegistry().requireService( ConfigurationService.class )
+			);
+			configuration.forEach( (name, value) -> {
+				if ( value == null ) {
+					properties.remove( name );
+				}
+				else {
+					properties.setProperty( name, value );
+				}
+			} );
+			((Configurable) generator).configure( context, properties );
+			((ExportableProducer) generator).registerExportables( context.getDatabase() );
+			((Configurable) generator).initialize( context.getSqlStringGenerationContext() );
+			return new PreparedGenerator<>( managedBean );
+		}
+
+		@Override
+		public Class<? extends Generator> getGeneratorClass(GeneratorCreationContext context) {
+			return implementationClass();
+		}
+
+		protected abstract Class<G> implementationClass();
+	}
+
+	private static final class SequenceGeneratorDescriptor
+			extends BuiltInGeneratorDescriptor<SequenceStyleGenerator> {
+		private SequenceGeneratorDescriptor(
+				String generatorName,
+				int fallbackAllocationSize,
+				Map<String, String> configuration) {
+			super( generatorName, fallbackAllocationSize, configuration );
+		}
+
+		@Override
+		protected Class<SequenceStyleGenerator> implementationClass() {
+			return SequenceStyleGenerator.class;
+		}
+	}
+
+	private static final class TableGeneratorDescriptor
+			extends BuiltInGeneratorDescriptor<org.hibernate.id.enhanced.TableGenerator> {
+		private TableGeneratorDescriptor(
+				String generatorName,
+				int fallbackAllocationSize,
+				Map<String, String> configuration) {
+			super( generatorName, fallbackAllocationSize, configuration );
+		}
+
+		@Override
+		protected Class<org.hibernate.id.enhanced.TableGenerator> implementationClass() {
+			return org.hibernate.id.enhanced.TableGenerator.class;
+		}
 	}
 
 	public static void handleIdGeneratorType(
@@ -287,22 +380,9 @@ public class GeneratorAnnotationHelper {
 			SimpleValue idValue,
 			MemberDetails idMember,
 			MetadataBuildingContext buildingContext) {
-		final var markerAnnotation =
-				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
-		idValue.setCustomIdGeneratorCreator( creationContext -> {
-			final var memberDetails = creationContext.getMemberDetails();
-			final var identifierGenerator =
-					instantiateGenerator( beanContainer( creationContext ), markerAnnotation.value() );
-			prepareForUse(
-					identifierGenerator,
-					generatorAnnotation,
-					memberDetails,
-					null,
-					null,
-					creationContext
-			);
-			return identifierGenerator;
-		} );
+		idValue.setCustomIdGeneratorCreator(
+				GeneratorBinder.identifierGeneratorDescriptor( generatorAnnotation )
+		);
 	}
 
 	/**
@@ -394,13 +474,57 @@ public class GeneratorAnnotationHelper {
 				null,
 				context
 		);
-		idValue.setCustomIdGeneratorCreator( creationContext ->
-				new UuidGenerator( generatorConfig, creationContext.getMemberDetails() ) );
+		idValue.setCustomIdGeneratorCreator( uuidGeneratorDescriptor( generatorConfig ) );
+	}
+
+	public static GeneratorDescriptor uuidGeneratorDescriptor(
+			org.hibernate.annotations.UuidGenerator generatorConfig) {
+		return new UuidGeneratorDescriptor( generatorConfig );
+	}
+
+	private static final class UuidGeneratorDescriptor implements GeneratorDescriptor {
+		private final org.hibernate.annotations.UuidGenerator.Style style;
+		private final String algorithmClassName;
+		private transient Class<? extends UuidValueGenerator> algorithmClass;
+
+		private UuidGeneratorDescriptor(org.hibernate.annotations.UuidGenerator generatorConfig) {
+			style = generatorConfig == null
+					? org.hibernate.annotations.UuidGenerator.Style.AUTO
+					: generatorConfig.style();
+			algorithmClass = generatorConfig == null
+					? UuidValueGenerator.class
+					: generatorConfig.algorithm();
+			algorithmClassName = algorithmClass.getName();
+		}
+
+		@Override
+		public Generator createGenerator(GeneratorCreationContext context) {
+			final MemberDetails contextMember = context.getMemberDetails();
+			return new UuidGenerator(
+					style,
+					resolveAlgorithmClass( context ),
+					contextMember == null ? context.getProperty().getMemberDetails() : contextMember
+			);
+		}
+
+		@Override
+		public Class<? extends Generator> getGeneratorClass(GeneratorCreationContext context) {
+			return UuidGenerator.class;
+		}
+
+		private Class<? extends UuidValueGenerator> resolveAlgorithmClass(GeneratorCreationContext context) {
+			if ( algorithmClass == null ) {
+				algorithmClass = context.getServiceRegistry()
+						.requireService( org.hibernate.boot.registry.classloading.spi.ClassLoaderService.class )
+						.classForName( algorithmClassName )
+						.asSubclass( UuidValueGenerator.class );
+			}
+			return algorithmClass;
+		}
 	}
 
 	public static void handleIdentityStrategy(SimpleValue idValue) {
-		idValue.setCustomIdGeneratorCreator( creationContext -> new IdentityGenerator() );
-		idValue.setColumnToIdentity();
+		idValue.setCustomIdGeneratorCreator( IDENTITY_GENERATOR_DESCRIPTOR );
 	}
 
 	public static void handleGenericGenerator(
@@ -443,7 +567,11 @@ public class GeneratorAnnotationHelper {
 		}
 
 		GeneratorBinder.createGeneratorFrom(
-				new IdentifierGeneratorDefinition( generatorName, strategy, configuration ),
+				new IdentifierGeneratorDefinition(
+						generatorName,
+						GeneratorStrategies.resolveGeneratorClass( strategy, context ),
+						configuration
+				),
 				idValue,
 				context
 		);

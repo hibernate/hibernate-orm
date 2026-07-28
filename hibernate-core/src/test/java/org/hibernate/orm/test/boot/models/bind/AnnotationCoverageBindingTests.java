@@ -118,6 +118,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.mapping.BasicValue;
@@ -453,6 +454,34 @@ public class AnnotationCoverageBindingTests {
 	}
 
 	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testStructAggregateAssociationMemberDoesNotRegisterOwnerTableColumn(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( StructAggregateAssociationEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "publisher" ).getValue();
+					final org.hibernate.mapping.ManyToOne association =
+							(org.hibernate.mapping.ManyToOne) component.getProperty( "favoritePublisher" ).getValue();
+
+					assertThat( association.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "favorite_publisher_id" );
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "favorite_publisher_id" );
+				},
+				scope.getRegistry(),
+				StructAggregateAssociationEntity.class,
+				StructAggregateAssociationTarget.class
+		);
+	}
+
+	@Test
 	@ServiceRegistry
 	void testJsonAggregateAnnotationCoverage(ServiceRegistryScope scope) {
 		checkDomainModel(
@@ -684,6 +713,84 @@ public class AnnotationCoverageBindingTests {
 				},
 				scope.getRegistry(),
 				ArrayStructAggregateEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testCollectionAndMapAggregateRuntimeModel(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( context.getMetadata() )) {
+						final var mappingMetamodel = sessionFactory.getMappingMetamodel();
+
+						final var jsonCollectionEntity =
+								mappingMetamodel.getEntityDescriptor( PluralJsonAggregateEntity.class );
+						final var jsonCollection =
+								(PluralAttributeMapping) jsonCollectionEntity.findAttributeMapping( "publishers" );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) jsonCollection.getElementDescriptor(),
+								"publisher_info",
+								SqlTypes.JSON
+						);
+
+						final var xmlCollectionEntity =
+								mappingMetamodel.getEntityDescriptor( PluralXmlAggregateEntity.class );
+						final var xmlCollection =
+								(PluralAttributeMapping) xmlCollectionEntity.findAttributeMapping( "publishers" );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) xmlCollection.getElementDescriptor(),
+								"publisher_info",
+								SqlTypes.SQLXML
+						);
+
+						final var mapValueEntity = mappingMetamodel.getEntityDescriptor( MapValueJsonAggregateEntity.class );
+						final var mapValue = (PluralAttributeMapping) mapValueEntity.findAttributeMapping( "publishers" );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) mapValue.getElementDescriptor(),
+								"publisher_info",
+								SqlTypes.JSON
+						);
+
+						final var mapKeyEntity = mappingMetamodel.getEntityDescriptor( MapKeyJsonAggregateEntity.class );
+						final var mapKey = (PluralAttributeMapping) mapKeyEntity.findAttributeMapping( "publisherNames" );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) mapKey.getIndexDescriptor(),
+								"publisher_key",
+								SqlTypes.JSON
+						);
+
+						final var xmlMapValueEntity =
+								mappingMetamodel.getEntityDescriptor( MapValueXmlAggregateEntity.class );
+						final var xmlMapValue =
+								(PluralAttributeMapping) xmlMapValueEntity.findAttributeMapping( "publishers" );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) xmlMapValue.getElementDescriptor(),
+								"publisher_info",
+								SqlTypes.SQLXML
+						);
+
+						final var xmlMapKeyEntity =
+								mappingMetamodel.getEntityDescriptor( MapKeyXmlAggregateEntity.class );
+						final var xmlMapKey =
+								(PluralAttributeMapping) xmlMapKeyEntity.findAttributeMapping( "publisherNames" );
+						assertAggregateRuntimeMapping(
+								(EmbeddableValuedModelPart) xmlMapKey.getIndexDescriptor(),
+								"publisher_key",
+								SqlTypes.SQLXML
+						);
+					}
+				},
+				scope.getRegistry(),
+				PluralJsonAggregateEntity.class,
+				PluralXmlAggregateEntity.class,
+				MapValueJsonAggregateEntity.class,
+				MapKeyJsonAggregateEntity.class,
+				MapValueXmlAggregateEntity.class,
+				MapKeyXmlAggregateEntity.class
 		);
 	}
 
@@ -1783,6 +1890,35 @@ public class AnnotationCoverageBindingTests {
 
 		@Column(name = "code", columnDefinition = "varchar(32)")
 		private String code;
+	}
+
+	@Entity(name = "StructAggregateAssociationEntity")
+	@Table(name = "struct_aggregate_association_entities")
+	public static class StructAggregateAssociationEntity {
+		@Id
+		private Integer id;
+
+		@Embedded
+		@Column(name = "publisher_info")
+		private StructPublisherWithAssociation publisher;
+	}
+
+	@Entity(name = "StructAggregateAssociationTarget")
+	@Table(name = "struct_aggregate_association_targets")
+	public static class StructAggregateAssociationTarget {
+		@Id
+		private Integer id;
+	}
+
+	@Embeddable
+	@Struct(name = "publisher_with_association_type", attributes = { "name", "favorite_publisher_id" })
+	public static class StructPublisherWithAssociation {
+		@Column(name = "name", columnDefinition = "varchar(255)")
+		private String name;
+
+		@jakarta.persistence.ManyToOne
+		@JoinColumn(name = "favorite_publisher_id")
+		private StructAggregateAssociationTarget favoritePublisher;
 	}
 
 	@Entity(name = "JsonAggregateEntity")

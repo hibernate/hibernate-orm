@@ -85,14 +85,18 @@ class AnyValueBinder {
 	}
 
 	Any bind(AnySource source, String propertyName, Table table) {
+		return bind( source, propertyName, table, true );
+	}
+
+	Any bind(AnySource source, String propertyName, Table table, boolean registerTableColumns) {
 		validateSupportedShape( source, propertyName );
 
 		final Any any = new Any( bindingState.getMetadataBuildingContext(), table, true );
 		any.setLazy( source.lazy() );
-		any.setDiscriminator( bindDiscriminator( source, propertyName, table ) );
+		any.setDiscriminator( bindDiscriminator( source, propertyName, table, registerTableColumns ) );
 		any.setDiscriminatorValueMappings( bindDiscriminatorValueMappings( source, propertyName ) );
 		any.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( source ) );
-		final BasicValue key = bindKey( source, propertyName, table );
+		final BasicValue key = bindKey( source, propertyName, table, registerTableColumns );
 		any.setKey( key );
 		addAdditionalKeySelectables( any, key );
 		any.setTypeUsingReflection(
@@ -103,7 +107,11 @@ class AnyValueBinder {
 		return any;
 	}
 
-	private BasicValue bindDiscriminator(AnySource source, String propertyName, Table table) {
+	private BasicValue bindDiscriminator(
+			AnySource source,
+			String propertyName,
+			Table table,
+			boolean registerTableColumns) {
 		final BasicValue discriminator = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		discriminator.setTable( table );
 
@@ -121,7 +129,9 @@ class AnyValueBinder {
 					0,
 					0
 			);
-			table.addColumn( column );
+			if ( registerTableColumns ) {
+				table.addColumn( column );
+			}
 			discriminator.addColumn(
 					column,
 					columnSource == null || columnSource.insertable( true ),
@@ -146,7 +156,7 @@ class AnyValueBinder {
 		return discriminator;
 	}
 
-	private BasicValue bindKey(AnySource source, String propertyName, Table table) {
+	private BasicValue bindKey(AnySource source, String propertyName, Table table, boolean registerTableColumns) {
 		final BasicValue key = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		key.setTable( table );
 
@@ -157,7 +167,9 @@ class AnyValueBinder {
 					false,
 					source.effectiveOptional()
 			);
-			table.addColumn( column );
+			if ( registerTableColumns ) {
+				table.addColumn( column );
+			}
 			key.addColumn( column, true, true );
 		}
 		else {
@@ -172,7 +184,9 @@ class AnyValueBinder {
 						false,
 						source.effectiveOptional()
 				);
-				table.addColumn( column );
+				if ( registerTableColumns ) {
+					table.addColumn( column );
+				}
 				key.addColumn(
 						column,
 						columnSource == null || columnSource.insertable( true ),

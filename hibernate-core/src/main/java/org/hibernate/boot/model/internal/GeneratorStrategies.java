@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.GenerationType;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -14,7 +13,6 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.SelectGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.models.spi.TypeDetails;
 
 
 /**
@@ -24,46 +22,17 @@ import org.hibernate.models.spi.TypeDetails;
  *
  * @author Gavin King
  */
-public class GeneratorStrategies {
-
-	/**
-	 * Interpret a JPA {@link GenerationType} as an old-style generator strategy name.
-	 *
-	 * @param generationType the type specified by {@link jakarta.persistence.GeneratedValue#strategy}
-	 * @param name           the name specified by {@link jakarta.persistence.GeneratedValue#generator}
-	 * @param type           the Java type of the generated identifier
-	 * @return a {@code hbml.xml}-equivalent string identifying the strategy
-	 */
-	public static String generatorStrategy(GenerationType generationType, String name, TypeDetails type) {
-		switch ( generationType ) {
-			case IDENTITY:
-				return "identity";
-			case SEQUENCE:
-				return SequenceStyleGenerator.class.getName();
-			case TABLE:
-				return org.hibernate.id.enhanced.TableGenerator.class.getName();
-			case AUTO:
-				if ( "increment".equalsIgnoreCase( name ) ) {
-					// special case for @GeneratedValue(name="increment")
-					// for some reason we consider there to be an implicit
-					// generator named 'increment' (doesn't seem very useful)
-					return IncrementGenerator.class.getName();
-				}
-				else {
-					return SequenceStyleGenerator.class.getName();
-				}
-			default:
-				throw new IllegalArgumentException( "Unsupported generation type:" + generationType );
-		}
+public final class GeneratorStrategies {
+	private GeneratorStrategies() {
 	}
 
 	/**
 	 * Interpret an "old" generator strategy name as a {@link Generator} class.
 	 */
-	public static Class<? extends Generator> generatorClass(
+	public static Class<? extends Generator> resolveGeneratorClass(
 			String strategy,
 			MetadataBuildingContext context) {
-		return generatorClass(
+		return resolveGeneratorClass(
 				strategy,
 				context.getMetadataCollector().getDatabase().getDialect(),
 				context.getClassLoaderService()
@@ -73,18 +42,15 @@ public class GeneratorStrategies {
 	/**
 	 * Interpret an "old" generator strategy name as a {@link Generator} class.
 	 */
-	@SuppressWarnings("unchecked")
-	public static Class<? extends Generator> generatorClass(
+	public static Class<? extends Generator> resolveGeneratorClass(
 			String strategy,
 			Dialect dialect,
 			ClassLoaderService classLoaderService) {
-		final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( strategy, dialect );
+		final Class<? extends Generator> legacyNamedGenerator = legacyGeneratorClass( strategy, dialect );
 		if ( legacyNamedGenerator != null ) {
 			return legacyNamedGenerator;
 		}
-		final Class<? extends Generator> clazz =
-				classLoaderService
-						.classForName( strategy );
+		final Class<? extends Generator> clazz = classLoaderService.classForName( strategy );
 		if ( !Generator.class.isAssignableFrom( clazz ) ) {
 			// in principle, this shouldn't happen, since @GenericGenerator
 			// constrains the type to subtypes of Generator
@@ -93,7 +59,7 @@ public class GeneratorStrategies {
 		return clazz;
 	}
 
-	public static Class<? extends Generator> mapLegacyNamedGenerator(String strategy, Dialect dialect) {
+	private static Class<? extends Generator> legacyGeneratorClass(String strategy, Dialect dialect) {
 		if ( "native".equals(strategy) ) {
 			strategy = dialect.getNativeIdentifierGeneratorStrategy();
 		}
@@ -117,7 +83,12 @@ public class GeneratorStrategies {
 		return null;
 	}
 
-	public static Class<? extends Generator> mapLegacyNamedGenerator(String strategy, MetadataBuildingContext buildingContext) {
-		return mapLegacyNamedGenerator( strategy, buildingContext.getMetadataCollector().getDatabase().getDialect() );
+	static Class<? extends Generator> resolveLegacyGeneratorClass(
+			String strategy,
+			MetadataBuildingContext buildingContext) {
+		return legacyGeneratorClass(
+				strategy,
+				buildingContext.getMetadataCollector().getDatabase().getDialect()
+		);
 	}
 }

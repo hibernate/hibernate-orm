@@ -24,7 +24,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.Value;
@@ -35,12 +34,12 @@ import org.hibernate.type.SqlTypes;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 
-/// New-pipeline binding state for a component mapping.
+/// Materializes schema/runtime aggregate details from a resolved aggregate
+/// component binding.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public class ComponentBinding implements ComponentBindingPhase.AggregateFinalization {
-	private final Table table;
+final class AggregateMappingFinalizer {
 	private final String path;
 	private final Component component;
 	private final ClassDetails componentClassDetails;
@@ -48,36 +47,20 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 	private final MetadataBuildingContext context;
 	private final AggregateMemberContainer memberContainer;
 
-	private ComponentBinding(
-			Table table,
-			String path,
-			Component component,
-			ClassDetails componentClassDetails,
-			String propertyName,
-			MetadataBuildingContext context,
-			AggregateMemberContainer memberContainer) {
-		this.table = table;
-		this.path = path;
-		this.component = component;
-		this.componentClassDetails = componentClassDetails;
-		this.propertyName = propertyName;
-		this.context = context;
-		this.memberContainer = memberContainer;
+	private AggregateMappingFinalizer(AggregateComponentBinding binding) {
+		this.path = binding.path();
+		this.component = binding.component();
+		this.componentClassDetails = binding.componentClassDetails();
+		this.propertyName = binding.propertyName();
+		this.context = binding.context();
+		this.memberContainer = binding.memberContainer();
 	}
 
-	public static ComponentBinding aggregate(
-			Table table,
-			String path,
-			Component component,
-			ClassDetails componentClassDetails,
-			String propertyName,
-			MetadataBuildingContext context,
-			AggregateMemberContainer memberContainer) {
-		return new ComponentBinding( table, path, component, componentClassDetails, propertyName, context, memberContainer );
+	static void finish(AggregateComponentBinding binding) {
+		new AggregateMappingFinalizer( binding ).finishAggregateMapping();
 	}
 
-	@Override
-	public void finishAggregateMapping() {
+	private void finishAggregateMapping() {
 		validateComponent( component, qualify( path, propertyName ), isAggregateArray() );
 
 		final var metadataCollector = context.getMetadataCollector();
@@ -202,7 +185,6 @@ public class ComponentBinding implements ComponentBindingPhase.AggregateFinaliza
 			subColumn.setCustomRead( customReadExpression );
 		}
 
-		table.getColumns().removeAll( aggregatedColumns );
 	}
 
 	private List<Column> aggregatedColumns() {

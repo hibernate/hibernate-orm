@@ -135,7 +135,11 @@ public class MappedSuperclassTests {
 							.containsExactly( EntityHierarchyBinding.Relation.SUPER, EntityHierarchyBinding.Relation.ROOT );
 
 					final JpaStaticMetamodelInjectionSource metamodelInjectionSource =
-							JpaStaticMetamodelInjectionSource.from( context.getBindingState().getBootBindingModel() );
+							context.getBindingState().getBootBindingModel().staticMetamodelInjectionSource();
+					assertThat( metamodelInjectionSource )
+							.isEqualTo( JpaStaticMetamodelInjectionSource.from(
+									context.getBindingState().getBootBindingModel()
+							) );
 					assertThat( metamodelInjectionSource.managedTypes() )
 							.extracting( JpaStaticMetamodelInjectionSource.ManagedTypeReference::javaType )
 							.containsExactly( HierarchySuper.class, HierarchyRoot.class );
@@ -610,6 +614,18 @@ public class MappedSuperclassTests {
 					assertThat( superBinding.declaredAttributes() )
 							.extracting( "attributeName" )
 							.contains( "genericValue" );
+					final var staticMetamodelSource = bootBindingModel.staticMetamodelInjectionSource();
+					assertThat( staticMetamodelSource )
+							.isEqualTo( JpaStaticMetamodelInjectionSource.from( bootBindingModel ) );
+					assertThat( staticMetamodelSource.managedTypes() )
+							.filteredOn( type -> type.javaType().equals( GenericStringEntity.class ) )
+							.singleElement()
+							.satisfies( type -> assertThat( type.fields() )
+									.contains(
+											new JpaStaticMetamodelInjectionSource.ConcreteGenericAttributeFieldReference(
+													"genericValue"
+											)
+									) );
 				},
 				scope.getRegistry(),
 				GenericMappedSuper.class,

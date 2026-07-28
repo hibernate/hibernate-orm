@@ -55,6 +55,7 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -66,19 +67,24 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.MappingRole;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.PreparedGenerator;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -139,6 +145,9 @@ public class InFlightMetadataCollectorImpl
 	private final Map<ClassDetails, List<ClassDetails>> embeddableSubtypes = new HashMap<>();
 	private final Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap = new HashMap<>();
 	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
+	private final Map<String, PreparedGenerator<?>> preparedEntityIdentifierGenerators = new ConcurrentHashMap<>();
+	private final Map<String, PreparedGenerator<?>> preparedCollectionIdentifierGenerators = new ConcurrentHashMap<>();
+	private final Map<MappingRole, PreparedGenerator<?>> preparedValueGenerators = new ConcurrentHashMap<>();
 
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
 	private final Map<String, String> imports = new HashMap<>();
@@ -1649,7 +1658,7 @@ public class InFlightMetadataCollectorImpl
 	 */
 	public MetadataImpl buildMetadataInstance(MetadataBuildingContext buildingContext) {
 		processSecondPasses( buildingContext );
-		processExportableProducers();
+		processGeneratorContributions();
 
 		try {
 			return new MetadataImpl(
@@ -1675,6 +1684,9 @@ public class InFlightMetadataCollectorImpl
 					sqlFunctionMap,
 					getPersistenceUnitLifecycleCallbackDefinitions(),
 					getDatabase(),
+					preparedEntityIdentifierGenerators,
+					preparedCollectionIdentifierGenerators,
+					preparedValueGenerators,
 					bootstrapContext
 			);
 		}
@@ -1683,9 +1695,7 @@ public class InFlightMetadataCollectorImpl
 		}
 	}
 
-	private void processExportableProducers() {
-		// for now we only handle id generators as ExportableProducers
-
+	private void processGeneratorContributions() {
 		final var dialect = getDialect();
 
 		for ( var entityBinding : entityBindingMap.values() ) {
@@ -1695,20 +1705,103 @@ public class InFlightMetadataCollectorImpl
 						entityBinding.getIdentifier(),
 						dialect,
 						rootClass,
-						entityBinding.getIdentifierProperty()
-					);
-				}
+						entityBinding.getIdentifierProperty(),
+						rootClass.getEntityName(),
+						preparedEntityIdentifierGenerators
+				);
 			}
+			for ( var property : entityBinding.getProperties() ) {
+				handleValueGenerator( property );
+			}
+		}
 
-			for ( var collection : collectionBindingMap.values() ) {
+		for ( var collection : collectionBindingMap.values() ) {
 			if ( collection instanceof IdentifierCollection identifierCollection ) {
 				handleIdentifierValueBinding(
 						identifierCollection.getIdentifier(),
 						dialect,
 						null,
-						null
+						null,
+						collection.getRole(),
+						preparedCollectionIdentifierGenerators
 				);
 			}
+		}
+	}
+
+	private void handleValueGenerator(Property property) {
+		final var descriptor = property.getValueGeneratorCreator();
+		final MappingRole role = property.getMappingRole();
+		if ( descriptor != null && role != null ) {
+			final var context = new BootPropertyGeneratorCreationContext(
+					property,
+					this,
+					getDatabase(),
+					bootstrapContext.getServiceRegistry()
+			);
+			if ( descriptor.isExportable( context ) && !preparedValueGenerators.containsKey( role ) ) {
+				preparedValueGenerators.put( role, descriptor.prepareGenerator( context ) );
+			}
+		}
+		if ( property.getValue() instanceof Component component ) {
+			component.getProperties().forEach( this::handleValueGenerator );
+		}
+	}
+
+	private record BootPropertyGeneratorCreationContext(
+			Property property,
+			GeneratorSettings defaults,
+			Database database,
+			ServiceRegistry serviceRegistry)
+			implements GeneratorCreationContext {
+		@Override
+		public Database getDatabase() {
+			return database;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return defaults.getDefaultCatalog();
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return defaults.getDefaultSchema();
+		}
+
+		@Override
+		public RootClass getRootClass() {
+			return property.getPersistentClass().getRootClass();
+		}
+
+		@Override
+		public PersistentClass getPersistentClass() {
+			return property.getPersistentClass();
+		}
+
+		@Override
+		public Property getProperty() {
+			return property;
+		}
+
+		@Override
+		public Value getValue() {
+			return property.getValue();
+		}
+
+		@Override
+		public MemberDetails getMemberDetails() {
+			return property.getMemberDetails();
+		}
+
+		@Override
+		public SqlStringGenerationContext getSqlStringGenerationContext() {
+			return defaults.getSqlStringGenerationContext();
 		}
 	}
 
@@ -1722,9 +1815,14 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private void handleIdentifierValueBinding(
-			KeyValue identifierValueBinding, Dialect dialect, RootClass entityBinding, Property identifierProperty) {
+			KeyValue identifierValueBinding,
+			Dialect dialect,
+			RootClass entityBinding,
+			Property identifierProperty,
+			String role,
+			Map<String, PreparedGenerator<?>> preparedGenerators) {
 		try {
-			GeneratorBinder.createIdentifierGenerator(
+			final var preparedGenerator = GeneratorBinder.prepareIdentifierGeneratorForRelationalModel(
 					identifierValueBinding,
 					dialect,
 					entityBinding,
@@ -1734,6 +1832,9 @@ public class InFlightMetadataCollectorImpl
 					bootstrapContext.getServiceRegistry(),
 					bootstrapContext.getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
 			);
+			if ( preparedGenerator != null ) {
+				preparedGenerators.put( role, preparedGenerator );
+			}
 		}
 		catch (MappingException e) {
 			// Ignore this for now, the reasoning being "non-reflective" binding as needed

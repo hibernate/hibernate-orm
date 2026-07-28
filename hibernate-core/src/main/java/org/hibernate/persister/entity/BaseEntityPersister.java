@@ -613,7 +613,11 @@ abstract class BaseEntityPersister implements Serializable {
 		}
 		else {
 			final var creationContext = new PropertyGeneratorCreationContext( property, context );
-			final var generator = generatorCreator.createGenerator( creationContext );
+			final var preparedGenerator =
+					context.getBootModel().consumePreparedValueGenerator( property.getMappingRole() );
+			final var generator = preparedGenerator == null
+					? generatorCreator.createGenerator( creationContext )
+					: preparedGenerator.getGenerator();
 			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, creationContext );
 			return generator;
 		}

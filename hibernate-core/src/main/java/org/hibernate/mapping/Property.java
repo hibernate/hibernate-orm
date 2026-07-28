@@ -58,7 +58,7 @@ public class Property implements Serializable, MetaAttributable, AppliedMappingP
 	private boolean optimisticLocked = true;
 	private boolean temporalExcluded;
 	private boolean auditedExcluded;
-	private GeneratorCreator generatorCreator;
+	private GeneratorDescriptor generatorCreator;
 	private String propertyAccessorName;
 	private transient PropertyAccessStrategy propertyAccessStrategy;
 	private boolean lazy;
@@ -299,12 +299,12 @@ public class Property implements Serializable, MetaAttributable, AppliedMappingP
 	}
 
 	@Internal
-	public GeneratorCreator getValueGeneratorCreator() {
+	public GeneratorDescriptor getValueGeneratorCreator() {
 		return generatorCreator;
 	}
 
 	@Internal
-	public void setValueGeneratorCreator(GeneratorCreator generator) {
+	public void setValueGeneratorCreator(GeneratorDescriptor generator) {
 		this.generatorCreator = generator;
 	}
 

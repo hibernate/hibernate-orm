@@ -262,9 +262,9 @@ class AssociationTargetBinder {
 			List<Property> selectedProperties) {
 		final Component component = (Component) componentProperty.getValue();
 		final ArrayList<Property> selectedSubProperties = new ArrayList<>();
-		for ( Property subProperty : component.getProperties() ) {
-			if ( selectedProperties.contains( subProperty ) ) {
-				selectedSubProperties.add( subProperty );
+		for ( Property selectedProperty : selectedProperties ) {
+			if ( component.getProperties().contains( selectedProperty ) ) {
+				selectedSubProperties.add( selectedProperty );
 			}
 		}
 		final Component selection = component.copyForPropertySelection( selectedSubProperties );
@@ -304,7 +304,7 @@ class AssociationTargetBinder {
 			return null;
 		}
 		if ( component.getProperties().contains( property )
-				&& referencedColumnNamesContainAll( component.getColumns(), referencedColumnNames ) ) {
+				&& referencedColumnNamesContainInOrder( component.getColumns(), referencedColumnNames ) ) {
 			return componentProperty;
 		}
 		for ( Property subProperty : component.getProperties() ) {
@@ -316,20 +316,18 @@ class AssociationTargetBinder {
 		return null;
 	}
 
-	private boolean referencedColumnNamesContainAll(List<Column> columns, List<Identifier> referencedColumnNames) {
-		for ( Column column : columns ) {
-			if ( !referencedColumnNamesContains( referencedColumnNames, column ) ) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private boolean referencedColumnNamesContains(List<Identifier> referencedColumnNames, Column column) {
-		final Identifier columnName = column.getNameIdentifier( entityBinder.getBindingState().getDatabase() );
+	private boolean referencedColumnNamesContainInOrder(
+			List<Column> columns,
+			List<Identifier> referencedColumnNames) {
+		int columnIndex = 0;
 		for ( Identifier referencedColumnName : referencedColumnNames ) {
-			if ( columnName.matches( referencedColumnName ) ) {
-				return true;
+			if ( columns.get( columnIndex )
+					.getNameIdentifier( entityBinder.getBindingState().getDatabase() )
+					.matches( referencedColumnName ) ) {
+				columnIndex++;
+				if ( columnIndex == columns.size() ) {
+					return true;
+				}
 			}
 		}
 		return false;

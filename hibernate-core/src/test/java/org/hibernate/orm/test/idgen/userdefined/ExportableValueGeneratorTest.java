@@ -29,8 +29,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.EnumSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(annotatedClasses = ExportableValueGeneratorTest.WithExportableGenerator.class)
@@ -55,6 +57,11 @@ public class ExportableValueGeneratorTest {
 		int secondSequenceVal = entityManagerFactory.callInTransaction( entityManager ->
 				entityManager.find( WithExportableGenerator.class, second.uuid ).sequenceVal );
 		assertEquals( 2, secondSequenceVal );
+		assertEquals( 1, OnExecutionSequenceGenerator.CONSTRUCTION_COUNT.get() );
+		assertSame(
+				OnExecutionSequenceGenerator.REGISTERED_INSTANCE,
+				OnExecutionSequenceGenerator.RUNTIME_INSTANCE
+		);
 	}
 
 	@ValueGenerationType(generatedBy = OnExecutionSequenceGenerator.class)
@@ -64,15 +71,20 @@ public class ExportableValueGeneratorTest {
 	}
 
 	public static class OnExecutionSequenceGenerator implements OnExecutionGenerator, ExportableProducer {
+		private static final AtomicInteger CONSTRUCTION_COUNT = new AtomicInteger();
+		private static OnExecutionSequenceGenerator REGISTERED_INSTANCE;
+		private static OnExecutionSequenceGenerator RUNTIME_INSTANCE;
 
 		final String sequenceName;
 
 		public OnExecutionSequenceGenerator(OnExecutionSequence annotation) {
+			CONSTRUCTION_COUNT.incrementAndGet();
 			sequenceName = annotation.sequenceName();
 		}
 
 		@Override
 		public void registerExportables(Database database) {
+			REGISTERED_INSTANCE = this;
 			Identifier testseq = Identifier.toIdentifier( sequenceName );
 			database.getDefaultNamespace()
 					.registerSequence( testseq,
@@ -91,6 +103,7 @@ public class ExportableValueGeneratorTest {
 
 		@Override
 		public String[] getReferencedColumnValues(Dialect dialect) {
+			RUNTIME_INSTANCE = this;
 			return new String[] { dialect.getSequenceSupport().getSelectSequenceNextValString( sequenceName ) };
 		}
 

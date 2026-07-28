@@ -283,7 +283,8 @@ public class ComponentBinder {
 								modelBinders,
 								options,
 								state,
-								context
+								context,
+								!memberTarget.isAggregateMemberTarget()
 						);
 				property.setValue( value );
 				if ( !hasJoinTable( member, toOneValueIntent ) ) {
@@ -295,7 +296,10 @@ public class ComponentBinder {
 				applyTenantId( member, ownerBinding, property );
 				deferAttributeBinders( member, ownerBinding, property );
 				if ( value instanceof ManyToOne manyToOne ) {
-					manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
+					if ( !memberTarget.isAggregateMemberTarget() ) {
+						manyToOne.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
+					}
+					manyToOne.getColumns().forEach( memberTarget::registerMemberColumn );
 					columns.addAll( manyToOne.getColumns() );
 				}
 				continue;
@@ -309,7 +313,12 @@ public class ComponentBinder {
 						options,
 						state,
 						context
-				).bind( anySource, attributeName, memberTarget.table() );
+				).bind(
+						anySource,
+						attributeName,
+						memberTarget.table(),
+						!memberTarget.isAggregateMemberTarget()
+				);
 				property.setValue( value );
 				property.setOptional( anySource.effectiveOptional() );
 				property.setCascade( anySource.cascades() );
@@ -320,7 +329,10 @@ public class ComponentBinder {
 				applyCollation( ownerType, componentMember, property );
 				applyTenantId( member, ownerBinding, property );
 				deferAttributeBinders( member, ownerBinding, property );
-				value.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
+				if ( !memberTarget.isAggregateMemberTarget() ) {
+					value.getColumns().forEach( (column) -> columnConsumer.accept( member, column ) );
+				}
+				value.getColumns().forEach( memberTarget::registerMemberColumn );
 				columns.addAll( value.getColumns() );
 				continue;
 			}
@@ -432,7 +444,9 @@ public class ComponentBinder {
 			deferAttributeBinders( member, ownerBinding, property );
 			if ( basicValue.column() != null ) {
 				final Column column = basicValue.column();
-				columnConsumer.accept( member, column );
+				if ( !memberTarget.isAggregateMemberTarget() ) {
+					columnConsumer.accept( member, column );
+				}
 				columns.add( column );
 			}
 		}

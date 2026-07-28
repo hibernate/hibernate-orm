@@ -19,9 +19,4 @@ public interface ComponentBindingPhase {
 		void bindCustomMapping();
 	}
 
-	/// Finalize aggregate component mapping after member values, table keys, and
-	/// foreign-key binding have populated the component/table model.
-	interface AggregateFinalization {
-		void finishAggregateMapping();
-	}
 }

@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.internal;
 
 import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -214,9 +213,94 @@ public class MetadataContext {
 	public ManagedDomainType<?> locateManagedType(Class<?> javaType, ManagedTypeBinding.Kind kind) {
 		return switch ( kind ) {
 			case ENTITY -> locateEntityType( javaType );
-			case MAPPED_SUPERCLASS -> getMappedSuperclassTypeMap().get( javaType );
-			case EMBEDDABLE -> embeddables.get( javaType );
+			case MAPPED_SUPERCLASS -> locateMappedSuperclassType( javaType );
+			case EMBEDDABLE -> locateEmbeddableType( javaType );
 		};
+	}
+
+	private ManagedDomainType<?> locateEmbeddableType(Class<?> javaType) {
+		final var embeddable = embeddables.get( javaType );
+		return embeddable == null ? jpaMetamodel.findEmbeddableType( javaType ) : embeddable;
+	}
+
+	private ManagedDomainType<?> locateMappedSuperclassType(Class<?> javaType) {
+		// A mapped superclass used only as the supertype of an embeddable is
+		// represented by the descriptor in that embeddable's runtime hierarchy.
+		// Prefer it to the separately registered mapped-superclass shell.
+		for ( var embeddable : embeddables.values() ) {
+			final var mappedSuperclass = locateSuperType( embeddable, javaType );
+			if ( mappedSuperclass != null ) {
+				return mappedSuperclass;
+			}
+		}
+		if ( staticMetamodelInjectionSource != null ) {
+			for ( var typeReference : staticMetamodelInjectionSource.managedTypes() ) {
+				if ( typeReference.kind() == ManagedTypeBinding.Kind.EMBEDDABLE ) {
+					final var embeddable = jpaMetamodel.findEmbeddableType( typeReference.javaType() );
+					final var mappedSuperclass = locateSuperType( embeddable, javaType );
+					if ( mappedSuperclass != null ) {
+						return mappedSuperclass;
+					}
+				}
+			}
+		}
+		return getMappedSuperclassTypeMap().get( javaType );
+	}
+
+	private static ManagedDomainType<?> locateSuperType(
+			ManagedDomainType<?> managedType,
+			Class<?> javaType) {
+		if ( managedType != null ) {
+			for ( ManagedDomainType<?> superType = managedType.getSuperType();
+					superType != null;
+					superType = superType.getSuperType() ) {
+				if ( javaType.equals( superType.getJavaType() ) ) {
+					return superType;
+				}
+			}
+		}
+		return null;
+	}
+
+	public Attribute<?, ?> locateEmbeddableMappedSuperclassAttribute(
+			Class<?> mappedSuperclassJavaType,
+			String attributeName) {
+		for ( var embeddable : embeddables.values() ) {
+			final var attribute = locateMappedSuperclassAttribute(
+					embeddable,
+					mappedSuperclassJavaType,
+					attributeName
+			);
+			if ( attribute != null ) {
+				return attribute;
+			}
+		}
+		if ( staticMetamodelInjectionSource != null ) {
+			for ( var typeReference : staticMetamodelInjectionSource.managedTypes() ) {
+				if ( typeReference.kind() == ManagedTypeBinding.Kind.EMBEDDABLE ) {
+					final var attribute = locateMappedSuperclassAttribute(
+							jpaMetamodel.findEmbeddableType( typeReference.javaType() ),
+							mappedSuperclassJavaType,
+							attributeName
+					);
+					if ( attribute != null ) {
+						return attribute;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private static Attribute<?, ?> locateMappedSuperclassAttribute(
+			ManagedDomainType<?> embeddable,
+			Class<?> mappedSuperclassJavaType,
+			String attributeName) {
+		if ( embeddable != null
+				&& mappedSuperclassJavaType.isAssignableFrom( embeddable.getJavaType() ) ) {
+			return embeddable.findDeclaredAttribute( attributeName );
+		}
+		return null;
 	}
 
 	public void injectStaticMetamodelManagedType(
@@ -227,7 +311,28 @@ public class MetadataContext {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void injectStaticMetamodelAttribute(Class<?> metamodelClass, Attribute attribute) {
-		registerAttribute( metamodelClass, attribute, true );
+		registerAttribute( metamodelClass, attribute );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void injectStaticMetamodelAttribute(
+			Class<?> metamodelClass,
+			Attribute attribute,
+			boolean allowInheritedField) {
+		if ( allowInheritedField ) {
+			registerAttribute( metamodelClass, attribute );
+		}
+		else {
+			try {
+				injectField( metamodelClass, attribute.getName(), attribute, false );
+			}
+			catch (NoSuchFieldException e) {
+				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.unableToLocateStaticMetamodelField(
+						metamodelClass.getName(),
+						attribute.getName()
+				);
+			}
+		}
 	}
 
 	public void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
@@ -347,6 +452,9 @@ public class MetadataContext {
 		final Set<String> processedMetamodelClasses = new HashSet<>();
 		final boolean viewBackedStaticMetamodelInjection =
 				staticMetamodelScanEnabled && staticMetamodelInjectionSource != null;
+		final JpaStaticMetamodelInjection viewInjection = viewBackedStaticMetamodelInjection
+				? new JpaStaticMetamodelInjection( staticMetamodelInjectionSource )
+				: null;
 
 		//we need to process types from superclasses to subclasses
 		for ( Object mapping : orderedMappings ) {
@@ -435,8 +543,7 @@ public class MetadataContext {
 		}
 
 		if ( viewBackedStaticMetamodelInjection ) {
-			new JpaStaticMetamodelInjection( staticMetamodelInjectionSource )
-					.populate( this, processedMetamodelClasses );
+			viewInjection.populateAvailableTypes( this, processedMetamodelClasses );
 		}
 
 		while ( !embeddablesToProcess.isEmpty() ) {
@@ -458,16 +565,27 @@ public class MetadataContext {
 				}
 
 				( ( AttributeContainer<?>) embeddable ).getInFlightAccess().finishUp();
+				if ( viewBackedStaticMetamodelInjection ) {
+					viewInjection.populateEmbeddableType(
+							this,
+							processedMetamodelClasses,
+							embeddable
+					);
+				}
 				// Do not process embeddables for entity types i.e. id-classes or
 				// generic component embeddables used just for concrete type resolution
 				if ( !component.isGeneric()
 						&& !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
 					embeddables.put( embeddable.getJavaType(), embeddable );
-					if ( staticMetamodelScanEnabled ) {
+					if ( staticMetamodelScanEnabled && !viewBackedStaticMetamodelInjection ) {
 						populateStaticMetamodel( embeddable, processedMetamodelClasses );
 					}
 				}
 			}
+		}
+
+		if ( viewBackedStaticMetamodelInjection ) {
+			viewInjection.populateAvailableTypes( this, processedMetamodelClasses );
 		}
 	}
 
@@ -952,7 +1070,7 @@ public class MetadataContext {
 				final var attributes = entityType.getIdClassAttributesSafely();
 				if ( attributes != null ) {
 					for ( var attribute : attributes ) {
-						registerAttribute( metamodelClass, attribute, true );
+						registerAttribute( metamodelClass, attribute );
 					}
 				}
 			}
@@ -960,10 +1078,6 @@ public class MetadataContext {
 	}
 
 	private <X> void registerAttribute(Class<?> metamodelClass, Attribute<X, ?> attribute) {
-		registerAttribute( metamodelClass, attribute, false );
-	}
-
-	private <X> void registerAttribute(Class<?> metamodelClass, Attribute<X, ?> attribute, boolean allowInheritedField) {
 		final String name = attribute.getName();
 		try {
 			// there is a shortcoming in the existing Hibernate code in terms of the way MappedSuperclass
@@ -974,11 +1088,6 @@ public class MetadataContext {
 			//
 			// As a result, in the case of embeddable classes we simply use getField rather than
 			// getDeclaredField
-			final var persistentAttribute = (PersistentAttribute<X, ?>) attribute;
-			final boolean allowNonDeclaredFieldReference =
-					persistentAttribute.getAttributeClassification() == AttributeClassification.EMBEDDED
-							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE
-							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.MAPPED_SUPERCLASS;
 			injectField( metamodelClass, name, attribute, true );
 		}
 		catch (NoSuchFieldException e) {

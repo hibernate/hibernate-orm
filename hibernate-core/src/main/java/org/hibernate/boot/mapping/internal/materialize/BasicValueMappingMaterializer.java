@@ -7,22 +7,19 @@ package org.hibernate.boot.mapping.internal.materialize;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.internal.GeneratorBinder;
-import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder;
 import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.ColumnBinder;
 import org.hibernate.boot.mapping.internal.binders.ComponentMemberTarget;
+import org.hibernate.boot.mapping.internal.binders.IdentifierGeneratorBindingPhase;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -40,6 +37,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -53,7 +51,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Lob;
 import jakarta.annotation.Nonnull;
 
-import static jakarta.persistence.GenerationType.AUTO;
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.applyChecks;
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.applyColumnTransformer;
 import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.processSelectable;
@@ -243,7 +240,12 @@ public class BasicValueMappingMaterializer {
 				bindingContext
 		);
 		if ( source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
-			applyGeneratedIdentifierMember( basicValue, member, bindingState );
+			applyGeneratedIdentifierMember(
+					basicValue,
+					member,
+					ownerBinding.getRootClass(),
+					bindingState
+			);
 		}
 		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding(
 				resolutionInput,
@@ -295,6 +297,7 @@ public class BasicValueMappingMaterializer {
 	private static void applyGeneratedIdentifierMember(
 			BasicValue basicValue,
 			MemberDetails member,
+			RootClass typeBinding,
 			BindingState bindingState) {
 		if ( GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
 				basicValue,
@@ -303,6 +306,23 @@ public class BasicValueMappingMaterializer {
 				basicValue.getTable().getName() + "." + member.getName()
 		) ) {
 			return;
+		}
+		final String entityClassName = typeBinding.getClassName();
+		if ( entityClassName != null ) {
+			final ClassDetails entityType = bindingState.getMetadataBuildingContext()
+					.getMetadataCollector()
+					.getClassDetailsRegistry()
+					.getClassDetails( entityClassName );
+			if ( !entityType.getName().equals( member.getDeclaringType().getName() )
+					&& GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
+							basicValue,
+							member,
+							entityType,
+							bindingState.getMetadataBuildingContext(),
+							basicValue.getTable().getName() + "." + member.getName()
+					) ) {
+				return;
+			}
 		}
 		if ( GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
 				basicValue,
@@ -329,14 +349,12 @@ public class BasicValueMappingMaterializer {
 			return;
 		}
 
-		final var generationType = generatedValue.strategy() == null ? AUTO : generatedValue.strategy();
-		GeneratorBinder.makeIdGenerator(
+		IdentifierGeneratorBindingPhase.resolveGeneratedValueGenerator(
+				typeBinding,
 				basicValue,
 				member,
-				GeneratorStrategies.generatorStrategy( generationType, generatedValue.generator(), member.getType() ),
-				generatedValue.generator(),
-				bindingState.getMetadataBuildingContext(),
-				localGenerators( member, bindingState )
+				generatedValue,
+				bindingState.getMetadataBuildingContext()
 		);
 	}
 
@@ -346,50 +364,6 @@ public class BasicValueMappingMaterializer {
 					"Property '" + propertyPath + "' is annotated '@GeneratedValue' but is not part of an identifier"
 			);
 		}
-	}
-
-	private static Map<String, IdentifierGeneratorDefinition> localGenerators(
-			MemberDetails member,
-			BindingState bindingState) {
-		final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>();
-		visitPackageGeneratorDefinitions( member, bindingState, localGenerators );
-		GeneratorBinder.visitIdGeneratorDefinitions(
-				member.getDeclaringType(),
-				generator -> addLocalGenerator( localGenerators, generator ),
-				bindingState.getMetadataBuildingContext()
-		);
-		GeneratorBinder.visitIdGeneratorDefinitions(
-				member,
-				generator -> addLocalGenerator( localGenerators, generator ),
-				bindingState.getMetadataBuildingContext()
-		);
-		return localGenerators;
-	}
-
-	private static void visitPackageGeneratorDefinitions(
-			MemberDetails member,
-			BindingState bindingState,
-			HashMap<String, IdentifierGeneratorDefinition> localGenerators) {
-		final String className = member.getDeclaringType().getClassName();
-		if ( className == null ) {
-			return;
-		}
-
-		final int packageEnd = className.lastIndexOf( '.' );
-		if ( packageEnd < 0 ) {
-			return;
-		}
-
-		final var packageInfo = packageInfoDetails( member, bindingState );
-		if ( packageInfo == null ) {
-			return;
-		}
-
-		GeneratorBinder.visitIdGeneratorDefinitions(
-				packageInfo,
-				generator -> addLocalGenerator( localGenerators, generator ),
-				bindingState.getMetadataBuildingContext()
-		);
 	}
 
 	private static org.hibernate.models.spi.ClassDetails packageInfoDetails(
@@ -419,17 +393,6 @@ public class BasicValueMappingMaterializer {
 			}
 		}
 		return packageInfo;
-	}
-
-	private static void addLocalGenerator(
-			HashMap<String, IdentifierGeneratorDefinition> localGenerators,
-			IdentifierGeneratorDefinition generator) {
-		if ( generator.getName().isEmpty() ) {
-			localGenerators.put( "\u0000" + localGenerators.size(), generator );
-		}
-		else {
-			localGenerators.put( generator.getName(), generator );
-		}
 	}
 
 	private static void applyFinalFieldMutability(

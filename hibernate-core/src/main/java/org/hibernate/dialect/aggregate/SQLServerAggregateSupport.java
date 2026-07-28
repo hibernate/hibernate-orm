@@ -5,6 +5,7 @@
 package org.hibernate.dialect.aggregate;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -28,8 +29,9 @@ import static org.hibernate.type.SqlTypes.*;
 
 public class SQLServerAggregateSupport extends AggregateSupportImpl {
 
-	private static final AggregateSupport JSON_INSTANCE = new SQLServerAggregateSupport( true );
-	private static final AggregateSupport LEGACY_INSTANCE = new SQLServerAggregateSupport( false );
+	private static final AggregateSupport EXTENDED_JSON_INSTANCE = new SQLServerAggregateSupport( JsonSupportLevel.EXTENDED );
+	private static final AggregateSupport JSON_INSTANCE = new SQLServerAggregateSupport( JsonSupportLevel.NORMAL );
+	private static final AggregateSupport LEGACY_INSTANCE = new SQLServerAggregateSupport( JsonSupportLevel.NONE );
 
 	private static final String JSON_QUERY_START = "json_query(";
 	private static final String JSON_QUERY_JSON_END = "')";
@@ -38,16 +40,24 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	private static final String XML_QUERY_SEPARATOR = ".query('";
 	private static final String XML_QUERY_END = "/*') as nvarchar(max))+'</e>' as xml)";
 
-	private final boolean supportsJson;
+	private final JsonSupportLevel jsonSupportLevel;
 
-	private SQLServerAggregateSupport(boolean supportsJson) {
-		this.supportsJson = supportsJson;
+	private SQLServerAggregateSupport(JsonSupportLevel jsonSupportLevel) {
+		this.jsonSupportLevel = jsonSupportLevel;
+	}
+
+	private enum JsonSupportLevel {
+		EXTENDED,
+		NORMAL,
+		NONE
 	}
 
 	public static AggregateSupport valueOf(Dialect dialect) {
-		return dialect.getVersion().isSameOrAfter( 13 )
-				? SQLServerAggregateSupport.JSON_INSTANCE
-				: SQLServerAggregateSupport.LEGACY_INSTANCE;
+		return dialect.getVersion().isSameOrAfter( 16 )
+				? EXTENDED_JSON_INSTANCE
+				: dialect.getVersion().isSameOrAfter( 13 )
+					? JSON_INSTANCE
+					: LEGACY_INSTANCE;
 	}
 
 	@Override
@@ -62,7 +72,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:
-				if ( !supportsJson ) {
+				if ( jsonSupportLevel == JsonSupportLevel.NONE ) {
 					break;
 				}
 				final String parentJsonPartExpression;
@@ -200,7 +210,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:
-				if ( !supportsJson ) {
+				if ( jsonSupportLevel == JsonSupportLevel.NONE ) {
 					break;
 				}
 			case SQLXML:
@@ -211,29 +221,59 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
-	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
 		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
 			case BLOB:
-				return "convert(nvarchar(max)," + customWriteExpression + ",2)";
+				sqlAppender.appendSql( "convert(nvarchar(max),");
+				renderFunction.run();
+				sqlAppender.appendSql( ",2)" );
+				break;
 			case TIME:
-				return "left(" + customWriteExpression + ",8)";
+				sqlAppender.appendSql( "left(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",8)" );
+				break;
 			case DATE:
-				return "format(" + customWriteExpression + ",'yyyy-MM-dd')";
+				sqlAppender.appendSql( "format(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",'yyyy-MM-dd')" );
+				break;
 			case TIMESTAMP:
-				return "format(" + customWriteExpression + ",'yyyy-MM-ddTHH:mm:ss.fffffff')";
+				sqlAppender.appendSql( "format(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",'yyyy-MM-ddTHH:mm:ss.fffffff')" );
+				break;
 			case TIMESTAMP_UTC:
 			case TIMESTAMP_WITH_TIMEZONE:
-				return "format(" + customWriteExpression + ",'yyyy-MM-ddTHH:mm:ss.fffffffzzz')";
+				sqlAppender.appendSql( "format(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",'yyyy-MM-ddTHH:mm:ss.fffffffzzz')" );
+				break;
 			case UUID:
-				return "cast(" + customWriteExpression + " as nvarchar(36))";
+				sqlAppender.appendSql( "cast(");
+				renderFunction.run();
+				sqlAppender.appendSql( " as nvarchar(36))" );
+				break;
 			case JSON:
 			case JSON_ARRAY:
-				return "json_query(" + customWriteExpression + ")";
+				if ( jsonSupportLevel != JsonSupportLevel.EXTENDED ) {
+					sqlAppender.appendSql( "json_query(" );
+					renderFunction.run();
+					sqlAppender.appendSql( ")" );
+					break;
+				}
 			default:
-				return customWriteExpression;
+				renderFunction.run();
+				break;
 		}
 	}
 
@@ -276,7 +316,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		final int aggregateSqlTypeCode = aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 		switch ( aggregateSqlTypeCode ) {
 			case JSON:
-				if ( !supportsJson ) {
+				if ( jsonSupportLevel == JsonSupportLevel.NONE ) {
 					break;
 				}
 				return new RootJsonWriteExpression( aggregateColumn, columnsToUpdate, this, typeConfiguration );
@@ -326,7 +366,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 						parts[parts.length - 1].getSelectableName(),
 						new BasicJsonWriteExpression(
 								column,
-								jsonCustomWriteExpression(
+								aggregateSupport.jsonCustomWriteExpression(
 										customWriteExpression,
 										column.getJdbcMapping()
 								)

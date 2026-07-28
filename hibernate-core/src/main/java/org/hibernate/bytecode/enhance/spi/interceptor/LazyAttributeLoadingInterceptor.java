@@ -4,6 +4,9 @@
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 
@@ -206,6 +210,33 @@ public class LazyAttributeLoadingInterceptor
 		initializedLazyFields = null;
 	}
 
+	public void serialize(ObjectOutputStream oos) throws IOException {
+		entityMeta.serialize( oos );
+		if ( initializedLazyFields == null ) {
+			oos.writeInt( -1 );
+		}
+		else {
+			oos.writeInt( initializedLazyFields.size() );
+			for ( String field : initializedLazyFields ) {
+				oos.writeUTF( field );
+			}
+		}
+	}
+
+	public static LazyAttributeLoadingInterceptor deserialize(
+			ObjectInputStream ois,
+			EntityHolder holder,
+			SharedSessionContractImplementor session) throws IOException {
+		final EntityRelatedState entityMeta = EntityRelatedState.deserialize( ois, holder );
+		final var interceptor = new LazyAttributeLoadingInterceptor(
+				entityMeta, holder.getEntityKey().getIdentifier(), session );
+		final int size = ois.readInt();
+		for ( int i = 0; i < size; i++ ) {
+			interceptor.attributeInitialized( ois.readUTF() );
+		}
+		return interceptor;
+	}
+
 	/**
 	 * This is an helper object to group all state which relates to a particular entity type,
 	 * and which is needed for this interceptor.
@@ -230,6 +261,37 @@ public class LazyAttributeLoadingInterceptor
 		}
 		private EntityRelatedState toNonSharedMutableState() {
 			return new EntityRelatedState( entityName, new HashSet<>( lazyFields ), false );
+		}
+
+		private void serialize(ObjectOutputStream oos) throws IOException {
+			if ( shared ) {
+				oos.writeInt( -1 );
+			}
+			else {
+				oos.writeInt( lazyFields.size() );
+				for ( String field : lazyFields ) {
+					oos.writeUTF( field );
+				}
+			}
+		}
+
+		private static EntityRelatedState deserialize(ObjectInputStream ois, EntityHolder holder) throws IOException {
+			final var persister = holder.getDescriptor();
+			final String entityName = persister.getEntityName();
+			final int size = ois.readInt();
+			if ( size == -1 ) {
+				return new EntityRelatedState(
+						entityName,
+						persister.getBytecodeEnhancementMetadata()
+								.getLazyAttributesMetadata().getLazyAttributeNames() );
+			}
+			else {
+				final Set<String> lazyFields = new HashSet<>( size );
+				for ( int i = 0; i < size; i++ ) {
+					lazyFields.add( ois.readUTF() );
+				}
+				return new EntityRelatedState( entityName, lazyFields, false );
+			}
 		}
 	}
 }

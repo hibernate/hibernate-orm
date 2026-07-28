@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.AnnotationException;
@@ -23,13 +24,10 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.MemberDetails;
 
-
-
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 import static org.hibernate.internal.util.GenericsHelper.actualMemberType;
-import static org.hibernate.internal.util.StringHelper.join;
 
 /**
  * @implNote It is important that all {@link RegisteredConversion} be registered
@@ -197,7 +195,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 									conversionSite.getSiteDescriptor(),
 									memberDetails.getDeclaringType().getName(),
 									memberDetails.getName(),
-									join( matches, value -> value.getAttributeConverterClass().getName() )
+									matches.stream().map( value -> value.getAttributeConverterClass().getName() )
+											.collect( Collectors.joining( ", " ) )
 							)
 					);
 				}

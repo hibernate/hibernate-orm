@@ -25,20 +25,6 @@ public interface SqmCreationOptions {
 	}
 
 	/**
-	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED
-	 */
-	default boolean isJsonFunctionsEnabled() {
-		return false;
-	}
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#XML_FUNCTIONS_ENABLED
-	 */
-	default boolean isXmlFunctionsEnabled() {
-		return false;
-	}
-
-	/**
 	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
 	 */
 	default boolean isPortableIntegerDivisionEnabled() {

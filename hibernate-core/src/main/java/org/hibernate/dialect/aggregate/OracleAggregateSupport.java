@@ -11,6 +11,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.StringHelper;
@@ -418,56 +419,133 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	private String jsonCustomWriteExpression(
 			String customWriteExpression,
-			JdbcMapping jdbcMapping,
 			SelectableMapping column,
 			TypeConfiguration typeConfiguration) {
-		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( jsonSupport ) {
 			case OSON:
 			case MERGEPATCH:
 			case QUERY_AND_PATH:
 			case QUERY:
-				switch ( sqlTypeCode ) {
-					case CLOB:
-						return "to_clob(" + customWriteExpression + ")";
-					case UUID:
-						return "regexp_replace(lower(rawtohex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')";
-					case ARRAY:
-						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
-						final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
-						switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
-							case CLOB:
-								return "(select json_arrayagg(to_clob(t.column_value)) from table(" + customWriteExpression + ") t)";
-							case UUID:
-								return "(select json_arrayagg(regexp_replace(lower(rawtohex(t.column_value)),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')) from table(" + customWriteExpression + ") t)";
-							case BIT:
-								return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
-							case BOOLEAN:
-								final String elementTypeName = determineElementTypeName( column.toSize(), pluralType, typeConfiguration );
-								if ( elementTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
-									return "(select json_arrayagg(decode(t.column_value,1,'true',0,'false',null)) from table(" + customWriteExpression + ") t)";
-								}
-							default:
-								break;
-						}
-						return customWriteExpression;
-					case BIT:
-						return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
-					case BOOLEAN:
-						//noinspection unchecked
-						final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) jdbcMapping.getJdbcType()
-								.getJdbcLiteralFormatter( jdbcMapping.getMappedJavaType() );
-						final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-						final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
-						final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
-						final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
-						return "decode(" + customWriteExpression + "," + trueLiteral + ",'true'," + falseLiteral + ",'false')";
-						// Fall-through intended
-					default:
-						return customWriteExpression;
-				}
+				StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+				appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), column.getJdbcMapping(), typeConfiguration );
+				return sqlAppender.toString();
 		}
 		throw new IllegalStateException( "JSON not supported!" );
+	}
+
+	public void appendJsonWriteExpression(
+			SqlAppender sqlAppender,
+			Runnable renderFunction,
+			JdbcMapping jdbcMapping,
+			TypeConfiguration typeConfiguration) {
+		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
+		switch ( sqlTypeCode ) {
+			case CLOB:
+				sqlAppender.append( "to_clob(" );
+				renderFunction.run();
+				sqlAppender.append( ")" );
+				break;
+			case UUID:
+				sqlAppender.append( "regexp_replace(lower(rawtohex(" );
+				renderFunction.run();
+				sqlAppender.append( ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')" );
+				break;
+			case BINARY:
+			case VARBINARY:
+			case LONG32VARBINARY:
+			case BLOB:
+				sqlAppender.append( "rawtohex(" );
+				renderFunction.run();
+				sqlAppender.append( ')' );
+				break;
+			case ARRAY:
+				final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
+				final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
+				switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
+					case CLOB:
+						sqlAppender.append( "(select json_arrayagg(to_clob(t.column_value)) from table(" );
+						renderFunction.run();
+						sqlAppender.append( ") t)" );
+						break;
+					case UUID:
+						sqlAppender.append( "(select json_arrayagg(regexp_replace(lower(rawtohex(t.column_value)),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')) from table(" );
+						renderFunction.run();
+						sqlAppender.append( ") t)" );
+						break;
+					case BIT:
+						sqlAppender.append( "decode(" );
+						renderFunction.run();
+						sqlAppender.append( ",1,'true',0,'false',null)" );
+					case BOOLEAN:
+						final String elementTypeName = determineElementTypeName( Size.nil(), pluralType, typeConfiguration );
+						if ( elementTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
+							sqlAppender.append( "(select json_arrayagg(decode(t.column_value,1,'true',0,'false',null)) from table(" );
+							renderFunction.run();
+							sqlAppender.append( ") t)" );
+							break;
+						}
+					default:
+						break;
+				}
+				renderFunction.run();
+				break;
+			case BIT:
+				sqlAppender.append( "decode(" );
+				renderFunction.run();
+				sqlAppender.append( ",1,'true',0,'false',null)" );
+				break;
+			case BOOLEAN:
+				if ( checkConstraintSupport ) {
+					// When check constraints are supported, booleans are also natively supported
+					// i.e. this is a proxy for checking dialect version >= 23
+					renderFunction.run();
+				}
+				else {
+					//noinspection unchecked
+					final JdbcLiteralFormatter<Boolean> jdbcLiteralFormatter = (JdbcLiteralFormatter<Boolean>) jdbcMapping.getJdbcType()
+							.getJdbcLiteralFormatter( jdbcMapping.getMappedJavaType() );
+					final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
+					final WrapperOptions wrapperOptions = getWrapperOptions( typeConfiguration );
+					final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
+					final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
+					sqlAppender.append( "decode(" );
+					renderFunction.run();
+					sqlAppender.append( "," );
+					sqlAppender.append( trueLiteral );
+					sqlAppender.append( ",'true'," );
+					sqlAppender.append( falseLiteral );
+					sqlAppender.append( ",'false')" );
+				}
+				break;
+			case TIME:
+				sqlAppender.append( "to_char(" );
+				renderFunction.run();
+				sqlAppender.append( ",'HH24:MI:SS')" );
+				break;
+			case TIMESTAMP:
+				if ( supportsOson() ) {
+					renderFunction.run();
+				}
+				else {
+					sqlAppender.append( "replace(to_char(" );
+					renderFunction.run();
+					sqlAppender.append( ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')" );
+				}
+				break;
+			case TIMESTAMP_UTC:
+				if ( supportsOson() ) {
+					renderFunction.run();
+				}
+				else {
+					sqlAppender.append( "replace(to_char(" );
+					renderFunction.run();
+					sqlAppender.append( ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')||'Z'" );
+				}
+				break;
+			default:
+				renderFunction.run();
+				break;
+		}
 	}
 
 	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping, TypeConfiguration typeConfiguration) {
@@ -487,12 +565,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				final String trueLiteral = jdbcLiteralFormatter.toJdbcLiteral( true, dialect, wrapperOptions );
 				final String falseLiteral = jdbcLiteralFormatter.toJdbcLiteral( false, dialect, wrapperOptions );
 				return "decode(" + customWriteExpression + "," + trueLiteral + ",'true'," + falseLiteral + ",'false')";
-//			case TIME:
-//				return "varchar_format(timestamp('1970-01-01'," + customWriteExpression + "),'HH24:MI:SS')";
-//			case TIMESTAMP:
-//				return "replace(varchar_format(" + customWriteExpression + ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')";
-//			case TIMESTAMP_UTC:
-//				return "replace(varchar_format(" + customWriteExpression + ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')||'Z'";
+			case TIME:
+				return "to_char(" + customWriteExpression + ",'HH24:MI:SS')";
+			case TIMESTAMP:
+				return "replace(to_char(" + customWriteExpression + ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')";
+			case TIMESTAMP_UTC:
+				return "replace(to_char(" + customWriteExpression + ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')||'Z'";
 			default:
 				return customWriteExpression;
 		}
@@ -645,7 +723,6 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								column,
 								aggregateSupport.jsonCustomWriteExpression(
 										customWriteExpression,
-										column.getJdbcMapping(),
 										column,
 										typeConfiguration
 								),

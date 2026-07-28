@@ -367,8 +367,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayFill_h2();
 		functionFactory.arrayToString_h2( getMaximumArraySize() );
 
-		functionFactory.jsonObject();
-		functionFactory.jsonArray();
+		functionFactory.jsonObject_h2();
+		functionFactory.jsonArray_h2();
 		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
 			functionFactory.jsonValue_h2();
 			functionFactory.jsonQuery_h2();
@@ -1193,6 +1193,16 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String[] getDropEnumTypeCommand(String name) {
 		return new String[] { "drop domain if exists " + name };
+	}
+
+	@Override
+	public boolean supportsSchemaIfNotExists() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsSchemaIfExists() {
+		return true;
 	}
 
 }

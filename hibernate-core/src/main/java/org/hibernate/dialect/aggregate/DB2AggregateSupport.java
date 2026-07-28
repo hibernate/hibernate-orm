@@ -17,6 +17,7 @@ import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.type.DB2StructJdbcType;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
@@ -229,6 +230,12 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		final SqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.append( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable valueRenderer, JdbcMapping jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -236,22 +243,42 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			case LONG32VARBINARY:
 			case BLOB:
 				// We encode binary data as hex
-				return "hex(" + customWriteExpression + ")";
+				sqlAppender.append( "hex(" );
+				valueRenderer.run();
+				sqlAppender.append( ")" );
+				break;
 			case UUID:
-				return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')";
+				sqlAppender.append( "regexp_replace(lower(hex(" );
+				valueRenderer.run();
+				sqlAppender.append( ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')" );
+				break;
 			case ARRAY:
 			case JSON_ARRAY:
-				return "(" + customWriteExpression + ") format json";
+			case JSON:
+				sqlAppender.append( '(' );
+				valueRenderer.run();
+				sqlAppender.append( ") format json" );
+				break;
 //			case BOOLEAN:
 //				return "(" + customWriteExpression + ")=true";
 			case TIME:
-				return "varchar_format(timestamp('1970-01-01'," + customWriteExpression + "),'HH24:MI:SS')";
+				sqlAppender.append( "varchar_format(timestamp('1970-01-01'," );
+				valueRenderer.run();
+				sqlAppender.append( "),'HH24:MI:SS')" );
+				break;
 			case TIMESTAMP:
-				return "replace(varchar_format(" + customWriteExpression + ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')";
+				sqlAppender.append( "replace(varchar_format(" );
+				valueRenderer.run();
+				sqlAppender.append( ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')" );
+				break;
 			case TIMESTAMP_UTC:
-				return "replace(varchar_format(" + customWriteExpression + ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')||'Z'";
+				sqlAppender.append( "replace(varchar_format(" );
+				valueRenderer.run();
+				sqlAppender.append( ",'YYYY-MM-DD HH24:MI:SS.FF9'),' ','T')||'Z'" );
+				break;
 			default:
-				return customWriteExpression;
+				valueRenderer.run();
+				break;
 		}
 	}
 

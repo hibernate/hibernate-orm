@@ -30,9 +30,9 @@ plugins {
 }
 
 repositories {
-	org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it)
-	org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
-	org.hibernate.orm.env.MavenMirror.maybeAddMavenCentralSnapshots(it) { content ->
+	org.hibernate.orm.env.Repositories.maybeAddMavenLocal(it)
+	mavenCentral()
+	org.hibernate.orm.env.Repositories.maybeAddMavenCentralSnapshots(it) { content ->
 		content.includeGroup "jakarta.persistence"
 	}
 }

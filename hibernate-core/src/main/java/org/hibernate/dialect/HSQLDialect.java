@@ -784,4 +784,14 @@ public class HSQLDialect extends Dialect {
 				.createMergeOperation( optionalTableUpdate );
 	}
 
+	@Override
+	public boolean supportsSchemaIfNotExists() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsSchemaIfExists() {
+		return true;
+	}
+
 }

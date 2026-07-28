@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false">
+
+    <class name="org.hibernate.orm.test.legacy.C1" table="prop_case_test">
+        <id name="id" column="id">
+            <generator class="assigned"/>
+        </id>
+        <property name="C1Name"/>
+    </class>
+</hibernate-mapping>

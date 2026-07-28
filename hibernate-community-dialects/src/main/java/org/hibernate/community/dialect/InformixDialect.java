@@ -115,6 +115,7 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.impliedOrInvariant;
@@ -784,14 +785,9 @@ public class InformixDialect extends Dialect {
 							default -> null;
 						};
 
-				if ( constraintName == null ) {
-					return null;
-				}
-				else {
-					// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
-					final int index = constraintName.indexOf( '.' );
-					return index > 0 ? constraintName.substring( index + 1 ) : constraintName;
-				}
+				// strip table-owner because Informix always returns
+				// constraint names as "<table-owner>.<constraint-name>"
+				return constraintName == null ? null : unroot( constraintName );
 			} );
 
 	@Override

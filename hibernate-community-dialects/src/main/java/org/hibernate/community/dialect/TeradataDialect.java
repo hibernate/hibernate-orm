@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -510,13 +511,7 @@ public class TeradataDialect extends Dialect {
 						return null;
 				}
 
-				if ( constraintName != null ) {
-					int i = constraintName.indexOf( '.' );
-					if ( i != -1 ) {
-						constraintName = constraintName.substring( i + 1 );
-					}
-				}
-				return constraintName;
+				return constraintName == null ? null : unroot( constraintName );
 			} );
 
 	private final LockingSupport lockingSupport = new TeradataLockingSupport();

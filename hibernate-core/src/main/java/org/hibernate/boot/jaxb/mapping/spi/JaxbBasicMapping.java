@@ -40,4 +40,8 @@ public interface JaxbBasicMapping {
 	String getJdbcTypeName();
 
 	void setJdbcTypeName(String value);
+
+	Boolean isMutable();
+
+	void setMutable(Boolean value);
 }

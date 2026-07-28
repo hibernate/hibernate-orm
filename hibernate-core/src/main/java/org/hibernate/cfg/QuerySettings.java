@@ -21,29 +21,6 @@ import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
  * @see org.hibernate.query.spi.QueryEngineOptions
  */
 public interface QuerySettings {
-	/**
-	 * Boolean setting to control if the use of tech preview JSON functions in HQL is enabled.
-	 *
-	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
-	 *
-	 * @see org.hibernate.query.spi.QueryEngineOptions#isJsonFunctionsEnabled
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	String JSON_FUNCTIONS_ENABLED = "hibernate.query.hql.json_functions_enabled";
-
-	/**
-	 * Boolean setting to control if the use of tech preview XML functions in HQL is enabled.
-	 *
-	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
-	 *
-	 * @see org.hibernate.query.spi.QueryEngineOptions#isXmlFunctionsEnabled
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	String XML_FUNCTIONS_ENABLED = "hibernate.query.hql.xml_functions_enabled";
 
 	/**
 	 * Specifies that division of two integers should produce an integer on all

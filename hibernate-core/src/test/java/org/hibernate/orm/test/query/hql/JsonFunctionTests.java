@@ -15,7 +15,6 @@ import java.util.UUID;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -34,10 +33,8 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,7 +67,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 		JsonFunctionTests.JsonHolder.class,
 		EntityOfBasics.class
 })
-@ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18496")
 public class JsonFunctionTests {

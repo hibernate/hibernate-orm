@@ -6,10 +6,13 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -48,11 +51,15 @@ public class MySQLJsonArrayFunction extends JsonArrayFunction {
 				// so we have to use manual array appending instead
 				sqlAppender.appendSql( '(' );
 				for ( int i = argumentsCount - 1; i > 0; i-- ) {
-					sqlAppender.appendSql( "select case when t.v is null then x.v else json_array_append(x.v,'$',t.v) end v from (select " );
+					sqlAppender.appendSql( "select case when t.v is null then x.v else json_array_append(x.v,'$',");
+					appendJsonWriteExpression( sqlAppender, sqlAstArguments.get( i ), () -> sqlAppender.appendSql( "t.v" ), walker );
+					sqlAppender.appendSql( ") end v from (select " );
 					sqlAstArguments.get( i ).accept( walker );
 					sqlAppender.appendSql( " v) t,(" );
 				}
-				sqlAppender.appendSql( "select case when t.v is null then json_array() else json_array(t.v) end v from (select " );
+				sqlAppender.appendSql( "select case when t.v is null then json_array() else json_array(");
+				appendJsonWriteExpression( sqlAppender, sqlAstArguments.get( 0 ), () -> sqlAppender.appendSql( "t.v" ), walker );
+				sqlAppender.appendSql( ") end v from (select " );
 				sqlAstArguments.get( 0 ).accept( walker );
 				sqlAppender.appendSql( " v) t" );
 				for ( int i = 1; i < argumentsCount; i++ ) {
@@ -65,11 +72,22 @@ public class MySQLJsonArrayFunction extends JsonArrayFunction {
 				char separator = '(';
 				for ( int i = 0; i < argumentsCount; i++ ) {
 					sqlAppender.appendSql( separator );
-					sqlAstArguments.get( i ).accept( walker );
+					renderValue( sqlAppender, sqlAstArguments.get( i ), walker );
 					separator = ',';
 				}
 				sqlAppender.appendSql( ')' );
 			}
 		}
+	}
+
+	@Override
+	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
+		appendJsonWriteExpression( sqlAppender, value, () -> value.accept( walker ), walker );
+	}
+
+	private void appendJsonWriteExpression(SqlAppender sqlAppender, SqlAstNode value, Runnable renderFunction, SqlAstTranslator<?> walker) {
+		final JdbcMappingContainer expressionType = ((Expression) value).getExpressionType();
+		((MySQLAggregateSupport) walker.getSessionFactory().getJdbcServices().getDialect().getAggregateSupport())
+				.appendJsonWriteExpression( sqlAppender, renderFunction, expressionType.getSingleJdbcMapping() );
 	}
 }

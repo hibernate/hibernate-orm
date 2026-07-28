@@ -513,8 +513,8 @@ public class CockroachDialect extends Dialect {
 		functionFactory.jsonValue_cockroachdb();
 		functionFactory.jsonQuery_cockroachdb();
 		functionFactory.jsonExists_cockroachdb();
-		functionFactory.jsonObject_postgresql();
-		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonObject_postgresql( false );
+		functionFactory.jsonArray_postgresql( false );
 		functionFactory.jsonArrayAgg_postgresql( false );
 		functionFactory.jsonObjectAgg_postgresql( false );
 		functionFactory.jsonSet_postgresql();
@@ -1269,6 +1269,16 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean causesRollback(SQLException sqlException) {
+		return true;
+	}
+
+	@Override
+	public boolean supportsSchemaIfNotExists() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsSchemaIfExists() {
 		return true;
 	}
 }

@@ -995,6 +995,16 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSchemaIfNotExists() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsSchemaIfExists() {
+		return true;
+	}
+
+	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait";
 	}

@@ -269,8 +269,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean inClauseParameterPaddingEnabled;
 
 	private final boolean portableIntegerDivisionEnabled;
-	private final boolean jsonFunctionsEnabled;
-	private final boolean xmlFunctionsEnabled;
 
 	private final int queryStatisticsMaxSize;
 
@@ -557,8 +555,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		portableIntegerDivisionEnabled = getBoolean( PORTABLE_INTEGER_DIVISION, settings );
 
-		jsonFunctionsEnabled = getBoolean( JSON_FUNCTIONS_ENABLED, settings );
-		xmlFunctionsEnabled = getBoolean( XML_FUNCTIONS_ENABLED, settings );
 		safeModeEnabled = getBoolean( SAFE_MODE_ENABLED, settings );
 
 		queryStatisticsMaxSize =
@@ -1486,16 +1482,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean inClauseParameterPaddingEnabled() {
 		return inClauseParameterPaddingEnabled;
-	}
-
-	@Override
-	public boolean isJsonFunctionsEnabled() {
-		return jsonFunctionsEnabled;
-	}
-
-	@Override
-	public boolean isXmlFunctionsEnabled() {
-		return xmlFunctionsEnabled;
 	}
 
 	@Override

@@ -573,6 +573,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					return "format(?1,'hh\\:mm\\:ss')";
 			}
 		}
+		else if ( to == CastType.JSON ) {
+			return "json_query(cast(?1 as nvarchar(max)))";
+		}
 		return super.castPattern( from, to );
 	}
 
@@ -1114,10 +1117,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		return getVersion().isSameOrAfter( 13 )
-				? new String[] { "drop schema if exists " + schemaName }
-				: super.getDropSchemaCommand( schemaName );
+	public boolean supportsSchemaIfExists() {
+		return getVersion().isSameOrAfter( 13 );
 	}
 
 	@Override

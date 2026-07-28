@@ -42,7 +42,13 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 		Product.class,
 		Room.class,
 		Shop.class,
-		User.class
+		User.class,
+		Depth1Entity.class,
+		Depth2Entity.class,
+		Depth3Root.class,
+		Depth3Sub.class,
+		Depth4Base.class,
+		Depth4Entity.class
 })
 @WithMappingFiles("orm.xml")
 class AccessTypeTest {
@@ -114,5 +120,56 @@ class AccessTypeTest {
 	void testMemberAccessType() {
 		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
 		assertAttributeTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
+	}
+
+	// test for default access type inference
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void depth1IdPlacement() {
+		// step 1: field-placed @Id → FIELD access → plain field is a persistent attribute
+		assertPresenceOfFieldInMetamodelFor(
+				Depth1Entity.class, "probe",
+				"field-placed @Id resolves to FIELD access, which includes plain fields"
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void depth2CurrentClassMembers() {
+		// step 2: the @Id is excluded from id inference by its member-level @Access, so access
+		// comes from a mapping annotation on a member of the current class. The @Column is on a
+		// getter, giving PROPERTY — never the FIELD the @Id field would yield.
+		assertPresenceOfFieldInMetamodelFor(
+				Depth2Entity.class, "value",
+				"the @Column getter property is a persistent attribute"
+		);
+		assertAbsenceOfFieldInMetamodelFor(
+				Depth2Entity.class, "probe",
+				"step 2 resolves to PROPERTY (from the getter), which excludes the plain field"
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void depth3RootEntityMembers() {
+		// step 3: empty subclass inherits access from the root entity's members.
+		// The root's FIELD signal is a @Column field (its @Id is a PROPERTY getter, excluded from inference)
+		// so FIELD can only come from a member scan — never from @Id placement.
+		assertPresenceOfFieldInMetamodelFor(
+				Depth3Sub.class, "probe",
+				"access inherited from the root entity's @Column field resolves to FIELD, which includes plain fields"
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void depth4MappedSuperclassMembers() {
+		// step 4: entity inherits access from the mapped superclass's members. The mapped
+		// superclass's FIELD signal is a @Column field (its @Id is a PROPERTY getter, excluded
+		// from inference), so FIELD can only come from a member scan — never from @Id placement.
+		assertPresenceOfFieldInMetamodelFor(
+				Depth4Entity.class, "probe",
+				"access inherited from the mapped superclass's @Column field resolves to FIELD, which includes plain fields"
+		);
 	}
 }

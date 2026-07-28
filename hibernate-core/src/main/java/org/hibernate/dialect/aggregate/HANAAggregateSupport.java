@@ -5,6 +5,7 @@
 package org.hibernate.dialect.aggregate;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
@@ -232,22 +233,41 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String customWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case UUID:
-				return "replace_regexpr('^(.{8})(.{4})(.{4})(.{4})(.{12})$' in lower(bintohex(" + customWriteExpression + ")) with '\\1-\\2-\\3-\\4-\\5')";
+				sqlAppender.appendSql( "replace_regexpr('^(.{8})(.{4})(.{4})(.{4})(.{12})$' in lower(bintohex(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ")) with '\\1-\\2-\\3-\\4-\\5')" );
+				break;
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
 			case BLOB:
 				// We encode binary data as hex
-				return "bintohex(" + customWriteExpression + ")";
+				sqlAppender.appendSql( "bintohex(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ")" );
+				break;
 			case TIMESTAMP:
-				return "to_varchar(" + customWriteExpression + ",'YYYY-MM-DD\"T\"HH24:MI:SS.FF9')";
+				sqlAppender.appendSql( "to_varchar(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ",'YYYY-MM-DD\"T\"HH24:MI:SS.FF9')" );
+				break;
 			case TIMESTAMP_UTC:
-				return "to_varchar(" + customWriteExpression + ",'YYYY-MM-DD\"T\"HH24:MI:SS.FF9\"Z\"')";
+				sqlAppender.appendSql( "to_varchar(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ",'YYYY-MM-DD\"T\"HH24:MI:SS.FF9\"Z\"')" );
+				break;
 			default:
-				return customWriteExpression;
+				renderFunction.run();
+				break;
 		}
 	}
 

@@ -491,6 +491,18 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsDropSchemaIfExists implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSchemaIfExists();
+		}
+	}
+
+	public static class SupportsCreateSchemaIfNotExists implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSchemaIfNotExists();
+		}
+	}
+
 	public static class SupportAlterColumnType implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsAlterColumnType();

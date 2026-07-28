@@ -145,7 +145,7 @@ class StatefulRepositoryTest {
 		final String statefulRepository = getMetaModelSourceAsString( StatefulBookRepository.class, true );
 		assertTrue( statefulRepository.contains( "@PersistenceContext" ) );
 		assertTrue( statefulRepository.contains( "protected @Nonnull EntityManager entityManager;" ) );
-		assertTrue( statefulRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatefulBookRepository()" ) );
+		assertTrue( statefulRepository.contains( "@Inject\n\t_StatefulBookRepository()" ) );
 		assertFalse( statefulRepository.contains( "EntityManagerFactory" ) );
 		assertFalse( statefulRepository.contains( "createEntityManager()" ) );
 		assertFalse( statefulRepository.contains( "entityManager.close();" ) );
@@ -164,7 +164,7 @@ class StatefulRepositoryTest {
 		final String statelessRepository = getMetaModelSourceAsString( StatelessBookRepository.class, true );
 		assertTrue( statelessRepository.contains( "@PersistenceAgent" ) );
 		assertTrue( statelessRepository.contains( "protected @Nonnull EntityAgent entityAgent;" ) );
-		assertTrue( statelessRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatelessBookRepository()" ) );
+		assertTrue( statelessRepository.contains( "@Inject\n\t_StatelessBookRepository()" ) );
 		assertFalse( statelessRepository.contains( "EntityManagerFactory" ) );
 		assertFalse( statelessRepository.contains( "createEntityAgent()" ) );
 		assertFalse( statelessRepository.contains( "entityAgent.close();" ) );

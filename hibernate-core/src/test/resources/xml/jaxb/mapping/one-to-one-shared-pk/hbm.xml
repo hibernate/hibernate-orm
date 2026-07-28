@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-lazy="false"
+    package="org.hibernate.orm.test.legacy">
+
+    <class name="C1" discriminator-value="null" table="shared_pk_parent">
+        <id name="id" column="parent_id">
+            <generator class="assigned"/>
+        </id>
+        <property name="address"/>
+        <one-to-one name="d"/>
+    </class>
+
+    <class name="D" table="shared_pk_child">
+        <id name="id" column="child_id">
+            <generator class="assigned"/>
+        </id>
+        <property name="amount"/>
+    </class>
+</hibernate-mapping>

@@ -1863,9 +1863,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return generatedCteName;
 		}
 		else {
-			final String cteName = name != null
+			final String generatedName = name != null
 					? generateCteName( name )
 					: generateCteName( "cte" + cteNameMapping.size() );
+			// route the CTE name through the IdentifierHelper so it gets the same quoting
+			// treatment (reserved words, global/auto quoting) as any other identifier
+			final String cteName = getSessionFactory().getJdbcServices().getJdbcEnvironment()
+					.getIdentifierHelper().toIdentifier( generatedName ).render( getDialect() );
 			cteNameMapping.put( key, cteName );
 			return cteName;
 		}

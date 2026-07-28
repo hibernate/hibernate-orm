@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
-import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.sql.exec.ExecutionException;
@@ -17,10 +16,8 @@ import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(annotatedClasses = EntityWithJson.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonExists.class)
 public class JsonExistsTest {
 

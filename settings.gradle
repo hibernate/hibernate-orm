@@ -5,6 +5,7 @@
 
 pluginManagement {
     repositories {
+        mavenCentral()
         gradlePluginPortal()
         maven {
             name = 'localPluginRepository'
@@ -13,6 +14,7 @@ pluginManagement {
     }
 
     includeBuild 'local-build-plugins'
+
 }
 
 plugins {
@@ -25,11 +27,9 @@ plugins {
 dependencyResolutionManagement {
     repositories {
         // See MAINTAINERS.md for documentation.
-        // TODO Move to infra overrides instead;
-        //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it)
-        org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
-        org.hibernate.orm.env.MavenMirror.maybeAddMavenCentralSnapshots(it) { content ->
+        org.hibernate.orm.env.Repositories.maybeAddMavenLocal(it)
+        mavenCentral()
+        org.hibernate.orm.env.Repositories.maybeAddMavenCentralSnapshots(it) { content ->
             content.includeGroup "jakarta.persistence"
         }
 

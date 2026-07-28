@@ -23,16 +23,6 @@ public class SqmCreationOptionsStandard implements SqmCreationOptions {
 	}
 
 	@Override
-	public boolean isJsonFunctionsEnabled() {
-		return queryEngineOptions.isJsonFunctionsEnabled();
-	}
-
-	@Override
-	public boolean isXmlFunctionsEnabled() {
-		return queryEngineOptions.isXmlFunctionsEnabled();
-	}
-
-	@Override
 	public boolean isPortableIntegerDivisionEnabled() {
 		return queryEngineOptions.isPortableIntegerDivisionEnabled();
 	}

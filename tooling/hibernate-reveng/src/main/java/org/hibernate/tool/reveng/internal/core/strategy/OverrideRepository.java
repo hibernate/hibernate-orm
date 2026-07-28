@@ -38,12 +38,40 @@ import org.hibernate.tool.reveng.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.reveng.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
 
 public class OverrideRepository  {
 
 	final private static Logger log = Logger.getLogger( OverrideRepository.class );
+
+	private static final String HTTP_BASE =
+			"http://hibernate.org/dtd/hibernate-reverse-engineering";
+	private static final String HTTPS_BASE =
+			"https://hibernate.org/dtd/hibernate-reverse-engineering";
+	private static final String DTD_RESOURCE =
+			"org/hibernate/hibernate-reverse-engineering-3.0.dtd";
+
+	static final EntityResolver DTD_RESOLVER = (publicId, systemId) -> {
+		if (matches(publicId) || matches(systemId)) {
+			InputStream dtdStream = OverrideRepository.class.getClassLoader()
+					.getResourceAsStream(DTD_RESOURCE);
+			if (dtdStream != null) {
+				InputSource source = new InputSource(dtdStream);
+				source.setPublicId(publicId);
+				source.setSystemId(systemId);
+				return source;
+			}
+		}
+		return null;
+	};
+
+	private static boolean matches(String id) {
+		return id != null
+				&& (id.startsWith(HTTP_BASE) || id.startsWith(HTTPS_BASE));
+	}
 
 	final private Map<TypeMappingKey, List<SQLTypeMapping>> typeMappings; // from sqltypes to list of SQLTypeMapping
 
@@ -169,6 +197,7 @@ public class OverrideRepository  {
 			dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			db.setErrorHandler(errorHandler);
+			db.setEntityResolver(DTD_RESOLVER);
 			Document document = db.parse(xmlInputStream);
 			if ( !errors.isEmpty()) throw new MappingException( "invalid override definition", errors.get( 0 ) );
 			add( document );

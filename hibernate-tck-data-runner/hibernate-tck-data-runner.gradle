@@ -11,12 +11,12 @@ plugins {
 description = 'Hibernate ORM\'s Jakarta Data TCK runner'
 
 repositories {
-    org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it)
-    org.hibernate.orm.env.MavenMirror.maybeAddMavenCentralSnapshots(it) { content ->
+    org.hibernate.orm.env.Repositories.maybeAddMavenLocal(it)
+    org.hibernate.orm.env.Repositories.maybeAddMavenCentralSnapshots(it) { content ->
         content.includeGroup "jakarta.persistence"
         content.includeGroup "jakarta.data"
     }
-    org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
+    mavenCentral()
 }
 
 // Configuration to resolve the TCK sources jar

@@ -33,7 +33,7 @@ import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 /**
  * The action for performing an entity insertion, for entities not defined to use {@code IDENTITY} generation.
  *
- * @see EntityIdentityInsertAction
+ * @see DelayableEntityInsertAction
  */
 public class EntityInsertAction extends AbstractEntityInsertAction {
 

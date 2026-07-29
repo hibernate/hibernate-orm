@@ -11,6 +11,7 @@ import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -288,7 +289,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			final List<Values> valuesList = new ArrayList<>( sqmValuesList.size() );
 			for ( int i = 0; i < sqmValuesList.size(); i++ ) {
 				final var values = sqmConverter.visitValues( sqmValuesList.get( i ) );
-				additionalInsertValues.applyValues( values );
+				additionalInsertValues.applyValues( values, sqmValuesList.size() );
 				if ( rowNumberType != null ) {
 					values.getExpressions().add( new QueryLiteral<>(
 							rowNumberType.getJavaTypeDescriptor()
@@ -1124,7 +1125,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 
 			if ( rootTableInserter.temporaryTableIdUpdate != null ) {
 				final var beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
-				final var rowNumberStream = rowNumberStream( rows, rowNumberStartsAtOne, executionContext );
+				final var rowNumbers = rowNumberStream( rows, rowNumberStartsAtOne, executionContext );
 				final var updateBindings = new JdbcParameterBindingsImpl( 3 );
 				if ( sessionUidParameter != null ) {
 					updateBindings.addBinding(
@@ -1139,19 +1140,32 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				final var rootIdentity = (JdbcParameter) parameterBinders.get( 0 );
 				final var rowNumber = (JdbcParameter) parameterBinders.get( 1 );
 				final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
-				rowNumberStream.forEach( rowNumberValue -> {
+				final Object[] generatedIds;
+				if ( beforeExecutionGenerator.supportsBatchGeneration() ) {
+					generatedIds = beforeExecutionGenerator.generateBatch(
+							session,
+							GenerationRequests.of( rows ),
+							INSERT
+					);
+				}
+				else {
+					generatedIds = null;
+				}
+				for ( int i = 0; i < rowNumbers.length; i++ ) {
 					updateBindings.addBinding(
 							rowNumber,
 							new JdbcParameterBindingImpl(
 									rowNumber.getExpressionType().getSingleJdbcMapping(),
-									rowNumberValue
+									rowNumbers[i]
 							)
 					);
 					updateBindings.addBinding(
 							rootIdentity,
 							new JdbcParameterBindingImpl(
 									basicIdentifierMapping.getJdbcMapping(),
-									beforeExecutionGenerator.generate( session, null, null, INSERT )
+									generatedIds != null
+											? generatedIds[i]
+											: beforeExecutionGenerator.generate( session, null, null, INSERT )
 							)
 					);
 					final int updateCount = jdbcServices.getJdbcMutationExecutor().execute(
@@ -1163,7 +1177,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 							executionContext
 					);
 					assert updateCount == 1;
-				} );
+				}
 			}
 		}
 
@@ -1234,15 +1248,15 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		}
 	}
 
-	private IntStream rowNumberStream(
+	private int[] rowNumberStream(
 			int rows, boolean rowNumberStartsAtOne,
 			SqmJdbcExecutionContextAdapter executionContext) {
 		return !rowNumberStartsAtOne
-				? IntStream.of( loadInsertedRowNumbers(
+				? loadInsertedRowNumbers(
 					rootTableInserter.temporaryTableRowNumberSelectSql,
 					entityTable, sessionUidAccess, rows, executionContext
-				) )
-				: IntStream.range( 1, rows + 1 );
+				)
+				: IntStream.range( 1, rows + 1 ).toArray();
 	}
 
 	private void insertTable(

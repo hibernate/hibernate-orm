@@ -16,6 +16,9 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.GenerationRequest;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -385,15 +388,42 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public void preInsert(CollectionPersister persister) throws HibernateException {
+		final var generator = persister.getGenerator();
+		if ( generator.supportsBatchGeneration() ) {
+			preInsertBatched( generator );
+		}
+		else {
+			final Iterator<E> itr = collection.iterator();
+			int i = 0;
+			while ( itr.hasNext() ) {
+				final E entry = itr.next();
+				final Integer loc = i++;
+				if ( !identifiers.containsKey( loc ) ) {
+					//TODO: native ids
+					final Object id = generator.generate( getSession(), entry, null, INSERT );
+					identifiers.put( loc, id );
+				}
+			}
+		}
+	}
+
+	private void preInsertBatched(BeforeExecutionGenerator generator) {
+		final List<Integer> pendingLocations = new ArrayList<>();
+		final List<GenerationRequest> requests = new ArrayList<>();
 		final Iterator<E> itr = collection.iterator();
 		int i = 0;
 		while ( itr.hasNext() ) {
 			final E entry = itr.next();
 			final Integer loc = i++;
 			if ( !identifiers.containsKey( loc ) ) {
-				//TODO: native ids
-				final Object id = persister.getGenerator().generate( getSession(), entry, null, INSERT );
-				identifiers.put( loc, id );
+				pendingLocations.add( loc );
+				requests.add( GenerationRequest.of( entry, null ) );
+			}
+		}
+		if ( !requests.isEmpty() ) {
+			final Object[] ids = generator.generateBatch( getSession(), GenerationRequests.of( requests ), INSERT );
+			for ( int j = 0; j < pendingLocations.size(); j++ ) {
+				identifiers.put( pendingLocations.get( j ), ids[j] );
 			}
 		}
 	}

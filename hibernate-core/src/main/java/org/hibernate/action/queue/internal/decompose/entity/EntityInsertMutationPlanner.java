@@ -18,9 +18,11 @@ import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import jakarta.annotation.Nullable;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
@@ -122,7 +124,11 @@ class EntityInsertMutationPlanner {
 		);
 	}
 
-	boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
+	boolean preInsertInMemoryValueGeneration(
+			Object[] values,
+			Object entity,
+			SharedSessionContractImplementor session,
+			@Nullable BatchGenerationContext batchContext) {
 		boolean foundStateDependentGenerator = false;
 		if ( entityPersister.hasPreInsertGeneratedProperties() ) {
 			final var generators = entityPersister.getGenerators();
@@ -131,8 +137,15 @@ class EntityInsertMutationPlanner {
 				if ( generator != null
 						&& generator.generatesOnInsert()
 						&& generator.generatedBeforeExecution( entity, session ) ) {
-					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
-					entityPersister.setValue( entity, i, values[i] );
+					final var beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
+					if ( batchContext != null && beforeExecutionGenerator.supportsBatchGeneration() ) {
+						batchContext.register( beforeExecutionGenerator, i, entity, values, entityPersister, INSERT );
+						values[i] = BatchGenerationContext.PLACEHOLDER;
+					}
+					else {
+						values[i] = beforeExecutionGenerator.generate( session, entity, values[i], INSERT );
+						entityPersister.setValue( entity, i, values[i] );
+					}
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
 				}
 			}

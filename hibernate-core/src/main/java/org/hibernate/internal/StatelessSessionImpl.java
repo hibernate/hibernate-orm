@@ -33,6 +33,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
+import org.hibernate.engine.internal.VersionLogger;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -67,6 +68,8 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpsertEvent;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.GenerationRequest;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
@@ -86,7 +89,9 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.TypeHelper;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,6 +111,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
+import static org.hibernate.engine.internal.Versioning.isNullInitialVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRollback;
@@ -371,8 +377,36 @@ public class StatelessSessionImpl
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
-			for ( Object entity : entities ) {
-				doInsert( null, entity );
+			final var batchGeneratedValues = batchGenerateValues( entities );
+			if ( batchGeneratedValues.ids == null && batchGeneratedValues.states == null ) {
+				// When states are null, versions must be too
+				assert batchGeneratedValues.versions == null;
+				for ( int i = 0; i < entities.size(); i++ ) {
+					doInsert(
+							batchGeneratedValues.persisters[i],
+							entities.get( i ),
+							batchGeneratedValues.persisters[i].getValues( entities.get( i ) ),
+							null,
+							null
+					);
+				}
+			}
+			else {
+				for ( int i = 0; i < entities.size(); i++ ) {
+					doInsert(
+							batchGeneratedValues.persisters[i],
+							entities.get( i ),
+							batchGeneratedValues.states == null || batchGeneratedValues.states[i] == null
+									? batchGeneratedValues.persisters[i].getValues( entities.get( i ) )
+									: batchGeneratedValues.states[i],
+							batchGeneratedValues.ids == null
+									? null
+									: batchGeneratedValues.ids[i],
+							batchGeneratedValues.versions == null
+									? null
+									: batchGeneratedValues.versions[i]
+					);
+				}
 			}
 			getJdbcCoordinator().executeBatch();
 		}
@@ -385,6 +419,108 @@ public class StatelessSessionImpl
 		finally {
 			setJdbcBatchSize( batchSize );
 		}
+	}
+
+	private BatchGeneratedValues batchGenerateValues(List<?> entities) {
+		final var persisters = new EntityPersister[entities.size()];
+		final var indexByIdGenerator = new IdentityHashMap<BeforeExecutionGenerator, List<Integer>>();
+		final var indexByVersionGenerator = new IdentityHashMap<BeforeExecutionGenerator, List<Integer>>();
+		Object[][] states = null;
+		for ( int i = 0; i < entities.size(); i++ ) {
+			final var entity = entities.get( i );
+			final var persister = getEntityPersister( null, entity );
+			final var idGenerator = persister.getGenerator();
+			persisters[i] = persister;
+
+			if ( idGenerator.generatedBeforeExecution( entity, this )
+				&& idGenerator.generatesOnInsert()
+				&& idGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator
+				&& beforeExecutionGenerator.supportsBatchGeneration() ) {
+				indexByIdGenerator.computeIfAbsent( beforeExecutionGenerator, k -> new ArrayList<>() )
+						.add( i );
+			}
+			final var versionGenerator = persister.getVersionGenerator();
+			if ( versionGenerator != null
+				&& versionGenerator.generatedBeforeExecution( entity, this )
+				&& idGenerator.generatesOnInsert()
+				&& versionGenerator.supportsBatchGeneration() ) {
+				// Mimics Versioning#seedVersion
+				if ( states == null ) {
+					states = new Object[entities.size()][];
+				}
+				states[i] = persister.getValues( entity );
+				final Object initialVersion = states[i][persister.getVersionPropertyIndex()];
+				if ( isNullInitialVersion( initialVersion ) ) {
+					indexByVersionGenerator.computeIfAbsent( versionGenerator, k -> new ArrayList<>() )
+							.add( i );
+				}
+				else {
+					VersionLogger.INSTANCE.initial( initialVersion );
+				}
+			}
+		}
+		final Object[] generatedIds;
+		if ( indexByIdGenerator.isEmpty() ) {
+			generatedIds = null;
+		}
+		else {
+			generatedIds = new Object[entities.size()];
+			for ( var entry : indexByIdGenerator.entrySet() ) {
+				final var generator = entry.getKey();
+				final var indexes = entry.getValue();
+				final Object[] ids = generator.generateBatch( this,
+						new InsertGenerationRequests( entities, indexes, persisters, states, true ), INSERT );
+				for ( int i = 0; i < indexes.size(); i++ ) {
+					generatedIds[indexes.get( i )] = ids[i];
+				}
+			}
+		}
+		final Object[] generatedVersions;
+		if ( indexByVersionGenerator.isEmpty() ) {
+			generatedVersions = null;
+		}
+		else {
+			generatedVersions = new Object[entities.size()];
+			for ( var entry : indexByVersionGenerator.entrySet() ) {
+				final var generator = entry.getKey();
+				final var indexes = entry.getValue();
+				final Object[] versions = generator.generateBatch( this,
+						new InsertGenerationRequests( entities, indexes, persisters, states, false ), INSERT );
+				for ( int i = 0; i < indexes.size(); i++ ) {
+					generatedVersions[indexes.get( i )] = versions[i];
+				}
+			}
+		}
+		return new BatchGeneratedValues( persisters, states, generatedIds, generatedVersions );
+	}
+
+	private record BatchGeneratedValues(EntityPersister[] persisters, @Nullable Object[][] states, @Nullable Object[] ids, @Nullable Object[] versions) {}
+
+	private record InsertGenerationRequests(List<?> entities, List<Integer> indexes, EntityPersister[] persisters, Object[][] states, boolean id)
+			implements GenerationRequests {
+
+		@Override
+		public int size() {
+			return indexes.size();
+		}
+
+		@Override
+		public GenerationRequest get(int index) {
+			final int idx = indexes.get( index );
+			final Object entity = entities.get( idx );
+			final Object currentValue;
+			if ( id ) {
+				currentValue = persisters[idx].getGenerator().allowAssignedIdentifiers()
+						? persisters[idx].getIdentifier( entity )
+						: null;
+			}
+			else {
+				assert states[idx] != null;
+				currentValue = states[idx][persisters[idx].getVersionPropertyIndex()];
+			}
+			return GenerationRequest.of( entity, currentValue );
+		}
+
 	}
 
 	@Override
@@ -402,13 +538,21 @@ public class StatelessSessionImpl
 	}
 
 	private Object doInsert(String entityName, Object entity) {
-		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
-		final Object id;
 		final Object[] state = persister.getValues( entity );
+		return doInsert( persister, entity, state, null, null );
+	}
+
+	private Object doInsert(EntityPersister persister, Object entity, Object[] state, @Nullable Object preGeneratedId, @Nullable Object preGeneratedVersion) {
+		checkNotReadOnly();
+		final Object id;
 		if ( persister.isVersioned() ) {
-			if ( seedVersion( entity, state, persister, this ) ) {
-				persister.setValues( entity, state );
+			if ( preGeneratedVersion != null ) {
+				state[persister.getVersionPropertyIndex()] = preGeneratedVersion;
+				persister.setValue( entity, persister.getVersionPropertyIndex(), preGeneratedVersion );
+			}
+			else if ( seedVersion( entity, state, persister, this ) ) {
+				persister.setValue( entity, persister.getVersionPropertyIndex(), state[ persister.getVersionPropertyIndex() ] );
 			}
 		}
 		final var generator = persister.getGenerator();
@@ -416,8 +560,13 @@ public class StatelessSessionImpl
 			if ( !generator.generatesOnInsert() ) {
 				throw new IdentifierGenerationException( "Identifier generator must generate on insert" );
 			}
-			final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
-			id = ( (BeforeExecutionGenerator) generator ).generate( this, entity, currentValue, INSERT );
+			if ( preGeneratedId != null ) {
+				id = preGeneratedId;
+			}
+			else {
+				final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
+				id = ( (BeforeExecutionGenerator) generator ).generate( this, entity, currentValue, INSERT );
+			}
 			persister.setIdentifier( entity, id, this );
 			if ( firePreInsert(entity, id, state, persister) ) {
 				return id;
@@ -689,7 +838,7 @@ public class StatelessSessionImpl
 			oldVersion = persister.getVersion( entity );
 			final Object newVersion = incrementVersion( entity, oldVersion, persister, this );
 			setVersion( state, newVersion, persister );
-			persister.setValues( entity, state );
+			persister.setValue( entity, persister.getVersionPropertyIndex(), newVersion );
 		}
 		else {
 			oldVersion = null;
@@ -827,7 +976,7 @@ public class StatelessSessionImpl
 							.isUnsaved( oldVersion );
 			if ( knownTransient != null && knownTransient ) {
 				if ( seedVersion( entity, state, persister, this ) ) {
-					persister.setValues( entity, state );
+					persister.setValue( entity, persister.getVersionPropertyIndex(), state[ persister.getVersionPropertyIndex() ] );
 				}
 				// this is a nonsense but avoids setting version restriction
 				// parameter to null later on deep in the guts
@@ -836,7 +985,7 @@ public class StatelessSessionImpl
 			else {
 				final Object newVersion = incrementVersion( entity, oldVersion, persister, this );
 				setVersion( state, newVersion, persister );
-				persister.setValues( entity, state );
+				persister.setValue( entity, persister.getVersionPropertyIndex(), newVersion );
 				return oldVersion;
 			}
 		}

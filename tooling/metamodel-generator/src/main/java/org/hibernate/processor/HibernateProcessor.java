@@ -342,7 +342,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setAddInjectAnnotation( packagePresent(jakartaInjectPackage) );
 		context.setAddNonnullAnnotation( packagePresent(jakartaAnnotationPackage) );
 		context.setAddGeneratedAnnotation( packagePresent(jakartaAnnotationPackage) );
-		context.setAddDependentAnnotation( packagePresent(jakartaContextPackage) );
+		context.setCdiAvailable( packagePresent(jakartaContextPackage) );
 		context.setAddTransactionScopedAnnotation( packagePresent(jakartaTransactionPackage) );
 		context.setDataEventPackageAvailable( packagePresent(dataEventPackage) );
 		context.setQuarkusInjection( packagePresent(quarkusOrmPackage) || packagePresent(quarkusReactivePackage) );

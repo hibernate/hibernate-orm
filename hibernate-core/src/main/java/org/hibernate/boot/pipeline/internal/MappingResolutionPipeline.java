@@ -504,10 +504,6 @@ public class MappingResolutionPipeline {
 	}
 
 	private static MetadataImplementor finalizeMetadata(MetadataBuildingContext metadataBuildingContext) {
-//		final MetadataImplementor metadata = metadataBuildingContext.getMetadataCollector();
-//		metadata.orderColumns( false );
-//		metadata.validate();
-//		return metadata;
 		return ( (InFlightMetadataCollectorImpl) metadataBuildingContext.getMetadataCollector() ).buildMetadataInstance( metadataBuildingContext );
 	}
 

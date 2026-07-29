@@ -35,7 +35,7 @@ import jakarta.persistence.TypedQueryReference;
  * @author Steve Ebersole
  */
 @Incubating(since = "8.0")
-public interface NamedObjectRepository {
+public interface NamedObjectRepository extends NamedLoaderQueryResolver {
 
 	/**
 	 * Returns all selection-query references keyed by registration name.

@@ -6,7 +6,6 @@ package org.hibernate.bytecode.internal.bytebuddy;
 
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyFactory;
 import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
@@ -23,7 +22,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	}
 
 	@Override
-	public ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory) {
+	public ProxyFactory buildProxyFactory() {
 		return new ByteBuddyProxyFactory( byteBuddyProxyHelper );
 	}
 

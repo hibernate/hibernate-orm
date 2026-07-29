@@ -14,8 +14,9 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 
 /// Internal state for ORM's default SessionFactory construction path.
-/// This keeps resolved settings available to ORM while the public producer SPI
-/// continues to expose only the transitional SessionFactoryOptions bridge.
+/// This keeps resolved settings available as the new pipeline's source of
+/// truth while the public producer SPI exposes the common
+/// SessionFactoryOptions compatibility view used by both construction paths.
 ///
 /// @since 9.0
 /// @author Steve Ebersole

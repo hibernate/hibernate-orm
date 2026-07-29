@@ -19,6 +19,7 @@ import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
@@ -71,6 +72,8 @@ public class SessionFactoryPipelineTests {
 	@Test
 	void sessionFactoryBuildTargetIsDefined(ServiceRegistryScope registryScope) {
 		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
+				.property( MappingSettings.DEFAULT_CATALOG, "pipeline_catalog" )
+				.property( MappingSettings.DEFAULT_SCHEMA, "pipeline_schema" )
 				.managedClass( SimpleEntity.class );
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration, Map.of() );
 		final var mappingSettings = SettingsResolver.resolveMappingSettings(
@@ -97,6 +100,10 @@ public class SessionFactoryPipelineTests {
 			assertThat( sessionFactory.getRuntimeMetamodels()
 					.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class ) ).isNotNull();
+			assertThat( sessionFactory.getSqlStringGenerationContext().getDefaultCatalog().getText() )
+					.isEqualTo( "pipeline_catalog" );
+			assertThat( sessionFactory.getSqlStringGenerationContext().getDefaultSchema().getText() )
+					.isEqualTo( "pipeline_schema" );
 		}
 	}
 

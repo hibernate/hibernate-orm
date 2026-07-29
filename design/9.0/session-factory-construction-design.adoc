@@ -114,7 +114,9 @@ public interface SessionFactoryProducer {
 
 The producer SPI lives in `org.hibernate.boot.pipeline.spi`.  The important
 point is that the extension hook receives the same finalized construction
-request as the default ORM producer.
+request as the default ORM producer.  Its metadata is fully bound; the producer
+owns any integration-time contributions and its final ordering and validation
+gate.
 
 The producer returns `SessionFactoryImplementor`.  This keeps the final
 construction SPI aligned with Hibernate's runtime contract while still allowing
@@ -128,7 +130,7 @@ inputs, not raw bootstrap state.
 
 Candidate contents include:
 
-* finalized metadata;
+* fully bound metadata;
 * resolved SessionFactory settings;
 * the base service registry;
 * prepared SessionFactory service-registry inputs;
@@ -190,7 +192,6 @@ object graph consumed by the default `SessionFactoryImpl`.
 
 Possible members include:
 
-* `SessionFactoryServiceRegistry`;
 * `RuntimeMetamodels`;
 * `QueryEngine`;
 * `SqlTranslationEngine`;
@@ -215,15 +216,15 @@ runtime object behavior".
 
 == Integration Lifecycle
 
-The current `Integrator` contract receives:
+The `Integrator` contract now receives:
 
 [source,java]
 ----
-integrate(Metadata metadata, BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory)
+integrate(Metadata metadata, Integrator.Context context, SessionFactoryImplementor sessionFactory)
 ----
 
-This is one of the main reasons `BootstrapContext` crosses the final factory
-boundary.
+`Integrator.Context` currently exposes only `ManagedBeanRegistry`, replacing
+the one `BootstrapContext` capability used by the audited integrations.
 
 The replacement design should distinguish:
 
@@ -231,10 +232,9 @@ The replacement design should distinguish:
 * final runtime integration after the factory instance exists;
 * disintegration on factory close or failed startup.
 
-For a transition period, ORM may adapt legacy `Integrator` implementations by
-creating a narrow compatibility view of the old arguments.  Long term, final
-runtime integration should receive a construction or integration context that
-contains only the dependencies valid at that phase.
+`SessionFactoryIntegratorLifecycle` supplies this context, tracks only
+successfully integrated instances, and performs disintegration on normal close
+or startup failure.
 
 Possible shape:
 
@@ -242,7 +242,7 @@ Possible shape:
 ----
 interface SessionFactoryIntegration {
     void integrate(SessionFactoryIntegrationContext context);
-    void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry);
+    void disintegrate(SessionFactoryImplementor sessionFactory, Integrator.Context context);
 }
 ----
 
@@ -300,9 +300,11 @@ SessionFactoryProducer
 ----
 
 This gives custom factory implementations a better hook than replacing the
-staged customization object.  `SessionFactoryOptions` remains only as the
-transitional compatibility product passed to custom producers and the current
-`SessionFactoryImpl` bridge.
+staged customization object.  `ResolvedSessionFactorySettings` is the
+source-of-truth product for the resolved pipeline.  `SessionFactoryOptions`
+remains the common read-only compatibility projection passed to custom
+producers, used by legacy/native construction, and retained by the completed
+factory for runtime compatibility.
 
 == Relationship To BootstrapContext And MetadataBuildingContext
 
@@ -325,8 +327,11 @@ hooks.  Its current signature is one of the remaining reasons the old
 `BootstrapContext` leaks into runtime construction.
 
 `SessionFactoryOptions`::
-Should become a compatibility adapter or a view over resolved factory settings,
-not the main pipeline product.
+Is the common read-only compatibility view across resolved and legacy/native
+construction.  On the resolved path it is projected from
+`ResolvedSessionFactorySettings`; it is not the main pipeline product or a
+settings-mutation surface.  The completed factory continues to retain it for
+existing runtime SPI consumers.
 
 == Runtime Construction Context Direction
 
@@ -345,19 +350,53 @@ Use this split when deciding whether a dependency should be narrowed:
   services;
 * SQL translation should depend on `SqlTranslationContext` rather than
   `SqlAstCreationContext#getSessionFactory()`;
-* proxy factory creation still needs a deliberate decision: either it remains a
-  factory-aware runtime contract or it receives a smaller proxy/bytecode
-  creation context;
-* legacy `Integrator` callbacks remain a compatibility bridge because the
-  current SPI receives both `BootstrapContext` and the factory.
+* proxy factory creation no longer receives the factory; the factory argument
+  to `ProxyFactoryFactory#buildProxyFactory()` was unused by both built-in
+  implementations and has been removed;
+* `Integrator` callbacks remain a compatibility bridge because the current SPI
+  receives the in-flight factory.
 
-The service-registry creation path should also stay explicit.  Standard-service
-backed constructor inputs belong in `StandardServiceComponents`; the
-`SessionFactoryServiceRegistry` remains factory-scoped and is still created with
-a completed-safe factory access handle.
+Standard-service-backed constructor inputs belong in
+`StandardServiceComponents`.  Factory-owned components do not require a child
+service registry: their strategies and factories are selected while preparing
+`SessionFactoryRuntimeComponents`, and their products are owned directly by the
+factory.  A completed-safe factory access handle remains available only where
+runtime-model construction genuinely needs it.
 
 The point is not to remove every factory reference.  The point is to stop using
 an incomplete factory as a general construction context.
+
+=== Runtime-model callback audit
+
+`RuntimeModelCreationContext` no longer exposes `getSessionFactory()` directly.
+It exposes `SessionFactoryAccess`, making each dereference of the in-flight
+factory visible and reviewable.
+
+The audited callbacks divide into:
+
+* runtime ownership: entity and collection persisters ultimately belong to and
+  retain the completed factory;
+* deferred runtime behavior: attribute mutability plans, identifier/natural-id
+  mappings, audit mappings, discriminated associations, and CTE strategies
+  retain `SessionFactoryAccess` and dereference it only when runtime work occurs;
+* construction-time integration: temporary-table strategy construction and
+  preparation consume the selected `TemporaryTableStrategy` and
+  `JdbcServices`; factory-taking constructors remain compatibility bridges but
+  the runtime-model path does not use them.
+
+Filter construction now receives the mapping model, SQL string generation,
+dialect, and type-configuration inputs through `RuntimeModelCreationContext`;
+table-name formatting likewise retains `SqlStringGenerationContext` rather
+than consulting the factory.  Proxy and temporary-table construction no longer
+dereference the in-flight factory.  Persisters still retain the concrete
+factory as their eventual runtime owner.  HQL and native named-query
+definitions now resolve without a factory; only stored-procedure definitions
+retain the factory-aware resolution contract they actually use.  Persisters
+resolve and retain selection-only custom loader mementos through the restricted
+`NamedLoaderQueryResolver` exposed by `RuntimeModelCreationContext`.
+`NamedObjectRepository` implements that view, while mutation and procedure
+registrations are excluded.  The persisters' only constructor dereference
+therefore assigns the eventual runtime owner.
 
 == Suggested Migration Steps
 
@@ -375,19 +414,19 @@ an incomplete factory as a general construction context.
    create a custom factory implementation.
 6. [x] Add named producer registration and bootstrap-setting based producer
    selection.
-7. [~] Start moving preparable constructor work into request/component builders.
+7. [x] Move preparable constructor work into request/component builders.
 8. [x] Remove the public/staged factory-builder surface and replace its
    internal compatibility role with explicit construction products.
-9. [~] Add a legacy `Integrator` adapter, then design narrower phase-specific
-   integration hooks.
-10. [ ] Change `SessionFactoryImpl` to accept prepared runtime components.
-11. [ ] Remove direct `BootstrapContext` and `MetadataBuildingContext` exposure from
+9. [x] Retain legacy `Integrator` through a narrow context adapter; add a new
+   phase-specific hook only when a concrete integration need identifies one.
+10. [x] Change `SessionFactoryImpl` to accept prepared runtime components.
+11. [x] Remove direct `BootstrapContext` and `MetadataBuildingContext` exposure from
     final factory construction.
 
-== Current Progress
+== Completed Result
 
-The first seam is implemented, and the initial runtime/service/integrator
-preparation slices are in place.
+The construction seam and its runtime/service/integrator preparation are
+implemented.
 
 Implemented pieces:
 
@@ -408,7 +447,7 @@ Implemented pieces:
   producer failure, and request shape
 * `org.hibernate.boot.pipeline.internal.SessionFactoryRuntimeComponentsBuilder`
   and `SessionFactoryRuntimeComponents` for the first constructor values that do not
-  need the factory instance or `SessionFactoryServiceRegistry`
+  need the factory instance
 * `org.hibernate.boot.pipeline.internal.StandardServiceComponentsBuilder`
   and `StandardServiceComponents` for standard-service-backed constructor
   values
@@ -441,17 +480,21 @@ Implemented pieces:
   `SessionFactoryRuntimeComponentsBuilder`, using resolved settings on the pipeline
   path and the transitional options bridge on legacy/native paths
 * `org.hibernate.boot.pipeline.internal.SessionFactoryIntegratorLifecycle`
-  adapts legacy `Integrator` callbacks, tracks successfully integrated
+  supplies the narrow `Integrator.Context`, tracks successfully integrated
   instances, and handles disintegration on close or startup failure
 
-Current transitional compromises:
+Current compatibility boundaries:
 
 * `SessionFactoryConstructionRequest` exposes `SessionFactoryOptions` as the
-  temporary factory-settings bridge.
-* `ResolvedSessionFactorySettings` is a pipeline SPI type, but it is deliberately
-  not exposed through `SessionFactoryConstructionRequest` yet.
-* The internal construction request still carries `BootstrapContext` for the ORM
-  default producer, because `SessionFactoryImpl` still requires it.
+  common read-only factory-settings view.  This keeps the producer contract
+  coherent for both the resolved-settings and legacy/native paths.
+* `ResolvedSessionFactorySettings` is the source-of-truth product of the
+  resolved pipeline.  It is deliberately not exposed through
+  `SessionFactoryConstructionRequest`, because the legacy/native path does not
+  produce it.
+* Internal construction state still carries `BootstrapContext` while named
+  runtime and integration inputs are prepared.  The resulting
+  `SessionFactoryConstructionPlan` does not store or expose it.
 * `SessionFactoryRuntimeComponents` is internal to ORM's default producer and
   is not exposed through `SessionFactoryConstructionRequest`.
 * `SessionFactoryConstructionPlan` is internal to ORM's default
@@ -462,20 +505,37 @@ Current transitional compromises:
   `SessionFactoryConstructionRequest`.
 * `StandardServiceComponents` is created before entering the
   `SessionFactoryImpl` constructor and carried by `SessionFactoryConstructionPlan`;
-  it carries the standard service registry but does not own
-  `SessionFactoryServiceRegistry` construction.
-* `SessionFactoryImpl` still builds the `SessionFactoryServiceRegistry`
-  directly.  Service-registry creation receives `SessionFactoryAccess` rather
-  than the concrete incomplete factory.
+  it carries the standard service registry used throughout factory
+  construction.
+* The child `SessionFactoryServiceRegistry` and its builder, initiator,
+  contributor, and factory infrastructure have been removed.
+  `SessionFactoryConstructionPlan` carries `DelayedSessionFactoryReference`
+  directly; it is intentionally unresolved during preparation and completed
+  by the constructor.  The completed factory registers as a lifecycle
+  dependent of the standard registry, preserving automatic close semantics
+  without manufacturing a child registry.
 * `SessionFactoryImpl` still performs most runtime construction work.  The first
   slimming steps move no-factory-needed value lookup/copy/derivation and the
   safe service-registry-sourced value lookups.
-* Legacy `Integrator` callbacks still receive the factory and `BootstrapContext`;
-  only discovery/bookkeeping has moved out of `SessionFactoryImpl`.
+* `Integrator` callbacks receive finalized metadata, narrow
+  `Integrator.Context`, and the in-flight factory.  They no longer receive
+  `BootstrapContext`.  Bean Validation no longer uses this callback:
+  `BeanValidationPlan` contributes relational constraints before final column
+  ordering and validation, and activates runtime listeners separately during
+  factory construction.
 
 Built as `SessionFactoryRuntimeComponents` v1:
 
 * `TypeConfiguration`
+* named runtime-model capabilities: `ModelsContext`, `ClassLoaderService`,
+  `ClassLoaderAccess`, `ManagedBeanRegistry`, and
+  `ManagedTypeRepresentationResolver`
+* Java-service-selected `NativeQueryInterpreter`, `CacheFactory`, and
+  `StatisticsFactory`
+* prepared `ExtensionIntegrationService`, composed from Java-loadable
+  `ExtensionIntegration` implementations
+* `SqlStringGenerationContext`, derived from resolved metadata,
+  `JdbcServices`, and resolved default catalog/schema
 * `StatementObserver`, including the `IgnoredStatementObserver.IGNORE` fallback
 * `SessionFactoryObserver[]`
 * finalized filter definitions copied from metadata
@@ -552,13 +612,13 @@ factory instance exists.
   `StatementObserver` can be a prepared value with `IgnoredStatementObserver`
   fallback already applied.
 
-| `getServiceRegistry( options, this )`
-| Builds the `SessionFactoryServiceRegistry` using `SessionFactoryAccess`.
-| Not directly.  The registry stores access to the eventual factory, and some
-  session-factory-scoped services dereference it when initialized.
-| Keep explicit in `SessionFactoryImpl` until factory-scoped service creation
-  has a clearer owner separate from the standard-service-backed constructor
-  components.
+| Child service-registry creation.
+| Previously built a `SessionFactoryServiceRegistry` using
+  `SessionFactoryAccess`.
+| No.
+| Removed.  Factory-owned components are prepared or created explicitly, and
+  `SessionFactoryImplementor#getServiceRegistry()` exposes the standard
+  registry.
 
 | `new EventEngine( options, standardServiceRegistry )`
 | Creates event engine from options and standard services.
@@ -582,18 +642,19 @@ factory instance exists.
   `JdbcValuesMappingProducerProvider`, `ChangesetCoordinator`, hot services, and
   connection providers.
 | Resolves services and caches frequently used references.
-| Generally no for the standard-service-backed components.  `CacheImplementor`
-  remains session-factory-scoped.
-| Standard-service-backed values moved to `StandardServiceComponents`;
-  `CacheImplementor` remains resolved from `SessionFactoryServiceRegistry` in
-  `SessionFactoryImpl`.  `StandardServiceComponents` is now prepared as
-  part of `SessionFactoryConstructionPlan`.
+| Generally no for the standard-service-backed components.
+  `CacheImplementor` remains factory-owned and needs the completed factory.
+| Standard-service-backed values moved to `StandardServiceComponents`.
+  `CacheFactory` is selected in `SessionFactoryRuntimeComponents`; the
+  constructor uses it to create the factory-owned `CacheImplementor`.
 
 | `SqlStringGenerationContext`
 | Builds SQL naming/rendering context from metadata database, JDBC environment,
   default catalog, and default schema.
 | No.
-| Move to prepared runtime components.
+| Moved to `SessionFactoryRuntimeComponents`.  Standard-service components are
+  prepared first so `JdbcServices` is an explicit builder input; resolved and
+  legacy construction paths supply their respective catalog/schema values.
 
 | `PersistenceUnitUtilImpl`, `CoordinatingEntityNameResolver`,
   `SchemaManagerImpl`, `SessionFactoryBasedWrapperOptions`
@@ -615,42 +676,56 @@ factory instance exists.
   part of a filter/tenant runtime plan.
 
 | Integrator observer setup, `integrate(...)`, and failure disintegration.
-| Runs legacy `Integrator` callbacks and tracks disintegration.
-| Yes today because `Integrator#integrate` receives the factory and
-  `BootstrapContext`.
+| Runs `Integrator` callbacks and tracks disintegration.
+| Yes because `Integrator#integrate` still receives the in-flight factory.
 | Discovery, callback invocation, successful-integrator tracking, and
-  disintegration moved to `SessionFactoryIntegratorLifecycle`.  The legacy
-  callback still receives the factory and `BootstrapContext`; replacing it with
-  narrower phase-specific integration hooks remains a follow-up.
+  disintegration moved to `SessionFactoryIntegratorLifecycle`.
+  `Integrator.Context` replaces `BootstrapContext` and currently exposes only
+  managed-bean access.
 
 | `bootMetamodel.orderColumns( false )` and `bootMetamodel.validate()`
 | Performs final metadata ordering and validation.
-| No obvious factory need.
-| Move before factory construction, probably into metadata finalization or a
-  `FinalizedMetadata` product.
+| No.
+| Moved into default construction-plan preparation after Bean Validation
+  relational contributions and before runtime-component derivation, integrator
+  callbacks, and runtime-model construction.  A custom producer owns the
+  equivalent integration and finalization lifecycle for its factory.
 
 | `primeSecondLevelCacheRegions( bootMetamodel )`
 | Initializes cache regions from metadata.
-| Likely depends on cache access and metadata, not fully initialized factory.
-| Audit details, then move into cache runtime plan/component if possible.
+| Configuration planning does not; cache activation does.
+| `SessionFactoryRuntimeComponentsBuilder` prepares the complete
+  `DomainDataRegionConfig` set.  Factory construction builds the
+  `CacheImplementor` and primes it before persister construction because both
+  the cache facade/region SPI and the persisters require the concrete factory
+  owner.
 
 | `RuntimeMetamodelsImpl`, `MappingMetamodelImpl`, `ModelCreationContext`, and
   `mappingMetamodelImpl.finishInitialization(...)`
 | Builds runtime mapping and JPA metamodels.
-| Partly.  `ModelCreationContext` currently carries `BootstrapContext`; SQL
-  translation engine and persister creation may call back to the factory through
-  surrounding services.
-| Major follow-up.  Introduce a narrower model-creation context first, then
-  determine whether mapping metamodel creation can happen before the factory or
-  needs a factory reference.
+| Partly.  `ModelCreationContext` now names its model, class-loading,
+  managed-bean, and managed-type representation dependencies instead of
+  carrying `BootstrapContext`.  Deferred runtime behavior retains
+  `SessionFactoryAccess`; proxy and temporary-table preparation no longer
+  dereference the factory.  Entity and collection persisters retain the
+  in-flight factory solely as their eventual runtime owner; table formatting,
+  filters, and selection-only custom loader resolution use named context
+  dependencies.  The loader resolver is a restricted view implemented by the
+  named-object repository, not exposure of the repository or query engine.
+| The context and callback audit is complete.  Persister ownership is the
+  remaining deliberate boundary rather than a construction service lookup.
+  Runtime-model completion therefore remains inside factory construction.
+  External two-phase completion would weaken final-field and failure-cleanup
+  guarantees without removing a broad dependency.
 
 | `QueryEngineImpl`
 | Builds query engine before mapping metamodel completion because SQL AST
   translator creation needs SQM function registry.
 | No obvious factory need from constructor call, but depends on runtime
   metamodel placeholder, settings, service registry, and metadata.
-| Move with runtime metamodel planning.  This likely needs an explicit ordering
-  product for query engine, SQL translation engine, and metamodel creation.
+| Keep in the factory-owned in-flight model phase.  It must be assigned before
+  persister loader completion and is part of the accepted runtime-model
+  construction cycle.
 
 | `SqlTranslationContextImpl(...)` and `SqlTranslationEngineImpl( sqlTranslationContext )`
 | Creates SQL translation engine from an explicit SQL translation context.  The
@@ -659,14 +734,13 @@ factory instance exists.
   after persister initialization.
 | No direct factory reference for the SQL translation engine itself.  The
   fetch-profile registry remains in-flight until persisters exist.
-| Keep as the current narrow context boundary.  Continue auditing table-group
-  creation paths that still need runtime factory access through load/query
-  influencers.
+| Keep as the narrow context boundary inside factory-owned runtime-model
+  completion.
 
 | `addFetchProfiles(...)`
 | Populates fetch profiles after persisters exist.
 | Depends on completed mapping metamodel/persisters.
-| Move into runtime metamodel completion step when that step is extracted.
+| Keep in the accepted factory-owned runtime-model completion step.
 
 | Default session, temporary session, and stateless option templates.
 | Creates reusable builders from factory methods after tenant resolver decision.
@@ -734,24 +808,14 @@ Good early move candidates:
 
 Likely blockers before major constructor slimming:
 
-* some session-factory-scoped services still dereference `SessionFactoryAccess`
-  during service initialization;
-* legacy `Integrator#integrate` receives both `BootstrapContext` and the factory;
-* runtime metamodel creation still uses `ModelCreationContext` with
-  `BootstrapContext`;
+* `Integrator#integrate` receives the in-flight factory;
 * SQL translation engine and several helper objects take direct factory
   references;
 * `TypeConfiguration` final scoping must be carefully ordered.
 
-Suggested next implementation slice:
-
-* Continue refining `SessionFactoryRuntimeComponentsBuilder` and related
-  builders so they prepare only the no-factory-needed values from the "good
-  early move candidates" list.
-* Keep `SessionFactoryImpl` assigning those prepared values and running all
-  lifecycle/back-reference work.
-* Do not attempt runtime metamodel extraction until `ModelCreationContext` is
-  narrowed.
+Stage 4 is complete.  `SessionFactoryImpl` remains responsible for
+factory-owned cache activation, runtime-model completion, callback ordering,
+back-reference completion, and failure cleanup.
 
 == Testing Targets
 
@@ -770,20 +834,22 @@ Focused tests should prove:
 * `BootstrapContext` usage at the final boundary is replaced by named
   construction dependencies.
 
-== Open Questions
+== Closed Decisions
 
-These are PR-blocking Stage 4 construction-boundary decisions except for total
-`SessionFactoryOptions` elimination, which may remain a follow-up after its
-minimum compatibility view is defined.  See
-link:design-doc-audit.adoc#_open_question_routing[
-the centralized scope routing].
-
-* Should the construction request expose finalized `org.hibernate.boot.Metadata`
-  for compatibility, or only narrower finalized metadata products?
-* How much of runtime metamodel creation can move before the factory instance
-  exists?
-* Which integration callbacks must run before runtime metamodel creation, and
-  which can run after?
-* What later replacement should remove `SessionFactoryOptions` from
-  `SessionFactoryConstructionRequest` while still giving custom producers the
-  public factory settings they need?
+* The construction request exposes the fully bound `MetadataImplementor`
+  through the public `Metadata` inspection contract.  The default producer
+  applies Bean Validation relational contributions, orders columns, and
+  validates that model before integrator callbacks and runtime-model
+  construction.
+* Runtime metamodel scaffolding and completion remain a factory-owned in-flight
+  phase because cache strategies, persisters, loaders, query infrastructure,
+  and SQL infrastructure form an explicit construction cycle around the
+  concrete factory owner.
+* Legacy integrators run after metadata finalization and before runtime-model
+  completion.  Bean Validation is split into a prepared boot-model contribution
+  and runtime-listener activation rather than using this compatibility hook;
+  narrower phase-specific hooks otherwise require a concrete integration use
+  case.
+* `SessionFactoryOptions` remains the common producer and runtime compatibility
+  view for this PR.  Its eventual decomposition is a follow-up and does not
+  require a path-dependent construction request now.

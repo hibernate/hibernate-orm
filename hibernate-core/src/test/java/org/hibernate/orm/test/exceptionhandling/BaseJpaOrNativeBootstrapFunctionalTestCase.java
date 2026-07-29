@@ -110,7 +110,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 				)
 				.unwrap( SessionFactoryImplementor.class );
 
-		serviceRegistry = (StandardServiceRegistryImpl) sessionFactory.getServiceRegistry().getParentServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) sessionFactory.getServiceRegistry();
 	}
 
 	private void buildSessionFactory() {

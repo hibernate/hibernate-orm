@@ -6,7 +6,6 @@ package org.hibernate.integrator.internal;
 
 import java.util.LinkedHashSet;
 
-import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.integrator.spi.Integrator;
@@ -24,7 +23,6 @@ public class IntegratorServiceImpl implements IntegratorService {
 	public IntegratorServiceImpl(Iterable<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
 		// Register standard integrators.
 		// Envers, for example, needs to be handled by discovery because in separate project/jar.
-		addIntegrator( integrators, new BeanValidationIntegrator() );
 		addIntegrator( integrators, new CollectionCacheInvalidator() );
 
 		// register provided integrators

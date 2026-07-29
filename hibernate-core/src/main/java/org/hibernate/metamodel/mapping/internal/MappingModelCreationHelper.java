@@ -18,6 +18,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -73,6 +74,7 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
@@ -422,8 +424,8 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		if ( bootProperty.isUpdatable() ) {
 			return new MutabilityPlan<>() {
-				final SessionFactoryImplementor sessionFactory =
-						creationProcess.getCreationContext().getSessionFactory();
+				final SessionFactoryAccess sessionFactoryAccess =
+						creationProcess.getCreationContext().getSessionFactoryAccess();
 
 				@Override
 				public boolean isMutable() {
@@ -432,7 +434,9 @@ public class MappingModelCreationHelper {
 
 				@Override
 				public Object deepCopy(Object value) {
-					return value == null ? null : attrType.deepCopy( value, sessionFactory );
+					return value == null
+							? null
+							: attrType.deepCopy( value, sessionFactoryAccess.getSessionFactory() );
 
 				}
 
@@ -1539,10 +1543,15 @@ public class MappingModelCreationHelper {
 	}
 
 	public static String getTableIdentifierExpression(Table table, SessionFactoryImplementor sessionFactory) {
+		return getTableIdentifierExpression( table, sessionFactory.getSqlStringGenerationContext() );
+	}
+
+	public static String getTableIdentifierExpression(
+			Table table,
+			SqlStringGenerationContext sqlStringGenerationContext) {
 		return table.getSubselect() != null
 				? "( " + table.getSubselect() + " )"
-				: sessionFactory.getSqlStringGenerationContext()
-						.format( table.getQualifiedTableName() );
+				: sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private static CollectionPart interpretMapKey(

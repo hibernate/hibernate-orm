@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
@@ -67,7 +66,7 @@ public class CommentElementCollectionTest {
 
 	public static class MetadataIntegrator implements Integrator {
 		@Override
-		public void integrate(Metadata metadata, BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
+		public void integrate(Metadata metadata, Integrator.Context context, SessionFactoryImplementor sessionFactory) {
 			METADATA = metadata;
 		}
 	}

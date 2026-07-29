@@ -5,7 +5,6 @@
 package org.hibernate.stat.spi;
 
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 
 import java.util.Map;
@@ -13,13 +12,14 @@ import java.util.Map;
 import static java.util.Collections.emptyMap;
 
 /**
- * A service SPI for collecting statistics about various events occurring at runtime.
+ * The factory-owned SPI for collecting statistics about events occurring at
+ * runtime.
  * <p>
  * A custom implementation may be provided via a {@link StatisticsFactory}.
  *
  * @author Emmanuel Bernard
  */
-public interface StatisticsImplementor extends Statistics, Service {
+public interface StatisticsImplementor extends Statistics {
 	/**
 	 * Callback about a session being opened.
 	 */

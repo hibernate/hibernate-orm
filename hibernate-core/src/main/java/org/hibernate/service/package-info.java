@@ -19,6 +19,5 @@
  * @see org.hibernate.service.ServiceRegistry
  * @see org.hibernate.service.spi.ServiceInitiator
  * @see org.hibernate.integrator.spi.Integrator
- * @see org.hibernate.service.spi.SessionFactoryServiceRegistryBuilder
  */
 package org.hibernate.service;

@@ -14,6 +14,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -94,7 +95,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 	public static final String SHORT_NAME = "cte";
 
 	private final EntityPersister rootDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 	private final CteTable entityCteTable;
 
 	public CteInsertStrategy(
@@ -107,7 +108,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 			EntityPersister rootDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.rootDescriptor = rootDescriptor;
-		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
+		this.sessionFactoryAccess = runtimeModelCreationContext.getSessionFactoryAccess();
 
 		final Dialect dialect = runtimeModelCreationContext.getDialect();
 
@@ -162,7 +163,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 	}
 
 	protected SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+		return sessionFactoryAccess.getSessionFactory();
 	}
 
 	protected CteTable getEntityCteTable() {

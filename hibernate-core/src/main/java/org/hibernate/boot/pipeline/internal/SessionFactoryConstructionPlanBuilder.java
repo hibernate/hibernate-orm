@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.pipeline.internal;
 
+import org.hibernate.boot.beanvalidation.BeanValidationPlan;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionIdentity;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -20,31 +23,7 @@ public final class SessionFactoryConstructionPlanBuilder {
 	}
 
 	public static SessionFactoryConstructionPlan build(SessionFactoryConstructionState state) {
-		return new SessionFactoryConstructionPlan(
-				state.metadata(),
-				state.resolvedSettings(),
-				state.identity(),
-				state.options(),
-				state.bootstrapContext(),
-				state.runtimeMappingHandoff(),
-				new DelayedSessionFactoryReference(),
-				buildRuntimeComponents( state ),
-				StandardServiceComponentsBuilder.build( state.options() )
-		);
-	}
-
-	private static SessionFactoryRuntimeComponents buildRuntimeComponents(SessionFactoryConstructionState state) {
-		return state.hasResolvedSettings()
-				? SessionFactoryRuntimeComponentsBuilder.build(
-						state.metadata(),
-						state.resolvedSettings(),
-						state.bootstrapContext()
-				)
-				: SessionFactoryRuntimeComponentsBuilder.build(
-						state.metadata(),
-						state.options(),
-						state.bootstrapContext()
-				);
+		return build( state, null );
 	}
 
 	public static SessionFactoryConstructionPlan build(
@@ -52,16 +31,93 @@ public final class SessionFactoryConstructionPlanBuilder {
 			SessionFactoryOptions options,
 			BootstrapContext bootstrapContext,
 			RuntimeMappingHandoff runtimeMappingHandoff) {
-		return new SessionFactoryConstructionPlan(
+		return build( metadata, null, null, options, bootstrapContext, runtimeMappingHandoff, null );
+	}
+
+	public static SessionFactoryConstructionPlan build(
+			MetadataImplementor metadata,
+			ResolvedSessionFactorySettings resolvedSettings,
+			SessionFactoryConstructionIdentity identity,
+			SessionFactoryOptions options,
+			BootstrapContext bootstrapContext,
+			RuntimeMappingHandoff runtimeMappingHandoff,
+			SessionFactoryRuntimeComponents suppliedRuntimeComponents) {
+		final var state = new SessionFactoryConstructionState(
 				metadata,
-				null,
-				null,
+				resolvedSettings,
+				identity,
 				options,
 				bootstrapContext,
-				runtimeMappingHandoff,
-				new DelayedSessionFactoryReference(),
-				SessionFactoryRuntimeComponentsBuilder.build( metadata, options, bootstrapContext ),
-				StandardServiceComponentsBuilder.build( options )
+				runtimeMappingHandoff
+		);
+		return build( state, suppliedRuntimeComponents );
+	}
+
+	private static SessionFactoryConstructionPlan build(
+			SessionFactoryConstructionState state,
+			SessionFactoryRuntimeComponents suppliedRuntimeComponents) {
+		final var metadata = state.metadata();
+		final var options = state.options();
+		final var standardServiceComponents = StandardServiceComponentsBuilder.build( options );
+		final var beanValidationPlan = BeanValidationPlan.prepare(
+				metadata,
+				options,
+				standardServiceComponents.serviceRegistry()
+		);
+		beanValidationPlan.contributeRelationalConstraints();
+		metadata.orderColumns( false );
+		metadata.validate();
+		final var runtimeComponents = suppliedRuntimeComponents == null
+				? buildRuntimeComponents( state, standardServiceComponents )
+				: suppliedRuntimeComponents;
+		final var sessionFactoryReference = new DelayedSessionFactoryReference();
+		return new SessionFactoryConstructionPlan(
+				metadata,
+				state.resolvedSettings(),
+				state.identity(),
+				options,
+				state.runtimeMappingHandoff(),
+				runtimeComponents,
+				standardServiceComponents,
+				sessionFactoryReference,
+				beanValidationPlan,
+				integratorLifecycle(
+						metadata,
+						runtimeComponents,
+						standardServiceComponents,
+						sessionFactoryReference
+				)
+		);
+	}
+
+	private static SessionFactoryRuntimeComponents buildRuntimeComponents(
+			SessionFactoryConstructionState state,
+			StandardServiceComponents standardServiceComponents) {
+		return state.hasResolvedSettings()
+				? SessionFactoryRuntimeComponentsBuilder.build(
+						state.metadata(),
+						state.resolvedSettings(),
+						state.bootstrapContext(),
+						standardServiceComponents.jdbcServices()
+				)
+				: SessionFactoryRuntimeComponentsBuilder.build(
+						state.metadata(),
+						state.options(),
+						state.bootstrapContext(),
+						standardServiceComponents.jdbcServices()
+				);
+	}
+
+	private static SessionFactoryIntegratorLifecycle integratorLifecycle(
+			MetadataImplementor metadata,
+			SessionFactoryRuntimeComponents runtimeComponents,
+			StandardServiceComponents standardServiceComponents,
+			DelayedSessionFactoryReference sessionFactoryReference) {
+		return new SessionFactoryIntegratorLifecycle(
+				metadata,
+				runtimeComponents.managedBeanRegistry(),
+				sessionFactoryReference,
+				standardServiceComponents.serviceRegistry()
 		);
 	}
 }

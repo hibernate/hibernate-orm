@@ -4,18 +4,18 @@
 This is the only current-status document for the ORM 9 "Improve bootstrap"
 work.  Durable scope and dependencies live in
 link:improve-bootstrap-completion-plan.adoc[
-`improve-bootstrap-completion-plan.adoc`].  Design-document routing lives in
-link:design-doc-audit.adoc[`design-doc-audit.adoc`].
+`improve-bootstrap-completion-plan.adoc`].
 
 == Current Objective
 
-Date: 2026-07-28.
+Date: 2026-07-29.
 
 Stage 0, "Establish The Review Baseline", Stage 1, "Close Bootstrap Inputs And
 Customization Ownership", and Stage 2, "Finish The Semantic Boot-Mapping
 Handoff", are complete.  Stage 3, "Complete Runtime-Sensitive Mapping
-Products", is complete.  The next active work is Stage 4, "Finish
-SessionFactory Construction Boundaries".
+Products", and Stage 4, "Finish SessionFactory Construction Boundaries", are
+complete.  The next active work is Stage 5, "Stabilize Extension Boundaries And
+Documentation".
 
 The first Stage 2 mapped-superclass cleanup stores role-bearing
 `AppliedAttributeMapping` values directly in each
@@ -178,6 +178,104 @@ the remaining strategy-name interpretation is confined to XML,
 programmatic/named-definition, and other legacy compatibility inputs.
 `IdentifierGeneratorDefinition` itself is now class-bearing, so those source
 strings are resolved before entering the retained metadata model.
+
+The first Stage 4 constructor-slimming slice prepares
+`SqlStringGenerationContext` in `SessionFactoryRuntimeComponentsBuilder`.
+`SessionFactoryConstructionPlanBuilder` now prepares standard-service
+components first and supplies their `JdbcServices` to runtime-component
+preparation.  Resolved-settings and legacy-options paths preserve their
+respective default catalog/schema inputs, while `SessionFactoryImpl` only
+assigns the prepared context.
+
+The second Stage 4 slice removes `BootstrapContext` from
+`RuntimeModelCreationContext`.  Runtime-model creation now names its
+`ModelsContext`, class-loading, managed-bean, and managed-type representation
+dependencies directly.  `SessionFactoryRuntimeComponentsBuilder` captures
+those capabilities during preparation and `SessionFactoryImpl` passes them
+into its narrowed model-creation context.
+
+The third Stage 4 slice first made factory-scoped service-registry creation an
+explicit pre-construction phase.  The later sixth slice removed that child
+registry altogether.  The construction plan now carries its delayed
+`SessionFactoryAccess` directly, and `SessionFactoryImpl` completes the handle
+after receiving the plan.
+
+The fourth Stage 4 slice replaces the `BootstrapContext` argument of
+`Integrator#integrate` with `Integrator.Context`, while retaining the fully
+bound `Metadata` and in-flight `SessionFactoryImplementor` arguments.  The narrow
+context exposes `ManagedBeanRegistry`, covering the audited Hibernate
+Search-style CDI use without carrying the full boot context.
+`SessionFactoryIntegratorLifecycle` is now a prepared construction-plan product
+and still owns integration bookkeeping and disintegration.  Consequently,
+`SessionFactoryConstructionPlan` no longer stores or exposes
+`BootstrapContext`.  Bean Validation no longer participates through
+`Integrator`: its prepared plan contributes relational constraints before the
+default producer orders and validates metadata, and later activates runtime
+event listeners against the in-flight factory.  Integrators therefore receive
+finalized metadata before runtime-model construction.
+
+The fifth Stage 4 slice closes the `SessionFactoryOptions` boundary decision.
+`ResolvedSessionFactorySettings` is the source-of-truth settings product for
+the resolved pipeline.  `SessionFactoryOptions` remains a read-only
+compatibility projection shared by `SessionFactoryProducer` invocations from
+both resolved and legacy/native construction and retained by the completed
+factory for runtime consumers.  The producer request intentionally does not
+expose `ResolvedSessionFactorySettings`, since the legacy/native path has no
+such product.
+
+The sixth Stage 4 slice removes `SessionFactoryServiceRegistry` and its
+builder, initiator, contributor, and factory infrastructure.  Factory-owned
+cache, statistics, native-query, and extension-integration components are
+prepared or selected explicitly and handed directly to `SessionFactoryImpl`.
+`CacheFactory`, `StatisticsFactory`, `NativeQueryInterpreter`, and
+`ExtensionIntegration` provide the Java-service extension points.  Integrator
+disintegration now receives the same narrow `Integrator.Context` used during
+integration, while `SessionFactoryImplementor#getServiceRegistry()` exposes
+the standard registry without implying ownership by the factory.  The factory
+registers as a lifecycle dependent of that standard registry, preserving
+automatic registry shutdown and shared-registry reference counting without a
+child registry.
+
+The seventh Stage 4 slice audits runtime-model callbacks into the in-flight
+factory.  `RuntimeModelCreationContext` no longer exposes a broad
+`getSessionFactory()` shortcut; callers must use the deliberately named
+`SessionFactoryAccess`.  Runtime-only consumers such as attribute mutability
+plans and CTE mutation/insert strategies retain the access handle and defer
+dereferencing it until execution.  The remaining construction-time
+dereferences are explicit and limited to entity/collection persisters retaining
+their runtime owner.  Proxy-factory creation no longer receives the factory:
+`ProxyFactoryFactory#buildProxyFactory()` had an unused factory parameter in
+both built-in implementations, so the eighth Stage 4 slice removes it.  The
+ninth slice changes temporary-table strategy construction and preparation to
+consume the selected `TemporaryTableStrategy` and `JdbcServices`; the old
+factory-taking constructors remain compatibility bridges.  Runtime-owner
+persister construction is therefore the only remaining deliberate
+construction-time dereference rather than an implicit reason for every
+model-construction consumer to see the factory.  The tenth slice audits that
+persister boundary.  Persisters still retain the concrete factory as their
+eventual runtime owner, but table-name formatting and filter alias/rendering
+now consume `SqlStringGenerationContext`, `JdbcServices`, the mapping model,
+`Dialect`, and `TypeConfiguration` directly.  The eleventh slice splits named
+query resolution: HQL/native definitions resolve without a factory, while
+stored-procedure definitions retain their genuinely factory-aware contract.
+Persisters resolve and retain selection-only custom loader mementos through
+the restricted `NamedLoaderQueryResolver` exposed by
+`RuntimeModelCreationContext`; `NamedObjectRepository` implements that view,
+but mutation and procedure registrations are excluded from it.  Their only
+remaining construction-time factory dereference assigns the concrete factory
+as their eventual runtime owner.
+
+The final Stage 4 slice moves boot-model column ordering and validation into
+`SessionFactoryConstructionState`, before either the default or a custom
+`SessionFactoryProducer` receives the construction request.  It also prepares
+the complete set of `DomainDataRegionConfig` values in
+`SessionFactoryRuntimeComponentsBuilder`.  `SessionFactoryImpl` retains only
+the genuinely factory-owned cache activation sequence: build the
+`CacheImplementor`, prime it from those prepared configurations, and then
+construct persisters which consume the resulting cache access strategies.
+Runtime-model completion remains deliberately inside factory construction:
+persisters retain the concrete factory as their runtime owner and complete
+their loaders against the in-flight query and SQL infrastructure.
 
 The first Stage 1 slice established function precedence in
 `FunctionRegistryCoordinator`: dialect baseline, then all contributors by

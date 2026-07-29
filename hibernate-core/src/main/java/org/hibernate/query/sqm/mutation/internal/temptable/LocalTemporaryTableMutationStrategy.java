@@ -51,7 +51,7 @@ public class LocalTemporaryTableMutationStrategy extends LocalTemporaryTableStra
 						runtimeModelCreationContext.getDialect(),
 						runtimeModelCreationContext
 				),
-				runtimeModelCreationContext.getSessionFactory()
+				temporaryTableStrategy
 		);
 	}
 
@@ -59,6 +59,12 @@ public class LocalTemporaryTableMutationStrategy extends LocalTemporaryTableStra
 			TemporaryTable idTable,
 			SessionFactoryImplementor sessionFactory) {
 		super( idTable, sessionFactory );
+	}
+
+	public LocalTemporaryTableMutationStrategy(
+			TemporaryTable idTable,
+			TemporaryTableStrategy temporaryTableStrategy) {
+		super( idTable, temporaryTableStrategy );
 	}
 
 	@Override

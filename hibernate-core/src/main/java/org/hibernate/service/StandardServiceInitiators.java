@@ -35,7 +35,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInit
 import org.hibernate.query.sqm.mutation.internal.SqmMultiTableMutationStrategyProviderInitiator;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
-import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.service.internal.ChangesetCoordinatorInitiator;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyInitiator;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderInitiator;
@@ -128,9 +127,6 @@ public final class StandardServiceInitiators {
 
 		// JtaPlatform
 		serviceInitiators.add( JtaPlatformInitiator.INSTANCE );
-
-		// SessionFactoryServiceRegistryFactory
-		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );
 
 		// RegionFactory
 		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );

@@ -20,19 +20,19 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.Service;
 
 /**
- * An SPI supported by any Hibernate {@linkplain Service service} that provides an
- * implementation of the {@link Cache} API. Extends {@code Cache} with operations
- * called internally by Hibernate.
+ * The factory-owned implementation of the {@link Cache} API. Extends
+ * {@code Cache} with operations called internally by Hibernate.
+ * <p>
+ * A custom implementation may be provided via a {@link CacheFactory}.
  *
  * @since 4.1
  *
  * @author Strong Liu
  * @author Steve Ebersole
  */
-public interface CacheImplementor extends Service, Cache, Serializable {
+public interface CacheImplementor extends Cache, Serializable {
 	@Override
 	@Nonnull
 	SessionFactoryImplementor getSessionFactory();

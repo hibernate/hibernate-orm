@@ -10,6 +10,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -31,5 +32,22 @@ public class ServiceRegistryClosingCascadeTest {
 
 		}
 		assertThat( ((BootstrapServiceRegistryImpl) bsr).isActive() ).isFalse();
+	}
+
+	@Test
+	public void testSharedRegistryClosesAfterLastSessionFactory() {
+		final BootstrapServiceRegistry bootstrapRegistry = new BootstrapServiceRegistryBuilder().build();
+		final StandardServiceRegistry standardRegistry =
+				ServiceRegistryUtil.serviceRegistryBuilder( bootstrapRegistry ).build();
+		final SessionFactory first = new Configuration().buildSessionFactory( standardRegistry );
+		final SessionFactory second = new Configuration().buildSessionFactory( standardRegistry );
+
+		first.close();
+		assertThat( ((ServiceRegistryImplementor) standardRegistry).isActive() ).isTrue();
+		assertThat( ((BootstrapServiceRegistryImpl) bootstrapRegistry).isActive() ).isTrue();
+
+		second.close();
+		assertThat( ((ServiceRegistryImplementor) standardRegistry).isActive() ).isFalse();
+		assertThat( ((BootstrapServiceRegistryImpl) bootstrapRegistry).isActive() ).isFalse();
 	}
 }

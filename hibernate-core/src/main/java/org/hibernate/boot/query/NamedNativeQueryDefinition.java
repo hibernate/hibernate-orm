@@ -7,7 +7,6 @@ package org.hibernate.boot.query;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 
 import java.util.Set;
@@ -33,7 +32,6 @@ public interface NamedNativeQueryDefinition<E> extends NamedQueryDefinition<E> {
 	Set<String> getQuerySpaces();
 
 	@Nonnull
-	@Override
-	NamedNativeQueryMemento<E> resolve(@Nonnull SessionFactoryImplementor factory);
+	NamedNativeQueryMemento<E> resolve();
 
 }

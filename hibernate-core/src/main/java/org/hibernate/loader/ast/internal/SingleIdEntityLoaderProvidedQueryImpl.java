@@ -9,7 +9,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import jakarta.persistence.QueryFlushMode;
-import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 
 import jakarta.persistence.Parameter;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -25,11 +25,11 @@ import static org.hibernate.query.ResultListTransformer.uniqueResultTransformer;
  */
 public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
-	private final NamedQueryMemento<T> namedQueryMemento;
+	private final NamedSelectionMemento<T> namedQueryMemento;
 
 	public SingleIdEntityLoaderProvidedQueryImpl(
 			EntityMappingType entityDescriptor,
-			NamedQueryMemento<T> namedQueryMemento) {
+			NamedSelectionMemento<T> namedQueryMemento) {
 		this.entityDescriptor = entityDescriptor;
 		this.namedQueryMemento = namedQueryMemento;
 	}

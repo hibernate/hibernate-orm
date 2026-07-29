@@ -504,7 +504,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		}
 
 		return ( (PropertyBasedMapping) modelPart )
-				.getPropertyAccess().getGetter().get( targetObject );
+				.getPropertyAccess().getPropertyValueAccessor().get( targetObject );
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
@@ -32,11 +32,11 @@ public class UnsavedValueFactory {
 	public static IdentifierValue getUnsavedIdentifierValue(
 			KeyValue bootIdMapping,
 			JavaType<?> idJavaType,
-			Getter getter,
+			PropertyValueAccessor valueAccessor,
 			Supplier<?> templateInstanceAccess) {
 		final var nullValueSemantic = bootIdMapping.getNullValueSemantic();
 		return nullValueSemantic == null
-				? inferUnsavedIdentifierValue( idJavaType, getter, templateInstanceAccess )
+				? inferUnsavedIdentifierValue( idJavaType, valueAccessor, templateInstanceAccess )
 				: switch ( nullValueSemantic ) {
 					case UNDEFINED -> IdentifierValue.UNDEFINED;
 					case NULL -> IdentifierValue.NULL;
@@ -48,10 +48,10 @@ public class UnsavedValueFactory {
 	}
 
 	private static IdentifierValue inferUnsavedIdentifierValue(
-			JavaType<?> idJavaType, Getter getter, Supplier<?> templateInstanceAccess) {
-		if ( getter != null && templateInstanceAccess != null ) {
+			JavaType<?> idJavaType, PropertyValueAccessor valueAccessor, Supplier<?> templateInstanceAccess) {
+		if ( valueAccessor != null && templateInstanceAccess != null ) {
 			// use the id value of a newly instantiated instance as the unsaved-value
-			final Object defaultValue = getter.get( templateInstanceAccess.get() );
+			final Object defaultValue = valueAccessor.get( templateInstanceAccess.get() );
 			return new IdentifierValue( defaultValue );
 		}
 		else if ( idJavaType instanceof PrimitiveJavaType<?> primitiveJavaType ) {
@@ -72,11 +72,11 @@ public class UnsavedValueFactory {
 	public static <T> VersionValue getUnsavedVersionValue(
 			KeyValue bootVersionMapping,
 			VersionJavaType<T> versionJavaType,
-			Getter getter,
+			PropertyValueAccessor valueAccessor,
 			Supplier<?> templateInstanceAccess) {
 		final var nullValueSemantic = bootVersionMapping.getNullValueSemantic();
 		return nullValueSemantic == null
-				? inferUnsavedVersionValue( getter, templateInstanceAccess )
+				? inferUnsavedVersionValue( valueAccessor, templateInstanceAccess )
 				: switch ( nullValueSemantic ) {
 					case UNDEFINED -> VersionValue.UNDEFINED;
 					case NULL -> VersionValue.NULL;
@@ -87,9 +87,9 @@ public class UnsavedValueFactory {
 				};
 	}
 
-	private static VersionValue inferUnsavedVersionValue(Getter getter, Supplier<?> templateInstanceAccess) {
-		if ( getter != null && templateInstanceAccess != null ) {
-			final Object defaultValue = getter.get( templateInstanceAccess.get() );
+	private static VersionValue inferUnsavedVersionValue(PropertyValueAccessor valueAccessor, Supplier<?> templateInstanceAccess) {
+		if ( valueAccessor != null && templateInstanceAccess != null ) {
+			final Object defaultValue = valueAccessor.get( templateInstanceAccess.get() );
 			// if the version of a newly instantiated object is null
 			// or a negative number, use that value as the unsaved-value,
 			// otherwise assume it's the initial version set by program

@@ -4,6 +4,8 @@
  */
 package org.hibernate.property.access.spi;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Map;
 
 import jakarta.annotation.Nullable;
@@ -12,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.models.accessor.HibernateAccessorValueReader;
 import org.hibernate.models.accessor.HibernateAccessorValueWriter;
 import org.hibernate.property.access.internal.AccessStrategyHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -29,6 +30,23 @@ import org.hibernate.usertype.CompositeUserType;
  * from hibernate-accessor — ORM never implements those interfaces.
  */
 public final class PropertyValueAccessor {
+
+	/**
+	 * A placeholder for a property value, indicating that
+	 * we don't know the value of the back reference
+	 */
+	public static final Serializable UNKNOWN = new Serializable() {
+		@Override
+		public String toString() {
+			return "<unknown>";
+		}
+
+		@Serial
+		public Object readResolve() {
+			return UNKNOWN;
+		}
+	};
+	private static final int ENHANCEMENT_STATE_NONE = 0;
 
 	private enum Kind {
 		STANDARD,
@@ -89,8 +107,28 @@ public final class PropertyValueAccessor {
 		this.chain = chain;
 	}
 
-	// TODO: have a dedicated enhanced factory instead of standard + enhancementState
 	public static PropertyValueAccessor standard(
+			HibernateAccessorValueReader<?> reader,
+			@Nullable HibernateAccessorValueWriter writer,
+			String propertyName) {
+		return new PropertyValueAccessor(
+				Kind.STANDARD, reader, writer, ENHANCEMENT_STATE_NONE, propertyName,
+				null, null, -1, null, null, null
+		);
+	}
+
+	public static PropertyValueAccessor standard(
+			HibernateAccessorValueReader<?> reader,
+			@Nullable HibernateAccessorValueWriter writer,
+			int enhancementState,
+			String propertyName) {
+		return new PropertyValueAccessor(
+				Kind.STANDARD, reader, writer, enhancementState, propertyName,
+				null, null, -1, null, null, null
+		);
+	}
+
+	public static PropertyValueAccessor enhanced(
 			HibernateAccessorValueReader<?> reader,
 			@Nullable HibernateAccessorValueWriter writer,
 			int enhancementState,
@@ -103,13 +141,13 @@ public final class PropertyValueAccessor {
 
 	public static PropertyValueAccessor map(String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.MAP, null, null, 0, null,
+				Kind.MAP, null, null, ENHANCEMENT_STATE_NONE, null,
 				propertyName, null, -1, null, null, null
 		);
 	}
 
 	private static final PropertyValueAccessor EMBEDDED_INSTANCE = new PropertyValueAccessor(
-			Kind.EMBEDDED, null, null, 0, null,
+			Kind.EMBEDDED, null, null, ENHANCEMENT_STATE_NONE, null,
 			null, null, -1, null, null, null
 	);
 
@@ -118,7 +156,7 @@ public final class PropertyValueAccessor {
 	}
 
 	private static final PropertyValueAccessor NOOP_INSTANCE = new PropertyValueAccessor(
-			Kind.NOOP, null, null, 0, null,
+			Kind.NOOP, null, null, ENHANCEMENT_STATE_NONE, null,
 			null, null, -1, null, null, null
 	);
 
@@ -130,28 +168,28 @@ public final class PropertyValueAccessor {
 			CompositeUserType<?> compositeUserType,
 			int propertyIndex) {
 		return new PropertyValueAccessor(
-				Kind.COMPOSITE_USER_TYPE, null, null, 0, null,
+				Kind.COMPOSITE_USER_TYPE, null, null, ENHANCEMENT_STATE_NONE, null,
 				null, compositeUserType, propertyIndex, null, null, null
 		);
 	}
 
 	public static PropertyValueAccessor backRef(String entityName, String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.BACK_REF, null, null, 0, null,
+				Kind.BACK_REF, null, null, ENHANCEMENT_STATE_NONE, null,
 				null, null, -1, entityName, propertyName, null
 		);
 	}
 
 	public static PropertyValueAccessor indexBackRef(String entityName, String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.INDEX_BACK_REF, null, null, 0, null,
+				Kind.INDEX_BACK_REF, null, null, ENHANCEMENT_STATE_NONE, null,
 				null, null, -1, entityName, propertyName, null
 		);
 	}
 
 	public static PropertyValueAccessor chained(PropertyValueAccessor[] chain) {
 		return new PropertyValueAccessor(
-				Kind.CHAINED, null, null, 0, null,
+				Kind.CHAINED, null, null, ENHANCEMENT_STATE_NONE, null,
 				null, null, -1, null, null, chain
 		);
 	}
@@ -165,7 +203,7 @@ public final class PropertyValueAccessor {
 		final HibernateAccessorValueReader<?> reader = getter::get;
 		final HibernateAccessorValueWriter writer = setter != null ? setter::set : (t, v) -> {};
 		return new PropertyValueAccessor(
-				Kind.STANDARD, reader, writer, 0, null,
+				Kind.STANDARD, reader, writer, ENHANCEMENT_STATE_NONE, null,
 				null, null, -1, null, null, null
 		);
 	}
@@ -178,7 +216,7 @@ public final class PropertyValueAccessor {
 			case EMBEDDED -> owner;
 			case NOOP -> null;
 			case COMPOSITE_USER_TYPE -> ( (CompositeUserType<Object>) compositeUserType ).getPropertyValue( owner, compositePropertyIndex );
-			case BACK_REF, INDEX_BACK_REF -> PropertyAccessStrategyBackRefImpl.UNKNOWN;
+			case BACK_REF, INDEX_BACK_REF -> UNKNOWN;
 			case CHAINED -> {
 				Object result = owner;
 				for ( PropertyValueAccessor accessor : chain ) {
@@ -194,7 +232,7 @@ public final class PropertyValueAccessor {
 		switch ( kind ) {
 			case STANDARD -> {
 				writer.set( target, value );
-				if ( enhancementState != 0 ) {
+				if ( enhancementState != ENHANCEMENT_STATE_NONE ) {
 					AccessStrategyHelper.handleEnhancedInjection( target, value, enhancementState, propertyName );
 				}
 			}

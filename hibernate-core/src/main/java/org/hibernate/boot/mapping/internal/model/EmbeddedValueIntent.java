@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.mapping.internal.model;
 
+import jakarta.annotation.Nullable;
+
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.models.spi.TypeDetails;
@@ -19,7 +22,12 @@ import org.hibernate.models.spi.TypeDetails;
 public record EmbeddedValueIntent(
 		TypeDetails memberType,
 		String path,
-		String fullPath) implements ValueIntent {
+		String fullPath,
+		@Nullable EmbeddedValueMetadata valueMetadata) implements ValueIntent {
+	public EmbeddedValueIntent(TypeDetails memberType, String path, String fullPath) {
+		this( memberType, path, fullPath, null );
+	}
+
 	@Override
 	public AttributeNature nature() {
 		return AttributeNature.EMBEDDED;
@@ -39,5 +47,28 @@ public record EmbeddedValueIntent(
 				attributeName,
 				sourceRole
 		);
+	}
+
+	public static EmbeddedValueIntent fromAttribute(
+			EmbeddedValueMetadata valueMetadata,
+			String attributeName,
+			String sourceRole) {
+		return new EmbeddedValueIntent(
+				valueMetadata.getType(),
+				attributeName,
+				sourceRole,
+				valueMetadata
+		);
+	}
+
+	public static EmbeddedValueIntent fromAttribute(
+			@Nullable EmbeddedValueMetadata valueMetadata,
+			TypeDetails memberType,
+			String attributeName,
+			String sourceRole) {
+		if ( valueMetadata == null ) {
+			return fromAttribute( memberType, attributeName, sourceRole );
+		}
+		return new EmbeddedValueIntent( memberType, attributeName, sourceRole, valueMetadata );
 	}
 }

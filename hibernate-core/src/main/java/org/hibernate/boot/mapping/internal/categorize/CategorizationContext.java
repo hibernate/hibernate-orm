@@ -5,12 +5,15 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.SharedCacheMode;
 
@@ -41,6 +44,15 @@ public interface CategorizationContext {
 	EffectiveMappingDefaults getEffectiveMappingDefaults();
 
 	ClassDetailsRegistry getClassDetailsRegistry();
+
+	ModelsContext getModelsContext();
+
+	Map<String, EmbeddableTypeMetadata> getEmbeddableTypes();
+
+	default EmbeddableTypeMetadata findEmbeddableType(ClassDetails classDetails) {
+		final String className = classDetails.getClassName();
+		return getEmbeddableTypes().get( className == null ? classDetails.getName() : className );
+	}
 
 	SharedCacheMode getSharedCacheMode();
 

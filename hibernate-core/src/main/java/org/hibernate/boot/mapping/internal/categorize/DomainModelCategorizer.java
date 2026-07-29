@@ -7,10 +7,13 @@ package org.hibernate.boot.mapping.internal.categorize;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.boot.mapping.internal.xml.XmlProcessor;
@@ -24,6 +27,8 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Transient;
 
 import static org.hibernate.boot.mapping.internal.categorize.EntityHierarchyBuilder.createEntityHierarchies;
@@ -82,7 +87,7 @@ public class DomainModelCategorizer {
 		//	- apply overlay XML
 		//
 		// INPUTS:
-		//		- "options" (areIdGeneratorsGlobal, etc)
+		//		- options
 		//		- xmlPreProcessingResult
 		//		- sourceModelBuildingContext
 		//
@@ -91,14 +96,15 @@ public class DomainModelCategorizer {
 		//		- mappedSuperClasses
 		//  	- embeddables
 
-		// JPA id generator global-ity thing
-		final boolean areIdGeneratorsGlobal = true;
 		final ModelsContext modelsContext = metadataBuildingContext.getModelsContext();
 		final ClassDetailsRegistry mutableClassDetailsRegistry = modelsContext.getClassDetailsRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				areIdGeneratorsGlobal,
 				modelsContext,
-				metadataBuildingContext.getMetadataCollector().getDatabase().getDialect()
+				metadataBuildingContext.getMetadataCollector().getDatabase().getDialect(),
+				(strategy) -> org.hibernate.boot.model.internal.GeneratorStrategies.resolveGeneratorClass(
+						strategy,
+						metadataBuildingContext
+				)
 		);
 
 		final RootMappingDefaults mappingDefaults = rootMappingDefaults( metadataBuildingContext );
@@ -135,18 +141,6 @@ public class DomainModelCategorizer {
 		// OUTPUTS:
 		//		- CategorizedDomainModel
 
-		// Collect the entity hierarchies based on the scoped managed type inheritance state
-		final CategorizationContextImpl mappingBuildingContext = new CategorizationContextImpl(
-				persistenceUnitMetadata,
-				mappingDefaults,
-				mutableClassDetailsRegistry,
-				metadataBuildingContext.getBuildingPlan().getSharedCacheMode(),
-				metadataBuildingContext.getBuildingPlan().getImplicitCacheAccessType(),
-				modelCategorizationCollector.getGlobalRegistrations(),
-				metadataBuildingContext.getMetadataCollector().getConverterRegistry(),
-				metadataBuildingContext.getMetadataCollector().getDatabase()
-		);
-
 		final ManagedTypeInheritanceState inheritanceState = new ManagedTypeInheritanceState(
 				modelCategorizationCollector.getSourcePersistentTypes(),
 				resolvedMappingSources.includeUnlistedStructuralTypes()
@@ -160,12 +154,40 @@ public class DomainModelCategorizer {
 				modelCategorizationCollector,
 				resolvedMappingSources.includeUnlistedStructuralTypes()
 		);
+		final Map<String, EmbeddableTypeMetadata> embeddableMetadata =
+				createEmbeddableMetadata( modelCategorizationCollector.getEmbeddables() );
+		// Collect the entity hierarchies based on the scoped managed type inheritance state
+		final CategorizationContextImpl mappingBuildingContext = new CategorizationContextImpl(
+				persistenceUnitMetadata,
+				mappingDefaults,
+				mutableClassDetailsRegistry,
+				modelsContext,
+				embeddableMetadata,
+				metadataBuildingContext.getBuildingPlan().getSharedCacheMode(),
+				metadataBuildingContext.getBuildingPlan().getImplicitCacheAccessType(),
+				modelCategorizationCollector.getGlobalRegistrations(),
+				metadataBuildingContext.getMetadataCollector().getConverterRegistry(),
+				metadataBuildingContext.getMetadataCollector().getDatabase()
+		);
+		metadataBuildingContext.getMetadataCollector()
+				.getIdentifierGeneratorRegistrations()
+				.values()
+				.forEach( modelCategorizationCollector.getGlobalRegistrations()::collectIdentifierGenerator );
 		final Set<EntityHierarchy> entityHierarchies = createEntityHierarchies(
 				inheritanceState,
 				mappingBuildingContext
 		);
 
-		return modelCategorizationCollector.createResult( entityHierarchies );
+		return modelCategorizationCollector.createResult( entityHierarchies, embeddableMetadata );
+	}
+
+	private static Map<String, EmbeddableTypeMetadata> createEmbeddableMetadata(
+			Map<String, ClassDetails> embeddableClasses) {
+		final Map<String, EmbeddableTypeMetadata> result = new LinkedHashMap<>( embeddableClasses.size() );
+		embeddableClasses.forEach(
+				(name, classDetails) -> result.put( name, new EmbeddableTypeMetadataImpl( classDetails ) )
+		);
+		return Map.copyOf( result );
 	}
 
 	private static void discoverReachableEmbeddables(
@@ -195,28 +217,52 @@ public class DomainModelCategorizer {
 			DomainModelCategorizationCollector modelCategorizationCollector,
 			boolean includeUnlistedStructuralTypes,
 			List<ClassDetails> typesToProcess) {
-		for ( MemberDetails member : persistentMembers( declaringType ) ) {
-			collectReachableEmbeddable(
+		for ( ClassDetails memberDeclaringType = declaringType;
+				memberDeclaringType != null && memberDeclaringType != ClassDetails.OBJECT_CLASS_DETAILS;
+				memberDeclaringType = memberDeclaringType.getSuperClass() ) {
+			discoverReachableEmbeddables(
 					declaringType,
-					member,
-					member.getType().determineRelativeType( declaringType ),
+					memberDeclaringType,
 					modelCategorizationCollector,
 					includeUnlistedStructuralTypes,
 					typesToProcess
 			);
+		}
+	}
+
+	private static void discoverReachableEmbeddables(
+			ClassDetails rootDeclaringType,
+			ClassDetails memberDeclaringType,
+			DomainModelCategorizationCollector modelCategorizationCollector,
+			boolean includeUnlistedStructuralTypes,
+			List<ClassDetails> typesToProcess) {
+		for ( MemberDetails member : persistentMembers( memberDeclaringType ) ) {
 			if ( member.isPlural() ) {
 				collectReachableEmbeddable(
-						declaringType,
+						rootDeclaringType,
 						member,
-						determineRelativeType( member.getElementType(), declaringType ),
+						determineRelativeType( member.getElementType(), rootDeclaringType ),
+						true,
 						modelCategorizationCollector,
 						includeUnlistedStructuralTypes,
 						typesToProcess
 				);
 				collectReachableEmbeddable(
-						declaringType,
+						rootDeclaringType,
 						member,
-						determineRelativeType( member.getMapKeyType(), declaringType ),
+						determineRelativeType( member.getMapKeyType(), rootDeclaringType ),
+						false,
+						modelCategorizationCollector,
+						includeUnlistedStructuralTypes,
+						typesToProcess
+				);
+			}
+			else {
+				collectReachableEmbeddable(
+						rootDeclaringType,
+						member,
+						member.getType().determineRelativeType( rootDeclaringType ),
+						true,
 						modelCategorizationCollector,
 						includeUnlistedStructuralTypes,
 						typesToProcess
@@ -248,15 +294,25 @@ public class DomainModelCategorizer {
 			ClassDetails declaringType,
 			MemberDetails member,
 			TypeDetails memberType,
+			boolean applyMemberEmbeddingAnnotations,
 			DomainModelCategorizationCollector modelCategorizationCollector,
 			boolean includeUnlistedStructuralTypes,
 			List<ClassDetails> typesToProcess) {
 		if ( memberType == null ) {
 			return;
 		}
-		final ClassDetails embeddableType = memberType.determineRawClass();
+		final TargetEmbeddable targetEmbeddable = applyMemberEmbeddingAnnotations
+				? member.getDirectAnnotationUsage( TargetEmbeddable.class )
+				: null;
+		final ClassDetails embeddableType = targetEmbeddable == null
+				? memberType.determineRawClass()
+				: modelCategorizationCollector.resolveClassDetails( targetEmbeddable.value().getName() );
+		final boolean explicitEmbedded = applyMemberEmbeddingAnnotations
+				&& ( member.hasDirectAnnotationUsage( Embedded.class )
+						|| member.hasDirectAnnotationUsage( EmbeddedId.class )
+						|| targetEmbeddable != null );
 		if ( embeddableType == null
-				|| !embeddableType.hasDirectAnnotationUsage( Embeddable.class )
+				|| ( !explicitEmbedded && !embeddableType.hasDirectAnnotationUsage( Embeddable.class ) )
 				|| modelCategorizationCollector.getEmbeddables().containsKey( embeddableType.getClassName() ) ) {
 			return;
 		}

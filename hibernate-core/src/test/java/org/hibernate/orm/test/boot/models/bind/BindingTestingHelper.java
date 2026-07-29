@@ -93,7 +93,8 @@ public class BindingTestingHelper {
 		);
 		final BindingStateImpl bindingState = new BindingStateImpl(
 				metadataBuildingContext,
-				new InFlightMetadataCollectorAdapter( metadataCollector )
+				new InFlightMetadataCollectorAdapter( metadataCollector ),
+				categorizedDomainModel.getGlobalRegistrations()
 		);
 		final BindingOptionsImpl bindingOptions = new BindingOptionsImpl( metadataBuildingContext );
 		final BindingContextImpl bindingContext = new BindingContextImpl(

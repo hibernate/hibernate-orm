@@ -123,7 +123,7 @@ public class TenantIdBinder {
 				declarationBinding,
 				managedTypeBinding,
 				attributeMetadata.getMember(),
-				attributeMetadata.getMember().resolveRelativeType( managedType.getClassDetails() ),
+				attributeMetadata.resolveAttributeType( managedType.getClassDetails() ),
 				managedType.getClassDetails().getName() + "." + attributeName,
 				attributeName,
 				attributeMetadata.getNature(),

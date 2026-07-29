@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.model;
 
+import java.util.Objects;
+
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -26,6 +28,10 @@ public record StandardAttributeUsageBinding(
 		String attributePath,
 		AttributeNature nature,
 		ValueIntent valueIntent) implements AttributeUsageBinding {
+	public StandardAttributeUsageBinding {
+		Objects.requireNonNull( valueIntent, "valueIntent" );
+	}
+
 	@Override
 	public String attributeName() {
 		return declaration.attributeName();

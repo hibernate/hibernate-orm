@@ -13,7 +13,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.internal.FilterDefBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -51,6 +51,7 @@ import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
+import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
@@ -110,6 +111,7 @@ public class BindingStateImpl implements BindingState {
 	private MetadataBuildingContext metadataBuildingContext;
 	private final MappingResolutionState mappingResolutionState;
 	private final MetadataCollector metadataCollector;
+	private final GlobalRegistrations globalRegistrations;
 	private final BootBindingModel bootBindingModel = new BootBindingModel();
 	private final RelationalModelCorrespondences relationalModelCorrespondences;
 
@@ -173,10 +175,14 @@ public class BindingStateImpl implements BindingState {
 	private final java.util.List<EntityIdentifierHandoff> entityIdentifierHandoffList =
 			new java.util.ArrayList<>();
 
-	public BindingStateImpl(MetadataBuildingContext metadataBuildingContext, MetadataCollector metadataCollector) {
+	public BindingStateImpl(
+			MetadataBuildingContext metadataBuildingContext,
+			MetadataCollector metadataCollector,
+			GlobalRegistrations globalRegistrations) {
 		this.metadataBuildingContext = metadataBuildingContext;
 		this.mappingResolutionState = MappingResolutionState.from( metadataBuildingContext );
 		this.metadataCollector = metadataCollector;
+		this.globalRegistrations = globalRegistrations;
 		this.database = metadataCollector.getDatabase();
 		this.relationalModelCorrespondences = new RelationalModelCorrespondences( database );
 		this.jdbcServices = metadataBuildingContext.getJdbcServices();
@@ -196,6 +202,11 @@ public class BindingStateImpl implements BindingState {
 	@Override
 	public MappingResolutionState getMappingResolutionState() {
 		return mappingResolutionState;
+	}
+
+	@Override
+	public GlobalRegistrations getGlobalRegistrations() {
+		return globalRegistrations;
 	}
 
 	@Override @Nonnull
@@ -307,8 +318,8 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addIdentifierGenerator(IdentifierGeneratorDefinition identifierGeneratorDefinition) {
-		metadataCollector.addIdentifierGenerator( identifierGeneratorDefinition );
+	public void addIdentifierGeneratorRegistration(IdentifierGeneratorRegistration identifierGeneratorDefinition) {
+		metadataCollector.addIdentifierGeneratorRegistration( identifierGeneratorDefinition );
 	}
 
 	@Override

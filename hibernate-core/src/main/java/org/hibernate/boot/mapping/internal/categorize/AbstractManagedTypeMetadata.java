@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import static org.hibernate.boot.mapping.internal.categorize.CategorizationHelper.determineAttributeNature;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /// Models metadata about a JPA {@linkplain jakarta.persistence.metamodel.ManagedType managed-type}.
@@ -106,11 +105,11 @@ public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata
 
 		for ( MemberDetails backingMember : backingMembers ) {
 			var memberType = backingMember.getType().determineRelativeType( classDetails );
-			var attributeNature = determineAttributeNature( backingMember, memberType );
-			final AttributeMetadata attribute = new AttributeMetadataImpl(
-					backingMember.resolveAttributeName(),
-					attributeNature,
-					backingMember
+			final AttributeMetadata attribute = AttributeMetadataResolver.resolve(
+					backingMember,
+					memberType,
+					getAccessType(),
+					modelContext
 			);
 			attributeList.add( attribute );
 		}

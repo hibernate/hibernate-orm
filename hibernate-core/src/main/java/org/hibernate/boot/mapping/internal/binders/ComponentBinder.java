@@ -255,7 +255,7 @@ public class ComponentBinder {
 				continue;
 			}
 
-			if ( isToOneMember( member ) ) {
+			if ( componentMember.toOneValueIntent() != null ) {
 				final Property property = createProperty( component, componentMember, appliedAttributes );
 				final ToOneValueIntent toOneValueIntent = componentMember.toOneValueIntent();
 				final Value value = source.kind() == ComponentSource.Kind.EMBEDDED_IDENTIFIER
@@ -337,7 +337,7 @@ public class ComponentBinder {
 				continue;
 			}
 
-			if ( isEmbeddedMember( member, componentMember.type() )
+			if ( componentMember.embeddedValueIntent() != null
 					|| isImplicitEmbeddedIdentifierMember( source, componentMember.type() ) ) {
 				validateNestedEmbeddedTablePlacement( member );
 				final EmbeddedValueIntent embeddedValueIntent = componentMember.embeddedValueIntent() != null
@@ -369,7 +369,13 @@ public class ComponentBinder {
 				final ComponentMemberTarget nestedMemberTarget =
 						ComponentMemberTarget.forSource( nestedSource, memberTarget.table() );
 				final EmbeddableContribution nestedContribution =
-						embeddableMappingMaterializer.createContribution( nestedSource, context );
+						embeddedValueIntent.valueMetadata() == null
+								? embeddableMappingMaterializer.createContribution( nestedSource, context )
+								: embeddableMappingMaterializer.createContribution(
+										nestedSource,
+										embeddedValueIntent.valueMetadata(),
+										context
+								);
 				EmbeddableAttributeBinder.bindDiscriminator(
 						nestedComponent,
 						nestedMemberTarget.table(),
@@ -553,7 +559,7 @@ public class ComponentBinder {
 			property.setReturnedClassName( declaredType.getName() );
 		}
 		else {
-			final TypeDetails resolvedType = member.resolveRelativeType( source.componentType() );
+			final TypeDetails resolvedType = componentMember.resolvedType();
 			property.setGeneric( false );
 			property.setGenericSpecialization( true );
 			property.setReturnedClassName( resolvedType.getName() );
@@ -840,10 +846,11 @@ public class ComponentBinder {
 		final AttributeMetadata attributeMetadata = new ComponentAttributeMetadata(
 				member.resolveAttributeName(),
 				componentMember.nature(),
-				member
+				member,
+				componentMember.resolvedType()
 		);
-		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class ) ) {
-			return new ElementCollectionAttributeBinder(
+		return switch ( componentMember.nature() ) {
+			case ELEMENT_COLLECTION -> new ElementCollectionAttributeBinder(
 					ownerType,
 					ownerBinding,
 					attributeMetadata,
@@ -855,9 +862,7 @@ public class ComponentBinder {
 					collectionValueIntent,
 					registerCollectionBindings
 			).bind( property );
-		}
-		if ( member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class ) ) {
-			return new PluralAssociationAttributeBinder(
+			case ONE_TO_MANY -> new PluralAssociationAttributeBinder(
 					ownerType,
 					ownerBinding,
 					attributeMetadata,
@@ -870,9 +875,7 @@ public class ComponentBinder {
 					collectionValueIntent,
 					registerCollectionBindings
 			).bindOneToMany( property );
-		}
-		if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class ) ) {
-			return new PluralAssociationAttributeBinder(
+			case MANY_TO_MANY -> new PluralAssociationAttributeBinder(
 					ownerType,
 					ownerBinding,
 					attributeMetadata,
@@ -885,9 +888,7 @@ public class ComponentBinder {
 					collectionValueIntent,
 					registerCollectionBindings
 			).bindManyToMany( property );
-		}
-		if ( member.hasDirectAnnotationUsage( org.hibernate.annotations.ManyToAny.class ) ) {
-			return new PluralAssociationAttributeBinder(
+			case MANY_TO_ANY -> new PluralAssociationAttributeBinder(
 					ownerType,
 					ownerBinding,
 					attributeMetadata,
@@ -900,8 +901,10 @@ public class ComponentBinder {
 					collectionValueIntent,
 					registerCollectionBindings
 			).bindManyToAny( property );
-		}
-		throw new UnsupportedOperationException( "Unsupported plural embeddable member - " + member.getName() );
+			default -> throw new UnsupportedOperationException(
+					"Unsupported plural embeddable member - " + member.getName()
+			);
+		};
 	}
 
 	private boolean isPluralMember(ComponentSource source, ComponentMemberBinding componentMember) {
@@ -912,16 +915,8 @@ public class ComponentBinder {
 					|| AggregateMappingIntent.hasExplicitPluralBasicJdbcType( member ) ) ) {
 			return false;
 		}
-		return member.isPlural()
-				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToMany.class )
-				|| member.hasDirectAnnotationUsage( jakarta.persistence.ManyToMany.class )
-				|| member.hasDirectAnnotationUsage( jakarta.persistence.ElementCollection.class )
-				|| member.hasDirectAnnotationUsage( org.hibernate.annotations.ManyToAny.class );
-	}
-
-	private boolean isEmbeddedMember(MemberDetails member, TypeDetails memberType) {
-		return member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
-				|| memberType.determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class );
+		return componentMember.collectionValueIntent() != null
+			|| componentMember.nature() == AttributeNature.BASIC && member.isPlural();
 	}
 
 	private static void validateNestedEmbeddableRecursion(
@@ -1051,7 +1046,8 @@ public class ComponentBinder {
 	private record ComponentAttributeMetadata(
 			String name,
 			AttributeNature nature,
-			MemberDetails member) implements AttributeMetadata {
+			MemberDetails member,
+			TypeDetails attributeType) implements AttributeMetadata {
 		@Override
 		public String getName() {
 			return name;
@@ -1065,6 +1061,11 @@ public class ComponentBinder {
 		@Override
 		public MemberDetails getMember() {
 			return member;
+		}
+
+		@Override
+		public TypeDetails getAttributeType() {
+			return attributeType;
 		}
 	}
 

@@ -5,12 +5,14 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.SharedCacheMode;
 
@@ -22,6 +24,8 @@ public record CategorizationContextImpl(
 		PersistenceUnitMetadata persistenceUnitMetadata,
 		EffectiveMappingDefaults effectiveMappingDefaults,
 		ClassDetailsRegistry classDetailsRegistry,
+		ModelsContext modelsContext,
+		Map<String, EmbeddableTypeMetadata> embeddableTypes,
 		SharedCacheMode sharedCacheMode,
 		org.hibernate.cache.spi.access.AccessType implicitCacheAccessType,
 		GlobalRegistrations globalRegistrations,
@@ -45,6 +49,16 @@ public record CategorizationContextImpl(
 	@Override
 	public ClassDetailsRegistry getClassDetailsRegistry() {
 		return classDetailsRegistry;
+	}
+
+	@Override
+	public ModelsContext getModelsContext() {
+		return modelsContext;
+	}
+
+	@Override
+	public Map<String, EmbeddableTypeMetadata> getEmbeddableTypes() {
+		return embeddableTypes;
 	}
 
 	@Override

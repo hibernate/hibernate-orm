@@ -5,6 +5,10 @@
 package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadata;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -93,6 +97,13 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 		this.collation = collation;
 	}
 
+	/// Creates a member binding for a synthetic component model which has no
+	/// categorized [AttributeMetadata].
+	///
+	/// This path is intentionally limited to extension-provided structures such
+	/// as a `CompositeUserType` embeddable representation. Ordinary embeddable
+	/// declarations and polymorphic subtype members use the overload accepting
+	/// categorized attribute metadata.
 	public static ComponentMemberBinding from(
 			ComponentSource source,
 			ComponentSource.ComponentMember member,
@@ -111,6 +122,30 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 				new ComponentAttributeUsageContainer( source.componentType(), member.fullPath() ),
 				nature,
 				valueIntent( source, member, bindingState, bindingContext, nature ),
+				source.associationOverride( path ),
+				collation( member.member() )
+		);
+	}
+
+	public static ComponentMemberBinding from(
+			ComponentSource source,
+			ComponentSource.ComponentMember member,
+			AttributeMetadata attributeMetadata,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final String path = member.path();
+		final AttributeNature nature = attributeMetadata.getNature();
+		return new ComponentMemberBinding(
+				member.member(),
+				member.type(),
+				path,
+				member.namingPath(),
+				member.fullPath(),
+				member.declaringType(),
+				resolveDeclaration( nature, member, bindingState ),
+				new ComponentAttributeUsageContainer( source.componentType(), member.fullPath() ),
+				nature,
+				valueIntent( source, member, attributeMetadata, bindingState, bindingContext ),
 				source.associationOverride( path ),
 				collation( member.member() )
 		);
@@ -265,8 +300,46 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 					bindingState,
 					bindingContext
 			);
-			default -> null;
 		};
+	}
+
+	private static ValueIntent valueIntent(
+			ComponentSource source,
+			ComponentSource.ComponentMember member,
+			AttributeMetadata attributeMetadata,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( attributeMetadata instanceof SingularAttributeMetadata singular ) {
+			final var valueMetadata = singular.getValue();
+			return switch ( valueMetadata.getNature() ) {
+				case BASIC -> BasicValueIntent.fromComponentMember( source, member, bindingState, bindingContext );
+				case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
+						valueMetadata instanceof EmbeddedValueMetadata embedded ? embedded : null,
+						member.type(),
+						member.path(),
+						member.fullPath()
+				);
+				case TO_ONE -> new ToOneValueIntent(
+						member.type(),
+						member.path(),
+						member.fullPath(),
+						source.associationOverride( member.path() )
+				);
+				case ANY -> new AnyValueIntent(
+						AnySource.create( member.member(), bindingContext, bindingState )
+				);
+			};
+		}
+
+		final PluralAttributeMetadata plural = (PluralAttributeMetadata) attributeMetadata;
+		return CollectionValueIntent.fromAttribute(
+				collectionSource( source, member, attributeMetadata.getNature(), bindingContext ),
+				plural,
+				member.fullPath(),
+				member.path(),
+				bindingState,
+				bindingContext
+		);
 	}
 
 	private static CollectionSource collectionSource(

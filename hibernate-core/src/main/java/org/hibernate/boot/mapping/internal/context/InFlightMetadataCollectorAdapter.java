@@ -6,7 +6,7 @@ package org.hibernate.boot.mapping.internal.context;
 
 import java.util.Map;
 
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
@@ -135,8 +135,8 @@ public class InFlightMetadataCollectorAdapter implements MetadataCollector {
 	}
 
 	@Override
-	public void addIdentifierGenerator(IdentifierGeneratorDefinition identifierGeneratorDefinition) {
-		metadataCollector.addIdentifierGenerator( identifierGeneratorDefinition );
+	public void addIdentifierGeneratorRegistration(IdentifierGeneratorRegistration identifierGeneratorDefinition) {
+		metadataCollector.addIdentifierGeneratorRegistration( identifierGeneratorDefinition );
 	}
 
 	@Override

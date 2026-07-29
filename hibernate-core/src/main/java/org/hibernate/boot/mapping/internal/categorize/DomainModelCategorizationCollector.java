@@ -9,7 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
+import org.hibernate.generator.Generator;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
@@ -34,20 +36,24 @@ import jakarta.persistence.MappedSuperclass;
 /// @since 9.0
 /// @author Steve Ebersole
 public class DomainModelCategorizationCollector {
-	private final boolean areIdGeneratorsGlobal;
 	private final Map<String,ClassDetails> sourceClasses = new LinkedHashMap<>();
 	private final Set<ClassDetails> sourcePersistentTypes = new LinkedHashSet<>();
 	private final Set<ClassDetails> rootEntities = new LinkedHashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
+	private final ModelsContext modelsContext;
 	private final GlobalRegistrationsImpl globalRegistrations;
 
 	public DomainModelCategorizationCollector(
-			boolean areIdGeneratorsGlobal,
 			ModelsContext modelsContext,
-			Dialect dialect) {
-		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
-		this.globalRegistrations = new GlobalRegistrationsImpl( modelsContext, dialect );
+			Dialect dialect,
+			Function<String, Class<? extends Generator>> generatorClassResolver) {
+		this.modelsContext = modelsContext;
+		this.globalRegistrations = new GlobalRegistrationsImpl( modelsContext, dialect, generatorClassResolver );
+	}
+
+	ClassDetails resolveClassDetails(String name) {
+		return modelsContext.getClassDetailsRegistry().resolveClassDetails( name );
 	}
 
 	public Set<ClassDetails> getRootEntities() {
@@ -126,9 +132,7 @@ public class DomainModelCategorizationCollector {
 		sourceClasses.putIfAbsent( classDetails.getName(), classDetails );
 		collectGlobalRegistrations( classDetails );
 
-		if ( areIdGeneratorsGlobal ) {
-			getGlobalRegistrations().collectIdGenerators( classDetails );
-		}
+		getGlobalRegistrations().collectIdGenerators( classDetails );
 
 		validateManagedTypeCategory( classDetails );
 		if ( classDetails.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
@@ -206,12 +210,14 @@ public class DomainModelCategorizationCollector {
 	/// on {@linkplain #getRootEntities()}
 	///
 	/// @see org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer#categorize
-	public CategorizedDomainModel createResult(Set<EntityHierarchy> entityHierarchies) {
+	public CategorizedDomainModel createResult(
+			Set<EntityHierarchy> entityHierarchies,
+			Map<String, EmbeddableTypeMetadata> embeddableMetadata) {
 		return new CategorizedDomainModelImpl(
 				entityHierarchies,
 				sourceClasses,
 				mappedSuperclasses,
-				embeddables,
+				embeddableMetadata,
 				getGlobalRegistrations()
 		);
 	}

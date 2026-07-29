@@ -8,6 +8,7 @@ import org.hibernate.boot.mapping.internal.model.TenantIdBinding;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.BasicType;
 
 /// Stable read view over a finalized tenant-id binding.
@@ -29,6 +30,10 @@ public record TenantIdBindingView(TenantIdBinding binding) {
 
 	public MemberDetails member() {
 		return binding.member();
+	}
+
+	public TypeDetails resolvedType() {
+		return binding.resolvedType();
 	}
 
 	public BasicValueIntent valueIntent() {

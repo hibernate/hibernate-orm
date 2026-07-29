@@ -73,7 +73,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.JpaEventListenerStyle;
+import org.hibernate.boot.mapping.internal.categorize.JpaEventListener;
+import org.hibernate.boot.mapping.internal.categorize.JpaEventListenerStyle;
 import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
@@ -142,7 +143,6 @@ import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
-import org.hibernate.boot.models.spi.LifecycleEventHandler;
 import org.hibernate.boot.mapping.internal.xml.attr.CommonAttributeProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.ForeignKeyProcessing;
 import org.hibernate.boot.mapping.internal.xml.db.JoinColumnProcessing;
@@ -1560,7 +1560,7 @@ public class XmlAnnotationHelper {
 			ClassDetails classDetails) {
 		for ( MethodDetails method : classDetails.getMethods() ) {
 			if ( method.getName().equals( name )
-				&& LifecycleEventHandler.matchesSignature( callbackType, method ) ) {
+				&& JpaEventListener.matchesSignature( callbackType, method ) ) {
 				return (MutableMemberDetails) method;
 			}
 		}

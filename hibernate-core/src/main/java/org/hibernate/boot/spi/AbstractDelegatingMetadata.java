@@ -5,7 +5,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
@@ -181,8 +181,13 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
-	public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
-		return delegate.getIdentifierGenerator( name );
+	public IdentifierGeneratorRegistration getIdentifierGeneratorRegistration(String name) {
+		return delegate.getIdentifierGeneratorRegistration( name );
+	}
+
+	@Override
+	public Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations() {
+		return delegate.getIdentifierGeneratorRegistrations();
 	}
 
 	@Override

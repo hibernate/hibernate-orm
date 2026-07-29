@@ -195,10 +195,6 @@ public class BinderHelper {
 		return cascade.isEmpty() ? "none" : cascade.substring(1);
 	}
 
-	static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
-		return context.getJpaCompliance().isGlobalGeneratorScopeEnabled();
-	}
-
 	public static boolean isDefault(ClassDetails clazz) {
 		return clazz == ClassDetails.VOID_CLASS_DETAILS;
 	}

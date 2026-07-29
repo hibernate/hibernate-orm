@@ -77,8 +77,9 @@ public record EmbeddableDiscriminatorSource(
 			BindingContext bindingContext) {
 		final Map<String, ClassDetails> subtypes = new LinkedHashMap<>();
 		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
-			if ( isSubtypeOf( embeddableType, componentSource.componentType() ) ) {
-				subtypes.put( className( embeddableType ), embeddableType );
+			final ClassDetails embeddableClass = embeddableType.getClassDetails();
+			if ( isSubtypeOf( embeddableClass, componentSource.componentType() ) ) {
+				subtypes.put( className( embeddableClass ), embeddableClass );
 			}
 		} );
 		return new ArrayList<>( subtypes.values() );

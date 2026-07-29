@@ -30,6 +30,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final OptimisticLockStyle optimisticLockStyle;
 
 	private final KeyMapping idMapping;
+	private final IdentifierGeneratorResolution identifierGeneratorResolution;
 	private final KeyMapping naturalIdMapping;
 	private final AttributeMetadata versionAttribute;
 	private final AttributeMetadata tenantIdAttribute;
@@ -81,6 +82,11 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		this.optimisticLockStyle = determineOptimisticLockStyle( metadataCollector );
 
 		this.idMapping = metadataCollector.getIdMapping();
+		this.identifierGeneratorResolution = IdentifierGeneratorResolutionResolver.resolve(
+				this,
+				idMapping,
+				modelBuildingContext
+		);
 		this.naturalIdMapping = metadataCollector.getNaturalIdMapping();
 		this.versionAttribute = metadataCollector.getVersionAttribute();
 		this.tenantIdAttribute = metadataCollector.getTenantIdAttribute();
@@ -141,6 +147,11 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	@Override @Nonnull
 	public KeyMapping getIdMapping() {
 		return idMapping;
+	}
+
+	@Override @Nonnull
+	public IdentifierGeneratorResolution getIdentifierGeneratorResolution() {
+		return identifierGeneratorResolution;
 	}
 
 	@Override

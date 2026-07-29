@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataImpl;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
@@ -79,7 +79,7 @@ public final class MetadataState implements Serializable {
 	private final Map<String, FilterDefinitionRestorationRecipe> filterDefinitionRecipes;
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
-	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
+	private final Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap;
 	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap;
 	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
@@ -115,7 +115,7 @@ public final class MetadataState implements Serializable {
 		);
 		fetchProfileMap = metadata.getFetchProfileMap();
 		imports = metadata.getImports();
-		idGeneratorDefinitionMap = metadata.getIdGeneratorDefinitionMap();
+		identifierGeneratorRegistrationMap = metadata.getIdentifierGeneratorRegistrations();
 		namedQueryMap = metadata.getNamedQueryMap();
 		namedNativeQueryMap = metadata.getNamedNativeQueryMap();
 		namedProcedureCallMap = metadata.getNamedProcedureCallMap();
@@ -192,7 +192,7 @@ public final class MetadataState implements Serializable {
 				uuid, restoredOptions, entityBindingMap, composites, genericComponentsMap,
 				restoredEmbeddableDiscriminatorTypes, mappedSuperclassMap, collectionBindingMap,
 				restoredTypeDefinitionMap, restoredFilterDefinitionMap, fetchProfileMap, imports,
-				idGeneratorDefinitionMap, namedQueryMap, namedNativeQueryMap,
+				identifierGeneratorRegistrationMap, namedQueryMap, namedNativeQueryMap,
 				namedProcedureCallMap, sqlResultSetMappingMap, namedEntityGraphMap,
 				restoredFunctionRegistry, Map.of(), persistenceUnitLifecycleCallbackDefinitions,
 				database, restoredContext

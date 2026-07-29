@@ -14,7 +14,6 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import org.hibernate.Remove;
 import org.hibernate.StatementObserver;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.scan.spi.ScanningProvider;
@@ -353,19 +352,6 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	@Nonnull
 	public HibernatePersistenceConfiguration cachingCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_PROXY_COMPLIANCE, enabled );
-		return this;
-	}
-
-	/**
-	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
-	 * in terms of collecting all named value generators globally, regardless of location.
-	 *
-	 * @see JpaComplianceSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
-	 */
-	@Remove
-	@Nonnull
-	public HibernatePersistenceConfiguration globalGeneratorCompliance(boolean enabled) {
-		property( JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, enabled );
 		return this;
 	}
 

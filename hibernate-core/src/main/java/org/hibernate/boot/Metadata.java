@@ -9,8 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import org.hibernate.Remove;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
@@ -175,8 +174,20 @@ public interface Metadata extends MappingContext {
 
 	Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs();
 
-	@Remove
-	IdentifierGeneratorDefinition getIdentifierGenerator(String name);
+	/**
+	 * Finds a persistence-unit scoped identifier-generator registration.
+	 *
+	 * @return the registration, or {@code null} when none is registered under
+	 * the given name
+	 */
+	IdentifierGeneratorRegistration getIdentifierGeneratorRegistration(String name);
+
+	/**
+	 * The persistence-unit scoped identifier-generator registrations.
+	 *
+	 * @return an immutable map keyed by registration name
+	 */
+	Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations();
 
 	java.util.Collection<Table> collectTableMappings();
 

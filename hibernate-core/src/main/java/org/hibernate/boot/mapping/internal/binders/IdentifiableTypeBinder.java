@@ -363,7 +363,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				declarationBinding,
 				ownerTypeBinding,
 				attributeMetadata.getMember(),
-				attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() ),
+				attributeType( attributeMetadata, ownerType ),
 				ownerType.getClassDetails().getName() + "." + attributeName,
 				attributeName,
 				attributeMetadata.getNature(),
@@ -374,7 +374,9 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	private ValueIntent valueIntent(IdentifiableTypeMetadata ownerType, AttributeMetadata attributeMetadata) {
 		final String attributeName = attributeMetadata.getName();
 		final String sourceRole = ownerType.getClassDetails().getName() + "." + attributeName;
-		return switch ( attributeMetadata.getNature() ) {
+		if ( attributeMetadata instanceof org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadata singular ) {
+			final var valueMetadata = singular.getValue();
+			return switch ( valueMetadata.getNature() ) {
 			case BASIC -> BasicValueIntent.fromAttribute(
 					attributeMetadata.getMember(),
 					locateAttributeOverride( ownerType, attributeName ),
@@ -382,12 +384,17 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 					getBindingContext()
 			);
 			case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
-					attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() ),
+					valueMetadata instanceof org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata embedded
+							&& !memberTypeUsesTypeVariable( attributeMetadata )
+							&& !typeUsesTypeVariable( valueMetadata.getType() )
+							? embedded
+							: null,
+					attributeType( attributeMetadata, ownerType ),
 					attributeName,
 					sourceRole
 			);
 			case TO_ONE -> ToOneValueIntent.fromAttribute(
-					attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() ),
+					attributeType( attributeMetadata, ownerType ),
 					attributeName,
 					sourceRole,
 					locateAssociationOverride( ownerType, attributeName )
@@ -399,22 +406,24 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 							getBindingState()
 					)
 			);
-			case ELEMENT_COLLECTION, MANY_TO_MANY, ONE_TO_MANY, MANY_TO_ANY -> CollectionValueIntent.fromAttribute(
-					collectionSource( ownerType, attributeMetadata ),
-					sourceRole,
-					attributeName,
-					getBindingState(),
-					getBindingContext()
-			);
-			default -> null;
-		};
+			};
+		}
+		final var plural = (org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata) attributeMetadata;
+		return CollectionValueIntent.fromAttribute(
+				collectionSource( ownerType, attributeMetadata ),
+				plural,
+				sourceRole,
+				attributeName,
+				getBindingState(),
+				getBindingContext()
+		);
 	}
 
 	private CollectionSource collectionSource(
 			IdentifiableTypeMetadata ownerType,
 			AttributeMetadata attributeMetadata) {
 		final var modelsContext = getBindingContext().getModelsContext();
-		final TypeDetails collectionType = attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() );
+		final TypeDetails collectionType = attributeType( attributeMetadata, ownerType );
 		return switch ( attributeMetadata.getNature() ) {
 			case ELEMENT_COLLECTION -> CollectionSource.elementCollection(
 					attributeMetadata.getMember(),
@@ -566,7 +575,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			property.setReturnedClassName( declaredType.getName() );
 		}
 		else {
-			final TypeDetails resolvedType = attributeMetadata.getMember().resolveRelativeType( ownerType.getClassDetails() );
+			final TypeDetails resolvedType = attributeType( attributeMetadata, ownerType );
 			property.setGeneric( false );
 			property.setGenericSpecialization( true );
 			property.setReturnedClassName( resolvedType.getName() );
@@ -604,6 +613,12 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	protected boolean memberTypeUsesTypeVariable(AttributeMetadata attributeMetadata) {
 		return typeUsesTypeVariable( attributeMetadata.getMember().getType() );
+	}
+
+	private static TypeDetails attributeType(
+			AttributeMetadata attributeMetadata,
+			IdentifiableTypeMetadata usageSite) {
+		return attributeMetadata.resolveAttributeType( usageSite.getClassDetails() );
 	}
 
 	private boolean overridesSuperAttribute(

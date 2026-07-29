@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
@@ -60,6 +61,34 @@ public class OptimisticLockingTests {
 				},
 				scope.getRegistry(),
 				VersionedEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testGenericMappedSuperclassVersionAttribute(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var rootType = context.getCategorizedDomainModel()
+							.getEntityHierarchies()
+							.iterator()
+							.next()
+							.getRoot();
+					final var versionBinding = context.getBindingState()
+							.getBootBindingModel()
+							.getVersionBindingView( rootType );
+					assertThat( versionBinding ).isNotNull();
+					assertThat( versionBinding.resolvedType().determineRawClass().toJavaClass() )
+							.isEqualTo( Long.class );
+
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( GenericVersionedEntity.class.getName() );
+					final BasicValue value = (BasicValue) entityBinding.getVersion().getValue();
+					assertThat( value.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Long.class );
+				},
+				scope.getRegistry(),
+				GenericVersioned.class,
+				GenericVersionedEntity.class
 		);
 	}
 
@@ -127,6 +156,19 @@ public class OptimisticLockingTests {
 		@Version
 		@Column(name = "revision")
 		private int version;
+	}
+
+	@MappedSuperclass
+	public abstract static class GenericVersioned<V> {
+		@Version
+		private V version;
+	}
+
+	@Entity(name = "GenericVersionedEntity")
+	@Table(name = "generic_versioned")
+	public static class GenericVersionedEntity extends GenericVersioned<Long> {
+		@Id
+		private Integer id;
 	}
 
 	@Entity(name = "DirtyVersionedEntity")

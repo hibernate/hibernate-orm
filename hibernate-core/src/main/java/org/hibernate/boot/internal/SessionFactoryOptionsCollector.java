@@ -446,7 +446,6 @@ public class SessionFactoryOptionsCollector {
 						? jpaOrderByMappingCompliance
 						: jpaCompliance.isJpaOrderByMappingComplianceEnabled(),
 				jpaCompliance.isJpaProxyComplianceEnabled(),
-				jpaCompliance.isGlobalGeneratorScopeEnabled(),
 				jpaQueryCompliance != null ? jpaQueryCompliance : jpaCompliance.isJpaQueryComplianceEnabled(),
 				jpaTransactionCompliance != null
 						? jpaTransactionCompliance

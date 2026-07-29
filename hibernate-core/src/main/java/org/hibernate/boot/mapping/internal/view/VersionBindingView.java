@@ -8,6 +8,7 @@ import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.VersionBinding;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 /// Stable read view over a finalized version binding.
 ///
@@ -27,6 +28,10 @@ public record VersionBindingView(VersionBinding binding) {
 
 	public MemberDetails member() {
 		return binding.member();
+	}
+
+	public TypeDetails resolvedType() {
+		return binding.resolvedType();
 	}
 
 	public BasicValueIntent valueIntent() {

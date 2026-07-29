@@ -29,6 +29,7 @@ import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.AppliedMappingPart;
@@ -137,6 +138,11 @@ public class AttributeBindingModelTests {
 
 					final AttributeBindingView embeddedFacts = attribute( managedTypeBinding, "embeddedFacts" );
 					assertThat( embeddedFacts.valueIntent() ).isSameAs( embeddedFacts.embeddedValueIntent() );
+					assertThat( embeddedFacts.embeddedValueIntent().valueMetadata() )
+							.isSameAs(
+									( (SingularAttributeMetadata) entityType.findAttribute( "embeddedFacts" ) )
+											.getValue()
+							);
 					assertThat( embeddedFacts.embeddedValueIntent().memberType().determineRawClass().toJavaClass() )
 							.isEqualTo( EmbeddedFacts.class );
 					assertThat( embeddedFacts.embeddedValueIntent().path() ).isEqualTo( "embeddedFacts" );

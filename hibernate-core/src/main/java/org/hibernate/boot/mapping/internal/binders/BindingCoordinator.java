@@ -23,25 +23,19 @@ import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedStatement;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.boot.model.internal.GeneratorParameters;
-import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.models.AnnotationPlacementException;
-import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.mapping.ModelBindingLogging;
 import org.hibernate.boot.mapping.internal.model.EntityHierarchyBinding;
 import org.hibernate.boot.mapping.internal.model.EntityTypeBinding;
@@ -58,7 +52,6 @@ import org.hibernate.boot.mapping.internal.categorize.EmbeddableInstantiatorRegi
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FetchProfileRegistration;
-import org.hibernate.boot.mapping.internal.categorize.GenericGeneratorRegistration;
 import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.JavaTypeRegistration;
@@ -66,8 +59,7 @@ import org.hibernate.boot.mapping.internal.categorize.JdbcTypeRegistration;
 import org.hibernate.boot.mapping.internal.categorize.JpaConverterRegistration;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.SequenceGeneratorRegistration;
-import org.hibernate.boot.mapping.internal.categorize.TableGeneratorRegistration;
+import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.boot.mapping.internal.categorize.UserTypeRegistration;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
@@ -419,7 +411,8 @@ public class BindingCoordinator {
 			}
 			registerMappedSuperclassShell( type );
 		} );
-		categorizedDomainModel.forEachEmbeddable( (name, type) -> {
+		categorizedDomainModel.forEachEmbeddable( (name, embeddableType) -> {
+			final ClassDetails type = embeddableType.getClassDetails();
 			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type ) == null ) {
 				bindingState.getBootBindingModel().addManagedTypeBinding(
 						new EmbeddableTypeBinding( type, defaultAccessType( type ) )
@@ -568,8 +561,6 @@ public class BindingCoordinator {
 			IdentifiableTypeMetadata superType,
 			EntityHierarchy hierarchy,
 			EntityHierarchy.HierarchyRelation relation) {
-		processGenerators( type );
-
 		if ( type.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
 			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type.getClassDetails() ) == null ) {
 				bindingState.getBootBindingModel().addManagedTypeBinding(
@@ -614,15 +605,8 @@ public class BindingCoordinator {
 	}
 
 	private void processGenerators(GlobalRegistrations globalRegistrations) {
-		globalRegistrations.getSequenceGeneratorRegistrations().values().forEach( (registration) -> {
-			bindingState.addIdentifierGenerator( buildSequenceGeneratorDefinition( registration ) );
-		} );
-		globalRegistrations.getTableGeneratorRegistrations().values().forEach( (registration) -> {
-			bindingState.addIdentifierGenerator( buildTableGeneratorDefinition( registration ) );
-		} );
-		globalRegistrations.getGenericGeneratorRegistrations().values().forEach( (registration) -> {
-			bindingState.addIdentifierGenerator( buildGenericGeneratorDefinition( registration ) );
-		} );
+		globalRegistrations.getIdentifierGeneratorRegistrations().values()
+				.forEach( bindingState::addIdentifierGeneratorRegistration );
 	}
 
 	private void processImports(GlobalRegistrations globalRegistrations) {
@@ -867,12 +851,10 @@ public class BindingCoordinator {
 	private void processEventListeners(GlobalRegistrations globalRegistrations) {
 		// JPA event listeners are consumed by EntityTypeMetadata#getCompleteJpaEventListeners()
 		// during entity metadata binding.
-		final var registrar = bindingState.getMetadataBuildingContext()
-				.getMetadataCollector()
-				.getGlobalRegistrations()
-				.as( GlobalRegistrar.class );
-		globalRegistrations.getPersistenceUnitLifecycleEventHandlers()
-				.forEach( registrar::addPersistenceUnitLifecycleEventHandler );
+		PersistenceUnitCallbackDefinition.from(
+				globalRegistrations.getPersistenceUnitLifecycleEventHandlers()
+		).forEach( bindingState.getMetadataBuildingContext()
+				.getMetadataCollector()::addPersistenceUnitLifecycleCallbackDefinition );
 	}
 
 	private void processFilterDefinitions(GlobalRegistrations globalRegistrations) {
@@ -880,36 +862,6 @@ public class BindingCoordinator {
 			bindingState.apply( filterDefRegistration );
 		} );
 
-	}
-
-	private IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(SequenceGeneratorRegistration registration) {
-		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		GeneratorParameters.interpretSequenceGenerator( registration.configuration(), definitionBuilder );
-		definitionBuilder.setName( registration.name() );
-		return definitionBuilder.build();
-	}
-
-	private IdentifierGeneratorDefinition buildTableGeneratorDefinition(TableGeneratorRegistration registration) {
-		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		GeneratorParameters.interpretTableGenerator( registration.configuration(), definitionBuilder );
-		definitionBuilder.setName( registration.name() );
-		return definitionBuilder.build();
-	}
-
-	@SuppressWarnings("removal")
-	private IdentifierGeneratorDefinition buildGenericGeneratorDefinition(GenericGeneratorRegistration registration) {
-		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		definitionBuilder.setName( registration.name() );
-		if ( isNotEmpty( registration.strategy() ) ) {
-			definitionBuilder.setGeneratorClass(
-					GeneratorStrategies.resolveGeneratorClass(
-							registration.strategy(),
-							bindingState.getMetadataBuildingContext()
-					)
-			);
-		}
-		definitionBuilder.addParams( registration.parameters() );
-		return definitionBuilder.build();
 	}
 
 	private void processConverter(ConversionRegistration registration) {
@@ -1070,30 +1022,6 @@ public class BindingCoordinator {
 		// 		TableReference mappedTable = bindingState.
 		//
 
-	}
-
-	private void processGenerators(IdentifiableTypeMetadata type) {
-		final ClassDetails typeClassDetails = type.getClassDetails();
-
-		final TableGenerator[] tableGenerators = typeClassDetails.getRepeatedAnnotationUsages(
-				TableGenerator.class,
-				bindingContext.getModelsContext()
-		);
-		for ( TableGenerator tableGeneratorAnn : tableGenerators ) {
-			bindingState.addIdentifierGenerator(
-					buildTableGeneratorDefinition( new TableGeneratorRegistration( tableGeneratorAnn.name(), tableGeneratorAnn ) )
-			);
-		}
-
-		final SequenceGenerator[] sequenceGenerators = typeClassDetails.getRepeatedAnnotationUsages(
-				SequenceGenerator.class,
-				bindingContext.getModelsContext()
-		);
-		for ( SequenceGenerator sequenceGeneratorAnn : sequenceGenerators ) {
-			bindingState.addIdentifierGenerator(
-					buildSequenceGeneratorDefinition( new SequenceGeneratorRegistration( sequenceGeneratorAnn.name(), sequenceGeneratorAnn ) )
-			);
-		}
 	}
 
 }

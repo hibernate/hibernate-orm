@@ -12,6 +12,7 @@ import java.util.Locale;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
@@ -143,6 +144,7 @@ class EmbeddableAttributeBinder {
 		else {
 			componentSource = ComponentSource.embeddedAttribute(
 					member,
+					attributeBinding.embeddedValueIntent().memberType(),
 					ownerType.getClassDetails(),
 					ownerType.getHierarchy().getRoot().getClassDetails(),
 					ownerType.getAccessType(),
@@ -151,8 +153,22 @@ class EmbeddableAttributeBinder {
 		}
 		final Table componentTable = resolveComponentTable( member );
 		final EmbeddableMappingMaterializer materializer = new EmbeddableMappingMaterializer( bindingState );
+		final var embeddedValueIntent = attributeBinding.embeddedValueIntent();
+		final var embeddedValueMetadata = embeddedValueIntent == null ? null : embeddedValueIntent.valueMetadata();
 		final EmbeddableContribution contribution =
-				materializer.createContribution( componentSource, bindingContext );
+				compositeUserTypeClass == null
+						&& !member.hasDirectAnnotationUsage( TargetEmbeddable.class )
+						&& embeddedValueMetadata != null
+						&& componentSource.componentType().getName()
+								.equals( member.getType().determineRawClass().getName() )
+						&& embeddedValueMetadata.getType().determineRawClass().getName()
+								.equals( member.getType().determineRawClass().getName() )
+						? materializer.createContribution(
+								componentSource,
+								embeddedValueMetadata,
+								bindingContext
+						)
+						: materializer.createContribution( componentSource, bindingContext );
 		final Component component = materializer.createEmbeddedAttributeComponent(
 				componentSource,
 				ownerBinding,

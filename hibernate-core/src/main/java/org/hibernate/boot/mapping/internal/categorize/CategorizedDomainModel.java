@@ -64,12 +64,12 @@ public interface CategorizedDomainModel {
 		mappedSuperclasses.forEach( consumer::accept );
 	}
 
-	/// All embeddables defined in the persistence unit
-	Map<String,ClassDetails> getEmbeddables();
+	/// All embeddable declarations defined in the persistence unit.
+	Map<String,EmbeddableTypeMetadata> getEmbeddables();
 
 	/// Iteration over the {@linkplain #getEmbeddables() embeddables}
-	default void forEachEmbeddable(KeyedConsumer<String, ClassDetails> consumer) {
-		final Map<String, ClassDetails> embeddables = getEmbeddables();
+	default void forEachEmbeddable(KeyedConsumer<String, EmbeddableTypeMetadata> consumer) {
+		final Map<String, EmbeddableTypeMetadata> embeddables = getEmbeddables();
 		if ( embeddables.isEmpty() ) {
 			return;
 		}

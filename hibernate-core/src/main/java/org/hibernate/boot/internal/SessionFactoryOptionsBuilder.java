@@ -30,7 +30,6 @@ import org.hibernate.GraphParserMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
-import org.hibernate.Remove;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
@@ -1878,12 +1877,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public void enableJpaOrderByMappingCompliance(boolean enabled) {
 		mutableJpaCompliance().setOrderByMappingCompliance( enabled );
 	}
-
-	@Remove
-	public void enableGeneratorNameScopeCompliance(boolean enabled) {
-		mutableJpaCompliance().setGeneratorNameScopeCompliance( enabled );
-	}
-
 
 	public void enableCollectionInDefaultFetchGroup(boolean enabled) {
 		this.collectionsInDefaultFetchGroupEnabled = enabled;

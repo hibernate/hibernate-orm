@@ -30,9 +30,17 @@ class CollectionMappingHelper {
 			CollectionSource source,
 			PersistentClass ownerBinding,
 			BindingState bindingState) {
+		return createCollection( source, source.classification(), ownerBinding, bindingState );
+	}
+
+	static Collection createCollection(
+			CollectionSource source,
+			CollectionClassification categorizedClassification,
+			PersistentClass ownerBinding,
+			BindingState bindingState) {
 		final CustomCollectionType customType = resolveCustomCollectionType( source, bindingState );
 		final CollectionClassification classification = customType == null
-				? source.classification()
+				? categorizedClassification
 				: customType.classification();
 		final Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver = customType == null
 				? null

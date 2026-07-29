@@ -170,8 +170,7 @@ public class IdentifierBinder {
 			AggregatedKeyMapping aggregatedKeyMapping,
 			EntityTypeMetadata type) {
 		return aggregatedKeyMapping.getAttribute()
-				.getMember()
-				.resolveRelativeType( type.getClassDetails() )
+				.resolveAttributeType( type.getClassDetails() )
 				.determineRawClass();
 	}
 
@@ -179,8 +178,7 @@ public class IdentifierBinder {
 			AggregatedKeyMapping aggregatedKeyMapping,
 			EntityTypeMetadata type) {
 		return aggregatedKeyMapping.getAttribute()
-				.getMember()
-				.resolveRelativeType( type.getClassDetails() );
+				.resolveAttributeType( type.getClassDetails() );
 	}
 
 	private IdentifierBinding bindNonAggregatedIdentifier(
@@ -506,8 +504,8 @@ public class IdentifierBinder {
 			return;
 		}
 
-		final String entityMemberType = idAttribute.getMember()
-				.resolveRelativeType( type.getClassDetails() )
+		final String entityMemberType = idAttribute
+				.resolveAttributeType( type.getClassDetails() )
 				.determineRawClass()
 				.getClassName();
 		final String idClassMemberType = idClassMember

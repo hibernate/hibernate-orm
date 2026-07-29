@@ -13,7 +13,7 @@ import org.hibernate.boot.mapping.internal.context.MappingResolutionServicesImpl
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -28,7 +28,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
@@ -1684,13 +1683,12 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public GlobalRegistrations getGlobalRegistrations() {
+		public PersistenceUnitMetadata getPersistenceUnitMetadata() {
 			return null;
 		}
 
 		@Override
-		public PersistenceUnitMetadata getPersistenceUnitMetadata() {
-			return null;
+		public void addPersistenceUnitLifecycleCallbackDefinition(PersistenceUnitCallbackDefinition callbackDefinition) {
 		}
 
 		@Override
@@ -1805,7 +1803,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition) {
+		public void addIdentifierGeneratorRegistration(IdentifierGeneratorRegistration generatorRegistration) {
 
 		}
 
@@ -1895,7 +1893,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition) {
+		public void addDefaultIdentifierGeneratorRegistration(IdentifierGeneratorRegistration generatorRegistration) {
 
 		}
 
@@ -2197,8 +2195,13 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
+		public IdentifierGeneratorRegistration getIdentifierGeneratorRegistration(String name) {
 			return null;
+		}
+
+		@Override
+		public Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations() {
+			return Map.of();
 		}
 
 		@Override

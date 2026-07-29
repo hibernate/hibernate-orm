@@ -31,7 +31,7 @@ public class MetadataCopyingTest {
 				existingInstance.getFilterDefinitions(),
 				existingInstance.getFetchProfileMap(),
 				existingInstance.getImports(),
-				existingInstance.getIdGeneratorDefinitionMap(),
+				existingInstance.getIdentifierGeneratorRegistrations(),
 				existingInstance.getNamedQueryMap(),
 				existingInstance.getNamedNativeQueryMap(),
 				existingInstance.getNamedProcedureCallMap(),

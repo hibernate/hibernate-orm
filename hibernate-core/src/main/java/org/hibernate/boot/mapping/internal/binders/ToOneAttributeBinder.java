@@ -32,10 +32,11 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
-import org.hibernate.boot.models.AttributeNature;
+import org.hibernate.boot.mapping.internal.categorize.ValueMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.ValueNature;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -302,7 +303,14 @@ class ToOneAttributeBinder {
 					source,
 					ownerType,
 					ownerBinding,
-					new AttributeMetadataImpl( propertyName, AttributeNature.TO_ONE, member ),
+					new SingularAttributeMetadataImpl(
+							propertyName,
+							member,
+							new ValueMetadataImpl(
+									resolvedType,
+									ValueNature.TO_ONE
+							)
+					),
 					property,
 					primaryTable,
 					ownerClassName,

@@ -6,6 +6,8 @@ package org.hibernate.property.access.internal;
 
 import jakarta.persistence.AccessType;
 import jakarta.annotation.Nullable;
+import org.hibernate.models.accessor.HibernateAccessorValueReader;
+import org.hibernate.models.accessor.HibernateAccessorValueWriter;
 import org.hibernate.property.access.spi.EnhancedGetterFieldImpl;
 import org.hibernate.property.access.spi.EnhancedSetterImpl;
 import org.hibernate.property.access.spi.EnhancedSetterMethodImpl;
@@ -15,13 +17,17 @@ import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import static org.hibernate.internal.util.ReflectHelper.findField;
 import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.determineEnhancementState;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.getAccessType;
 
@@ -37,8 +43,10 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 
 	private final Getter getter;
 	private final Setter setter;
+	private final PropertyValueAccessor propertyValueAccessor;
 
 	public PropertyAccessEnhancedImpl(
+			PropertyAccessorService propertyAccessorService,
 			PropertyAccessStrategy strategy,
 			Class<?> containerJavaType,
 			String propertyName,
@@ -60,6 +68,12 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 				}
 				getter = new GetterFieldImpl( containerJavaType, propertyName, field );
 				setter = new EnhancedSetterImpl( containerJavaType, propertyName, field );
+				propertyValueAccessor = PropertyValueAccessor.enhanced(
+						propertyAccessorService.hibernateAccessorFactory().valueReader( field ),
+						propertyAccessorService.hibernateAccessorFactory().valueWriter( field ),
+						determineEnhancementState( containerJavaType, field.getType() ),
+						propertyName
+				);
 				break;
 			}
 			case PROPERTY: {
@@ -69,8 +83,39 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
 					);
 				}
-				getter = propertyGetter( classAccessType, containerJavaType, propertyName, getterMethod );
-				setter = propertySetter( classAccessType, containerJavaType, propertyName, getterMethod.getReturnType() );
+
+				final HibernateAccessorValueReader<?> reader;
+				final HibernateAccessorValueWriter writer;
+				final int enhancementState;
+
+				if ( classAccessType != null && getAccessType( containerJavaType, propertyName ) == AccessType.FIELD ) {
+					// We need to default to FIELD unless we have an explicit AccessType
+					// to avoid unnecessary initializations
+					final Field field = findField( containerJavaType, propertyName );
+					getter = new EnhancedGetterFieldImpl( containerJavaType, propertyName, field, getterMethod );
+					enhancementState = determineEnhancementState( containerJavaType, field.getType() );
+					reader = propertyAccessorService.hibernateAccessorFactory().valueReader( field );
+
+					setter = new EnhancedSetterImpl( containerJavaType, propertyName, field );
+					writer = propertyAccessorService.hibernateAccessorFactory().valueWriter( field );
+				}
+				else {
+					// when classAccessType is null, know PROPERTY is the explicit access type
+					getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
+					enhancementState = determineEnhancementState( containerJavaType, getterMethod.getReturnType() );
+					reader = propertyAccessorService.hibernateAccessorFactory().valueReader( getterMethod );
+
+					Method setterMethod = findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
+					setter = new EnhancedSetterMethodImpl( containerJavaType, propertyName, setterMethod );
+					writer = propertyAccessorService.hibernateAccessorFactory().valueWriter( setterMethod );
+				}
+
+				propertyValueAccessor = PropertyValueAccessor.enhanced(
+						reader,
+						writer,
+						enhancementState,
+						propertyName
+				);
 				break;
 			}
 			default: {
@@ -79,35 +124,6 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 				);
 			}
 		}
-	}
-
-	private static Getter propertyGetter(@Nullable AccessType classAccessType, Class<?> containerJavaType, String propertyName, Method getterMethod) {
-		if ( classAccessType != null ) {
-			final var explicitAccessType = getAccessType( containerJavaType, propertyName );
-			if ( explicitAccessType == AccessType.FIELD ) {
-				// We need to default to FIELD unless we have an explicit AccessType
-				// to avoid unnecessary initializations
-				return new EnhancedGetterFieldImpl( containerJavaType, propertyName,
-						findField( containerJavaType, propertyName ), getterMethod );
-			}
-		}
-		// when classAccessType is null, know PROPERTY is the explicit access type
-		return new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
-	}
-
-	private static Setter propertySetter(@Nullable AccessType classAccessType, Class<?> containerJavaType, String propertyName, Class<?> fieldType) {
-		if ( classAccessType != null ) {
-			final var explicitAccessType = getAccessType( containerJavaType, propertyName );
-			if ( explicitAccessType == AccessType.FIELD ) {
-				// We need to default to FIELD unless we have an explicit AccessType
-				// to avoid unnecessary initializations
-				return new EnhancedSetterImpl( containerJavaType, propertyName,
-						findField( containerJavaType, propertyName ) );
-			}
-		}
-		// when classAccessType is null, know PROPERTY is the explicit access type
-		return new EnhancedSetterMethodImpl( containerJavaType, propertyName,
-				findSetterMethod( containerJavaType, propertyName, fieldType ) );
 	}
 
 	@Override
@@ -123,5 +139,10 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 	@Override
 	public Setter getSetter() {
 		return setter;
+	}
+
+	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		return propertyValueAccessor;
 	}
 }

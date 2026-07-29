@@ -22,6 +22,6 @@ public class PropertyAccessStrategyFieldImpl implements PropertyAccessStrategy {
 
 	@Override
 	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, String propertyName, boolean setterRequired) {
-		return new PropertyAccessFieldImpl( this, containerJavaType, propertyName );
+		return new PropertyAccessFieldImpl( propertyAccessorService, this, containerJavaType, propertyName );
 	}
 }

@@ -30,7 +30,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
@@ -469,7 +469,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 				}
 			}
 			else if ( currentState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| currentState[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					|| currentState[i] == PropertyValueAccessor.UNKNOWN ) {
 				deletedState[i] = currentState[i];
 			}
 			else {

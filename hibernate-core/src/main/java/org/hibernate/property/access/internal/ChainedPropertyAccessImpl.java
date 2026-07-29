@@ -10,11 +10,10 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.PropertyAccessException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 
 import jakarta.annotation.Nullable;
@@ -25,9 +24,15 @@ import jakarta.annotation.Nullable;
 public class ChainedPropertyAccessImpl implements PropertyAccess, Getter, Setter {
 
 	private final PropertyAccess[] propertyAccesses;
+	private final PropertyValueAccessor propertyValueAccessor;
 
 	public ChainedPropertyAccessImpl(PropertyAccess... propertyAccesses) {
 		this.propertyAccesses = propertyAccesses;
+		final PropertyValueAccessor[] accessors = new PropertyValueAccessor[propertyAccesses.length];
+		for (int i = 0; i < accessors.length; i++) {
+			accessors[i] = propertyAccesses[i].getPropertyValueAccessor();
+		}
+		this.propertyValueAccessor = PropertyValueAccessor.chained( accessors );
 	}
 
 	@Override
@@ -46,24 +51,18 @@ public class ChainedPropertyAccessImpl implements PropertyAccess, Getter, Setter
 	}
 
 	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		return propertyValueAccessor;
+	}
+
+	@Override
 	public @Nullable Object get(Object owner) {
-		@Nullable Object result = owner;
-		for ( int i = 0; i < propertyAccesses.length; i++ ) {
-			result = propertyAccesses[i].getGetter().get( NullnessUtil.castNonNull( result ) );
-		}
-		return result;
+		return propertyValueAccessor.get( owner );
 	}
 
 	@Override
 	public @Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
-		@Nullable Object result = owner;
-		for ( int i = 0; i < propertyAccesses.length; i++ ) {
-			if ( result == null ) {
-				throw new PropertyAccessException( "Could not chain accessor because result of previous accessor was null" );
-			}
-			result = propertyAccesses[i].getGetter().getForInsert( result, mergeMap, session );
-		}
-		return result;
+		return propertyValueAccessor.getForInsert( owner, mergeMap, session );
 	}
 
 	@Override

@@ -30,6 +30,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -44,8 +45,6 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
-import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
-import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
@@ -884,11 +883,10 @@ public class EmbeddableBinder {
 			final String propertyName = property.getName();
 			sortedPropertyNames.add( propertyName );
 			sortedPropertyTypes.add(
-					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
-							context.getBootstrapContext().getServiceRegistry().requireService( PropertyAccessorService.class ),
+					ReflectHelper.reflectedPropertyType(
 							compositeUserType.embeddable(),
-							propertyName,
-							false ).getGetter().getReturnType()
+							propertyName
+					)
 			);
 			property.setPropertyAccessStrategy( strategy );
 		}

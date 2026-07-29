@@ -41,12 +41,12 @@ public interface PropertyAccess {
 	 */
 	@Nullable Setter getSetter();
 
-//	/**
-//	 * The monomorphic value accessor for this property.
-//	 * Replaces the value-access role of {@link Getter#get} / {@link Setter#set}.
-//	 *
-//	 * <p>The default implementation wraps the getter/setter via method references.
-//	 * Concrete implementations may return a pre-built optimized accessor instead.
-//	 */
-//	PropertyValueAccessor getPropertyValueAccessor();
+	/**
+	 * The monomorphic value accessor for this property.
+	 * Replaces the value-access role of {@link Getter#get} / {@link Setter#set}.
+	 *
+	 * <p>The default implementation wraps the getter/setter via method references.
+	 * Concrete implementations may return a pre-built optimized accessor instead.
+	 */
+	PropertyValueAccessor getPropertyValueAccessor();
 }

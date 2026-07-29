@@ -42,9 +42,9 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -122,7 +122,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Override
 	public Object[] getValues(Object compositeInstance) {
-		if ( compositeInstance == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+		if ( compositeInstance == PropertyValueAccessor.UNKNOWN ) {
 			return new Object[getNumberOfAttributeMappings()];
 		}
 

@@ -17,23 +17,33 @@ import org.hibernate.StatementObserver;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.boot.pipeline.internal.ResolvedMapping;
+import org.hibernate.boot.pipeline.internal.ResolvedMappingImplementor;
+import org.hibernate.boot.pipeline.internal.SessionFactoryConstructionPlan;
 import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.pipeline.spi.SessionFactoryConstructionRequest;
 import org.hibernate.boot.pipeline.spi.SessionFactoryProducer;
-import org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.query.named.spi.NamedLoaderQueryResolver;
+import org.hibernate.query.named.spi.NamedObjectRepository;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -49,6 +59,9 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for the final SessionFactory construction producer seam.
@@ -96,6 +109,33 @@ class SessionFactoryProducerTests {
 		assertThat( request.getMetadata() ).isInstanceOf( MetadataImplementor.class );
 		assertThat( request.getOptions() ).isInstanceOf( SessionFactoryOptions.class );
 		assertThat( request.getServiceRegistry() ).isSameAs( registryScope.getRegistry() );
+	}
+
+	@Test
+	@BootstrapServiceRegistry(
+			integrators = RecordingIntegrator.class
+	)
+	void defaultProducerFinalizesMetadataBeforeIntegratorCallbacks(ServiceRegistryScope registryScope) {
+		final var resolvedMapping =
+				( (ResolvedMappingImplementor) buildMetadata( registryScope ) ).getResolvedMapping();
+		final var trackedMetadata = spy( resolvedMapping.metadata() );
+		final var trackedResolvedMapping = new ResolvedMapping(
+				trackedMetadata,
+				resolvedMapping.mappingResolutionDetailsCollector(),
+				resolvedMapping.runtimeMappingHandoff()
+		);
+		doAnswer( invocation -> {
+			assertThat( RECORDING_INTEGRATED.get() ).isFalse();
+			return invocation.callRealMethod();
+		} ).when( trackedMetadata ).validate();
+
+		try (SessionFactory ignored = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				new ResolvedMappingImplementor( trackedResolvedMapping )
+		)) {
+			verify( trackedMetadata ).orderColumns( false );
+			verify( trackedMetadata ).validate();
+			assertThat( RECORDING_INTEGRATED.get() ).isTrue();
+		}
 	}
 
 	@Test
@@ -160,13 +200,59 @@ class SessionFactoryProducerTests {
 	}
 
 	@Test
-	void constructionRequestDoesNotExposeBootContexts() {
+	void constructionRequestExposesOnlyCommonConstructionProducts() {
 		for ( Method method : SessionFactoryConstructionRequest.class.getMethods() ) {
 			assertThat( method.getReturnType() )
 					.isNotEqualTo( BootstrapContext.class )
 					.isNotEqualTo( MetadataBuildingContext.class )
 					.isNotEqualTo( ResolvedSessionFactorySettings.class );
 		}
+	}
+
+	@Test
+	void constructionPlanDoesNotExposeBootstrapContext() {
+		for ( Method method : SessionFactoryConstructionPlan.class.getMethods() ) {
+			assertThat( method.getReturnType() ).isNotEqualTo( BootstrapContext.class );
+		}
+	}
+
+	@Test
+	void integratorDoesNotExposeBootstrapContext() {
+		for ( Method method : Integrator.class.getMethods() ) {
+			assertThat( method.getParameterTypes() ).doesNotContain( BootstrapContext.class );
+		}
+	}
+
+	@Test
+	void runtimeModelCreationDoesNotExposeBootstrapContextOrIncompleteFactory() {
+		for ( Method method : RuntimeModelCreationContext.class.getMethods() ) {
+			assertThat( method.getReturnType() )
+					.isNotEqualTo( BootstrapContext.class )
+					.isNotEqualTo( SessionFactoryImplementor.class )
+					.isNotEqualTo( QueryEngine.class )
+					.isNotEqualTo( NamedObjectRepository.class );
+		}
+	}
+
+	@Test
+	void runtimeModelCreationUsesRestrictedNamedLoaderQueryResolver() throws NoSuchMethodException {
+		assertThat( NamedLoaderQueryResolver.class ).isAssignableFrom( NamedObjectRepository.class );
+		assertThat(
+				RuntimeModelCreationContext.class
+						.getMethod( "getNamedLoaderQueryResolver" )
+						.getReturnType()
+		).isEqualTo( NamedLoaderQueryResolver.class );
+	}
+
+	@Test
+	void onlyStoredProcedureDefinitionsRequireFactoryForResolution() throws NoSuchMethodException {
+		assertThat( NamedHqlQueryDefinition.class.getMethod( "resolve" ).getParameterTypes() ).isEmpty();
+		assertThat( NamedNativeQueryDefinition.class.getMethod( "resolve" ).getParameterTypes() ).isEmpty();
+		assertThat(
+				NamedProcedureCallDefinition.class
+						.getMethod( "resolve", SessionFactoryImplementor.class )
+						.getParameterTypes()
+		).containsExactly( SessionFactoryImplementor.class );
 	}
 
 	@Test
@@ -209,6 +295,25 @@ class SessionFactoryProducerTests {
 			assertThat( sessionFactoryImplementor.getFilterDefinition( TenantIdBinder.FILTER_NAME ) ).isNotNull();
 			assertThat( sessionFactoryImplementor.getTenantIdentifierJavaType().getJavaTypeClass() )
 					.isEqualTo( String.class );
+		}
+	}
+
+	@Test
+	@ServiceRegistry(settings = {
+			@Setting(name = JdbcSettings.URL, value = "jdbc:h2:mem:prepared-sql-context;DB_CLOSE_DELAY=-1"),
+			@Setting(name = JdbcSettings.USER, value = "sa"),
+			@Setting(name = JdbcSettings.PASS, value = ""),
+			@Setting(name = MappingSettings.DEFAULT_CATALOG, value = "legacy_catalog"),
+			@Setting(name = MappingSettings.DEFAULT_SCHEMA, value = "legacy_schema")
+	})
+	void preparedSqlStringGenerationContextUsesLegacyOptions(ServiceRegistryScope registryScope) {
+		try (SessionFactory sessionFactory =
+				org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( buildMetadata( registryScope ) )) {
+			final var generationContext =
+					sessionFactory.unwrap( SessionFactoryImplementor.class ).getSqlStringGenerationContext();
+
+			assertThat( generationContext.getDefaultCatalog().getText() ).isEqualTo( "legacy_catalog" );
+			assertThat( generationContext.getDefaultSchema().getText() ).isEqualTo( "legacy_schema" );
 		}
 	}
 
@@ -300,15 +405,18 @@ class SessionFactoryProducerTests {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Context context,
 				SessionFactoryImplementor sessionFactory) {
+			assertThat( metadata ).isNotNull();
+			assertThat( context.getManagedBeanRegistry() ).isNotNull();
+			assertThat( sessionFactory ).isNotNull();
 			RECORDING_INTEGRATED.set( true );
 		}
 
 		@Override
 		public void disintegrate(
 				SessionFactoryImplementor sessionFactory,
-				SessionFactoryServiceRegistry serviceRegistry) {
+				Context context) {
 			RECORDING_DISINTEGRATED.set( true );
 		}
 	}
@@ -317,7 +425,7 @@ class SessionFactoryProducerTests {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Context context,
 				SessionFactoryImplementor sessionFactory) {
 			FAILING_INTEGRATED.set( true );
 			throw new RuntimeException( "failing integrator" );
@@ -326,7 +434,7 @@ class SessionFactoryProducerTests {
 		@Override
 		public void disintegrate(
 				SessionFactoryImplementor sessionFactory,
-				SessionFactoryServiceRegistry serviceRegistry) {
+				Context context) {
 			FAILING_DISINTEGRATED.set( true );
 		}
 	}

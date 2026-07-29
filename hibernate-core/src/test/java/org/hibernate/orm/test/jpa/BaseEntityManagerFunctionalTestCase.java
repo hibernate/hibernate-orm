@@ -80,8 +80,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		log.trace( "Building EntityManagerFactory" );
 		entityManagerFactory = BootstrapPipeline.build( buildPersistenceUnitDescriptor(), buildSettings() )
 				.unwrap( SessionFactoryImplementor.class );
-		serviceRegistry = (StandardServiceRegistryImpl)
-				entityManagerFactory.getServiceRegistry().getParentServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getServiceRegistry();
 		afterEntityManagerFactoryBuilt();
 	}
 

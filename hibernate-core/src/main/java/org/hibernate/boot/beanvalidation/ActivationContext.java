@@ -7,8 +7,9 @@ package org.hibernate.boot.beanvalidation;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.ValidationConstraintDdlInfluence;
 
 /**
@@ -36,6 +37,11 @@ public interface ActivationContext {
 	Metadata getMetadata();
 
 	/**
+	 * Access the options for the SessionFactory being built.
+	 */
+	SessionFactoryOptions getSessionFactoryOptions();
+
+	/**
 	 * Access the SessionFactory being built to trigger this BV activation
 	 *
 	 * @return The SessionFactory being built
@@ -43,11 +49,11 @@ public interface ActivationContext {
 	SessionFactoryImplementor getSessionFactory();
 
 	/**
-	 * Access the ServiceRegistry specific to the SessionFactory being built.
+	 * Access the standard ServiceRegistry used by the SessionFactory being built.
 	 *
-	 * @return The SessionFactoryServiceRegistry
+	 * @return The standard ServiceRegistry
 	 */
-	SessionFactoryServiceRegistry getServiceRegistry();
+	ServiceRegistry getServiceRegistry();
 
 	/**
 	 * @return Resolved validation constraint influence on DDL.

@@ -46,10 +46,17 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 /// Resolved settings used while building the runtime SessionFactory.
-/// This is intentionally focused on values needed by the next SessionFactory
-/// construction slice.  It is not meant to mirror ORM's large
-/// `SessionFactoryOptions` surface; additional named values should be added
-/// only when a concrete build or runtime consumer requires them.
+/// This is the source-of-truth settings product of the resolved bootstrap
+/// pipeline.  It is intentionally focused on explicitly named build and
+/// runtime inputs rather than mirroring the historical
+/// `SessionFactoryOptions` SPI.  Additional values should be added only when a
+/// concrete build or runtime consumer requires them.
+///
+/// Custom [SessionFactoryProducer] implementations receive the common
+/// compatibility projection exposed by
+/// [SessionFactoryConstructionRequest#getOptions()] because the producer SPI
+/// also supports legacy/native metadata bootstrap, which does not produce this
+/// record.
 ///
 /// @see SessionFactoryImplementor#getSessionFactoryOptions()
 ///

@@ -10,7 +10,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +31,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.maskOut;
 class SessionFactorySettings {
 
 	static Map<String, Object> getSettings(
-			SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
+			SessionFactoryOptions options, ServiceRegistry serviceRegistry) {
 		final var settings =
 				serviceRegistry.requireService( ConfigurationService.class )
 						.getSettings();
@@ -48,14 +48,14 @@ class SessionFactorySettings {
 	}
 
 	static Map<String, Object> getMaskedSettings(
-			SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
+			SessionFactoryOptions options, ServiceRegistry serviceRegistry) {
 		final var settings = getSettings( options, serviceRegistry );
 		deprecationCheck( settings );
 		return maskOutSensitiveInformation( settings );
 	}
 
 	static String getSessionFactoryName(
-			SessionFactoryOptions options, SessionFactoryServiceRegistry serviceRegistry) {
+			SessionFactoryOptions options, ServiceRegistry serviceRegistry) {
 		final String sessionFactoryName = options.getSessionFactoryName();
 		if ( sessionFactoryName != null ) {
 			return sessionFactoryName;
@@ -78,7 +78,7 @@ class SessionFactorySettings {
 	static String determineJndiName(
 			String name,
 			SessionFactoryOptions options,
-			SessionFactoryServiceRegistry serviceRegistry) {
+			ServiceRegistry serviceRegistry) {
 		final var configService = serviceRegistry.requireService( ConfigurationService.class );
 		final String explicitJndiName = configService.getSetting( SESSION_FACTORY_JNDI_NAME, STRING );
 		if ( isNotEmpty( explicitJndiName ) ) {

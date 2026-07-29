@@ -13,6 +13,7 @@ import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
@@ -20,8 +21,6 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
-
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -44,7 +43,8 @@ public abstract class PersistentTableStrategy {
 	public static final String CATALOG = "hibernate.query.mutation_strategy.persistent.catalog";
 
 	private final TemporaryTable temporaryTable;
-	private final SessionFactoryImplementor sessionFactory;
+	private final TemporaryTableStrategy temporaryTableStrategy;
+	private final JdbcServices jdbcServices;
 
 	private boolean prepared;
 
@@ -53,16 +53,28 @@ public abstract class PersistentTableStrategy {
 	public PersistentTableStrategy(
 			TemporaryTable temporaryTable,
 			SessionFactoryImplementor sessionFactory) {
-		this.temporaryTable = temporaryTable;
-		this.sessionFactory = sessionFactory;
+		this(
+				temporaryTable,
+				sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy(),
+				sessionFactory.getJdbcServices()
+		);
+	}
 
-		if ( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
+	public PersistentTableStrategy(
+			TemporaryTable temporaryTable,
+			TemporaryTableStrategy temporaryTableStrategy,
+			JdbcServices jdbcServices) {
+		this.temporaryTable = temporaryTable;
+		this.temporaryTableStrategy = temporaryTableStrategy;
+		this.jdbcServices = jdbcServices;
+
+		if ( temporaryTableStrategy.getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
 			throw new IllegalArgumentException( "Persistent ID tables cannot use AfterUseAction.DROP : " + temporaryTable.getTableExpression() );
 		}
 	}
 
 	public TemporaryTableStrategy getTemporaryTableStrategy() {
-		return castNonNull( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy() );
+		return temporaryTableStrategy;
 	}
 
 	public void prepare(
@@ -91,7 +103,7 @@ public abstract class PersistentTableStrategy {
 
 		final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork = new TemporaryTableHelper.TemporaryTableCreationWork(
 				getTemporaryTable(),
-				sessionFactory
+				jdbcServices
 		);
 		Connection connection;
 		try {
@@ -138,7 +150,7 @@ public abstract class PersistentTableStrategy {
 		LOG.tracef( "Dropping persistent ID table: %s", temporaryTable.getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
-				new TemporaryTableHelper.TemporaryTableDropWork( temporaryTable, sessionFactory );
+				new TemporaryTableHelper.TemporaryTableDropWork( temporaryTable, jdbcServices );
 		Connection connection;
 		try {
 			connection = connectionAccess.obtainConnection();
@@ -170,7 +182,4 @@ public abstract class PersistentTableStrategy {
 		return temporaryTable;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
 }

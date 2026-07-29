@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.beanvalidation.ValidationMode;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -51,7 +50,7 @@ public enum ValidationConstraintDdlInfluence {
 			}
 		}
 		// legacy boolean setting fallback
-		if ( !configurationService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true ) ) {
+		if ( !configurationService.getSetting( SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, StandardConverters.BOOLEAN, true ) ) {
 			return DISABLED;
 		}
 		return AUTO;

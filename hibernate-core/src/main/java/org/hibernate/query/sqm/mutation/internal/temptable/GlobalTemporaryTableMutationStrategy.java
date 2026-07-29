@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -51,7 +52,8 @@ public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableSt
 						runtimeModelCreationContext.getDialect(),
 						runtimeModelCreationContext
 				),
-				runtimeModelCreationContext.getSessionFactory()
+				temporaryTableStrategy,
+				runtimeModelCreationContext.getJdbcServices()
 		);
 	}
 
@@ -59,6 +61,13 @@ public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableSt
 			TemporaryTable idTable,
 			SessionFactoryImplementor sessionFactory) {
 		super( idTable, sessionFactory );
+	}
+
+	public GlobalTemporaryTableMutationStrategy(
+			TemporaryTable idTable,
+			TemporaryTableStrategy temporaryTableStrategy,
+			JdbcServices jdbcServices) {
+		super( idTable, temporaryTableStrategy, jdbcServices );
 	}
 
 	@Override

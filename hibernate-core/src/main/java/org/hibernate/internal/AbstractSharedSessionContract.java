@@ -56,7 +56,6 @@ import org.hibernate.engine.creation.internal.options.SharedStatelessOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationContext;
-import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -350,9 +349,7 @@ abstract class AbstractSharedSessionContract
 		}
 
 		extensions = new HashMap<>();
-		for ( var integration : factory.getServiceRegistry()
-				.requireService( ExtensionIntegrationService.class )
-				.extensionIntegrations() ) {
+		for ( var integration : factory.getExtensionIntegrationService().extensionIntegrations() ) {
 			extensions.put( integration.getExtensionType(),
 					integration.createExtension( this ) );
 		}

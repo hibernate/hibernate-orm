@@ -17,7 +17,6 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.query.named.spi.NamedNativeQueryMemento;
@@ -133,7 +132,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 
 	@Nonnull
 	@Override
-	public NamedNativeQueryMemento<R> resolve(@Nonnull SessionFactoryImplementor factory) {
+	public NamedNativeQueryMemento<R> resolve() {
 		return new NativeSelectionMementoImpl<>(
 				name,
 				sqlString,

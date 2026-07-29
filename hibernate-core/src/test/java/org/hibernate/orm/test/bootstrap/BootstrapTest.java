@@ -18,12 +18,10 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
@@ -36,7 +34,6 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -68,7 +65,8 @@ public class BootstrapTest {
 	public void test_bootstrap_bootstrap_native_registry_BootstrapServiceRegistry_example() {
 
 		ClassLoader customClassLoader = Thread.currentThread().getContextClassLoader();
-		Integrator customIntegrator = new BeanValidationIntegrator();
+		Integrator customIntegrator = new Integrator() {
+		};
 
 		//tag::example-bootstrap-native-BootstrapServiceRegistry[]
 		BootstrapServiceRegistryBuilder bootstrapRegistryBuilder =
@@ -376,7 +374,7 @@ public class BootstrapTest {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Integrator.Context context,
 				SessionFactoryImplementor sessionFactory) {
 
 			// As you might expect, an EventListenerRegistry is the thing with which event
@@ -407,7 +405,7 @@ public class BootstrapTest {
 		@Override
 		public void disintegrate(
 				SessionFactoryImplementor sessionFactory,
-				SessionFactoryServiceRegistry serviceRegistry) {
+				Context context) {
 
 		}
 	}

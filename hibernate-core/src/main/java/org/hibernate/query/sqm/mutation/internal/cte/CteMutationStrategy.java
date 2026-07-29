@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -51,7 +52,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 	public static final String ID_TABLE_NAME = "id_cte";
 
 	private final EntityPersister rootDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryAccess sessionFactoryAccess;
 	private final CteTable idCteTable;
 
 	public CteMutationStrategy(
@@ -64,7 +65,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			EntityPersister rootDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.rootDescriptor = rootDescriptor;
-		this.sessionFactory = runtimeModelCreationContext.getSessionFactory();
+		this.sessionFactoryAccess = runtimeModelCreationContext.getSessionFactoryAccess();
 
 		final Dialect dialect = runtimeModelCreationContext.getDialect();
 
@@ -99,7 +100,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 					sqmDelete,
 					domainParameterXref,
 					this,
-					sessionFactory,
+					getSessionFactory(),
 					context,
 					firstJdbcParameterBindingsConsumer
 			);
@@ -110,7 +111,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 					sqmDelete,
 					domainParameterXref,
 					this,
-					sessionFactory,
+					getSessionFactory(),
 					context,
 					firstJdbcParameterBindingsConsumer
 			);
@@ -124,7 +125,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 				sqmUpdate,
 				domainParameterXref,
 				this,
-				sessionFactory,
+				getSessionFactory(),
 				context,
 				firstJdbcParameterBindingsConsumer
 		);
@@ -133,7 +134,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 	protected void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
 		final String targetEntityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister targetEntityDescriptor =
-				sessionFactory.getMappingMetamodel()
+				getSessionFactory().getMappingMetamodel()
 						.getEntityDescriptor( targetEntityName );
 
 		if ( targetEntityDescriptor != rootDescriptor && ! rootDescriptor.isSubclassEntityName( targetEntityDescriptor.getEntityName() ) ) {
@@ -154,7 +155,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 	}
 
 	protected SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+		return sessionFactoryAccess.getSessionFactory();
 	}
 
 	protected CteTable getIdCteTable() {

@@ -15,6 +15,7 @@ import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
@@ -22,8 +23,6 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
-
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Strategy based on ANSI SQL's definition of a "global temporary table".
@@ -39,15 +38,27 @@ public class GlobalTemporaryTableStrategy {
 	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.global_temporary.drop_tables";
 
 	private final TemporaryTable temporaryTable;
-	private final SessionFactoryImplementor sessionFactory;
+	private final TemporaryTableStrategy temporaryTableStrategy;
+	private final JdbcServices jdbcServices;
 
 	private boolean prepared;
 	private boolean dropIdTables;
 
 	public GlobalTemporaryTableStrategy(TemporaryTable temporaryTable, SessionFactoryImplementor sessionFactory) {
+		this(
+				temporaryTable,
+				requireGlobalTemporaryTableStrategy( sessionFactory.getJdbcServices().getDialect() ),
+				sessionFactory.getJdbcServices()
+		);
+	}
+
+	public GlobalTemporaryTableStrategy(
+			TemporaryTable temporaryTable,
+			TemporaryTableStrategy temporaryTableStrategy,
+			JdbcServices jdbcServices) {
 		this.temporaryTable = temporaryTable;
-		this.sessionFactory = sessionFactory;
-		final TemporaryTableStrategy temporaryTableStrategy = requireGlobalTemporaryTableStrategy( sessionFactory.getJdbcServices().getDialect() );
+		this.temporaryTableStrategy = temporaryTableStrategy;
+		this.jdbcServices = jdbcServices;
 
 		if ( temporaryTableStrategy.getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
 			throw new IllegalArgumentException( "Global-temp ID tables cannot use AfterUseAction.DROP : "
@@ -61,7 +72,7 @@ public class GlobalTemporaryTableStrategy {
 	}
 
 	public TemporaryTableStrategy getTemporaryTableStrategy() {
-		return castNonNull( sessionFactory.getJdbcServices().getDialect().getGlobalTemporaryTableStrategy() );
+		return temporaryTableStrategy;
 	}
 
 	public void prepare(MappingModelCreationProcess mappingModelCreationProcess, JdbcConnectionAccess connectionAccess) {
@@ -79,7 +90,7 @@ public class GlobalTemporaryTableStrategy {
 			LOG.tracef( "Creating global-temp ID table: %s", getTemporaryTable().getTableExpression() );
 
 			final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork =
-					new TemporaryTableHelper.TemporaryTableCreationWork( getTemporaryTable(), sessionFactory );
+					new TemporaryTableHelper.TemporaryTableCreationWork( getTemporaryTable(), jdbcServices );
 			final Connection connection;
 			try {
 				connection = connectionAccess.obtainConnection();
@@ -119,7 +130,7 @@ public class GlobalTemporaryTableStrategy {
 		LOG.tracef( "Dropping global-temp ID table: %s", getTemporaryTable().getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
-				new TemporaryTableHelper.TemporaryTableDropWork( getTemporaryTable(), sessionFactory );
+				new TemporaryTableHelper.TemporaryTableDropWork( getTemporaryTable(), jdbcServices );
 		Connection connection;
 		try {
 			connection = connectionAccess.obtainConnection();
@@ -154,7 +165,4 @@ public class GlobalTemporaryTableStrategy {
 		return temporaryTable;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
 }

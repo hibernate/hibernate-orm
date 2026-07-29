@@ -25,7 +25,6 @@ import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -46,6 +45,7 @@ import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -166,7 +166,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.PathException;
-import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -325,6 +325,8 @@ public abstract class AbstractEntityPersister
 
 	private final NavigableRole navigableRole;
 	private final SessionFactoryImplementor factory;
+	private final SqlStringGenerationContext sqlStringGenerationContext;
+	private final JdbcServices jdbcServices;
 
 	private final String sqlAliasStem;
 	private final String jpaEntityName;
@@ -451,6 +453,7 @@ public abstract class AbstractEntityPersister
 	private Setter[] setterCache;
 
 	private final String queryLoaderName;
+	private final NamedSelectionMemento<?> namedQueryLoaderMemento;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -484,6 +487,8 @@ public abstract class AbstractEntityPersister
 		super( persistentClass, creationContext );
 
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
+		sqlStringGenerationContext = creationContext.getSqlStringGenerationContext();
+		jdbcServices = creationContext.getJdbcServices();
 
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 		this.jpaCallbacks =
@@ -517,8 +522,8 @@ public abstract class AbstractEntityPersister
 			filterHelper = new FilterHelper(
 					persistentClass.getFilters(),
 					getEntityNameByTableNameMap( persistentClass,
-							factory.getSqlStringGenerationContext() ),
-					factory
+							creationContext.getSqlStringGenerationContext() ),
+					creationContext
 			);
 		}
 		else {
@@ -798,9 +803,8 @@ public abstract class AbstractEntityPersister
 		fullDiscriminatorSQLValues = toStringArray( sqlValues );
 		fullDiscriminatorValues = values.toArray( DiscriminatorValue[]::new );
 
-		if ( hasNamedQueryLoader() ) {
-			getNamedQueryMemento( creationContext.getBootModel() );
-		}
+		namedQueryLoaderMemento =
+				hasNamedQueryLoader() ? resolveNamedQueryLoader( creationContext ) : null;
 
 		// Hibernate Reactive needs to convert the stateManagement so that it can create reactive coordinators
 		stateManagement = statementManagerConverter.apply( persistentClass.getRootClass().getStateManagement() );
@@ -835,10 +839,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	private NamedQueryMemento<?> getNamedQueryMemento(@Nonnull MetadataImplementor bootModel) {
+	private NamedSelectionMemento<?> resolveNamedQueryLoader(RuntimeModelCreationContext creationContext) {
 		final var memento =
-				factory.getQueryEngine().getNamedObjectRepository()
-						.resolve( factory, bootModel, queryLoaderName );
+				creationContext.getNamedLoaderQueryResolver()
+						.resolveLoaderQuery( creationContext.getBootModel(), queryLoaderName );
 		if ( memento == null ) {
 			throw new IllegalArgumentException( "Could not resolve named query '" + queryLoaderName
 					+ "' for loading entity '" + getEntityName() + "'" );
@@ -846,14 +850,19 @@ public abstract class AbstractEntityPersister
 		return memento;
 	}
 
+	private NamedSelectionMemento<?> getNamedQueryMemento() {
+		if ( namedQueryLoaderMemento == null ) {
+			throw new IllegalStateException( "Entity does not define a named query loader: " + getEntityName() );
+		}
+		return namedQueryLoaderMemento;
+	}
+
 	/**
 	 * For Hibernate Reactive
 	 */
 	protected SingleIdEntityLoader<?> buildSingleIdEntityLoader() {
 		if ( hasNamedQueryLoader() ) {
-			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final var memento = getNamedQueryMemento( null );
-			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
+			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, getNamedQueryMemento() );
 		}
 		else {
 			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ), null );
@@ -5236,7 +5245,7 @@ public abstract class AbstractEntityPersister
 	public String determineTableName(Table table) {
 		return table.getSubselect() != null
 				? "( " + createSqlQueryParser( table ).process() + " )"
-				: factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
+				: sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private SQLQueryParser createSqlQueryParser(Table table) {
@@ -5245,7 +5254,12 @@ public abstract class AbstractEntityPersister
 				null,
 				// NOTE: this allows finer control over catalog and schema used for
 				// placeholder handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
-				new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
+				new ExplicitSqlStringGenerationContext(
+						table.getCatalog(),
+						table.getSchema(),
+						sqlStringGenerationContext,
+						jdbcServices
+				)
 		);
 	}
 

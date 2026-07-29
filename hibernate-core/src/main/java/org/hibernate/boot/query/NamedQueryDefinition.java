@@ -11,15 +11,12 @@ import jakarta.annotation.Nonnull;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.JpaReference;
 
 /**
  * Boot-model representation of named queries.
  * <p>
- * Ultimately this is used to {@linkplain #resolve make} a
- * named query memento.
+ * Ultimately this is used to make a named query memento.
  *
  * @see org.hibernate.annotations.NamedQuery
  * @see org.hibernate.annotations.NamedNativeQuery
@@ -64,9 +61,4 @@ public interface NamedQueryDefinition<T> extends JpaReference, Serializable {
 	@Nullable
 	String getLocation();
 
-	/**
-	 * Resolve the mapping definition into its run-time memento form.
-	 */
-	@Nonnull
-	NamedQueryMemento<T> resolve(@Nonnull SessionFactoryImplementor factory);
 }

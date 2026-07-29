@@ -5,14 +5,13 @@
 package org.hibernate.engine.extension.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.service.Service;
 
 @Incubating
-public interface ExtensionIntegrationService extends Service {
+public interface ExtensionIntegrationService {
 	/**
-	 * Retrieve all extensions.
+	 * Retrieve all Java-service-loaded extension integrations.
 	 *
-	 * @return All extensions.
+	 * @return All extension integrations.
 	 */
 	Iterable<ExtensionIntegration<?>> extensionIntegrations();
 }

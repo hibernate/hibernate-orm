@@ -19,8 +19,8 @@ import org.hibernate.stat.Statistics;
 
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 
-/// **Temporary** adapter from the PoC's resolved factory settings to ORM's legacy
-/// [SessionFactoryOptions] SPI.
+/// Adapter from resolved factory settings to ORM's retained
+/// [SessionFactoryOptions] compatibility SPI.
 /// This adapter deliberately supports only the subset audited for the immediate
 /// `SessionFactoryImpl` constructor path.  Unsupported method calls fail
 /// loudly so each new runtime dependency can be audited before it becomes part of

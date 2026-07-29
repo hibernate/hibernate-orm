@@ -50,5 +50,21 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 */
 	void deRegisterChild(@Nonnull ServiceRegistryImplementor child);
 
+	/**
+	 * Register a non-registry object whose lifecycle depends on this registry.
+	 * This participates in automatic registry closing in the same way as a
+	 * child registry.
+	 */
+	default void registerDependent(@Nonnull Object dependent) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Release a previously registered dependent.
+	 */
+	default void deRegisterDependent(@Nonnull Object dependent) {
+		throw new UnsupportedOperationException();
+	}
+
 	<T extends Service> @Nullable T fromRegistryOrChildren(@Nonnull Class<T> serviceRole);
 }

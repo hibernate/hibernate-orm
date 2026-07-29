@@ -18,6 +18,8 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 /// cfg.xml aggregation.  The legacy/native construction bridge keeps the older
 /// SessionFactoryImpl name and JNDI helpers until that path is retired.
 ///
+/// @see org.hibernate.internal.SessionFactoryRegistry
+///
 /// @since 9.0
 /// @author Steve Ebersole
 public record SessionFactoryConstructionIdentity(

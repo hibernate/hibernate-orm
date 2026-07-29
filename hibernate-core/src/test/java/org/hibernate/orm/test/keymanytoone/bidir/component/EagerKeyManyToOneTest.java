@@ -10,7 +10,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultLoadEventListener;
 import org.hibernate.event.spi.EventType;
@@ -45,7 +44,7 @@ public class EagerKeyManyToOneTest {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Integrator.Context context,
 				SessionFactoryImplementor sessionFactory) {
 			integrate( sessionFactory );
 		}

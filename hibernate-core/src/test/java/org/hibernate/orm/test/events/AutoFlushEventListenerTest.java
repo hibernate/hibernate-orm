@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -108,7 +107,7 @@ public class AutoFlushEventListenerTest {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Integrator.Context context,
 				SessionFactoryImplementor sessionFactory) {
 			sessionFactory.getEventListenerRegistry().appendListeners(
 					EventType.AUTO_FLUSH,

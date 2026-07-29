@@ -9,7 +9,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventType;
@@ -220,7 +219,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 					@Override
 					public void integrate(
 							Metadata metadata,
-							BootstrapContext bootstrapContext,
+							Integrator.Context context,
 							SessionFactoryImplementor sessionFactory) {
 						integrate( sessionFactory );
 					}

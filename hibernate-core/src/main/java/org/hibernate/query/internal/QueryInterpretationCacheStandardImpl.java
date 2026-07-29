@@ -35,19 +35,22 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private final InternalCache<Key, QueryPlan> queryPlanCache;
 
-	private final ServiceRegistry serviceRegistry;
+	private final Supplier<StatisticsImplementor> statisticsSupplier;
 	private final InternalCache<Object, HqlInterpretation<?>> hqlInterpretationCache;
 	private final InternalCache<String, ParameterInterpretation> nativeQueryParamCache;
 
 	private StatisticsImplementor statistics;
 
-	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
+	public QueryInterpretationCacheStandardImpl(
+			int maxQueryPlanCount,
+			ServiceRegistry serviceRegistry,
+			Supplier<StatisticsImplementor> statisticsSupplier) {
 		QUERY_PLAN_CACHE_MESSAGE_LOGGER.startingQueryInterpretationCache( maxQueryPlanCount );
 		final var cacheFactory = serviceRegistry.requireService( InternalCacheFactory.class );
 		this.queryPlanCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.hqlInterpretationCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.nativeQueryParamCache = cacheFactory.createInternalCache( maxQueryPlanCount );
-		this.serviceRegistry = serviceRegistry;
+		this.statisticsSupplier = statisticsSupplier;
 	}
 
 	@Override
@@ -62,7 +65,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	private StatisticsImplementor getStatistics() {
 		if ( statistics == null ) {
-			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
+			statistics = statisticsSupplier.get();
 		}
 		return statistics;
 	}

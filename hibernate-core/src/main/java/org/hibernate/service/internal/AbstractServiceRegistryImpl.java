@@ -67,6 +67,8 @@ public abstract class AbstractServiceRegistryImpl
 	private final boolean autoCloseRegistry;
 	// Guarded by synchronization on this.
 	private Set<ServiceRegistryImplementor> childRegistries;
+	// Guarded by synchronization on this.
+	private Set<Object> dependents;
 
 	private final AtomicBoolean active = new AtomicBoolean( true );
 
@@ -419,7 +421,31 @@ public abstract class AbstractServiceRegistryImpl
 			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
 		}
 		childRegistries.remove( child );
-		if ( childRegistries.isEmpty() ) {
+		autoCloseIfUnused();
+	}
+
+	@Override
+	public synchronized void registerDependent(@Nonnull Object dependent) {
+		if ( dependents == null ) {
+			dependents = new HashSet<>();
+		}
+		if ( !dependents.add( dependent ) ) {
+			SERVICE_LOGGER.warnf( "Dependent [%s] was already registered; this will end badly later", dependent );
+		}
+	}
+
+	@Override
+	public synchronized void deRegisterDependent(@Nonnull Object dependent) {
+		if ( dependents == null ) {
+			throw new IllegalStateException( "No dependent registrations found" );
+		}
+		dependents.remove( dependent );
+		autoCloseIfUnused();
+	}
+
+	private void autoCloseIfUnused() {
+		if ( ( childRegistries == null || childRegistries.isEmpty() )
+				&& ( dependents == null || dependents.isEmpty() ) ) {
 			if ( autoCloseRegistry ) {
 				SERVICE_LOGGER.destroyingServiceRegistry();
 				destroy();

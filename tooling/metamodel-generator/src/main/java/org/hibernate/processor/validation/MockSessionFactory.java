@@ -89,6 +89,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -99,6 +100,7 @@ import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.named.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
+import org.hibernate.query.named.spi.NamedLoaderQueryResolver;
 import org.hibernate.query.named.spi.NamedObjectRepository;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
@@ -609,7 +611,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public QueryInterpretationCache getInterpretationCache() {
-		return new QueryInterpretationCacheDisabledImpl( serviceRegistry );
+		return new QueryInterpretationCacheDisabledImpl( this::getStatistics );
 	}
 
 	@Override
@@ -636,6 +638,11 @@ public abstract class MockSessionFactory
 	@Override
 	public NamedObjectRepository getNamedObjectRepository() {
 		return new NamedObjectRepositoryImpl(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
+	}
+
+	@Override
+	public NamedLoaderQueryResolver getNamedLoaderQueryResolver() {
+		return getNamedObjectRepository();
 	}
 
 	@Override
@@ -955,8 +962,8 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return MockSessionFactory.this;
+	public SessionFactoryAccess getSessionFactoryAccess() {
+		return () -> MockSessionFactory.this;
 	}
 
 	@Override

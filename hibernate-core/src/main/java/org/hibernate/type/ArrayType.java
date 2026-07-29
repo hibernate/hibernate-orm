@@ -119,6 +119,14 @@ public class ArrayType extends CollectionType {
 			Array.set( target, i, elemType.replace( Array.get(original, i), null, session, owner, copyCache ) );
 		}
 
+		if ( target instanceof PersistentCollection<?> targetPersistentCollection
+				&& targetPersistentCollection.wasInitialized()
+				&& targetPersistentCollection.isDirty()
+				&& targetPersistentCollection.getStoredSnapshot() != null
+				&& targetPersistentCollection.equalsSnapshot( getPersister( session.getFactory() ) ) ) {
+			targetPersistentCollection.clearDirty();
+		}
+
 		return target;
 
 	}

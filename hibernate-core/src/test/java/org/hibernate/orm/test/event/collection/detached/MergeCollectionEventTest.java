@@ -98,6 +98,28 @@ public class MergeCollectionEventTest {
 
 		listener.reset();
 
+		Character paul2 = new Character( 3, "Paul Atreides 2" );
+		scope.inTransaction( s -> {
+			s.persist( paul2 );
+		} );
+
+		assertEquals( 2, listener.getEventEntryList().size() );
+		checkListener( 0, PreCollectionRecreateEvent.class, paul2, Collections.EMPTY_LIST );
+		checkListener( 1, PostCollectionRecreateEvent.class, paul2, Collections.EMPTY_LIST );
+
+		listener.reset();
+
+		Character paulo2 = new Character( 4, "Paulo Atreides 2" );
+		scope.inTransaction( s -> {
+			s.persist( paulo2 );
+		} );
+
+		assertEquals( 2, listener.getEventEntryList().size() );
+		checkListener( 0, PreCollectionRecreateEvent.class, paulo2, Collections.EMPTY_LIST );
+		checkListener( 1, PostCollectionRecreateEvent.class, paulo2, Collections.EMPTY_LIST );
+
+		listener.reset();
+
 		Alias alias1 = new Alias( 1, "Paul Muad'Dib" );
 		scope.inTransaction( s -> {
 			s.persist( alias1 );
@@ -132,7 +154,7 @@ public class MergeCollectionEventTest {
 		paulo.associateAlias( alias2 );
 
 		scope.inTransaction( s -> {
-			s.merge( alias1 );
+			Alias managedAlias1 = s.merge( alias1 );
 
 			assertEquals( 0, listener.getEventEntryList().size() );
 
@@ -177,9 +199,22 @@ public class MergeCollectionEventTest {
 
 			listener.reset();
 
-			s.merge( alias2 );
+			Alias managedAlias2 = s.merge( alias2 );
 
 			assertEquals( 0, listener.getEventEntryList().size() );
+
+			s.flush();
+
+			// Data didn't change compared to snapshot, so we get no events
+			assertEquals( 0, listener.getEventEntryList().size() );
+
+			Character managedPaul2 = s.find( Character.class, paul2.getId() );
+			managedPaul2.associateAlias( managedAlias1 );
+			managedPaul2.associateAlias( managedAlias2 );
+
+			Character managedPaulo2 = s.find( Character.class, paulo2.getId() );
+			managedPaulo2.associateAlias( managedAlias1 );
+			managedPaulo2.associateAlias( managedAlias2 );
 
 			s.flush();
 
@@ -199,7 +234,7 @@ public class MergeCollectionEventTest {
 			else {
 				// Legacy: PRE/POST paired per collection
 				checkListener( 0, PreCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
-				checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
+				checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1.getCharacters() );
 //		checkListener( 2, PreCollectionUpdateEvent.class, paul, Collections.EMPTY_LIST );
 //		checkListener( 3, PostCollectionUpdateEvent.class, paul, paul.getAliases() );
 				checkListener( 4, PreCollectionUpdateEvent.class, alias2, alias2CharactersSnapshot );

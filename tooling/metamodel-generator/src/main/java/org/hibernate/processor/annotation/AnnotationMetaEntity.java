@@ -1211,7 +1211,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& hasAnnotation( element, ENTITY )
 			&& context.isDataEventPackageAvailable() // events
 			&& context.addInjectAnnotation() // @Inject
-			&& context.addDependentAnnotation(); // CDI
+			&& context.isCdiAvailable(); // CDI
 	}
 
 	void addEventBus() {
@@ -1237,7 +1237,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return jakartaDataRepository
 			&& !quarkusInjection
 			&& !springInjection
-			&& context.addDependentAnnotation();
+			&& context.isCdiAvailable();
 	}
 
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {

@@ -1036,8 +1036,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final var hibernateType = parameter.getHibernateType();
 			return hibernateType == null
 				|| values.isEmpty()
-				|| !isInstance( hibernateType, value, getNodeBuilder() )
-				|| isInstance( hibernateType, values.iterator().next(), getNodeBuilder() );
+				|| isInstance( hibernateType, values.iterator().next(), getNodeBuilder() )
+				|| !isInstance( hibernateType, value, getNodeBuilder() );
 		}
 		else {
 			return false;

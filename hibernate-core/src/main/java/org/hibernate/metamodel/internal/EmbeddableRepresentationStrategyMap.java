@@ -58,9 +58,9 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	@Override
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
 		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
+				null, // because Maps don't get a service
 				null,
-				bootAttributeDescriptor.getName(),
-				true );
+				bootAttributeDescriptor.getName(), true );
 	}
 
 	@Override

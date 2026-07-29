@@ -23,6 +23,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
 import org.hibernate.usertype.CompositeUserType;
@@ -68,6 +69,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			final var embeddableClass = getEmbeddableClass( bootDescriptor, subclassesByName, property );
 			propertyAccesses[i] =
 					buildPropertyAccess(
+							creationContext.getServiceRegistry().requireService( PropertyAccessorService.class ),
 							property,
 							embeddableClass,
 							customInstantiator == null,
@@ -176,6 +178,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	}
 
 	private PropertyAccess buildPropertyAccess(
+			PropertyAccessorService propertyAccessorService,
 			Property property,
 			Class<?> embeddableClass,
 			boolean requireSetters,
@@ -191,7 +194,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 					)
 			);
 		}
-		return strategy.buildPropertyAccess( embeddableClass, property.getName(), requireSetters );
+		return strategy.buildPropertyAccess( propertyAccessorService, embeddableClass, property.getName(), requireSetters );
 	}
 
 	private static ReflectionOptimizer buildReflectionOptimizer(

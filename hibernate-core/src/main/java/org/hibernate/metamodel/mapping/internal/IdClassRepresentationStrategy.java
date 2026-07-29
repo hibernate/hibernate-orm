@@ -17,6 +17,7 @@ import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,8 +26,10 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class IdClassRepresentationStrategy implements EmbeddableRepresentationStrategy {
 	private final JavaType<?> idClassType;
 	private final EmbeddableInstantiator instantiator;
+	private final PropertyAccessorService propertyAccessorService;
 
 	public IdClassRepresentationStrategy(
+			PropertyAccessorService propertyAccessorService,
 			IdClassEmbeddable idClassEmbeddable,
 			boolean simplePropertyOrder,
 			Supplier<String[]> attributeNamesAccess) {
@@ -43,6 +46,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 					() -> idClassEmbeddable
 			);
 		}
+		this.propertyAccessorService = propertyAccessorService;
 	}
 
 	@Override
@@ -81,9 +85,9 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 		}
 
 		return strategy.buildPropertyAccess(
+				propertyAccessorService,
 				idClassType.getJavaTypeClass(),
 				bootAttributeDescriptor.getName(),
-				false
-		);
+				false );
 	}
 }

@@ -2,7 +2,6 @@ package org.hibernate.bytecode.internal.none;
 
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.proxy.ProxyFactory;
 
 /**
@@ -11,7 +10,7 @@ import org.hibernate.proxy.ProxyFactory;
 final class NoProxyFactoryFactory implements ProxyFactoryFactory {
 
 	@Override
-	public ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory) {
+	public ProxyFactory buildProxyFactory() {
 		return DisallowedProxyFactory.INSTANCE;
 	}
 

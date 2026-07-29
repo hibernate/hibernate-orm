@@ -1,7 +1,6 @@
 package org.hibernate.orm.test.events;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.ClearEvent;
 import org.hibernate.event.spi.ClearEventListener;
@@ -74,7 +73,7 @@ public class ClearEventListenerTest {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Integrator.Context context,
 				SessionFactoryImplementor sessionFactory) {
 			integrate( sessionFactory );
 		}

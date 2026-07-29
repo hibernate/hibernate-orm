@@ -454,13 +454,12 @@ smaller contracts:
 As those consumers are audited, `SessionFactoryImpl` and its collaborators can
 accept narrower resolved products instead of the whole options SPI.
 
-Factory-scoped service-registry creation should become an explicit late
-construction phase.  The current ORM path builds the
-`SessionFactoryServiceRegistry` from inside `SessionFactoryImpl` with a
-partially initialized factory and the full `SessionFactoryOptions` SPI.  The
-target design should instead pass a narrower service-registry build context:
-parent services, class-loading access, resolved settings needed by
-factory-scoped services, and a factory identity/build handle.
+Factory-owned runtime services no longer require a child service registry.
+Strategies and factories that may be replaced by integrations are discovered
+as Java services while preparing runtime components.  Their products are
+created explicitly and owned directly by `SessionFactoryImpl`, while
+`SessionFactoryImplementor#getServiceRegistry()` exposes the standard service
+registry.
 
 Integrator execution should likewise be visible as a factory-integration phase.
 The legacy `Integrator` SPI may need to remain as a compatibility adapter, but

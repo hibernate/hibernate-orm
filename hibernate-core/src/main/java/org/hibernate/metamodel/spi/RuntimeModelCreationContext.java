@@ -4,11 +4,9 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.action.queue.spi.PlanningOptions;
-import org.hibernate.Remove;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -18,7 +16,6 @@ import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
@@ -28,6 +25,7 @@ import org.hibernate.metamodel.internal.MappedSuperclassHandoffResolver;
 import org.hibernate.metamodel.internal.RuntimeModelHandoffResolvers;
 import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.query.named.spi.NamedLoaderQueryResolver;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -42,45 +40,25 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public interface RuntimeModelCreationContext {
-	@Remove
-	@Nonnull
-	SessionFactoryImplementor getSessionFactory();
-
 	/**
 	 * Access to the SessionFactory for runtime model objects that need the
 	 * factory for later runtime behavior.
 	 */
-	default SessionFactoryAccess getSessionFactoryAccess() {
-		return this::getSessionFactory;
-	}
+	SessionFactoryAccess getSessionFactoryAccess();
 
-	@Remove
-	@Nonnull
-	BootstrapContext getBootstrapContext();
+	ModelsContext getModelsContext();
 
-	default ModelsContext getModelsContext() {
-		return getBootstrapContext().getModelsContext();
-	}
+	ClassLoaderService getClassLoaderService();
 
-	default ClassLoaderService getClassLoaderService() {
-		return getBootstrapContext().getClassLoaderService();
-	}
+	ClassLoaderAccess getClassLoaderAccess();
 
-	default ClassLoaderAccess getClassLoaderAccess() {
-		return getBootstrapContext().getClassLoaderAccess();
-	}
-
-	default ManagedBeanRegistry getManagedBeanRegistry() {
-		return getBootstrapContext().getManagedBeanRegistry();
-	}
+	ManagedBeanRegistry getManagedBeanRegistry();
 
 	default MappingResolutionOptions getMappingResolutionOptions() {
 		return getBootModel().getMappingResolutionOptions();
 	}
 
-	default ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
-		return getBootstrapContext().getRepresentationStrategySelector();
-	}
+	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 
 	default CollectionSemanticsResolver getPersistentCollectionRepresentationResolver() {
 		return getMappingResolutionOptions().getPersistentCollectionRepresentationResolver();
@@ -135,7 +113,8 @@ public interface RuntimeModelCreationContext {
 
 	SqmFunctionRegistry getFunctionRegistry();
 
-	@Nonnull
+	NamedLoaderQueryResolver getNamedLoaderQueryResolver();
+
 	Map<String, Object> getSettings();
 
 	@Nonnull

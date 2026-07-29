@@ -7,7 +7,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -117,7 +117,7 @@ class BeanValidationNewLifecycleTest {
 	 */
 	@ServiceRegistry(settings = {
 			@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "callback"),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = ValidatedItem.class)
 	@SessionFactory
@@ -142,7 +142,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_INSERT_VALIDATION_GROUP, value = ""),
 			@Setting(name = ValidationSettings.JAKARTA_PERSIST_VALIDATION_GROUP,
 					value = "jakarta.validation.groups.Default"),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = ValidatedItem.class)
 	@SessionFactory
@@ -167,7 +167,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_INSERT_VALIDATION_GROUP, value = ""),
 			@Setting(name = ValidationSettings.JAKARTA_PERSIST_VALIDATION_GROUP, value = ""),
 			@Setting(name = ValidationSettings.JAKARTA_UPDATE_VALIDATION_GROUP, value = ""),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = ValidatedItem.class)
 	@SessionFactory
@@ -188,7 +188,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "callback"),
 			@Setting(name = ValidationSettings.JAKARTA_MERGE_VALIDATION_GROUP,
 					value = "jakarta.validation.groups.Default"),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = ValidatedItem.class)
 	@SessionFactory
@@ -217,7 +217,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "callback"),
 			@Setting(name = ValidationSettings.JAKARTA_INSERT_VALIDATION_GROUP, value = ""),
 			@Setting(name = ValidationSettings.JAKARTA_UPDATE_VALIDATION_GROUP, value = ""),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = ValidatedItem.class)
 	@SessionFactory
@@ -244,7 +244,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "callback"),
 			@Setting(name = ValidationSettings.JAKARTA_REMOVE_VALIDATION_GROUP,
 					value = "jakarta.validation.groups.Default"),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = ValidatedItem.class)
 	@SessionFactory
@@ -277,7 +277,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_INSERT_VALIDATION_GROUP,
 					value = "org.hibernate.orm.test.annotations.beanvalidation.BeanValidationNewLifecycleTest$InsertGroup"),
 			@Setting(name = ValidationSettings.JAKARTA_UPDATE_VALIDATION_GROUP, value = ""),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = DualValidatedItem.class)
 	@SessionFactory
@@ -310,7 +310,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_INSERT_VALIDATION_GROUP,
 					value = "org.hibernate.orm.test.annotations.beanvalidation.BeanValidationNewLifecycleTest$InsertGroup"),
 			@Setting(name = ValidationSettings.JAKARTA_UPDATE_VALIDATION_GROUP, value = ""),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = DualValidatedItem.class)
 	@SessionFactory
@@ -343,7 +343,7 @@ class BeanValidationNewLifecycleTest {
 			@Setting(name = ValidationSettings.JAKARTA_INSERT_VALIDATION_GROUP,
 					value = "org.hibernate.orm.test.annotations.beanvalidation.BeanValidationNewLifecycleTest$InsertGroup"),
 			@Setting(name = ValidationSettings.JAKARTA_UPDATE_VALIDATION_GROUP, value = ""),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = DualValidatedItem.class)
 	@SessionFactory
@@ -378,7 +378,7 @@ class BeanValidationNewLifecycleTest {
 					value = "org.hibernate.orm.test.annotations.beanvalidation.BeanValidationNewLifecycleTest$RemoveGroup"),
 			@Setting(name = ValidationSettings.JAKARTA_DELETE_VALIDATION_GROUP,
 					value = "org.hibernate.orm.test.annotations.beanvalidation.BeanValidationNewLifecycleTest$DeleteGroup"),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = DualValidatedItem.class)
 	@SessionFactory
@@ -416,7 +416,7 @@ class BeanValidationNewLifecycleTest {
 					value = "org.hibernate.orm.test.annotations.beanvalidation.BeanValidationNewLifecycleTest$RemoveGroup"),
 			@Setting(name = ValidationSettings.JAKARTA_DELETE_VALIDATION_GROUP,
 					value = "org.hibernate.orm.test.annotations.beanvalidation.BeanValidationNewLifecycleTest$DeleteGroup"),
-			@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+			@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 	})
 	@DomainModel(annotatedClasses = DualValidatedItem.class)
 	@SessionFactory
@@ -436,7 +436,7 @@ class BeanValidationNewLifecycleTest {
 					.satisfies( ex -> {
 						var violations = ((ConstraintViolationException) ex).getConstraintViolations();
 						assertThat( violations )
-								.extracting( v -> ((ConstraintViolation<?>) v).getPropertyPath().toString() )
+								.extracting( v -> v.getPropertyPath().toString() )
 								.containsExactly( "deleteField" );
 					} );
 		} );

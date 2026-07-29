@@ -11,6 +11,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -20,34 +21,46 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public class ExplicitSqlStringGenerationContext implements SqlStringGenerationContext {
-	private final SessionFactoryImplementor factory;
-	@Nullable
+	private final JdbcServices jdbcServices;
 	private final Identifier defaultCatalog;
 	@Nullable
 	private final Identifier defaultSchema;
 
 	public ExplicitSqlStringGenerationContext(
-			@Nullable String defaultCatalog,
-			@Nullable String defaultSchema,
-			@Nonnull SessionFactoryImplementor factory) {
-		this.factory = factory;
+			String defaultCatalog,
+			String defaultSchema,
+			SessionFactoryImplementor factory) {
+		this(
+				defaultCatalog,
+				defaultSchema,
+				factory.getSqlStringGenerationContext(),
+				factory.getJdbcServices()
+		);
+	}
+
+	public ExplicitSqlStringGenerationContext(
+			String defaultCatalog,
+			String defaultSchema,
+			SqlStringGenerationContext baseContext,
+			JdbcServices jdbcServices) {
+		this.jdbcServices = jdbcServices;
 		this.defaultCatalog = defaultCatalog != null
 				? toIdentifier( defaultCatalog )
-				: toIdentifier( factory.getSessionFactoryOptions().getDefaultCatalog() );
+				: baseContext.getDefaultCatalog();
 		this.defaultSchema = defaultSchema != null
 				? toIdentifier( defaultSchema )
-				: toIdentifier( factory.getSessionFactoryOptions().getDefaultSchema() );
+				: baseContext.getDefaultSchema();
 	}
 
 	@Nonnull
 	private JdbcEnvironment getJdbcEnvironment() {
-		return factory.getJdbcServices().getJdbcEnvironment();
+		return jdbcServices.getJdbcEnvironment();
 	}
 
 	@Nonnull
 	@Override
 	public Dialect getDialect() {
-		return factory.getJdbcServices().getDialect();
+		return jdbcServices.getDialect();
 	}
 
 	@Nullable

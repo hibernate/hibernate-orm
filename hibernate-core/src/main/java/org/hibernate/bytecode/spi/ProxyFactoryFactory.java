@@ -1,6 +1,5 @@
 package org.hibernate.bytecode.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.service.Service;
 
@@ -19,7 +18,7 @@ public interface ProxyFactoryFactory extends Service {
 	 *
 	 * @return The lazy-load proxy factory.
 	 */
-	ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory);
+	ProxyFactory buildProxyFactory();
 
 	/**
 	 * Build a proxy factory for basic proxy concerns.  The return

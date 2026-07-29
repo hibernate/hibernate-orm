@@ -1,7 +1,6 @@
 package org.hibernate.orm.test.cdi.general.hibernatesearch;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -9,7 +8,6 @@ import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hamcrest.CoreMatchers;
 
@@ -57,9 +55,9 @@ public class HibernateSearchSimulatedIntegrator implements Integrator, BeanConta
 	@SuppressWarnings("unchecked")
 	public void integrate(
 			Metadata metadata,
-			BootstrapContext bootstrapContext,
+			Integrator.Context context,
 			SessionFactoryImplementor sessionFactory) {
-		ManagedBeanRegistry registry = bootstrapContext.getManagedBeanRegistry();
+		ManagedBeanRegistry registry = context.getManagedBeanRegistry();
 
 		BeanContainer beanContainer = registry.getBeanContainer();
 		assertThat( beanContainer, CoreMatchers.notNullValue() );
@@ -154,7 +152,7 @@ public class HibernateSearchSimulatedIntegrator implements Integrator, BeanConta
 	}
 
 	@Override
-	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	public void disintegrate(SessionFactoryImplementor sessionFactory, Context context) {
 		applicationScopedBean1.release();
 		applicationScopedBean2.release();
 		dependentBean1.release();

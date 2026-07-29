@@ -19,7 +19,6 @@ public interface NamedProcedureCallDefinition extends NamedQueryDefinition<Objec
 	@Nonnull
 	String getProcedureName();
 
-	@Override
 	@Nonnull
 	NamedCallableQueryMemento resolve(@Nonnull SessionFactoryImplementor factory);
 }

@@ -24,10 +24,12 @@ import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.spi.StandardSqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_ENABLED;
 import static org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE;
@@ -61,6 +63,8 @@ public class QueryEngineImpl implements QueryEngine {
 			QueryEngineOptions options,
 			BindingContext context,
 			ServiceRegistryImplementor serviceRegistry,
+			NativeQueryInterpreter nativeQueryInterpreter,
+			Supplier<StatisticsImplementor> statisticsSupplier,
 			Map<String,Object> properties,
 			String name) {
 		dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
@@ -69,8 +73,8 @@ public class QueryEngineImpl implements QueryEngine {
 		sqmFunctionRegistry = createFunctionRegistry( metadata, options );
 		sqmTranslatorFactory = resolveSqmTranslatorFactory( options );
 		namedObjectRepository = metadata.buildNamedQueryRepository();
-		interpretationCache = buildInterpretationCache( serviceRegistry, properties );
-		nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
+		interpretationCache = buildInterpretationCache( serviceRegistry, statisticsSupplier, properties );
+		this.nativeQueryInterpreter = nativeQueryInterpreter;
 		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		// here we have something nasty: we need to pass a reference to the current object to
 		// create the NodeBuilder, but then we need the NodeBuilder to create the HqlTranslator
@@ -130,7 +134,9 @@ public class QueryEngineImpl implements QueryEngine {
 	}
 
 	public static QueryInterpretationCache buildInterpretationCache(
-			ServiceRegistry serviceRegistry, Map<String, Object> properties) {
+			ServiceRegistry serviceRegistry,
+			Supplier<StatisticsImplementor> statisticsSupplier,
+			Map<String, Object> properties) {
 		final boolean useCache = getBoolean(
 				QUERY_PLAN_CACHE_ENABLED,
 				properties,
@@ -161,8 +167,8 @@ public class QueryEngineImpl implements QueryEngine {
 		}
 
 		return useCache
-				? new QueryInterpretationCacheStandardImpl( appliedMaxPlanSize, serviceRegistry )
-				: new QueryInterpretationCacheDisabledImpl( serviceRegistry ); // disabled
+				? new QueryInterpretationCacheStandardImpl( appliedMaxPlanSize, serviceRegistry, statisticsSupplier )
+				: new QueryInterpretationCacheDisabledImpl( statisticsSupplier ); // disabled
 	}
 
 	@Override

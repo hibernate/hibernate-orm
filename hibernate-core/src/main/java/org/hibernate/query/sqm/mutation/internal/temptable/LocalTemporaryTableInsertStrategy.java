@@ -44,7 +44,7 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 						runtimeModelCreationContext.getDialect(),
 						runtimeModelCreationContext
 				),
-				runtimeModelCreationContext.getSessionFactory()
+				temporaryTableStrategy
 		);
 	}
 
@@ -52,6 +52,12 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 			TemporaryTable entityTable,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityTable, sessionFactory );
+	}
+
+	public LocalTemporaryTableInsertStrategy(
+			TemporaryTable entityTable,
+			TemporaryTableStrategy temporaryTableStrategy) {
+		super( entityTable, temporaryTableStrategy );
 	}
 
 	@Override

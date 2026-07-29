@@ -11,7 +11,6 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.junit.jupiter.api.Test;
@@ -45,7 +44,6 @@ public class EntityManagerUnwrapTest extends EntityManagerFactoryBasedFunctional
 		entityManagerFactory.unwrap( SessionFactory.class );
 		entityManagerFactory.unwrap( SessionFactoryImplementor.class );
 
-		entityManagerFactory.unwrap( SessionFactoryServiceRegistry.class );
 		entityManagerFactory.unwrap( ServiceRegistry.class );
 
 		entityManagerFactory.unwrap( JdbcServices.class );

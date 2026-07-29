@@ -21,7 +21,6 @@ import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -35,7 +34,7 @@ import static org.hibernate.internal.log.StatisticsLogger.STATISTICS_LOGGER;
  * @author Alex Snaps
  * @author Sanne Grinovero
  */
-public class StatisticsImpl implements StatisticsImplementor, Service {
+public class StatisticsImpl implements StatisticsImplementor {
 
 	private final MappingMetamodelImplementor metamodel;
 	private final CacheImplementor cache;

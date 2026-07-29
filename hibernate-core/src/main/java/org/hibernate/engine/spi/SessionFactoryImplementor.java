@@ -21,6 +21,7 @@ import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
+import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
@@ -109,6 +110,12 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	StatisticsImplementor getStatistics();
 
 	/**
+	 * Obtain the integrations used to create per-session extensions.
+	 */
+	@Nonnull
+	ExtensionIntegrationService getExtensionIntegrationService();
+
+	/**
 	 * Obtain the {@link TypeConfiguration}
 	 */
 	@Nonnull
@@ -149,9 +156,13 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	SqlTranslationEngine getSqlTranslationEngine();
 
 	/**
-	 * Access to the {@code ServiceRegistry} for this {@code SessionFactory}.
+	 * Access to the standard {@code ServiceRegistry} used to build this
+	 * {@code SessionFactory}.
+	 * <p>
+	 * Factory-owned runtime components are exposed directly through this
+	 * contract and are not children of this registry.
 	 *
-	 * @return The factory's ServiceRegistry
+	 * @return The standard service registry
 	 */
 	@Nonnull
 	ServiceRegistryImplementor getServiceRegistry();

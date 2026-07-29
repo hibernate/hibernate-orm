@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -53,7 +55,13 @@ public class FilterConfiguration implements Serializable {
 	}
 
 	public Map<String, String> getAliasTableMap(SessionFactoryImplementor factory) {
-		final var mergedAliasTableMap = mergeAliasMaps( factory );
+		return getAliasTableMap( factory.getMappingMetamodel(), factory.getSqlStringGenerationContext() );
+	}
+
+	public Map<String, String> getAliasTableMap(
+			MappingMetamodelImplementor mappingMetamodel,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		final var mergedAliasTableMap = mergeAliasMaps( mappingMetamodel );
 		if ( !mergedAliasTableMap.isEmpty() ) {
 			return mergedAliasTableMap;
 		}
@@ -62,7 +70,7 @@ public class FilterConfiguration implements Serializable {
 		}
 		else if ( persistentClassTableName != null ) {
 			final String tableName =
-					factory.getSqlStringGenerationContext().format( persistentClassTableName );
+					sqlStringGenerationContext.format( persistentClassTableName );
 			return singletonMap( null, tableName );
 		}
 		else {
@@ -70,7 +78,7 @@ public class FilterConfiguration implements Serializable {
 		}
 	}
 
-	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
+	private Map<String, String> mergeAliasMaps(MappingMetamodelImplementor mappingMetamodel) {
 		final Map<String, String> result = new HashMap<>();
 		if ( aliasTableMap != null ) {
 			result.putAll( aliasTableMap );
@@ -79,7 +87,7 @@ public class FilterConfiguration implements Serializable {
 		if ( aliasEntityMap != null ) {
 			for ( var entry : aliasEntityMap.entrySet() ) {
 				final var joinable =
-						factory.getMappingMetamodel()
+						mappingMetamodel
 								.getEntityDescriptor( entry.getValue() );
 				result.put( entry.getKey(), joinable.getTableName() );
 			}

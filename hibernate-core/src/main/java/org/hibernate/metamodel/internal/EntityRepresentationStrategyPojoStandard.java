@@ -351,7 +351,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		final var proxyFactory =
 				bytecodeProvider.getProxyFactoryFactory()
-						.buildProxyFactory( creationContext.getSessionFactory() );
+						.buildProxyFactory();
+		final String entityName = bootDescriptor.getEntityName();
 		try {
 			proxyFactory.postInstantiate(
 					entityName,

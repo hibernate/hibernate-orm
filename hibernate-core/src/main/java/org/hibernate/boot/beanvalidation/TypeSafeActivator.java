@@ -47,7 +47,6 @@ import org.hibernate.mapping.SingleTableSubclass;
 
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
@@ -68,6 +67,8 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * Sets up Bean Validation {@linkplain BeanValidationEventListener event listener} and DDL-based constraints.
+ * The "type safe" aspect entails using reflection to avoid hard requirement on Bean Validation being
+ * present on the classpath.
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
@@ -125,7 +126,7 @@ class TypeSafeActivator {
 	}
 
 	@SuppressWarnings("unused")
-	public static void activate(ActivationContext context) {
+	public static Object prepareValidatorFactory(ActivationContext context) {
 		final ValidatorFactory factory;
 		try {
 			factory = getValidatorFactory( context );
@@ -143,7 +144,7 @@ class TypeSafeActivator {
 					// all good, we are looking at the ValidationMode.AUTO, and there are no providers available.
 					// Hence, we just don't enable the Jakarta Validation integration:
 					BEAN_VALIDATION_LOGGER.validationFactorySkipped();
-					return;
+					return null;
 				}
 				else {
 					// There is a Jakarta Validation provider, but it failed to bootstrap the factory for some reason,
@@ -152,9 +153,12 @@ class TypeSafeActivator {
 				}
 			}
 		}
+		return factory;
+	}
 
-		applyRelationalConstraints( factory, context );
-		applyCallbackListeners( factory, context );
+	@SuppressWarnings("unused")
+	public static void applyCallbackListeners(Object validatorFactory, ActivationContext context) {
+		applyCallbackListeners( (ValidatorFactory) validatorFactory, context );
 	}
 
 	public static void applyCallbackListeners(ValidatorFactory validatorFactory, ActivationContext context) {
@@ -188,7 +192,7 @@ class TypeSafeActivator {
 
 	private static void setupListener(
 			ValidatorFactory validatorFactory,
-			SessionFactoryServiceRegistry serviceRegistry,
+			ServiceRegistry serviceRegistry,
 			SessionFactoryImplementor sessionFactory) {
 		final var listener =
 				new BeanValidationEventListener( validatorFactory,
@@ -207,6 +211,11 @@ class TypeSafeActivator {
 
 	private static boolean isConstraintBasedValidationEnabled(ActivationContext context) {
 		return context.getValidationConstraintDdlInfluence() != DISABLED;
+	}
+
+	@SuppressWarnings("unused")
+	public static void applyRelationalConstraints(Object validatorFactory, ActivationContext context) {
+		applyRelationalConstraints( (ValidatorFactory) validatorFactory, context );
 	}
 
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext context) {
@@ -705,7 +714,7 @@ class TypeSafeActivator {
 
 		// 1 - look in SessionFactoryOptions.getValidatorFactoryReference()
 		final var providedFactory =
-				resolveProvidedFactory( context.getSessionFactory().getSessionFactoryOptions() );
+				resolveProvidedFactory( context.getSessionFactoryOptions() );
 		if ( providedFactory != null ) {
 			return providedFactory;
 		}

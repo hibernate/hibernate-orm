@@ -32,15 +32,21 @@ public class TemporaryTableHelper {
 	public static class TemporaryTableCreationWork extends AbstractReturningWork<Boolean> {
 		private final TemporaryTable temporaryTable;
 		private final TemporaryTableExporter exporter;
-		private final SessionFactoryImplementor sessionFactory;
+		private final JdbcServices jdbcServices;
 
 		public TemporaryTableCreationWork(
 				TemporaryTable temporaryTable,
 				SessionFactoryImplementor sessionFactory) {
+			this( temporaryTable, sessionFactory.getJdbcServices() );
+		}
+
+		public TemporaryTableCreationWork(
+				TemporaryTable temporaryTable,
+				JdbcServices jdbcServices) {
 			this(
 					temporaryTable,
-					sessionFactory.getJdbcServices().getDialect().getTemporaryTableExporter(),
-					sessionFactory
+					jdbcServices.getDialect().getTemporaryTableExporter(),
+					jdbcServices
 			);
 		}
 
@@ -48,14 +54,20 @@ public class TemporaryTableHelper {
 				TemporaryTable temporaryTable,
 				TemporaryTableExporter exporter,
 				SessionFactoryImplementor sessionFactory) {
+			this( temporaryTable, exporter, sessionFactory.getJdbcServices() );
+		}
+
+		public TemporaryTableCreationWork(
+				TemporaryTable temporaryTable,
+				TemporaryTableExporter exporter,
+				JdbcServices jdbcServices) {
 			this.temporaryTable = temporaryTable;
 			this.exporter = exporter;
-			this.sessionFactory = sessionFactory;
+			this.jdbcServices = jdbcServices;
 		}
 
 		@Override
 		public Boolean execute(Connection connection) {
-			final var jdbcServices = sessionFactory.getJdbcServices();
 			try {
 				final String creationCommand = exporter.getSqlCreateCommand( temporaryTable );
 				logStatement( creationCommand, jdbcServices );
@@ -86,15 +98,21 @@ public class TemporaryTableHelper {
 	public static class TemporaryTableDropWork extends AbstractWork {
 		private final TemporaryTable temporaryTable;
 		private final TemporaryTableExporter exporter;
-		private final SessionFactoryImplementor sessionFactory;
+		private final JdbcServices jdbcServices;
 
 		public TemporaryTableDropWork(
 				TemporaryTable temporaryTable,
 				SessionFactoryImplementor sessionFactory) {
+			this( temporaryTable, sessionFactory.getJdbcServices() );
+		}
+
+		public TemporaryTableDropWork(
+				TemporaryTable temporaryTable,
+				JdbcServices jdbcServices) {
 			this(
 					temporaryTable,
-					sessionFactory.getJdbcServices().getDialect().getTemporaryTableExporter(),
-					sessionFactory
+					jdbcServices.getDialect().getTemporaryTableExporter(),
+					jdbcServices
 			);
 		}
 
@@ -102,14 +120,20 @@ public class TemporaryTableHelper {
 				TemporaryTable temporaryTable,
 				TemporaryTableExporter exporter,
 				SessionFactoryImplementor sessionFactory) {
+			this( temporaryTable, exporter, sessionFactory.getJdbcServices() );
+		}
+
+		public TemporaryTableDropWork(
+				TemporaryTable temporaryTable,
+				TemporaryTableExporter exporter,
+				JdbcServices jdbcServices) {
 			this.temporaryTable = temporaryTable;
 			this.exporter = exporter;
-			this.sessionFactory = sessionFactory;
+			this.jdbcServices = jdbcServices;
 		}
 
 		@Override
 		public void execute(Connection connection) {
-			final var jdbcServices = sessionFactory.getJdbcServices();
 			try {
 				final String dropCommand = exporter.getSqlDropCommand( temporaryTable );
 				logStatement( dropCommand, jdbcServices );

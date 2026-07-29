@@ -1,7 +1,6 @@
 package org.hibernate.testing.jdbc;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 
@@ -9,7 +8,7 @@ public class SharedDriverManagerTypeCacheClearingIntegrator implements Integrato
 	@Override
 	public void integrate(
 			Metadata metadata,
-			BootstrapContext bootstrapContext,
+			Integrator.Context context,
 			SessionFactoryImplementor sessionFactory) {
 		SharedDriverManagerConnectionProvider.getInstance().clearTypeCache();
 	}

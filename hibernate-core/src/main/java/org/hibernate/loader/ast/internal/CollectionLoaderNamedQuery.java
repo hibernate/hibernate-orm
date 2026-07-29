@@ -11,7 +11,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryTypeMismatchException;
-import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 
 import java.util.List;
 
@@ -20,9 +20,9 @@ import java.util.List;
  */
 public class CollectionLoaderNamedQuery implements CollectionLoader {
 	private final CollectionPersister persister;
-	private final NamedQueryMemento<?> namedQueryMemento;
+	private final NamedSelectionMemento<?> namedQueryMemento;
 
-	public CollectionLoaderNamedQuery(@Nonnull CollectionPersister persister, @Nonnull NamedQueryMemento<?> namedQueryMemento) {
+	public CollectionLoaderNamedQuery(CollectionPersister persister, NamedSelectionMemento<?> namedQueryMemento) {
 		this.persister = persister;
 		this.namedQueryMemento = namedQueryMemento;
 	}

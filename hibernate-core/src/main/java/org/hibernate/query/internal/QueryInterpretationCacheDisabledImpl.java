@@ -13,7 +13,6 @@ import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
@@ -24,12 +23,12 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  */
 public class QueryInterpretationCacheDisabledImpl implements QueryInterpretationCache {
 
-	private final ServiceRegistry serviceRegistry;
+	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
 	private StatisticsImplementor statistics;
 
-	public QueryInterpretationCacheDisabledImpl(ServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
+	public QueryInterpretationCacheDisabledImpl(Supplier<StatisticsImplementor> statisticsSupplier) {
+		this.statisticsSupplier = statisticsSupplier;
 	}
 
 	@Override
@@ -44,7 +43,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 	private StatisticsImplementor getStatistics() {
 		if ( statistics == null ) {
-			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
+			statistics = statisticsSupplier.get();
 		}
 		return statistics;
 	}

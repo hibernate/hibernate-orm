@@ -7,7 +7,6 @@ import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Timeout;
 import org.hibernate.boot.query.NamedMutationDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.query.named.spi.NamedNativeQueryMemento;
 import org.hibernate.query.named.internal.NativeMutationMementoImpl;
@@ -67,7 +66,7 @@ public class NamedNativeMutationDefinitionImpl<T>
 
 	@Nonnull
 	@Override
-	public NamedNativeQueryMemento<T> resolve(@Nonnull SessionFactoryImplementor factory) {
+	public NamedNativeQueryMemento<T> resolve() {
 		return new NativeMutationMementoImpl<>(
 				name,
 				sqlString,

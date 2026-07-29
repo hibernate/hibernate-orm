@@ -7,7 +7,6 @@ import java.util.List;
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AbstractCollectionEvent;
@@ -27,7 +26,6 @@ import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -144,7 +142,7 @@ public class AggregatedCollectionEventListener
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Integrator.Context context,
 				SessionFactoryImplementor sessionFactory) {
 			integrate( sessionFactory );
 		}
@@ -167,7 +165,7 @@ public class AggregatedCollectionEventListener
 
 		@Override
 		public void disintegrate(
-				SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+				SessionFactoryImplementor sessionFactory, Context context) {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 	}

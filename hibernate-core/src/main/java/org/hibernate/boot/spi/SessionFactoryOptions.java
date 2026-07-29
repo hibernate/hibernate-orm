@@ -46,7 +46,8 @@ import org.hibernate.type.format.FormatMapper;
 import jakarta.persistence.criteria.Nulls;
 
 /**
- * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
+ * Read-only compatibility view of the options used to build, and subsequently
+ * used by, a {@link org.hibernate.SessionFactory}.
  *
  * @apiNote This is an SPI contract. Access it by unwrapping a
  * {@link org.hibernate.SessionFactory} to {@link SessionFactoryImplementor} and calling
@@ -55,6 +56,10 @@ import jakarta.persistence.criteria.Nulls;
  * is deprecated and marked for removal; the accessor on {@code SessionFactoryImplementor}
  * remains supported.
  * This interface is not intended for implementation by application code.
+ * It is also the common settings view exposed to
+ * {@link org.hibernate.boot.pipeline.spi.SessionFactoryProducer}. New bootstrap
+ * code should resolve settings into
+ * {@link org.hibernate.boot.pipeline.spi.ResolvedSessionFactorySettings}.
  *
  * @since 5.0
  *

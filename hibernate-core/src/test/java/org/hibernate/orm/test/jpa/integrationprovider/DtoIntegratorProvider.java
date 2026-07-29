@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
@@ -20,7 +19,7 @@ public class DtoIntegratorProvider implements IntegratorProvider {
 					@Override
 					public void integrate(
 							Metadata metadata,
-							BootstrapContext bootstrapContext,
+							Integrator.Context context,
 							SessionFactoryImplementor sessionFactory) {
 						metadata.getImports().put( "PersonDto", PersonDto.class.getName() );
 					}

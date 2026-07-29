@@ -3,6 +3,7 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 import org.hibernate.dialect.temptable.internal.TemporaryTable;
 import org.hibernate.dialect.temptable.spi.TemporaryTableKind;
 import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -47,7 +48,8 @@ public class PersistentTableInsertStrategy extends PersistentTableStrategy imple
 						runtimeModelCreationContext.getDialect(),
 						runtimeModelCreationContext
 				),
-				runtimeModelCreationContext.getSessionFactory()
+				temporaryTableStrategy,
+				runtimeModelCreationContext.getJdbcServices()
 		);
 	}
 
@@ -55,6 +57,13 @@ public class PersistentTableInsertStrategy extends PersistentTableStrategy imple
 			TemporaryTable entityTable,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityTable, sessionFactory );
+	}
+
+	public PersistentTableInsertStrategy(
+			TemporaryTable entityTable,
+			TemporaryTableStrategy temporaryTableStrategy,
+			JdbcServices jdbcServices) {
+		super( entityTable, temporaryTableStrategy, jdbcServices );
 	}
 
 	@Override

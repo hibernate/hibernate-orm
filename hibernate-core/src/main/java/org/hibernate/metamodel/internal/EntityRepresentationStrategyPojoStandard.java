@@ -77,7 +77,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		final var identifierProperty = bootDescriptor.getIdentifierProperty();
 		final var propertyAccessorService = creationContext.getServiceRegistry()
-				.getService( PropertyAccessorService.class );
+				.requireService( PropertyAccessorService.class );
 
 		if ( identifierProperty == null ) {
 			identifierPropertyName = null;

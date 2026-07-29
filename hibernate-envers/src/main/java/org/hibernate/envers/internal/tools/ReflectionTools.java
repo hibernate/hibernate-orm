@@ -16,6 +16,7 @@ import org.hibernate.envers.tools.Pair;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 
@@ -51,6 +52,7 @@ public abstract class ReflectionTools {
 			Getter value = GETTER_CACHE.get( key );
 			if ( value == null ) {
 				value = propertyData.getPropertyAccessStrategy().buildPropertyAccess(
+						serviceRegistry.requireService( PropertyAccessorService.class ),
 						cls,
 						propertyData.getBeanName(), false
 				).getGetter();
@@ -65,7 +67,9 @@ public abstract class ReflectionTools {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
 		Getter value = GETTER_CACHE.get( key );
 		if ( value == null ) {
-			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName, true ).getGetter();
+			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess(
+					serviceRegistry.requireService( PropertyAccessorService.class ),
+					cls, propertyName, true ).getGetter();
 			// It's ok if two getters are generated concurrently
 			GETTER_CACHE.put( key, value );
 		}
@@ -81,7 +85,9 @@ public abstract class ReflectionTools {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
 		Setter value = SETTER_CACHE.get( key );
 		if ( value == null ) {
-			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName, true ).getSetter();
+			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess(
+					serviceRegistry.requireService( PropertyAccessorService.class ),
+					cls, propertyName, true ).getSetter();
 			// It's ok if two setters are generated concurrently
 			SETTER_CACHE.put( key, value );
 		}

@@ -14,7 +14,6 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.Setter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -540,7 +539,7 @@ public class EmbeddableInitializerImpl
 			final Object parent =
 					determineParentInstance( determineOwningInitializer(), data.getRowProcessingState() );
 			if ( parent != null ) {
-				final Setter setter = parentInjectionAccess.getSetter();
+				final var setter = parentInjectionAccess.getPropertyValueAccessor();
 				assert setter != null;
 				setter.set( data.getInstance(), parent );
 			}

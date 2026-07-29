@@ -29,7 +29,7 @@ public class EnhancedSetterMethodImpl extends SetterMethodImpl {
 	public EnhancedSetterMethodImpl(Class<?> containerClass, String propertyName, Method setterMethod) {
 		super( containerClass, propertyName, setterMethod );
 		this.propertyName = propertyName;
-		this.enhancementState = determineEnhancementState( containerClass, setterMethod.getReturnType() );
+		this.enhancementState = determineEnhancementState( containerClass, setterMethod.getParameterTypes()[0] );
 	}
 
 	@Override

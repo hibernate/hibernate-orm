@@ -65,7 +65,17 @@ public enum ValidationConstraintDdlInfluence {
 		if ( setting instanceof ValidationConstraintDdlInfluence type ) {
 			return type;
 		}
+		if ( setting instanceof Boolean enabled ) {
+			return enabled ? AUTO : DISABLED;
+		}
 
-		return valueOf( setting.toString().trim().toUpperCase( Locale.ROOT ) );
+		final String text = setting.toString().trim();
+		if ( text.equalsIgnoreCase( "true" ) ) {
+			return AUTO;
+		}
+		if ( text.equalsIgnoreCase( "false" ) ) {
+			return DISABLED;
+		}
+		return valueOf( text.toUpperCase( Locale.ROOT ) );
 	}
 }

@@ -47,6 +47,11 @@ public interface EntityHierarchy {
 	@Nonnull
 	KeyMapping getIdMapping();
 
+	/// The identifier generators resolved for this hierarchy, by categorized
+	/// identifier attribute.
+	@Nonnull
+	IdentifierGeneratorResolution getIdentifierGeneratorResolution();
+
 	@Nullable
 	KeyMapping getNaturalIdMapping();
 

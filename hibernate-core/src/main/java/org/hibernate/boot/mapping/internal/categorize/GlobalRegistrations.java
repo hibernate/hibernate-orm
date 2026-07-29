@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.models.spi.PersistenceUnitLifecycleEventHandler;
 
 
@@ -63,14 +64,8 @@ public interface GlobalRegistrations {
 	/// HQL import aliases keyed by alias.
 	Map<String, String> getImportedRenames();
 
-	/// Sequence generator definitions keyed by generator name.
-	Map<String, SequenceGeneratorRegistration> getSequenceGeneratorRegistrations();
-
-	/// Table generator definitions keyed by generator name.
-	Map<String, TableGeneratorRegistration> getTableGeneratorRegistrations();
-
-	/// Generic generator definitions keyed by generator name.
-	Map<String, GenericGeneratorRegistration> getGenericGeneratorRegistrations();
+	/// Normalized identifier-generator registrations keyed by generator name.
+	Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations();
 
 	/// SQL result set mappings keyed by mapping name.
 	Map<String, SqlResultSetMappingRegistration> getSqlResultSetMappingRegistrations();

@@ -67,10 +67,10 @@ public interface AttributeUsageBinding {
 	/// Broad persistent attribute kind for this usage.
 	AttributeNature nature();
 
-	/// Source-level value intent for this usage, when this slice records one.
+	/// Source-level value intent for this usage.
 	///
-	/// Some attribute kinds are still transitional and may return `null` until
-	/// their value facts are lifted into this binding model.
+	/// Every persistent attribute usage has an intent. Plural attribute intents
+	/// in turn expose their element, index, and collection-id value intents.
 	ValueIntent valueIntent();
 
 	/// Narrow [#valueIntent()] to a basic-valued intent when applicable.

@@ -5,30 +5,29 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.models.spi.MemberDetails;
 
-/// Standard AttributeMetadata impl
+/// Standard SingularAttributeMetadata impl
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record AttributeMetadataImpl(
+public record SingularAttributeMetadataImpl(
 		String name,
-		AttributeNature nature,
-		MemberDetails member) implements AttributeMetadata {
+		MemberDetails member,
+		ValueMetadata value) implements SingularAttributeMetadata {
 	@Override
 	public String getName() {
 		return name;
 	}
 
 	@Override
-	public AttributeNature getNature() {
-		return nature;
+	public MemberDetails getMember() {
+		return member;
 	}
 
 	@Override
-	public MemberDetails getMember() {
-		return member;
+	public ValueMetadata getValue() {
+		return value;
 	}
 
 	@Override @Nonnull

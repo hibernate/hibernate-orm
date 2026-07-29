@@ -15,7 +15,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
@@ -28,9 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ClassLevelGeneratorTest {
 	@Test
 	void testAnonGenerator(SessionFactoryScope scope) {
-		// this won't work with global scoping due to
-		assertThat( scope.getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isGlobalGeneratorScopeEnabled() ).isFalse();
-
 		scope.inSession(s-> {
 			EntityWithAnonSequenceGenerator entity1 = new EntityWithAnonSequenceGenerator();
 			EntityWithAnonTableGenerator entity2 = new EntityWithAnonTableGenerator();

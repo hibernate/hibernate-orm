@@ -14,7 +14,8 @@ import java.util.UUID;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration.Kind;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CompositeTypeRegistration;
@@ -77,7 +78,9 @@ import jakarta.persistence.Fetch;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
@@ -112,19 +115,92 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /// @author Steve Ebersole
 public class GlobalRegistrationBindingTests {
 	@Test
+	void testCategorizedIdentifierGeneratorResolution() {
+		final var categorizedModel = buildCategorizedDomainModel(
+				GlobalRegistrationEntity.class,
+				AssignedEntity.class,
+				GlobalSequenceGeneratedEntity.class,
+				GlobalGenericGeneratedEntity.class,
+				UuidGeneratedEntity.class,
+				IdentityGeneratedEntity.class,
+				PartiallyGeneratedEntity.class
+		);
+
+		assertThat( hierarchy( categorizedModel, "AssignedEntity" )
+				.getIdentifierGeneratorResolution()
+				.isEmpty() ).isTrue();
+
+		assertThat( generatedPart( categorizedModel, "GlobalSequenceGeneratedEntity" )
+				.registration()
+				.getKind() ).isEqualTo( Kind.SEQUENCE );
+
+		assertThat( generatedPart( categorizedModel, "GlobalGenericGeneratedEntity" )
+				.registration()
+				.getKind() ).isEqualTo( Kind.CUSTOM );
+
+		final var uuidPart = generatedPart( categorizedModel, "UuidGeneratedEntity" );
+		assertThat( uuidPart.registration().getKind() ).isEqualTo( Kind.UUID );
+		assertThat( uuidPart.configuration() ).isInstanceOf( UuidGenerator.class );
+
+		final var identityPart = generatedPart( categorizedModel, "IdentityGeneratedEntity" );
+		assertThat( identityPart.nature() )
+				.isEqualTo( org.hibernate.boot.mapping.internal.categorize.IdentifierGeneratorResolution.Nature.IDENTITY );
+		assertThat( identityPart.registration() ).isNull();
+
+		final var partialHierarchy = hierarchy( categorizedModel, "PartiallyGeneratedEntity" );
+		final var partialId = (org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping)
+				partialHierarchy.getIdMapping();
+		final var generatedAttribute = partialId.getIdAttributes()
+				.stream()
+				.filter( attribute -> attribute.getName().equals( "generated" ) )
+				.findFirst()
+				.orElseThrow();
+		final var assignedAttribute = partialId.getIdAttributes()
+				.stream()
+				.filter( attribute -> attribute.getName().equals( "assigned" ) )
+				.findFirst()
+				.orElseThrow();
+		assertThat( partialHierarchy.getIdentifierGeneratorResolution().find( generatedAttribute ) )
+				.isNotNull();
+		assertThat( partialHierarchy.getIdentifierGeneratorResolution().find( assignedAttribute ) )
+				.isNull();
+	}
+
+	private static org.hibernate.boot.mapping.internal.categorize.IdentifierGeneratorResolution.Part generatedPart(
+			org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel categorizedModel,
+			String jpaEntityName) {
+		final var hierarchy = hierarchy( categorizedModel, jpaEntityName );
+		final var idMapping =
+				(org.hibernate.boot.mapping.internal.categorize.SingleAttributeKeyMapping) hierarchy.getIdMapping();
+		return hierarchy.getIdentifierGeneratorResolution().find( idMapping.getAttribute() );
+	}
+
+	private static org.hibernate.boot.mapping.internal.categorize.EntityHierarchy hierarchy(
+			org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel categorizedModel,
+			String jpaEntityName) {
+		return categorizedModel.getEntityHierarchies()
+				.stream()
+				.filter( hierarchy -> hierarchy.getRoot().getJpaEntityName().equals( jpaEntityName ) )
+				.findFirst()
+				.orElseThrow();
+	}
+
+	@Test
 	@ServiceRegistry
 	void testGlobalRegistrations(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
 					final var metadataCollector = context.getMetadataCollector();
 
-					final var sequenceGenerator = metadataCollector.getIdentifierGenerator( "global_seq" );
+					final var sequenceGenerator = metadataCollector.getIdentifierGeneratorRegistration( "global_seq" );
+					assertThat( sequenceGenerator.getKind() ).isEqualTo( Kind.SEQUENCE );
 					assertThat( sequenceGenerator.getGeneratorClass() ).isEqualTo( SequenceStyleGenerator.class );
 					assertThat( sequenceGenerator.getParameters() )
 							.containsEntry( SEQUENCE_PARAM, "global_sequence" )
 							.containsEntry( INITIAL_PARAM, "7" )
 							.containsEntry( INCREMENT_PARAM, "13" );
-					final var tableGenerator = metadataCollector.getIdentifierGenerator( "global_table" );
+					final var tableGenerator = metadataCollector.getIdentifierGeneratorRegistration( "global_table" );
+					assertThat( tableGenerator.getKind() ).isEqualTo( Kind.TABLE );
 					assertThat( tableGenerator.getGeneratorClass() )
 							.isEqualTo( org.hibernate.id.enhanced.TableGenerator.class );
 					assertThat( tableGenerator.getParameters() )
@@ -134,12 +210,13 @@ public class GlobalRegistrationBindingTests {
 							.containsEntry( VALUE_COLUMN_PARAM, "next_value" )
 							.containsEntry( INITIAL_PARAM, "4" )
 							.containsEntry( INCREMENT_PARAM, "17" );
-					final var genericGenerator = metadataCollector.getIdentifierGenerator(
+					final var genericGenerator = metadataCollector.getIdentifierGeneratorRegistration(
 							GlobalIdentifierGenerator.class.getName()
 					);
+					assertThat( genericGenerator.getKind() ).isEqualTo( Kind.CUSTOM );
 					assertThat( genericGenerator.getGeneratorClass() ).isEqualTo( GlobalIdentifierGenerator.class );
 					assertThat( genericGenerator.getParameters() ).containsEntry( "role", "global" );
-					assertThat( ( (IdentifierGeneratorDefinition) SerializationHelper.clone( genericGenerator ) )
+					assertThat( ( (IdentifierGeneratorRegistration) SerializationHelper.clone( genericGenerator ) )
 							.getGeneratorClass() )
 							.isEqualTo( GlobalIdentifierGenerator.class );
 
@@ -618,6 +695,12 @@ public class GlobalRegistrationBindingTests {
 		}
 	}
 
+	@Entity(name = "AssignedEntity")
+	public static class AssignedEntity {
+		@Id
+		private Integer id;
+	}
+
 	@Entity(name = "UuidGeneratedEntity")
 	public static class UuidGeneratedEntity {
 		@Id
@@ -644,6 +727,28 @@ public class GlobalRegistrationBindingTests {
 		@Id
 		@GeneratedValue(generator = "org.hibernate.orm.test.boot.models.bind.GlobalRegistrationBindingTests$GlobalIdentifierGenerator")
 		private Integer id;
+	}
+
+	@Entity(name = "IdentityGeneratedEntity")
+	public static class IdentityGeneratedEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Long id;
+	}
+
+	@Entity(name = "PartiallyGeneratedEntity")
+	@IdClass(PartiallyGeneratedId.class)
+	public static class PartiallyGeneratedEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long generated;
+		@Id
+		private String assigned;
+	}
+
+	public static class PartiallyGeneratedId implements Serializable {
+		private Long generated;
+		private String assigned;
 	}
 
 	@MappedSuperclass

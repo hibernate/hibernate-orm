@@ -14,6 +14,7 @@ import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -197,6 +198,7 @@ class InversePluralAssociationBinder {
 				&& identifierCollection.getIdentifier() == null ) {
 			CollectionIdBinder.bindCollectionId(
 					inverseBinding.source(),
+					( (PluralAttributeMetadata) inverseBinding.attributeMetadata() ).getCollectionId(),
 					identifierCollection,
 					inverseCollection.getCollectionTable(),
 					entityBinder.getOptions(),
@@ -423,6 +425,7 @@ class InversePluralAssociationBinder {
 		if ( source.mapKeyColumn() != null ) {
 			CollectionIndexBinder.bindBasicMapKey(
 					inverseBinding.source(),
+					null,
 					inverseMap,
 					inverseCollection.getCollectionTable(),
 					entityBinder.getOptions(),

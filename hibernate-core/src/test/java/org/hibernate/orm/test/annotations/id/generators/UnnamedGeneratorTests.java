@@ -12,7 +12,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.RootClass;
@@ -55,39 +54,22 @@ public class UnnamedGeneratorTests {
 	}
 
 	private void checkSequence(Class<?> entityClass, String expectedDbName) {
-		// strictly-global = false
-		withGenerator( entityClass, false, (generator) -> {
-			final String name = SEQUENCE_NAME_EXTRACTOR.apply( generator );
-			assertThat( name ).isEqualToIgnoringCase( expectedDbName );
-		} );
-
-		// strictly-global = true
-		withGenerator( entityClass, true, (generator) -> {
+		withGenerator( entityClass, (generator) -> {
 			final String name = SEQUENCE_NAME_EXTRACTOR.apply( generator );
 			assertThat( name ).isEqualToIgnoringCase( expectedDbName );
 		} );
 	}
 
 	private void checkTableGenerator(Class<?> entityClass, String expectedTableName, String expectedSegmentName) {
-		// strictly-global = false
-		withGenerator( entityClass, false, (generator) -> {
-			final org.hibernate.id.enhanced.TableGenerator tableGenerator = (org.hibernate.id.enhanced.TableGenerator) generator;
-			assertThat( tableGenerator.getTableName() ).isEqualToIgnoringCase( expectedTableName );
-			assertThat( tableGenerator.getSegmentValue() ).isEqualTo( expectedSegmentName );
-		} );
-
-		// strictly-global = true
-		withGenerator( entityClass, true, (generator) -> {
+		withGenerator( entityClass, (generator) -> {
 			final org.hibernate.id.enhanced.TableGenerator tableGenerator = (org.hibernate.id.enhanced.TableGenerator) generator;
 			assertThat( tableGenerator.getTableName() ).isEqualToIgnoringCase( expectedTableName );
 			assertThat( tableGenerator.getSegmentValue() ).isEqualTo( expectedSegmentName );
 		} );
 	}
 
-	private void withGenerator(Class<?> entityClass, boolean strictlyGlobal, Consumer<Generator> checks) {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, strictlyGlobal )
-				.build()) {
+	private void withGenerator(Class<?> entityClass, Consumer<Generator> checks) {
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
 			final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, entityClass );
 			final RootClass entityBinding = metadata.getEntityBinding( entityClass.getName() ).getRootClass();
 			final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator(

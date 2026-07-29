@@ -4,7 +4,6 @@
  */
 package org.hibernate.jpa.spi;
 
-import org.hibernate.Remove;
 import org.hibernate.Transaction;
 
 /**
@@ -89,18 +88,6 @@ public interface JpaCompliance {
 	 * @see org.hibernate.persister.entity.AbstractEntityPersister#isCacheInvalidationRequired()
 	 */
 	boolean isJpaCacheComplianceEnabled();
-
-	/**
-	 * Should the scope of {@link jakarta.persistence.TableGenerator#name()}
-	 * and {@link jakarta.persistence.SequenceGenerator#name()} be considered
-	 * globally or locally defined?
-	 *
-	 * @return {@code true} if the generator name scope is considered global
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
-	 */
-	@Remove
-	boolean isGlobalGeneratorScopeEnabled();
 
 	/**
 	 * Should we strictly handle {@link jakarta.persistence.OrderBy} expressions?

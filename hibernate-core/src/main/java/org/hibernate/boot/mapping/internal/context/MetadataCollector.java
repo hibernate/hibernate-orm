@@ -6,7 +6,7 @@ package org.hibernate.boot.mapping.internal.context;
 
 import java.util.Map;
 
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
@@ -99,7 +99,7 @@ public interface MetadataCollector {
 	void addPropertyReference(String referencedEntityName, String referencedPropertyName);
 
 	/// Register an identifier generator.
-	void addIdentifierGenerator(IdentifierGeneratorDefinition identifierGeneratorDefinition);
+	void addIdentifierGeneratorRegistration(IdentifierGeneratorRegistration identifierGeneratorDefinition);
 
 	/// Register a named entity graph.
 	void addNamedEntityGraph(NamedEntityGraphDefinition namedEntityGraphDefinition);

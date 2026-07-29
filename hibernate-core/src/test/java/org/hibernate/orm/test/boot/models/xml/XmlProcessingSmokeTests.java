@@ -11,14 +11,13 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
+import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizationCollector;
 import org.hibernate.boot.mapping.internal.categorize.FetchProfileRegistration;
-import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
+import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrationsImpl;
+import org.hibernate.boot.mapping.internal.categorize.NamedQueryRegistration;
 import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext;
-import org.hibernate.boot.models.spi.FilterDefRegistration;
-import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
-import org.hibernate.boot.models.spi.NamedQueryRegistration;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentContextImpl;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentImpl;
@@ -28,7 +27,6 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.orm.test.boot.models.XmlHelper;
-import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -147,8 +145,12 @@ public class XmlProcessingSmokeTests {
 		collectedXmlResources.addDocument( binding );
 
 		final DomainModelCategorizationCollector collector = new DomainModelCategorizationCollector(
-				new GlobalRegistrationsImpl( buildingContext, new BootstrapContextImpl() ),
-				buildingContext
+				buildingContext,
+				metadataBuildingContext.getMetadataCollector().getDatabase().getDialect(),
+				(strategy) -> org.hibernate.boot.model.internal.GeneratorStrategies.resolveGeneratorClass(
+						strategy,
+						metadataBuildingContext
+				)
 		);
 		collectedXmlResources.getDocuments().forEach( xmlDocument -> {
 			final XmlDocumentContextImpl xmlDocumentContext = new XmlDocumentContextImpl(
@@ -165,19 +167,19 @@ public class XmlProcessingSmokeTests {
 
 		final GlobalRegistrationsImpl globalRegistrations = collector.getGlobalRegistrations();
 		assertThat( globalRegistrations.getJavaTypeRegistrations() ).hasSize( 1 );
-		assertThat( globalRegistrations.getJavaTypeRegistrations().get(0).getDescriptor().getClassName() )
+		assertThat( globalRegistrations.getJavaTypeRegistrations().get(0).descriptor().getClassName() )
 				.isEqualTo( StringJavaType.class.getName() );
 
 		assertThat( globalRegistrations.getJdbcTypeRegistrations() ).hasSize( 1 );
-		assertThat( globalRegistrations.getJdbcTypeRegistrations().get(0).getDescriptor().getClassName() )
+		assertThat( globalRegistrations.getJdbcTypeRegistrations().get(0).descriptor().getClassName() )
 				.isEqualTo( ClobJdbcType.class.getName() );
 
 		assertThat( globalRegistrations.getUserTypeRegistrations() ).hasSize( 1 );
-		assertThat( globalRegistrations.getUserTypeRegistrations().get(0).getUserTypeClass().getClassName() )
+		assertThat( globalRegistrations.getUserTypeRegistrations().get(0).userTypeClass().getClassName() )
 				.isEqualTo( MyUserType.class.getName() );
 
 		assertThat( globalRegistrations.getConverterRegistrations() ).hasSize( 1 );
-		assertThat( globalRegistrations.getConverterRegistrations().get(0).getConverterType() )
+		assertThat( globalRegistrations.getConverterRegistrations().get(0).converterType().toJavaClass() )
 				.isEqualTo( org.hibernate.type.YesNoConverter.class );
 
 		validateFilterDefs( globalRegistrations.getFilterDefRegistrations() );
@@ -202,8 +204,12 @@ public class XmlProcessingSmokeTests {
 		collectedXmlResources.addDocument( binding );
 
 		final DomainModelCategorizationCollector collector = new DomainModelCategorizationCollector(
-				new GlobalRegistrationsImpl( buildingContext, new BootstrapContextImpl() ),
-				buildingContext
+				buildingContext,
+				metadataBuildingContext.getMetadataCollector().getDatabase().getDialect(),
+				(strategy) -> org.hibernate.boot.model.internal.GeneratorStrategies.resolveGeneratorClass(
+						strategy,
+						metadataBuildingContext
+				)
 		);
 		collectedXmlResources.getDocuments().forEach( xmlDocument -> {
 			final XmlDocumentContextImpl xmlDocumentContext = new XmlDocumentContextImpl(
@@ -222,16 +228,25 @@ public class XmlProcessingSmokeTests {
 
 		final NamedQueryRegistration namedQuery = globalRegistrations.getNamedQueryRegistrations().get( "global.findAll" );
 		assertThat( namedQuery ).isNotNull();
-		assertThat( namedQuery.getQueryHints() ).containsEntry( "org.hibernate.timeout", "200" );
+		assertThat( ( (jakarta.persistence.NamedQuery) namedQuery.configuration() ).hints() )
+				.anySatisfy( hint -> {
+					assertThat( hint.name() ).isEqualTo( "org.hibernate.timeout" );
+					assertThat( hint.value() ).isEqualTo( "200" );
+				} );
 
-		final NamedNativeQueryRegistration nativeQuery =
+		final NamedQueryRegistration nativeQuery =
 				globalRegistrations.getNamedNativeQueryRegistrations().get( "global.findAllNative" );
 		assertThat( nativeQuery ).isNotNull();
-		assertThat( nativeQuery.getQueryHints() ).containsEntry( "org.hibernate.timeout", "300" );
+		assertThat( ( (jakarta.persistence.NamedNativeQuery) nativeQuery.configuration() ).hints() )
+				.anySatisfy( hint -> {
+					assertThat( hint.name() ).isEqualTo( "org.hibernate.timeout" );
+					assertThat( hint.value() ).isEqualTo( "300" );
+				} );
 
 		assertThat( globalRegistrations.getNamedStoredProcedureQueryRegistrations().get( "global.proc" ) )
 				.isNotNull()
-				.extracting( registration -> registration.configuration().hints() )
+				.extracting( registration ->
+						( (jakarta.persistence.NamedStoredProcedureQuery) registration.configuration() ).hints() )
 				.satisfies( hints -> assertThat( hints )
 						.hasSize( 1 )
 						.anySatisfy( hint -> {
@@ -329,15 +344,15 @@ public class XmlProcessingSmokeTests {
 		assertThat( filterDefRegistrations ).hasSize( 2 );
 
 		final FilterDefRegistration amountFilter = filterDefRegistrations.get( "amount_filter" );
-		assertThat( amountFilter.getDefaultCondition() ).isEqualTo( "amount = :amount" );
-		assertThat( amountFilter.getParameterTypes() ).hasSize( 1 );
-		final ClassDetails amountParameterType = amountFilter.getParameterTypes().get( "amount" );
+		assertThat( amountFilter.defaultCondition() ).isEqualTo( "amount = :amount" );
+		assertThat( amountFilter.parameterTypes() ).hasSize( 1 );
+		final ClassDetails amountParameterType = amountFilter.parameterTypes().get( "amount" );
 		assertThat( amountParameterType.getClassName() ).isEqualTo( int.class.getName() );
 
 		final FilterDefRegistration nameFilter = filterDefRegistrations.get( "name_filter" );
-		assertThat( nameFilter.getDefaultCondition() ).isEqualTo( "name = :name" );
-		assertThat( nameFilter.getParameterTypes() ).hasSize( 1 );
-		final ClassDetails nameParameterType = nameFilter.getParameterTypes().get( "name" );
+		assertThat( nameFilter.defaultCondition() ).isEqualTo( "name = :name" );
+		assertThat( nameFilter.parameterTypes() ).hasSize( 1 );
+		final ClassDetails nameParameterType = nameFilter.parameterTypes().get( "name" );
 		assertThat( nameParameterType.getClassName() ).isEqualTo( String.class.getName() );
 	}
 }

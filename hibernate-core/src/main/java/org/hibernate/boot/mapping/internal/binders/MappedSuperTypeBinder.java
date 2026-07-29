@@ -145,6 +145,12 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	private void applyDeclaredVersion(Table mappedSuperclassTable) {
 		final var versionAttribute = getManagedType().getHierarchy().getVersionAttribute();
 		if ( versionAttribute != null ) {
+			if ( isUnresolvedGenericAttribute( versionAttribute ) ) {
+				// The concrete entity usage owns resolution of the type variable.
+				// Its specialized value is projected back into the mapped-superclass
+				// declaration view by applyDeclaredIdentifierAndVersion().
+				return;
+			}
 			for ( Property property : binding.getDeclaredProperties() ) {
 				if ( property.getName().equals( versionAttribute.getName() ) && declaresProperty( property ) ) {
 					binding.setDeclaredVersion( property );
@@ -158,6 +164,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				);
 				new BasicValueMappingMaterializer().materializeVersionBasicValue(
 						versionAttribute.getMember(),
+						versionAttribute.resolveAttributeType( getManagedType().getClassDetails() ),
 						BasicValueIntent.fromAttribute( versionAttribute.getMember(), getBindingState(), getBindingContext() ),
 						property,
 						mappedSuperclassTable,
@@ -248,8 +255,24 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 		final var versionProperty = entityBinding.getVersion();
 		if ( versionProperty != null && declaresProperty( versionProperty ) ) {
-			binding.setDeclaredVersion( versionProperty );
+			final AttributeMetadata versionAttribute = getManagedType().findAttribute( versionProperty.getName() );
+			binding.setDeclaredVersion(
+					isUnresolvedGenericAttribute( versionAttribute )
+							? prepareGenericDeclaredProperty( versionProperty, versionAttribute )
+							: versionProperty
+			);
 		}
+	}
+
+	private Property prepareGenericDeclaredProperty(
+			Property appliedProperty,
+			AttributeMetadata attribute) {
+		final Property declaredProperty = appliedProperty.copyForDeclaration(
+				genericBasicValue( (BasicValue) appliedProperty.getValue() )
+		);
+		declaredProperty.setGeneric( true );
+		declaredProperty.setReturnedClassName( attribute.getMember().getType().getName() );
+		return declaredProperty;
 	}
 
 	private Component createDeclaredIdentifierMapper(Component identifierMapper, KeyMapping idMapping) {

@@ -13,7 +13,6 @@ import static org.hibernate.cfg.JpaComplianceSettings.JPAQL_STRICT_COMPLIANCE;
 import static org.hibernate.cfg.JpaComplianceSettings.JPA_CACHING_COMPLIANCE;
 import static org.hibernate.cfg.JpaComplianceSettings.JPA_CLOSED_COMPLIANCE;
 import static org.hibernate.cfg.JpaComplianceSettings.JPA_COMPLIANCE;
-import static org.hibernate.cfg.JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
 import static org.hibernate.cfg.JpaComplianceSettings.JPA_LOAD_BY_ID_COMPLIANCE;
 import static org.hibernate.cfg.JpaComplianceSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE;
 import static org.hibernate.cfg.JpaComplianceSettings.JPA_PROXY_COMPLIANCE;
@@ -28,7 +27,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.toBoolean;
 public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean orderByMappingCompliance;
 	private boolean proxyCompliance;
-	private boolean generatorNameScopeCompliance;
 	private boolean queryCompliance;
 	private boolean transactionCompliance;
 	private boolean closedCompliance;
@@ -46,11 +44,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 
 		proxyCompliance = getBoolean(
 				JPA_PROXY_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
-		generatorNameScopeCompliance = getBoolean(
-				JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
@@ -112,11 +105,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	}
 
 	@Override
-	public boolean isGlobalGeneratorScopeEnabled() {
-		return generatorNameScopeCompliance;
-	}
-
-	@Override
 	public boolean isJpaOrderByMappingComplianceEnabled() {
 		return orderByMappingCompliance;
 	}
@@ -137,11 +125,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	@Override
 	public void setProxyCompliance(boolean proxyCompliance) {
 		this.proxyCompliance = proxyCompliance;
-	}
-
-	@Override
-	public void setGeneratorNameScopeCompliance(boolean enabled) {
-		this.generatorNameScopeCompliance = enabled;
 	}
 
 	public void setQueryCompliance(boolean queryCompliance) {
@@ -173,7 +156,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 		return new JpaComplianceImpl.JpaComplianceBuilder()
 				.setProxyCompliance( proxyCompliance )
 				.setOrderByMappingCompliance( orderByMappingCompliance )
-				.setGlobalGeneratorNameCompliance( generatorNameScopeCompliance )
 				.setQueryCompliance( queryCompliance )
 				.setTransactionCompliance( transactionCompliance )
 				.setClosedCompliance( closedCompliance )

@@ -12,14 +12,12 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.binders.BasicValueSourceBinder;
 import org.hibernate.boot.mapping.internal.binders.AttributeBindingPhase;
 import org.hibernate.boot.mapping.internal.binders.ColumnBinder;
 import org.hibernate.boot.mapping.internal.binders.ComponentMemberTarget;
-import org.hibernate.boot.mapping.internal.binders.IdentifierGeneratorBindingPhase;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
@@ -30,7 +28,6 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -113,6 +110,7 @@ public class BasicValueMappingMaterializer {
 
 	public void materializeVersionBasicValue(
 			MemberDetails member,
+			TypeDetails resolvedType,
 			BasicValueIntent basicValueIntent,
 			Property property,
 			Table primaryTable,
@@ -124,7 +122,7 @@ public class BasicValueMappingMaterializer {
 		property.setValue( basicValue );
 
 		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
-				BasicValueSource.attribute( member, bindingContext ),
+				BasicValueSource.attribute( member, resolvedType, bindingContext ),
 				property,
 				basicValue,
 				bindingOptions,
@@ -145,6 +143,7 @@ public class BasicValueMappingMaterializer {
 
 	public void materializeTenantIdBasicValue(
 			MemberDetails member,
+			TypeDetails resolvedType,
 			BasicValueIntent basicValueIntent,
 			Property property,
 			Table primaryTable,
@@ -156,7 +155,7 @@ public class BasicValueMappingMaterializer {
 
 		processSelectable( basicValueIntent, property, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
 		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
-				BasicValueSource.attribute( member, bindingContext ),
+				BasicValueSource.attribute( member, resolvedType, bindingContext ),
 				property,
 				basicValue,
 				bindingOptions,
@@ -244,7 +243,8 @@ public class BasicValueMappingMaterializer {
 					basicValue,
 					member,
 					ownerBinding.getRootClass(),
-					bindingState
+					bindingState,
+					bindingContext
 			);
 		}
 		bindingState.addAttributeValueResolution( new BasicValueResolutionBinding(
@@ -298,62 +298,16 @@ public class BasicValueMappingMaterializer {
 			BasicValue basicValue,
 			MemberDetails member,
 			RootClass typeBinding,
-			BindingState bindingState) {
-		if ( GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		IdentifierGeneratorMaterializer.apply(
+				IdentifierGeneratorMaterializer.findResolution(
+						member,
+						typeBinding,
+						bindingContext.getCategorizedDomainModel()
+				),
 				basicValue,
 				member,
-				bindingState.getMetadataBuildingContext(),
-				basicValue.getTable().getName() + "." + member.getName()
-		) ) {
-			return;
-		}
-		final String entityClassName = typeBinding.getClassName();
-		if ( entityClassName != null ) {
-			final ClassDetails entityType = bindingState.getMetadataBuildingContext()
-					.getMetadataCollector()
-					.getClassDetailsRegistry()
-					.getClassDetails( entityClassName );
-			if ( !entityType.getName().equals( member.getDeclaringType().getName() )
-					&& GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
-							basicValue,
-							member,
-							entityType,
-							bindingState.getMetadataBuildingContext(),
-							basicValue.getTable().getName() + "." + member.getName()
-					) ) {
-				return;
-			}
-		}
-		if ( GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
-				basicValue,
-				member,
-				member.getDeclaringType(),
-				bindingState.getMetadataBuildingContext(),
-				basicValue.getTable().getName() + "." + member.getName()
-		) ) {
-			return;
-		}
-		final var packageInfo = packageInfoDetails( member, bindingState );
-		if ( packageInfo != null && GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
-				basicValue,
-				member,
-				packageInfo,
-				bindingState.getMetadataBuildingContext(),
-				basicValue.getTable().getName() + "." + member.getName()
-		) ) {
-			return;
-		}
-
-		final GeneratedValue generatedValue = member.getDirectAnnotationUsage( GeneratedValue.class );
-		if ( generatedValue == null ) {
-			return;
-		}
-
-		IdentifierGeneratorBindingPhase.resolveGeneratedValueGenerator(
-				typeBinding,
-				basicValue,
-				member,
-				generatedValue,
 				bindingState.getMetadataBuildingContext()
 		);
 	}
@@ -364,35 +318,6 @@ public class BasicValueMappingMaterializer {
 					"Property '" + propertyPath + "' is annotated '@GeneratedValue' but is not part of an identifier"
 			);
 		}
-	}
-
-	private static org.hibernate.models.spi.ClassDetails packageInfoDetails(
-			MemberDetails member,
-			BindingState bindingState) {
-		final String className = member.getDeclaringType().getClassName();
-		if ( className == null ) {
-			return null;
-		}
-
-		final int packageEnd = className.lastIndexOf( '.' );
-		if ( packageEnd < 0 ) {
-			return null;
-		}
-
-		final var classDetailsRegistry = bindingState.getMetadataBuildingContext()
-				.getModelsContext()
-				.getClassDetailsRegistry();
-		final String packageInfoName = className.substring( 0, packageEnd ) + ".package-info";
-		var packageInfo = classDetailsRegistry.findClassDetails( packageInfoName );
-		if ( packageInfo == null ) {
-			try {
-				packageInfo = classDetailsRegistry.resolveClassDetails( packageInfoName );
-			}
-			catch (ClassLoadingException ignored) {
-				return null;
-			}
-		}
-		return packageInfo;
 	}
 
 	private static void applyFinalFieldMutability(

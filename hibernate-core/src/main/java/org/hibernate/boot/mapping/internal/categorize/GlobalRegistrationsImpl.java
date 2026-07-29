@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
@@ -27,6 +28,8 @@ import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
+import org.hibernate.boot.model.internal.GeneratorParameters;
 import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.boot.model.internal.NamedGraphCreators;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
@@ -60,6 +63,7 @@ import org.hibernate.boot.mapping.internal.xml.QueryProcessing;
 import org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper;
 import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
@@ -120,9 +124,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private List<FetchProfileRegistration> fetchProfileRegistrations;
 	private Map<String, String> importedRenameMap;
 
-	private Map<String, SequenceGeneratorRegistration> sequenceGeneratorRegistrations;
-	private Map<String, TableGeneratorRegistration> tableGeneratorRegistrations;
-	private Map<String, GenericGeneratorRegistration> genericGeneratorRegistrations;
+	private final Function<String, Class<? extends Generator>> generatorClassResolver;
+	private Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrations;
 	private Map<String, SqlResultSetMappingRegistration> sqlResultSetMappingRegistrations;
 	private Map<String, NamedQueryRegistration> namedQueryRegistrations;
 	private Map<String, NamedQueryRegistration> namedNativeQueryRegistrations;
@@ -131,29 +134,44 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private List<DatabaseObjectRegistration> databaseObjectRegistrations;
 
 	public GlobalRegistrationsImpl(ModelsContext modelsContext) {
-		this( modelsContext, modelsContext.getClassDetailsRegistry(), modelsContext.getAnnotationDescriptorRegistry(), null );
+		this( modelsContext, (Dialect) null, null );
 	}
 
 	public GlobalRegistrationsImpl(ModelsContext modelsContext, Dialect dialect) {
-		this( modelsContext, modelsContext.getClassDetailsRegistry(), modelsContext.getAnnotationDescriptorRegistry(), dialect );
+		this( modelsContext, dialect, null );
+	}
+
+	public GlobalRegistrationsImpl(
+			ModelsContext modelsContext,
+			Dialect dialect,
+			Function<String, Class<? extends Generator>> generatorClassResolver) {
+		this(
+				modelsContext,
+				modelsContext.getClassDetailsRegistry(),
+				modelsContext.getAnnotationDescriptorRegistry(),
+				dialect,
+				generatorClassResolver
+		);
 	}
 
 	public GlobalRegistrationsImpl(
 			ModelsContext modelsContext,
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry descriptorRegistry) {
-		this( modelsContext, classDetailsRegistry, descriptorRegistry, null );
+		this( modelsContext, classDetailsRegistry, descriptorRegistry, null, null );
 	}
 
 	public GlobalRegistrationsImpl(
 			ModelsContext modelsContext,
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry descriptorRegistry,
-			Dialect dialect) {
+			Dialect dialect,
+			Function<String, Class<? extends Generator>> generatorClassResolver) {
 		this.modelsContext = modelsContext;
 		this.classDetailsRegistry = classDetailsRegistry;
 		this.descriptorRegistry = descriptorRegistry;
 		this.dialect = dialect;
+		this.generatorClassResolver = generatorClassResolver;
 	}
 
 	@Override
@@ -222,18 +240,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	@Override
-	public Map<String, SequenceGeneratorRegistration> getSequenceGeneratorRegistrations() {
-		return sequenceGeneratorRegistrations == null ? emptyMap() : sequenceGeneratorRegistrations;
-	}
-
-	@Override
-	public Map<String, TableGeneratorRegistration> getTableGeneratorRegistrations() {
-		return tableGeneratorRegistrations == null ? emptyMap() : tableGeneratorRegistrations;
-	}
-
-	@Override
-	public Map<String, GenericGeneratorRegistration> getGenericGeneratorRegistrations() {
-		return genericGeneratorRegistrations == null ? emptyMap() : genericGeneratorRegistrations;
+	public Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations() {
+		return identifierGeneratorRegistrations == null ? emptyMap() : identifierGeneratorRegistrations;
 	}
 
 	@Override
@@ -641,37 +649,31 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectNamedQueryRegistrations(AnnotationTarget annotationTarget) {
-		for ( NamedQuery usage : annotationTarget.getRepeatedAnnotationUsages( NamedQuery.class, modelsContext ) ) {
-			collectNamedQueryRegistrationIfAbsent( usage.name(), NamedQueryRegistration.Kind.HQL, true, usage, annotationTarget );
-		}
-		for ( NamedNativeQuery usage : annotationTarget.getRepeatedAnnotationUsages( NamedNativeQuery.class, modelsContext ) ) {
-			collectNamedQueryRegistrationIfAbsent( usage.name(), NamedQueryRegistration.Kind.NATIVE, true, usage, annotationTarget );
-		}
-		for ( NamedStoredProcedureQuery usage : annotationTarget.getRepeatedAnnotationUsages( NamedStoredProcedureQuery.class, modelsContext ) ) {
-			collectNamedQueryRegistrationIfAbsent( usage.name(), NamedQueryRegistration.Kind.CALLABLE, true, usage, annotationTarget );
-		}
-		for ( NamedStatement usage : annotationTarget.getRepeatedAnnotationUsages( NamedStatement.class, modelsContext ) ) {
-			collectNamedQueryRegistrationIfAbsent( usage.name(), NamedQueryRegistration.Kind.HQL, true, usage, annotationTarget );
-		}
-		for ( NamedNativeStatement usage : annotationTarget.getRepeatedAnnotationUsages( NamedNativeStatement.class, modelsContext ) ) {
-			collectNamedQueryRegistrationIfAbsent( usage.name(), NamedQueryRegistration.Kind.NATIVE, true, usage, annotationTarget );
-		}
-		for ( org.hibernate.annotations.NamedQuery usage : annotationTarget.getRepeatedAnnotationUsages(
-				org.hibernate.annotations.NamedQuery.class,
-				modelsContext
-		) ) {
-			collectNamedQueryRegistrationIfAbsent( usage.name(), NamedQueryRegistration.Kind.HQL, false, usage, annotationTarget );
-		}
-		for ( org.hibernate.annotations.NamedNativeQuery usage : annotationTarget.getRepeatedAnnotationUsages(
-				org.hibernate.annotations.NamedNativeQuery.class,
-				modelsContext
-		) ) {
-			collectNamedQueryRegistrationIfAbsent( usage.name(), NamedQueryRegistration.Kind.NATIVE, false, usage, annotationTarget );
-		}
+		annotationTarget.forEachAnnotationUsage( NamedQuery.class, modelsContext,
+				usage -> collectNamedQueryRegistrationIfAbsent(
+						usage.name(), NamedQueryRegistration.Kind.HQL, true, usage, annotationTarget ) );
+		annotationTarget.forEachAnnotationUsage( NamedNativeQuery.class, modelsContext,
+				usage -> collectNamedQueryRegistrationIfAbsent(
+						usage.name(), NamedQueryRegistration.Kind.NATIVE, true, usage, annotationTarget ) );
+		annotationTarget.forEachAnnotationUsage( NamedStoredProcedureQuery.class, modelsContext,
+				usage -> collectNamedQueryRegistrationIfAbsent(
+						usage.name(), NamedQueryRegistration.Kind.CALLABLE, true, usage, annotationTarget ) );
+		annotationTarget.forEachAnnotationUsage( NamedStatement.class, modelsContext,
+				usage -> collectNamedQueryRegistrationIfAbsent(
+						usage.name(), NamedQueryRegistration.Kind.HQL, true, usage, annotationTarget ) );
+		annotationTarget.forEachAnnotationUsage( NamedNativeStatement.class, modelsContext,
+				usage -> collectNamedQueryRegistrationIfAbsent(
+						usage.name(), NamedQueryRegistration.Kind.NATIVE, true, usage, annotationTarget ) );
+		annotationTarget.forEachAnnotationUsage( org.hibernate.annotations.NamedQuery.class, modelsContext,
+				usage -> collectNamedQueryRegistrationIfAbsent(
+						usage.name(), NamedQueryRegistration.Kind.HQL, false, usage, annotationTarget ) );
+		annotationTarget.forEachAnnotationUsage( org.hibernate.annotations.NamedNativeQuery.class, modelsContext,
+				usage -> collectNamedQueryRegistrationIfAbsent(
+						usage.name(), NamedQueryRegistration.Kind.NATIVE, false, usage, annotationTarget ) );
 	}
 
 	public void collectSqlResultSetMappingRegistrations(AnnotationTarget annotationTarget) {
-		for ( SqlResultSetMapping usage : annotationTarget.getRepeatedAnnotationUsages( SqlResultSetMapping.class, modelsContext ) ) {
+		annotationTarget.forEachAnnotationUsage( SqlResultSetMapping.class, modelsContext, usage -> {
 			if ( sqlResultSetMappingRegistrations == null ) {
 				sqlResultSetMappingRegistrations = new HashMap<>();
 			}
@@ -679,7 +681,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					usage.name(),
 					new SqlResultSetMappingRegistration( usage.name(), usage, annotationTarget )
 			);
-		}
+		} );
 	}
 
 	private void collectNamedQueryRegistration(
@@ -737,7 +739,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectNamedEntityGraphRegistrations(ClassDetails classDetails) {
-		for ( NamedEntityGraph usage : classDetails.getRepeatedAnnotationUsages( NamedEntityGraph.class, modelsContext ) ) {
+		classDetails.forEachAnnotationUsage( NamedEntityGraph.class, modelsContext, usage -> {
 			if ( !classDetails.hasDirectAnnotationUsage( Entity.class ) && StringHelper.isEmpty( usage.name() ) ) {
 				throw new AnnotationException(
 						"Unnamed @NamedEntityGraph is only valid when declared on an entity type - "
@@ -751,11 +753,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					NamedEntityGraphDefinition.Source.JPA,
 					NamedGraphCreators.jpa( usage, jpaEntityName, classDetails, modelsContext )
 			);
-		}
-		for ( org.hibernate.annotations.NamedEntityGraph usage : classDetails.getRepeatedAnnotationUsages(
-				org.hibernate.annotations.NamedEntityGraph.class,
-				modelsContext
-		) ) {
+		} );
+		classDetails.forEachAnnotationUsage( org.hibernate.annotations.NamedEntityGraph.class, modelsContext, usage -> {
 			final boolean packageInfo = isPackageInfo( classDetails );
 			final String jpaEntityName = parsedGraphEntityName( classDetails, usage, packageInfo );
 			collectNamedEntityGraphRegistration(
@@ -766,7 +765,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 							? NamedGraphCreators.parsed( usage )
 							: NamedGraphCreators.parsed( classDetails.toJavaClass(), usage )
 			);
-		}
+		} );
 	}
 
 	private void collectNamedEntityGraphRegistration(
@@ -854,7 +853,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	public void collectFetchProfiles(AnnotationTarget annotationTarget) {
-		for ( FetchProfile usage : annotationTarget.getRepeatedAnnotationUsages( FetchProfile.class, modelsContext ) ) {
+		final FetchProfile[] usages =
+				annotationTarget.getRepeatedAnnotationUsages( FetchProfile.class, modelsContext );
+		if ( usages == null ) {
+			return;
+		}
+		for ( FetchProfile usage : usages ) {
 			if ( fetchProfileRegistrations == null ) {
 				fetchProfileRegistrations = new ArrayList<>();
 			}
@@ -1342,24 +1346,24 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				annotationUsage.options( generator.getOptions() );
 			}
 
-			collectSequenceGenerator( new SequenceGeneratorRegistration( generator.getName(), annotationUsage ) );
+			collectSequenceGenerator( generator.getName(), annotationUsage );
 		} );
 	}
 
 	public void collectSequenceGenerator(SequenceGenerator usage) {
-		collectSequenceGenerator( new SequenceGeneratorRegistration( usage.name(), usage ) );
+		collectSequenceGenerator( usage.name(), usage );
 	}
 
 	public void collectSequenceGenerator(ClassDetails classDetails, SequenceGenerator usage) {
-		collectSequenceGenerator( new SequenceGeneratorRegistration( registrationName( classDetails, usage.name() ), usage ) );
+		collectSequenceGenerator( registrationName( classDetails, usage.name() ), usage );
 	}
 
-	public void collectSequenceGenerator(SequenceGeneratorRegistration generatorRegistration) {
-		if ( sequenceGeneratorRegistrations == null ) {
-			sequenceGeneratorRegistrations = new HashMap<>();
-		}
-
-		sequenceGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
+	private void collectSequenceGenerator(String name, SequenceGenerator configuration) {
+		final var builder = new IdentifierGeneratorRegistration.Builder();
+		builder.setKind( IdentifierGeneratorRegistration.Kind.SEQUENCE );
+		GeneratorParameters.interpretSequenceGenerator( configuration, builder );
+		builder.setName( name );
+		collectIdentifierGenerator( builder.build() );
 	}
 
 
@@ -1412,24 +1416,24 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					modelsContext
 			) );
 
-			collectTableGenerator( new TableGeneratorRegistration( generator.getName(), annotationUsage ) );
+			collectTableGenerator( generator.getName(), annotationUsage );
 		} );
 	}
 
 	public void collectTableGenerator(TableGenerator usage) {
-		collectTableGenerator( new TableGeneratorRegistration( usage.name(), usage ) );
+		collectTableGenerator( usage.name(), usage );
 	}
 
 	public void collectTableGenerator(ClassDetails classDetails, TableGenerator usage) {
-		collectTableGenerator( new TableGeneratorRegistration( registrationName( classDetails, usage.name() ), usage ) );
+		collectTableGenerator( registrationName( classDetails, usage.name() ), usage );
 	}
 
-	public void collectTableGenerator(TableGeneratorRegistration generatorRegistration) {
-		if ( tableGeneratorRegistrations == null ) {
-			tableGeneratorRegistrations = new HashMap<>();
-		}
-
-		tableGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
+	private void collectTableGenerator(String name, TableGenerator configuration) {
+		final var builder = new IdentifierGeneratorRegistration.Builder();
+		builder.setKind( IdentifierGeneratorRegistration.Kind.TABLE );
+		GeneratorParameters.interpretTableGenerator( configuration, builder );
+		builder.setName( name );
+		collectIdentifierGenerator( builder.build() );
 	}
 
 
@@ -1442,30 +1446,40 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		genericGenerators.forEach( (generator) -> collectGenericGenerator(
-				new GenericGeneratorRegistration(
-						generator.getName(),
-						generator.getClazz(),
-						extractParameterMap( generator.getParameters() )
-				)
+				generator.getName(),
+				generator.getClazz(),
+				extractParameterMap( generator.getParameters() )
 		) );
 	}
 
 	public void collectGenericGenerator(GenericGenerator usage) {
 		collectGenericGenerator(
-				new GenericGeneratorRegistration(
-						usage.type().getName(),
-						usage.type().getName(),
-						extractParameterMap( usage.parameters() )
-				)
+				usage.type().getName(),
+				usage.type().getName(),
+				extractParameterMap( usage.parameters() )
 		);
 	}
 
-	public void collectGenericGenerator(GenericGeneratorRegistration generatorRegistration) {
-		if ( genericGeneratorRegistrations == null ) {
-			genericGeneratorRegistrations = new HashMap<>();
+	private void collectGenericGenerator(String name, String strategy, Map<String, String> parameters) {
+		if ( generatorClassResolver == null ) {
+			throw new IllegalStateException( "No identifier-generator strategy resolver was supplied" );
 		}
+		collectIdentifierGenerator( new IdentifierGeneratorRegistration(
+				name,
+				IdentifierGeneratorRegistration.Kind.CUSTOM,
+				generatorClassResolver.apply( strategy ),
+				parameters
+		) );
+	}
 
-		genericGeneratorRegistrations.put( generatorRegistration.name(), generatorRegistration );
+	void collectIdentifierGenerator(IdentifierGeneratorRegistration registration) {
+		if ( identifierGeneratorRegistrations == null ) {
+			identifierGeneratorRegistrations = new HashMap<>();
+		}
+		final var previous = identifierGeneratorRegistrations.put( registration.getName(), registration );
+		if ( previous != null && !previous.equals( registration ) ) {
+			throw new IllegalArgumentException( "Duplicate generator name '" + registration.getName() + "'" );
+		}
 	}
 
 	private static String registrationName(ClassDetails classDetails, String name) {

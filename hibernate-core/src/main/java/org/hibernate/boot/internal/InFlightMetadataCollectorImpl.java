@@ -17,7 +17,7 @@ import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionContributions;
 import org.hibernate.boot.mapping.internal.context.TypeDefinitionRegistryStandardImpl;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
@@ -35,8 +35,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
-import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -48,7 +46,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -132,7 +129,8 @@ public class InFlightMetadataCollectorImpl
 	private final MappingResolutionContributions mappingContributions;
 	private final SqmFunctionRegistry functionRegistry;
 
-	private final GlobalRegistrations globalRegistrations;
+	private final List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions =
+			new ArrayList<>();
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
@@ -163,7 +161,7 @@ public class InFlightMetadataCollectorImpl
 
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
 	private final Map<String, FetchProfile> fetchProfileMap = new HashMap<>();
-	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap = new HashMap<>();
+	private final Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap = new HashMap<>();
 
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 
@@ -199,7 +197,6 @@ public class InFlightMetadataCollectorImpl
 
 		uuid = UUID.randomUUID();
 
-		globalRegistrations = new GlobalRegistrationsImpl( bootstrapContext.getModelsContext(), bootstrapContext );
 		persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
 
 		// we need this to be a ConcurrentHashMap for the one we ultimately pass along to the SF,
@@ -238,11 +235,6 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public GlobalRegistrations getGlobalRegistrations() {
-		return globalRegistrations;
-	}
-
-	@Override
 	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
 		return persistenceUnitMetadata;
 	}
@@ -273,8 +265,12 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public List<PersistenceUnitCallbackDefinition> getPersistenceUnitLifecycleCallbackDefinitions() {
-		return PersistenceUnitCallbackDefinition.from(
-				globalRegistrations.getPersistenceUnitLifecycleEventHandlers() );
+		return List.copyOf( persistenceUnitLifecycleCallbackDefinitions );
+	}
+
+	@Override
+	public void addPersistenceUnitLifecycleCallbackDefinition(PersistenceUnitCallbackDefinition callbackDefinition) {
+		persistenceUnitLifecycleCallbackDefinitions.add( callbackDefinition );
 	}
 
 	@Override
@@ -606,11 +602,16 @@ public class InFlightMetadataCollectorImpl
 	// identifier generators
 
 	@Override
-	public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
+	public IdentifierGeneratorRegistration getIdentifierGeneratorRegistration(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid generator name" );
 		}
-		return idGeneratorDefinitionMap.get( name );
+		return identifierGeneratorRegistrationMap.get( name );
+	}
+
+	@Override
+	public Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations() {
+		return Map.copyOf( identifierGeneratorRegistrationMap );
 	}
 
 	@Override
@@ -623,31 +624,23 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public void addIdentifierGenerator(IdentifierGeneratorDefinition generator) {
+	public void addIdentifierGeneratorRegistration(IdentifierGeneratorRegistration generator) {
 		if ( generator == null || generator.getName() == null ) {
 			throw new IllegalArgumentException( "Id generator object or name is null" );
 		}
 		else if ( !generator.getName().isEmpty()
 					&& !defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
-			final var old = idGeneratorDefinitionMap.put( generator.getName(), generator );
+			final var old = identifierGeneratorRegistrationMap.put( generator.getName(), generator );
 			if ( old != null && !old.equals( generator ) ) {
-				if ( bootstrapContext.getJpaCompliance().isGlobalGeneratorScopeEnabled() ) {
-					throw new IllegalArgumentException( "Duplicate generator name '" + old.getName()
-							+ "'; you will likely want to set the property '"
-							+ JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
-							+ "' to false " );
-				}
-				else {
-					BOOT_LOGGER.duplicateGeneratorName( old.getName() );
-				}
+				throw new IllegalArgumentException( "Duplicate generator name '" + old.getName() + "'" );
 			}
 		}
 
 	}
 
 	@Override
-	public void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generator) {
-		addIdentifierGenerator( generator );
+	public void addDefaultIdentifierGeneratorRegistration(IdentifierGeneratorRegistration generator) {
+		addIdentifierGeneratorRegistration( generator );
 		defaultIdentifierGeneratorNames.add( generator.getName() );
 	}
 
@@ -1674,7 +1667,7 @@ public class InFlightMetadataCollectorImpl
 					filterDefinitionMap,
 					fetchProfileMap,
 					imports,
-					idGeneratorDefinitionMap,
+					identifierGeneratorRegistrationMap,
 					namedQueryMap,
 					namedNativeQueryMap,
 					namedProcedureCallMap,

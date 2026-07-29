@@ -6,6 +6,7 @@ package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 /// Binding-layer state for a source-model `@Version` attribute.
 ///
@@ -20,5 +21,6 @@ public record VersionBinding(
 		EntityTypeMetadata owner,
 		String attributeName,
 		MemberDetails member,
+		TypeDetails resolvedType,
 		BasicValueIntent valueIntent) {
 }

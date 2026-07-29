@@ -183,16 +183,40 @@ public record ComponentSource(
 			MemberDetails member,
 			ClassDetails ownerType,
 			ClassDetails hierarchyRootType,
-				AccessType defaultAccessType,
-				BindingContext bindingContext) {
-		final ClassDetails componentType = resolveEmbeddableType( member, ownerType, bindingContext );
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
+		return embeddedAttribute(
+				member,
+				embeddedAttributeTypeVariableScope( member, ownerType ),
+				ownerType,
+				hierarchyRootType,
+				defaultAccessType,
+				bindingContext
+		);
+	}
+
+	public static ComponentSource embeddedAttribute(
+			MemberDetails member,
+			TypeDetails embeddedType,
+			ClassDetails ownerType,
+			ClassDetails hierarchyRootType,
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
+		final TargetEmbeddable targetEmbeddable = resolveTargetEmbeddable( member, false );
+		final ClassDetails componentType = targetEmbeddable == null
+				? embeddedType.determineRawClass()
+				: bindingContext.getClassDetailsRegistry()
+						.resolveClassDetails( targetEmbeddable.value().getName() );
+		final TypeDetails typeVariableScope = targetEmbeddable == null
+				? embeddedType
+				: TypeDetails.classType( componentType );
 		final ClassDetails memberSourceType = resolveMemberSourceType( componentType, bindingContext );
 		return new ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
 				componentType,
 				memberSourceType,
-				embeddedAttributeTypeVariableScope( member, ownerType ),
+				typeVariableScope,
 				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
 				effectiveAccessType( member, defaultAccessType ),
 				"",
@@ -302,7 +326,21 @@ public record ComponentSource(
 			AccessType defaultAccessType,
 			String namingPathPrefix,
 			BindingContext bindingContext) {
-		final TypeDetails elementType = elementCollectionElementType( member, bindingContext );
+		return collectionElement(
+				member,
+				elementCollectionElementType( member, bindingContext ),
+				defaultAccessType,
+				namingPathPrefix,
+				bindingContext
+		);
+	}
+
+	public static ComponentSource collectionElement(
+			MemberDetails member,
+			TypeDetails elementType,
+			AccessType defaultAccessType,
+			String namingPathPrefix,
+			BindingContext bindingContext) {
 		final ClassDetails componentType = elementType.determineRawClass();
 		final ClassDetails memberSourceType = resolveMemberSourceType( componentType, bindingContext );
 		return new ComponentSource(
@@ -358,12 +396,21 @@ public record ComponentSource(
 			ClassDetails componentType,
 			AccessType defaultAccessType,
 			BindingContext bindingContext) {
+		return mapKey( member, TypeDetails.classType( componentType ), defaultAccessType, bindingContext );
+	}
+
+	public static ComponentSource mapKey(
+			MemberDetails member,
+			TypeDetails mapKeyType,
+			AccessType defaultAccessType,
+			BindingContext bindingContext) {
+		final ClassDetails componentType = mapKeyType.determineRawClass();
 		return new ComponentSource(
 				Kind.MAP_KEY,
 				member,
 				componentType,
 				componentType,
-				member.getMapKeyType(),
+				mapKeyType,
 				new PathAdjustmentCollector( member, bindingContext ),
 				defaultAccessType,
 				"",
@@ -383,8 +430,9 @@ public record ComponentSource(
 	public List<ComponentMember> subclassMembers(BindingContext bindingContext) {
 		final List<ComponentMember> members = new ArrayList<>();
 		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
-			if ( isSubtypeOf( embeddableType, memberSourceType ) ) {
-				collectLocalMembers( embeddableType, embeddableType, members );
+			final ClassDetails embeddableClass = embeddableType.getClassDetails();
+			if ( isSubtypeOf( embeddableClass, memberSourceType ) ) {
+				collectLocalMembers( embeddableClass, embeddableClass, members );
 			}
 		} );
 		return members;
@@ -615,10 +663,12 @@ public record ComponentSource(
 		final Class<?> componentJavaType = componentType.toJavaClass();
 		final ClassDetails[] match = new ClassDetails[1];
 		final boolean[] multipleMatches = new boolean[1];
-		bindingContext.getCategorizedDomainModel().forEachEmbeddable( (name, embeddableType) -> {
-			if ( componentJavaType.isAssignableFrom( embeddableType.toJavaClass() ) ) {
+		bindingContext.getClassDetailsRegistry().forEachClassDetails( candidate -> {
+			if ( candidate != componentType
+					&& candidate.isRealClass()
+					&& componentJavaType.isAssignableFrom( candidate.toJavaClass() ) ) {
 				if ( match[0] == null ) {
-					match[0] = embeddableType;
+					match[0] = candidate;
 				}
 				else {
 					multipleMatches[0] = true;

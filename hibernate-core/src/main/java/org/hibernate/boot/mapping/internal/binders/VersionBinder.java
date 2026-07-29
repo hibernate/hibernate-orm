@@ -49,6 +49,7 @@ public class VersionBinder {
 				managedType,
 				usageBinding.attributeName(),
 				usageBinding.member(),
+				usageBinding.resolvedType(),
 				usageBinding.basicValueIntent()
 		);
 		bindingState.getBootBindingModel().addVersionBinding( managedType, versionBinding );
@@ -99,7 +100,7 @@ public class VersionBinder {
 				declarationBinding,
 				managedTypeBinding,
 				attributeMetadata.getMember(),
-				attributeMetadata.getMember().resolveRelativeType( managedType.getClassDetails() ),
+				attributeMetadata.resolveAttributeType( managedType.getClassDetails() ),
 				managedType.getClassDetails().getName() + "." + attributeName,
 				attributeName,
 				attributeMetadata.getNature(),

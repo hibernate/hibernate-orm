@@ -20,6 +20,7 @@ import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.AppliedMappingPart;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -726,6 +727,11 @@ public class MappedSuperclassTests {
 					assertThat( identifierBinding.identifierMember() ).isNotNull();
 					assertThat( identifierBinding.identifierMember().getType().getTypeKind() )
 							.isEqualTo( TypeDetails.Kind.TYPE_VARIABLE );
+					assertThat( ( (BasicValue) identifierProperty.getValue() )
+							.resolve()
+							.getDomainJavaType()
+							.getJavaType() )
+							.isEqualTo( Integer.class );
 					assertThat( new IdentifierHandoffResolver(
 							RuntimeMappingHandoffSnapshot.from( bootBindingModel, context.getMetadata() )
 					)

@@ -17,7 +17,7 @@ public record CategorizedDomainModelImpl(
 		Set<EntityHierarchy> entityHierarchies,
 		Map<String, ClassDetails> sourceClasses,
 		Map<String, ClassDetails> mappedSuperclasses,
-		Map<String, ClassDetails> embeddables,
+		Map<String, EmbeddableTypeMetadata> embeddables,
 		GlobalRegistrations globalRegistrations) implements CategorizedDomainModel {
 	@Override
 	public Set<EntityHierarchy> getEntityHierarchies() {
@@ -34,7 +34,7 @@ public record CategorizedDomainModelImpl(
 	}
 
 	@Override
-	public Map<String, ClassDetails> getEmbeddables() {
+	public Map<String, EmbeddableTypeMetadata> getEmbeddables() {
 		return embeddables;
 	}
 

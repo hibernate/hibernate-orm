@@ -12,7 +12,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
 public record JpaComplianceImpl(
 		boolean orderByMappingCompliance,
 		boolean proxyCompliance,
-		boolean globalGeneratorNameScopeCompliance,
 		boolean queryCompliance,
 		boolean transactionCompliance,
 		boolean closedCompliance,
@@ -47,11 +46,6 @@ public record JpaComplianceImpl(
 	}
 
 	@Override
-	public boolean isGlobalGeneratorScopeEnabled() {
-		return globalGeneratorNameScopeCompliance;
-	}
-
-	@Override
 	public boolean isJpaOrderByMappingComplianceEnabled() {
 		return orderByMappingCompliance;
 	}
@@ -65,7 +59,6 @@ public record JpaComplianceImpl(
 		private boolean queryCompliance;
 		private boolean orderByMappingCompliance;
 		private boolean proxyCompliance;
-		private boolean globalGeneratorNameScopeCompliance;
 		private boolean cachingCompliance;
 		private boolean transactionCompliance;
 		private boolean closedCompliance;
@@ -110,11 +103,6 @@ public record JpaComplianceImpl(
 			return this;
 		}
 
-		public JpaComplianceBuilder setGlobalGeneratorNameCompliance(boolean globalGeneratorNameCompliance) {
-			this.globalGeneratorNameScopeCompliance = globalGeneratorNameCompliance;
-			return this;
-		}
-
 		public JpaComplianceBuilder setLoadByIdCompliance(boolean loadByIdCompliance) {
 			this.loadByIdCompliance = loadByIdCompliance;
 			return this;
@@ -124,7 +112,6 @@ public record JpaComplianceImpl(
 			return new JpaComplianceImpl(
 					orderByMappingCompliance,
 					proxyCompliance,
-					globalGeneratorNameScopeCompliance,
 					queryCompliance,
 					transactionCompliance,
 					closedCompliance,

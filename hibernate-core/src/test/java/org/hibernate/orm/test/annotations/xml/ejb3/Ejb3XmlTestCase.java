@@ -5,10 +5,9 @@
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
 import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizationCollector;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
-import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.mapping.internal.xml.XmlPreProcessingResult;
@@ -16,7 +15,6 @@ import org.hibernate.boot.mapping.internal.xml.XmlPreProcessor;
 import org.hibernate.boot.mapping.internal.xml.XmlProcessingResult;
 import org.hibernate.boot.mapping.internal.xml.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -95,23 +93,20 @@ public abstract class Ejb3XmlTestCase  {
 				.setRegistryPrimer( (contributions, inFlightContext) ->
 						OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation ) )
 				.bootstrap();
-		final BootstrapContext bootstrapContext = new BootstrapContextImpl();
-		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl(
-				modelBuildingContext,
-				bootstrapContext
-		);
-
-		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				globalRegistrations,
-				modelBuildingContext
-		);
-
 		final var serviceRegistry = new StandardServiceRegistryBuilder().build();
 		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
 				new org.hibernate.boot.mapping.internal.context.GlobalMappingDefaultsImpl( serviceRegistry ),
 				persistenceUnitMetadata
 		);
 		final var metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
+				modelBuildingContext,
+				metadataBuildingContext.getMetadataCollector().getDatabase().getDialect(),
+				(strategy) -> org.hibernate.boot.model.internal.GeneratorStrategies.resolveGeneratorClass(
+						strategy,
+						metadataBuildingContext
+				)
+		);
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,

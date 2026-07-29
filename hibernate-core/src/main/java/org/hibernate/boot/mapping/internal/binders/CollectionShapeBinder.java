@@ -37,6 +37,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SortableValue;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.spi.ClassDetails;
 
 import jakarta.persistence.FetchType;
@@ -50,14 +51,22 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /// Applies collection-shape metadata after the concrete collection mapping exists.
 ///
-/// `CollectionSource` decides the semantic classification of a plural member.
-/// This helper applies the metadata that is orthogonal to table/element/key
-/// binding, such as ordered and sorted collection settings.
+/// The categorized plural metadata decides the semantic classification of a
+/// plural member. This helper applies the source details which are orthogonal
+/// to table/element/key binding, such as ordered and sorted collection settings.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 class CollectionShapeBinder {
 	static void apply(CollectionSource source, Collection collection, BindingState bindingState) {
+		apply( source, source.classification(), collection, bindingState );
+	}
+
+	static void apply(
+			CollectionSource source,
+			CollectionClassification classification,
+			Collection collection,
+			BindingState bindingState) {
 		validateOrderingAndSorting( source, collection, bindingState );
 		applyFetching( source, collection );
 		applyFetchProfileOverrides( source, collection, bindingState );
@@ -70,7 +79,7 @@ class CollectionShapeBinder {
 		applyCollectionType( source, collection );
 		applySoftDelete( source, collection, bindingState );
 		StateManagementBindingPhase.registerCollection( source, collection, bindingState );
-		switch ( source.classification() ) {
+		switch ( classification ) {
 			case ORDERED_SET, ORDERED_MAP -> applyOrdering( source, collection, bindingState );
 			case SORTED_SET, SORTED_MAP -> applySorting( source, collection );
 			default -> {

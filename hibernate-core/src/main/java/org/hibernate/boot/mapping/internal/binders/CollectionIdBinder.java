@@ -9,8 +9,9 @@ import java.util.HashMap;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.internal.GeneratorBinder;
+import org.hibernate.boot.mapping.internal.categorize.CollectionIdMetadata;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -22,6 +23,8 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.Table;
 
+import jakarta.annotation.Nullable;
+
 /// Binding for [CollectionId]
 ///
 /// @since 9.0
@@ -29,12 +32,15 @@ import org.hibernate.mapping.Table;
 class CollectionIdBinder {
 	static void bindCollectionId(
 			CollectionSource source,
+			@Nullable CollectionIdMetadata collectionIdMetadata,
 			IdentifierCollection collection,
 			Table table,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final CollectionId collectionId = source.member().getDirectAnnotationUsage( CollectionId.class );
+		final CollectionId collectionId = collectionIdMetadata == null
+				? source.member().getDirectAnnotationUsage( CollectionId.class )
+				: collectionIdMetadata.source();
 		if ( collectionId == null ) {
 			throw new MappingException(
 					"idbag mapping missing @CollectionId - " + collection.getRole()
@@ -68,11 +74,12 @@ class CollectionIdBinder {
 		id.addColumn( idColumn );
 		collection.setIdentifier( id );
 
-		bindGenerator( collectionId, id, source, bindingState );
+		bindGenerator( collectionId, collectionIdMetadata, id, source, bindingState );
 	}
 
 	private static void bindGenerator(
 			CollectionId collectionId,
+			@Nullable CollectionIdMetadata collectionIdMetadata,
 			BasicValue id,
 			CollectionSource source,
 			BindingState bindingState) {
@@ -86,6 +93,14 @@ class CollectionIdBinder {
 		}
 
 		checkLegalCollectionIdStrategy( generator );
+		if ( collectionIdMetadata != null && collectionIdMetadata.generatorRegistration() != null ) {
+			GeneratorBinder.createGeneratorFrom(
+					collectionIdMetadata.generatorRegistration(),
+					id,
+					bindingState.getMetadataBuildingContext()
+			);
+			return;
+		}
 		GeneratorBinder.makeIdGenerator(
 				id,
 				source.member(),
@@ -96,10 +111,10 @@ class CollectionIdBinder {
 		);
 	}
 
-	private static Map<String, IdentifierGeneratorDefinition> localGenerators(
+	private static Map<String, IdentifierGeneratorRegistration> localGenerators(
 			CollectionSource source,
 			BindingState bindingState) {
-		final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>();
+		final HashMap<String, IdentifierGeneratorRegistration> localGenerators = new HashMap<>();
 		GeneratorBinder.visitIdGeneratorDefinitions(
 				source.member(),
 				generator -> localGenerators.put( generator.getName(), generator ),

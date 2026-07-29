@@ -5,11 +5,10 @@
 package org.hibernate.orm.test.boot.models;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
+import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizationCollector;
 import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
-import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
-import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.mapping.internal.xml.XmlPreProcessingResult;
@@ -231,11 +230,13 @@ public class SourceModelTestHelper {
 		final var metadataBuildingContext =
 				new MetadataBuildingContextTestingImpl( bootstrapContext.getServiceRegistry() );
 
-		final GlobalRegistrationsImpl globalRegistrations =
-				new GlobalRegistrationsImpl( ModelsContext, bootstrapContext );
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				globalRegistrations,
-				ModelsContext
+				ModelsContext,
+				metadataBuildingContext.getMetadataCollector().getDatabase().getDialect(),
+				(strategy) -> org.hibernate.boot.model.internal.GeneratorStrategies.resolveGeneratorClass(
+						strategy,
+						metadataBuildingContext
+				)
 		);
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(

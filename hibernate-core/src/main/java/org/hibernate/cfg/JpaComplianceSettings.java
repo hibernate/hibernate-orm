@@ -4,8 +4,6 @@
  */
 package org.hibernate.cfg;
 
-import org.hibernate.Remove;
-
 /**
  * @author Steve Ebersole
  */
@@ -23,7 +21,6 @@ public interface JpaComplianceSettings {
 	 * @see #JPA_CLOSED_COMPLIANCE
 	 * @see #JPA_PROXY_COMPLIANCE
 	 * @see #JPA_CACHING_COMPLIANCE
-	 * @see #JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
 	 * @see #JPA_LOAD_BY_ID_COMPLIANCE
 	 *
 	 * @since 6.0
@@ -145,29 +142,6 @@ public interface JpaComplianceSettings {
 	 * @since 5.3
 	 */
 	String JPA_CACHING_COMPLIANCE = "hibernate.jpa.compliance.caching";
-
-	/**
-	 * Determines whether the scope of any identifier generator name specified
-	 * via {@link jakarta.persistence.TableGenerator#name()} or
-	 * {@link jakarta.persistence.SequenceGenerator#name()} is considered global
-	 * to the persistence unit, or local to the entity in which identifier generator
-	 * is defined.
-	 *
-	 * @apiNote If enabled, the name will be considered globally scoped, and so the existence
-	 * of two different generators with the same name will be considered a collision,
-	 * and will result in an exception during bootstrap.
-	 * Setting this to {@code false} enables legacy generator-name scoping as a temporary
-	 * compatibility measure. This setting will be removed in 9.0, when generator names
-	 * will always be globally scoped.
-	 *
-	 * @settingDefault {@link #JPA_COMPLIANCE}
-	 *
-	 * @see org.hibernate.jpa.spi.JpaCompliance#isGlobalGeneratorScopeEnabled()
-	 *
-	 * @since 5.2.17
-	 */
-	@Remove
-	String JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE = "hibernate.jpa.compliance.global_id_generators";
 
 	/**
 	 * Determines if an identifier value passed to

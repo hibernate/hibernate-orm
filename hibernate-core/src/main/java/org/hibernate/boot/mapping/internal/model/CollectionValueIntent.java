@@ -5,6 +5,10 @@
 package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
+import org.hibernate.boot.mapping.internal.categorize.CollectionIdMetadata;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.ValueMetadata;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
@@ -41,7 +45,8 @@ public record CollectionValueIntent(
 		String attributePath,
 		ValueIntent elementIntent,
 		@Nullable ValueIntent indexIntent,
-		@Nullable BasicValueIntent collectionIdIntent) implements ValueIntent {
+		@Nullable BasicValueIntent collectionIdIntent,
+		@Nullable PluralAttributeMetadata valueMetadata) implements ValueIntent {
 	@Override
 	public AttributeNature nature() {
 		return switch ( collectionNature ) {
@@ -52,13 +57,39 @@ public record CollectionValueIntent(
 		};
 	}
 
+	public @Nullable CollectionIdMetadata collectionIdMetadata() {
+		return valueMetadata == null ? null : valueMetadata.getCollectionId();
+	}
+
 	public static CollectionValueIntent fromAttribute(
 			CollectionSource source,
+			PluralAttributeMetadata valueMetadata,
 			String sourceRole,
 			String attributePath,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		return fromUsage( source, sourceRole, attributePath, bindingState, bindingContext );
+		return new CollectionValueIntent(
+				source,
+				source.nature(),
+				valueMetadata.getCollectionClassification(),
+				sourceRole,
+				attributePath,
+				elementIntent(
+						source,
+						valueMetadata.getElement(),
+						sourceRole,
+						bindingState,
+						bindingContext
+				),
+				indexIntent(
+						source,
+						valueMetadata.getCollectionClassification(),
+						valueMetadata.getIndex(),
+						sourceRole
+				),
+				collectionIdIntent( source, valueMetadata.getCollectionClassification() ),
+				valueMetadata
+		);
 	}
 
 	public static CollectionValueIntent fromUsage(
@@ -75,8 +106,35 @@ public record CollectionValueIntent(
 				attributePath,
 				elementIntent( source, sourceRole, bindingState, bindingContext ),
 				indexIntent( source, sourceRole ),
-				collectionIdIntent( source )
+				collectionIdIntent( source ),
+				null
 		);
+	}
+
+	private static ValueIntent elementIntent(
+			CollectionSource source,
+			ValueMetadata valueMetadata,
+			String sourceRole,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		return switch ( valueMetadata.getNature() ) {
+			case BASIC -> BasicValueIntent.fromCollectionElement( source );
+			case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
+					valueMetadata instanceof EmbeddedValueMetadata embedded ? embedded : null,
+					source.elementType(),
+					source.member().resolveAttributeName(),
+					sourceRole + ".<element>"
+			);
+			case TO_ONE -> new ToOneValueIntent(
+					source.elementType(),
+					source.member().resolveAttributeName(),
+					sourceRole + ".<element>",
+					null
+			);
+			case ANY -> new AnyValueIntent(
+					AnySource.createManyToAny( source, bindingContext, bindingState )
+			);
+		};
 	}
 
 	private static ValueIntent elementIntent(
@@ -131,8 +189,44 @@ public record CollectionValueIntent(
 		return BasicValueIntent.fromMapKey( source );
 	}
 
+	private static @Nullable ValueIntent indexIntent(
+			CollectionSource source,
+			CollectionClassification classification,
+			@Nullable ValueMetadata valueMetadata,
+			String sourceRole) {
+		if ( valueMetadata == null || source.mapKey() != null ) {
+			return null;
+		}
+		if ( classification == CollectionClassification.LIST
+				|| classification == CollectionClassification.ARRAY ) {
+			return BasicValueIntent.fromListIndex( source );
+		}
+		return switch ( valueMetadata.getNature() ) {
+			case BASIC -> BasicValueIntent.fromMapKey( source );
+			case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
+					valueMetadata instanceof EmbeddedValueMetadata embedded ? embedded : null,
+					source.mapKeyType(),
+					source.member().resolveAttributeName() + ".<map-key>",
+					sourceRole + ".<map-key>"
+			);
+			case TO_ONE -> new ToOneValueIntent(
+					source.mapKeyType(),
+					source.member().resolveAttributeName() + ".<map-key>",
+					sourceRole + ".<map-key>",
+					null
+			);
+			case ANY -> throw new IllegalArgumentException( "Map key cannot be an any-valued association" );
+		};
+	}
+
 	private static @Nullable BasicValueIntent collectionIdIntent(CollectionSource source) {
-		if ( source.classification() != CollectionClassification.ID_BAG
+		return collectionIdIntent( source, source.classification() );
+	}
+
+	private static @Nullable BasicValueIntent collectionIdIntent(
+			CollectionSource source,
+			CollectionClassification classification) {
+		if ( classification != CollectionClassification.ID_BAG
 				&& !source.member().hasDirectAnnotationUsage( CollectionId.class ) ) {
 			return null;
 		}

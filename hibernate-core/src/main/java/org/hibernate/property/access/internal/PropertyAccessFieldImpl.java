@@ -9,6 +9,8 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 
@@ -22,9 +24,10 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 	private final PropertyAccessStrategyFieldImpl strategy;
 	private final Getter getter;
 	private final Setter setter;
+	private final PropertyValueAccessor propertyValueAccessor;
 
 	public PropertyAccessFieldImpl(
-			PropertyAccessStrategyFieldImpl strategy,
+			PropertyAccessorService propertyAccessorService, PropertyAccessStrategyFieldImpl strategy,
 			Class<?> containerJavaType,
 			final String propertyName) {
 		this.strategy = strategy;
@@ -32,6 +35,13 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 		final var field = findField( containerJavaType, propertyName );
 		getter = new GetterFieldImpl( containerJavaType, propertyName, field );
 		setter = new SetterFieldImpl( containerJavaType, propertyName, field );
+		propertyValueAccessor = PropertyValueAccessor.standard(
+				propertyAccessorService
+						.hibernateAccessorFactory().valueReader( field ),
+				propertyAccessorService
+						.hibernateAccessorFactory().valueWriter( field ),
+				propertyName
+		);
 	}
 
 	@Override
@@ -47,6 +57,11 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 	@Override
 	public Setter getSetter() {
 		return setter;
+	}
+
+	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		return propertyValueAccessor;
 	}
 
 }

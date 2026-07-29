@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -66,6 +67,7 @@ public class EmbeddedAttributeMapping
 	private final boolean selectable;
 
 	public EmbeddedAttributeMapping(
+			PropertyAccessorService propertyAccessorService,
 			String name,
 			NavigableRole navigableRole,
 			int stateArrayPosition,
@@ -85,7 +87,7 @@ public class EmbeddedAttributeMapping
 			fetchableIndex,
 			tableExpression,
 			attributeMetadata,
-			parentPropertyAccess( parentInjectionAttributeName, embeddableMappingType ),
+			parentPropertyAccess( propertyAccessorService, parentInjectionAttributeName, embeddableMappingType ),
 			mappedFetchTiming,
 			mappedFetchStyle,
 			embeddableMappingType,

@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -66,6 +67,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	private final String sqlAliasStem;
 
 	public EmbeddedCollectionPart(
+			PropertyAccessorService propertyAccessorService,
 			CollectionPersister collectionDescriptor,
 			Nature nature,
 			EmbeddableMappingType embeddableMappingType,
@@ -76,7 +78,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
 		this.parentInjectionAttributePropertyAccess =
-				parentPropertyAccess( parentInjectionAttributeName, embeddableMappingType );
+				parentPropertyAccess( propertyAccessorService, parentInjectionAttributeName, embeddableMappingType );
 		this.embeddableMappingType = embeddableMappingType;
 
 		this.containingTableExpression = containingTableExpression;

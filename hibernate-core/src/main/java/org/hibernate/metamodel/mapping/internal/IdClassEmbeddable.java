@@ -23,6 +23,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -68,7 +69,11 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeRegistry()
 						.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
 
+		final PropertyAccessorService propertyAccessorService = creationProcess.getCreationContext().getServiceRegistry()
+				.requireService( PropertyAccessorService.class );
+
 		representationStrategy = new IdClassRepresentationStrategy(
+				propertyAccessorService,
 				this,
 				idClassSource.sortProperties() == null,
 				idClassSource::getPropertyNames
@@ -76,10 +81,10 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 		final var propertyAccess =
 				PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
+						propertyAccessorService,
 						null,
 						EntityIdentifierMapping.ID_ROLE_NAME,
-						true
-				);
+						true );
 		final var attributeMetadata =
 				MappingModelCreationHelper.getAttributeMetadata( propertyAccess );
 
@@ -129,7 +134,10 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
 		this.virtualIdEmbeddable = (VirtualIdEmbeddable) valueMapping.getEmbeddableTypeDescriptor();
 		this.javaType = inverseMappingType.javaType;
-		this.representationStrategy = new IdClassRepresentationStrategy( this, false, () -> {
+		this.representationStrategy = new IdClassRepresentationStrategy(
+				creationProcess.getCreationContext().getServiceRegistry()
+						.requireService( PropertyAccessorService.class ),
+				this, false, () -> {
 			final var attributeNames = new String[inverseMappingType.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < attributeNames.length; i++ ) {
 				attributeNames[i] = inverseMappingType.getAttributeMapping( i ).getAttributeName();

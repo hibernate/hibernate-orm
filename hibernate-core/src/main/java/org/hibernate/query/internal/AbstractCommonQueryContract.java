@@ -34,6 +34,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.query.QueryArgumentException;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
@@ -1618,10 +1619,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final var beanClass = bean.getClass();
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			try {
-				final var getter =
-						BuiltInPropertyAccessStrategies.BASIC.getStrategy()
-								.buildPropertyAccess( beanClass, paramName, true )
-								.getGetter();
+				final var getter = BuiltInPropertyAccessStrategies.BASIC.getStrategy()
+						.buildPropertyAccess(
+								getSessionFactory().getServiceRegistry().getService( PropertyAccessorService.class ),
+								beanClass, paramName, true )
+						.getGetter();
 				final var returnType = getter.getReturnTypeClass();
 				final Object object = getter.get( bean );
 				if ( Collection.class.isAssignableFrom( returnType ) ) {

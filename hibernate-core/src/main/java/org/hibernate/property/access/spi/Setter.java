@@ -25,7 +25,7 @@ public interface Setter {
 	 * @param target The instance containing the property value to be set.
 	 * @param value The value to be set.
 	 *
-	 * @deprecated no longer used
+	 * @deprecated Use {@link PropertyAccess#getPropertyValueAccessor()} instead.
 	 */
 	@Deprecated(since = "7.4", forRemoval = true)
 	void set(Object target, @Nullable Object value);

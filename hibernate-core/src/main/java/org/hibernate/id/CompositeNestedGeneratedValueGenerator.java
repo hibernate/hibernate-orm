@@ -19,6 +19,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.ComponentType;
@@ -100,11 +101,8 @@ public class CompositeNestedGeneratedValueGenerator
 		 * Used when the {@link CompositeType} is {@linkplain CompositeType#isMutable() mutable}.
 		 *
 		 * @see #getPropertyIndex()
-		 *
-		 * @deprecated no longer used, it will be replaced by a method that will not return the deprecated {@link Setter} interface
 		 */
-		@Deprecated(since = "7.4", forRemoval = true)
-		Setter getInjector();
+		PropertyValueAccessor getInjector();
 
 		/**
 		 * Returns the index of the generated property.

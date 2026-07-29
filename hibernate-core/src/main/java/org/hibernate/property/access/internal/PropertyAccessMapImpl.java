@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 
 import jakarta.annotation.Nullable;
@@ -28,11 +29,13 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 	private final Getter getter;
 	private final Setter setter;
 	private final PropertyAccessStrategyMapImpl strategy;
+	private final PropertyValueAccessor propertyValueAccessor;
 
 	public PropertyAccessMapImpl(PropertyAccessStrategyMapImpl strategy, final String propertyName) {
 		this.strategy = strategy;
-		this.getter = new GetterImpl( propertyName );
-		this.setter = new SetterImpl( propertyName );
+		this.propertyValueAccessor = PropertyValueAccessor.map( propertyName );
+		this.getter = new GetterImpl( propertyValueAccessor );
+		this.setter = new SetterImpl( propertyValueAccessor );
 	}
 
 	@Override
@@ -50,17 +53,21 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 		return setter;
 	}
 
-	public static class GetterImpl implements Getter {
-		private final String propertyName;
+	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		return propertyValueAccessor;
+	}
 
-		public GetterImpl(String propertyName) {
-			this.propertyName = propertyName;
+	public static class GetterImpl implements Getter {
+		private final PropertyValueAccessor propertyValueAccessor;
+
+		public GetterImpl(PropertyValueAccessor propertyValueAccessor) {
+			this.propertyValueAccessor = propertyValueAccessor;
 		}
 
 		@Override
-		@SuppressWarnings("rawtypes")
 		public @Nullable Object get(Object owner) {
-			return ( (Map) owner ).get( propertyName );
+			return propertyValueAccessor.get( owner );
 		}
 
 		@Override
@@ -96,16 +103,15 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 	}
 
 	public static class SetterImpl implements Setter {
-		private final String propertyName;
+		private final PropertyValueAccessor propertyValueAccessor;
 
-		public SetterImpl(String propertyName) {
-			this.propertyName = propertyName;
+		public SetterImpl(PropertyValueAccessor propertyValueAccessor) {
+			this.propertyValueAccessor = propertyValueAccessor;
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked", "rawtypes"})
 		public void set(Object target, @Nullable Object value) {
-			( (Map) target ).put( propertyName, value );
+			propertyValueAccessor.set( target, value );
 		}
 
 		@Override

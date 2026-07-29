@@ -51,7 +51,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -970,7 +970,7 @@ public class EntityInitializerImpl
 			final Object sourceValue = source[i];
 			if ( updatableAttributeMutabilityPlan[i] != null
 					&& sourceValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& sourceValue != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					&& sourceValue != PropertyValueAccessor.UNKNOWN ) {
 				target[i] = updatableAttributeMutabilityPlan[i].deepCopy( source[i] );
 			}
 		}

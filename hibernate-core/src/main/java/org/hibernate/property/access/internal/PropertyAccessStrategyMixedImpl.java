@@ -21,6 +21,6 @@ public class PropertyAccessStrategyMixedImpl implements PropertyAccessStrategy {
 
 	@Override
 	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, String propertyName, boolean setterRequired) {
-		return new PropertyAccessMixedImpl( this, containerJavaType, propertyName );
+		return new PropertyAccessMixedImpl( propertyAccessorService, this, containerJavaType, propertyName );
 	}
 }

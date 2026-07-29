@@ -13,7 +13,7 @@ import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.type.Type;
 
 /**
@@ -118,7 +118,7 @@ public class CacheEntryHelper {
 
 	private static boolean isPlaceholder(Object value) {
 		return value == LazyPropertyInitializer.UNFETCHED_PROPERTY
-			|| value == PropertyAccessStrategyBackRefImpl.UNKNOWN;
+			|| value == PropertyValueAccessor.UNKNOWN;
 	}
 
 	@Nonnull

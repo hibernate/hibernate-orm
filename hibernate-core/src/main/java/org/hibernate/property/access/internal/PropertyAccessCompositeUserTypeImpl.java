@@ -14,6 +14,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 
 import jakarta.annotation.Nullable;
@@ -28,11 +29,13 @@ import jakarta.annotation.Nullable;
 public class PropertyAccessCompositeUserTypeImpl implements PropertyAccess, Getter {
 
 	private final PropertyAccessStrategyCompositeUserTypeImpl strategy;
+	private final PropertyValueAccessor propertyValueAccessor;
 	private final int propertyIndex;
 
 	public PropertyAccessCompositeUserTypeImpl(PropertyAccessStrategyCompositeUserTypeImpl strategy, String property) {
 		this.strategy = strategy;
 		this.propertyIndex = strategy.sortedPropertyNames.indexOf( property );
+		this.propertyValueAccessor = PropertyValueAccessor.compositeUserType( strategy.compositeUserType,  propertyIndex );
 	}
 
 	@Override
@@ -48,6 +51,11 @@ public class PropertyAccessCompositeUserTypeImpl implements PropertyAccess, Gett
 	@Override
 	public @Nullable Setter getSetter() {
 		return null;
+	}
+
+	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		return propertyValueAccessor;
 	}
 
 	@Override

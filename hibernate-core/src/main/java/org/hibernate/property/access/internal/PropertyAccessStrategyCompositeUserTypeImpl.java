@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -33,7 +34,7 @@ public class PropertyAccessStrategyCompositeUserTypeImpl implements PropertyAcce
 	}
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
+	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
 		return new PropertyAccessCompositeUserTypeImpl( this, propertyName );
 	}
 }

@@ -231,7 +231,7 @@ public final class ReflectHelper {
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
 			final var clazz = classLoaderService.classForName( className );
-			return getReturnTypeClass(getter( clazz, name ));
+			return getReturnTypeClass( member( clazz, name ));
 		}
 		catch ( ClassLoadingException e ) {
 			throw new MappingException( "class " + className + " not found while looking for property: " + name, e );
@@ -244,7 +244,7 @@ public final class ReflectHelper {
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
 			final var clazz = classLoaderService.classForName( className );
-			return getReturnType(getter( clazz, name ));
+			return getReturnType( member( clazz, name ));
 		}
 		catch ( ClassLoadingException e ) {
 			throw new MappingException( "class " + className + " not found while looking for property: " + name, e );
@@ -260,11 +260,11 @@ public final class ReflectHelper {
 	 * @throws MappingException Indicates we were unable to locate the property.
 	 */
 	public static Class<?> reflectedPropertyClass(Class<?> clazz, String name) throws MappingException {
-		return getReturnTypeClass(getter( clazz, name ));
+		return getReturnTypeClass( member( clazz, name ));
 	}
 
 	public static Type reflectedPropertyType(Class<?> clazz, String name) throws MappingException {
-		return getReturnType(getter( clazz, name ));
+		return getReturnType( member( clazz, name ));
 	}
 
 	private static Type getReturnType(Member member) {
@@ -291,7 +291,7 @@ public final class ReflectHelper {
 		}
 	}
 
-	private static Member getter(Class<?> containerJavaType, String propertyName) throws MappingException {
+	private static Member member(Class<?> containerJavaType, String propertyName) throws MappingException {
 		final var propertyAccessType = getAccessType( containerJavaType, propertyName );
 		return switch ( propertyAccessType ) {
 			case FIELD -> {

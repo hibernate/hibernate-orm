@@ -13,6 +13,7 @@ import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.envers.junit.EnversTest;
@@ -90,9 +91,9 @@ public class AttributeAccessorTest {
 	public static class BasicAttributeAccessor extends PropertyAccessStrategyBasicImpl {
 		static boolean invoked;
 		@Override
-		public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
+		public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class containerJavaType, String propertyName, boolean setterRequired) {
 			invoked = true;
-			return super.buildPropertyAccess( containerJavaType, propertyName, setterRequired );
+			return super.buildPropertyAccess( propertyAccessorService, containerJavaType, propertyName, setterRequired );
 		}
 	}
 }

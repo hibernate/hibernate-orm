@@ -1211,7 +1211,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& hasAnnotation( element, ENTITY )
 			&& context.isDataEventPackageAvailable() // events
 			&& context.addInjectAnnotation() // @Inject
-			&& context.addDependentAnnotation(); // CDI
+			&& context.isCdiAvailable(); // CDI
 	}
 
 	void addEventBus() {
@@ -1237,7 +1237,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return jakartaDataRepository
 			&& !quarkusInjection
 			&& !springInjection
-			&& context.addDependentAnnotation();
+			&& context.isCdiAvailable();
 	}
 
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {
@@ -5908,7 +5908,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public List<AnnotationMirror> inheritedAnnotations() {
-		if ( repository ) {
+		if ( repository && context.isCdiAvailable() ) {
 			List<AnnotationMirror> list = new ArrayList<>();
 			for ( var annotationMirror : element.getAnnotationMirrors() ) {
 				if ( isInheritedAnnotation( annotationMirror, context ) ) {

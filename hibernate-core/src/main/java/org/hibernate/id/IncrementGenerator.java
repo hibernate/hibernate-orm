@@ -107,10 +107,14 @@ public class IncrementGenerator implements IdentifierGenerator {
 			union.append( tableName );
 			final var dialect = context.getDialect();
 			if ( i < physicalTableNames.size() - 1 ) {
-				union.append( " union " );
+				union.append( ' ' );
 				if ( dialect.getSetOperationSupport().supports( SetOperator.UNION_ALL ) ) {
-					union.append( "all " );
+					union.append( dialect.getSetOperatorSqlString( SetOperator.UNION_ALL ) );
 				}
+				else {
+					union.append( dialect.getSetOperatorSqlString( SetOperator.UNION ) );
+				}
+				union.append( ' ' );
 			}
 		}
 		String maxColumn;

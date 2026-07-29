@@ -8,6 +8,7 @@ import java.sql.Types;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -27,6 +28,8 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -521,8 +524,18 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	@Override
-	public Object generate(final SharedSessionContractImplementor session, final Object object) {
+	public @Nonnull Object generate(
+			final @Nonnull SharedSessionContractImplementor session,
+			final Object object) {
 		return optimizer.generate( new NextValueCallback( session ) );
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		return optimizer.generateBatch( requests.size(), new NextValueCallback( session ) );
 	}
 
 	private class NextValueCallback
@@ -537,6 +550,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			return session.getTransactionCoordinator().createIsolationDelegate()
 					.delegateWork( this, true );
 		}
+
+		@Override
+		public long[] getNextValues(int count) {
+			return session.getTransactionCoordinator().createIsolationDelegate()
+					.delegateWork( (executor, connection) -> nextValues( count, connection, session ), true );
+		}
+
 		@Override
 		public Long execute(Connection connection)
 				throws SQLException {
@@ -552,6 +572,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			Connection connection,
 			SharedSessionContractImplementor session)
 					throws SQLException {
+		final int increment = optimizer.applyIncrementSizeToSourceValues() ? incrementSize : 1;
 		final var logger =
 				session.getFactory().getJdbcServices()
 						.getSqlStatementLogger();
@@ -560,14 +581,41 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		int rows;
 		do {
 			value = retrieveCurrentValue( connection, logger, listener, session );
-			final long updateValue = optimizer.applyIncrementSizeToSourceValues()
-					? value + incrementSize
-					: value + 1;
+			final long updateValue = value + increment;
 			rows = updateValue( connection, logger, listener, session, updateValue, value );
 		}
 		while ( rows == 0 );
 		accessCount++;
 		return storeLastUsedValue ? value + 1 : value;
+	}
+
+	private long[] nextValues(
+			int count,
+			Connection connection,
+			SharedSessionContractImplementor session)
+			throws SQLException {
+		final int increment = optimizer.applyIncrementSizeToSourceValues()
+				? count * incrementSize
+				: count;
+		final var logger =
+				session.getFactory().getJdbcServices()
+						.getSqlStatementLogger();
+		final var listener = session.getEventListenerManager();
+		long value;
+		int rows;
+		do {
+			value = retrieveCurrentValue( connection, logger, listener, session );
+			final long updateValue = value + increment;
+			rows = updateValue( connection, logger, listener, session, updateValue, value );
+		}
+		while ( rows == 0 );
+		accessCount++;
+		final long[] result = new long[count];
+		final long baseValue = storeLastUsedValue ? value + 1 : value;
+		for ( int i = 0; i < result.length; i++ ) {
+			result[i] = (long) i * incrementSize + baseValue;
+		}
+		return result;
 	}
 
 	private int updateValue(

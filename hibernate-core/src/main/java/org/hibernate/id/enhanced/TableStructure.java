@@ -152,51 +152,13 @@ public class TableStructure implements DatabaseStructure {
 								if ( selectQuery == null || updateQuery == null || physicalTableName == null ) {
 									throw new IllegalStateException( "The TableStructure was not properly initialized" );
 								}
+								final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 								long value;
 								int rows;
 								do {
-									try ( var selectStatement = prepareStatement(
-											connection,
-											selectQuery,
-											statementLogger,
-											statsCollector,
-											session
-									) ) {
-										try ( var resultSet = executeQuery(
-												selectStatement,
-												statsCollector,
-												selectQuery,
-												session
-										) ) {
-											if ( !resultSet.next() ) {
-												throw new IdentifierGenerationException(
-														"Could not read a hi value, populate the table: "
-																+ physicalTableName );
-											}
-											value = extractLong( resultSet, 1 );
-										}
-									}
-									catch (SQLException sqle) {
-										TABLE_GENERATOR_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
-										throw sqle;
-									}
-
-									try ( var updateStatement = prepareStatement(
-											connection,
-											updateQuery,
-											statementLogger,
-											statsCollector,
-											session
-									) ) {
-										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
-										bindLong( updateStatement, 1, value + increment );
-										bindLong( updateStatement, 2, value );
-										rows = executeUpdate( updateStatement, statsCollector, updateQuery, session );
-									}
-									catch (SQLException e) {
-										TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
-										throw e;
-									}
+									value = retrieveCurrentValue( connection );
+									final long updateValue = value + increment;
+									rows = updateValue( connection, updateValue, value );
 								} while ( rows == 0 );
 
 								accessCounter++;
@@ -206,6 +168,82 @@ public class TableStructure implements DatabaseStructure {
 						},
 						true
 				);
+			}
+
+			@Override
+			public long[] getNextValues(int count) {
+				return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
+						new AbstractReturningWork<>() {
+							@Override
+							public long[] execute(Connection connection) throws SQLException {
+								final int increment = applyIncrementSizeToSourceValues
+										? count * incrementSize
+										: count;
+								long value;
+								int rows;
+								do {
+									value = retrieveCurrentValue( connection );
+									final long updateValue = value + increment;
+									rows = updateValue( connection, updateValue, value );
+								} while ( rows == 0 );
+
+								accessCounter++;
+								final long[] result = new long[count];
+								for ( int i = 0; i < result.length; i++ ) {
+									result[i] = (long) i * incrementSize + value;
+								}
+								return result;
+							}
+						},
+						true
+				);
+			}
+
+			private int updateValue(Connection connection, long updateValue, long value)
+					throws SQLException {
+				try (var updateStatement = prepareStatement(
+						connection,
+						updateQuery,
+						statementLogger,
+						statsCollector,
+						session
+				) ) {
+					bindLong( updateStatement, 1, updateValue );
+					bindLong( updateStatement, 2, value );
+					return executeUpdate( updateStatement, statsCollector, updateQuery, session );
+				}
+				catch (SQLException e) {
+					TABLE_GENERATOR_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
+					throw e;
+				}
+			}
+
+			private long retrieveCurrentValue(Connection connection) throws SQLException {
+				try (var selectStatement = prepareStatement(
+						connection,
+						selectQuery,
+						statementLogger,
+						statsCollector,
+						session
+				) ) {
+					try ( var resultSet = executeQuery(
+							selectStatement,
+							statsCollector,
+							selectQuery,
+							session
+					) ) {
+						if ( !resultSet.next() ) {
+							throw new IdentifierGenerationException(
+									"Could not read a hi value, populate the table: "
+									+ physicalTableName );
+						}
+						return extractLong( resultSet, 1 );
+					}
+				}
+				catch (SQLException sqle) {
+					TABLE_GENERATOR_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
+					throw sqle;
+				}
 			}
 
 			@Override

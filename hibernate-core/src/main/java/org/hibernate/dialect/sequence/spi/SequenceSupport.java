@@ -1,5 +1,6 @@
 package org.hibernate.dialect.sequence.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
@@ -45,6 +46,14 @@ public interface SequenceSupport {
 		return supportsSequences();
 	}
 
+	/// Does this dialect support fetching N sequence values at once?/// @return True if fetching N sequence values at once is supported; false otherwise.
+	///
+	/// @see #getSequenceNextValParameterizedString(String)
+	/// @since 8.0
+	default boolean supportsSelectNextValParameterized() {
+		return supportsSequences();
+	}
+
 	/// Render the expression which obtains the next value inside another SQL
 	/// statement. Do not include a surrounding `select` statement.
 	///
@@ -73,6 +82,23 @@ public interface SequenceSupport {
 		return "select " + getSelectSequenceNextValString( sequenceName ) + getFromDual();
 	}
 
+	/// Generate the appropriate select statement to retrieve the next N values
+	/// of a sequence, or {@code null} if unsupported.
+	/// <p>
+	/// This should be a stand alone select statement.
+	///
+	/// @param sequenceName the name of the sequence
+	/// @return String The select "next value" statement to fetch N rows, or {@code null}.
+	/// @throws MappingException If sequences or fetching N sequence values are not supported.
+	/// @since 8.0
+	default @Nullable String getSequenceNextValParameterizedString(String sequenceName) throws MappingException {
+		if ( !supportsSelectNextValParameterized() ) {
+			throw new MappingException( "Fetching N sequence values at once is not supported" );
+		}
+		final String parameterizedDual = getFromGenerateSeries();
+		return parameterizedDual == null ? null : "select " + getSelectSequenceNextValString( sequenceName ) + parameterizedDual;
+	}
+
 	/// Render a stand-alone statement which obtains the previous sequence value.
 	///
 	/// @param sequenceName the qualified sequence name
@@ -86,6 +112,14 @@ public interface SequenceSupport {
 	/// value-selection statements, including any required leading whitespace.
 	default String getFromDual() {
 		return "";
+	}
+
+	/// Returns a parameterized {@code generate_series()} table function from clause, or {code null} if unsupported.
+	///
+	/// @return The parameterized {@code generate_series()} table function from clause, or {code null}
+	/// @since 8.0
+	default @Nullable String getFromGenerateSeries() {
+		return null;
 	}
 
 	/// Render a stand-alone next-value statement for databases whose selection

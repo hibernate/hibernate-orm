@@ -73,6 +73,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean isGenericSpecialization;
 	private boolean lob;
 	private String returnedClassName;
+	private boolean mapsId;
 
 	public boolean isBackRef() {
 		return false;
@@ -156,7 +157,30 @@ public class Property implements Serializable, MetaAttributable {
 		return value instanceof ToOne toOne ? toOne.getOnDeleteAction() : null;
 	}
 
+	public boolean isMapsId() {
+		return mapsId;
+	}
+
+	public void setMapsId(boolean mapsId) {
+		this.mapsId = mapsId;
+	}
+
 	public CascadeStyle getCascadeStyle() throws MappingException {
+		final CascadeStyle baseStyle = computeBaseCascadeStyle();
+		if ( !mapsId ) {
+			return baseStyle;
+		}
+		else if ( baseStyle == CascadeStyles.NONE ) {
+			return CascadeStyles.MAPS_ID;
+		}
+		else {
+			return new CascadeStyles.MultipleCascadeStyle(
+					new CascadeStyle[] { baseStyle, CascadeStyles.MAPS_ID }
+			);
+		}
+	}
+
+	private CascadeStyle computeBaseCascadeStyle() throws MappingException {
 		final Type type = value.getType();
 		if ( type instanceof AnyType ) {
 			return getCascadeStyle( cascade );

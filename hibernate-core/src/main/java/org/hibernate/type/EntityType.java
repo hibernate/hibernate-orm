@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -332,8 +333,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				if ( id == null ) {
 					throw new AssertionFailure( "non-transient entity has a null id: " + original.getClass().getName() );
 				}
-				final Object replaced =
-						getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
+				final Object replaced = id instanceof DelayedPostInsertIdentifier
+						? id
+						: getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 								.replace( id, null, session, owner, copyCache );
 				return resolve( replaced, session, owner );
 			}

@@ -1,7 +1,10 @@
 package org.hibernate.id.enhanced;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MathHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
@@ -61,6 +64,18 @@ public class HiLoOptimizer extends AbstractOptimizer {
 		private Long lastSourceValue;
 		private long upperLimit;
 		private long value;
+
+		void setLastSourceValue(long lastSourceValue, int incrementSize) {
+			this.lastSourceValue = lastSourceValue;
+			// upperLimit defines the upper end of the bucket values
+			upperLimit = lastSourceValue * incrementSize + 1;
+			// initialize value to the lower end of the bucket
+			value = upperLimit - incrementSize;
+		}
+
+		static long determineValue(long lastSourceValue, int incrementSize) {
+			return (lastSourceValue * incrementSize + 1) - incrementSize;
+		}
 	}
 
 
@@ -83,29 +98,97 @@ public class HiLoOptimizer extends AbstractOptimizer {
 		lock.lock();
 		try {
 			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
 			if ( generationState.lastSourceValue == null ) {
 				// first call, so initialize ourselves.  we need to read the database
 				// value and set up the 'bucket' boundaries
-				generationState.lastSourceValue = callback.getNextValue();
-				while ( generationState.lastSourceValue < 1 ) {
-					generationState.lastSourceValue = callback.getNextValue();
+				long lastSourceValue = callback.getNextValue();
+				while ( lastSourceValue < 1 ) {
+					lastSourceValue = callback.getNextValue();
 				}
-				// upperLimit defines the upper end of the bucket values
-				generationState.upperLimit = generationState.lastSourceValue * incrementSize + 1;
-				// initialize value to the lower end of the bucket
-				generationState.value = generationState.upperLimit - incrementSize;
+				generationState.setLastSourceValue( lastSourceValue, incrementSize );
 			}
 			else if ( generationState.value >= generationState.upperLimit ) {
-				generationState.lastSourceValue = callback.getNextValue();
-				generationState.upperLimit = generationState.lastSourceValue * incrementSize + 1;
-				generationState.value = generationState.upperLimit - incrementSize;
+				generationState.setLastSourceValue( callback.getNextValue(), incrementSize );
 			}
 			return makeIntegralValue( generationState.value++, returnClass );
 		}
 		finally {
 			lock.unlock();
 		}
+	}
+
+	@Override
+	public Serializable[] generateBatch(int count, AccessCallback callback) {
+		final long[] buckets;
+		final int availableValues;
+		long baseValue;
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+
+			if ( generationState.lastSourceValue == null ) {
+				// first call, so initialize ourselves.  we need to read the database
+				// value and set up the 'bucket' boundaries
+				buckets = determineInitialBuckets( count, callback );
+				generationState.setLastSourceValue( buckets[buckets.length - 1], incrementSize );
+				availableValues = 0;
+				baseValue = generationState.value;
+				generationState.value += ((count - 1) % incrementSize) + 1;
+			}
+			else if ( generationState.value + count > generationState.upperLimit ) {
+				availableValues = (int) (generationState.upperLimit - generationState.value);
+				baseValue = generationState.value;
+				buckets = callback.getNextValues( MathHelper.ceilDiv( count - availableValues, incrementSize ) );
+				generationState.setLastSourceValue( buckets[buckets.length - 1], incrementSize );
+				generationState.value += ((count - availableValues - 1) % incrementSize) + 1;
+			}
+			else {
+				availableValues = count;
+				baseValue = generationState.value;
+				generationState.value += count;
+				buckets = ArrayHelper.EMPTY_LONG_ARRAY;
+			}
+		}
+		finally {
+			lock.unlock();
+		}
+		final Serializable[] result = new Serializable[count];
+		for ( int i = 0; i < availableValues; i++ ) {
+			result[i] = makeIntegralValue( baseValue + i, returnClass );
+		}
+		for ( int i = 0; i < buckets.length; i++ ) {
+			baseValue = GenerationState.determineValue( buckets[i], incrementSize );
+			final var offset = availableValues + i * incrementSize;
+			for ( int j = 0; j < incrementSize && offset + j < result.length ; j++ ) {
+				result[offset + j] = makeIntegralValue( baseValue++, returnClass );
+			}
+		}
+		return result;
+	}
+
+	private @Nonnull long[] determineInitialBuckets(int count, AccessCallback callback) {
+		long[] goodBuckets = null;
+		int invalidBuckets = MathHelper.ceilDiv( count, incrementSize );
+		do {
+			final long[] newBuckets = callback.getNextValues( invalidBuckets );
+			if ( goodBuckets == null ) {
+				goodBuckets = newBuckets;
+			}
+			else {
+				// Shift the values to the left until we have only values greater or equal to 1
+				System.arraycopy( goodBuckets, invalidBuckets, goodBuckets, 0, goodBuckets.length - invalidBuckets );
+				System.arraycopy( newBuckets, 0, goodBuckets, goodBuckets.length - invalidBuckets, newBuckets.length );
+			}
+
+			invalidBuckets = 0;
+			for ( long bucketValue : goodBuckets ) {
+				if ( bucketValue > 0L ) {
+					break;
+				}
+				invalidBuckets++;
+			}
+		} while ( invalidBuckets != 0 );
+		return goodBuckets;
 	}
 
 	/**

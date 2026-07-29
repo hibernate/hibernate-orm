@@ -3,6 +3,8 @@ package org.hibernate.dialect.sequence.internal;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sequence.spi.NextvalSequenceSupport;
 
+import jakarta.annotation.Nullable;
+
 /**
  * Sequence support for {@link org.hibernate.dialect.HANADialect}.
  *
@@ -19,6 +21,11 @@ public final class HANASequenceSupport extends NextvalSequenceSupport {
 	@Override
 	public String getFromDual() {
 		return " from sys.dummy";
+	}
+
+	@Override
+	public @Nullable String getFromGenerateSeries() {
+		return " from series_generate_integer(1,1,?)";
 	}
 
 	@Override

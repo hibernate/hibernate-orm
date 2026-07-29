@@ -6,6 +6,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.ComparableExecutable;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.persister.entity.EntityPersister;
@@ -198,14 +199,8 @@ public abstract class EntityAction
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			final var resolvedPersister =
-					session.getFactory().getMappingMetamodel()
-							.getEntityDescriptor( entityName );
-			persister = resolvedPersister;
-			assert id != null;
-			instance =
-					session.getPersistenceContext()
-							.getEntity( session.generateEntityKey( id, resolvedPersister ) );
+			persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
+			instance = session.getPersistenceContextInternal().getEntity( generateEntityKey( session ) );
 		}
 	}
 
@@ -221,5 +216,10 @@ public abstract class EntityAction
 	@Nonnull
 	protected EventListenerGroups getEventListenerGroups() {
 		return session.getFactory().getEventListenerGroups();
+	}
+
+	protected @Nonnull EntityKey generateEntityKey(@Nonnull EventSource session) {
+		assert id != null;
+		return session.generateEntityKey( id, persister );
 	}
 }

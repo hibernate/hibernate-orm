@@ -6,6 +6,8 @@ import java.util.EnumSet;
 import java.util.Locale;
 import java.util.UUID;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -13,6 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.BasicType;
@@ -112,8 +115,35 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+	public @Nonnull Object generate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable Object owner,
+			@Nullable Object currentValue,
+			@Nonnull EventType eventType) {
 		return valueTransformer.transform( generator.generateUuid( session ) );
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		return true;
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		final UUID[] uuids = generator.generateUuids( requests.size(), session );
+		if ( valueTransformer == UUIDJavaType.PassThroughTransformer.INSTANCE ) {
+			return uuids;
+		}
+		else {
+			final Object[] result = new Object[uuids.length];
+			for ( int i = 0; i < uuids.length; i++ ) {
+				result[i] = valueTransformer.transform( uuids[i] );
+			}
+			return result;
+		}
 	}
 
 	@Internal

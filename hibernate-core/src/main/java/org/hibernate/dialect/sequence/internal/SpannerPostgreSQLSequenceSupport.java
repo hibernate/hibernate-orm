@@ -46,4 +46,10 @@ public class SpannerPostgreSQLSequenceSupport extends PostgreSQLSequenceSupport 
 	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
 		throw new UnsupportedOperationException( "No support for retrieving previous value" );
 	}
+
+	@Override
+	public String getFromGenerateSeries() {
+		// Spanner documents the generate_series function, but doesn't really support it, so emulate it
+		return " from unnest(regexp_split_to_array(repeat(',',?-1),','))";
+	}
 }

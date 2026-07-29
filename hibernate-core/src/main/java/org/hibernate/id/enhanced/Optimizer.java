@@ -42,6 +42,24 @@ public interface Optimizer {
 	Serializable generate(AccessCallback callback);
 
 	/**
+	 * Generate identifier values accounting for this specific optimization in batch.
+	 *
+	 * @implNote All known implementors are synchronized. Consider carefully
+	 *           if a new implementation could drop this requirement.
+	 *
+	 * @param count The amount of identifiers to generate
+	 * @param callback Callback to access the underlying value source.
+	 * @return The generated identifier values.
+	 */
+	default Serializable[] generateBatch(int count, AccessCallback callback) {
+		final Serializable[] batch = new Serializable[count];
+		for (int i = 0; i < count; i++) {
+			batch[i] = generate( callback );
+		}
+		return batch;
+	}
+
+	/**
 	 * Reset the optimizer before restarting the underlying database sequence.
 	 *
 	 * @since 7.2

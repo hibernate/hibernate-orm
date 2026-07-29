@@ -3,6 +3,7 @@ package org.hibernate.dialect.sequence.internal;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sequence.spi.NextvalSequenceSupport;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -54,5 +55,10 @@ public final class OracleSequenceSupport extends NextvalSequenceSupport {
 	@Override
 	public String getRestartSequenceString(String sequenceName, long startWith) {
 		return "alter sequence " + sequenceName + " restart start with " + startWith;
+	}
+
+	@Override
+	public @Nullable String getFromGenerateSeries() {
+		return " from (select 1 v from dual connect by level<=?)";
 	}
 }

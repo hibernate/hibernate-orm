@@ -6,7 +6,7 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.EntityDeleteAction;
-import org.hibernate.action.internal.EntityIdentityInsertAction;
+import org.hibernate.action.internal.DelayableEntityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
@@ -43,7 +43,7 @@ public interface ActionQueue extends TransactionCompletionCallbacks {
 	/// Adds an identity-based entity insert action.
 	///
 	/// @param action The action representing the entity insertion with identity generation
-	void addAction(EntityIdentityInsertAction action);
+	void addAction(DelayableEntityInsertAction action);
 
 	/// Adds an entity update action.
 	///

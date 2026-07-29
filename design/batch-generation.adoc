@@ -1,0 +1,353 @@
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+= Batch Value Generation
+
+This document is a contributor-oriented design guide for Hibernate's batch
+value generation support.
+It describes how `BeforeExecutionGenerator` implementations may opt into batch
+generation so that the runtime collects multiple generation requests and issues
+a single `generateBatch` call instead of calling `generate` once per entity.
+
+Batch generation is useful for generators that benefit from amortized setup
+cost, such as fetching a range of sequence values in one database round-trip,
+or allocating identifiers from an external service in bulk.
+
+== Goals
+
+The batch generation design exists to let `BeforeExecutionGenerator`
+implementations produce values for multiple entities at once, reducing
+per-entity overhead for generators where batch operations are cheaper than
+repeated single-value calls.
+
+The main goals are:
+
+* Provide an opt-in SPI on `BeforeExecutionGenerator` for batch generation.
+* Collect pending generation requests across an entire persist cascade or
+  flush decomposition phase before resolving them.
+* Distribute generated values back into entity state arrays and entity
+  instances transparently.
+* Support batch generation for identifiers, version properties, and arbitrary
+  generated attributes.
+* Integrate with the persist event path, the merge event path, the flush
+  decomposition path (both graph and legacy queues), the stateless session
+  bulk insert path, and the SQM bulk insert path.
+* Preserve existing single-entity generation behavior when a generator does
+  not opt in.
+
+== Source Map
+
+`org.hibernate.generator.BeforeExecutionGenerator`::
+The generator SPI extended with `supportsBatchGeneration()` and
+`generateBatch()`.
+
+`org.hibernate.generator.GenerationRequest`::
+Represents a single request within a batch: the entity instance and the
+current property value.
+
+`org.hibernate.generator.GenerationRequests`::
+An ordered, read-only collection of `GenerationRequest` elements passed to
+`generateBatch`.
+
+`org.hibernate.event.spi.BatchGenerationContext`::
+Collects deferred generation registrations and resolves them in bulk.
+Used during both the event listener path and the flush decomposition path.
+
+`org.hibernate.event.spi.ManagedOperationContext`::
+Common interface implemented by `PersistContext` and `MergeContext` to carry
+a `BatchGenerationContext` through a persist or merge cascade.
+
+`org.hibernate.action.internal.DelayableEntityInsertAction`::
+Renamed from `EntityIdentityInsertAction`.  Now used for any insert whose
+identifier generation is deferred, whether by identity column or by batch
+generation.
+
+== SPI
+
+=== BeforeExecutionGenerator
+
+Two methods were added to `BeforeExecutionGenerator`:
+
+`supportsBatchGeneration()`::
+Returns `true` when the generator provides an optimized `generateBatch`
+implementation.  Defaults to `false`.  When `false`, the runtime calls
+`generate` once per entity as before.
+
+`generateBatch(session, requests, eventType)`::
+Generates values for all requests in one call.  The default implementation
+loops over the requests and delegates to `generate` for each one.
+Generators that opt in should override this with a true batch implementation.
++
+The returned array must have exactly `requests.size()` elements, in the same
+order as the requests.
+
+=== GenerationRequest and GenerationRequests
+
+`GenerationRequest` is a simple contract exposing:
+
+* `entity()` -- the entity instance owning the attribute being generated.
+* `currentValue()` -- the current value of the property, or `null`.
+
+`GenerationRequests` is an indexed, iterable, read-only collection of
+`GenerationRequest` elements.  It has two factory methods:
+
+* `GenerationRequests.of(List<? extends GenerationRequest>)` -- wraps an
+  existing list.
+* `GenerationRequests.of(int size)` -- creates a collection of the given size
+  where every request has `null` entity and `null` current value.  Used for
+  bulk DML operations where individual entity instances are not available.
+
+== BatchGenerationContext
+
+`BatchGenerationContext` is the central coordination point.  It collects
+deferred `BeforeExecutionGenerator` registrations during an in-memory value
+generation traversal, then resolves them all at once.
+
+=== Lifecycle
+
+[source]
+----
+1. Create BatchGenerationContext
+2. For each entity:
+     - preInsert/preUpdate in-memory value generation
+     - If generator.supportsBatchGeneration():
+         context.register(generator, propertyIndex, entity, state, persister, eventType)
+         state[propertyIndex] = PLACEHOLDER
+     - Else:
+         value = generator.generate(session, entity, currentValue, eventType)
+         state[propertyIndex] = value
+3. context.resolve(session)
+     - For each (generator, eventType) pair:
+         results = generator.generateBatch(session, requests, eventType)
+         distribute results into state arrays and entity instances
+----
+
+=== PLACEHOLDER Sentinel
+
+When a generator is registered for batch generation, the caller installs
+`BatchGenerationContext.PLACEHOLDER` in the entity state array at the
+property index.  This sentinel marks that the real value will be supplied
+later during `resolve`.
+
+=== Registration
+
+There are two `register` overloads:
+
+Property-index registration::
+Used for generated attributes (non-identifier properties).  The caller
+provides the property index, entity, state array, persister, and event type.
+During resolve, the generated value is written into `state[propertyIndex]`
+and set on the entity via `persister.setValue`.
+
+Consumer registration::
+Used for identifier generation.  The caller provides a
+`GeneratedValueConsumer` callback instead of a property index.
+During resolve, the generated value is passed to the consumer's
+`consumeGeneratedValue` method.  `DelayableEntityInsertAction` implements
+this interface and uses it to set the generated identifier, create the
+entity key, check uniqueness, and replace delayed entity identity insert
+keys in the persistence context.
+
+=== Resolution
+
+`resolve(SharedSessionContractImplementor)` iterates the pending map keyed
+by `(generator, eventType)` pairs.  For each entry it calls
+`generator.generateBatch` with the collected requests and distributes results
+back.  After resolution the pending map is cleared.
+
+For identifier generation, if the generated value is `null`, an
+`IdentifierGenerationException` is thrown.  The `SHORT_CIRCUIT_INDICATOR`
+sentinel is respected for generators that may decide to skip generation.
+
+== Integration Points
+
+Batch generation is integrated into five distinct code paths.
+
+=== Persist / Merge Event Path
+
+`AbstractSaveEventListener.saveWithGeneratedId` checks
+`supportsBatchGeneration()` on the identifier generator.  When batch
+generation is supported, the identifier is not generated immediately.
+Instead, `generatedId` is left `null` and the entity insert is treated as
+delayed (using `DelayableEntityInsertAction`).  The generator is registered
+on the `ManagedOperationContext`'s `BatchGenerationContext`.
+
+`PersistContext` and `MergeContext` both implement `ManagedOperationContext`
+and lazily create a `BatchGenerationContext`.  After the full persist or merge
+cascade completes:
+
+* `DefaultPersistEventListener.onPersist` calls
+  `persistContext.resolveBatchGenerators(session)`.
+* `AbstractFlushingEventListener.prepareEntityFlushes` calls
+  `context.resolveBatchGenerators(session)` after cascading on flush.
+
+This means all entities reached by one `persist()` call share a single
+batch generation context and their identifiers are resolved together
+before any flush work begins.
+
+=== Graph Queue Flush Decomposition
+
+`FlushCoordinator.decomposeExecutablePhases` creates a `BatchGenerationContext`
+and installs it on the `Decomposer` before decomposing the insert and update
+phases.  After those phases complete, it calls `batchContext.resolve(session)`
+and clears the context from the decomposer.
+
+The decomposers (`InsertDecomposer`, `UpdateDecomposer`,
+`TemporalEntityMutationPlanContributor`) and mutation planners
+(`EntityInsertMutationPlanner`) pass the batch context through to
+`preInsertInMemoryValueGeneration` / `preUpdateInMemoryValueGeneration`.
+Inside those methods, if a batch context is present and the generator
+supports batch generation, the generator is registered instead of called
+directly.
+
+=== Legacy Queue Coordinators
+
+`InsertCoordinatorStandard` and `UpdateCoordinatorStandard` gain an
+overloaded `preInsertInMemoryValueGeneration` /
+`preUpdateInMemoryValueGeneration` accepting an optional
+`BatchGenerationContext`.  The existing no-argument overloads delegate with
+`null`, preserving the non-batched behavior for the legacy path.
+
+=== Stateless Session Bulk Insert
+
+`StatelessSessionImpl.insertMultiple` uses a dedicated
+`batchGenerateValues` method that:
+
+1. Scans all entities and groups them by identifier generator and version
+   generator (only for generators that support batch generation).
+2. Calls `generateBatch` once per generator with an `InsertGenerationRequests`
+   adapter that maps entity indices to `GenerationRequest` elements.
+3. Distributes generated identifiers and versions into arrays.
+4. Passes pre-generated identifiers and versions into the per-entity
+   `doInsert` method, skipping the per-entity `generate` call.
+
+=== SQM and Temp-Table Bulk Insert
+
+For `INSERT ... VALUES` statements, `BaseSqmToSqlAstConverter` creates an
+`IdGeneratorParameter` that pre-generates all needed identifiers via
+`generateBatch` on first bind.  The generated values are stored in an
+`IdValues` holder registered as a JDBC parameter binding.  Each subsequent
+bind call consumes the next value from the holder.
+
+For temp-table-based bulk inserts, `TableBasedInsertHandler` calls
+`generateBatch` to produce all identifiers at once before iterating over
+row numbers to update the temp table with the generated identifiers.
+
+=== PersistentIdentifierBag
+
+`PersistentIdentifierBag.preInsert` checks whether the collection
+persister's generator supports batch generation.  When it does, it collects
+all pending locations, creates `GenerationRequest` instances, calls
+`generateBatch` once, and distributes identifiers into the bag's identifier
+map.
+
+=== CompositeNestedGeneratedValueGenerator
+
+This generator delegates to sub-generators for each component property of a
+composite identifier.  It propagates batch generation support:
+
+* `supportsBatchGeneration()` returns `true` only if all sub-generators
+  support batch generation.
+* `generateBatch` builds a request-mapping per sub-generator, calls each
+  sub-generator's `generateBatch`, and assembles the composite results.
+
+== DelayableEntityInsertAction
+
+`EntityIdentityInsertAction` was renamed to `DelayableEntityInsertAction`
+because the action is no longer specific to identity-column generation.
+It is now also used when a `BeforeExecutionGenerator` supports batch
+generation and the insert is delayed until batch resolution.
+
+The action implements `BatchGenerationContext.GeneratedValueConsumer` with a
+`consumeGeneratedValue` method that:
+
+1. Sets the identifier on the entity instance via the persister.
+2. Records the generated identifier on the action.
+3. Creates the entity key.
+4. Checks persistence context uniqueness.
+5. Replaces delayed entity identity insert keys in the persistence context.
+
+== Implementing a Batch-Capable Generator
+
+A generator opts into batch generation by:
+
+1. Returning `true` from `supportsBatchGeneration()`.
+2. Overriding `generateBatch` with an implementation that processes all
+   requests efficiently.
+
+Example:
+
+[source,java]
+----
+public class BatchSequenceGenerator implements BeforeExecutionGenerator {
+
+    @Override
+    public boolean supportsBatchGeneration() {
+        return true;
+    }
+
+    @Override
+    public Object generate(
+            SharedSessionContractImplementor session,
+            Object owner, Object currentValue,
+            EventType eventType) {
+        // single-entity fallback
+        return fetchNextSequenceValue(session);
+    }
+
+    @Override
+    public Object[] generateBatch(
+            SharedSessionContractImplementor session,
+            GenerationRequests requests,
+            EventType eventType) {
+        // fetch all values in one round-trip
+        return fetchSequenceValues(session, requests.size());
+    }
+}
+----
+
+The default `generateBatch` implementation loops over requests and calls
+`generate` for each one.  Override it only when the batch path offers a
+real advantage.
+
+== Testing Strategy
+
+Batch generation tests::
+Cover insert and update paths with batch-capable generators.
+Verify that `generateBatch` is called once with the expected request count,
+and that `generate` is not called when batch generation is active.
+
+Mixed generator tests::
+Verify that entities with both batch-capable and non-batch generators work
+correctly: batch generators are resolved via `generateBatch`, non-batch
+generators are called individually.
+
+Cascade tests::
+Verify that parent-child cascade persistence with batch-capable identifier
+generators produces correct identifiers for all cascaded children.
+
+Distinct values::
+Verify that batch generation produces unique values for each entity.
+
+== Common Failure Modes
+
+Placeholder leak::
+If `BatchGenerationContext.resolve` is not called, `PLACEHOLDER` sentinels
+remain in entity state arrays.  These will cause bind failures or incorrect
+null values during SQL execution.
+
+Generator returns wrong array size::
+The `generateBatch` return array must have exactly `requests.size()` elements.
+A size mismatch causes `ArrayIndexOutOfBoundsException` during result
+distribution.
+
+Batch generator called without registration::
+Calling `resolve` on an empty context is safe (it returns immediately).
+But if a generator is registered and the context is never resolved, values
+are silently lost.
+
+State array mutation after registration::
+Between registration and resolution, the state array position holds
+`PLACEHOLDER`.  Code that reads state values during this window must be
+aware that the real value is not yet available.

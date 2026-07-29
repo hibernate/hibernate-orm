@@ -28,6 +28,7 @@ import java.util.List;
 import static java.util.Collections.emptyIterator;
 import static org.hibernate.engine.internal.ForeignKeys.isTransient;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -53,7 +54,8 @@ public class CascadingActions {
 				String propertyName,
 				@Nullable List<String> attributePath,
 				DeleteContext context,
-				boolean isCascadeDeleteEnabled) {
+				boolean isCascadeDeleteEnabled,
+				boolean isMapsId) {
 			session.delete( childEntityName, child, isCascadeDeleteEnabled, context );
 		}
 
@@ -101,7 +103,8 @@ public class CascadingActions {
 				String propertyName,
 				@Nullable List<String> attributePath,
 				RefreshContext context,
-				boolean isCascadeDeleteEnabled)
+				boolean isCascadeDeleteEnabled,
+				boolean isMapsId)
 				throws HibernateException {
 			session.refresh( childEntityName, child, context );
 		}
@@ -147,7 +150,8 @@ public class CascadingActions {
 				String propertyName,
 				@Nullable List<String> attributePath,
 				Void nothing,
-				boolean isCascadeDeleteEnabled)
+				boolean isCascadeDeleteEnabled,
+				boolean isMapsId)
 				throws HibernateException {
 			session.evict( child );
 		}
@@ -190,9 +194,20 @@ public class CascadingActions {
 				String propertyName,
 				@Nullable List<String> attributePath,
 				MergeContext context,
-				boolean isCascadeDeleteEnabled)
+				boolean isCascadeDeleteEnabled,
+				boolean isMapsId)
 				throws HibernateException {
-			session.merge( childEntityName, child, context );
+			if ( isMapsId ) {
+				if ( context.containsKey( child ) && context.isOperatedOn( child ) ) {
+					EVENT_LISTENER_LOGGER.alreadyInMergeProcess();
+				}
+				else {
+					session.persist( childEntityName, child );
+				}
+			}
+			else {
+				session.merge( childEntityName, child, context );
+			}
 		}
 
 		@Override
@@ -229,7 +244,8 @@ public class CascadingActions {
 				String propertyName,
 				@Nullable List<String> attributePath,
 				PersistContext context,
-				boolean isCascadeDeleteEnabled)
+				boolean isCascadeDeleteEnabled,
+				boolean isMapsId)
 				throws HibernateException {
 			session.persist( childEntityName, child, context );
 		}
@@ -279,9 +295,25 @@ public class CascadingActions {
 				String propertyName,
 				@Nullable List<String> attributePath,
 				PersistContext context,
-				boolean isCascadeDeleteEnabled)
+				boolean isCascadeDeleteEnabled,
+				boolean isMapsId)
 				throws HibernateException {
-			session.persistOnFlush( childEntityName, child, context );
+			if ( isMapsId ) {
+				final var persister = session.getEntityPersister( childEntityName, child );
+				final var entityKey = session.generateEntityKey( persister.getIdentifier( child ), persister );
+				final var entityHolder = session.getPersistenceContextInternal().getEntityHolder( entityKey );
+				if ( entityHolder == null || entityHolder.getEntity() == child ) {
+					session.persistOnFlush( childEntityName, child, context );
+				}
+				else {
+					// The child entity is detached and part of the parent entity identifier.
+					// Normally, maps-id entities would be cascaded, but not in this special case,
+					// because the persistence context already contains an entity that is loaded for this id
+				}
+			}
+			else {
+				session.persistOnFlush( childEntityName, child, context );
+			}
 		}
 
 		@Override
@@ -330,7 +362,8 @@ public class CascadingActions {
 				String propertyName,
 				@Nullable List<String> attributePath,
 				Void nothing,
-				boolean isCascadeDeleteEnabled)
+				boolean isCascadeDeleteEnabled,
+				boolean isMapsId)
 				throws HibernateException {
 			if ( child != null && isChildTransient( session, child, childEntityName, isCascadeDeleteEnabled ) ) {
 				throw new TransientPropertyValueException(

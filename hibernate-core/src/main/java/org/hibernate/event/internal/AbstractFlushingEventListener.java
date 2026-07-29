@@ -154,6 +154,7 @@ public abstract class AbstractFlushingEventListener {
 				cascadeOnFlush( session, entityEntry.getPersister(), entry.$$_hibernate_getEntityInstance(), context );
 			}
 		}
+		context.resolveBatchGenerators( session );
 		checkForTransientReferences( session, persistenceContext );
 	}
 

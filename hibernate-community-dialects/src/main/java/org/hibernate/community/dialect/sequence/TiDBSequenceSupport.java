@@ -1,5 +1,6 @@
 package org.hibernate.community.dialect.sequence;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
@@ -21,6 +22,12 @@ public class TiDBSequenceSupport implements SequenceSupport {
 	@Override
 	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
 		return "lastval(" + sequenceName + ")";
+	}
+
+	@Override
+	public @Nullable String getSequenceNextValParameterizedString(String sequenceName) throws MappingException {
+		return "with recursive cte as (select 1 v union all select t.v + 1 from cte t where t.v<?) select "
+			+ getSelectSequenceNextValString( sequenceName ) + " from cte t";
 	}
 
 	@Override

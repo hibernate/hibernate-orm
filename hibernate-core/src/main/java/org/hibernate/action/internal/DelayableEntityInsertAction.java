@@ -1,17 +1,30 @@
 package org.hibernate.action.internal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
+import org.hibernate.AssertionFailure;
+import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -21,19 +34,23 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * The action for performing entity insertions when entity is using {@code IDENTITY} column identifier generation
+ * or batch generation via {@link BeforeExecutionGenerator#generateBatch(SharedSessionContractImplementor, GenerationRequests, EventType)}
  *
  * @see EntityInsertAction
+ * @see BeforeExecutionGenerator#supportsBatchGeneration()
  */
-public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
+public class DelayableEntityInsertAction extends AbstractEntityInsertAction implements BatchGenerationContext.GeneratedValueConsumer {
 
 	private final boolean isDelayed;
-	private final @Nullable EntityKey delayedEntityKey;
-	private @Nullable EntityKey entityKey;
+	private transient @Nullable EntityKey delayedEntityKey;
+	private transient @Nullable EntityKey entityKey;
+	private transient @Nullable byte[] pendingEntityKeyBytes;
 	private @Nullable Object generatedId;
+	private @Nullable Object version;
 	private @Nullable Object rowId;
 
 	/**
-	 * Constructs an EntityIdentityInsertAction
+	 * Constructs an DelayableEntityInsertAction
 	 *
 	 * @param state The current (extracted) entity state
 	 * @param instance The entity instance
@@ -41,41 +58,42 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 * @param session The session
 	 * @param isDelayed Are we in a situation which allows the insertion to be delayed?
 	 */
-	public EntityIdentityInsertAction(
+	public DelayableEntityInsertAction(
 			final @Nonnull Object[] state,
 			final @Nonnull Object instance,
+			final @Nullable Object version,
 			final @Nonnull EntityPersister persister,
 			final @Nonnull EventSource session,
 			final boolean isDelayed) {
-		this( state, instance, persister, session, isDelayed, isDelayed );
-	}
-
-	private EntityIdentityInsertAction(
-			final @Nonnull Object[] state,
-			final @Nonnull Object instance,
-			final @Nonnull EntityPersister persister,
-			final @Nonnull EventSource session,
-			final boolean isDelayed,
-			final boolean useDelayedIdentifier) {
 		super(
-				useDelayedIdentifier ? generateDelayedPostInsertIdentifier() : null,
+				isDelayed ? generateDelayedPostInsertIdentifier() : null,
 				state,
 				instance,
 				persister,
 				session
 		);
+		this.version = version;
 		this.isDelayed = isDelayed;
-		delayedEntityKey = useDelayedIdentifier ? generateDelayedEntityKey() : null;
+		delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
+	}
+
+	@Nullable
+	public Object getVersion() {
+		return version;
+	}
+
+	public void setVersion(@Nullable Object version) {
+		this.version = version;
 	}
 
 	@Nonnull
-	public static EntityIdentityInsertAction delayedCopy(@Nonnull EntityIdentityInsertAction action) {
-		return new EntityIdentityInsertAction(
+	public static DelayableEntityInsertAction delayedCopy(@Nonnull DelayableEntityInsertAction action) {
+		return new DelayableEntityInsertAction(
 				action.getState(),
 				action.getInstance(),
+				action.getVersion(),
 				action.getPersister(),
 				action.getSession(),
-				true,
 				true
 		);
 	}
@@ -114,21 +132,36 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );
 			}
 			final var persistenceContext = session.getPersistenceContextInternal();
-			if ( persister.getRowIdMapping() != null ) {
-				rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
-				if ( rowId != null && isDelayed ) {
-					persistenceContext.replaceEntityEntryRowId( getInstance(), rowId );
-				}
+			final var entry = persistenceContext.getEntry( instance );
+			if ( entry == null ) {
+				throw new AssertionFailure( "possible non-threadsafe access to session" );
 			}
-			if ( generatedId == null && generatedValues != null ) {
-				final Object compositeId =
-						compositeGeneratedId( persister, instance, generatedValues, session );
-				if ( compositeId != null ) {
-					generatedId = compositeId;
+			entry.postInsert( getState() );
+			if ( generatedValues != null ) {
+				if ( generatedId == null ) {
+					final Object compositeId =
+							compositeGeneratedId( persister, instance, generatedValues, session );
+					if ( compositeId != null ) {
+						generatedId = compositeId;
+					}
 				}
-			}
-			if ( persister.hasInsertGeneratedProperties() ) {
-				persister.processInsertGeneratedProperties( generatedId, instance, state, generatedValues, session );
+				if ( persister.hasInsertGeneratedProperties() ) {
+					persister.processInsertGeneratedProperties( generatedId, instance, state, generatedValues, session );
+					if ( persister.isVersionPropertyGenerated() ) {
+						version = Versioning.getVersion( state, persister );
+					}
+					entry.postUpdate( instance, state, version );
+				}
+				else if ( persister.isVersionPropertyGenerated() ) {
+					version = Versioning.getVersion( state, persister );
+					entry.postInsert( version );
+				}
+				if ( persister.getRowIdMapping() != null ) {
+					rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
+					if ( rowId != null && isDelayed ) {
+						persistenceContext.replaceEntityEntryRowId( getInstance(), rowId );
+					}
+				}
 			}
 			if ( generatedId == null ) {
 				generatedId = persister.getIdentifier( instance, session );
@@ -140,6 +173,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			persistenceContext.registerInsertedKey( persister, generatedId );
 			entityKey = session.generateEntityKey( generatedId, persister );
 			persistenceContext.checkUniqueness( entityKey, getInstance() );
+			if ( isDelayed ) {
+				entry.setStatus( super.getInitialEntityEntryStatus() );
+			}
+			handleNaturalIdPreSaveNotifications();
 		}
 
 		//TODO: this bit actually has to be called after all cascades!
@@ -345,6 +382,28 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	@Override
+	protected Status getInitialEntityEntryStatus() {
+		return isDelayed ? Status.SAVING : super.getInitialEntityEntryStatus();
+	}
+
+	@Override
+	public void consumeGeneratedValue(Object generatedValue, SharedSessionContractImplementor session) {
+		getPersister().setIdentifier( getInstance(), generatedValue, session );
+		session.runEntityLifecycleCallback( () -> getPersister().getEntityCallbacks().preCreate( getInstance() ) );
+		setGeneratedId( generatedValue );
+		final var entityKey = session.generateEntityKey( generatedValue, getPersister() );
+		setEntityKey( entityKey );
+		final var persistenceContext = session.getPersistenceContextInternal();
+		persistenceContext.checkUniqueness( entityKey, getInstance() );
+		persistenceContext.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
+		final var entry = persistenceContext.getEntry( getInstance() );
+		if ( entry != null ) {
+			entry.setStatus( super.getInitialEntityEntryStatus() );
+		}
+		handleNaturalIdPreSaveNotifications();
+	}
+
+	@Override
 	@Nonnull
 	protected EntityKey getEntityKey() {
 		final var entityKey = this.entityKey == null ? delayedEntityKey : this.entityKey;
@@ -374,5 +433,66 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	@Nonnull
 	protected EntityKey generateDelayedEntityKey() {
 		return getSession().generateEntityKey( getDelayedId(), getPersister() );
+	}
+
+	private void writeObject(ObjectOutputStream oos) throws IOException {
+		oos.defaultWriteObject();
+		if ( delayedEntityKey != null ) {
+			oos.writeBoolean( true );
+			delayedEntityKey.serialize( oos );
+		}
+		else {
+			oos.writeBoolean( false );
+		}
+		if ( entityKey != null ) {
+			oos.writeBoolean( true );
+			entityKey.serialize( oos );
+		}
+		else {
+			oos.writeBoolean( false );
+		}
+	}
+
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+		ois.defaultReadObject();
+		final var baos = new ByteArrayOutputStream();
+		try ( var buffer = new ObjectOutputStream( baos ) ) {
+			for ( int i = 0; i < 2; i++ ) {
+				final boolean present = ois.readBoolean();
+				buffer.writeBoolean( present );
+				if ( present ) {
+					buffer.writeObject( ois.readObject() );
+					buffer.writeObject( ois.readObject() );
+					buffer.writeObject( ois.readObject() );
+				}
+			}
+		}
+		pendingEntityKeyBytes = baos.toByteArray();
+	}
+
+	@Override
+	public void afterDeserialize(@Nullable EventSource session) {
+		if ( session != null && pendingEntityKeyBytes != null ) {
+			try ( var ois = new ObjectInputStream( new ByteArrayInputStream( pendingEntityKeyBytes ) ) ) {
+				if ( ois.readBoolean() ) {
+					delayedEntityKey = EntityKey.deserialize( ois, session.getFactory() );
+				}
+				if ( ois.readBoolean() ) {
+					entityKey = EntityKey.deserialize( ois, session.getFactory() );
+				}
+			}
+			catch ( IOException | ClassNotFoundException e ) {
+				throw new AssertionFailure( "failed to deserialize entity keys", e );
+			}
+			pendingEntityKeyBytes = null;
+		}
+		super.afterDeserialize( session );
+	}
+
+	@Nonnull
+	@Override
+	protected EntityKey generateEntityKey(@Nonnull EventSource session) {
+		assert generatedId != null;
+		return entityKey != null ? entityKey : session.generateEntityKey( generatedId, getPersister() );
 	}
 }

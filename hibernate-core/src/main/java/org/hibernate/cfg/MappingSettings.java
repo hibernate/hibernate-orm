@@ -9,6 +9,9 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.metamodel.CollectionClassification;
@@ -162,6 +165,17 @@ public interface MappingSettings {
 	 * @since 5.4
 	 */
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
+
+	/**
+	 * Specifies whether batch generation of identifier values is enabled.
+	 * This will lead to {@link org.hibernate.generator.BeforeExecutionGenerator#generateBatch(SharedSessionContractImplementor, GenerationRequests, EventType)}
+	 * calls for identifier generators instead of {@link org.hibernate.generator.BeforeExecutionGenerator#generate(SharedSessionContractImplementor, Object, Object, EventType)}.
+	 *
+	 * @settingDefault {@code true}
+	 *
+	 * @since 8.0
+	 */
+	String ID_BATCH_GENERATION = "hibernate.id.batch_generation";
 
 	/**
 	 * Specifies the preferred JDBC type for storing boolean values.

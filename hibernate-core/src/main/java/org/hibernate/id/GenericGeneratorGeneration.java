@@ -1,10 +1,14 @@
 package org.hibernate.id;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -20,10 +24,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.entity.EntityPersister;
@@ -133,6 +139,11 @@ public class GenericGeneratorGeneration
 	}
 
 	@Override
+	public boolean requiresGeneration(Object entity, Object currentValue, SharedSessionContractImplementor session) {
+		return delegate.requiresGeneration( entity, currentValue, session );
+	}
+
+	@Override
 	public EnumSet<EventType> getEventTypes() {
 		return delegate.getEventTypes();
 	}
@@ -165,12 +176,32 @@ public class GenericGeneratorGeneration
 	}
 
 	@Override
-	public Object generate(
-			SharedSessionContractImplementor session,
-			Object owner,
-			Object currentValue,
-			EventType eventType) {
+	public @Nonnull Object generate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable Object owner,
+			@Nullable Object currentValue,
+			@Nonnull EventType eventType) {
 		return beforeExecutionGenerator().generate( session, owner, currentValue, eventType );
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		return beforeExecutionGenerator().generateBatch( session, requests, eventType );
+	}
+
+	@Override
+	public List<BeforeExecutionGenerator> resolveGenerationDependencies(RuntimeModelCreationContext context) {
+		return delegate instanceof BeforeExecutionGenerator beforeExecutionGenerator
+				? beforeExecutionGenerator.resolveGenerationDependencies( context )
+				: Collections.emptyList();
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		return beforeExecutionGenerator().supportsBatchGeneration();
 	}
 
 	@Override

@@ -213,7 +213,7 @@ public class GeneratedValuesProcessor {
 			final var attribute = generatedValuesToSelect.get( i );
 			final Object generatedValue = selectionResults[i];
 			state[ attribute.getStateArrayPosition() ] = generatedValue;
-			attribute.getAttributeMetadata().getPropertyAccess().getSetter().set( entity, generatedValue );
+			attribute.getAttributeMetadata().getPropertyAccess().getPropertyValueAccessor().set( entity, generatedValue );
 		}
 	}
 

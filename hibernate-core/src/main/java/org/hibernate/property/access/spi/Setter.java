@@ -18,6 +18,10 @@ import org.hibernate.Remove;
 @Remove // Remove/replace with a different SPI that is based on Hibernate Models
 public interface Setter {
 
+	/**
+	 * @deprecated Use {@link PropertyAccess#getPropertyValueAccessor()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.1")
 	void set(Object target, @Nullable Object value);
 
 	/**

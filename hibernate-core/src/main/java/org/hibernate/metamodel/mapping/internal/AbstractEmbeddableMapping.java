@@ -42,10 +42,8 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyValueAccessor;
-import org.hibernate.property.access.spi.Setter;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
@@ -68,8 +66,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		EmbeddableMappingType.ConcreteEmbeddableType {
 	protected AttributeMappingsList attributeMappings;
 	protected SelectableMappings selectableMappings;
-	protected Getter[] getterCache;
-	protected Setter[] setterCache;
+	protected PropertyValueAccessor[] accessorCache;
 
 	public AbstractEmbeddableMapping(int attributeMappingSizeHint) {
 		attributeMappings = new ImmutableAttributeMappingList.Builder( attributeMappingSizeHint ).build();
@@ -102,12 +99,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Override
 	public Object getValue(Object instance, int position) {
-		return getterCache[position].get( instance );
+		return accessorCache[position].get( instance );
 	}
 
 	@Override
 	public void setValue(Object instance, int position, Object value) {
-		setterCache[position].set( instance, value );
+		accessorCache[position].set( instance, value );
 	}
 
 	@Override
@@ -779,15 +776,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	protected void buildGetterSetterCache() {
 		final int propertySpan = attributeMappings.size();
-		final Getter[] getterCache = new Getter[propertySpan];
-		final Setter[] setterCache = new Setter[propertySpan];
+		final PropertyValueAccessor[] accessorCache = new PropertyValueAccessor[propertySpan];
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final PropertyAccess propertyAccess = attributeMappings.get( i ).getPropertyAccess();
-			getterCache[i] = propertyAccess.getGetter();
-			setterCache[i] = propertyAccess.getSetter();
+			accessorCache[i] = propertyAccess.getPropertyValueAccessor();
 		}
-		this.getterCache = getterCache;
-		this.setterCache = setterCache;
+		this.accessorCache = accessorCache;
 	}
 
 	private static MutabilityPlan<?> getMutabilityPlan(boolean updateable) {

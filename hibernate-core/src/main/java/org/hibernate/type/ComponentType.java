@@ -509,7 +509,7 @@ public class ComponentType extends AbstractType
 			//equals()/hashCode() implementations
 			final var parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
 			if ( parentAccess != null ) {
-				parentAccess.getSetter().set( result, parentAccess.getGetter().get( component ) );
+				parentAccess.getPropertyValueAccessor().set( result, parentAccess.getPropertyValueAccessor().get( component ) );
 			}
 
 			return result;
@@ -671,7 +671,7 @@ public class ComponentType extends AbstractType
 
 			final var parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
 			if ( parentInjectionAccess != null ) {
-				parentInjectionAccess.getSetter().set( instance, owner );
+				parentInjectionAccess.getPropertyValueAccessor().set( instance, owner );
 			}
 
 			return instance;

@@ -48,7 +48,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.PropertyAccessorService;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.type.ComponentType;
@@ -896,10 +896,10 @@ public class GeneratorBinder {
 		}
 	}
 
-	private static Setter injector(PropertyAccessorService propertyAccessorService, Property property, Class<?> attributeDeclarer) {
+	private static PropertyValueAccessor injector(PropertyAccessorService propertyAccessorService, Property property, Class<?> attributeDeclarer) {
 		return property.getPropertyAccessStrategy( attributeDeclarer )
 				.buildPropertyAccess( propertyAccessorService, attributeDeclarer, property.getName(), true )
-				.getSetter();
+				.getPropertyValueAccessor();
 	}
 
 	/**

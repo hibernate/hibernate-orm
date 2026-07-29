@@ -113,7 +113,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert array == null;
 		array = newInstance( persister.getElementClass(), 0 );
-		persister.getAttributeMapping().getPropertyAccess().getSetter().set( getOwner(), array );
+		persister.getAttributeMapping().getPropertyAccess().getPropertyValueAccessor().set( getOwner(), array );
 		endRead();
 	}
 
@@ -129,7 +129,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 				set( array, i, loadingState.get( i ) );
 			}
 		}
-		attributeMapping.getPropertyAccess().getSetter().set( getOwner(), array );
+		attributeMapping.getPropertyAccess().getPropertyValueAccessor().set( getOwner(), array );
 	}
 
 	@SuppressWarnings("unused")

@@ -50,6 +50,7 @@ public class PropertyValueAccessor {
 
 	public enum Kind {
 		STANDARD,
+		READ_ONLY,
 		MAP,
 		EMBEDDED,
 		NOOP,
@@ -61,7 +62,7 @@ public class PropertyValueAccessor {
 
 	private final Kind kind;
 
-	// STANDARD mode
+	// STANDARD/READ_ONLY mode
 	private final @Nullable HibernateAccessorValueReader<?> reader;
 	private final @Nullable HibernateAccessorValueWriter writer;
 	private final int enhancementState;
@@ -111,19 +112,20 @@ public class PropertyValueAccessor {
 			HibernateAccessorValueReader<?> reader,
 			@Nullable HibernateAccessorValueWriter writer,
 			String propertyName) {
+		if ( writer == null ) {
+			return readonly( reader, propertyName );
+		}
 		return new PropertyValueAccessor(
 				Kind.STANDARD, reader, writer, ENHANCEMENT_STATE_NONE, propertyName,
 				null, null, -1, null, null, null
 		);
 	}
 
-	public static PropertyValueAccessor standard(
+	public static PropertyValueAccessor readonly(
 			HibernateAccessorValueReader<?> reader,
-			@Nullable HibernateAccessorValueWriter writer,
-			int enhancementState,
 			String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.STANDARD, reader, writer, enhancementState, propertyName,
+				Kind.READ_ONLY, reader, null, ENHANCEMENT_STATE_NONE, propertyName,
 				null, null, -1, null, null, null
 		);
 	}
@@ -134,7 +136,7 @@ public class PropertyValueAccessor {
 			int enhancementState,
 			String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.STANDARD, reader, writer, enhancementState, propertyName,
+				writer == null ? Kind.READ_ONLY : Kind.STANDARD, reader, writer, enhancementState, propertyName,
 				null, null, -1, null, null, null
 		);
 	}
@@ -194,20 +196,6 @@ public class PropertyValueAccessor {
 		);
 	}
 
-	/**
-	 * Fallback factory that wraps existing Getter/Setter in a STANDARD accessor
-	 * using reflection-based delegation. Used when a PropertyAccess does not have
-	 * a pre-built PropertyValueAccessor (e.g. CompositeUserType, ChainedPropertyAccess).
-	 */
-	public static PropertyValueAccessor fromGetterSetter(Getter getter, @Nullable Setter setter) {
-		final HibernateAccessorValueReader<?> reader = getter::get;
-		final HibernateAccessorValueWriter writer = setter != null ? setter::set : (t, v) -> {};
-		return new PropertyValueAccessor(
-				Kind.STANDARD, reader, writer, ENHANCEMENT_STATE_NONE, null,
-				null, null, -1, null, null, null
-		);
-	}
-
 	public Kind getKind() {
 		return kind;
 	}
@@ -215,7 +203,7 @@ public class PropertyValueAccessor {
 	@SuppressWarnings("unchecked")
 	public @Nullable Object get(Object owner) {
 		return switch ( kind ) {
-			case STANDARD -> reader.get( owner );
+			case STANDARD,READ_ONLY -> reader.get( owner );
 			case MAP -> ( (Map<?, ?>) owner ).get( mapKey );
 			case EMBEDDED -> owner;
 			case NOOP -> null;
@@ -240,6 +228,7 @@ public class PropertyValueAccessor {
 					AccessStrategyHelper.handleEnhancedInjection( target, value, enhancementState, propertyName );
 				}
 			}
+			case READ_ONLY -> throw new UnsupportedOperationException( "Cannot set read-only property" );
 			case MAP -> ( (Map<String, Object>) target ).put( mapKey, value );
 			case EMBEDDED, NOOP, BACK_REF, INDEX_BACK_REF -> {
 			}

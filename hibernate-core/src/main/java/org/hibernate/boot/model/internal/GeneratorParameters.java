@@ -6,7 +6,7 @@ import java.util.Properties;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Internal;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.GeneratorCreationContext;
@@ -260,7 +260,8 @@ public class GeneratorParameters {
 	@Internal
 	public static void interpretTableGenerator(
 			TableGenerator tableGeneratorAnnotation,
-			IdentifierGeneratorDefinition.Builder definitionBuilder) {
+			IdentifierGeneratorRegistration.Builder definitionBuilder) {
+		definitionBuilder.setKind( IdentifierGeneratorRegistration.Kind.TABLE );
 		definitionBuilder.setName( tableGeneratorAnnotation.name() );
 		definitionBuilder.setGeneratorClass( org.hibernate.id.enhanced.TableGenerator.class );
 		definitionBuilder.addParam( CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
@@ -316,7 +317,8 @@ public class GeneratorParameters {
 	@Internal
 	public static void interpretSequenceGenerator(
 			SequenceGenerator sequenceGeneratorAnnotation,
-			IdentifierGeneratorDefinition.Builder definitionBuilder) {
+			IdentifierGeneratorRegistration.Builder definitionBuilder) {
+		definitionBuilder.setKind( IdentifierGeneratorRegistration.Kind.SEQUENCE );
 		definitionBuilder.setName( sequenceGeneratorAnnotation.name() );
 		definitionBuilder.setGeneratorClass( SequenceStyleGenerator.class );
 

@@ -50,6 +50,7 @@ public class TenantIdMappingMaterializer {
 		final Property property = materializeTenantId(
 				binding.attributeName(),
 				binding.member(),
+				binding.resolvedType(),
 				binding.valueIntent(),
 				binding.tenantIdType(),
 				typeBinding,
@@ -64,6 +65,7 @@ public class TenantIdMappingMaterializer {
 	private Property materializeTenantId(
 			String attributeName,
 			MemberDetails memberDetails,
+			org.hibernate.models.spi.TypeDetails resolvedType,
 			BasicValueIntent valueIntent,
 			BasicType<?> tenantIdType,
 			RootClass typeBinding,
@@ -77,6 +79,7 @@ public class TenantIdMappingMaterializer {
 
 		new BasicValueMappingMaterializer().materializeTenantIdBasicValue(
 				memberDetails,
+				resolvedType,
 				valueIntent,
 				property,
 				typeBinding.getRootTable(),

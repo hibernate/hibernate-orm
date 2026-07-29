@@ -472,7 +472,8 @@ public class MappingResolutionPipeline {
 			MetadataBuildingContext metadataBuildingContext) {
 		final BindingStateImpl bindingState = new BindingStateImpl(
 				metadataBuildingContext,
-				new InFlightMetadataCollectorAdapter( metadataBuildingContext.getMetadataCollector() )
+				new InFlightMetadataCollectorAdapter( metadataBuildingContext.getMetadataCollector() ),
+				categorizedDomainModel.getGlobalRegistrations()
 		);
 		coordinateBinding(
 				categorizedDomainModel,

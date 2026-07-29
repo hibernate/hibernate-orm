@@ -25,6 +25,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,6 +77,30 @@ public class SimpleTenancyTests {
 				},
 				scope.getRegistry(),
 				ProtectedEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testGenericMappedSuperclassTenantId(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( GenericTenantEntity.class.getName() );
+					final TenantIdBindingView tenantIdBinding = context.getBindingState()
+							.getBootBindingModel()
+							.getTenantIdBindingView( entityType( context, GenericTenantEntity.class ) );
+					assertThat( tenantIdBinding ).isNotNull();
+					assertThat( tenantIdBinding.resolvedType().determineRawClass().toJavaClass() )
+							.isEqualTo( Tenant.class );
+
+					final BasicValue value = (BasicValue) entityBinding.getProperty( "tenant" ).getValue();
+					assertThat( value.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Tenant.class );
+					assertThat( value.getEnumerationStyle() ).isEqualTo( EnumType.STRING );
+				},
+				scope.getRegistry(),
+				GenericTenant.class,
+				GenericTenantEntity.class
 		);
 	}
 
@@ -188,6 +213,20 @@ public class SimpleTenancyTests {
 		@TenantId
 		@Column(name = "tenant_id")
 		private String tenant;
+	}
+
+	@MappedSuperclass
+	public abstract static class GenericTenant<T> {
+		@TenantId
+		@Enumerated(EnumType.STRING)
+		private T tenant;
+	}
+
+	@Entity(name = "GenericTenantEntity")
+	@Table(name = "generic_tenant")
+	public static class GenericTenantEntity extends GenericTenant<Tenant> {
+		@Id
+		private Integer id;
 	}
 
 	public static class RlsDialect extends H2Dialect {

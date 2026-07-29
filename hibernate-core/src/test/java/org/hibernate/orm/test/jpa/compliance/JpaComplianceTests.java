@@ -43,7 +43,6 @@ public class JpaComplianceTests {
 		assertThat( compliance.isJpaOrderByMappingComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaProxyComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaCacheComplianceEnabled() ).isEqualTo( expected );
-		assertThat( compliance.isGlobalGeneratorScopeEnabled() ).isEqualTo( expected );
 	}
 
 	@Test
@@ -81,7 +80,6 @@ public class JpaComplianceTests {
 		assertThat( compliance.isJpaOrderByMappingComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaProxyComplianceEnabled() ).isEqualTo( expected );
 		assertThat( compliance.isJpaCacheComplianceEnabled() ).isEqualTo( expected );
-		assertThat( compliance.isGlobalGeneratorScopeEnabled() ).isEqualTo( expected );
 	}
 
 	@Test

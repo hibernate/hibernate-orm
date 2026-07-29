@@ -5,6 +5,7 @@ import java.util.Locale;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
 import org.hibernate.boot.mapping.internal.binders.MappedSuperTypeBinder;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -48,6 +49,16 @@ public class EmbeddableMappingMaterializer {
 		return contribution;
 	}
 
+	public EmbeddableContribution createContribution(
+			ComponentSource source,
+			EmbeddedValueMetadata valueMetadata,
+			BindingContext bindingContext) {
+		final EmbeddableContribution contribution =
+				EmbeddableContribution.from( source, valueMetadata, state, bindingContext );
+		state.getBootBindingModel().addEmbeddableContribution( contribution );
+		return contribution;
+	}
+
 	public Component createEmbeddedAttributeComponent(
 			ComponentSource source,
 			PersistentClass ownerBinding,
@@ -59,6 +70,7 @@ public class EmbeddableMappingMaterializer {
 		applyComponentMappedSuperclass( component, source.componentType() );
 		component.setTable( table );
 		component.setTypeUsingReflection( ownerClassName, attributeName, state.getClassLoaderService() );
+		reapplyExplicitTargetType( component, source );
 		return component;
 	}
 
@@ -73,7 +85,17 @@ public class EmbeddableMappingMaterializer {
 		applyComponentMappedSuperclass( component, source.componentType() );
 		component.setTable( table );
 		component.setTypeUsingReflection( ownerClassName, attributeName, state.getClassLoaderService() );
+		reapplyExplicitTargetType( component, source );
 		return component;
+	}
+
+	private static void reapplyExplicitTargetType(Component component, ComponentSource source) {
+		if ( source.sourceMember() != null
+				&& !source.componentType().getName().equals(
+						source.sourceMember().getType().determineRawClass().getName()
+				) ) {
+			applyComponentType( component, source.componentType() );
+		}
 	}
 
 	public Component createCollectionElementComponent(ComponentSource source, Collection collection, Table table) {

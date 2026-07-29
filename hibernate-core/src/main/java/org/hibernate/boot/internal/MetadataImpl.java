@@ -14,7 +14,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -82,7 +82,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, FilterDefinition> filterDefinitionMap;
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
-	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
+	private final Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap;
 	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap;
 	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
@@ -109,7 +109,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, FilterDefinition> filterDefinitionMap,
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
-			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
+			Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap,
 			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
 			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
@@ -133,7 +133,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				filterDefinitionMap,
 				fetchProfileMap,
 				imports,
-				idGeneratorDefinitionMap,
+				identifierGeneratorRegistrationMap,
 				namedQueryMap,
 				namedNativeQueryMap,
 				namedProcedureCallMap,
@@ -163,7 +163,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, FilterDefinition> filterDefinitionMap,
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
-			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
+			Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap,
 			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
 			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
@@ -189,7 +189,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.filterDefinitionMap = filterDefinitionMap;
 		this.fetchProfileMap = fetchProfileMap;
 		this.imports = imports;
-		this.idGeneratorDefinitionMap = idGeneratorDefinitionMap;
+		this.identifierGeneratorRegistrationMap = identifierGeneratorRegistrationMap;
 		this.namedQueryMap = namedQueryMap;
 		this.namedNativeQueryMap = namedNativeQueryMap;
 		this.namedProcedureCallMap = namedProcedureCallMap;
@@ -375,9 +375,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	@Nullable
-	public IdentifierGeneratorDefinition getIdentifierGenerator(@Nonnull String name) {
-		return idGeneratorDefinitionMap.get( name );
+	public IdentifierGeneratorRegistration getIdentifierGeneratorRegistration(String name) {
+		return identifierGeneratorRegistrationMap.get( name );
+	}
+
+	@Override
+	public Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations() {
+		return Map.copyOf( identifierGeneratorRegistrationMap );
 	}
 
 	@Override
@@ -673,10 +677,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	public Map<Class<?>, MappedSuperclass> getMappedSuperclassMap() {
 		return mappedSuperclassMap;
-	}
-
-	public Map<String, IdentifierGeneratorDefinition> getIdGeneratorDefinitionMap() {
-		return idGeneratorDefinitionMap;
 	}
 
 	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphMap() {

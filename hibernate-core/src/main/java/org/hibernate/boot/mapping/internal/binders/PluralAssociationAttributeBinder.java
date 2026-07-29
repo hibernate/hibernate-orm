@@ -259,7 +259,7 @@ class PluralAssociationAttributeBinder {
 				attributeMetadata.getName(),
 				bindingState.getClassLoaderService()
 		);
-		CollectionShapeBinder.apply( source, collection, bindingState );
+		applyCollectionShape( source, collection );
 		applyCascade( source, property, collection );
 
 		if ( !registerCollectionBindings ) {
@@ -294,7 +294,7 @@ class PluralAssociationAttributeBinder {
 				attributeMetadata.getName(),
 				bindingState.getClassLoaderService()
 		);
-		CollectionShapeBinder.apply( source, collection, bindingState );
+		applyCollectionShape( source, collection );
 		applyCascade( source, property, collection );
 
 		if ( !registerCollectionBindings ) {
@@ -333,7 +333,7 @@ class PluralAssociationAttributeBinder {
 				attributeMetadata.getName(),
 				bindingState.getClassLoaderService()
 		);
-		CollectionShapeBinder.apply( source, collection, bindingState );
+		applyCollectionShape( source, collection );
 		applyCascade( source, property, collection );
 
 		final ManyToOne element = bindElementValue( source, target, table, uniqueTargetColumns );
@@ -348,7 +348,8 @@ class PluralAssociationAttributeBinder {
 					modelBinders,
 					bindingOptions,
 					bindingState,
-					bindingContext
+					bindingContext,
+					collectionValueIntent
 			);
 		}
 		else if ( collection instanceof IndexedCollection indexedCollection ) {
@@ -364,6 +365,7 @@ class PluralAssociationAttributeBinder {
 		else if ( collection instanceof IdentifierCollection identifierCollection ) {
 			CollectionIdBinder.bindCollectionId(
 					source,
+					collectionValueIntent == null ? null : collectionValueIntent.collectionIdMetadata(),
 					identifierCollection,
 					table,
 					bindingOptions,
@@ -408,7 +410,7 @@ class PluralAssociationAttributeBinder {
 				attributeMetadata.getName(),
 				bindingState.getClassLoaderService()
 		);
-		CollectionShapeBinder.apply( source, collection, bindingState );
+		applyCollectionShape( source, collection );
 		applyCascade( source, property, collection );
 
 		final org.hibernate.mapping.OneToMany element = new org.hibernate.mapping.OneToMany(
@@ -441,6 +443,7 @@ class PluralAssociationAttributeBinder {
 					bindingOptions,
 					bindingState,
 					bindingContext,
+					collectionValueIntent,
 					true
 			);
 		}
@@ -457,6 +460,7 @@ class PluralAssociationAttributeBinder {
 		else if ( collection instanceof IdentifierCollection identifierCollection ) {
 			CollectionIdBinder.bindCollectionId(
 					source,
+					collectionValueIntent == null ? null : collectionValueIntent.collectionIdMetadata(),
 					identifierCollection,
 					table,
 					bindingOptions,
@@ -502,9 +506,13 @@ class PluralAssociationAttributeBinder {
 				attributeMetadata.getName(),
 				bindingState.getClassLoaderService()
 		);
-		CollectionShapeBinder.apply( source, collection, bindingState );
+		applyCollectionShape( source, collection );
 
-		final AnySource anySource = AnySource.createManyToAny( source, bindingContext, bindingState );
+		final AnySource anySource = collectionValueIntent != null
+				&& collectionValueIntent.elementIntent()
+						instanceof org.hibernate.boot.mapping.internal.model.AnyValueIntent anyValueIntent
+								? anyValueIntent.source()
+								: AnySource.createManyToAny( source, bindingContext, bindingState );
 		final org.hibernate.mapping.Any element = new AnyValueBinder(
 				bindingOptions,
 				bindingState,
@@ -522,7 +530,8 @@ class PluralAssociationAttributeBinder {
 					modelBinders,
 					bindingOptions,
 					bindingState,
-					bindingContext
+					bindingContext,
+					collectionValueIntent
 			);
 		}
 		else if ( collection instanceof IndexedCollection indexedCollection ) {
@@ -538,6 +547,7 @@ class PluralAssociationAttributeBinder {
 		else if ( collection instanceof IdentifierCollection identifierCollection ) {
 			CollectionIdBinder.bindCollectionId(
 					source,
+					collectionValueIntent == null ? null : collectionValueIntent.collectionIdMetadata(),
 					identifierCollection,
 					table,
 					bindingOptions,
@@ -660,8 +670,26 @@ class PluralAssociationAttributeBinder {
 		}
 	}
 
+	private void applyCollectionShape(CollectionSource source, Collection collection) {
+		CollectionShapeBinder.apply(
+				source,
+				collectionValueIntent == null
+						? source.classification()
+						: collectionValueIntent.classification(),
+				collection,
+				bindingState
+		);
+	}
+
 	private Collection createCollection(CollectionSource source) {
-		return CollectionMappingHelper.createCollection( source, ownerBinding, bindingState );
+		return CollectionMappingHelper.createCollection(
+				source,
+				collectionValueIntent == null
+						? source.classification()
+						: collectionValueIntent.classification(),
+				ownerBinding,
+				bindingState
+		);
 	}
 
 	private ManyToOne bindElementValue(
@@ -1058,6 +1086,11 @@ class PluralAssociationAttributeBinder {
 	}
 
 	private ClassDetails resolveTargetClassDetails(CollectionSource source) {
+		if ( collectionValueIntent != null
+				&& collectionValueIntent.elementIntent()
+						instanceof org.hibernate.boot.mapping.internal.model.ToOneValueIntent toOneValueIntent ) {
+			return resolveTargetClassDetails( toOneValueIntent.memberType() );
+		}
 		final ManyToMany manyToMany = source.manyToMany();
 		if ( manyToMany != null && manyToMany.targetEntity() != void.class ) {
 			return bindingContext.getClassDetailsRegistry().resolveClassDetails( manyToMany.targetEntity().getName() );

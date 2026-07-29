@@ -45,7 +45,7 @@ public final class GeneratorStrategies {
 			String strategy,
 			Dialect dialect,
 			ClassLoaderService classLoaderService) {
-		final Class<? extends Generator> legacyNamedGenerator = legacyGeneratorClass( strategy, dialect );
+		final Class<? extends Generator> legacyNamedGenerator = resolveLegacyGeneratorClass( strategy, dialect );
 		if ( legacyNamedGenerator != null ) {
 			return legacyNamedGenerator;
 		}
@@ -58,7 +58,7 @@ public final class GeneratorStrategies {
 		return clazz;
 	}
 
-	private static Class<? extends Generator> legacyGeneratorClass(String strategy, Dialect dialect) {
+	public static Class<? extends Generator> resolveLegacyGeneratorClass(String strategy, Dialect dialect) {
 		if ( "native".equals(strategy) ) {
 			return nativeGeneratorClass( dialect.getNativeValueGenerationStrategy() );
 		}
@@ -97,7 +97,7 @@ public final class GeneratorStrategies {
 	static Class<? extends Generator> resolveLegacyGeneratorClass(
 			String strategy,
 			MetadataBuildingContext buildingContext) {
-		return legacyGeneratorClass(
+		return resolveLegacyGeneratorClass(
 				strategy,
 				buildingContext.getMetadataCollector().getDatabase().getDialect()
 		);

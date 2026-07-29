@@ -187,7 +187,12 @@ class ElementCollectionAttributeBinder {
 				attributeMetadata.getName(),
 				bindingState.getClassLoaderService()
 		);
-		CollectionShapeBinder.apply( source, collection, bindingState );
+		CollectionShapeBinder.apply(
+				source,
+				collectionValueIntent == null ? source.classification() : collectionValueIntent.classification(),
+				collection,
+				bindingState
+		);
 
 		final Value element = bindElementValue( source, collection, table );
 		collection.setElement( element );
@@ -201,7 +206,8 @@ class ElementCollectionAttributeBinder {
 					modelBinders,
 					bindingOptions,
 					bindingState,
-					bindingContext
+					bindingContext,
+					collectionValueIntent
 			);
 		}
 		else if ( collection instanceof IndexedCollection indexedCollection ) {
@@ -217,6 +223,7 @@ class ElementCollectionAttributeBinder {
 		else if ( collection instanceof IdentifierCollection identifierCollection ) {
 			CollectionIdBinder.bindCollectionId(
 					source,
+					collectionValueIntent == null ? null : collectionValueIntent.collectionIdMetadata(),
 					identifierCollection,
 					table,
 					bindingOptions,
@@ -265,7 +272,14 @@ class ElementCollectionAttributeBinder {
 	}
 
 	private Collection createCollection(CollectionSource source) {
-		return CollectionMappingHelper.createCollection( source, ownerBinding, bindingState );
+		return CollectionMappingHelper.createCollection(
+				source,
+				collectionValueIntent == null
+						? source.classification()
+						: collectionValueIntent.classification(),
+				ownerBinding,
+				bindingState
+		);
 	}
 
 		private UniqueConstraint[] uniqueConstraints(CollectionSource source) {
@@ -316,9 +330,18 @@ class ElementCollectionAttributeBinder {
 			Collection collection,
 			Table table,
 			ComponentElement componentElement) {
+		final org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent embeddedValueIntent =
+				collectionValueIntent == null
+						|| !( collectionValueIntent.elementIntent()
+								instanceof org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent intent )
+						? null
+						: intent;
 		final ComponentSource source = componentElement.compositeUserTypeClass() == null
 				? ComponentSource.collectionElement(
 						collectionSource.member(),
+						embeddedValueIntent == null
+								? collectionSource.elementType()
+								: embeddedValueIntent.memberType(),
 						ownerType.getAccessType(),
 						collectionRolePath,
 						bindingContext
@@ -331,7 +354,15 @@ class ElementCollectionAttributeBinder {
 				);
 		final EmbeddableMappingMaterializer materializer = new EmbeddableMappingMaterializer( bindingState );
 		final EmbeddableContribution contribution =
-				materializer.createContribution( source, bindingContext );
+				componentElement.compositeUserTypeClass() == null
+						&& embeddedValueIntent != null
+						&& embeddedValueIntent.valueMetadata() != null
+						? materializer.createContribution(
+								source,
+								embeddedValueIntent.valueMetadata(),
+								bindingContext
+						)
+						: materializer.createContribution( source, bindingContext );
 		final Component component =
 				materializer.createCollectionElementComponent(
 						source,
@@ -410,6 +441,18 @@ class ElementCollectionAttributeBinder {
 			}
 		}
 
+		if ( collectionValueIntent != null ) {
+			if ( collectionValueIntent.elementIntent()
+					instanceof org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent embeddedValueIntent ) {
+				return new ComponentElement(
+						embeddedValueIntent.memberType().determineRawClass(),
+						null,
+						null
+				);
+			}
+			return null;
+		}
+
 		return source.hasEmbeddableElement() ? new ComponentElement( elementType, null, null ) : null;
 	}
 
@@ -425,7 +468,10 @@ class ElementCollectionAttributeBinder {
 	private BasicValue bindBasicElementValue(CollectionSource source, Table table) {
 		final BasicValue element = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		element.setTable( table );
-		final BasicValueIntent valueIntent = BasicValueIntent.fromCollectionElement( source );
+		final BasicValueIntent valueIntent = collectionValueIntent != null
+				&& collectionValueIntent.elementIntent() instanceof BasicValueIntent categorizedIntent
+						? categorizedIntent
+						: BasicValueIntent.fromCollectionElement( source );
 		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
 				BasicValueSource.collectionElement( source.member(), source.elementType(), bindingContext ),
 				null,

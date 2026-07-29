@@ -66,8 +66,8 @@ public enum ValidationMode {
 			}
 			catch ( IllegalArgumentException e ) {
 				throw new HibernateException( "Unknown validation mode in "
-											  + BeanValidationSettings.JAKARTA_MODE_PROPERTY
-											  + ": " + modeProperty );
+											+ BeanValidationSettings.JAKARTA_MODE_PROPERTY
+											+ ": " + modeProperty );
 			}
 		}
 	}

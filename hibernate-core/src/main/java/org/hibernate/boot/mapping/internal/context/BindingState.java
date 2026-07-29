@@ -4,7 +4,7 @@ import java.util.List;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
@@ -41,6 +41,7 @@ import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
+import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
 import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -92,6 +93,9 @@ public interface BindingState {
 
 	/// Stable resolution state for the current boot run.
 	@Nonnull MappingResolutionState getMappingResolutionState();
+
+	/// Persistence-unit scoped registrations produced during categorization.
+	@Nonnull GlobalRegistrations getGlobalRegistrations();
 
 	/// Database model being populated during binding.
 	@Nonnull Database getDatabase();
@@ -154,7 +158,7 @@ public interface BindingState {
 	void addPropertyReference(String referencedEntityName, String referencedPropertyName);
 
 	/// Register an identifier generator for eventual publication to the metadata collector.
-	void addIdentifierGenerator(IdentifierGeneratorDefinition identifierGeneratorDefinition);
+	void addIdentifierGeneratorRegistration(IdentifierGeneratorRegistration identifierGeneratorDefinition);
 
 	/// Register a named entity graph for eventual publication to the metadata collector.
 	void addNamedEntityGraph(NamedEntityGraphDefinition namedEntityGraphDefinition);

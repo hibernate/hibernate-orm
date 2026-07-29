@@ -10,6 +10,10 @@ import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
+import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
+import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
+import org.hibernate.boot.mapping.internal.model.ValueIntent;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -31,12 +35,14 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.ModelsException;
 import org.hibernate.mapping.MappingRole;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.annotation.Nullable;
 
 /// Binds synthetic collection index values such as list indexes and map keys.
 ///
@@ -149,6 +155,33 @@ class CollectionIndexBinder {
 				bindingOptions,
 				bindingState,
 				bindingContext,
+				null,
+				false
+		);
+	}
+
+	static void bindMapKey(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			CollectionSource source,
+			org.hibernate.mapping.Map collection,
+			Table table,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			@Nullable CollectionValueIntent collectionValueIntent) {
+		bindMapKey(
+				ownerType,
+				ownerBinding,
+				source,
+				collection,
+				table,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				collectionValueIntent,
 				false
 		);
 	}
@@ -164,20 +197,53 @@ class CollectionIndexBinder {
 			BindingState bindingState,
 			BindingContext bindingContext,
 			boolean nullableBasicMapKey) {
+		bindMapKey(
+				ownerType,
+				ownerBinding,
+				source,
+				collection,
+				table,
+				modelBinders,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				null,
+				nullableBasicMapKey
+		);
+	}
+
+	static void bindMapKey(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			CollectionSource source,
+			org.hibernate.mapping.Map collection,
+			Table table,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext,
+			@Nullable CollectionValueIntent collectionValueIntent,
+			boolean nullableBasicMapKey) {
+		final ValueIntent indexIntent =
+				collectionValueIntent == null ? null : collectionValueIntent.indexIntent();
+		final TypeDetails indexType = source.mapKeyType();
 		final MapKey mapKey = source.mapKey();
 		if ( mapKey != null ) {
 			bindPropertyMapKey( source, collection, source.mapKeyName(), bindingState );
 			return;
 		}
-		if ( !source.mapKeyJoinColumns().isEmpty() ) {
+		if ( !source.mapKeyJoinColumns().isEmpty() || indexIntent instanceof ToOneValueIntent ) {
+			bindEntityMapKey( source, indexType, collection, table, bindingState );
+			return;
+		}
+		if ( indexIntent == null && isEntityMapKey( source, bindingState ) ) {
 			bindEntityMapKey( source, collection, table, bindingState );
 			return;
 		}
-		if ( isEntityMapKey( source, bindingState ) ) {
-			bindEntityMapKey( source, collection, table, bindingState );
-			return;
-		}
-		final ComponentMapKey componentMapKey = resolveComponentMapKey( source, bindingState, bindingContext );
+		final EmbeddedValueIntent embeddedValueIntent =
+				indexIntent instanceof EmbeddedValueIntent intent ? intent : null;
+		final ComponentMapKey componentMapKey =
+				resolveComponentMapKey( source, embeddedValueIntent, bindingState, bindingContext );
 		if ( componentMapKey != null ) {
 			bindComponentMapKey(
 					ownerType,
@@ -186,6 +252,7 @@ class CollectionIndexBinder {
 					collection,
 					table,
 					componentMapKey,
+					embeddedValueIntent,
 					modelBinders,
 					bindingOptions,
 					bindingState,
@@ -193,7 +260,16 @@ class CollectionIndexBinder {
 			);
 			return;
 		}
-		bindBasicMapKey( source, collection, table, bindingOptions, bindingState, bindingContext, nullableBasicMapKey );
+		bindBasicMapKey(
+				source,
+				indexType,
+				collection,
+				table,
+				bindingOptions,
+				bindingState,
+				bindingContext,
+				nullableBasicMapKey
+		);
 	}
 
 	private record ComponentMapKey(
@@ -204,6 +280,7 @@ class CollectionIndexBinder {
 
 	private static ComponentMapKey resolveComponentMapKey(
 			CollectionSource source,
+			@Nullable EmbeddedValueIntent embeddedValueIntent,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		if ( source.mapKeyType() == null ) {
@@ -241,6 +318,14 @@ class CollectionIndexBinder {
 			);
 		}
 
+		if ( embeddedValueIntent != null ) {
+			return new ComponentMapKey(
+					embeddedValueIntent.memberType().determineRawClass(),
+					null,
+					null
+			);
+		}
+
 		final ClassDetails mapKeyType = source.mapKeyType().determineRawClass();
 		if ( mapKeyType.hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
 			return new ComponentMapKey( mapKeyType, null, null );
@@ -266,13 +351,16 @@ class CollectionIndexBinder {
 			org.hibernate.mapping.Map collection,
 			Table table,
 			ComponentMapKey componentMapKey,
+			@Nullable EmbeddedValueIntent embeddedValueIntent,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final ComponentSource source = ComponentSource.mapKey(
 				collectionSource.member(),
-				componentMapKey.componentType(),
+				embeddedValueIntent == null
+						? org.hibernate.models.spi.TypeDetails.classType( componentMapKey.componentType() )
+						: embeddedValueIntent.memberType(),
 				ownerType.getAccessType(),
 				bindingContext
 		);
@@ -286,22 +374,48 @@ class CollectionIndexBinder {
 			component.setCompositeUserType( componentMapKey.compositeUserType() );
 		}
 
-		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
-				ownerType,
-				ownerBinding,
-				source,
-				component,
-				table,
-				(ignored, column) -> table.addColumn( column ),
-				false,
-				false,
-				true
-		);
+		final ComponentBinder componentBinder =
+				new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext );
+		if ( componentMapKey.compositeUserTypeClass() == null
+				&& embeddedValueIntent != null
+				&& embeddedValueIntent.valueMetadata() != null ) {
+			final var contribution = new EmbeddableMappingMaterializer( bindingState ).createContribution(
+					source,
+					embeddedValueIntent.valueMetadata(),
+					bindingContext
+			);
+			componentBinder.bindBasicProperties(
+					ownerType,
+					ownerBinding,
+					source,
+					component,
+					table,
+					(ignored, column) -> table.addColumn( column ),
+					false,
+					false,
+					true,
+					true,
+					contribution
+			);
+		}
+		else {
+			componentBinder.bindBasicProperties(
+					ownerType,
+					ownerBinding,
+					source,
+					component,
+					table,
+					(ignored, column) -> table.addColumn( column ),
+					false,
+					false,
+					true
+			);
+		}
 		collection.setIndex( component );
 	}
 
 	private static boolean isEntityMapKey(CollectionSource source, BindingState bindingState) {
-		return resolveEntityMapKeyBinder( source, bindingState ) != null;
+		return resolveEntityMapKeyBinder( source, null, bindingState ) != null;
 	}
 
 	private static void bindPropertyMapKey(
@@ -548,6 +662,7 @@ class CollectionIndexBinder {
 
 	static void bindBasicMapKey(
 			CollectionSource source,
+			@Nullable TypeDetails indexType,
 			org.hibernate.mapping.Map collection,
 			Table table,
 			BindingOptions bindingOptions,
@@ -557,7 +672,11 @@ class CollectionIndexBinder {
 		final BasicValue index = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), table );
 		index.setTable( table );
 		final var resolutionInput = BasicValueSourceBinder.bindBasicValue(
-				BasicValueSource.mapKey( source.member(), source.mapKeyType(), bindingContext ),
+				BasicValueSource.mapKey(
+						source.member(),
+						indexType == null ? source.mapKeyType() : indexType,
+						bindingContext
+				),
 				null,
 				index,
 				bindingOptions,
@@ -609,10 +728,19 @@ class CollectionIndexBinder {
 
 	private static void bindEntityMapKey(
 			CollectionSource source,
+			@Nullable TypeDetails indexType,
 			org.hibernate.mapping.Map collection,
 			Table table,
 			BindingState bindingState) {
-		bindEntityMapKey( source, collection, table, bindingState, false );
+		bindEntityMapKey( source, indexType, collection, table, bindingState, false );
+	}
+
+	private static void bindEntityMapKey(
+			CollectionSource source,
+			org.hibernate.mapping.Map collection,
+			Table table,
+			BindingState bindingState) {
+		bindEntityMapKey( source, null, collection, table, bindingState, false );
 	}
 
 	static void bindNullableEntityMapKey(
@@ -620,20 +748,23 @@ class CollectionIndexBinder {
 			org.hibernate.mapping.Map collection,
 			Table table,
 			BindingState bindingState) {
-		bindEntityMapKey( source, collection, table, bindingState, true );
+		bindEntityMapKey( source, null, collection, table, bindingState, true );
 	}
 
 	private static void bindEntityMapKey(
 			CollectionSource source,
+			@Nullable TypeDetails indexType,
 			org.hibernate.mapping.Map collection,
 			Table table,
 			BindingState bindingState,
 			boolean nullableMapKey) {
-		final EntityTypeBinder targetTypeBinder = resolveEntityMapKeyBinder( source, bindingState );
+		final EntityTypeBinder targetTypeBinder = resolveEntityMapKeyBinder( source, indexType, bindingState );
 		if ( targetTypeBinder == null ) {
 			throw new MappingException(
 					"Could not resolve local type binding for entity-valued map key - "
-							+ source.mapKeyType().determineRawClass().getClassName()
+							+ ( indexType == null ? source.mapKeyType() : indexType )
+									.determineRawClass()
+									.getClassName()
 			);
 		}
 
@@ -712,12 +843,16 @@ class CollectionIndexBinder {
 		) );
 	}
 
-	private static EntityTypeBinder resolveEntityMapKeyBinder(CollectionSource source, BindingState bindingState) {
-		if ( source.mapKeyType() == null ) {
+	private static EntityTypeBinder resolveEntityMapKeyBinder(
+			CollectionSource source,
+			@Nullable TypeDetails indexType,
+			BindingState bindingState) {
+		final TypeDetails mapKeyTypeDetails = indexType == null ? source.mapKeyType() : indexType;
+		if ( mapKeyTypeDetails == null ) {
 			return null;
 		}
 
-		final ClassDetails mapKeyType = source.mapKeyType().determineRawClass();
+		final ClassDetails mapKeyType = mapKeyTypeDetails.determineRawClass();
 		if ( bindingState.getTypeBinder( mapKeyType ) instanceof EntityTypeBinder entityTypeBinder ) {
 			return entityTypeBinder;
 		}

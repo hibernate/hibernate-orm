@@ -38,6 +38,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.FetchStyle;
@@ -445,6 +446,24 @@ public class ElementCollectionBindingTests {
 	void testIdBagElementCollectionWithGeneratorImplementation(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
+					final CollectionValueIntent collectionIntent = collectionIntent(
+							context.getBindingState().getBootBindingModel(),
+							IdBagGeneratorImplementationOwner.class,
+							"labels"
+					);
+					final var categorizedAttribute = (PluralAttributeMetadata) context.getCategorizedDomainModel()
+							.getEntityHierarchies()
+							.iterator()
+							.next()
+							.getRoot()
+							.findAttribute( "labels" );
+					assertThat( collectionIntent.collectionIdMetadata() )
+							.isSameAs( categorizedAttribute.getCollectionId() );
+					assertThat( collectionIntent.collectionIdMetadata().generatorRegistration() )
+							.isNotNull()
+							.extracting( registration -> registration.getGeneratorClass() )
+							.isEqualTo( IncrementGenerator.class );
+
 					final PersistentClass entityBinding = context.getMetadataCollector()
 							.getEntityBinding( IdBagGeneratorImplementationOwner.class.getName() );
 					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
@@ -1106,8 +1125,17 @@ public class ElementCollectionBindingTests {
 							EmbeddableElementOwner.class,
 							"addresses"
 					);
+					final var categorizedAttribute = (PluralAttributeMetadata) context.getCategorizedDomainModel()
+							.getEntityHierarchies()
+							.iterator()
+							.next()
+							.getRoot()
+							.findAttribute( "addresses" );
 
+					assertThat( collectionIntent.valueMetadata() ).isSameAs( categorizedAttribute );
 					assertThat( collectionIntent.elementIntent() ).isInstanceOf( EmbeddedValueIntent.class );
+					assertThat( ( (EmbeddedValueIntent) collectionIntent.elementIntent() ).valueMetadata() )
+							.isSameAs( categorizedAttribute.getElement() );
 					assertThat( collection.getCollectionTable().getName() ).isEqualTo( "owner_addresses" );
 					assertThat( collection.getKey().getColumns() )
 							.extracting( org.hibernate.mapping.Column::getName )

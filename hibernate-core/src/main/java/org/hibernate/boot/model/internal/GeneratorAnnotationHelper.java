@@ -8,10 +8,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.GeneratorOptimizer;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.AnnotationBasedGenerator;
@@ -560,19 +559,6 @@ public class GeneratorAnnotationHelper {
 		handleGenericGenerator( generatorName, determineStrategyName( generatorConfig ), configuration, idValue, context );
 	}
 
-	public static void handleGenericGenerator(
-			String generatorName,
-			GenericGeneratorRegistration generatorRegistration,
-			PersistentClass entityMapping,
-			SimpleValue idValue,
-			MetadataBuildingContext context) {
-		final Map<String,String> configuration = new HashMap<>( generatorRegistration.parameters() );
-		configuration.put( GENERATOR_NAME, generatorRegistration.name() );
-		configuration.put( ENTITY_NAME, entityMapping.getEntityName() );
-		configuration.put( JPA_ENTITY_NAME, entityMapping.getJpaEntityName() );
-		handleGenericGenerator( generatorName, generatorRegistration.strategy(), configuration, idValue, context );
-	}
-
 	private static void handleGenericGenerator(
 			String generatorName,
 			String strategy,
@@ -585,7 +571,7 @@ public class GeneratorAnnotationHelper {
 		}
 
 		GeneratorBinder.createGeneratorFrom(
-				new IdentifierGeneratorDefinition(
+				new IdentifierGeneratorRegistration(
 						generatorName,
 						GeneratorStrategies.resolveGeneratorClass( strategy, context ),
 						configuration

@@ -156,6 +156,7 @@ public class StandardAttributeBindingTarget implements AttributeBindingTarget {
 					entityType,
 					usage.attributeName(),
 					usage.member(),
+					usage.resolvedType(),
 					usage.basicValueIntent(),
 					tenantIdType
 			);

@@ -2,6 +2,7 @@ package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.BasicType;
 
 /// Binding-layer state for a source-model `@TenantId` attribute.
@@ -23,6 +24,7 @@ public record TenantIdBinding(
 		EntityTypeMetadata owner,
 		String attributeName,
 		MemberDetails member,
+		TypeDetails resolvedType,
 		BasicValueIntent valueIntent,
 		BasicType<?> tenantIdType) {
 }

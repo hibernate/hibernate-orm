@@ -35,6 +35,7 @@ public class VersionMappingMaterializer {
 
 		new BasicValueMappingMaterializer().materializeVersionBasicValue(
 				contribution.member(),
+				contribution.resolvedType(),
 				contribution.valueIntent(),
 				property,
 				typeBinding.getRootTable(),

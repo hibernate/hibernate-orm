@@ -47,6 +47,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
@@ -895,9 +896,9 @@ public class GeneratorBinder {
 		}
 	}
 
-	private static Setter injector(Property property, Class<?> attributeDeclarer) {
+	private static Setter injector(PropertyAccessorService propertyAccessorService, Property property, Class<?> attributeDeclarer) {
 		return property.getPropertyAccessStrategy( attributeDeclarer )
-				.buildPropertyAccess( attributeDeclarer, property.getName(), true )
+				.buildPropertyAccess( propertyAccessorService, attributeDeclarer, property.getName(), true )
 				.getSetter();
 	}
 
@@ -934,6 +935,7 @@ public class GeneratorBinder {
 	}
 
 	public static Generator buildIdentifierGenerator(
+			PropertyAccessorService propertyAccessorService,
 			Component component,
 			Dialect dialect,
 			RootClass rootClass,
@@ -949,7 +951,7 @@ public class GeneratorBinder {
 		for ( int i = 0; i < properties.size(); i++ ) {
 			final var property = properties.get( i );
 			final var propertyGenerator =
-					propertyGenerator( component, dialect, rootClass, defaults, property, generationPlans, i );
+					propertyGenerator( propertyAccessorService, component, dialect, rootClass, defaults, property, generationPlans, i );
 			generators.add( propertyGenerator );
 
 			final int span = property.getColumnSpan();
@@ -1019,6 +1021,7 @@ public class GeneratorBinder {
 	}
 
 	private static Generator propertyGenerator(
+			PropertyAccessorService propertyAccessorService,
 			Component component,
 			Dialect dialect,
 			RootClass rootClass,
@@ -1036,7 +1039,7 @@ public class GeneratorBinder {
 					generationPlans.add( new Component.ValueGenerationPlan(
 							beforeExecutionGenerator,
 							component.getType().isMutable()
-									? injector( property, getAttributeDeclarer( rootClass, component ) )
+									? injector( propertyAccessorService, property, getAttributeDeclarer( rootClass, component ) )
 									: null,
 							propertyIndex
 					) );

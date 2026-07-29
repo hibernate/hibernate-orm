@@ -9,6 +9,7 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import jakarta.persistence.AccessType;
 import jakarta.annotation.Nullable;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 
 /**
  * Defines a strategy for accessing property values via a get/set pair, which may be nonpublic.  This
@@ -38,7 +39,7 @@ public class PropertyAccessStrategyEnhancedImpl implements PropertyAccessStrateg
 	}
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
+	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
 		return new PropertyAccessEnhancedImpl( this, containerJavaType, propertyName, classAccessType );
 	}
 }

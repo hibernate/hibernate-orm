@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.ComponentType;
@@ -715,7 +716,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	@Override
 	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
 		return getCustomIdGeneratorCreator().isAssigned()
-				? GeneratorBinder.buildIdentifierGenerator( this, dialect, rootClass, defaults )
+				? GeneratorBinder.buildIdentifierGenerator( getServiceRegistry().requireService( PropertyAccessorService.class ), this, dialect, rootClass, defaults )
 				: super.createGenerator( dialect, rootClass, property, defaults );
 	}
 

@@ -45,6 +45,7 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
@@ -569,7 +570,7 @@ public class EmbeddableBinder {
 		}
 
 		if ( compositeUserType != null ) {
-			processCompositeUserType( embeddable, compositeUserType );
+			processCompositeUserType( context, embeddable, compositeUserType );
 		}
 
 		return embeddable;
@@ -870,7 +871,7 @@ public class EmbeddableBinder {
 		}
 	}
 
-	private static void processCompositeUserType(Component embeddable, CompositeUserType<?> compositeUserType) {
+	private static void processCompositeUserType(MetadataBuildingContext context, Component embeddable, CompositeUserType<?> compositeUserType) {
 		embeddable.sortProperties();
 		final List<String> sortedPropertyNames = new ArrayList<>( embeddable.getPropertySpan() );
 		final List<Type> sortedPropertyTypes = new ArrayList<>( embeddable.getPropertySpan() );
@@ -884,10 +885,10 @@ public class EmbeddableBinder {
 			sortedPropertyNames.add( propertyName );
 			sortedPropertyTypes.add(
 					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
+							context.getBootstrapContext().getServiceRegistry().requireService( PropertyAccessorService.class ),
 							compositeUserType.embeddable(),
 							propertyName,
-							false
-					).getGetter().getReturnType()
+							false ).getGetter().getReturnType()
 			);
 			property.setPropertyAccessStrategy( strategy );
 		}

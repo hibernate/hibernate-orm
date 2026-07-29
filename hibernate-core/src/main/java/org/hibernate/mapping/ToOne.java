@@ -199,6 +199,10 @@ public abstract sealed class ToOne
 		this.sorted = sorted;
 	}
 
+	public PersistentClass getReferencedEntity() {
+		return getMetadata().getEntityBinding( referencedEntityName );
+	}
+
 	@Override
 	public int[] sortProperties() {
 		final var entityBinding = getMetadata().getEntityBinding( referencedEntityName );

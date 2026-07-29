@@ -2,6 +2,8 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MathHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -33,6 +35,16 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 
 		private Long lastSourceValue;
 		private long value;
+
+		void setLastSourceValue(long lastSourceValue) {
+			this.lastSourceValue = lastSourceValue;
+			lo = lastSourceValue == 0 ? 1 : 0;
+			hi = lastSourceValue * ( maxLo + 1 );
+		}
+
+		static long determineValue(long lastSourceValue, int maxLo) {
+			return (lastSourceValue * ( maxLo + 1 )) + (lastSourceValue == 0 ? 1 : 0);
+		}
 	}
 
 	/**
@@ -56,9 +68,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		try {
 			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lo > generationState.maxLo ) {
-				generationState.lastSourceValue = callback.getNextValue();
-				generationState.lo = generationState.lastSourceValue == 0 ? 1 : 0;
-				generationState.hi = generationState.lastSourceValue * ( generationState.maxLo + 1 );
+				generationState.setLastSourceValue( callback.getNextValue() );
 			}
 			generationState.value = generationState.hi + generationState.lo++;
 			return makeIntegralValue( generationState.value, returnClass );
@@ -66,6 +76,47 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		finally {
 			lock.unlock();
 		}
+	}
+
+	@Override
+	public Serializable[] generateBatch(int count, AccessCallback callback) {
+		final long[] buckets;
+		final int availableValues;
+		long baseValue;
+		lock.lock();
+		try {
+			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
+			if ( generationState.lo + (count - 1) > generationState.maxLo ) {
+				availableValues = Math.max( 0, (int) (generationState.maxLo - generationState.lo) );
+				baseValue = generationState.hi + generationState.lo;
+				buckets = callback.getNextValues( MathHelper.ceilDiv( count - availableValues, incrementSize ) );
+				generationState.setLastSourceValue( buckets[buckets.length - 1] );
+				generationState.lo += (count - availableValues) % incrementSize;
+				generationState.value = generationState.hi + generationState.lo - 1;
+			}
+			else {
+				availableValues = count;
+				baseValue = generationState.hi + generationState.lo;
+				buckets = ArrayHelper.EMPTY_LONG_ARRAY;
+				generationState.lo += count;
+				generationState.value = generationState.hi + generationState.lo - 1;
+			}
+		}
+		finally {
+			lock.unlock();
+		}
+		final Serializable[] result = new Serializable[count];
+		for ( int i = 0; i < availableValues; i++ ) {
+			result[i] = makeIntegralValue( baseValue + i, returnClass );
+		}
+		for ( int i = 0; i < buckets.length; i++ ) {
+			baseValue = GenerationState.determineValue( buckets[i], incrementSize );
+			final var offset = availableValues + i * incrementSize;
+			for ( int j = 0; j < incrementSize && offset + j < result.length ; j++ ) {
+				result[offset + j] = makeIntegralValue( baseValue++, returnClass );
+			}
+		}
+		return result;
 	}
 
 	/**

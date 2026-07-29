@@ -1,6 +1,12 @@
 package org.hibernate.generator;
 
+import java.util.List;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 
 /**
  * A generator that is called to produce a value just before a row is written to the database.
@@ -39,7 +45,106 @@ public interface BeforeExecutionGenerator extends Generator {
 	 * @param eventType    The type of event that has triggered generation of a new value
 	 * @return The generated value
 	 */
-	Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType);
+	@Nonnull Object generate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable Object owner,
+			@Nullable Object currentValue,
+			@Nonnull EventType eventType);
+
+	/**
+	 * Whether this generator supports batch generation via {@link #generateBatch}.
+	 * <p>
+	 * When this returns {@code true}, the runtime may collect multiple entities
+	 * and invoke {@link #generateBatch} once instead of calling {@link #generate}
+	 * repeatedly. Generators that benefit from batch operations (e.g., fetching
+	 * multiple values in one round-trip, or amortizing expensive initialization)
+	 * should override this to return {@code true} and provide an optimized
+	 * {@link #generateBatch} implementation.
+	 *
+	 * @return {@code true} if this generator provides an optimized batch
+	 *         implementation; {@code false} (default) otherwise.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	default boolean supportsBatchGeneration() {
+		return false;
+	}
+
+	/**
+	 * Resolve the generation dependencies for this generator.
+	 * <p>
+	 * Returns the list of {@link BeforeExecutionGenerator} instances that must
+	 * complete before this generator can run. Called once during boot by
+	 * {@link org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl}
+	 * to build a topological execution order for batch generation.
+	 *
+	 * @param context the runtime model creation context, providing access
+	 *                to entity persisters and their generators
+	 * @return the generators this one depends on; empty list if independent
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	default List<BeforeExecutionGenerator> resolveGenerationDependencies(RuntimeModelCreationContext context) {
+		return List.of();
+	}
+
+	/**
+	 * Generate values for multiple entities in a single batch invocation.
+	 * <p>
+	 * Called when the runtime has collected multiple entities that all need
+	 * a value from this same generator instance. The default implementation
+	 * delegates to {@link #generate} for each request.
+	 *
+	 * @param session   The session from which the request originates.
+	 * @param requests  The generation requests, each providing the entity
+	 *                  and current value of the property being generated.
+	 * @param eventType The type of event that has triggered generation.
+	 * @return An array of generated values, in the same order as {@code requests}.
+	 *         Must have exactly {@code requests.size()} elements.
+	 *
+	 * @since 8.0
+	 *
+	 * @see #supportsBatchGeneration()
+	 */
+	@Incubating(since = "8.0")
+	default @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		return generateBatch( this, session, requests, eventType );
+	}
+
+	/**
+	 * Generate values for multiple entities in a single batch invocation by
+	 * delegating to {@link #generate} for each request.
+	 * This is useful for subclasses that want to retain the single {@link #generate} operation semantics
+	 * for their batch implementation.
+	 *
+	 * @param generator The generator to delegate to
+	 * @param session   The session from which the request originates.
+	 * @param requests  The generation requests, each providing the entity
+	 *                  and current value of the property being generated.
+	 * @param eventType The type of event that has triggered generation.
+	 * @return An array of generated values, in the same order as {@code requests}.
+	 *         Must have exactly {@code requests.size()} elements.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	static @Nonnull Object[] generateBatch(
+			BeforeExecutionGenerator generator,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		final Object[] results = new Object[requests.size()];
+		for ( int i = 0; i < requests.size(); i++ ) {
+			final GenerationRequest request = requests.get( i );
+			results[i] = generator.generate( session, request.owner(), request.currentValue(), eventType );
+		}
+		return results;
+	}
 
 	@Override
 	default boolean generatedOnExecution() {

@@ -1,5 +1,6 @@
 package org.hibernate.action.queue.internal.decompose;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 
 import org.hibernate.TransientPropertyValueException;
@@ -17,6 +18,7 @@ import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
@@ -64,6 +66,7 @@ public class Decomposer implements DecompositionContext {
 	private List<CollectionMutationCompletion> flushSuccessCompletions;
 	private long nextCollectionMutationId;
 	private boolean flushActive;
+	private @Nullable BatchGenerationContext batchGenerationContext;
 
 	public Decomposer(SessionImplementor session) {
 		this.session = session;
@@ -179,6 +182,15 @@ public class Decomposer implements DecompositionContext {
 	@Override
 	public DelayedValueAccess getGeneratedIdentifierHandle(Object entity) {
 		return generatedIdentifierHandles == null ? null : generatedIdentifierHandles.get( entity );
+	}
+
+	@Override
+	public @Nullable BatchGenerationContext getBatchGenerationContext() {
+		return batchGenerationContext;
+	}
+
+	public void setBatchGenerationContext(@Nullable BatchGenerationContext batchGenerationContext) {
+		this.batchGenerationContext = batchGenerationContext;
 	}
 
 	/// Filter out dependencies on entities being inserted in the current flush

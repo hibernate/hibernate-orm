@@ -553,6 +553,17 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	int[] getNaturalIdentifierProperties();
 
 	/**
+	 * The property indices of synthetic back-reference attributes,
+	 * or {@code null} if this entity has no back-reference properties.
+	 *
+	 * @since 8.0
+	 */
+	@Nullable
+	default int[] getBackRefPropertyIndices() {
+		return null;
+	}
+
+	/**
 	 * Retrieve the current state of the natural-id properties from the database.
 	 *
 	 * @param id The identifier of the entity for which to retrieve the natural-id values.

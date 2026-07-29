@@ -3,6 +3,7 @@ package org.hibernate.id.enhanced;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -14,6 +15,8 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -148,6 +151,7 @@ public class SequenceStyleGenerator
 	private Optimizer optimizer;
 	private Type identifierType;
 	private Table table;
+	private boolean supportsBatchGeneration;
 
 	/**
 	 * Getter for property 'databaseStructure'.
@@ -239,6 +243,8 @@ public class SequenceStyleGenerator
 				getInt( INITIAL_PARAM, parameters, -1 )
 		);
 		databaseStructure.configure( optimizer );
+		supportsBatchGeneration = !databaseStructure.isPhysicalSequence()
+								|| dialect.getSequenceSupport().supportsSelectNextValParameterized();
 	}
 
 	private int adjustIncrementSize(
@@ -557,8 +563,23 @@ public class SequenceStyleGenerator
 	// IdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object object) {
+	public @Nonnull Object generate(
+			final @Nonnull SharedSessionContractImplementor session,
+			final Object object) {
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		return supportsBatchGeneration;
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		return optimizer.generateBatch( requests.size(), databaseStructure.buildCallback( session ) );
 	}
 
 	// BulkInsertionCapableIdentifierGenerator implementation ~~~~~~~~~~~~~~~~~

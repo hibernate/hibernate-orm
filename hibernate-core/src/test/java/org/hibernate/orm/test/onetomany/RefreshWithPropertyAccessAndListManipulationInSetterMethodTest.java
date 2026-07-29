@@ -3,10 +3,13 @@ package org.hibernate.orm.test.onetomany;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Access;
@@ -26,6 +29,12 @@ import jakarta.persistence.Table;
 				RefreshWithPropertyAccessAndListManipulationInSetterMethodTest.CarName.class
 		}
 )
+// With batch generation, state from cascaded entities will be extracted before ids are assigned,
+// but this test specifically changes the state on cascaded entities in the id setter,
+// which is why the mapping as-is can not use batch generation. Alternative mappings
+// are shown in RefreshWithPropertyAccessAndListManipulationInSetterMethodIdClassTest
+// and RefreshWithPropertyAccessAndListManipulationInSetterMethodEmbeddedIdTest
+@ServiceRegistry(settings = @Setting(name = MappingSettings.ID_BATCH_GENERATION, value = "false"))
 @SessionFactory
 @JiraKey(value = "HHH-16272")
 public class RefreshWithPropertyAccessAndListManipulationInSetterMethodTest {

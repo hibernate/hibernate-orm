@@ -24,6 +24,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.internal.DelayedAssignedGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
@@ -40,6 +41,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
@@ -923,7 +925,7 @@ public class GeneratorBinder {
 
 	private static Class<?> resolveComponentClass(Component component) {
 		try {
-			return component.getComponentClass();
+			return component.isDynamic() ? Map.class : component.getComponentClass();
 		}
 		catch ( Exception e ) {
 			return null;
@@ -1027,27 +1029,43 @@ public class GeneratorBinder {
 			int propertyIndex) {
 		final var value = property.getValue();
 		if ( value instanceof SimpleValue simpleValue ) {
+			final Generator propertyGenerator;
 			if ( !simpleValue.getCustomIdGeneratorCreator().isAssigned() ) {
 				// skip any 'assigned' generators, they would have been
 				// handled by the StandardGenerationContextLocator
-				final var propertyGenerator = simpleValue.createGenerator( dialect, rootClass, property, defaults );
-				if ( propertyGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
-					generationPlans.add( new Component.ValueGenerationPlan(
-							beforeExecutionGenerator,
-							component.getType().isMutable()
-									? injector( propertyAccessorService, property, getAttributeDeclarer( rootClass, component ) )
-									: null,
-							propertyIndex
-					) );
-				}
-				return propertyGenerator;
+				propertyGenerator = simpleValue.createGenerator( dialect, rootClass, property, defaults );
+			}
+			else if ( value instanceof ToOne toOne && toOne.isReferenceToPrimaryKey()
+						&& !hasAssignedGenerator( toOne.getReferencedEntity() ) ) {
+				// need an assigned generator that reports batch capabilities, so it runs last
+				propertyGenerator = new DelayedAssignedGenerator( toOne.getReferencedEntityName() );
 			}
 			else {
-				return null;
+				propertyGenerator = null;
 			}
+			if ( propertyGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+				generationPlans.add( new Component.ValueGenerationPlan(
+						beforeExecutionGenerator,
+						component.getType().isMutable()
+								? injector( propertyAccessorService, property, getAttributeDeclarer( rootClass, component ) )
+								: null,
+						propertyIndex
+				) );
+			}
+			return propertyGenerator;
 		}
 		else {
 			return null;
 		}
+	}
+
+	private static boolean hasAssignedGenerator(PersistentClass persistentClass) {
+		final Property identifierProperty = persistentClass.getIdentifierProperty();
+		return identifierProperty == null
+				? persistentClass.getIdentifierMapper().getCustomIdGeneratorCreator().isAssigned()
+				: identifierProperty.getValueGeneratorCreator() != null
+						? identifierProperty.getValueGeneratorCreator().isAssigned()
+						: (!(identifierProperty.getValue() instanceof SimpleValue simpleValue)
+						|| simpleValue.getCustomIdGeneratorCreator().isAssigned());
 	}
 }

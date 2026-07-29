@@ -1,6 +1,7 @@
 package org.hibernate.boot.model.internal;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EmbeddedId;
@@ -50,6 +51,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -60,7 +62,11 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.models.spi.ArrayTypeDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -98,6 +104,7 @@ import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTim
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
+import static org.hibernate.id.IdentifierGeneratorHelper.getForeignIds;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -1324,12 +1331,46 @@ public class PropertyBinder {
 		idValue.setCustomIdGeneratorCreator( creationContext ->
 				new BeforeExecutionGenerator() {
 					@Override
-					public Object generate(
-							SharedSessionContractImplementor session,
-							Object owner,
-							Object currentValue,
-							EventType eventType) {
+					public @Nonnull Object generate(
+							@Nonnull SharedSessionContractImplementor session,
+							@Nullable Object owner,
+							@Nullable Object currentValue,
+							@Nonnull EventType eventType) {
 						return getForeignId( entityName, propertyName, session, owner );
+					}
+					@Override
+					public boolean supportsBatchGeneration() {
+						return true;
+					}
+					@Override
+					public List<BeforeExecutionGenerator> resolveGenerationDependencies(RuntimeModelCreationContext context) {
+						final EntityPersister persister = context.getDomainModel().getEntityDescriptor( entityName );
+						final var attributeMapping = persister.findAttributeMapping( propertyName );
+						final EntityMappingType entityMappingType;
+						if ( attributeMapping != null
+							&& attributeMapping.getPartMappingType() instanceof EntityMappingType entity ) {
+							entityMappingType = entity;
+						}
+						else {
+							final var identifierMapper =
+									persister.findAttributeMapping( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
+							assert identifierMapper != null;
+							entityMappingType = (EntityMappingType) identifierMapper.asEmbeddedAttributeMapping()
+									.getEmbeddableTypeDescriptor()
+									.findAttributeMapping( propertyName )
+									.getPartMappingType();
+						}
+						final var referencedGenerator = entityMappingType.getEntityPersister().getGenerator();
+						return referencedGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator
+								? List.of( beforeExecutionGenerator )
+								: List.of();
+					}
+					@Override
+					public @Nonnull Object[] generateBatch(
+							@Nonnull SharedSessionContractImplementor session,
+							@Nonnull GenerationRequests requests,
+							@Nonnull EventType eventType) {
+						return getForeignIds( entityName, propertyName, session, requests );
 					}
 					@Override
 					public EnumSet<EventType> getEventTypes() {

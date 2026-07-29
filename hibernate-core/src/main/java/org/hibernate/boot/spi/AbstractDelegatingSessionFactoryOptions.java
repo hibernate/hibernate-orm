@@ -639,6 +639,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isIdBatchGenerationEnabled() {
+		return delegate.isIdBatchGenerationEnabled();
+	}
+
+	@Override
 	@Nonnull
 	public CacheMode getInitialSessionCacheMode() {
 		return delegate.getInitialSessionCacheMode();

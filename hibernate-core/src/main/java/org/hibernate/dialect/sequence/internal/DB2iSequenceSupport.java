@@ -2,6 +2,7 @@ package org.hibernate.dialect.sequence.internal;
 
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 
 /**
@@ -35,6 +36,12 @@ public class DB2iSequenceSupport implements SequenceSupport {
 	@Override
 	public String getSequencePreviousValString(String sequenceName) throws MappingException {
 		return "values " + getSelectSequencePreviousValString( sequenceName );
+	}
+
+	@Override
+	public @Nullable String getSequenceNextValParameterizedString(String sequenceName) throws MappingException {
+		return "with cte as (select 1 v from sysibm.sysdummy1 t union all select t.v + 1 from cte t where t.v<?) select "
+			+ getSelectSequenceNextValString( sequenceName ) + " from cte t";
 	}
 
 	@Override

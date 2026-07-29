@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
+import org.hibernate.generator.Generator;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 
@@ -28,6 +29,23 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 * use for determining the entity descriptor from an instance of an entity
 	 */
 	Collection<EntityNameResolver> getEntityNameResolvers();
+
+	/**
+	 * Returns the topological execution order for the given generator,
+	 * as computed during boot from
+	 * {@link org.hibernate.generator.BeforeExecutionGenerator#resolveGenerationDependencies}.
+	 * <p>
+	 * Generators with lower order values must execute before generators
+	 * with higher values. Independent generators return {@code 0}.
+	 *
+	 * @param generator the generator to query
+	 * @return the execution order (0 = independent, higher = depends on lower-order generators)
+	 *
+	 * @since 8.0
+	 */
+	default int getGeneratorOrder(Generator generator) {
+		return 0;
+	}
 
 	/**
 	 * Get the names of all entities known to this Metamodel

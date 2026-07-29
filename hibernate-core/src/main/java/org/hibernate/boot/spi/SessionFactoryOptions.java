@@ -868,4 +868,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Nonnull
 	GraphParserMode getGraphParserMode();
+
+	/**
+	 * The graph parser mode to use for parsing entity graph strings.
+	 *
+	 * @see org.hibernate.cfg.MappingSettings#ID_BATCH_GENERATION
+	 *
+	 * @since 7.0
+	 */
+	boolean isIdBatchGenerationEnabled();
 }

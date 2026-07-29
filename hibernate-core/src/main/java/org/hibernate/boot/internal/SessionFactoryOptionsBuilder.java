@@ -324,6 +324,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Deprecated(forRemoval = true)
 	@Nonnull
 	private final GraphParserMode graphParserMode;
+	private final boolean batchGenerationEnabled;
 
 
 	public SessionFactoryOptionsBuilder(
@@ -629,6 +630,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 
 		graphParserMode = GraphParserMode.interpret( graphParserModeSetting );
+		batchGenerationEnabled = getBoolean( ID_BATCH_GENERATION, settings, true );
 	}
 
 	@Nullable
@@ -2016,6 +2018,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Nonnull
 	public GraphParserMode getGraphParserMode() {
 		return graphParserMode;
+	}
+
+	@Override
+	public boolean isIdBatchGenerationEnabled() {
+		return batchGenerationEnabled;
 	}
 
 	private Map<String, Object> initializeDefaultSessionProperties(ConfigurationService configurationService) {

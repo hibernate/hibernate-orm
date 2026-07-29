@@ -68,6 +68,140 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 
 This section describes changes in behavior that applications should be aware of.
 
+[[generator-subclasses-and-batching]]
+=== Generator subclasses and batching
+
+Batched optimizer and generator invocation was implemented for all built-in generators like `SequenceStyleGenerator`,
+`TableGenerator`, etc. Since the new batch generation is active by default, subclasses of these generators may
+need to also override the new `generateBatch` in case they override `generate` already, in order to retain the same semantics.
+
+A static implementation was provided to ease migration. Subclasses of built-in generators should add the following:
+
+```java
+	@Override
+	public Object[] generateBatch(
+			SharedSessionContractImplementor session,
+			GenerationRequests requests,
+			EventType eventType) {
+		return BeforeExecutionGenerator.generateBatch( this, session, requests, eventType );
+	}
+```
+
+Since batch generation changes the order of operations for persisting/merging from e.g.
+
+1. Generate id
+2. Set id on entity
+3. Extract state
+4. Cascade
+A. Generate id for cascaded entity
+B. ...
+
+to
+
+1. Register entity for batch generation
+2. Extract state
+3. Cascade
+A. Generate id for cascaded entity
+B. ...
+4. Batch generate ids
+5. Set ids on entities
+
+Applications that rely on the old order of operations might run into problems,
+specifically, when an entity with non-identity generated identifier using `@Access(PROPERTY)`,
+explicitly or implicitly by placing the `@Id`/`@EmbeddedId` annotation on the id getter,
+has code that changes the state of cascaded entities in the id setter.
+In such a scenario, since the id setter is called after the state of cascaded
+entities was already extracted, changing the state in the id setter will not
+work when batching is enabled.
+
+Batch generation for id values can be disabled by setting the
+`hibernate.id.batch_generation` configuration to `false`.
+
+If the entity id setter sets the id value on a cascaded entities' id attribute,
+it is possible to alternatively configure a `@MapsId` association.
+For example, code like this:
+
+```java
+@Entity
+public class Order {
+    private Long id;
+    private String customer;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<OrderPosition> positions = new ArrayList<>();
+
+    @Id
+    @GeneratedValue
+    @Access(AccessType.PROPERTY)
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+		for (OrderPosition position : positions) {
+			position.orderId = id;
+		}
+    }
+
+	public void addPosition(OrderPosition position) {
+		positions.add(position);
+		position.position = positions.size();
+	}
+}
+
+@Entity
+public class OrderPosition {
+    @Id
+    Long orderId;
+    @Id
+    int position;
+}
+```
+
+becomes
+
+```java
+@Entity
+public class Order {
+    private Long id;
+    private String customer;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    List<OrderPosition> positions = new ArrayList<>();
+
+    @Id
+    @GeneratedValue
+    @Access(AccessType.PROPERTY)
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+	public void addPosition(OrderPosition position) {
+		positions.add(position);
+		position.orderId = null;
+		position.order = this;
+		position.position = positions.size();
+	}
+}
+
+@Entity
+public class OrderPosition {
+    @Id
+    Long orderId;
+    @Id
+    int position;
+	@MapsId("orderId")
+	@ManyToOne(fetch = FetchType.LAZY)
+	Order order;
+}
+```
+
+The `orderId` value for `OrderPosition` will be generated from the value
+of the `Order` set on the `order` property automatically.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

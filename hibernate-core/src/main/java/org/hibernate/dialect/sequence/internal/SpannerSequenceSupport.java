@@ -72,6 +72,11 @@ public class SpannerSequenceSupport implements SequenceSupport {
 	}
 
 	@Override
+	public String getFromGenerateSeries() {
+		return " from generate_series(1,?)";
+	}
+
+	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		var nextValString = "get_next_sequence_value(sequence " + sequenceName + ")";
 		if ( dialect != null && dialect.useIntegerForPrimaryKey() ) {

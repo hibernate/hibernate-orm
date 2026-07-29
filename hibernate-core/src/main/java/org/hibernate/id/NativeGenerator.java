@@ -1,5 +1,7 @@
 package org.hibernate.id;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.SequenceGenerator;
 import org.hibernate.boot.model.relational.Database;
@@ -11,6 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -18,10 +21,13 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.uuid.UuidGenerator;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.lang.reflect.Member;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Properties;
 
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
@@ -108,8 +114,32 @@ public class NativeGenerator
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+	public @Nonnull Object generate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable Object owner,
+			@Nullable Object currentValue,
+			@Nonnull EventType eventType) {
 		return ((BeforeExecutionGenerator) dialectNativeGenerator).generate(session, owner, currentValue, eventType);
+	}
+
+	@Override
+	public List<BeforeExecutionGenerator> resolveGenerationDependencies(RuntimeModelCreationContext context) {
+		return dialectNativeGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator
+				? beforeExecutionGenerator.resolveGenerationDependencies( context )
+				: Collections.emptyList();
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		return ((BeforeExecutionGenerator) dialectNativeGenerator).supportsBatchGeneration();
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		return ((BeforeExecutionGenerator) dialectNativeGenerator).generateBatch( session, requests, eventType );
 	}
 
 	@Override

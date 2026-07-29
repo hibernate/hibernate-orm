@@ -5,7 +5,7 @@ import org.hibernate.action.queue.spi.decompose.entity.InsertCacheHandling;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
-import org.hibernate.action.internal.EntityIdentityInsertAction;
+import org.hibernate.action.internal.DelayableEntityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
@@ -33,7 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /// See [ - Marking the action as executed].
 ///
 /// See [EntityInsertAction].
-/// See [org.hibernate.action.internal.EntityIdentityInsertAction].
+/// See [DelayableEntityInsertAction].
 /// See [GeneratedValuesCollector].
 ///
 /// @author Steve Ebersole
@@ -108,7 +108,14 @@ public class PostInsertHandling implements PostExecutionCallback {
 			// 10. Mark action as executed
 			insertAction.markExecuted();
 		}
-		else if ( action instanceof EntityIdentityInsertAction identityInsertAction ) {
+		else if ( action instanceof DelayableEntityInsertAction identityInsertAction ) {
+			// Cache entity (if caching enabled)
+			InsertCacheHandling.putIfNecessary( action, cacheInsert, id, identityInsertAction.getVersion(), session );
+
+			if ( !identityInsertAction.isEarlyInsert() ) {
+				// Handle natural ID post-save notifications
+				identityInsertAction.handleNaturalIdPostSaveNotifications( id );
+			}
 			identityInsertAction.postInsert();
 
 			final var statistics = session.getFactory().getStatistics();
@@ -137,7 +144,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 		if ( generatedId != null ) {
 			identifierHandle.set( generatedId );
 			persister.setIdentifier( entity, generatedId, session );
-			if ( action instanceof EntityIdentityInsertAction identityInsertAction ) {
+			if ( action instanceof DelayableEntityInsertAction identityInsertAction ) {
 				identityInsertAction.setGeneratedId( generatedId );
 				final var entityKey = session.generateEntityKey( generatedId, persister );
 				identityInsertAction.setEntityKey( entityKey );
@@ -176,6 +183,9 @@ public class PostInsertHandling implements PostExecutionCallback {
 				if ( action instanceof EntityInsertAction insertAction ) {
 					insertAction.setVersion( version );
 				}
+				else if ( action instanceof DelayableEntityInsertAction insertAction ) {
+					insertAction.setVersion( version );
+				}
 			}
 			entry.postUpdate( instance, state, getVersionFromAction() );
 		}
@@ -183,6 +193,9 @@ public class PostInsertHandling implements PostExecutionCallback {
 			// Version generated but no other generated properties
 			final Object version = Versioning.getVersion( state, persister );
 			if ( action instanceof EntityInsertAction insertAction ) {
+				insertAction.setVersion( version );
+			}
+			else if ( action instanceof DelayableEntityInsertAction insertAction ) {
 				insertAction.setVersion( version );
 			}
 			entry.postInsert( version );
@@ -193,7 +206,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 			final Object rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
 			if ( rowId != null ) {
 				persistenceContext.replaceEntityEntryRowId( action.getInstance(), rowId );
-				if ( action instanceof EntityIdentityInsertAction identityInsertAction ) {
+				if ( action instanceof DelayableEntityInsertAction identityInsertAction ) {
 					identityInsertAction.setRowId( rowId );
 				}
 			}
@@ -202,6 +215,9 @@ public class PostInsertHandling implements PostExecutionCallback {
 
 	private Object getVersionFromAction() {
 		if ( action instanceof EntityInsertAction insertAction ) {
+			return insertAction.getVersion();
+		}
+		else if ( action instanceof DelayableEntityInsertAction insertAction ) {
 			return insertAction.getVersion();
 		}
 		return null;

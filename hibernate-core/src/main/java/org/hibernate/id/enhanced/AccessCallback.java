@@ -13,6 +13,18 @@ public interface AccessCallback {
 	 * @return The next value.
 	 */
 	long getNextValue();
+	/**
+	 * Retrieve the next values from the underlying source.
+	 *
+	 * @return The next values.
+	 */
+	default long[] getNextValues(int count) {
+		final long[] result = new long[count];
+		for (int i = 0; i < count; i++) {
+			result[i] = getNextValue();
+		}
+		return result;
+	}
 
 	/**
 	 * Obtain the tenant identifier (multi-tenancy), if one, associated with this callback.

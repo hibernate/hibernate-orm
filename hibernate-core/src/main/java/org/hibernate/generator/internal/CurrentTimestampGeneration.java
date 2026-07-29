@@ -15,11 +15,13 @@ import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
@@ -33,6 +35,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.mapping.BasicValue;
@@ -204,7 +207,11 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+	public @Nonnull Object generate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable Object owner,
+			@Nullable Object currentValue,
+			@Nonnull EventType eventType) {
 		if ( delegate == null ) {
 			if ( !version && eventType != EventType.FORCE_INCREMENT ) {
 				throw new UnsupportedOperationException( "CurrentTimestampGeneration.generate() should not have been called" );
@@ -214,6 +221,21 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		else {
 			return delegate.generate();
 		}
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		return true;
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		final Object[] result = new Object[requests.size()];
+		Arrays.fill( result, generate( session, null, null, eventType ) );
+		return result;
 	}
 
 	@Override

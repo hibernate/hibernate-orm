@@ -10,6 +10,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 
 /**
  * @author Steve Ebersole
@@ -22,7 +23,7 @@ public class PropertyAccessStrategyMapImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategy INSTANCE = new PropertyAccessStrategyMapImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(@Nullable Class<?> containerJavaType, String propertyName, boolean setterRequired) {
+	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, @Nullable Class<?> containerJavaType, String propertyName, boolean setterRequired) {
 
 		// Sometimes containerJavaType is null, but if it isn't, make sure it's a Map.
 		if (containerJavaType != null && !Map.class.isAssignableFrom( containerJavaType)) {

@@ -19,6 +19,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.ComponentType;
@@ -101,7 +102,7 @@ public class CompositeNestedGeneratedValueGenerator
 		 *
 		 * @see #getPropertyIndex()
 		 */
-		Setter getInjector();
+		PropertyValueAccessor getInjector();
 
 		/**
 		 * Returns the index of the generated property.

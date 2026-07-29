@@ -15,8 +15,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -29,9 +28,9 @@ import org.hibernate.type.Type;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntityInsideEmbeddableSelectFetchInitializer.BatchEntityInsideEmbeddableSelectFetchInitializerData> {
-	protected final Setter referencedModelPartSetter;
+	protected final PropertyValueAccessor referencedModelPartSetter;
 	protected final AttributeMapping[] rootEmbeddableAttributes;
-	protected final Getter[] rootEmbeddableGetters;
+	protected final PropertyValueAccessor[] rootEmbeddableGetters;
 	protected final Type[] rootEmbeddablePropertyTypes;
 
 	/**
@@ -71,14 +70,14 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
 				fetchOptions, creationState );
 
-		referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
+		referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getPropertyValueAccessor();
 		final String rootEmbeddablePropertyName =
 				getRootEmbeddablePropertyName( owningEntityInitializer, parentAccess, referencedModelPart );
 		rootEmbeddableAttributes = getParentEntityAttributes( rootEmbeddablePropertyName );
-		final var getters = new Getter[rootEmbeddableAttributes.length];
+		final var getters = new PropertyValueAccessor[rootEmbeddableAttributes.length];
 		for ( int i = 0; i < rootEmbeddableAttributes.length; i++ ) {
 			if ( rootEmbeddableAttributes[i] != null ) {
-				getters[i] = rootEmbeddableAttributes[i].getAttributeMetadata().getPropertyAccess().getGetter();
+				getters[i] = rootEmbeddableAttributes[i].getAttributeMetadata().getPropertyAccess().getPropertyValueAccessor();
 			}
 		}
 		rootEmbeddableGetters = getters;

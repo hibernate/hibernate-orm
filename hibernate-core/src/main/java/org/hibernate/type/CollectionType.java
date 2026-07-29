@@ -496,6 +496,14 @@ public abstract class CollectionType extends AbstractType implements Association
 			}
 		}
 
+		if ( target instanceof PersistentCollection<?> targetPersistentCollection
+				&& targetPersistentCollection.wasInitialized()
+				&& targetPersistentCollection.isDirty()
+				&& targetPersistentCollection.getStoredSnapshot() != null
+				&& targetPersistentCollection.equalsSnapshot( getPersister( session.getFactory() ) ) ) {
+			targetPersistentCollection.clearDirty();
+		}
+
 		return result;
 	}
 

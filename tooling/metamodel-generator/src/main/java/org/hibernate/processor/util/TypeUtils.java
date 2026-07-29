@@ -276,6 +276,18 @@ public final class TypeUtils {
 		return getAnnotationMirror( element, qualifiedName ) != null;
 	}
 
+	public static boolean isInheritedAnnotation(AnnotationMirror annotationMirror, Context context) {
+		final Element annotationType = annotationMirror.getAnnotationType().asElement();
+		// Interceptor bindings (e.g. @Transactional) let the generated repository implementation
+		// participate in interception. They only make sense when CDI is on the build path — without
+		// a container there is nothing to honor them — so guard on CDI availability.
+		return isInterceptorBinding( annotationType ) && context.isCdiAvailable();
+	}
+
+	private static boolean isInterceptorBinding(Element annotationType) {
+		return hasAnnotation( annotationType, "jakarta.interceptor.InterceptorBinding" );
+	}
+
 	public static boolean hasAnnotation(Element element, String... qualifiedNames) {
 		for ( String qualifiedName : qualifiedNames ) {
 			if ( hasAnnotation( element, qualifiedName ) ) {

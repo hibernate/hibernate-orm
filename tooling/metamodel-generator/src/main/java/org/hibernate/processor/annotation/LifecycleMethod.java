@@ -125,7 +125,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 
 	private void fireEvents(StringBuilder declaration, String prefix) {
 		if ( annotationMetaEntity.getContext().isDataEventPackageAvailable()
-				&& annotationMetaEntity.getContext().addDependentAnnotation()
+				&& annotationMetaEntity.getContext().isCdiAvailable()
 				&& eventTypes.contains( operationName )
 				&& !isReactive()) {
 			final String entityName = iterateEvents( declaration );

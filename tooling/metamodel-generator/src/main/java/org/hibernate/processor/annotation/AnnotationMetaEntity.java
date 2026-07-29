@@ -1013,7 +1013,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& !isReactive() // non-reactive
 			&& context.isDataEventPackageAvailable() // events
 			&& context.addInjectAnnotation() // @nject
-			&& context.addDependentAnnotation(); // CDI
+			&& context.isCdiAvailable(); // CDI
 	}
 
 	void addEventBus() {
@@ -1033,7 +1033,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return jakartaDataRepository
 			&& !quarkusInjection
 			&& !springInjection
-			&& context.addDependentAnnotation();
+			&& context.isCdiAvailable();
 	}
 
 	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {
@@ -3906,9 +3906,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	public List<AnnotationMirror> inheritedAnnotations() {
 		if ( repository ) {
 			return element.getAnnotationMirrors().stream()
-					.filter( annotationMirror -> hasAnnotation( annotationMirror.getAnnotationType().asElement(),
-							"jakarta.interceptor.InterceptorBinding" ) )
-					.collect( toList() );
+					.filter( a -> TypeUtils.isInheritedAnnotation( a, context ) )
+					.collect(toList());
 		}
 		else {
 			return emptyList();

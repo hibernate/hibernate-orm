@@ -6,6 +6,7 @@ package org.hibernate.processor.annotation;
 
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
+import org.hibernate.processor.util.TypeUtils;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -16,7 +17,6 @@ import static java.util.stream.Collectors.toList;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
 import static org.hibernate.processor.util.Constants.OBJECTS;
-import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 
 /**
  * @author Gavin King
@@ -80,9 +80,9 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	@Override
 	public List<AnnotationMirror> inheritedAnnotations() {
 		if ( annotationMetaEntity.isRepository() ) {
+			final var context = annotationMetaEntity.getContext();
 			return method.getAnnotationMirrors().stream()
-					.filter(annotationMirror -> hasAnnotation(annotationMirror.getAnnotationType().asElement(),
-							"jakarta.interceptor.InterceptorBinding"))
+					.filter( a -> TypeUtils.isInheritedAnnotation( a, context ) )
 					.collect(toList());
 		}
 		else {

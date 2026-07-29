@@ -13,6 +13,8 @@ import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.property.access.spi.SetterMethodImpl;
@@ -35,8 +37,9 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	private final Getter getter;
 	@Nullable
 	private final Setter setter;
+	private final PropertyValueAccessor propertyValueAccessor;
 
-	public PropertyAccessMixedImpl(PropertyAccessStrategy strategy, Class<?> containerJavaType, String propertyName) {
+	public PropertyAccessMixedImpl(PropertyAccessorService propertyAccessorService, PropertyAccessStrategy strategy, Class<?> containerJavaType, String propertyName) {
 		this.strategy = strategy;
 
 		final var propertyAccessType = getAccessType( containerJavaType, propertyName );
@@ -50,6 +53,11 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 				}
 				getter = fieldGetter( containerJavaType, propertyName, field );
 				setter = fieldSetter( containerJavaType, propertyName, field );
+				propertyValueAccessor = PropertyValueAccessor.standard(
+						propertyAccessorService.hibernateAccessorFactory().valueReader( field ),
+						propertyAccessorService.hibernateAccessorFactory().valueWriter( field ),
+						propertyName
+				);
 				break;
 			}
 			case PROPERTY: {
@@ -63,6 +71,11 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 
 				getter = propertyGetter( containerJavaType, propertyName, getterMethod );
 				setter = propertySetter( containerJavaType, propertyName, setterMethod );
+				propertyValueAccessor = PropertyValueAccessor.standard(
+						propertyAccessorService.hibernateAccessorFactory().valueReader( getterMethod ),
+						propertyAccessorService.hibernateAccessorFactory().valueWriter( setterMethod ),
+						propertyName
+				);
 				break;
 			}
 			default: {
@@ -105,5 +118,10 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	@Nullable
 	public Setter getSetter() {
 		return setter;
+	}
+
+	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		return propertyValueAccessor;
 	}
 }

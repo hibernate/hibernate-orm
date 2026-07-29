@@ -40,6 +40,6 @@ public class PropertyAccessStrategyEnhancedImpl implements PropertyAccessStrateg
 
 	@Override
 	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
-		return new PropertyAccessEnhancedImpl( this, containerJavaType, propertyName, classAccessType );
+		return new PropertyAccessEnhancedImpl( propertyAccessorService,this, containerJavaType, propertyName, classAccessType );
 	}
 }

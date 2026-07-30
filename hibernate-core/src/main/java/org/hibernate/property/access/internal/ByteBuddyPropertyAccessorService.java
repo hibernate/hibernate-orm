@@ -5,9 +5,9 @@
 package org.hibernate.property.access.internal;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Map;
 
 import org.hibernate.models.accessor.HibernateAccessorFactory;
-import org.hibernate.models.accessor.bytebuddy.HibernateAccessorByteBuddyFactory;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 
 /**
@@ -21,11 +21,11 @@ public class ByteBuddyPropertyAccessorService implements PropertyAccessorService
 
 	private final OrmHibernateAccessorFactory factory;
 
-	public ByteBuddyPropertyAccessorService() {
+	public ByteBuddyPropertyAccessorService(Map<String, Object> configurationValues) {
 		final MethodHandles.Lookup lookup = MethodHandles.lookup();
 		this.factory = new OrmHibernateAccessorFactory(
-				HibernateAccessorByteBuddyFactory.factory( lookup ),
-				lookup
+				lookup,
+				configurationValues
 		);
 	}
 

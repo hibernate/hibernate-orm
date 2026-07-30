@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import java.util.Map;
 
 import org.hibernate.metamodel.CollectionClassification;
@@ -17,6 +18,7 @@ import org.hibernate.models.spi.ClassDetails;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class CollectionTypeRegistration {
 	private final CollectionClassification classification;
 	private final ClassDetails userTypeClass;

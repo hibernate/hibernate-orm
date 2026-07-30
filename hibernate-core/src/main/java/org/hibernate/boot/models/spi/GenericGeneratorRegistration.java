@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import java.util.Map;
 
 /**
@@ -12,5 +13,6 @@ import java.util.Map;
  * @author Steve Ebersole
  * @see org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl
  */
+@Remove
 public record GenericGeneratorRegistration(String name, String strategy, Map<String, String> parameters) {
 }

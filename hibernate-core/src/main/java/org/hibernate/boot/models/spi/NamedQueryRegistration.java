@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import java.util.Collections;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import jakarta.persistence.QueryHint;
 /**
  * @author Steve Ebersole
  */
+@Remove
 public record NamedQueryRegistration(String name, NamedQuery configuration) {
 	public String getQueryString() {
 		return configuration.query();

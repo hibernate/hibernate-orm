@@ -13,7 +13,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -131,7 +131,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 				delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
 			}
 			else {
-				final Setter setter = ReflectionTools.getSetter(
+				final PropertyValueAccessor setter = ReflectionTools.getPropertyValueAccessor(
 						obj.getClass(),
 						propertyData,
 						enversService.getServiceRegistry()

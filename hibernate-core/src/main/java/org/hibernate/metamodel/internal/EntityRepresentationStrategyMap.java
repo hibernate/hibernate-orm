@@ -9,12 +9,13 @@ import java.util.function.Consumer;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -72,7 +73,12 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	}
 
 	@Override
-	public ReflectionOptimizer getReflectionOptimizer() {
+	public HibernateAccessorMultiValueReader getMultiValueReader() {
+		return null;
+	}
+
+	@Override
+	public HibernateAccessorMultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 

@@ -18,6 +18,7 @@ dependencies {
 	api project( ':hibernate-core' )
 	api project( ':hibernate-envers' )
 	implementation project( ':hibernate-scan-jandex' )
+	implementation libs.hibernateModelsAccessorByteBuddy
 
     testImplementation libs.test.junitJupiterApi
 

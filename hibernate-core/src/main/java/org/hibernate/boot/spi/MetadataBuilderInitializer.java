@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.service.JavaServiceLoadable;
@@ -18,7 +19,10 @@ import org.hibernate.service.JavaServiceLoadable;
  * @author Steve Ebersole
  *
  * @since 5.0
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 @JavaServiceLoadable
 public interface MetadataBuilderInitializer {
 	void contribute(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry);

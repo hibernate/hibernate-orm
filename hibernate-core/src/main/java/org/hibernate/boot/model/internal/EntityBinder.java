@@ -1403,6 +1403,12 @@ public class EntityBinder {
 			throw new AssertionFailure( "@Entity should never be missing" );
 		}
 		final String entityName = entity.name();
+		if ( StringHelper.isQuoted( entityName ) ) {
+			throw new AnnotationException(
+					"Entity name '" + entityName + "' for " + annotatedClass.getName()
+							+ " is quoted; quoted database identifiers must be declared using table and column annotations"
+			);
+		}
 		name = entityName.isBlank() ? unqualify( annotatedClass.getName() ) : entityName;
 	}
 

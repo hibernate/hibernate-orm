@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.boot.MetadataSources;
@@ -127,7 +128,8 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 		);
 	}
 
-	@Entity(name = "`Another_Test_Entity`")
+	@Entity
+	@Table(name = "`Another_Test_Entity`")
 	public static class AnotherTestEntity {
 		@Id
 		private Long id;

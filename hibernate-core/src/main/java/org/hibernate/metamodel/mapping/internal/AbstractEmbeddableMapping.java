@@ -123,9 +123,9 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			return new Object[getNumberOfAttributeMappings()];
 		}
 
-		final var optimizer = getRepresentationStrategy().getReflectionOptimizer();
-		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
-			return optimizer.getAccessOptimizer().getPropertyValues( compositeInstance );
+		final var reader = getRepresentationStrategy().getMultiValueReader();
+		if ( reader != null ) {
+			return reader.get( compositeInstance );
 		}
 
 		return getAttributeValues( compositeInstance );
@@ -141,9 +141,9 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 	@Override
 	public void setValues(Object component, Object[] values) {
-		final var optimizer = getRepresentationStrategy().getReflectionOptimizer();
-		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
-			optimizer.getAccessOptimizer().setPropertyValues( component, values );
+		final var writer = getRepresentationStrategy().getMultiValueWriter();
+		if ( writer != null ) {
+			writer.set( component, values );
 		}
 		else {
 			setAttributeValues( component, values );

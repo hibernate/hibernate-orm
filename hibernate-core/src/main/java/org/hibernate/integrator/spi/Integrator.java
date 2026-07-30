@@ -4,6 +4,7 @@
  */
 package org.hibernate.integrator.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -17,7 +18,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * is by making it discoverable via the standard Java {@link java.util.ServiceLoader}
  * facility.
  *
- * @implNote {@link #integrate(Metadata, BootstrapContext, SessionFactoryImplementor)}
+ * @implNote {@link #integrate(Metadata, Context, SessionFactoryImplementor)}
  *           is called during the process of {@linkplain SessionFactoryImplementor
  *           session factory} initialization. In fact, it's called directly from the
  *           constructor of {@link org.hibernate.internal.SessionFactoryImpl}. So the
@@ -34,9 +35,28 @@ public interface Integrator {
 	 * Perform integration.
 	 *
 	 * @param metadata The fully initialized boot-time mapping model
+	 * @param context The integration-time context
+	 * @param sessionFactory The SessionFactory being created
+	 *
+	 * @since 8.0
+	 */
+	default void integrate(
+			Metadata metadata,
+			Context context,
+			SessionFactoryImplementor sessionFactory) {
+		integrate( metadata, context.getBootstrapContext(), sessionFactory );
+	}
+
+	/**
+	 * Perform integration.
+	 *
+	 * @param metadata The fully initialized boot-time mapping model
 	 * @param bootstrapContext The context for bootstrapping of the SessionFactory
 	 * @param sessionFactory The SessionFactory being created
+	 *
+	 * @deprecated Use {@link #integrate(Metadata, Context, SessionFactoryImplementor)}.
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	default void integrate(
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
@@ -53,4 +73,18 @@ public interface Integrator {
 		// do nothing by default
 	}
 
+	/**
+	 * Inputs which are valid during SessionFactory integration but are not
+	 * represented by the finalized metadata or the in-flight SessionFactory.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	interface Context {
+		/**
+		 * @deprecated Access to the bootstrap context will be removed.
+		 */
+		@Deprecated(since = "8.0", forRemoval = true)
+		BootstrapContext getBootstrapContext();
+	}
 }

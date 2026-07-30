@@ -6,7 +6,7 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import java.util.List;
 
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.KeyValue;
@@ -30,7 +30,7 @@ import org.hibernate.mapping.Table;
 /// @since 9.0
 /// @author Steve Ebersole
 public record IdentifierBinding(
-		EntityTypeMetadata entityType,
+		EntityTypeMetadataImpl entityType,
 		RootClass rootClass,
 		KeyMapping keyMapping,
 		KeyValue value,

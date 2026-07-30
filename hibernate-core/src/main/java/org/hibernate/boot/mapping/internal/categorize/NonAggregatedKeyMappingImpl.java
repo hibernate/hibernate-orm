@@ -13,10 +13,10 @@ import org.hibernate.models.spi.ClassDetails;
 /// @since 9.0
 /// @author Steve Ebersole
 public record NonAggregatedKeyMappingImpl(
-		List<AttributeMetadata> idAttributes,
+		List<AttributeMetadataImplementor> idAttributes,
 		ClassDetails idClassType) implements NonAggregatedKeyMapping {
 	@Override
-	public List<AttributeMetadata> getIdAttributes() {
+	public List<AttributeMetadataImplementor> getIdAttributes() {
 		return idAttributes;
 	}
 
@@ -38,7 +38,7 @@ public record NonAggregatedKeyMappingImpl(
 	}
 
 	@Override
-	public boolean contains(AttributeMetadata attributeMetadata) {
+	public boolean contains(AttributeMetadataImplementor attributeMetadata) {
 		for ( int i = 0; i < idAttributes.size(); i++ ) {
 			if ( idAttributes.get( i ) == attributeMetadata ) {
 				return true;

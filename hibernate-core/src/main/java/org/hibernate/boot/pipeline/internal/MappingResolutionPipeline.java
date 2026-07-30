@@ -36,9 +36,9 @@ import org.hibernate.boot.mapping.internal.context.BindingOptionsImpl;
 import org.hibernate.boot.mapping.internal.context.BindingStateImpl;
 import org.hibernate.boot.mapping.internal.context.InFlightMetadataCollectorAdapter;
 import org.hibernate.boot.mapping.internal.binders.BindingCoordinator;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext;
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
@@ -255,7 +255,7 @@ public class MappingResolutionPipeline {
 			ResolvedMappingSettings mappingSettings,
 			PreparedMappingSources resolvedMappingSources,
 			MappingCustomizations mappingCustomizations) {
-		final CategorizedDomainModel categorizedDomainModel = categorize(
+		final CategorizedDomainModelImpl categorizedDomainModel = categorize(
 				resolvedMappingSources,
 				metadataBuildingContext
 		);
@@ -308,7 +308,7 @@ public class MappingResolutionPipeline {
 	private static void bindAdditionalMappingContributions(
 			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext,
-			CategorizedDomainModel categorizedDomainModel,
+			CategorizedDomainModelImpl categorizedDomainModel,
 			BindingStateImpl bindingState) {
 		final PreparedMappingSources contributedResources = collectAdditionalMappingContributions(
 				mappingSettings,
@@ -323,7 +323,7 @@ public class MappingResolutionPipeline {
 				contributorName( contributedResources ),
 				metadataBuildingContext
 		);
-		final CategorizedDomainModel contributedDomainModel = categorize(
+		final CategorizedDomainModelImpl contributedDomainModel = categorize(
 				contributedResources,
 				contributedMetadataBuildingContext
 		);
@@ -367,7 +367,7 @@ public class MappingResolutionPipeline {
 	private static PreparedMappingSources collectAdditionalMappingContributions(
 			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext,
-			CategorizedDomainModel categorizedDomainModel) {
+			CategorizedDomainModelImpl categorizedDomainModel) {
 		final ClassLoaderService classLoaderService = metadataBuildingContext.getClassLoaderService();
 		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
 				mappingSettings,
@@ -399,11 +399,11 @@ public class MappingResolutionPipeline {
 	}
 
 	private record ProcessedMappingsImpl(Map<String, ProcessedEntity> entityBindings) implements ProcessedMappings {
-		private static ProcessedMappingsImpl from(CategorizedDomainModel categorizedDomainModel) {
+		private static ProcessedMappingsImpl from(CategorizedDomainModelImpl categorizedDomainModel) {
 			final Map<String, ProcessedEntity> entityBindings = new LinkedHashMap<>();
 			categorizedDomainModel.forEachEntityHierarchy( (index, hierarchy) ->
 					hierarchy.forEachType( (type, superType, entityHierarchy, relation) -> {
-						if ( type instanceof EntityTypeMetadata entityType ) {
+						if ( type instanceof EntityTypeMetadataImpl entityType ) {
 							entityBindings.put( entityType.getEntityName(), entityType );
 						}
 					} )
@@ -461,7 +461,7 @@ public class MappingResolutionPipeline {
 		}
 	}
 
-	private static CategorizedDomainModel categorize(
+	private static CategorizedDomainModelImpl categorize(
 			PreparedMappingSources resolvedMappingSources,
 			MetadataBuildingContext metadataBuildingContext) {
 		return DomainModelCategorizer.categorize(
@@ -471,7 +471,7 @@ public class MappingResolutionPipeline {
 	}
 
 	private static BindingStateImpl bind(
-			CategorizedDomainModel categorizedDomainModel,
+			CategorizedDomainModelImpl categorizedDomainModel,
 			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext) {
 		final BindingStateImpl bindingState = new BindingStateImpl(
@@ -489,7 +489,7 @@ public class MappingResolutionPipeline {
 	}
 
 	private static void coordinateBinding(
-			CategorizedDomainModel categorizedDomainModel,
+			CategorizedDomainModelImpl categorizedDomainModel,
 			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext,
 			BindingStateImpl bindingState) {

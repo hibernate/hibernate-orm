@@ -18,7 +18,7 @@ import org.hibernate.models.spi.TypeDetails;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public interface AttributeUsageBinding {
+public interface AttributeUsageBinding extends org.hibernate.boot.mapping.spi.AttributeUsage {
 	/// The persistent attribute name for this usage.
 	///
 	/// This normally delegates to the source declaration name.  It is distinct

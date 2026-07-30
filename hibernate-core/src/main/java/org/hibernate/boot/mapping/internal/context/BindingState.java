@@ -43,10 +43,10 @@ import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
 import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
-import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractManagedTypeMetadata;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -59,7 +59,7 @@ import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -416,10 +416,10 @@ public interface BindingState {
 	void runStateManagementFinalizers();
 
 	/// Register the identifier binding produced for an entity hierarchy root.
-	void addIdentifierBinding(EntityTypeMetadata rootType, IdentifierBinding identifierBinding);
+	void addIdentifierBinding(EntityTypeMetadataImpl rootType, IdentifierBinding identifierBinding);
 
 	/// Resolve the identifier binding for an entity hierarchy root.
-	IdentifierBinding getIdentifierBinding(EntityTypeMetadata rootType);
+	IdentifierBinding getIdentifierBinding(EntityTypeMetadataImpl rootType);
 
 	/// Register the semantic-to-materialized handoff for an entity identifier.
 	void addEntityIdentifierHandoff(EntityIdentifierHandoff handoff);
@@ -437,26 +437,26 @@ public interface BindingState {
 	List<EntityIdentifierHandoff> getEntityIdentifierHandoffs();
 
 	/// Register semantic entity-identifier binding state for an entity root.
-	default void addEntityIdentifierBinding(EntityTypeMetadata rootType, EntityIdentifierBinding entityIdentifierBinding) {
+	default void addEntityIdentifierBinding(EntityTypeMetadataImpl rootType, EntityIdentifierBinding entityIdentifierBinding) {
 		getBootBindingModel().addEntityIdentifierBinding( rootType, entityIdentifierBinding );
 	}
 
 	/// Resolve semantic entity-identifier binding state for an entity root.
-	default EntityIdentifierBinding getEntityIdentifierBinding(EntityTypeMetadata rootType) {
+	default EntityIdentifierBinding getEntityIdentifierBinding(EntityTypeMetadataImpl rootType) {
 		return getBootBindingModel().getEntityIdentifierBinding( rootType );
 	}
 
 	/// Resolve the finalized entity-identifier binding view for an entity root.
-	default EntityIdentifierBindingView getEntityIdentifierBindingView(EntityTypeMetadata rootType) {
+	default EntityIdentifierBindingView getEntityIdentifierBindingView(EntityTypeMetadataImpl rootType) {
 		return getBootBindingModel().getEntityIdentifierBindingView( rootType );
 	}
 
 
 	/// Register the binder responsible for a categorized managed type.
-	void registerTypeBinder(ManagedTypeMetadata type, ManagedTypeBinder binder);
+	void registerTypeBinder(AbstractManagedTypeMetadata type, ManagedTypeBinder binder);
 
 	/// Resolve the binder responsible for a categorized managed type.
-	default ManagedTypeBinder getTypeBinder(ManagedTypeMetadata type) {
+	default ManagedTypeBinder getTypeBinder(AbstractManagedTypeMetadata type) {
 		return getTypeBinder( type.getClassDetails() );
 	}
 

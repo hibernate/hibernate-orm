@@ -25,7 +25,7 @@ import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;

@@ -5,10 +5,10 @@
 package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
-import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadataImpl;
+import org.hibernate.boot.mapping.spi.SingularAttributeMetadata;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -98,7 +98,7 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 	}
 
 	/// Creates a member binding for a synthetic component model which has no
-	/// categorized [AttributeMetadata].
+	/// categorized [AttributeMetadataImplementor].
 	///
 	/// This path is intentionally limited to extension-provided structures such
 	/// as a `CompositeUserType` embeddable representation. Ordinary embeddable
@@ -130,7 +130,7 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 	public static ComponentMemberBinding from(
 			ComponentSource source,
 			ComponentSource.ComponentMember member,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final String path = member.path();
@@ -306,7 +306,7 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 	private static ValueIntent valueIntent(
 			ComponentSource source,
 			ComponentSource.ComponentMember member,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		if ( attributeMetadata instanceof SingularAttributeMetadata singular ) {
@@ -314,7 +314,7 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 			return switch ( valueMetadata.getNature() ) {
 				case BASIC -> BasicValueIntent.fromComponentMember( source, member, bindingState, bindingContext );
 				case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
-						valueMetadata instanceof EmbeddedValueMetadata embedded ? embedded : null,
+						valueMetadata instanceof EmbeddedValueMetadataImpl embedded ? embedded : null,
 						member.type(),
 						member.path(),
 						member.fullPath()
@@ -331,7 +331,7 @@ public class ComponentMemberBinding implements AttributeUsageBinding {
 			};
 		}
 
-		final PluralAttributeMetadata plural = (PluralAttributeMetadata) attributeMetadata;
+		final PluralAttributeMetadataImpl plural = (PluralAttributeMetadataImpl) attributeMetadata;
 		return CollectionValueIntent.fromAttribute(
 				collectionSource( source, member, attributeMetadata.getNature(), bindingContext ),
 				plural,

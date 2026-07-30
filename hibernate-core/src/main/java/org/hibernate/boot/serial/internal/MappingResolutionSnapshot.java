@@ -15,7 +15,7 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuild
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 /// Stable recipes sufficient to reconstruct derived mapping type resolutions.
 ///

@@ -17,7 +17,8 @@ import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record CollectionIdMetadata(
+public record CollectionIdMetadataImpl(
 		CollectionId source,
-		@Nullable IdentifierGeneratorRegistration generatorRegistration) {
+		@Nullable IdentifierGeneratorRegistration generatorRegistration)
+		implements org.hibernate.boot.mapping.spi.CollectionIdMetadata {
 }

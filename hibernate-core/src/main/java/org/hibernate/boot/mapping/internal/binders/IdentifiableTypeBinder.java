@@ -27,10 +27,10 @@ import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.mapping.IdentifiableTypeClass;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
@@ -70,16 +70,16 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				Join secondaryTableJoin);
 	}
 
-	private final IdentifiableTypeMetadata superType;
-	private final EntityHierarchy.HierarchyRelation hierarchyRelation;
+	private final AbstractIdentifiableTypeMetadata superType;
+	private final EntityHierarchyImpl.HierarchyRelation hierarchyRelation;
 
 	private final List<AttributeBinder> attributeBinders;
 	private final IdentifiableTypeBinder superTypeBinder;
 
 	public IdentifiableTypeBinder(
-			IdentifiableTypeMetadata type,
-			IdentifiableTypeMetadata superType,
-			EntityHierarchy.HierarchyRelation hierarchyRelation,
+			AbstractIdentifiableTypeMetadata type,
+			AbstractIdentifiableTypeMetadata superType,
+			EntityHierarchyImpl.HierarchyRelation hierarchyRelation,
 			BindingState state,
 			BindingOptions options,
 			BindingContext bindingContext) {
@@ -90,7 +90,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		this.attributeBinders = new ArrayList<>( type.getNumberOfAttributes() );
 	}
 
-	public abstract EntityTypeMetadata findSuperEntity();
+	public abstract EntityTypeMetadataImpl findSuperEntity();
 
 	public EntityTypeBinder getSuperEntityBinder() {
 		IdentifiableTypeBinder check = superTypeBinder;
@@ -114,19 +114,19 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	public abstract IdentifiableTypeClass getTypeBinding();
 
-	public IdentifiableTypeMetadata getSuperType() {
+	public AbstractIdentifiableTypeMetadata getSuperType() {
 		return superType;
 	}
 
-	public EntityHierarchy.HierarchyRelation getHierarchyRelation() {
+	public EntityHierarchyImpl.HierarchyRelation getHierarchyRelation() {
 		return hierarchyRelation;
 	}
 
 	public abstract Table getTable();
 
 	@Override
-	public IdentifiableTypeMetadata getManagedType() {
-		return (IdentifiableTypeMetadata) super.getManagedType();
+	public AbstractIdentifiableTypeMetadata getManagedType() {
+		return (AbstractIdentifiableTypeMetadata) super.getManagedType();
 	}
 
 	@Override
@@ -145,8 +145,8 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	protected void bindDeclaredAttributes(
 			ModelBinders modelBinders,
-			IdentifiableTypeMetadata sourceType,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
 			Table primaryTable,
 			Consumer<Property> propertyConsumer) {
@@ -155,8 +155,8 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	protected void bindDeclaredAttributes(
 			ModelBinders modelBinders,
-			IdentifiableTypeMetadata sourceType,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
 			Table primaryTable,
 			Consumer<Property> propertyConsumer,
@@ -175,8 +175,8 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	protected void bindDeclaredAttributes(
 			ModelBinders modelBinders,
-			IdentifiableTypeMetadata sourceType,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
 			Table primaryTable,
 			Consumer<Property> propertyConsumer,
@@ -197,14 +197,14 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	protected void bindDeclaredAttributes(
 			ModelBinders modelBinders,
-			IdentifiableTypeMetadata sourceType,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
 			Table primaryTable,
 			Consumer<Property> propertyConsumer,
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings,
-			Predicate<AttributeMetadata> attributeFilter) {
+			Predicate<AttributeMetadataImplementor> attributeFilter) {
 		bindDeclaredAttributes(
 				modelBinders,
 				sourceType,
@@ -227,14 +227,14 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	protected void bindDeclaredAttributes(
 			ModelBinders modelBinders,
-			IdentifiableTypeMetadata sourceType,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass attributeOwnerBinding,
 			Table primaryTable,
 			BoundAttributeConsumer propertyConsumer,
 			boolean includePluralAttributes,
 			boolean registerCollectionBindings,
-			Predicate<AttributeMetadata> attributeFilter) {
+			Predicate<AttributeMetadataImplementor> attributeFilter) {
 		sourceType.forEachAttribute( (index, attributeMetadata) -> {
 			if ( sourceType.getHierarchy().getIdMapping().contains( attributeMetadata )
 					|| attributeMetadata.getMember().hasDirectAnnotationUsage( Id.class )
@@ -296,9 +296,9 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	}
 
 	private AttributeBindingView createAttributeBindingView(
-			IdentifiableTypeMetadata sourceType,
-			IdentifiableTypeMetadata ownerType,
-			AttributeMetadata attributeMetadata) {
+			AbstractIdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata ownerType,
+			AttributeMetadataImplementor attributeMetadata) {
 		final ManagedTypeBinding declaringTypeBinding = getBindingState()
 				.getBootBindingModel()
 				.getManagedTypeBinding( sourceType.getClassDetails() );
@@ -355,9 +355,9 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 
 	private StandardAttributeUsageBinding createAttributeUsage(
 			AttributeDeclarationBinding declarationBinding,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			ManagedTypeBinding ownerTypeBinding,
-			AttributeMetadata attributeMetadata) {
+			AttributeMetadataImplementor attributeMetadata) {
 		final String attributeName = attributeMetadata.getName();
 		return new StandardAttributeUsageBinding(
 				declarationBinding,
@@ -371,10 +371,10 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		);
 	}
 
-	private ValueIntent valueIntent(IdentifiableTypeMetadata ownerType, AttributeMetadata attributeMetadata) {
+	private ValueIntent valueIntent(AbstractIdentifiableTypeMetadata ownerType, AttributeMetadataImplementor attributeMetadata) {
 		final String attributeName = attributeMetadata.getName();
 		final String sourceRole = ownerType.getClassDetails().getName() + "." + attributeName;
-		if ( attributeMetadata instanceof org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadata singular ) {
+		if ( attributeMetadata instanceof org.hibernate.boot.mapping.spi.SingularAttributeMetadata singular ) {
 			final var valueMetadata = singular.getValue();
 			return switch ( valueMetadata.getNature() ) {
 			case BASIC -> BasicValueIntent.fromAttribute(
@@ -384,7 +384,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 					getBindingContext()
 			);
 			case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
-					valueMetadata instanceof org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata embedded
+					valueMetadata instanceof org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl embedded
 							&& !memberTypeUsesTypeVariable( attributeMetadata )
 							&& !typeUsesTypeVariable( valueMetadata.getType() )
 							? embedded
@@ -408,7 +408,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 			);
 			};
 		}
-		final var plural = (org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata) attributeMetadata;
+		final var plural = (org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadataImpl) attributeMetadata;
 		return CollectionValueIntent.fromAttribute(
 				collectionSource( ownerType, attributeMetadata ),
 				plural,
@@ -420,8 +420,8 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	}
 
 	private CollectionSource collectionSource(
-			IdentifiableTypeMetadata ownerType,
-			AttributeMetadata attributeMetadata) {
+			AbstractIdentifiableTypeMetadata ownerType,
+			AttributeMetadataImplementor attributeMetadata) {
 		final var modelsContext = getBindingContext().getModelsContext();
 		final TypeDetails collectionType = attributeType( attributeMetadata, ownerType );
 		return switch ( attributeMetadata.getNature() ) {
@@ -459,7 +459,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	}
 
 	private AssociationOverride locateAssociationOverride(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			String attributeName) {
 		final var modelsContext = getBindingContext().getModelsContext();
 		final ClassDetails ownerClassDetails = ownerType.getClassDetails();
@@ -475,7 +475,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	}
 
 	private AttributeOverride locateAttributeOverride(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			String attributeName) {
 		final var modelsContext = getBindingContext().getModelsContext();
 		final ClassDetails ownerClassDetails = ownerType.getClassDetails();
@@ -521,9 +521,9 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	}
 
 	private AttributeDeclarationBinding resolveOrCreateAttributeDeclaration(
-			IdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata sourceType,
 			ManagedTypeBinding declaringTypeBinding,
-			AttributeMetadata attributeMetadata) {
+			AttributeMetadataImplementor attributeMetadata) {
 		final String attributeName = attributeMetadata.getName();
 		for ( AttributeDeclarationBinding declaredAttribute : declaringTypeBinding.declaredAttributes() ) {
 			if ( declaredAttribute.attributeName().equals( attributeName ) ) {
@@ -555,9 +555,9 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 	}
 
 	private void applyGenericPropertyMarkers(
-			IdentifiableTypeMetadata sourceType,
-			IdentifiableTypeMetadata ownerType,
-			AttributeMetadata attributeMetadata,
+			AbstractIdentifiableTypeMetadata sourceType,
+			AbstractIdentifiableTypeMetadata ownerType,
+			AttributeMetadataImplementor attributeMetadata,
 			Property property) {
 		final TypeDetails declaredType = attributeMetadata.getMember().getType();
 		if ( !memberTypeUsesTypeVariable( attributeMetadata ) ) {
@@ -568,7 +568,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		}
 
 		if ( sourceType.getClassDetails().getName().equals( ownerType.getClassDetails().getName() ) ) {
-			if ( ownerType instanceof EntityTypeMetadata && !ownerType.hasSubTypes() ) {
+			if ( ownerType instanceof EntityTypeMetadataImpl && !ownerType.hasSubTypes() ) {
 				return;
 			}
 			property.setGeneric( true );
@@ -582,7 +582,7 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		}
 	}
 
-	private static boolean hasExplicitToOneTargetEntity(AttributeMetadata attributeMetadata) {
+	private static boolean hasExplicitToOneTargetEntity(AttributeMetadataImplementor attributeMetadata) {
 		final ManyToOne manyToOne = attributeMetadata.getMember().getDirectAnnotationUsage( ManyToOne.class );
 		if ( manyToOne != null && manyToOne.targetEntity() != void.class ) {
 			return true;
@@ -611,19 +611,19 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 		};
 	}
 
-	protected boolean memberTypeUsesTypeVariable(AttributeMetadata attributeMetadata) {
+	protected boolean memberTypeUsesTypeVariable(AttributeMetadataImplementor attributeMetadata) {
 		return typeUsesTypeVariable( attributeMetadata.getMember().getType() );
 	}
 
 	private static TypeDetails attributeType(
-			AttributeMetadata attributeMetadata,
-			IdentifiableTypeMetadata usageSite) {
+			AttributeMetadataImplementor attributeMetadata,
+			AbstractIdentifiableTypeMetadata usageSite) {
 		return attributeMetadata.resolveAttributeType( usageSite.getClassDetails() );
 	}
 
 	private boolean overridesSuperAttribute(
-			IdentifiableTypeMetadata sourceType,
-			AttributeMetadata attributeMetadata) {
+			AbstractIdentifiableTypeMetadata sourceType,
+			AttributeMetadataImplementor attributeMetadata) {
 		final var sourceSuperType = sourceType.getSuperType();
 		if ( sourceSuperType == null || sourceSuperType.findAttribute( attributeMetadata.getName() ) == null ) {
 			return false;

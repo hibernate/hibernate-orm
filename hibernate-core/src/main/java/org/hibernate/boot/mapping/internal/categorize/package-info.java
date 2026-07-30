@@ -23,7 +23,7 @@
 ///
 /// @see org.hibernate.boot.pipeline.internal.source.PreparedMappingSources
 /// @see org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer
-/// @see org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel
+/// @see org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl
 ///
 /// @author Steve Ebersole
 @Internal

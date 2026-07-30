@@ -14,6 +14,6 @@ import org.hibernate.internal.util.IndexedConsumer;
 /// @since 9.0
 /// @author Steve Ebersole
 @FunctionalInterface
-public interface AttributeConsumer extends IndexedConsumer<AttributeMetadata> {
+public interface AttributeConsumer extends IndexedConsumer<AttributeMetadataImplementor> {
 
 }

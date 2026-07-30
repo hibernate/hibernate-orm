@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
@@ -24,9 +24,9 @@ import org.hibernate.models.spi.ClassDetails;
 /// @author Steve Ebersole
 public record InversePluralAssociationBinding(
 		Nature nature,
-		IdentifiableTypeMetadata ownerType,
+		AbstractIdentifiableTypeMetadata ownerType,
 		PersistentClass ownerBinding,
-		AttributeMetadata attributeMetadata,
+		AttributeMetadataImplementor attributeMetadata,
 		CollectionSource source,
 		Collection collection,
 		ClassDetails targetClassDetails,

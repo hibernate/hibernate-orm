@@ -17,6 +17,75 @@ Products", and Stage 4, "Finish SessionFactory Construction Boundaries", are
 complete.  The next active work is Stage 5, "Stabilize Extension Boundaries And
 Documentation".
 
+== New-Chat Restart Point
+
+Stage 5 is active.  `org.hibernate.binder.AttributeBinder` and
+`org.hibernate.binder.TypeBinder` remain incubating ORM 9 SPIs; they are not
+deprecated or treated as legacy adapters.  The active first slice is the
+supported read-only semantic-model SPI/internal split defined by
+`binding-extension-spi-design.adoc`.  The initial categorized and
+declaration/usage/application SPI closure is implemented under
+`org.hibernate.boot.mapping.spi`. Internal categorization classes implement
+those contracts directly and own their additional operations; parallel
+`*Implementor` interfaces are avoided unless multiple unrelated internal
+implementations require a genuine shared role. `AttributeMetadataImplementor`
+is the retained example because it combines the supported attribute contract
+with internal table ownership. The SPI also owns the immutable
+`DeclarationRole` and `MappingRole` identities shared with the mutable boot
+mapping model.  The semantic-to-materialized binder contexts and signature
+changes are also implemented.  Focused tests lock down
+all three contexts, standard unsupported-target diagnostics, once-only
+invocation, special version-property correlation, and archive restoration
+without binder re-execution.  The next slice reconciles the extension
+documentation.  Do not reopen Stages 0-4 without a focused failing reproducer.
+
+Continue Stage 5 in this order:
+
+. close the categorized and declaration/usage/application model SPI;
+. consolidate or finish the remaining active design documents;
+. replace `new-contributor-model-binding-guide.adoc` with the three-guide
+  structure defined by the completion plan;
+. reconcile `design-doc-audit.adoc`, `index.adoc`, and compatibility guidance
+  with the final code and supported extension boundaries;
+. run the PR completion gates.
+
+The baseline branch is `wip/9-boot-design`.  Commit `2310b8dc965` contains the
+latest completed implementation slice.  Before editing, inspect `git status`
+and preserve any handoff-document changes or unrelated user work.
+
+Latest verification on 2026-07-29:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test
+----
+
+completed successfully, and `git diff --check` was clean.
+
+== Latest Categorized-Model Closeout
+
+The final semantic-model slice extends the categorized domain model without
+turning it into a binding or runtime model:
+
+* global identifier-generator declarations are immutable, class-bearing
+  `IdentifierGeneratorRegistration` values with explicit sequence, table,
+  UUID, and custom kinds;
+* strict JPA generator scoping is the only supported model, with unnamed
+  declarations implicitly named from the owning JPA entity name;
+* entity identifier-generator resolution is attached to `EntityHierarchy`;
+  collection ids retain scoped lookup because they have no entity hierarchy;
+* embeddables and collection elements/indexes are represented as categorized
+  values;
+* `AttributeMetadata` describes the persistent Java attribute and its
+  declaration/usage type context, while `ValueMetadata` describes the mapped
+  value shape independently of whether that value is itself an attribute;
+* binding consumes this split and resolves concrete generic embeddable usages
+  at the application site.
+
+The full Core suite exposed and closed compatibility regressions involving
+generic embeddables, composite user types, time-zone component projections,
+generator resolution, repeated global annotations, and validation settings.
+
 The first Stage 2 mapped-superclass cleanup stores role-bearing
 `AppliedAttributeMapping` values directly in each
 `MappedSuperclassContribution`.  Contribution registration no longer tests
@@ -340,28 +409,10 @@ handoff.  Git history retains that implementation history.
 
 The active branch is `wip/9-boot-design`.
 
-Expected current worktree changes:
-
-* `design/9.0/improve-bootstrap-completion-plan.adoc`;
-* `design/9.0/index.adoc`;
-* this handoff;
-* `design/9.0/design-doc-audit.adoc`;
-* `design/9.0/bootstrap-api-compatibility.adoc`;
-* focused design notes whose open questions are assigned a scope;
-* `FunctionRegistryCustomizations`, `FunctionRegistryCoordinator`, and
-  `FunctionContributionOrderingTests`, plus bootstrap/test-infrastructure
-  plumbing for the separate input;
-* `TypeContributionCoordinator`, `TypeContributionOrderingTests`, and the
-  corresponding mapping-resolution, binding, restoration, and test-helper
-  integration;
-* explicit `MappingResolutionOptions` plumbing and the narrowed
-  `BootstrapContext` contract across core, test support, and reverse-engineering
-  tooling;
-* `ProcessedMappings`, `AdditionalMappingContributorContext`, and updated late
-  contributor implementations/tests.
-
-Inspect `git status` before changing or switching branches.  Preserve unrelated
-worktree changes and do not use destructive cleanup.
+The implementation baseline is commit `2310b8dc965`.  This handoff and the
+completion plan may be modified after that commit specifically to prepare the
+next chat.  Inspect `git status` before changing or switching branches,
+preserve unrelated worktree changes, and do not use destructive cleanup.
 
 == Completed Baseline
 
@@ -405,21 +456,15 @@ contract.
 
 == Remaining Stages
 
-The implementation stages are defined by the completion plan.  In dependency
-order, the active areas are:
+Only Stage 5, extension-boundary and contributor-documentation stabilization,
+remains active for this completion plan.
 
-. bootstrap input and customization ownership;
-. semantic boot-mapping handoff for inheritance, generics, embeddables, and
-  identifiers;
-. runtime-sensitive static-metamodel, aggregate, state-management, and
-  generator work;
-. SessionFactory construction-boundary narrowing;
-. extension-boundary and contributor-documentation stabilization.
+The aggregate runtime storage-descriptor/access-strategy redesign remains a
+separately documented follow-up in `aggregate-mapping-design.adoc`; it does not
+reopen the completed aggregate boot-model work.
 
 Do not reopen a resolved broad parity bucket without a focused failing
-reproducer.  In particular, aggregate mapping, state-management binding,
-key materialization, deterministic ordering, and metadata serialization all
-have implemented foundations that should be extended in narrow slices.
+reproducer.
 
 == Stage 0 Closeout
 
@@ -466,10 +511,11 @@ git diff --check
 * Do not restore removed builder surfaces as compatibility shortcuts.
 * Keep `Metadata` as the resolved mapping inspection view unless a concrete
   consumer proves it insufficient.
-* Treat `Configuration`, legacy binders, `AdditionalMappingContributor`,
-  `Integrator`, `BootstrapContext`, `MetadataBuildingContext`, and
-  `SessionFactoryOptions` according to their documented compatibility
-  boundaries rather than as target pipeline products.
+* Treat `AttributeBinder` and `TypeBinder` according to their supported
+  semantic-to-materialized SPI boundary.  Treat `Configuration`,
+  `AdditionalMappingContributor`, `Integrator`, `BootstrapContext`,
+  `MetadataBuildingContext`, and `SessionFactoryOptions` according to their
+  documented compatibility boundaries rather than as target pipeline products.
 * Use `Identifier#matches(...)` semantics where identifier-aware comparison is
   required.
 * Quoted JPA entity names are illegal; quote database identifiers through

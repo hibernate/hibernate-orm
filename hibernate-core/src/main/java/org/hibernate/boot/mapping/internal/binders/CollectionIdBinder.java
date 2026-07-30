@@ -11,7 +11,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.internal.GeneratorBinder;
-import org.hibernate.boot.mapping.internal.categorize.CollectionIdMetadata;
+import org.hibernate.boot.mapping.internal.categorize.CollectionIdMetadataImpl;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
@@ -32,7 +32,7 @@ import jakarta.annotation.Nullable;
 class CollectionIdBinder {
 	static void bindCollectionId(
 			CollectionSource source,
-			@Nullable CollectionIdMetadata collectionIdMetadata,
+			@Nullable CollectionIdMetadataImpl collectionIdMetadata,
 			IdentifierCollection collection,
 			Table table,
 			BindingOptions bindingOptions,
@@ -79,7 +79,7 @@ class CollectionIdBinder {
 
 	private static void bindGenerator(
 			CollectionId collectionId,
-			@Nullable CollectionIdMetadata collectionIdMetadata,
+			@Nullable CollectionIdMetadataImpl collectionIdMetadata,
 			BasicValue id,
 			CollectionSource source,
 			BindingState bindingState) {

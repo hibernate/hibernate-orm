@@ -6,7 +6,7 @@ package org.hibernate.boot.mapping.internal.context;
 
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
@@ -36,7 +36,7 @@ public interface BindingContext {
 	/// Persistence-unit scoped registrations collected during categorization.
 	GlobalRegistrations getGlobalRegistrations();
 
-	CategorizedDomainModel getCategorizedDomainModel();
+	CategorizedDomainModelImpl getCategorizedDomainModel();
 
 	/// Registry used to resolve model class descriptors while binding.
 	default ClassDetailsRegistry getClassDetailsRegistry() {

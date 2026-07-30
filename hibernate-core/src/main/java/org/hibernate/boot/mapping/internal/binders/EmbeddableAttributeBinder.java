@@ -24,8 +24,8 @@ import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -60,10 +60,10 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
 /// @since 9.0
 /// @author Steve Ebersole
 class EmbeddableAttributeBinder {
-	private final IdentifiableTypeMetadata ownerType;
+	private final AbstractIdentifiableTypeMetadata ownerType;
 	private final AttributeBindingView attributeBinding;
 	private final PersistentClass ownerBinding;
-	private final AttributeMetadata attributeMetadata;
+	private final AttributeMetadataImplementor attributeMetadata;
 	private final Table primaryTable;
 	private final ModelBinders modelBinders;
 	private final BindingState bindingState;
@@ -73,10 +73,10 @@ class EmbeddableAttributeBinder {
 	private ComponentSource componentSource;
 
 	EmbeddableAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			Table primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
@@ -97,10 +97,10 @@ class EmbeddableAttributeBinder {
 	}
 
 	EmbeddableAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			Table primaryTable,
 			ModelBinders modelBinders,
 			BindingState bindingState,
@@ -303,7 +303,7 @@ class EmbeddableAttributeBinder {
 		final BasicValue discriminator = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), componentTable );
 		if ( component.getMappingRole() != null ) {
 			discriminator.setMappingRole(
-					component.getMappingRole().append( org.hibernate.mapping.MappingRole.PartKind.DISCRIMINATOR )
+					component.getMappingRole().append( org.hibernate.boot.mapping.spi.MappingRole.PartKind.DISCRIMINATOR )
 			);
 		}
 		discriminator.setTable( componentTable );

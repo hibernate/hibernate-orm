@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -21,9 +21,9 @@ import org.hibernate.models.spi.ClassDetails;
 /// @since 9.0
 /// @author Steve Ebersole
 public record InverseToOneAssociationBinding(
-		IdentifiableTypeMetadata ownerType,
+		AbstractIdentifiableTypeMetadata ownerType,
 		PersistentClass ownerBinding,
-		AttributeMetadata attributeMetadata,
+		AttributeMetadataImplementor attributeMetadata,
 		Property property,
 		OneToOne value,
 		ClassDetails targetClassDetails,

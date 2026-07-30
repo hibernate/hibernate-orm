@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;

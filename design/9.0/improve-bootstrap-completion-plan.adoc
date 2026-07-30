@@ -57,26 +57,25 @@ retained there.  Further serialization work is not a prerequisite for the
 other stages.
 
 | Bootstrap customizations
-| Active / blocking
-| Finish ownership and ordering for type contributors, function contributors,
-naming strategies, mapping customizations, and factory customizations.  Remove
-the remaining broad `BootstrapContext` access that merely transports these
+| Completed
+| Type and function contribution ordering, naming, mapping customizations, and
+factory customization ownership are explicit pipeline responsibilities.
+`BootstrapContext` no longer transports the resolved mapping and function
 products.
 
 | Additional mapping contribution
-| Active / focused
-| Preserve the current late contribution behavior, but replace the
-`InFlightMetadataCollector` read-side parameter with a narrow processed-model
-view if compatibility analysis permits.  Keep the proposed early
-`BootModelContributor` as a triggered follow-up rather than implementing it
-without a concrete use case.
+| Completed / Triggered follow-up
+| The retained late contributor uses `ProcessedMappings` and
+`AdditionalMappingContributorContext`.  A pipeline-native early contributor
+remains a triggered follow-up requiring a concrete pre-binding use case.
 
 | Binding extensions
-| Deferred stabilization
-| Keep the internal facet-based proofs for built-in binders.  Do not freeze a
-public replacement for `TypeBinder` and `AttributeBinder` until the semantic
-binding model and materialization boundary have settled.  Explicitly decide
-whether the legacy SPIs remain supported compatibility hooks for ORM 9.
+| Active stabilization
+| Retain `TypeBinder` and `AttributeBinder` as incubating ORM 9 SPIs.  Stabilize
+them at the semantic-to-materialized boundary: supported read-only categorized
+and applied-model contracts are the source side, while `org.hibernate.mapping`
+objects remain the broad mutable customization targets.  The internal facet
+proofs remain implementation architecture, not a public replacement.
 
 | JPA static metamodel
 | Completed / Follow-up cleanup
@@ -87,11 +86,11 @@ the owner of injected values; legacy entry-point cleanup is independent
 follow-up work.
 
 | Aggregate mappings
-| Mostly resolved / verify runtime boundary
-| Treat mapping-side intent, member-container, materialization, and aggregate
-array handoff as implemented.  Audit the remaining runtime consumers and add
-focused observable-behavior tests.  Do not reopen broad aggregate parity
-buckets without a reproducer.
+| Completed boot design / Runtime follow-up
+| Mapping-side intent, member-container, materialization, aggregate arrays, and
+the audited runtime handoff are complete.  The remaining runtime
+storage-descriptor and access-strategy redesign is independently tracked by
+`aggregate-mapping-design.adoc`.
 
 | Identifier and value generators
 | Completed
@@ -101,36 +100,34 @@ preparation versus deferred runtime creation while preserving exportables,
 gated CDI access, and construction-scoped instance identity.
 
 | State management
-| Mostly resolved / stabilization
-| Keep the existing binding phase and runtime behavior.  Add a new
-contribution/resolution product only if a concrete whole-model requirement
-cannot be expressed by the current bridge.  Otherwise convert the design note
-to a final-state reference.
+| Completed / Triggered follow-up
+| Runtime behavior is verified through the existing feature-specific mapping
+products.  Add another whole-model product only if a concrete requirement
+cannot be expressed through those products.
 
 | Components and embeddables
-| Active / blocking
-| Finish the distinction between embeddable declaration, contextual usage, and
-concrete component application.  Cover mixed `@Embeddable` / `@Embedded`,
-generic embeddables, polymorphic embeddables, and runtime handoff.
+| Completed
+| Embeddable declaration metadata, contextual usage, and concrete component
+application are distinct.  Mixed, nested, generic, polymorphic, collection,
+and runtime handoff cases are covered.
 
 | Inheritance and generics
-| Active / blocking
-| Treat declaration/usage/applied mapping and intrinsic mapping roles as the
-implemented foundation.  Finish mapped-superclass and generic runtime/JPA
-handoffs, then consolidate the overlapping focused design notes.
+| Completed
+| Declaration, usage, applied mapping, mapped-superclass traversal, concrete
+generic specialization, and runtime/JPA handoffs use stable semantic roles.
+The superseded focused design notes were consolidated or deleted.
 
 | SessionFactory bootstrap and construction
-| Active / blocking
-| Preserve `session-factory-bootstrap-design.adoc` as the top-level
-architecture and `session-factory-construction-design.adoc` as the construction
-detail.  Continue preparing no-factory-needed runtime components, narrow model
-creation context, and remove broad contexts from the final construction
-boundary.
+| Completed
+| `session-factory-bootstrap-design.adoc` is the top-level architecture and
+`session-factory-construction-design.adoc` is the construction detail.  Runtime
+components are prepared explicitly and broad bootstrap/mapping contexts no
+longer cross the final construction boundary.
 
 | Mapping-key creation
-| Mostly resolved / stabilization
-| Preserve the explicit resolved key products and materializers.  Audit only
-the remaining low-level compatibility helpers and stale status text.
+| Resolved
+| Explicit resolved key products and materializers are the final design.  The
+superseded design note was deleted.
 
 | Identifier correspondence
 | Resolved
@@ -145,10 +142,10 @@ trigger an executable identifier-representation conversion plan.
 finished reference material, and retain focused ordering guardrails.
 
 | `MetadataBuildingContext` audit
-| Active / cross-cutting stabilization
-| Use it as a capability checklist while completing the stages below.  Avoid
-making total reference count a completion metric; stored broad context and
-phase-ownership violations are the relevant blockers.
+| Completed / Follow-up narrowing
+| Mapping values no longer retain the broad context and the final
+SessionFactory construction boundary does not expose it.  Further
+capability-level SPI narrowing is follow-up work, not a completion metric.
 |===
 
 == Staged Implementation Plan
@@ -256,9 +253,12 @@ and cache definitions through immutable `MappingResolutionContributions`.
 Shared cache mode remains a mapping-resolution option.  Entry-point adapters
 only normalize these inputs; binding and factory construction do not discover
 or reapply them.
-Extracting a dedicated type input product remains open.
+Extracting a dedicated type input product is a nonblocking follow-up outside
+Stage 1.
 
 === Stage 2: Finalize The Semantic Boot-Mapping Handoff
+
+Status:: Complete.
 
 Goal::
 Make declaration, contextual usage, and concrete application the authoritative
@@ -288,6 +288,21 @@ Work::
   phase-owned inputs explicitly.  Empty context-taking compatibility
   constructors are not retained state.  Naming-source and
   `UserTypeCreationContext` SPI narrowing remain separate follow-ups.
++
+  Completed: categorized attributes and values have distinct contracts.
+  `AttributeMetadata` owns the persistent member, declaration type, and
+  contextual type resolution; `ValueMetadata` owns the semantic value shape
+  used by singular attributes, collection elements, and collection indexes.
+  Embeddable usages and collection values use that split through binding while
+  applied generic usages retain their concrete resolved types.
++
+  Completed: persistence-unit identifier-generator declarations are normalized
+  as immutable, class-bearing `IdentifierGeneratorRegistration` values with
+  explicit sequence, table, UUID, and custom kinds.  Strict JPA scoping is the
+  only supported naming model, including entity-name inference for unnamed
+  declarations.  Entity identifier registrations resolve onto
+  `EntityHierarchy`; collection-id resolution retains the required scoped
+  lookup because it has no entity hierarchy of its own.
 
 Exit gate::
 Mapped-superclass, embeddable, generic, identifier, and copy/materialization
@@ -296,6 +311,8 @@ Legacy flattened `org.hibernate.mapping` views are clearly labeled projections,
 not the semantic source of truth.
 
 === Stage 3: Complete Runtime-Sensitive Mapping Products
+
+Status:: Complete.
 
 Goal::
 Close the mapping areas whose correctness can only be demonstrated at runtime.
@@ -540,11 +557,13 @@ the final code rather than the migration.
 
 Work::
 
-. Decide the ORM 9 status of `AttributeBinder` and `TypeBinder`: retained
-  compatibility SPI, deprecated SPI, or replacement candidate.
-. Keep the internal attribute-contribution facets as implementation proofs.
-  Publish a replacement SPI only if the binding/materialization contracts are
-  stable and a concrete external use case validates the facade.
+. Retain `AttributeBinder` and `TypeBinder` as incubating ORM 9 SPIs and
+  stabilize their semantic-to-materialized invocation boundary.
+. Define a supported, read-only SPI/internal split for the categorized and
+  declaration/usage/application contracts exposed through binder contexts.
+. Remove the abandoned internal capability/facet facade while retaining useful
+  contribution records and materializers as ordinary internal implementation
+  details.
 . Consolidate mapped-superclass, generic-inheritance, embeddable, and resolved
   contribution notes into the smallest useful canonical set.
 . Move resolved audits and final-state designs under `finished/`; delete stale
@@ -555,6 +574,28 @@ Work::
   ** SessionFactory bootstrap and construction.
 . Make the overall guide a short routing document and keep detailed package,
   phase, and extension instructions in the two focused guides.
+
+Current progress::
+The supported read-only semantic-model closure is implemented in
+`org.hibernate.boot.mapping.spi`, with internal categorization and binding
+contracts adapting through supported superinterfaces.  Internal operational
+extensions use the `Implementor` suffix, concrete implementations use `Impl`,
+and data-only supported contracts do not acquire empty internal aliases; this
+avoids simple-name duplication between the SPI and internal categorization
+packages.  The SPI owns the immutable `DeclarationRole` and `MappingRole`
+identities shared with the mutable boot mapping model.  `AttributeBinder` now
+receives `AttributeBindingContext`; `TypeBinder` receives typed
+`EntityBindingContext` and `EmbeddableBindingContext` callbacks with standard
+default rejection for unsupported target kinds.  The contexts correlate the
+categorized/application model with mutable `org.hibernate.mapping` targets,
+and built-in plus representative user binders have migrated to the stabilized
+shape.
++
+Focused coverage exercises entity, embeddable, ordinary attribute, embedded
+attribute, and version-attribute contexts; standard unsupported-target
+diagnostics; once-only invocation; and metadata archive restoration.  Restore
+does not re-run binders, while the binder mutations serialized into the
+materialized boot model remain effective.
 
 Exit gate::
 A new contributor can start at one bootstrap overview, follow either focused
@@ -706,8 +747,9 @@ remaining in the PR:
 
 * early source-level mapping contribution, triggered by a contributor that
   needs pre-binding discovery or recategorization;
-* a public structured binding-extension SPI, triggered by a validated external
-  use case after the internal facet model stabilizes;
+* a distinct early source/categorization extension, triggered by a validated
+  use case which must change persistent discovery or categorization rather than
+  customize a materialized mapping;
 * further `MetadataBuildingContext` removal from compatibility constructors and
   naming SPI, where it does not represent retained broad state;
 * first-class identifier correspondence in runtime mappings beyond the cases

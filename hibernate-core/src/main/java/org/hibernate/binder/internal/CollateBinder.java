@@ -7,12 +7,10 @@ package org.hibernate.binder.internal;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Collate;
 import org.hibernate.binder.AttributeBinder;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.binder.AttributeBindingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 
 /**
@@ -22,7 +20,8 @@ import org.hibernate.mapping.Value;
  */
 public class CollateBinder implements AttributeBinder<Collate> {
 	@Override
-	public void bind(Collate collate, MetadataBuildingContext context, PersistentClass entity, Property property) {
+	public void bind(Collate collate, AttributeBindingContext context) {
+		final var property = context.getProperty();
 		final Value value = property.getValue();
 		if ( value instanceof OneToMany ) {
 			throw new AnnotationException( "One to many association '" + property.getName()

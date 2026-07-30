@@ -4,16 +4,18 @@
  */
 package org.hibernate.boot.mapping.internal.categorize;
 
+import org.hibernate.boot.mapping.spi.SingularAttributeMetadata;
 import org.hibernate.models.spi.MemberDetails;
 
-/// Standard [EmbeddedAttributeMetadata] implementation.
+/// Standard [EmbeddedAttributeMetadataImpl] implementation.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public record EmbeddedAttributeMetadataImpl(
 		String name,
 		MemberDetails member,
-		EmbeddedValueMetadata value) implements EmbeddedAttributeMetadata {
+		EmbeddedValueMetadataImpl value)
+		implements AttributeMetadataImplementor, SingularAttributeMetadata {
 	@Override
 	public String getName() {
 		return name;
@@ -25,7 +27,11 @@ public record EmbeddedAttributeMetadataImpl(
 	}
 
 	@Override
-	public EmbeddedValueMetadata getValue() {
+	public EmbeddedValueMetadataImpl getValue() {
 		return value;
+	}
+
+	public EmbeddableUsageMetadataImpl getEmbeddableUsage() {
+		return value.getEmbeddableUsage();
 	}
 }

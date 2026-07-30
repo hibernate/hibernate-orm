@@ -64,7 +64,7 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PreparedGenerator;

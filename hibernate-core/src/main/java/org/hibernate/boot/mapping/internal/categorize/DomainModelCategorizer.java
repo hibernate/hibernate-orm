@@ -34,7 +34,7 @@ import jakarta.persistence.Transient;
 import static org.hibernate.boot.mapping.internal.categorize.EntityHierarchyBuilder.createEntityHierarchies;
 
 /// Processes {@linkplain PreparedMappingSources resolved mapping sources} and produces a
-/// {@linkplain CategorizedDomainModel categorized domain model}.
+/// {@linkplain CategorizedDomainModelImpl categorized domain model}.
 ///
 /// XML mappings are pre-processed first so they can contribute managed class names
 /// and metadata-complete annotations.  The resulting visible persistent types are
@@ -43,7 +43,7 @@ import static org.hibernate.boot.mapping.internal.categorize.EntityHierarchyBuil
 ///
 /// This is the public entry point for the categorization phase.  It owns the
 /// transition from collected sources to categorized contracts; later phases should
-/// consume the resulting {@link CategorizedDomainModel} rather than repeat source
+/// consume the resulting {@link CategorizedDomainModelImpl} rather than repeat source
 /// collection.
 ///
 /// @since 9.0
@@ -52,7 +52,7 @@ public class DomainModelCategorizer {
 	private DomainModelCategorizer() {
 	}
 
-	public static CategorizedDomainModel categorize(
+	public static CategorizedDomainModelImpl categorize(
 			PreparedMappingSources resolvedMappingSources,
 			MetadataBuildingContext metadataBuildingContext) {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,7 +131,7 @@ public class DomainModelCategorizer {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		//	- create entity-hierarchies
-		//	- create the CategorizedDomainModel
+		//	- create the CategorizedDomainModelImpl
 		//
 		// INPUTS:
 		//		- rootEntities
@@ -139,7 +139,7 @@ public class DomainModelCategorizer {
 		//  	- embeddables
 		//
 		// OUTPUTS:
-		//		- CategorizedDomainModel
+		//		- CategorizedDomainModelImpl
 
 		final ManagedTypeInheritanceState inheritanceState = new ManagedTypeInheritanceState(
 				modelCategorizationCollector.getSourcePersistentTypes(),
@@ -154,7 +154,7 @@ public class DomainModelCategorizer {
 				modelCategorizationCollector,
 				resolvedMappingSources.includeUnlistedStructuralTypes()
 		);
-		final Map<String, EmbeddableTypeMetadata> embeddableMetadata =
+		final Map<String, EmbeddableTypeMetadataImpl> embeddableMetadata =
 				createEmbeddableMetadata( modelCategorizationCollector.getEmbeddables() );
 		// Collect the entity hierarchies based on the scoped managed type inheritance state
 		final CategorizationContextImpl mappingBuildingContext = new CategorizationContextImpl(
@@ -173,7 +173,7 @@ public class DomainModelCategorizer {
 				.getIdentifierGeneratorRegistrations()
 				.values()
 				.forEach( modelCategorizationCollector.getGlobalRegistrations()::collectIdentifierGenerator );
-		final Set<EntityHierarchy> entityHierarchies = createEntityHierarchies(
+		final Set<EntityHierarchyImpl> entityHierarchies = createEntityHierarchies(
 				inheritanceState,
 				mappingBuildingContext
 		);
@@ -181,9 +181,9 @@ public class DomainModelCategorizer {
 		return modelCategorizationCollector.createResult( entityHierarchies, embeddableMetadata );
 	}
 
-	private static Map<String, EmbeddableTypeMetadata> createEmbeddableMetadata(
+	private static Map<String, EmbeddableTypeMetadataImpl> createEmbeddableMetadata(
 			Map<String, ClassDetails> embeddableClasses) {
-		final Map<String, EmbeddableTypeMetadata> result = new LinkedHashMap<>( embeddableClasses.size() );
+		final Map<String, EmbeddableTypeMetadataImpl> result = new LinkedHashMap<>( embeddableClasses.size() );
 		embeddableClasses.forEach(
 				(name, classDetails) -> result.put( name, new EmbeddableTypeMetadataImpl( classDetails ) )
 		);

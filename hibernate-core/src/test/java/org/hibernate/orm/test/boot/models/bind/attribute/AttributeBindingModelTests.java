@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Collate;
@@ -20,6 +21,10 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Formula;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.binder.AttributeBinder;
+import org.hibernate.binder.AttributeBindingContext;
+import org.hibernate.boot.mapping.spi.AttributeApplication;
+import org.hibernate.boot.mapping.spi.AttributeDeclaration;
+import org.hibernate.boot.mapping.spi.AttributeUsage;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
@@ -27,10 +32,9 @@ import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
 import org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadata;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.spi.SingularAttributeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.AppliedMappingPart;
 import org.hibernate.mapping.Column;
@@ -43,8 +47,8 @@ import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.mapping.DeclarationRole;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import org.junit.jupiter.api.Test;
 
@@ -70,10 +74,11 @@ public class AttributeBindingModelTests {
 	@ServiceRegistry
 	void testOrdinaryAttributeBindings(ServiceRegistryScope scope) {
 		CompatibilityBoundBinder.callCount.set( 0 );
+		CompatibilityBoundBinder.context.set( null );
 
 		checkDomainModel(
 				(context) -> {
-					final EntityTypeMetadata entityType = entityType( context, AttributeBoundEntity.class );
+					final EntityTypeMetadataImpl entityType = entityType( context, AttributeBoundEntity.class );
 					final ManagedTypeBinding managedTypeBinding = context.getBindingState()
 							.getBootBindingModel()
 							.getManagedTypeBinding( entityType.getClassDetails() );
@@ -169,12 +174,15 @@ public class AttributeBindingModelTests {
 					final var appliedName = context.getBindingState().getBootBindingModel()
 							.getAppliedAttributeMapping( nameRole );
 					assertThat( appliedName ).isNotNull();
+					final AttributeApplication application = appliedName;
+					final AttributeUsage usage = application.usage();
+					final AttributeDeclaration declaration = usage.declaration();
 					assertThat( appliedName.usage() ).isSameAs( name.usageBinding() );
-					assertThat( appliedName.declaration() ).isSameAs( name.declaration() );
-					assertThat( appliedName.declarationRole() ).isEqualTo( name.declaration().declarationRole() );
-					assertThat( appliedName.containerRole() )
+					assertThat( declaration ).isSameAs( name.declaration() );
+					assertThat( application.declarationRole() ).isEqualTo( name.declaration().declarationRole() );
+					assertThat( application.containerRole() )
 							.isEqualTo( MappingRole.entity( AttributeBoundEntity.class.getName() ) );
-					assertThat( appliedName.resolvedType() ).isSameAs( name.resolvedType() );
+					assertThat( application.resolvedType() ).isSameAs( name.resolvedType() );
 					assertThatThrownBy( () -> context.getBindingState().getBootBindingModel()
 							.addAppliedAttributeMapping( new AppliedAttributeMapping( name.usageBinding(), nameRole ) ) )
 							.isInstanceOf( IllegalStateException.class )
@@ -220,6 +228,13 @@ public class AttributeBindingModelTests {
 					final Property customBound = entityBinding.getProperty( "customBound" );
 					assertThat( customBound.isUpdatable() ).isFalse();
 					assertThat( CompatibilityBoundBinder.callCount ).hasValue( 1 );
+					final AttributeBindingContext binderContext = CompatibilityBoundBinder.context.get();
+					assertThat( binderContext.getDomainModel() ).isNotNull();
+					assertThat( binderContext.getAttribute().role() ).isEqualTo( customBound.getMappingRole() );
+					assertThat( binderContext.getAttribute().usage().member().resolveAttributeName() )
+							.isEqualTo( "customBound" );
+					assertThat( binderContext.getPersistentClass() ).isSameAs( entityBinding );
+					assertThat( binderContext.getProperty() ).isSameAs( customBound );
 
 					assertThat( entityBinding.getProperty( "embeddedFacts" ).getValue() )
 							.isInstanceOf( Component.class );
@@ -244,10 +259,10 @@ public class AttributeBindingModelTests {
 		throw new AssertionError( "Could not locate attribute binding " + name );
 	}
 
-	private static EntityTypeMetadata entityType(
+	private static EntityTypeMetadataImpl entityType(
 			BindingTestingHelper.DomainModelCheckContext context,
 			Class<?> entityClass) {
-		for ( EntityHierarchy hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
+		for ( EntityHierarchyImpl hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
 			if ( hierarchy.getRoot().getClassDetails().getClassName().equals( entityClass.getName() ) ) {
 				return hierarchy.getRoot();
 			}
@@ -345,15 +360,13 @@ public class AttributeBindingModelTests {
 
 	public static class CompatibilityBoundBinder implements AttributeBinder<CompatibilityBound> {
 		private static final AtomicInteger callCount = new AtomicInteger();
+		private static final AtomicReference<AttributeBindingContext> context = new AtomicReference<>();
 
 		@Override
-		public void bind(
-				CompatibilityBound annotation,
-				MetadataBuildingContext buildingContext,
-				PersistentClass persistentClass,
-				Property property) {
+		public void bind(CompatibilityBound annotation, AttributeBindingContext bindingContext) {
 			callCount.incrementAndGet();
-			property.setUpdatable( false );
+			context.set( bindingContext );
+			bindingContext.getProperty().setUpdatable( false );
 		}
 	}
 }

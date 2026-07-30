@@ -9,7 +9,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
 import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.models.spi.ModelsContext;
@@ -31,7 +31,7 @@ import jakarta.persistence.SharedCacheMode;
 /// @since 9.0
 /// @author Steve Ebersole
 public class BindingContextImpl implements BindingContext {
-	private final CategorizedDomainModel categorizedDomainModel;
+	private final CategorizedDomainModelImpl categorizedDomainModel;
 	private final GlobalRegistrations globalRegistrations;
 
 	private final ImplicitNamingStrategy implicitNamingStrategy;
@@ -47,7 +47,7 @@ public class BindingContextImpl implements BindingContext {
 	private final TypeConfiguration typeConfiguration;
 
 	public BindingContextImpl(
-			CategorizedDomainModel categorizedDomainModel,
+			CategorizedDomainModelImpl categorizedDomainModel,
 			MetadataBuildingContext metadataBuildingContext) {
 		this(
 				categorizedDomainModel,
@@ -67,7 +67,7 @@ public class BindingContextImpl implements BindingContext {
 	}
 
 	public BindingContextImpl(
-			CategorizedDomainModel categorizedDomainModel,
+			CategorizedDomainModelImpl categorizedDomainModel,
 			GlobalRegistrations globalRegistrations,
 			ImplicitNamingStrategy implicitNamingStrategy,
 			PhysicalNamingStrategy physicalNamingStrategy,
@@ -141,7 +141,7 @@ public class BindingContextImpl implements BindingContext {
 	}
 
 	@Override
-	public CategorizedDomainModel getCategorizedDomainModel() {
+	public CategorizedDomainModelImpl getCategorizedDomainModel() {
 		return categorizedDomainModel;
 	}
 

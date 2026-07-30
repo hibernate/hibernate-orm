@@ -9,7 +9,7 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizationCollector;
 import org.hibernate.boot.mapping.internal.categorize.FetchProfileRegistration;
@@ -268,7 +268,7 @@ public class XmlProcessingSmokeTests {
 						metadataBuildingContext.getServiceRegistry()
 				)
 		);
-		final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
+		final CategorizedDomainModelImpl categorizedDomainModel = DomainModelCategorizer.categorize(
 				resolvedMappingSources,
 				metadataBuildingContext
 		);

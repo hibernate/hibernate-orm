@@ -19,6 +19,7 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterial
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer.MaterializedBasicValue;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
+import org.hibernate.boot.mapping.internal.materialize.CollationMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.ToOneMaterializationHelper;
@@ -27,13 +28,12 @@ import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
 import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
 import org.hibernate.boot.mapping.internal.model.AppliedEmbeddableMapping;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.CollationContribution;
 import org.hibernate.boot.mapping.internal.model.ComponentMemberBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
 import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
-import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
-import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
-import org.hibernate.boot.mapping.internal.extension.StandardAttributeBindingTarget;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
@@ -42,12 +42,13 @@ import org.hibernate.boot.mapping.internal.sources.ToOneSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.AttributeNature;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -64,7 +65,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.FetchType;
@@ -110,7 +111,7 @@ public class ComponentBinder {
 	}
 
 	public List<Column> bindBasicProperties(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
@@ -134,7 +135,7 @@ public class ComponentBinder {
 	}
 
 	public List<Column> bindBasicProperties(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
@@ -162,7 +163,7 @@ public class ComponentBinder {
 	}
 
 	public List<Column> bindBasicProperties(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
@@ -197,7 +198,7 @@ public class ComponentBinder {
 	}
 
 	private List<Column> bindProperties(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ComponentSource source,
 			Component component,
@@ -456,7 +457,7 @@ public class ComponentBinder {
 				columns.add( column );
 			}
 		}
-		state.addComponentCustomMapping( CustomMappingBinder.typeBinding( source.componentType(), component, state, context ) );
+		state.addComponentCustomMapping( CustomMappingBinder.typeBinding( contribution, component, state, context ) );
 		for ( AppliedAttributeMapping appliedAttribute : appliedAttributes ) {
 			state.getBootBindingModel().addAppliedAttributeMapping( appliedAttribute );
 		}
@@ -535,9 +536,13 @@ public class ComponentBinder {
 			}
 			new org.hibernate.binder.internal.TenantIdBinder().bind(
 					tenantId,
-					state.getMetadataBuildingContext(),
-					ownerBinding,
-					property
+					CustomMappingBinder.attributeBindingContext(
+							member,
+							ownerBinding,
+							property,
+							state,
+							context
+					)
 			);
 		}
 	}
@@ -640,32 +645,31 @@ public class ComponentBinder {
 	}
 
 	private void applyCollation(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			ComponentMemberBinding componentMember,
 			Property property) {
 		final Collate collate = componentMember.member().getDirectAnnotationUsage( Collate.class );
 		if ( collate == null ) {
 			return;
 		}
-		final var contributionContext = new BindingContributionContext(
-				options,
-				state,
-				context
+		final var contribution = new CollationContribution(
+				ownerType,
+				componentMember.usageContainer() instanceof ManagedTypeBinding
+						? componentMember.attributePath()
+						: componentMember.sourceRole(),
+				componentMember.member(),
+				collate.value()
 		);
-		new CollationAttributeContributor().contribute(
-				collate,
-				StandardAttributeBindingTarget.forProperty(
-						ownerType,
-						componentMember,
-						property,
-						contributionContext
-				),
-				contributionContext
+		state.getBootBindingModel().addCollationContribution( contribution );
+		new CollationMappingMaterializer().materializeCollation(
+				new CollationContributionView( contribution ),
+				property,
+				state
 		);
 	}
 
 	private ToOne bindAssociationIdentifierMember(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ClassDetails componentType,
 			ComponentMemberBinding componentMember,
@@ -747,7 +751,7 @@ public class ComponentBinder {
 	}
 
 	private OneToOne bindInverseOneToOneAssociationIdentifierMember(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ClassDetails componentType,
 			String attributeName,
@@ -790,7 +794,7 @@ public class ComponentBinder {
 	}
 
 	private Table bindAssociationIdentifierTable(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			PersistentClass ownerBinding,
 			Table primaryTable,
 			String attributeName,
@@ -836,14 +840,14 @@ public class ComponentBinder {
 	}
 
 	private Collection bindPluralMember(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			ComponentMemberBinding componentMember,
 			Property property,
 			boolean registerCollectionBindings) {
 		final MemberDetails member = componentMember.member();
 		final CollectionValueIntent collectionValueIntent = componentMember.collectionValueIntent();
-		final AttributeMetadata attributeMetadata = new ComponentAttributeMetadata(
+		final AttributeMetadataImplementor attributeMetadata = new ComponentAttributeMetadata(
 				member.resolveAttributeName(),
 				componentMember.nature(),
 				member,
@@ -1032,8 +1036,8 @@ public class ComponentBinder {
 		);
 	}
 
-	private static EntityTypeMetadata resolveOwnerEntityType(IdentifiableTypeMetadata ownerType) {
-		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+	private static EntityTypeMetadataImpl resolveOwnerEntityType(AbstractIdentifiableTypeMetadata ownerType) {
+		if ( ownerType instanceof EntityTypeMetadataImpl entityType ) {
 			return entityType;
 		}
 		return ownerType.getHierarchy().getRoot();
@@ -1047,7 +1051,7 @@ public class ComponentBinder {
 			String name,
 			AttributeNature nature,
 			MemberDetails member,
-			TypeDetails attributeType) implements AttributeMetadata {
+			TypeDetails attributeType) implements AttributeMetadataImplementor {
 		@Override
 		public String getName() {
 			return name;

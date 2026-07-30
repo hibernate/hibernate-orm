@@ -71,7 +71,7 @@ public class XmlPhaseBoundaryTests {
 				} );
 	}
 
-	private static org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel categorize(
+	private static org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl categorize(
 			String mappingResource,
 			ServiceRegistryScope scope) {
 		final var metadataBuildingContext = new MetadataBuildingContextTestingImpl( scope.getRegistry() );

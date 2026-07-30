@@ -42,7 +42,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadataImpl;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.FetchStyle;
@@ -69,7 +69,7 @@ import org.hibernate.type.descriptor.java.LongJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
@@ -455,7 +455,7 @@ public class ElementCollectionBindingTests {
 							IdBagGeneratorImplementationOwner.class,
 							"labels"
 					);
-					final var categorizedAttribute = (PluralAttributeMetadata) context.getCategorizedDomainModel()
+					final var categorizedAttribute = (PluralAttributeMetadataImpl) context.getCategorizedDomainModel()
 							.getEntityHierarchies()
 							.iterator()
 							.next()
@@ -1129,7 +1129,7 @@ public class ElementCollectionBindingTests {
 							EmbeddableElementOwner.class,
 							"addresses"
 					);
-					final var categorizedAttribute = (PluralAttributeMetadata) context.getCategorizedDomainModel()
+					final var categorizedAttribute = (PluralAttributeMetadataImpl) context.getCategorizedDomainModel()
 							.getEntityHierarchies()
 							.iterator()
 							.next()

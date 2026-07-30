@@ -11,8 +11,8 @@ import org.hibernate.mapping.AppliedMappingPart;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.mapping.DeclarationRole;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import jakarta.persistence.Access;
 

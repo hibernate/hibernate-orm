@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.model;
 
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 
@@ -18,7 +18,7 @@ import org.hibernate.models.spi.TypeDetails;
 /// @since 9.0
 /// @author Steve Ebersole
 public record VersionBinding(
-		EntityTypeMetadata owner,
+		EntityTypeMetadataImpl owner,
 		String attributeName,
 		MemberDetails member,
 		TypeDetails resolvedType,

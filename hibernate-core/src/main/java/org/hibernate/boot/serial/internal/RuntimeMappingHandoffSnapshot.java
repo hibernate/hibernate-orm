@@ -15,14 +15,14 @@ import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
 import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.metamodel.internal.AttributeUsageHandoff;
 import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.annotation.Nullable;
 
-import static org.hibernate.mapping.MappingRole.PartKind.IDENTIFIER;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.IDENTIFIER;
 
 /// Serializable, immutable runtime handoff frozen from role-indexed applied mappings.
 ///

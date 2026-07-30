@@ -7,7 +7,7 @@ package org.hibernate.boot.mapping.internal.binders;
 import java.util.List;
 
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -27,7 +27,7 @@ import jakarta.persistence.JoinColumn;
 /// @since 9.0
 /// @author Steve Ebersole
 public record DerivedIdentifierBinding(
-		IdentifiableTypeMetadata ownerType,
+		AbstractIdentifiableTypeMetadata ownerType,
 		PersistentClass ownerBinding,
 		Property property,
 		ToOne value,

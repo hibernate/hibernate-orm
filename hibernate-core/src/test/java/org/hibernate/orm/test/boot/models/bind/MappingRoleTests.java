@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.boot.models.bind;
 
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.mapping.DeclarationRole;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import org.junit.jupiter.api.Test;
 

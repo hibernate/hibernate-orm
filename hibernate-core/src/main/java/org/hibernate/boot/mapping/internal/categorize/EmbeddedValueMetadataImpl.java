@@ -6,21 +6,23 @@ package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.List;
 
+import org.hibernate.boot.mapping.spi.EmbeddedValueMetadata;
+import org.hibernate.boot.mapping.spi.ValueNature;
 import org.hibernate.models.spi.TypeDetails;
 
-/// Standard [EmbeddedValueMetadata] implementation.
+/// Standard [EmbeddedValueMetadataImpl] implementation.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public record EmbeddedValueMetadataImpl(
 		TypeDetails type,
-		EmbeddableUsageMetadata embeddableUsage,
-		List<EmbeddableUsageMetadata> subtypeUsages) implements EmbeddedValueMetadata {
+		EmbeddableUsageMetadataImpl embeddableUsage,
+		List<EmbeddableUsageMetadataImpl> subtypeUsages) implements EmbeddedValueMetadata {
 	public EmbeddedValueMetadataImpl {
 		subtypeUsages = List.copyOf( subtypeUsages );
 	}
 
-	public EmbeddedValueMetadataImpl(TypeDetails type, EmbeddableUsageMetadata embeddableUsage) {
+	public EmbeddedValueMetadataImpl(TypeDetails type, EmbeddableUsageMetadataImpl embeddableUsage) {
 		this( type, embeddableUsage, List.of() );
 	}
 
@@ -35,12 +37,12 @@ public record EmbeddedValueMetadataImpl(
 	}
 
 	@Override
-	public EmbeddableUsageMetadata getEmbeddableUsage() {
+	public EmbeddableUsageMetadataImpl getEmbeddableUsage() {
 		return embeddableUsage;
 	}
 
 	@Override
-	public List<EmbeddableUsageMetadata> getSubtypeUsages() {
+	public List<EmbeddableUsageMetadataImpl> getSubtypeUsages() {
 		return subtypeUsages;
 	}
 }

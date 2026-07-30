@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.categorize;
 
+import org.hibernate.boot.mapping.spi.ValueMetadata;
+import org.hibernate.boot.mapping.spi.ValueNature;
 import org.hibernate.models.spi.TypeDetails;
 
 /// Standard metadata for a value without a categorized embeddable usage.

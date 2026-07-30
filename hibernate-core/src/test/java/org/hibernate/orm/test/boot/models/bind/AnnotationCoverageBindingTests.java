@@ -105,9 +105,11 @@ import org.hibernate.annotations.View;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NativeGenerator;
 import org.hibernate.binder.AttributeBinder;
+import org.hibernate.binder.AttributeBindingContext;
+import org.hibernate.binder.EmbeddableBindingContext;
+import org.hibernate.binder.EntityBindingContext;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -2476,12 +2478,14 @@ public class AnnotationCoverageBindingTests {
 	public @interface CustomAttributeBinding {
 		class Binder implements AttributeBinder<CustomAttributeBinding> {
 			@Override
-			public void bind(
-					CustomAttributeBinding annotation,
-					MetadataBuildingContext buildingContext,
-					PersistentClass persistentClass,
-					Property property) {
-				property.setUpdatable( false );
+			public void bind(CustomAttributeBinding annotation, AttributeBindingContext context) {
+				Objects.requireNonNull( context.getDomainModel() );
+				Objects.requireNonNull( context.getAttribute() );
+				Objects.requireNonNull( context.getAttribute().usage() );
+				Objects.requireNonNull( context.getAttribute().role() );
+				Objects.requireNonNull( context.getPersistentClass() );
+				Objects.requireNonNull( context.getMetadataBuildingContext() );
+				context.getProperty().setUpdatable( false );
 			}
 		}
 	}
@@ -2492,19 +2496,12 @@ public class AnnotationCoverageBindingTests {
 	public @interface CustomEntityBinding {
 		class Binder implements TypeBinder<CustomEntityBinding> {
 			@Override
-			public void bind(
-					CustomEntityBinding annotation,
-					MetadataBuildingContext buildingContext,
-					PersistentClass persistentClass) {
-				persistentClass.setBatchSize( 37 );
-			}
-
-			@Override
-			public void bind(
-					CustomEntityBinding annotation,
-					MetadataBuildingContext buildingContext,
-					Component embeddableClass) {
-				throw new AssertionError( "Should not be called for embeddables" );
+			public void bind(CustomEntityBinding annotation, EntityBindingContext context) {
+				assertThat( context.getEntityType().getEntityName() )
+						.isEqualTo( context.getPersistentClass().getEntityName() );
+				assertThat( context.getDomainModel().getEntityHierarchies() )
+						.anyMatch( hierarchy -> hierarchy == context.getEntityType().getHierarchy() );
+				context.getPersistentClass().setBatchSize( 37 );
 			}
 		}
 	}
@@ -2515,22 +2512,17 @@ public class AnnotationCoverageBindingTests {
 	public @interface CustomComponentBinding {
 		class Binder implements TypeBinder<CustomComponentBinding> {
 			@Override
-			public void bind(
-					CustomComponentBinding annotation,
-					MetadataBuildingContext buildingContext,
-					PersistentClass persistentClass) {
-				throw new AssertionError( "Should not be called for entities" );
-			}
-
-			@Override
-			public void bind(
-					CustomComponentBinding annotation,
-					MetadataBuildingContext buildingContext,
-					Component embeddableClass) {
+			public void bind(CustomComponentBinding annotation, EmbeddableBindingContext context) {
+				final Component embeddableClass = context.getComponent();
+				assertThat( context.getEmbeddableUsage().type().getClassDetails().getName() )
+						.isEqualTo( embeddableClass.getComponentClassName() );
+				assertThat( context.getPersistentClass() ).isSameAs( embeddableClass.getOwner() );
+				assertThat( context.getEmbeddableUsage().sourceMember().resolveAttributeName() )
+						.isEqualTo( "generatedDetails" );
 				final var name = embeddableClass.getRoleName() == null
 						? embeddableClass.getComponentClassName()
 						: embeddableClass.getRoleName();
-				embeddableClass.setComponentClassDetails( name, true, buildingContext );
+				embeddableClass.setComponentClassDetails( name, true, context.getMetadataBuildingContext() );
 			}
 		}
 	}

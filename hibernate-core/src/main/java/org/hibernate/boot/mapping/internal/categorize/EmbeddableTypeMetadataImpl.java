@@ -15,11 +15,12 @@ import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.mapping.spi.EmbeddableTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 
-/// Standard [EmbeddableTypeMetadata] implementation.
+/// Standard [EmbeddableTypeMetadataImpl] implementation.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -43,8 +44,7 @@ public final class EmbeddableTypeMetadataImpl implements EmbeddableTypeMetadata 
 		return explicitAccessType;
 	}
 
-	@Override
-	public EmbeddableUsageMetadata resolveUsage(
+	public EmbeddableUsageMetadataImpl resolveUsage(
 			MemberDetails sourceMember,
 			TypeVariableScope typeVariableScope,
 			AccessType inheritedAccessType,
@@ -58,7 +58,7 @@ public final class EmbeddableTypeMetadataImpl implements EmbeddableTypeMetadata 
 		);
 	}
 
-	EmbeddableUsageMetadata resolveUsage(
+	EmbeddableUsageMetadataImpl resolveUsage(
 			MemberDetails sourceMember,
 			TypeVariableScope typeVariableScope,
 			AccessType inheritedAccessType,
@@ -80,7 +80,7 @@ public final class EmbeddableTypeMetadataImpl implements EmbeddableTypeMetadata 
 					explicitAccessType == null ? inheritedAccessType : explicitAccessType;
 			final Map<String, PersistentMember> members = new LinkedHashMap<>();
 			collectPersistentMembers( classDetails, accessType, context, members );
-			final List<AttributeMetadata> attributes = new ArrayList<>( members.size() );
+			final List<AttributeMetadataImplementor> attributes = new ArrayList<>( members.size() );
 			for ( PersistentMember persistentMember : members.values() ) {
 				final MemberDetails member = persistentMember.member();
 				attributes.add(
@@ -93,7 +93,7 @@ public final class EmbeddableTypeMetadataImpl implements EmbeddableTypeMetadata 
 						)
 				);
 			}
-			return new EmbeddableUsageMetadata(
+			return new EmbeddableUsageMetadataImpl(
 					this,
 					sourceMember,
 					typeVariableScope,

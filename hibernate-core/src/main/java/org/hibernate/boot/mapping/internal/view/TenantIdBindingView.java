@@ -6,7 +6,7 @@ package org.hibernate.boot.mapping.internal.view;
 
 import org.hibernate.boot.mapping.internal.model.TenantIdBinding;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.BasicType;
@@ -20,7 +20,7 @@ import org.hibernate.type.BasicType;
 /// @since 9.0
 /// @author Steve Ebersole
 public record TenantIdBindingView(TenantIdBinding binding) {
-	public EntityTypeMetadata owner() {
+	public EntityTypeMetadataImpl owner() {
 		return binding.owner();
 	}
 

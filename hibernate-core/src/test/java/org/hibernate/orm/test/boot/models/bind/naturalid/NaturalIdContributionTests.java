@@ -6,8 +6,8 @@ package org.hibernate.orm.test.boot.models.bind.naturalid;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
@@ -31,7 +31,7 @@ public class NaturalIdContributionTests {
 	void testNaturalIdContribution(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
-					final EntityTypeMetadata entityType = entityType( context, NaturalEntity.class );
+					final EntityTypeMetadataImpl entityType = entityType( context, NaturalEntity.class );
 					final NaturalIdContributionView contribution = context.getBindingState()
 							.getBootBindingModel()
 							.getNaturalIdContributionView( entityType, "code" );
@@ -58,10 +58,10 @@ public class NaturalIdContributionTests {
 		);
 	}
 
-	private static EntityTypeMetadata entityType(
+	private static EntityTypeMetadataImpl entityType(
 			BindingTestingHelper.DomainModelCheckContext context,
 			Class<?> entityClass) {
-		for ( EntityHierarchy hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
+		for ( EntityHierarchyImpl hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
 			if ( hierarchy.getRoot().getClassDetails().getClassName().equals( entityClass.getName() ) ) {
 				return hierarchy.getRoot();
 			}

@@ -42,23 +42,23 @@ import org.hibernate.boot.mapping.internal.model.EntityTypeBinding;
 import org.hibernate.boot.mapping.internal.model.EmbeddableTypeBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassTypeBinding;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
 import org.hibernate.boot.mapping.internal.categorize.CollectionTypeRegistration;
 import org.hibernate.boot.mapping.internal.categorize.CompositeUserTypeRegistration;
 import org.hibernate.boot.mapping.internal.categorize.ConversionRegistration;
 import org.hibernate.boot.mapping.internal.categorize.DatabaseObjectRegistration;
 import org.hibernate.boot.mapping.internal.categorize.EmbeddableInstantiatorRegistration;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.FetchProfileRegistration;
 import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.JavaTypeRegistration;
 import org.hibernate.boot.mapping.internal.categorize.JdbcTypeRegistration;
 import org.hibernate.boot.mapping.internal.categorize.JpaConverterRegistration;
-import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadataImpl;
 import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.boot.mapping.internal.categorize.UserTypeRegistration;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -111,7 +111,7 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 /// @since 9.0
 /// @author Steve Ebersole
 public class BindingCoordinator {
-	private final CategorizedDomainModel categorizedDomainModel;
+	private final CategorizedDomainModelImpl categorizedDomainModel;
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
 	private final BindingContext bindingContext;
@@ -120,7 +120,7 @@ public class BindingCoordinator {
 
 	/// Create a binding coordinator for a categorized model.
 	public BindingCoordinator(
-			CategorizedDomainModel categorizedDomainModel,
+			CategorizedDomainModelImpl categorizedDomainModel,
 			BindingState bindingState,
 			BindingOptions bindingOptions,
 			BindingContext bindingContext) {
@@ -139,7 +139,7 @@ public class BindingCoordinator {
 	/// @param options Binding options in effect
 	/// @param bindingContext Access to binding services and shared categorization state
 	public static void coordinateBinding(
-			CategorizedDomainModel categorizedDomainModel,
+			CategorizedDomainModelImpl categorizedDomainModel,
 			BindingState state,
 			BindingOptions options,
 			BindingContext bindingContext) {
@@ -339,7 +339,7 @@ public class BindingCoordinator {
 		registerCategorizedDeclarationContainers();
 		categorizedDomainModel.forEachEntityHierarchy( (index, hierarchy) -> {
 			hierarchy.forEachType( (type, superType, entityHierarchy, relation) -> {
-				if ( type.getManagedTypeKind() != ManagedTypeMetadata.Kind.ENTITY
+				if ( type.getManagedTypeKind() != AbstractManagedTypeMetadata.Kind.ENTITY
 						|| boundTypeNames.add( type.getClassDetails().getClassName() != null
 								? type.getClassDetails().getClassName()
 								: type.getClassDetails().getName() ) ) {
@@ -465,7 +465,7 @@ public class BindingCoordinator {
 		return null;
 	}
 
-	private void registerEntityHierarchyBinding(EntityHierarchy hierarchy) {
+	private void registerEntityHierarchyBinding(EntityHierarchyImpl hierarchy) {
 		final EntityTypeBinding rootBinding = (EntityTypeBinding) bindingState.getBootBindingModel()
 				.getManagedTypeBinding( hierarchy.getRoot().getClassDetails() );
 		final ManagedTypeBinding absoluteRootBinding = bindingState.getBootBindingModel()
@@ -496,7 +496,7 @@ public class BindingCoordinator {
 		);
 	}
 
-	private EntityHierarchyBinding.Relation toBindingRelation(EntityHierarchy.HierarchyRelation relation) {
+	private EntityHierarchyBinding.Relation toBindingRelation(EntityHierarchyImpl.HierarchyRelation relation) {
 		return switch ( relation ) {
 			case SUPER -> EntityHierarchyBinding.Relation.SUPER;
 			case ROOT -> EntityHierarchyBinding.Relation.ROOT;
@@ -557,18 +557,18 @@ public class BindingCoordinator {
 
 
 	private ManagedTypeBinder createIdentifiableTypeBinder(
-			IdentifiableTypeMetadata type,
-			IdentifiableTypeMetadata superType,
-			EntityHierarchy hierarchy,
-			EntityHierarchy.HierarchyRelation relation) {
-		if ( type.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
+			AbstractIdentifiableTypeMetadata type,
+			AbstractIdentifiableTypeMetadata superType,
+			EntityHierarchyImpl hierarchy,
+			EntityHierarchyImpl.HierarchyRelation relation) {
+		if ( type.getManagedTypeKind() == AbstractManagedTypeMetadata.Kind.ENTITY ) {
 			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type.getClassDetails() ) == null ) {
 				bindingState.getBootBindingModel().addManagedTypeBinding(
 						new EntityTypeBinding( type.getClassDetails(), type.getAccessType() )
 				);
 			}
 			final EntityTypeBinder binder = new EntityTypeBinder(
-					(EntityTypeMetadata) type,
+					(EntityTypeMetadataImpl) type,
 					superType,
 					relation,
 					modelBinders,
@@ -580,14 +580,14 @@ public class BindingCoordinator {
 			return binder;
 		}
 		else {
-			assert type.getManagedTypeKind() == ManagedTypeMetadata.Kind.MAPPED_SUPER;
+			assert type.getManagedTypeKind() == AbstractManagedTypeMetadata.Kind.MAPPED_SUPER;
 			if ( bindingState.getBootBindingModel().getManagedTypeBinding( type.getClassDetails() ) == null ) {
 				bindingState.getBootBindingModel().addManagedTypeBinding(
 						new MappedSuperclassTypeBinding( type.getClassDetails(), type.getAccessType() )
 				);
 			}
 			final MappedSuperTypeBinder binder = new MappedSuperTypeBinder(
-					(MappedSuperclassTypeMetadata) type,
+					(MappedSuperclassTypeMetadataImpl) type,
 					superType,
 					relation,
 					modelBinders,
@@ -849,7 +849,7 @@ public class BindingCoordinator {
 	}
 
 	private void processEventListeners(GlobalRegistrations globalRegistrations) {
-		// JPA event listeners are consumed by EntityTypeMetadata#getCompleteJpaEventListeners()
+		// JPA event listeners are consumed by EntityTypeMetadataImpl#getCompleteJpaEventListeners()
 		// during entity metadata binding.
 		PersistenceUnitCallbackDefinition.from(
 				globalRegistrations.getPersistenceUnitLifecycleEventHandlers()
@@ -972,7 +972,7 @@ public class BindingCoordinator {
 		);
 	}
 
-	private void processTables(AttributeMetadata attribute) {
+	private void processTables(AttributeMetadataImplementor attribute) {
 		final JoinTable joinTableAnn = attribute.getMember().getDirectAnnotationUsage( JoinTable.class );
 		final CollectionTable collectionTableAnn = attribute.getMember().getDirectAnnotationUsage( CollectionTable.class );
 

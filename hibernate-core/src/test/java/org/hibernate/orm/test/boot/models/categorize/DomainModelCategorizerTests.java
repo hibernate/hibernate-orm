@@ -9,13 +9,15 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.boot.mapping.spi.CategorizedDomainModel;
+import org.hibernate.boot.mapping.spi.EntityHierarchy;
+import org.hibernate.boot.mapping.spi.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.spi.ValueNature;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
-import org.hibernate.boot.mapping.internal.categorize.EmbeddedAttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.ValueNature;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedAttributeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadataImpl;
+import org.hibernate.boot.mapping.spi.SingularAttributeMetadata;
 import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -60,15 +62,20 @@ public class DomainModelCategorizerTests {
 			final PreparedMappingSources resolvedMappingSources = new PreparedMappingSources( List.of( root, included ), emptyList(), emptyList() );
 
 			final var result = DomainModelCategorizer.categorize( resolvedMappingSources, metadataBuildingContext );
+			final CategorizedDomainModel semanticModel = result;
 
-			assertThat( result.getEntityHierarchies() ).hasSize( 1 );
+			assertThat( semanticModel.getEntityHierarchies() ).hasSize( 1 );
 
-			final var hierarchy = result.getEntityHierarchies().iterator().next();
+			final EntityHierarchy hierarchy = semanticModel.getEntityHierarchies().iterator().next();
 			assertThat( hierarchy.getRoot().getClassDetails().getClassName() ).isEqualTo( Root.class.getName() );
 			assertThat( hierarchy.getRoot().getSubTypes() )
 					.extracting( IdentifiableTypeMetadata::getClassDetails )
 					.extracting( ClassDetails::getClassName )
 					.containsExactly( IncludedLeaf.class.getName() );
+			assertThatThrownBy( () -> semanticModel.getEntityHierarchies().clear() )
+					.isInstanceOf( UnsupportedOperationException.class );
+			assertThatThrownBy( () -> hierarchy.getRoot().getAttributes().clear() )
+					.isInstanceOf( UnsupportedOperationException.class );
 		}
 	}
 
@@ -88,7 +95,7 @@ public class DomainModelCategorizerTests {
 			assertThat( result.getEntityHierarchies() ).isEmpty();
 			assertThat( result.getEmbeddables() )
 					.extractingByKey( EmbeddableType.class.getName() )
-					.extracting( org.hibernate.boot.mapping.internal.categorize.EmbeddableTypeMetadata::getClassDetails )
+					.extracting( org.hibernate.boot.mapping.internal.categorize.EmbeddableTypeMetadataImpl::getClassDetails )
 					.isSameAs( embeddable );
 		}
 	}
@@ -187,22 +194,22 @@ public class DomainModelCategorizerTests {
 			final var root = result.getEntityHierarchies().iterator().next().getRoot();
 			assertThat( ( (SingularAttributeMetadata) root.findAttribute( "id" ) ).getValue().getNature() )
 					.isEqualTo( ValueNature.BASIC );
-			final var embedded = (EmbeddedAttributeMetadata) root.findAttribute( "details" );
+			final var embedded = (EmbeddedAttributeMetadataImpl) root.findAttribute( "details" );
 			assertThat( embedded.getValue().getNature() ).isEqualTo( ValueNature.EMBEDDED );
 			assertThat( embedded.getEmbeddableUsage().findAttribute( "inheritedName" ) ).isNotNull();
 			assertThat( embedded.getEmbeddableUsage().findAttribute( "name" ) ).isNotNull();
 
-			final var idBag = (PluralAttributeMetadata) root.findAttribute( "detailBag" );
+			final var idBag = (PluralAttributeMetadataImpl) root.findAttribute( "detailBag" );
 			assertThat( idBag.getCollectionClassification() ).isEqualTo( CollectionClassification.ID_BAG );
-			assertThat( ( (EmbeddedValueMetadata) idBag.getElement() )
+			assertThat( ( (EmbeddedValueMetadataImpl) idBag.getElement() )
 					.getEmbeddableUsage().findAttribute( "name" ) ).isNotNull();
 			assertThat( idBag.getIndex() ).isNull();
 			assertThat( idBag.getCollectionId().generatorRegistration().getGeneratorClass() )
 					.isEqualTo( IncrementGenerator.class );
 
-			final var map = (PluralAttributeMetadata) root.findAttribute( "detailsByName" );
+			final var map = (PluralAttributeMetadataImpl) root.findAttribute( "detailsByName" );
 			assertThat( map.getCollectionClassification() ).isEqualTo( CollectionClassification.MAP );
-			assertThat( map.getElement() ).isInstanceOf( EmbeddedValueMetadata.class );
+			assertThat( map.getElement() ).isInstanceOf( EmbeddedValueMetadataImpl.class );
 			assertThat( map.getIndex().getNature() )
 					.isEqualTo( ValueNature.BASIC );
 		}
@@ -223,7 +230,7 @@ public class DomainModelCategorizerTests {
 			);
 
 			final var hierarchy = result.getEntityHierarchies().iterator().next();
-			final var embeddedId = (EmbeddedAttributeMetadata)
+			final var embeddedId = (EmbeddedAttributeMetadataImpl)
 					( (org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping) hierarchy.getIdMapping() )
 							.getAttribute();
 			final var generatedMember = embeddedId.getEmbeddableUsage().findAttribute( "generated" );

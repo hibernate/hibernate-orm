@@ -49,11 +49,11 @@ import org.hibernate.boot.mapping.internal.view.CollationContributionView;
 import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.FilterDefRegistration;
 import org.hibernate.boot.mapping.internal.categorize.GlobalRegistrations;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractManagedTypeMetadata;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -70,7 +70,7 @@ import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -170,7 +170,7 @@ public class BindingStateImpl implements BindingState {
 
 	private final Map<ClassDetails, ManagedTypeBinder> typeBinders = new HashMap<>();
 	private final Map<ClassDetails, IdentifiableTypeBinder> typeBindersBySuper = new HashMap<>();
-	private final Map<EntityTypeMetadata, IdentifierBinding> entityIdentifierBindings = new HashMap<>();
+	private final Map<EntityTypeMetadataImpl, IdentifierBinding> entityIdentifierBindings = new HashMap<>();
 	private final Map<MappingRole, EntityIdentifierHandoff> entityIdentifierHandoffsByRole = new HashMap<>();
 	private final java.util.List<EntityIdentifierHandoff> entityIdentifierHandoffList =
 			new java.util.ArrayList<>();
@@ -433,10 +433,10 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void registerTypeBinder(ManagedTypeMetadata type, ManagedTypeBinder binder) {
+	public void registerTypeBinder(AbstractManagedTypeMetadata type, ManagedTypeBinder binder) {
 		typeBinders.put( type.getClassDetails(), binder );
 
-		if ( type instanceof IdentifiableTypeMetadata identifiableType ) {
+		if ( type instanceof AbstractIdentifiableTypeMetadata identifiableType ) {
 			if ( identifiableType.getSuperType() != null ) {
 				typeBindersBySuper.put(
 						identifiableType.getSuperType().getClassDetails(),
@@ -467,12 +467,12 @@ public class BindingStateImpl implements BindingState {
 	}
 
 	@Override
-	public void addIdentifierBinding(EntityTypeMetadata rootType, IdentifierBinding entityIdentifierBinding) {
+	public void addIdentifierBinding(EntityTypeMetadataImpl rootType, IdentifierBinding entityIdentifierBinding) {
 		entityIdentifierBindings.put( rootType, entityIdentifierBinding );
 	}
 
 	@Override
-	public IdentifierBinding getIdentifierBinding(EntityTypeMetadata rootType) {
+	public IdentifierBinding getIdentifierBinding(EntityTypeMetadataImpl rootType) {
 		return entityIdentifierBindings.get( rootType );
 	}
 

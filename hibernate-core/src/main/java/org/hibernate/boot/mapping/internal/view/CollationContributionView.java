@@ -5,7 +5,7 @@
 package org.hibernate.boot.mapping.internal.view;
 
 import org.hibernate.boot.mapping.internal.model.CollationContribution;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.models.spi.MemberDetails;
 
 /// Stable read view over a finalized collation contribution.
@@ -16,7 +16,7 @@ import org.hibernate.models.spi.MemberDetails;
 /// @since 9.0
 /// @author Steve Ebersole
 public record CollationContributionView(CollationContribution contribution) {
-	public IdentifiableTypeMetadata owner() {
+	public AbstractIdentifiableTypeMetadata owner() {
 		return contribution.owner();
 	}
 

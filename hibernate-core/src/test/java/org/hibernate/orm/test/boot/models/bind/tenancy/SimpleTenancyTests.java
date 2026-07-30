@@ -10,8 +10,8 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.boot.mapping.internal.binders.TenantIdBinder;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
@@ -166,10 +166,10 @@ public class SimpleTenancyTests {
 		assertThat( filter.useAutoAliasInjection() ).isTrue();
 	}
 
-	private static EntityTypeMetadata entityType(
+	private static EntityTypeMetadataImpl entityType(
 			org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.DomainModelCheckContext context,
 			Class<?> entityClass) {
-		for ( EntityHierarchy hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
+		for ( EntityHierarchyImpl hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
 			if ( hierarchy.getRoot().getClassDetails().getClassName().equals( entityClass.getName() ) ) {
 				return hierarchy.getRoot();
 			}

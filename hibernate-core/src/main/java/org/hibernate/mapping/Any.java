@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;

@@ -19,19 +19,20 @@ import org.hibernate.models.spi.TypeVariableScope;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record EmbeddableUsageMetadata(
-		EmbeddableTypeMetadata type,
+public record EmbeddableUsageMetadataImpl(
+		EmbeddableTypeMetadataImpl type,
 		MemberDetails sourceMember,
 		TypeVariableScope typeVariableScope,
 		AccessType accessType,
-		List<AttributeMetadata> attributes) {
-	public EmbeddableUsageMetadata {
+		List<AttributeMetadataImplementor> attributes)
+		implements org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata {
+	public EmbeddableUsageMetadataImpl {
 		attributes = List.copyOf( attributes );
 	}
 
-	public AttributeMetadata findAttribute(String name) {
+	public AttributeMetadataImplementor findAttribute(String name) {
 		for ( int i = 0; i < attributes.size(); i++ ) {
-			final AttributeMetadata attribute = attributes.get( i );
+			final AttributeMetadataImplementor attribute = attributes.get( i );
 			if ( attribute.getName().equals( name ) ) {
 				return attribute;
 			}

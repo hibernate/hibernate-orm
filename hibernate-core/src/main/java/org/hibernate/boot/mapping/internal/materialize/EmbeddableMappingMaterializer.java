@@ -9,7 +9,7 @@ import java.util.Locale;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
-import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl;
 import org.hibernate.boot.mapping.internal.binders.MappedSuperTypeBinder;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
@@ -23,7 +23,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.usertype.CompositeUserType;
 
 import static org.hibernate.internal.util.StringHelper.count;
@@ -55,7 +55,7 @@ public class EmbeddableMappingMaterializer {
 
 	public EmbeddableContribution createContribution(
 			ComponentSource source,
-			EmbeddedValueMetadata valueMetadata,
+			EmbeddedValueMetadataImpl valueMetadata,
 			BindingContext bindingContext) {
 		final EmbeddableContribution contribution =
 				EmbeddableContribution.from( source, valueMetadata, state, bindingContext );

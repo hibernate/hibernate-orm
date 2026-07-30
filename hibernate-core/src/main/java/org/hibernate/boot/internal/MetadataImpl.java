@@ -40,7 +40,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PreparedGenerator;
 import org.hibernate.mapping.Table;

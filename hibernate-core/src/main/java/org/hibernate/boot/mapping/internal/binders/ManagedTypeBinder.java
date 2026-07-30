@@ -7,7 +7,7 @@ package org.hibernate.boot.mapping.internal.binders;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractManagedTypeMetadata;
 
 /// Base class for binders tied to one categorized managed type.
 ///
@@ -19,14 +19,14 @@ import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
 /// @since 9.0
 /// @author Steve Ebersole
 public abstract class ManagedTypeBinder {
-	private final ManagedTypeMetadata managedType;
+	private final AbstractManagedTypeMetadata managedType;
 
 	private final BindingState state;
 	private final BindingOptions options;
 	private final BindingContext bindingContext;
 
 	public ManagedTypeBinder(
-			ManagedTypeMetadata managedType,
+			AbstractManagedTypeMetadata managedType,
 			BindingState state,
 			BindingOptions options,
 			BindingContext bindingContext) {
@@ -36,7 +36,7 @@ public abstract class ManagedTypeBinder {
 		this.bindingContext = bindingContext;
 	}
 
-	public ManagedTypeMetadata getManagedType() {
+	public AbstractManagedTypeMetadata getManagedType() {
 		return managedType;
 	}
 

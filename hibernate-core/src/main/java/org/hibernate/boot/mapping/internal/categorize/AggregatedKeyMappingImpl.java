@@ -9,9 +9,9 @@ package org.hibernate.boot.mapping.internal.categorize;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record AggregatedKeyMappingImpl(AttributeMetadata attribute) implements AggregatedKeyMapping {
+public record AggregatedKeyMappingImpl(AttributeMetadataImplementor attribute) implements AggregatedKeyMapping {
 	@Override
-	public AttributeMetadata getAttribute() {
+	public AttributeMetadataImplementor getAttribute() {
 		return attribute;
 	}
 }

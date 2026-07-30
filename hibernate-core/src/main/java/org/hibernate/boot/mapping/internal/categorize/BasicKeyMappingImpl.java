@@ -9,9 +9,9 @@ package org.hibernate.boot.mapping.internal.categorize;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public record BasicKeyMappingImpl(AttributeMetadata attribute) implements BasicKeyMapping {
+public record BasicKeyMappingImpl(AttributeMetadataImplementor attribute) implements BasicKeyMapping {
 	@Override
-	public AttributeMetadata getAttribute() {
+	public AttributeMetadataImplementor getAttribute() {
 		return attribute;
 	}
 }

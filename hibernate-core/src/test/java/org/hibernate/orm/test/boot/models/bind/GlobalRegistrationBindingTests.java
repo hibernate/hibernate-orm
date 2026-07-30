@@ -167,7 +167,7 @@ public class GlobalRegistrationBindingTests {
 	}
 
 	private static org.hibernate.boot.mapping.internal.categorize.IdentifierGeneratorResolution.Part generatedPart(
-			org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel categorizedModel,
+			org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl categorizedModel,
 			String jpaEntityName) {
 		final var hierarchy = hierarchy( categorizedModel, jpaEntityName );
 		final var idMapping =
@@ -175,8 +175,8 @@ public class GlobalRegistrationBindingTests {
 		return hierarchy.getIdentifierGeneratorResolution().find( idMapping.getAttribute() );
 	}
 
-	private static org.hibernate.boot.mapping.internal.categorize.EntityHierarchy hierarchy(
-			org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel categorizedModel,
+	private static org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl hierarchy(
+			org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl categorizedModel,
 			String jpaEntityName) {
 		return categorizedModel.getEntityHierarchies()
 				.stream()

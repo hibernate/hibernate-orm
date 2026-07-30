@@ -38,29 +38,29 @@ import static org.hibernate.boot.mapping.internal.categorize.CategorizationLoggi
 /// @since 9.0
 /// @author Steve Ebersole
 public class HierarchyMetadataCollector {
-	private final EntityHierarchy entityHierarchy;
+	private final EntityHierarchyImpl entityHierarchy;
 	private final ClassDetails rootEntityClassDetails;
 	private final CategorizationContext modelContext;
 	private final MappedSuperclassTracker mappedSuperclassTracker;
 
 	private boolean belowRootEntity;
 
-	private EntityTypeMetadata rootEntityMetadata;
+	private EntityTypeMetadataImpl rootEntityMetadata;
 	private Inheritance inheritanceAnnotation;
 	private OptimisticLocking optimisticLockingAnnotation;
 	private Cache cacheAnnotation;
 	private NaturalIdCache naturalIdCacheAnnotation;
 
 	private KeyMapping idMapping;
-	private AttributeMetadata versionAttribute;
-	private AttributeMetadata tenantIdAttribute;
+	private AttributeMetadataImplementor versionAttribute;
+	private AttributeMetadataImplementor tenantIdAttribute;
 
 	private IdClass idClassAnnotation;
 	private Object collectedIdAttributes;
 	private Object collectedNaturalIdAttributes;
 
 	public HierarchyMetadataCollector(
-			EntityHierarchy entityHierarchy,
+			EntityHierarchyImpl entityHierarchy,
 			ClassDetails rootEntityClassDetails,
 			CategorizationContext modelContext,
 			MappedSuperclassTracker mappedSuperclassTracker) {
@@ -70,7 +70,7 @@ public class HierarchyMetadataCollector {
 		this.mappedSuperclassTracker = mappedSuperclassTracker;
 	}
 
-	public EntityTypeMetadata getRootEntityMetadata() {
+	public EntityTypeMetadataImpl getRootEntityMetadata() {
 		return rootEntityMetadata;
 	}
 
@@ -86,11 +86,11 @@ public class HierarchyMetadataCollector {
 		return inheritanceAnnotation;
 	}
 
-	public AttributeMetadata getVersionAttribute() {
+	public AttributeMetadataImplementor getVersionAttribute() {
 		return versionAttribute;
 	}
 
-	public AttributeMetadata getTenantIdAttribute() {
+	public AttributeMetadataImplementor getTenantIdAttribute() {
 		return tenantIdAttribute;
 	}
 
@@ -113,7 +113,7 @@ public class HierarchyMetadataCollector {
 
 		if ( collectedIdAttributes instanceof List ) {
 			//noinspection unchecked
-			final List<AttributeMetadata> idAttributes = (List<AttributeMetadata>) collectedIdAttributes;
+			final List<AttributeMetadataImplementor> idAttributes = (List<AttributeMetadataImplementor>) collectedIdAttributes;
 			final ClassDetails idClassDetails;
 			if ( idClassAnnotation == null ) {
 				idClassDetails = resolveGeneratedIdClassDetails();
@@ -124,7 +124,7 @@ public class HierarchyMetadataCollector {
 			return new NonAggregatedKeyMappingImpl( idAttributes, idClassDetails );
 		}
 
-		final AttributeMetadata idAttribute = (AttributeMetadata) collectedIdAttributes;
+		final AttributeMetadataImplementor idAttribute = (AttributeMetadataImplementor) collectedIdAttributes;
 		if ( idAttribute == null ) {
 			throw new AnnotationException(
 					String.format(
@@ -187,11 +187,11 @@ public class HierarchyMetadataCollector {
 		if ( collectedIdAttributes == null ) {
 			return false;
 		}
-		if ( collectedIdAttributes instanceof AttributeMetadata attributeMetadata ) {
+		if ( collectedIdAttributes instanceof AttributeMetadataImplementor attributeMetadata ) {
 			return attributeName.equals( attributeMetadata.getName() );
 		}
 		//noinspection unchecked
-		for ( AttributeMetadata attributeMetadata : (List<AttributeMetadata>) collectedIdAttributes ) {
+		for ( AttributeMetadataImplementor attributeMetadata : (List<AttributeMetadataImplementor>) collectedIdAttributes ) {
 			if ( attributeName.equals( attributeMetadata.getName() ) ) {
 				return true;
 			}
@@ -233,11 +233,11 @@ public class HierarchyMetadataCollector {
 
 		if ( collectedNaturalIdAttributes instanceof List ) {
 			//noinspection unchecked
-			final List<AttributeMetadata> attributes = (List<AttributeMetadata>) collectedNaturalIdAttributes;
+			final List<AttributeMetadataImplementor> attributes = (List<AttributeMetadataImplementor>) collectedNaturalIdAttributes;
 			return new NonAggregatedKeyMappingImpl( attributes, null );
 		}
 
-		final AttributeMetadata attribute = (AttributeMetadata) collectedNaturalIdAttributes;
+		final AttributeMetadataImplementor attribute = (AttributeMetadataImplementor) collectedNaturalIdAttributes;
 
 		if ( attribute.getNature() == AttributeNature.BASIC ) {
 			return new BasicKeyMappingImpl( attribute );
@@ -261,8 +261,8 @@ public class HierarchyMetadataCollector {
 		);
 	}
 
-	public void collectType(IdentifiableTypeMetadata typeMetadata) {
-		if ( typeMetadata instanceof MappedSuperclassTypeMetadata mappedSuperclass ) {
+	public void collectType(AbstractIdentifiableTypeMetadata typeMetadata) {
+		if ( typeMetadata instanceof MappedSuperclassTypeMetadataImpl mappedSuperclass ) {
 			mappedSuperclassTracker.markVisited( mappedSuperclass );
 		}
 
@@ -276,7 +276,7 @@ public class HierarchyMetadataCollector {
 						)
 				);
 			}
-			if ( typeMetadata instanceof EntityTypeMetadata && hasNewIdentifierAttribute( typeMetadata ) ) {
+			if ( typeMetadata instanceof EntityTypeMetadataImpl && hasNewIdentifierAttribute( typeMetadata ) ) {
 				throw new AnnotationException(
 						String.format(
 								Locale.ROOT,
@@ -291,7 +291,7 @@ public class HierarchyMetadataCollector {
 		final ClassDetails classDetails = typeMetadata.getClassDetails();
 
 		if ( sameClass( classDetails, rootEntityClassDetails ) ) {
-			rootEntityMetadata = (EntityTypeMetadata) typeMetadata;
+			rootEntityMetadata = (EntityTypeMetadataImpl) typeMetadata;
 			belowRootEntity = true;
 		}
 
@@ -301,7 +301,7 @@ public class HierarchyMetadataCollector {
 		naturalIdCacheAnnotation = applyLocalAnnotation( NaturalIdCache.class, classDetails, naturalIdCacheAnnotation );
 		idClassAnnotation = applyLocalAnnotation( IdClass.class, classDetails, idClassAnnotation );
 
-		if ( versionAttribute == null || tenantIdAttribute == null || !( collectedIdAttributes instanceof AttributeMetadata idAttribute
+		if ( versionAttribute == null || tenantIdAttribute == null || !( collectedIdAttributes instanceof AttributeMetadataImplementor idAttribute
 				&& idAttribute.getMember().hasDirectAnnotationUsage( EmbeddedId.class ) ) ) {
 			// walk the attributes
 			typeMetadata.forEachAttribute( (index, attributeMetadata) -> {
@@ -335,7 +335,7 @@ public class HierarchyMetadataCollector {
 		}
 	}
 
-	private boolean hasNaturalIdAttribute(IdentifiableTypeMetadata typeMetadata) {
+	private boolean hasNaturalIdAttribute(AbstractIdentifiableTypeMetadata typeMetadata) {
 		final boolean[] found = { false };
 		typeMetadata.forEachAttribute( (index, attributeMetadata) -> {
 			if ( attributeMetadata.getMember().hasDirectAnnotationUsage( NaturalId.class ) ) {
@@ -345,7 +345,7 @@ public class HierarchyMetadataCollector {
 		return found[0];
 	}
 
-	private boolean hasNewIdentifierAttribute(IdentifiableTypeMetadata typeMetadata) {
+	private boolean hasNewIdentifierAttribute(AbstractIdentifiableTypeMetadata typeMetadata) {
 		final boolean[] found = { false };
 		typeMetadata.forEachAttribute( (index, attributeMetadata) -> {
 			final MemberDetails member = attributeMetadata.getMember();
@@ -428,7 +428,7 @@ public class HierarchyMetadataCollector {
 				: javaClass.getName() + "_";
 	}
 
-	public void collectIdAttribute(AttributeMetadata member) {
+	public void collectIdAttribute(AttributeMetadataImplementor member) {
 		assert member != null;
 
 		if ( member.getMember().hasDirectAnnotationUsage( Formula.class ) ) {
@@ -442,18 +442,18 @@ public class HierarchyMetadataCollector {
 		}
 		else if ( collectedIdAttributes instanceof List ) {
 			//noinspection unchecked,rawtypes
-			final List<AttributeMetadata> membersList = (List) collectedIdAttributes;
+			final List<AttributeMetadataImplementor> membersList = (List) collectedIdAttributes;
 			membersList.add( member );
 		}
-		else if ( collectedIdAttributes instanceof AttributeMetadata ) {
-			final ArrayList<AttributeMetadata> combined = new ArrayList<>();
-			combined.add( (AttributeMetadata) collectedIdAttributes );
+		else if ( collectedIdAttributes instanceof AttributeMetadataImplementor ) {
+			final ArrayList<AttributeMetadataImplementor> combined = new ArrayList<>();
+			combined.add( (AttributeMetadataImplementor) collectedIdAttributes );
 			combined.add( member );
 			collectedIdAttributes = combined;
 		}
 	}
 
-	public void collectNaturalIdAttribute(AttributeMetadata member) {
+	public void collectNaturalIdAttribute(AttributeMetadataImplementor member) {
 		assert member != null;
 
 		if ( collectedNaturalIdAttributes == null ) {
@@ -461,12 +461,12 @@ public class HierarchyMetadataCollector {
 		}
 		else if ( collectedNaturalIdAttributes instanceof List ) {
 			//noinspection unchecked,rawtypes
-			final List<AttributeMetadata> membersList = (List) collectedNaturalIdAttributes;
+			final List<AttributeMetadataImplementor> membersList = (List) collectedNaturalIdAttributes;
 			membersList.add( member );
 		}
-		else if ( collectedNaturalIdAttributes instanceof AttributeMetadata ) {
-			final ArrayList<AttributeMetadata> combined = new ArrayList<>();
-			combined.add( (AttributeMetadata) collectedNaturalIdAttributes );
+		else if ( collectedNaturalIdAttributes instanceof AttributeMetadataImplementor ) {
+			final ArrayList<AttributeMetadataImplementor> combined = new ArrayList<>();
+			combined.add( (AttributeMetadataImplementor) collectedNaturalIdAttributes );
 			combined.add( member );
 			collectedNaturalIdAttributes = combined;
 		}

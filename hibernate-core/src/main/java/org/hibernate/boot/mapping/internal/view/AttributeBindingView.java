@@ -17,7 +17,7 @@ import org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclaratio
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.model.ValueIntent;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -44,8 +44,8 @@ public record AttributeBindingView(AttributeUsageBinding binding) {
 		return binding.attributeName();
 	}
 
-	public AttributeMetadata attributeMetadata() {
-		final AttributeMetadata attributeMetadata = attributeDeclaration().attributeMetadata();
+	public AttributeMetadataImplementor attributeMetadata() {
+		final AttributeMetadataImplementor attributeMetadata = attributeDeclaration().attributeMetadata();
 		if ( attributeMetadata == null ) {
 			throw new IllegalStateException(
 					"Attribute binding view requires categorized attribute metadata for " + binding.sourceRole()

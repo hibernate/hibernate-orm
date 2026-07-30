@@ -5,6 +5,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 /// A compatibility mapping projection which represents a concrete applied
 /// mapping occurrence.

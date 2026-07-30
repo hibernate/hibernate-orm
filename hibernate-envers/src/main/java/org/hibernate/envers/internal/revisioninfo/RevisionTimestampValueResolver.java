@@ -12,7 +12,7 @@ import java.util.Date;
 
 import org.hibernate.envers.internal.entities.RevisionTimestampData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -22,11 +22,11 @@ import org.hibernate.service.ServiceRegistry;
 public class RevisionTimestampValueResolver {
 
 	private final RevisionTimestampData timestampData;
-	private final Setter revisionTimestampSetter;
+	private final PropertyValueAccessor revisionTimestampSetter;
 
 	public RevisionTimestampValueResolver(Class<?> revisionInfoClass, RevisionTimestampData timestampData, ServiceRegistry serviceRegistry) {
 		this.timestampData = timestampData;
-		this.revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, timestampData, serviceRegistry );
+		this.revisionTimestampSetter = ReflectionTools.getPropertyValueAccessor( revisionInfoClass, timestampData, serviceRegistry );
 	}
 
 	public String getName() {

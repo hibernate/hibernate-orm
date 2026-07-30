@@ -5,7 +5,7 @@
 package org.hibernate.envers.strategy.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 
 /**
  * A contract to initialize an {@link AuditStrategy}
@@ -23,9 +23,6 @@ public interface AuditStrategyContext {
 	/**
 	 * Get the revision info timestamp accessor
 	 * @return the getter for the timestamp attribute on the revision entity
-	 *
-	 * @deprecated no longer used, it will be replaced by a method that will not return the deprecated {@link Getter} interface
 	 */
-	@Deprecated(since = "7.4", forRemoval = true)
-	Getter getRevisionInfoTimestampAccessor();
+	PropertyValueAccessor getRevisionInfoTimestampAccessor();
 }

@@ -4,17 +4,17 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
@@ -22,6 +22,9 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.accessor.HibernateAccessorInstantiator;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -40,7 +43,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	private final PropertyAccess[] propertyAccesses;
 	private final Map<String, Integer> attributeNameToPositionMap;
 
-	private final ReflectionOptimizer reflectionOptimizer;
+	private final @Nullable HibernateAccessorMultiValueReader multiValueReader;
+	private final @Nullable HibernateAccessorMultiValueWriter multiValueWriter;
 	private final EmbeddableInstantiator instantiator;
 	private final Map<Object, EmbeddableInstantiator> instantiatorsByDiscriminator;
 	private final Map<String, EmbeddableInstantiator> instantiatorsByClass;
@@ -82,12 +86,21 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			}
 		}
 
-		reflectionOptimizer = buildReflectionOptimizer(
-				bootDescriptor,
-				foundCustomAccessor,
-				propertyAccesses,
-				creationContext
-		);
+		if ( canBuildMultiValueAccessors( bootDescriptor, foundCustomAccessor ) ) {
+			final var multiValueAccessors = PropertyAccessHelper.buildMultiValueAccessors(
+					creationContext.getServiceRegistry()
+							.requireService( PropertyAccessorService.class )
+							.hibernateAccessorFactory(),
+					bootDescriptor.getComponentClass(),
+					Arrays.asList( propertyAccesses )
+			);
+			multiValueReader = multiValueAccessors.reader();
+			multiValueWriter = multiValueAccessors.writer();
+		}
+		else {
+			multiValueReader = null;
+			multiValueWriter = null;
+		}
 
 		if ( bootDescriptor.isPolymorphic() ) {
 			final int size = bootDescriptor.getDiscriminatorValues().size();
@@ -98,7 +111,6 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 				final var instantiator = determineInstantiator(
 						bootDescriptor,
 						castNonNull( subclassesByName ).get( className ),
-						reflectionOptimizer,
 						runtimeDescriptorAccess,
 						creationContext
 				);
@@ -113,7 +125,6 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 					determineInstantiator(
 							bootDescriptor,
 							bootDescriptor.getComponentClass(),
-							reflectionOptimizer,
 							runtimeDescriptorAccess,
 							creationContext
 					);
@@ -149,14 +160,17 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	private static EmbeddableInstantiator determineInstantiator(
 			Component bootDescriptor,
 			Class<?> embeddableClass,
-			ReflectionOptimizer reflectionOptimizer,
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
-		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
+		final var accessorService = creationContext.getServiceRegistry()
+				.requireService( PropertyAccessorService.class );
+		final HibernateAccessorInstantiator<?> hibernateInstantiator =
+				PropertyAccessHelper.resolveInstantiator( embeddableClass, accessorService );
+		if ( hibernateInstantiator != null ) {
 			return new EmbeddableInstantiatorPojoOptimized(
 					embeddableClass,
 					runtimeDescriptorAccess,
-					reflectionOptimizer.getInstantiationOptimizer()
+					hibernateInstantiator
 			);
 		}
 		else if ( bootDescriptor.isEmbedded() && isAbstractClass( embeddableClass ) ) {
@@ -197,29 +211,13 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		return strategy.buildPropertyAccess( propertyAccessorService, embeddableClass, property.getName(), requireSetters );
 	}
 
-	private static ReflectionOptimizer buildReflectionOptimizer(
+	private static boolean canBuildMultiValueAccessors(
 			Component bootDescriptor,
-			boolean hasCustomAccessors,
-			PropertyAccess[] propertyAccesses,
-			RuntimeModelCreationContext creationContext) {
-		if ( !hasCustomAccessors
+			boolean hasCustomAccessors) {
+		return !hasCustomAccessors
 				&& bootDescriptor.getCustomInstantiator() == null
 				&& bootDescriptor.getInstantiator() == null
-				&& !bootDescriptor.isPolymorphic() ) {
-			final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
-			int i = 0;
-			for ( var property : bootDescriptor.getProperties() ) {
-				propertyAccessMap.put( property.getName(), propertyAccesses[i] );
-				i++;
-			}
-			return creationContext.getServiceRegistry()
-					.requireService( BytecodeProvider.class )
-					.getReflectionOptimizer( bootDescriptor.getComponentClass(), propertyAccessMap );
-		}
-		else {
-			return null;
-		}
-
+				&& !bootDescriptor.isPolymorphic();
 	}
 
 	private static Map<String, Class<?>> getSubclassesByName(
@@ -253,8 +251,13 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	}
 
 	@Override
-	public ReflectionOptimizer getReflectionOptimizer() {
-		return reflectionOptimizer;
+	public @Nullable HibernateAccessorMultiValueReader getMultiValueReader() {
+		return multiValueReader;
+	}
+
+	@Override
+	public @Nullable HibernateAccessorMultiValueWriter getMultiValueWriter() {
+		return multiValueWriter;
 	}
 
 	@Override

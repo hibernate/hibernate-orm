@@ -4,16 +4,11 @@
  */
 package org.hibernate.bytecode.internal.none;
 
-import java.util.Map;
-
 import jakarta.annotation.Nonnull;
-import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.property.access.spi.PropertyAccess;
 
 import jakarta.annotation.Nullable;
 
@@ -32,21 +27,6 @@ public final class BytecodeProviderImpl implements BytecodeProvider {
 	@Override
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new NoProxyFactoryFactory();
-	}
-
-	@Override
-	@Nonnull
-	public ReflectionOptimizer getReflectionOptimizer(
-			@Nonnull Class<?> clazz,
-			@Nonnull String[] getterNames,
-			@Nonnull String[] setterNames,
-			@Nonnull Class<?>[] types) {
-		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Use a different BytecodeProvider" );
-	}
-
-	@Override
-	public @Nullable ReflectionOptimizer getReflectionOptimizer(@Nonnull Class<?> clazz, @Nonnull Map<String, PropertyAccess> propertyAccessMap) {
-		return null;
 	}
 
 	@Override

@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.service.JavaServiceLoadable;
@@ -14,7 +15,10 @@ import org.hibernate.service.JavaServiceLoadable;
  * returns a non-null {@link org.hibernate.boot.MetadataBuilder}.
  *
  * @author Gunnar Morling
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 @JavaServiceLoadable
 public interface MetadataBuilderFactory {
 

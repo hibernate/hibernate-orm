@@ -5,6 +5,7 @@
 package org.hibernate.boot;
 
 import jakarta.persistence.FetchType;
+import org.hibernate.Remove;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.model.FunctionContributor;
@@ -31,7 +32,10 @@ import jakarta.persistence.SharedCacheMode;
  * @author Hardy Ferentschik
  *
  * @since 5.0
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 public interface MetadataBuilder {
 	/**
 	 * Specify the implicit catalog name to apply to any unqualified database names.

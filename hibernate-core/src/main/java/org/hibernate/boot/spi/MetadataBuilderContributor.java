@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributor;
@@ -24,7 +25,10 @@ import org.hibernate.boot.model.TypeContributor;
  *
  * @deprecated Use settings, {@link TypeContributor}, {@link FunctionContributor} or
  * {@link AdditionalMappingContributor} instead depending on need
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 @Deprecated(forRemoval = true)
 public interface MetadataBuilderContributor {
 	/**

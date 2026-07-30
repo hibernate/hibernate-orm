@@ -6,6 +6,7 @@ package org.hibernate.boot;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
@@ -61,7 +62,10 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
  * @author Steve Ebersole
  *
  * @since 5.0
+ *
+ * @apiNote This class will be removed in 9.0.
  */
+@Remove
 public class MetadataSources implements Serializable {
 
 	private final ServiceRegistry serviceRegistry;

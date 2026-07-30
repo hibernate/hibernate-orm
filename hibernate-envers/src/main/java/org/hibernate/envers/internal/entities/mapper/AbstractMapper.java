@@ -11,8 +11,7 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -33,7 +32,7 @@ public abstract class AbstractMapper {
 	 */
 	@SuppressWarnings("unchecked")
 	protected <T> T getValueFromObject(PropertyData propertyData, Object object, ServiceRegistry serviceRegistry) {
-		final Getter getter = ReflectionTools.getGetter( object.getClass(), propertyData, serviceRegistry );
+		final PropertyValueAccessor getter = ReflectionTools.getPropertyValueAccessor( object.getClass(), propertyData, serviceRegistry );
 		return (T) getter.get( object );
 	}
 
@@ -49,7 +48,7 @@ public abstract class AbstractMapper {
 	 */
 	@SuppressWarnings("unchecked")
 	protected <T> T getValueFromObject(String propertyName, String accessType, Object object, ServiceRegistry serviceRegistry) {
-		final Getter getter = ReflectionTools.getGetter( object.getClass(), propertyName, accessType, serviceRegistry );
+		final PropertyValueAccessor getter = ReflectionTools.getPropertyValueAccessor( object.getClass(), propertyName, accessType, serviceRegistry );
 		return (T) getter.get( object );
 	}
 
@@ -62,7 +61,7 @@ public abstract class AbstractMapper {
 	 * @param serviceRegistry the service registry, should not be {@literal null}
 	 */
 	protected void setValueOnObject(PropertyData propertyData, Object object, Object value, ServiceRegistry serviceRegistry) {
-		final Setter setter = ReflectionTools.getSetter(object.getClass(), propertyData, serviceRegistry );
+		final PropertyValueAccessor setter = ReflectionTools.getPropertyValueAccessor(object.getClass(), propertyData, serviceRegistry );
 		setter.set( object, value );
 	}
 
@@ -75,8 +74,8 @@ public abstract class AbstractMapper {
 	 * @param serviceRegistry the service registry, should not be {@literal null}
 	 */
 	protected void getAndSetValue(PropertyData propertyData, Object source, Object destination, ServiceRegistry serviceRegistry) {
-		final Getter getter = ReflectionTools.getGetter( source.getClass(), propertyData, serviceRegistry );
-		final Setter setter = ReflectionTools.getSetter( destination.getClass(), propertyData, serviceRegistry );
+		final PropertyValueAccessor getter = ReflectionTools.getPropertyValueAccessor( source.getClass(), propertyData, serviceRegistry );
+		final PropertyValueAccessor setter = ReflectionTools.getPropertyValueAccessor( destination.getClass(), propertyData, serviceRegistry );
 		setter.set( destination, getter.get( source ) );
 	}
 

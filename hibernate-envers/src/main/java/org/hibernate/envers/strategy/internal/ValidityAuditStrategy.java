@@ -32,8 +32,8 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.property.access.spi.Getter;
 import jakarta.persistence.QueryFlushMode;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.sql.ComparisonRestriction;
 import org.hibernate.sql.Update;
 import org.hibernate.type.BasicType;
@@ -81,7 +81,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	/**
 	 * getter for the revision entity field annotated with @RevisionTimestamp
 	 */
-	private Getter revisionTimestampGetter;
+	private PropertyValueAccessor revisionTimestampGetter;
 
 	private final SessionCacheCleaner sessionCacheCleaner;
 
@@ -336,7 +336,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	 * @deprecated with no replacement.
 	 */
 	@Deprecated(since = "5.4")
-	public void setRevisionTimestampGetter(Getter revisionTimestampGetter) {
+	public void setRevisionTimestampGetter(PropertyValueAccessor revisionTimestampGetter) {
 		this.revisionTimestampGetter = revisionTimestampGetter;
 	}
 

@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa.spi;
 
+import org.hibernate.Remove;
+
 /**
  * @author Steve Ebersole
  */
@@ -21,6 +23,7 @@ public interface MutableJpaCompliance extends JpaCompliance {
 
 	void setCachingCompliance(boolean cachingCompliance);
 
+	@Remove
 	void setGeneratorNameScopeCompliance(boolean generatorScopeCompliance);
 
 	void setLoadByIdCompliance(boolean enabled);

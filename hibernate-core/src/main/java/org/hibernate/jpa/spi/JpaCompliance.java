@@ -4,6 +4,7 @@
  */
 package org.hibernate.jpa.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.Transaction;
 
 /**
@@ -98,6 +99,7 @@ public interface JpaCompliance {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
 	 */
+	@Remove
 	boolean isGlobalGeneratorScopeEnabled();
 
 	/**

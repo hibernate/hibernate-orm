@@ -6,6 +6,7 @@ package org.hibernate.engine.extension.spi;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.engine.extension.internal.ExtensionIntegrationServiceImpl;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
@@ -13,6 +14,7 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import java.util.Set;
 
 @Incubating
+@Remove
 public class ExtensionIntegrationServiceInitiator
 		implements SessionFactoryServiceInitiator<ExtensionIntegrationService> {
 

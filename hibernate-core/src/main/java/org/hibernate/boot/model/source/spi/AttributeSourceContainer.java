@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.List;
 
 /**
@@ -15,6 +17,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface AttributeSourceContainer extends ToolingHintContextContainer {
 	AttributePath getAttributePathBase();
 	AttributeRole getAttributeRoleBase();

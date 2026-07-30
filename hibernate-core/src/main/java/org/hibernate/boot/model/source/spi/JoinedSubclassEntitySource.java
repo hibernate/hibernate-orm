@@ -4,12 +4,15 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.List;
 
 /**
  * @author Strong Liu
  * @author Steve Ebersole
  */
+@Remove
 public interface JoinedSubclassEntitySource extends SubclassEntitySource, ForeignKeyContributingSource {
 	/**
 	 * The {@code PrimaryKeyJoinColumns} mapping for the joined-subclass.

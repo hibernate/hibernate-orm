@@ -7,6 +7,7 @@ package org.hibernate.mapping;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -528,6 +529,7 @@ public class Property implements Serializable, MetaAttributable {
 		this.returnedClassName = returnedClassName;
 	}
 
+	@Remove
 	public Generator createGenerator(RuntimeModelCreationContext context) {
 		if ( generatorCreator == null ) {
 			return null;

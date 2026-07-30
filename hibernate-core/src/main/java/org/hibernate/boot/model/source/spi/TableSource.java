@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Contract describing source of table information
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface TableSource extends TableSpecificationSource {
 	/**
 	 * Obtain the supplied table name.

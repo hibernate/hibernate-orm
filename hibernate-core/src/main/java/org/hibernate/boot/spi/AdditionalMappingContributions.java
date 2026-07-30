@@ -7,6 +7,7 @@ package org.hibernate.boot.spi;
 import java.io.InputStream;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -46,6 +47,7 @@ public interface AdditionalMappingContributions {
 	 * bindings instead.
 	 */
 	@Deprecated
+	@Remove
 	void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding);
 
 	/**

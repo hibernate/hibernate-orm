@@ -4,12 +4,15 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Defines the index of a persistent list/array
  *
  * @author Gail Badner
  * @author Steve Ebersole
  */
+@Remove
 public interface PluralAttributeSequentialIndexSource extends PluralAttributeIndexSource, RelationalValueSourceContainer {
 	/**
 	 * Hibernate allows specifying the base value to use when storing the index

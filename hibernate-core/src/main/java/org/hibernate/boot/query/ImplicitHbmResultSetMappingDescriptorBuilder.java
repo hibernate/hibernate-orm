@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryJoinReturnType;
@@ -28,6 +29,7 @@ import static org.hibernate.boot.query.HbmResultSetMappingDescriptor.*;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class ImplicitHbmResultSetMappingDescriptorBuilder {
 
 	private final String registrationName;

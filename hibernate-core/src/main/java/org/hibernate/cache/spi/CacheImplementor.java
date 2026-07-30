@@ -54,6 +54,7 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 *
 	 * @since 5.3
 	 */
+	@Remove
 	void prime(@Nonnull Set<DomainDataRegionConfig> cacheRegionConfigs);
 
 	/**

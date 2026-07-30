@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -15,6 +17,7 @@ import org.hibernate.boot.jaxb.Origin;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface IdentifiableTypeSource extends AttributeSourceContainer {
 	/**
 	 * Obtain the origin of this source.

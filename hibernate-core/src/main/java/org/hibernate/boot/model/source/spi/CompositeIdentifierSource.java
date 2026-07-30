@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Common contract for composite identifiers. Specific subtypes include aggregated
  * (think {@link jakarta.persistence.EmbeddedId}) and non-aggregated (think
@@ -11,5 +13,6 @@ package org.hibernate.boot.model.source.spi;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface CompositeIdentifierSource extends IdentifierSource, EmbeddableSourceContributor {
 }

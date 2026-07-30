@@ -25,6 +25,7 @@ import java.util.UUID;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
@@ -112,6 +113,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  *
  * @author Steve Ebersole
  */
+@Remove
 public class MetadataBuildingProcess {
 
 	private static final Comparator<TypeContributor> TYPE_CONTRIBUTOR_COMPARATOR = Comparator.comparingInt(

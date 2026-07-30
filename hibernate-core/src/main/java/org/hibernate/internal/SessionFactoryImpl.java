@@ -296,10 +296,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		changesetCoordinator = serviceRegistry.requireService( ChangesetCoordinator.class );
 
+		final Integrator.Context integratorContext = createIntegratorContext( bootstrapContext );
 		final var integratorObserver = new IntegratorObserver();
 		observerChain.addObserver( integratorObserver );
 		try {
-			integrate( bootMetamodel, bootstrapContext, integratorObserver );
+			integrate( bootMetamodel, integratorContext, integratorObserver );
 
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
@@ -531,21 +532,42 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return graphPlanningOptions;
 	}
 
+	@SuppressWarnings("removal")
 	class IntegratorObserver implements SessionFactoryObserver {
+		private final Integrator.Context context = new Integrator.Context() {
+			@Override
+			public ManagedBeanRegistry getManagedBeanRegistry() {
+				return SessionFactoryImpl.this.getManagedBeanRegistry();
+			}
+
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				throw new IllegalStateException( "BootstrapContext is no longer available" );
+			}
+		};
 		private final ArrayList<Integrator> integrators = new ArrayList<>();
+
 		@Override
 		public void sessionFactoryClosed(SessionFactory factory) {
 			for ( var integrator : integrators ) {
-				integrator.disintegrate( SessionFactoryImpl.this, SessionFactoryImpl.this.serviceRegistry );
+				integrator.disintegrate( SessionFactoryImpl.this, context );
 			}
 			integrators.clear();
 		}
 	}
 
 	@SuppressWarnings("removal")
-	private void integrate(MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext, IntegratorObserver integratorObserver) {
+	private static Integrator.Context createIntegratorContext(BootstrapContext bootstrapContext) {
+		return () -> bootstrapContext;
+	}
+
+	@SuppressWarnings("removal")
+	private void integrate(
+			MetadataImplementor bootMetamodel,
+			Integrator.Context context,
+			IntegratorObserver integratorObserver) {
 		for ( var integrator : serviceRegistry.requireService( IntegratorService.class ).getIntegrators() ) {
-			integrator.integrate( bootMetamodel, () -> bootstrapContext, this );
+			integrator.integrate( bootMetamodel, context, this );
 			integratorObserver.integrators.add( integrator );
 		}
 	}
@@ -553,7 +575,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void disintegrate(Exception startupException, IntegratorObserver integratorObserver) {
 		for ( var integrator : integratorObserver.integrators ) {
 			try {
-				integrator.disintegrate( this, serviceRegistry );
+				integrator.disintegrate( this, integratorObserver.context );
 			}
 			catch (Throwable ex) {
 				startupException.addSuppressed( ex );

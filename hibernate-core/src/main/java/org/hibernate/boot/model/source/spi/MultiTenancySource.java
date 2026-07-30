@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Describes the source information related to mapping the multi-tenancy of an entity
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface MultiTenancySource {
 	/**
 	 * Obtain the column/formula information about the multi-tenancy discriminator.

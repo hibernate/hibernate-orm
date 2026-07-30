@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.List;
 
 /**
@@ -17,6 +19,7 @@ import java.util.List;
  * @author Strong Liu
  * @author Steve Ebersole
  */
+@Remove
 public interface IdentifierSourceAggregatedComposite extends CompositeIdentifierSource {
 	/**
 	 * Obtain the source descriptor for the identifier attribute.

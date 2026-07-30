@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.MergedSettings;
@@ -24,6 +25,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
+@Remove
 public final class Bootstrap {
 	private Bootstrap() {
 	}

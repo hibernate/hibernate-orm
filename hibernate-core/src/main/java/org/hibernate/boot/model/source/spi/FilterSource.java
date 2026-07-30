@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Map;
 
 /**
@@ -12,6 +14,7 @@ import java.util.Map;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface FilterSource {
 	/**
 	 * Get the name of the filter being described.

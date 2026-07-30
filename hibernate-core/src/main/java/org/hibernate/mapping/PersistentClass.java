@@ -6,6 +6,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -134,6 +135,7 @@ public abstract sealed class PersistentClass
 		return contributor;
 	}
 
+	@Remove
 	public ServiceRegistry getServiceRegistry() {
 		return metadataBuildingContext.getBuildingOptions().getServiceRegistry();
 	}

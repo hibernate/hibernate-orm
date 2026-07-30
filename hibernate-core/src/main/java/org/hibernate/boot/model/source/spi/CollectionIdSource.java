@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Map;
 
 /**
  * @author Steve Ebersole
  */
+@Remove
 public interface CollectionIdSource {
 	/**
 	 * Obtain source information about the column for the collection id.

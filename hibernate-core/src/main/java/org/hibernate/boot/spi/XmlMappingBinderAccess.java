@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.internal.FileXmlSource;
 import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
@@ -28,6 +29,7 @@ import java.util.function.Function;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class XmlMappingBinderAccess {
 	private final ClassLoaderService classLoaderService;
 	private final MappingBinder mappingBinder;

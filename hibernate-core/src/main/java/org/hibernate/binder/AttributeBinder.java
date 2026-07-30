@@ -5,6 +5,7 @@
 package org.hibernate.binder;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -38,5 +39,6 @@ public interface AttributeBinder<A extends Annotation> {
 	 *                        in the case of a property of an embeddable class)
 	 * @param property a {@link Property} object representing the annotated property
 	 */
+	@Remove
 	void bind(A annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass, Property property);
 }

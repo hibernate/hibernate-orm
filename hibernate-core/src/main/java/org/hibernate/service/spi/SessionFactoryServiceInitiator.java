@@ -5,6 +5,8 @@
 package org.hibernate.service.spi;
 
 import jakarta.annotation.Nonnull;
+
+import org.hibernate.Remove;
 import org.hibernate.service.Service;
 
 /**
@@ -12,7 +14,10 @@ import org.hibernate.service.Service;
  * {@link SessionFactoryServiceRegistry}.
  *
  * @author Steve Ebersole
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 public interface SessionFactoryServiceInitiator<R extends Service> extends ServiceInitiator<R>{
 	/**
 	 * Initiates the managed service.

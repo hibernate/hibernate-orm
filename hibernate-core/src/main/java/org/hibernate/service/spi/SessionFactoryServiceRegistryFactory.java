@@ -5,6 +5,8 @@
 package org.hibernate.service.spi;
 
 import jakarta.annotation.Nonnull;
+
+import org.hibernate.Remove;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
@@ -15,7 +17,10 @@ import org.hibernate.service.Service;
  * Is itself a service within the standard service registry.
  *
  * @author Steve Ebersole
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 public interface SessionFactoryServiceRegistryFactory extends Service {
 	/**
 	 * Create the registry.

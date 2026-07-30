@@ -176,66 +176,85 @@ public class GetPropertyValues implements ByteCodeAppender {
 					);
 				}
 
-				// Load the entity to extract the property
-				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
-
-				final var declaringClass = getterMember.getDeclaringClass();
-				final Class<?> type;
-				if ( getterMember instanceof Method getter ) {
-					type = getter.getReturnType();
-					methodVisitor.visitMethodInsn(
-							declaringClass.isInterface()
-									? Opcodes.INVOKEINTERFACE
-									: Opcodes.INVOKEVIRTUAL,
-							Type.getInternalName( declaringClass ),
-							getter.getName(),
-							Type.getMethodDescriptor( getter ),
-							declaringClass.isInterface()
-					);
-				}
-				else if ( getterMember instanceof Field getter ) {
-					type = getter.getType();
+				if ( getterMember instanceof DelegatingAccessorMember dm ) {
+					methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 					methodVisitor.visitFieldInsn(
 							Opcodes.GETFIELD,
-							Type.getInternalName( declaringClass ),
-							getter.getName(),
-							Type.getDescriptor( type )
+							implementationContext.getInstrumentedType().getInternalName(),
+							dm.getFieldName(),
+							constants.descriptor_HibernateAccessorValueReader
 					);
-				}
-				else if ( getterMember instanceof ForeignPackageMember foreignPackageMember ) {
-					final var underlyingMember = foreignPackageMember.getMember();
-					if ( underlyingMember instanceof Method getter ) {
-						type = getter.getReturnType();
-					}
-					else if ( underlyingMember instanceof Field getter ) {
-						type = getter.getType();
-					}
-					else {
-						throw new AssertionError( "Unknown underlying member type" );
-					}
+					methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
 					methodVisitor.visitMethodInsn(
-							Opcodes.INVOKESTATIC,
-							Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
-							"get_" + getterMember.getName(),
-							Type.getMethodDescriptor(
-									Type.getType( type ),
-									Type.getType( underlyingMember.getDeclaringClass() )
-							),
-							false
+							Opcodes.INVOKEINTERFACE,
+							constants.internalName_HibernateAccessorValueReader,
+							"get",
+							constants.methodDescriptor_ValueReader_get,
+							true
 					);
 				}
 				else {
-					throw new AssertionError( "Unknown getter member type" );
-				}
-				if ( type.isPrimitive() ) {
-					PrimitiveBoxingDelegate.forPrimitive( new TypeDescription.ForLoadedType( type ) )
-							.assignBoxedTo(
-									TypeDescription.Generic.OBJECT,
-									ReferenceTypeAwareAssigner.INSTANCE,
-									Assigner.Typing.STATIC
-							)
-							.apply( methodVisitor, implementationContext );
+					// Load the entity to extract the property
+					methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
+					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
+
+					final var declaringClass = getterMember.getDeclaringClass();
+					final Class<?> type;
+					if ( getterMember instanceof Method getter ) {
+						type = getter.getReturnType();
+						methodVisitor.visitMethodInsn(
+								declaringClass.isInterface()
+										? Opcodes.INVOKEINTERFACE
+										: Opcodes.INVOKEVIRTUAL,
+								Type.getInternalName( declaringClass ),
+								getter.getName(),
+								Type.getMethodDescriptor( getter ),
+								declaringClass.isInterface()
+						);
+					}
+					else if ( getterMember instanceof Field getter ) {
+						type = getter.getType();
+						methodVisitor.visitFieldInsn(
+								Opcodes.GETFIELD,
+								Type.getInternalName( declaringClass ),
+								getter.getName(),
+								Type.getDescriptor( type )
+						);
+					}
+					else if ( getterMember instanceof ForeignPackageMember foreignPackageMember ) {
+						final var underlyingMember = foreignPackageMember.getMember();
+						if ( underlyingMember instanceof Method getter ) {
+							type = getter.getReturnType();
+						}
+						else if ( underlyingMember instanceof Field getter ) {
+							type = getter.getType();
+						}
+						else {
+							throw new AssertionError( "Unknown underlying member type" );
+						}
+						methodVisitor.visitMethodInsn(
+								Opcodes.INVOKESTATIC,
+								Type.getInternalName( foreignPackageMember.getForeignPackageAccessor() ),
+								"get_" + getterMember.getName(),
+								Type.getMethodDescriptor(
+										Type.getType( type ),
+										Type.getType( underlyingMember.getDeclaringClass() )
+								),
+								false
+						);
+					}
+					else {
+						throw new AssertionError( "Unknown getter member type" );
+					}
+					if ( type.isPrimitive() ) {
+						PrimitiveBoxingDelegate.forPrimitive( new TypeDescription.ForLoadedType( type ) )
+								.assignBoxedTo(
+										TypeDescription.Generic.OBJECT,
+										ReferenceTypeAwareAssigner.INSTANCE,
+										Assigner.Typing.STATIC
+								)
+								.apply( methodVisitor, implementationContext );
+					}
 				}
 			}
 			if ( persistentAttributeInterceptable ) {

@@ -11,11 +11,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -23,6 +24,9 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.models.accessor.HibernateAccessorInstantiator;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
@@ -48,7 +52,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private final boolean isBytecodeEnhanced;
 
-	private final ReflectionOptimizer reflectionOptimizer;
+	private final @Nullable HibernateAccessorMultiValueReader multiValueReader;
+	private final @Nullable HibernateAccessorMultiValueWriter multiValueWriter;
 	private final ProxyFactory proxyFactory;
 	private final EntityInstantiator instantiator;
 
@@ -122,7 +127,14 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		);
 
 		propertyAccessMap = buildPropertyAccessMap( propertyAccessorService, bootDescriptor, strategySelector );
-		reflectionOptimizer = resolveReflectionOptimizer( bytecodeProvider );
+
+		final var multiValueAccessors = PropertyAccessHelper.buildMultiValueAccessors(
+				propertyAccessorService.hibernateAccessorFactory(),
+				mappedJtd.getJavaTypeClass(),
+				propertyAccessMap.values()
+		);
+		multiValueReader = multiValueAccessors.reader();
+		multiValueWriter = multiValueAccessors.writer();
 
 		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor );
 	}
@@ -167,12 +179,17 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	 * Used by Hibernate Reactive
 	 */
 	protected EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister persister) {
-		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
+		final var accessorService = persister.getFactory().getServiceRegistry()
+				.requireService( PropertyAccessorService.class );
+		final var mappedClass = mappedJtd.getJavaTypeClass();
+		final HibernateAccessorInstantiator<?> hibernateInstantiator =
+				PropertyAccessHelper.resolveInstantiator( mappedClass, accessorService );
+		if ( hibernateInstantiator != null ) {
 			return new EntityInstantiatorPojoOptimized(
 					persister,
 					bootDescriptor,
 					mappedJtd,
-					reflectionOptimizer.getInstantiationOptimizer()
+					hibernateInstantiator
 			);
 		}
 		else {
@@ -305,10 +322,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return proxyFactory;
 	}
 
-	private ReflectionOptimizer resolveReflectionOptimizer(BytecodeProvider bytecodeProvider) {
-		return bytecodeProvider.getReflectionOptimizer( mappedJtd.getJavaTypeClass(), propertyAccessMap );
-	}
-
 	private PropertyAccess makePropertyAccess(PropertyAccessorService propertyAccessorService, Property bootAttributeDescriptor, StrategySelector strategySelector) {
 		final var mappedClass = mappedJtd.getJavaTypeClass();
 		final String descriptorName = bootAttributeDescriptor.getName();
@@ -332,8 +345,13 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	@Override
-	public ReflectionOptimizer getReflectionOptimizer() {
-		return reflectionOptimizer;
+	public @Nullable HibernateAccessorMultiValueReader getMultiValueReader() {
+		return multiValueReader;
+	}
+
+	@Override
+	public @Nullable HibernateAccessorMultiValueWriter getMultiValueWriter() {
+		return multiValueWriter;
 	}
 
 	@Override

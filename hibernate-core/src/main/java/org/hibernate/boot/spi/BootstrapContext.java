@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -66,6 +67,7 @@ public interface BootstrapContext {
 	 *
 	 * @see SqmFunctionRegistry
 	 */
+	@Remove
 	SqmFunctionRegistry getFunctionRegistry();
 
 	/**
@@ -78,6 +80,7 @@ public interface BootstrapContext {
 	/**
 	 * Options specific to building the {@linkplain Metadata boot metamodel}
 	 */
+	@Remove
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
 	/**
@@ -168,6 +171,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The {@link SqmFunctionDescriptor}s registered via {@code MetadataBuilder}
 	 */
+	@Remove
 	Map<String, SqmFunctionDescriptor> getSqlFunctions();
 
 	/**
@@ -179,6 +183,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The {@link AuxiliaryDatabaseObject}s registered via {@code MetadataBuilder}
 	 */
+	@Remove
 	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
 
 	/**
@@ -188,6 +193,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The {@link ConverterDescriptor}s registered via {@code MetadataBuilder}
 	 */
+	@Remove
 	Collection<ConverterDescriptor<?, ?>> getAttributeConverters();
 
 	/**
@@ -197,6 +203,7 @@ public interface BootstrapContext {
 	 *
 	 * @return Explicit cache region mappings
 	 */
+	@Remove
 	Collection<CacheRegionDefinition> getCacheRegionDefinitions();
 
 	/**
@@ -212,15 +219,18 @@ public interface BootstrapContext {
 	/**
 	 * To support Envers.
 	 */
+	@Remove
 	void registerAdHocBasicType(BasicType<?> basicType);
 
 	/**
 	 * To support Envers.
 	 */
+	@Remove
 	<T> BasicType<T> resolveAdHocBasicType(String key);
 
 	/**
 	 * Find a previously registered ad-hoc BasicTypeImpl based on java and jdbc type.
 	 */
+	@Remove
 	<T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType);
 }

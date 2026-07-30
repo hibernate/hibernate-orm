@@ -6,25 +6,24 @@ package org.hibernate.boot.serial;
 
 import java.io.InputStream;
 
+import jakarta.persistence.PersistenceConfiguration;
+
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.boot.serial.internal.MetadataArchiveImpl;
 
 /// Creates and reads the explicit, factory-ready serial form of resolved boot [Metadata].
 ///
-/// A producer must opt in while configuring bootstrap, and may then archive
-/// metadata after the usual boot-model building phase:
+/// A producer must opt in while configuring bootstrap and may create an archive
+/// directly from a supported [PersistenceConfiguration]:
 ///
 /// ```java
-/// StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-///         .applySetting(MappingSettings.METADATA_SERIALIZATION_ENABLED, true)
-///         .build();
+/// var configuration = new HibernatePersistenceConfiguration("example")
+///         .managedClass(MyEntity.class)
+///         .property(MappingSettings.METADATA_SERIALIZATION_ENABLED, true);
 ///
-/// Metadata metadata = new MetadataSources(serviceRegistry)
-///         .addAnnotatedClass(MyEntity.class)
-///         .buildMetadata();
-///
-/// MetadataArchive archive = MetadataSerialization.serialize(metadata);
+/// MetadataArchive archive = MetadataSerialization.serialize(configuration);
 /// try (OutputStream output = Files.newOutputStream(metadataFile)) {
 ///     archive.writeTo(output);
 /// }
@@ -69,6 +68,30 @@ import org.hibernate.boot.serial.internal.MetadataArchiveImpl;
 @Incubating
 public final class MetadataSerialization {
 	private MetadataSerialization() {
+	}
+
+	/// Resolves the given persistence configuration and creates its data-only
+	/// metadata archive.
+	///
+	/// The bootstrap-owned service registries used for mapping resolution are
+	/// released before this method returns. The configuration must enable
+	/// metadata serialization using
+	/// [org.hibernate.cfg.MappingSettings#METADATA_SERIALIZATION_ENABLED].
+	///
+	/// @param configuration persistence-unit configuration and mapping sources
+	///
+	/// @return the opaque archive, ready to be [written][MetadataArchive#writeTo]
+	///
+	/// @throws IllegalArgumentException if `configuration` is `null`
+	/// @throws IllegalStateException if metadata serialization was not enabled
+	/// @throws MetadataSerializationException if the metadata graph could not be serialized
+	public static MetadataArchive serialize(PersistenceConfiguration configuration) {
+		if ( configuration == null ) {
+			throw new IllegalArgumentException( "PersistenceConfiguration cannot be null" );
+		}
+		try (var resolution = BootstrapPipeline.resolveMetadata( configuration )) {
+			return serialize( resolution.metadata() );
+		}
 	}
 
 	/// Creates the data-only serial form of the given boot metadata.

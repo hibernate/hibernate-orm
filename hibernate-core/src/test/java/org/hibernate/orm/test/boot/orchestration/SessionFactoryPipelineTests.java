@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.boot.orchestration;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 import org.hibernate.boot.serial.MetadataSerialization;
@@ -20,6 +22,7 @@ import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
@@ -44,6 +47,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @ServiceRegistry
 public class SessionFactoryPipelineTests {
+	@Test
+	void persistenceConfigurationProducesMetadataArchive(ServiceRegistryScope registryScope) {
+		final var archive = MetadataSerialization.serialize(
+				new HibernatePersistenceConfiguration( "archive-producer" )
+						.property( JdbcSettings.DIALECT, H2Dialect.class )
+						.property( MappingSettings.METADATA_SERIALIZATION_ENABLED, true )
+						.managedClass( SimpleEntity.class )
+		);
+		final var output = new ByteArrayOutputStream();
+		archive.writeTo( output );
+
+		final var restored = MetadataSerialization
+				.read( new ByteArrayInputStream( output.toByteArray() ) )
+				.restore( registryScope.getRegistry() );
+
+		assertThat( restored.getMetadata().getEntityBinding( SimpleEntity.class.getName() ) ).isNotNull();
+	}
+
 	@Test
 	void hibernatePersistenceConfigurationBuildsSessionFactory() {
 		try (var sessionFactory = new HibernatePersistenceConfiguration( "test" )

@@ -14,6 +14,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DisabledCaching;
+import org.hibernate.cache.spi.CacheConstructionContext;
 import org.hibernate.cache.spi.CacheFactory;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
@@ -59,8 +60,9 @@ public class SessionFactoryJavaServiceTests {
 
 	public static class CustomCacheFactory implements CacheFactory {
 		@Override
-		public CacheImplementor buildCache(SessionFactoryImplementor sessionFactory) {
-			return new MarkerCache( sessionFactory );
+		public CacheImplementor buildCache(CacheConstructionContext constructionContext) {
+			CACHE_REGION_CONFIGS.set( constructionContext.getCacheRegionConfigs() );
+			return new MarkerCache( constructionContext.getSessionFactory() );
 		}
 	}
 
@@ -69,10 +71,6 @@ public class SessionFactoryJavaServiceTests {
 			super( sessionFactory );
 		}
 
-		@Override
-		public void prime(Set<DomainDataRegionConfig> cacheRegionConfigs) {
-			CACHE_REGION_CONFIGS.set( cacheRegionConfigs );
-		}
 	}
 
 	public static class CustomNativeQueryInterpreter extends NativeQueryInterpreterStandardImpl {

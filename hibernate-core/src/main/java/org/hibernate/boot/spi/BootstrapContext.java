@@ -18,9 +18,19 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Defines a context for things available during the process of bootstrapping
- * a {@link org.hibernate.SessionFactory} which are expected to be cleaned up
- * after the {@code SessionFactory} is built.
+ * Defines the shared environment used while resolving mapping metadata.
+ * <p>
+ * The context owns both durable bootstrap products, such as the
+ * {@link TypeConfiguration} and {@link ModelsContext}, and temporary
+ * source-processing resources, such as the Jakarta Persistence temporary
+ * class loader and scanning state. {@link #release()} releases only the
+ * temporary resources when metadata materialization completes. Durable
+ * products may remain available to the subsequent
+ * {@link org.hibernate.SessionFactory} construction step.
+ * <p>
+ * This broad context is retained for metadata-building compatibility.
+ * New bootstrap and factory-construction SPIs should expose focused resolved
+ * products instead of exposing {@code BootstrapContext}.
  *
  * @author Steve Ebersole
  */
@@ -130,7 +140,11 @@ public interface BootstrapContext {
 	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 
 	/**
-	 * Releases the "bootstrap only" resources held by this {@code BootstrapContext}.
+	 * Releases temporary source-processing resources held by this context.
+	 * <p>
+	 * This occurs when metadata materialization completes. It does not invalidate
+	 * durable products such as the {@link TypeConfiguration} or
+	 * {@link ModelsContext}, which may be used during factory construction.
 	 */
 	void release();
 }

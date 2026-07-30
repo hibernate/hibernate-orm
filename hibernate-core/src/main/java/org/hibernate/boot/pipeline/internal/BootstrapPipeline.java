@@ -148,6 +148,35 @@ public class BootstrapPipeline {
 		}
 	}
 
+	/// Resolve metadata from a Jakarta Persistence [PersistenceConfiguration].
+	///
+	/// The returned metadata is suitable for metadata-only callers and retains
+	/// the resolved mapping product. Closing the result releases the
+	/// bootstrap-owned service registries.
+	public static MappingResolutionResult resolveMetadata(PersistenceConfiguration persistenceConfiguration) {
+		final var bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder().build();
+		StandardServiceRegistry standardServiceRegistry = null;
+		try {
+			final var bootstrapRequest =
+					createEntryPointBootstrapRequest( persistenceConfiguration, bootstrapServiceRegistry );
+			standardServiceRegistry = bootstrapRequest.standardServiceRegistry();
+			return resolveMetadata( bootstrapRequest );
+		}
+		catch (Exception e) {
+			if ( standardServiceRegistry != null ) {
+				StandardServiceRegistryBuilder.destroy( standardServiceRegistry );
+			}
+			else {
+				bootstrapServiceRegistry.close();
+			}
+			throw new PersistenceException(
+					"Unable to resolve Hibernate metadata  [persistence unit: "
+							+ persistenceConfiguration.name() + "] ",
+					e
+			);
+		}
+	}
+
 	/// Build a [SessionFactory] from a persistence-unit descriptor and
 	/// integration settings.
 	///
@@ -259,37 +288,7 @@ public class BootstrapPipeline {
 					bootstrapServiceRegistry
 			);
 			standardServiceRegistry = bootstrapRequest.standardServiceRegistry();
-			final var typeConfiguration = new TypeConfiguration();
-			final var mappingResolutionOptions =
-					new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
-			final var bootstrapContext = createBootstrapContext(
-					bootstrapRequest.bootstrapSettings(),
-					standardServiceRegistry,
-					typeConfiguration
-			);
-			final var resolvedMapping = MappingResolutionPipeline.resolve(
-					bootstrapRequest.bootstrapSettings(),
-					bootstrapRequest.mappingSettings(),
-					bootstrapRequest.mappingSources(),
-					bootstrapRequest.mappingCustomizations(),
-					bootstrapRequest.functionCustomizations(),
-					bootstrapContext,
-					mappingResolutionOptions
-			);
-			populateFunctionRegistry(
-					resolvedMapping.metadata().getFunctionRegistry(),
-					bootstrapRequest.functionCustomizations(),
-					standardServiceRegistry,
-					typeConfiguration
-			);
-			final var serviceRegistryCloser = new OwnedServiceRegistryCloser(
-					(ServiceRegistryImplementor) standardServiceRegistry
-			);
-			return new MappingResolutionResult(
-					new ResolvedMappingImplementor( resolvedMapping ),
-					bootstrapRequest.bootstrapSettings().configurationValues(),
-					serviceRegistryCloser
-			);
+			return resolveMetadata( bootstrapRequest );
 		}
 		catch (Exception e) {
 			if ( standardServiceRegistry != null ) {
@@ -304,6 +303,41 @@ public class BootstrapPipeline {
 					e
 			);
 		}
+	}
+
+	private static MappingResolutionResult resolveMetadata(EntryPointBootstrapRequest bootstrapRequest) {
+		final var standardServiceRegistry = bootstrapRequest.standardServiceRegistry();
+		final var typeConfiguration = new TypeConfiguration();
+		final var mappingResolutionOptions =
+				new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
+		final var bootstrapContext = createBootstrapContext(
+				bootstrapRequest.bootstrapSettings(),
+				standardServiceRegistry,
+				typeConfiguration
+		);
+		final var resolvedMapping = MappingResolutionPipeline.resolve(
+				bootstrapRequest.bootstrapSettings(),
+				bootstrapRequest.mappingSettings(),
+				bootstrapRequest.mappingSources(),
+				bootstrapRequest.mappingCustomizations(),
+				bootstrapRequest.functionCustomizations(),
+				bootstrapContext,
+				mappingResolutionOptions
+		);
+		populateFunctionRegistry(
+				resolvedMapping.metadata().getFunctionRegistry(),
+				bootstrapRequest.functionCustomizations(),
+				standardServiceRegistry,
+				typeConfiguration
+		);
+		final var serviceRegistryCloser = new OwnedServiceRegistryCloser(
+				(ServiceRegistryImplementor) standardServiceRegistry
+		);
+		return new MappingResolutionResult(
+				new ResolvedMappingImplementor( resolvedMapping ),
+				bootstrapRequest.bootstrapSettings().configurationValues(),
+				serviceRegistryCloser
+		);
 	}
 
 	/// Build a [SessionFactoryImplementor] from fully resolved bootstrap

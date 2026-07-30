@@ -5,7 +5,7 @@
 package org.hibernate.envers.strategy.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 
 /**
  * A contract to initialize an {@link AuditStrategy}
@@ -24,5 +24,5 @@ public interface AuditStrategyContext {
 	 * Get the revision info timestamp accessor
 	 * @return the getter for the timestamp attribute on the revision entity
 	 */
-	Getter getRevisionInfoTimestampAccessor();
+	PropertyValueAccessor getRevisionInfoTimestampAccessor();
 }

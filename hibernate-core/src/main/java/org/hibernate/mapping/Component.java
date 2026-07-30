@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -385,6 +386,10 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return parentProperty;
 	}
 
+	/**
+	 * @apiNote This method will be removed in 9.0.
+	 */
+	@Remove
 	public void setComponentClassName(String componentClass) {
 		this.componentClassName = componentClass;
 		if ( this.dynamic ) {
@@ -410,6 +415,10 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		return dynamic;
 	}
 
+	/**
+	 * @apiNote This method will be removed in 9.0.
+	 */
+	@Remove
 	public void setDynamic(boolean dynamic) {
 		this.dynamic = dynamic;
 		if ( dynamic ) {

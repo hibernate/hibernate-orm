@@ -542,9 +542,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
+	@SuppressWarnings("removal")
 	private void integrate(MetadataImplementor bootMetamodel, BootstrapContext bootstrapContext, IntegratorObserver integratorObserver) {
 		for ( var integrator : serviceRegistry.requireService( IntegratorService.class ).getIntegrators() ) {
-			integrator.integrate( bootMetamodel, bootstrapContext, this );
+			integrator.integrate( bootMetamodel, () -> bootstrapContext, this );
 			integratorObserver.integrators.add( integrator );
 		}
 	}

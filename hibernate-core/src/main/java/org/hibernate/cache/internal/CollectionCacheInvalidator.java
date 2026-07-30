@@ -8,7 +8,6 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -53,7 +52,7 @@ public class CollectionCacheInvalidator
 	@Override
 	public void integrate(
 			Metadata metadata,
-			BootstrapContext bootstrapContext,
+			Integrator.Context context,
 			SessionFactoryImplementor sessionFactory) {
 		integrate( sessionFactory );
 	}

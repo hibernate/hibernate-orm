@@ -33,7 +33,8 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -455,7 +456,8 @@ public abstract class AbstractEntityPersister
 
 	private final String queryLoaderName;
 
-	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
+	protected HibernateAccessorMultiValueReader multiValueReader;
+	protected HibernateAccessorMultiValueWriter multiValueWriter;
 
 	protected final String[] fullDiscriminatorSQLValues;
 	private final DiscriminatorValue[] fullDiscriminatorValues;
@@ -535,7 +537,8 @@ public abstract class AbstractEntityPersister
 						.resolveStrategy( persistentClass, this, creationContext );
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
-		accessOptimizer = accessOptimizer( representationStrategy );
+		multiValueReader = representationStrategy.getMultiValueReader();
+		multiValueWriter = representationStrategy.getMultiValueWriter();
 
 		concreteProxy =
 				isPolymorphic()
@@ -4856,8 +4859,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void setPropertyValues(Object object, Object[] values) {
-		if ( accessOptimizer != null ) {
-			accessOptimizer.setPropertyValues( object, values );
+		if ( multiValueWriter != null ) {
+			multiValueWriter.set( object, values );
 		}
 		else {
 			final int size = getAttributeMappings().size();
@@ -4884,8 +4887,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object[] getPropertyValues(Object object) {
-		if ( accessOptimizer != null ) {
-			return accessOptimizer.getPropertyValues( object );
+		if ( multiValueReader != null ) {
+			return multiValueReader.get( object );
 		}
 		else {
 			final var enhancementMetadata = getBytecodeEnhancementMetadata();
@@ -5075,8 +5078,8 @@ public abstract class AbstractEntityPersister
 			Map<Object,Object> mergeMap,
 			SharedSessionContractImplementor session)
 				throws HibernateException {
-		if ( shouldGetAllProperties( entity ) && accessOptimizer != null ) {
-			return accessOptimizer.getPropertyValues( entity );
+		if ( shouldGetAllProperties( entity ) && multiValueReader != null ) {
+			return multiValueReader.get( entity );
 		}
 		else {
 			final var result = new Object[attributeMappings.size()];
@@ -5408,10 +5411,6 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private static ReflectionOptimizer.AccessOptimizer accessOptimizer(EntityRepresentationStrategy strategy) {
-		final var reflectionOptimizer = strategy.getReflectionOptimizer();
-		return reflectionOptimizer == null ? null : reflectionOptimizer.getAccessOptimizer();
-	}
 
 	private void prepareMappings(MappingModelCreationProcess creationProcess) {
 		final var persistentClass =

@@ -5,6 +5,7 @@
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
@@ -55,6 +56,70 @@ public class SetPropertyValues implements ByteCodeAppender {
 		final boolean persistentAttributeInterceptable =
 				PersistentAttributeInterceptable.class.isAssignableFrom( clazz );
 		final boolean compositeOwner = CompositeOwner.class.isAssignableFrom( clazz );
+		final List<TypeDefinition> baseLocals;
+		if ( persistentAttributeInterceptable ) {
+			// Extract interceptor once and store in local 3
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
+			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEVIRTUAL,
+					internalClazzName,
+					"$$_hibernate_getInterceptor",
+					constants.methodDescriptor_getInterceptor,
+					false
+			);
+			methodVisitor.visitInsn( Opcodes.DUP );
+			methodVisitor.visitTypeInsn(
+					Opcodes.INSTANCEOF,
+					constants.internalName_BytecodeLazyAttributeInterceptor
+			);
+
+			final var interceptorFalseLabel = new Label();
+			methodVisitor.visitJumpInsn( Opcodes.IFEQ, interceptorFalseLabel );
+
+			methodVisitor.visitTypeInsn(
+					Opcodes.CHECKCAST,
+					constants.internalName_BytecodeLazyAttributeInterceptor
+			);
+			methodVisitor.visitVarInsn( Opcodes.ASTORE, 3 );
+
+			final var interceptorEndLabel = new Label();
+			methodVisitor.visitJumpInsn( Opcodes.GOTO, interceptorEndLabel );
+
+			methodVisitor.visitLabel( interceptorFalseLabel );
+			implementationContext.getFrameGeneration().full(
+					methodVisitor,
+					constants.INTERFACES_for_PersistentAttributeInterceptor,
+					List.of(
+							implementationContext.getInstrumentedType(),
+							constants.TypeObject,
+							constants.Type_Array_Object
+					)
+			);
+			methodVisitor.visitInsn( Opcodes.POP );
+			methodVisitor.visitInsn( Opcodes.ACONST_NULL );
+			methodVisitor.visitVarInsn( Opcodes.ASTORE, 3 );
+
+			methodVisitor.visitLabel( interceptorEndLabel );
+			baseLocals = List.of(
+					implementationContext.getInstrumentedType(),
+					constants.TypeObject,
+					constants.Type_Array_Object,
+					constants.TypeBytecodeLazyAttributeInterceptor
+			);
+			implementationContext.getFrameGeneration().full(
+					methodVisitor,
+					List.of(),
+					baseLocals
+			);
+		}
+		else {
+			baseLocals = List.of(
+					implementationContext.getInstrumentedType(),
+					constants.TypeObject,
+					constants.Type_Array_Object
+			);
+		}
 		Label currentLabel = null;
 		Label nextLabel = new Label();
 		for ( int index = 0; index < setters.length; index++ ) {
@@ -69,6 +134,114 @@ public class SetPropertyValues implements ByteCodeAppender {
 						methodVisitor,
 						instrumentedMethod.getParameters().asTypeList()
 				);
+			}
+			if ( setterMember instanceof DelegatingAccessorMember dm ) {
+				if ( enhanced ) {
+					// UNFETCHED check: both references consumed by IF_ACMPEQ
+					methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
+					methodVisitor.visitLdcInsn( index );
+					methodVisitor.visitInsn( Opcodes.AALOAD );
+					methodVisitor.visitFieldInsn(
+							Opcodes.GETSTATIC,
+							constants.internalName_LazyPropertyInitializer,
+							"UNFETCHED_PROPERTY",
+							constants.Serializable_TYPE_DESCRIPTOR
+					);
+					methodVisitor.visitJumpInsn( Opcodes.IF_ACMPEQ, nextLabel );
+				}
+
+				// writer.set(entity, value)
+				methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+				methodVisitor.visitFieldInsn(
+						Opcodes.GETFIELD,
+						implementationContext.getInstrumentedType().getInternalName(),
+						dm.getFieldName(),
+						constants.descriptor_HibernateAccessorValueWriter
+				);
+				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
+				methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
+				methodVisitor.visitLdcInsn( index );
+				methodVisitor.visitInsn( Opcodes.AALOAD );
+				methodVisitor.visitMethodInsn(
+						Opcodes.INVOKEINTERFACE,
+						constants.internalName_HibernateAccessorValueWriter,
+						"set",
+						constants.methodDescriptor_ValueWriter_set,
+						true
+				);
+
+				if ( enhanced ) {
+					boolean alreadyHasFrame = false;
+
+					// CompositeTracker check
+					final Class<?> delegateType = delegateMemberType( dm.getMember() );
+					if ( compositeOwner && !isFinal( delegateType.getModifiers() ) ) {
+						methodVisitor.visitVarInsn( Opcodes.ALOAD, 2 );
+						methodVisitor.visitLdcInsn( index );
+						methodVisitor.visitInsn( Opcodes.AALOAD );
+						methodVisitor.visitInsn( Opcodes.DUP );
+						final Label ctFalseLabel = new Label();
+						methodVisitor.visitTypeInsn(
+								Opcodes.INSTANCEOF, constants.internalName_CompositeTracker
+						);
+						methodVisitor.visitJumpInsn( Opcodes.IFEQ, ctFalseLabel );
+						methodVisitor.visitTypeInsn(
+								Opcodes.CHECKCAST, constants.internalName_CompositeTracker
+						);
+						methodVisitor.visitLdcInsn( propertyNames[index] );
+						methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
+						methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
+						methodVisitor.visitMethodInsn(
+								Opcodes.INVOKEINTERFACE,
+								constants.internalName_CompositeTracker,
+								"$$_hibernate_setOwner",
+								constants.methodDescriptor_SetOwner,
+								true
+						);
+						final var ctEndLabel = new Label();
+						methodVisitor.visitJumpInsn( Opcodes.GOTO, ctEndLabel );
+						methodVisitor.visitLabel( ctFalseLabel );
+						implementationContext.getFrameGeneration().full(
+								methodVisitor,
+								List.of( constants.TypeObject ),
+								baseLocals
+						);
+						methodVisitor.visitInsn( Opcodes.POP );
+						methodVisitor.visitLabel( ctEndLabel );
+						implementationContext.getFrameGeneration()
+								.same( methodVisitor, instrumentedMethod.getParameters().asTypeList() );
+						alreadyHasFrame = true;
+					}
+
+					if ( persistentAttributeInterceptable ) {
+						methodVisitor.visitVarInsn( Opcodes.ALOAD, 3 );
+						final var skipLabel = new Label();
+						methodVisitor.visitJumpInsn( Opcodes.IFNULL, skipLabel );
+						methodVisitor.visitVarInsn( Opcodes.ALOAD, 3 );
+						methodVisitor.visitLdcInsn( propertyNames[index] );
+						methodVisitor.visitMethodInsn(
+								Opcodes.INVOKEINTERFACE,
+								constants.internalName_BytecodeLazyAttributeInterceptor,
+								"attributeInitialized",
+								constants.methodDescriptor_attributeInitialized,
+								true
+						);
+						methodVisitor.visitLabel( skipLabel );
+						implementationContext.getFrameGeneration()
+								.same( methodVisitor, instrumentedMethod.getParameters().asTypeList() );
+						alreadyHasFrame = true;
+					}
+
+					if ( alreadyHasFrame ) {
+						methodVisitor.visitLabel( nextLabel );
+						currentLabel = null;
+					}
+					else {
+						currentLabel = nextLabel;
+					}
+					nextLabel = new Label();
+				}
+				continue;
 			}
 			// Push entity on stack
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
@@ -109,11 +282,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 								TypeDescription.ForLoadedType.of( clazz ),
 								constants.TypeObject
 						),
-						List.of(
-								implementationContext.getInstrumentedType(),
-								constants.TypeObject,
-								constants.Type_Array_Object
-						)
+						baseLocals
 				);
 			}
 			final var type = setterTypee( setterMember );
@@ -193,11 +362,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 							List.of(
 									constants.TypeObject
 							),
-							List.of(
-									implementationContext.getInstrumentedType(),
-									constants.TypeObject,
-									constants.Type_Array_Object
-							)
+							baseLocals
 					);
 					// Pop that duplicated property value from the stack
 					methodVisitor.visitInsn( Opcodes.POP );
@@ -209,36 +374,12 @@ public class SetPropertyValues implements ByteCodeAppender {
 					alreadyHasFrame = true;
 				}
 				if ( persistentAttributeInterceptable ) {
-					// Load the owner
-					methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
-					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, internalClazzName );
-					// Extract the interceptor
-					methodVisitor.visitMethodInsn(
-							Opcodes.INVOKEVIRTUAL,
-							internalClazzName,
-							"$$_hibernate_getInterceptor",
-							constants.methodDescriptor_getInterceptor,
-							false
-					);
-					// Duplicate the interceptor on the stack and check if it implements BytecodeLazyAttributeInterceptor
-					methodVisitor.visitInsn( Opcodes.DUP );
-					methodVisitor.visitTypeInsn(
-							Opcodes.INSTANCEOF,
-							constants.internalName_BytecodeLazyAttributeInterceptor
-					);
-
-					// Jump to the false label if the instanceof check fails
-					final var instanceofFalseLabel = new Label();
-					methodVisitor.visitJumpInsn( Opcodes.IFEQ, instanceofFalseLabel );
-
-					// Cast to the subtype, so we can mark the property as initialized
-					methodVisitor.visitTypeInsn(
-							Opcodes.CHECKCAST,
-							constants.internalName_BytecodeLazyAttributeInterceptor
-					);
-					// Load the property name
+					// Use the interceptor stored in local 3 at the top of the method
+					methodVisitor.visitVarInsn( Opcodes.ALOAD, 3 );
+					final var skipLabel = new Label();
+					methodVisitor.visitJumpInsn( Opcodes.IFNULL, skipLabel );
+					methodVisitor.visitVarInsn( Opcodes.ALOAD, 3 );
 					methodVisitor.visitLdcInsn( propertyNames[index] );
-					// Invoke the method to mark the property as initialized
 					methodVisitor.visitMethodInsn(
 							Opcodes.INVOKEINTERFACE,
 							constants.internalName_BytecodeLazyAttributeInterceptor,
@@ -246,28 +387,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 							constants.methodDescriptor_attributeInitialized,
 							true
 					);
-
-					// Skip the cleanup
-					final var instanceofEndLabel = new Label();
-					methodVisitor.visitJumpInsn( Opcodes.GOTO, instanceofEndLabel );
-
-					// Here is the cleanup section for the false branch
-					methodVisitor.visitLabel( instanceofFalseLabel );
-					// We still have the duplicated interceptor on the stack
-					implementationContext.getFrameGeneration().full(
-							methodVisitor,
-							constants.INTERFACES_for_PersistentAttributeInterceptor,
-							List.of(
-									implementationContext.getInstrumentedType(),
-									constants.TypeObject,
-									constants.Type_Array_Object
-							)
-					);
-					// Pop that duplicated interceptor from the stack
-					methodVisitor.visitInsn( Opcodes.POP );
-
-					// Clean stack after the if block
-					methodVisitor.visitLabel( instanceofEndLabel );
+					methodVisitor.visitLabel( skipLabel );
 					implementationContext.getFrameGeneration()
 							.same( methodVisitor, instrumentedMethod.getParameters().asTypeList() );
 					alreadyHasFrame = true;
@@ -293,7 +413,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 					.same( methodVisitor, instrumentedMethod.getParameters().asTypeList() );
 		}
 		methodVisitor.visitInsn( Opcodes.RETURN );
-		return new Size( 4, instrumentedMethod.getStackSize() );
+		return new Size( 4, instrumentedMethod.getStackSize() + ( persistentAttributeInterceptable ? 1 : 0 ) );
 	}
 
 	private static void visitSetter(MethodVisitor methodVisitor, Member setterMember, Class<?> type) {
@@ -343,6 +463,16 @@ public class SetPropertyValues implements ByteCodeAppender {
 					false
 			);
 		}
+	}
+
+	private static @Nonnull Class<?> delegateMemberType(Member member) {
+		if ( member instanceof Field field ) {
+			return field.getType();
+		}
+		else if ( member instanceof Method method ) {
+			return method.getParameterTypes()[0];
+		}
+		return Object.class;
 	}
 
 	private static @Nonnull Class<?> setterTypee(Member setterMember) {

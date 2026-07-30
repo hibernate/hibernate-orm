@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -191,6 +192,7 @@ public interface Metadata extends MappingContext {
 
 	Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs();
 
+	@Remove
 	IdentifierGeneratorDefinition getIdentifierGenerator(String name);
 
 	java.util.Collection<Table> collectTableMappings();

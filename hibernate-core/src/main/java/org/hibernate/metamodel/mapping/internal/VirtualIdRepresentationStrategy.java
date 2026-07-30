@@ -5,8 +5,9 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorProxied;
@@ -61,7 +62,12 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	}
 
 	@Override
-	public ReflectionOptimizer getReflectionOptimizer() {
+	public HibernateAccessorMultiValueReader getMultiValueReader() {
+		return null;
+	}
+
+	@Override
+	public HibernateAccessorMultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 

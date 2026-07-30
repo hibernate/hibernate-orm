@@ -4,13 +4,13 @@
  */
 package org.hibernate.property.access.internal;
 
+import java.util.Map;
+
 import jakarta.annotation.Nonnull;
+
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.models.accessor.HibernateAccessorFactory;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import java.util.Map;
 
 /**
  * {@link StandardServiceInitiator} for {@link PropertyAccessorService}.
@@ -32,11 +32,6 @@ public class PropertyAccessorServiceInitiator implements StandardServiceInitiato
 	public PropertyAccessorService initiateService(
 			@Nonnull Map<String, Object> configurationValues,
 			@Nonnull ServiceRegistryImplementor registry) {
-		return new PropertyAccessorService() {
-			@Override
-			public HibernateAccessorFactory hibernateAccessorFactory() {
-				return HibernateAccessorFactory.reflection();
-			}
-		};
+		return new ByteBuddyPropertyAccessorService();
 	}
 }

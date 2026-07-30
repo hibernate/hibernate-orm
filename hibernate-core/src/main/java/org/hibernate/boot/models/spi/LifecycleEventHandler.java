@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
 import org.hibernate.boot.models.JpaEventListenerStyle;
@@ -59,6 +60,7 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
 /// @see jakarta.persistence.PreUpdate
 ///
 /// @author Steve Ebersole
+@Remove
 public class LifecycleEventHandler {
 
 	private final JpaEventListenerStyle consumerType;

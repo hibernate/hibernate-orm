@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import java.util.Collections;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import jakarta.persistence.QueryHint;
 /**
  * @author Steve Ebersole
  */
+@Remove
 public record NamedNativeStatementRegistration(String name, NamedNativeStatement configuration) {
 	public String getStatement() {
 		return configuration.statement();

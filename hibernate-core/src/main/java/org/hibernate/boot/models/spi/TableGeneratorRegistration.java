@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import jakarta.persistence.TableGenerator;
 
 /**
@@ -11,5 +12,6 @@ import jakarta.persistence.TableGenerator;
  *
  * @author Steve Ebersole
  */
+@Remove
 public record TableGeneratorRegistration(String name, TableGenerator configuration) {
 }

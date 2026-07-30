@@ -45,6 +45,8 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
+import org.hibernate.cache.spi.CacheConstructionContext;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
@@ -331,8 +333,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		sqlStringGenerationContext = runtimeComponents.sqlStringGenerationContext();
 
-		cacheAccess = runtimeComponents.cacheFactory().buildCache( this );
-		cacheAccess.prime( runtimeComponents.cacheRegionConfigs() );
+		cacheAccess = runtimeComponents.cacheFactory().buildCache(
+				new CacheConstructionContextImpl( this, runtimeComponents.cacheRegionConfigs() )
+		);
 		extensionIntegrationService = runtimeComponents.extensionIntegrationService();
 		statisticsFactory = runtimeComponents.statisticsFactory();
 
@@ -448,6 +451,21 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 						? standardServiceComponents.managedBeanRegistry()
 						: serviceRegistry.requireService( ManagedBeanRegistry.class )
 		);
+	}
+
+	private record CacheConstructionContextImpl(
+			SessionFactoryImplementor sessionFactory,
+			Set<DomainDataRegionConfig> cacheRegionConfigs)
+			implements CacheConstructionContext {
+		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			return sessionFactory;
+		}
+
+		@Override
+		public Set<DomainDataRegionConfig> getCacheRegionConfigs() {
+			return cacheRegionConfigs;
+		}
 	}
 
 	@Override

@@ -1,11 +1,11 @@
 package org.hibernate.cache.internal;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.PersistenceException;
-import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.Region;
@@ -43,11 +43,6 @@ public class DisabledCaching implements CacheImplementor {
 	@Nonnull
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
-	}
-
-	@Override
-	public void prime(@Nonnull Set<DomainDataRegionConfig> cacheRegionConfigs) {
-		// nothing to do
 	}
 
 	@Override

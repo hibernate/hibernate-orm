@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cache.spi.CacheConstructionContext;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsCache;
@@ -66,8 +67,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private final Map<String, QueryResultsCache> namedQueryResultsCacheMap = new ConcurrentHashMap<>();
 
 
-	public EnabledCaching(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+	public EnabledCaching(CacheConstructionContext constructionContext) {
+		this.sessionFactory = constructionContext.getSessionFactory();
 		final var options = sessionFactory.getSessionFactoryOptions();
 		regionFactory = options.getServiceRegistry().requireService( RegionFactory.class );
 		regionFactory.start( options, sessionFactory.getProperties() );
@@ -79,6 +80,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			timestampsCache = new TimestampsCacheDisabledImpl();
 			defaultQueryResultsCache = null;
 		}
+		initializeDomainDataRegions( constructionContext.getCacheRegionConfigs() );
 	}
 
 	private QueryResultsCache buildQueryResultsCache(SessionFactoryImplementor sessionFactory) {
@@ -101,8 +103,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				.buildTimestampsCache( this, timestampsRegion );
 	}
 
-	@Override
-	public void prime(@Nonnull Set<DomainDataRegionConfig> cacheRegionConfigs) {
+	private void initializeDomainDataRegions(Set<DomainDataRegionConfig> cacheRegionConfigs) {
 		for ( var regionConfig : cacheRegionConfigs ) {
 			final var region = buildRegion( regionConfig );
 			regionsByName.put( region.getName(), region );

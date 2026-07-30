@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Contact to define if the source of plural attribute is sortable or not.
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface Sortable {
 	/**
 	 * If the source of plural attribute is supposed to be sorted.

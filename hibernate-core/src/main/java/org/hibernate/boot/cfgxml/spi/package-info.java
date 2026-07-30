@@ -10,4 +10,7 @@
  *
  * @author Steve Ebersole
  */
+@Remove
 package org.hibernate.boot.cfgxml.spi;
+
+import org.hibernate.Remove;

@@ -5,6 +5,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.service.JavaServiceLoadable;
 
@@ -35,6 +36,7 @@ public interface AdditionalMappingContributor {
 	 * @param resourceStreamLocator Delegate for locating XML resources via class-path lookup.
 	 * @param buildingContext Access to useful contextual references.
 	 */
+	@Remove
 	void contribute(
 			AdditionalMappingContributions contributions,
 			InFlightMetadataCollector metadata,

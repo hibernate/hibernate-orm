@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.jaxb.hbm.spi.SingularAttributeInfo;
 
 /**
@@ -15,6 +17,7 @@ import org.hibernate.boot.jaxb.hbm.spi.SingularAttributeInfo;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface EmbeddedAttributeMapping extends SingularAttributeInfo {
 	boolean isUnique();
 	EmbeddableMapping getEmbeddableMapping();

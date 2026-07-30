@@ -6,6 +6,7 @@ package org.hibernate.boot.query;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Remove;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType;
@@ -69,6 +70,7 @@ import static org.hibernate.internal.util.StringHelper.split;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescriptor {
 
 	private final String registrationName;

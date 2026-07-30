@@ -5,6 +5,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -197,6 +198,7 @@ public abstract sealed class Collection
 	}
 
 	@Override
+	@Remove
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}
@@ -205,11 +207,13 @@ public abstract sealed class Collection
 		return getBuildingContext().getBootstrapContext();
 	}
 
+	@Remove
 	public MetadataImplementor getMetadata() {
 		return getBuildingContext().getMetadataCollector();
 	}
 
 	@Override
+	@Remove
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}

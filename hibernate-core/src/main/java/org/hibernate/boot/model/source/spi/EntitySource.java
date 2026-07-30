@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +18,7 @@ import org.hibernate.boot.model.CustomSql;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface EntitySource extends IdentifiableTypeSource, ToolingHintContextContainer, EntityNamingSourceContributor {
 	/**
 	 * Obtain the primary table for this entity.

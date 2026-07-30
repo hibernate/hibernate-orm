@@ -8,6 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -67,8 +68,23 @@ public interface Integrator {
 	 * Tongue-in-cheek name for a shutdown callback.
 	 *
 	 * @param sessionFactory The session factory being closed.
-	 * @param serviceRegistry That session factory's service registry
+	 * @param context The integration-time context
+	 *
+	 * @since 8.0
 	 */
+	default void disintegrate(SessionFactoryImplementor sessionFactory, Context context) {
+		disintegrate( sessionFactory, (SessionFactoryServiceRegistry) sessionFactory.getServiceRegistry() );
+	}
+
+	/**
+	 * Tongue-in-cheek name for a shutdown callback.
+	 *
+	 * @param sessionFactory The session factory being closed.
+	 * @param serviceRegistry That session factory's service registry
+	 *
+	 * @deprecated Use {@link #disintegrate(SessionFactoryImplementor, Context)}.
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	default void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 		// do nothing by default
 	}
@@ -81,6 +97,13 @@ public interface Integrator {
 	 */
 	@Incubating
 	interface Context {
+		/**
+		 * Access to managed beans using the bootstrap-time CDI access policy.
+		 */
+		default ManagedBeanRegistry getManagedBeanRegistry() {
+			return getBootstrapContext().getManagedBeanRegistry();
+		}
+
 		/**
 		 * @deprecated Access to the bootstrap context will be removed.
 		 */

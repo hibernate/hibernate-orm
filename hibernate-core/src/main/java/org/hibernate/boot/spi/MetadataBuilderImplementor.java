@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.MetadataBuilder;
 
 /**
@@ -11,6 +12,7 @@ import org.hibernate.boot.MetadataBuilder;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface MetadataBuilderImplementor extends MetadataBuilder {
 	BootstrapContext getBootstrapContext();
 

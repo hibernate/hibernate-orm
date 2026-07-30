@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Describes a relationship annotated with {@link jakarta.persistence.MapsId}
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface MapsIdSource {
 	/**
 	 * Obtain the {@link jakarta.persistence.MapsId#value()} naming the attribute

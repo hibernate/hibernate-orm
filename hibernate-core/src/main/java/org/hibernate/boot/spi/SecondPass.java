@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.mapping.PersistentClass;
 
 /**
@@ -19,6 +20,7 @@ import org.hibernate.mapping.PersistentClass;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
+@Remove
 public interface SecondPass extends Serializable {
 	/**
 	 * Perform the operation

@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Describes the nature of plural attribute indexes in terms of relational implications.
  *
  * @author Steve Ebersole
  */
+@Remove
 public enum PluralAttributeIndexNature {
 	/**
 	 * A sequential array/list index

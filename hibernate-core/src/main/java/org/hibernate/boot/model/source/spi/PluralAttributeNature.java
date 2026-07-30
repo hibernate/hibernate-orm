@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,7 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
+@Remove
 public enum PluralAttributeNature {
 	BAG( Collection.class, false ),
 	ID_BAG( Collection.class, false ),

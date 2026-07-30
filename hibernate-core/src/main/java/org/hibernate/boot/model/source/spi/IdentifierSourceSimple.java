@@ -4,12 +4,15 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Additional contract describing the source of an identifier mapping whose {@linkplain #getNature() nature} is
  * {@linkplain org.hibernate.id.EntityIdentifierNature#SIMPLE simple}.
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface IdentifierSourceSimple extends IdentifierSource {
 	/**
 	 * Obtain the source descriptor for the identifier attribute.

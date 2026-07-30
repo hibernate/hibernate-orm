@@ -4,9 +4,12 @@
  */
 package org.hibernate.boot.models;
 
+import org.hibernate.Remove;
+
 /// Distinction between the 2 different styles or approaches of lifecycle events defined by JPA.
 ///
 /// @author Steve Ebersole
+@Remove
 public enum JpaEventListenerStyle {
 	/// The lifecycle method is declared on the entity class.
 	/// The annotated method should define no arguments and have a void return type.

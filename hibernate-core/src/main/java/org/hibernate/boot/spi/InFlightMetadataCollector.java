@@ -297,8 +297,10 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// second passes
 
+	@Remove
 	void addSecondPass(SecondPass secondPass);
 
+	@Remove
 	void addSecondPass(SecondPass sp, boolean onTopOfTheQueue);
 
 
@@ -345,11 +347,13 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
 	PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails persistentClassDetails, String propertyName);
 
+	@Remove
 	boolean isInSecondPass();
 
 	NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName);
 	void registerNaturalIdUniqueKeyBinder(String entityName, NaturalIdUniqueKeyBinder ukBinder);
 
+	@Remove
 	void registerValueMappingResolver(Function<MetadataBuildingContext,Boolean> resolver);
 
 	void addJavaTypeRegistration(Class<?> javaType, JavaType<?> jtd);
@@ -381,6 +385,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	String getFromMappedBy(String ownerEntityName, String propertyName);
 
 	interface EntityTableXref {
+		@Remove
 		void addSecondaryTable(LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin);
 		void addSecondaryTable(QualifiedTableName logicalName, Join secondaryTableJoin);
 		Table resolveTable(Identifier tableName);

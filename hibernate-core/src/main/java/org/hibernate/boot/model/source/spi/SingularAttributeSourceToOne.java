@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
@@ -11,6 +13,7 @@ import org.hibernate.type.ForeignKeyDirection;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface SingularAttributeSourceToOne
 		extends SingularAttributeSource,
 			ForeignKeyContributingSource,

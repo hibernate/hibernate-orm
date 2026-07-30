@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.model.CustomSql;
 
 /**
  * @author Steve Ebersole
  */
+@Remove
 public interface PluralAttributeSource
 		extends AttributeSource,
 				FetchableAttributeSource,

@@ -227,6 +227,7 @@ public class StandardServiceRegistryBuilder {
 	 * @see #configure(String)
 	 * @see #loadProperties(String)
 	 */
+	@Deprecated(since = "8.0")
 	public StandardServiceRegistryBuilder configure() {
 		return configure( DEFAULT_CFG_RESOURCE_NAME );
 	}
@@ -238,18 +239,22 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
+	@Deprecated(since = "8.0")
 	public StandardServiceRegistryBuilder configure(String resourceName) {
 		return configure( configLoader.loadConfigXmlResource( resourceName ) );
 	}
 
+	@Deprecated(since = "8.0")
 	public StandardServiceRegistryBuilder configure(File configurationFile) {
 		return configure( configLoader.loadConfigXmlFile( configurationFile ) );
 	}
 
+	@Deprecated(since = "8.0")
 	public StandardServiceRegistryBuilder configure(URL url) {
 		return configure( configLoader.loadConfigXmlUrl( url ) );
 	}
 
+	@Deprecated(since = "8.0")
 	public StandardServiceRegistryBuilder configure(LoadedConfig loadedConfig) {
 		aggregatedCfgXml.merge( loadedConfig );
 		settings.putAll( loadedConfig.getConfigurationValues() );

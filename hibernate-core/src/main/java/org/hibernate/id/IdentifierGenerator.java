@@ -58,7 +58,7 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
  * @see PostInsertIdentifierGenerator
  * @see PersistentIdentifierGenerator
  */
-public interface IdentifierGenerator extends BeforeExecutionGenerator, ExportableProducer, Configurable {
+public interface IdentifierGenerator extends BeforeExecutionGenerator, Configurable {
 	/**
 	 * The configuration parameter holding the entity name
 	 */
@@ -108,8 +108,10 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 * {@link #configure(GeneratorCreationContext, Properties)}.
 	 *
 	 * @param database The database instance
+	 *
+	 * @deprecated Implement {@link ExportableProducer} instead.
 	 */
-	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	default void registerExportables(Database database) {}
 
 	/**

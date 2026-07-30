@@ -13,6 +13,7 @@ import java.util.function.Function;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -82,6 +83,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 		return getBootstrapContext().getModelsContext().getAnnotationDescriptorRegistry();
 	}
 
+	@Remove
 	GlobalRegistrations getGlobalRegistrations();
 	PersistenceUnitMetadata getPersistenceUnitMetadata();
 

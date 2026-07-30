@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
@@ -23,6 +24,7 @@ import java.util.Objects;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class ConversionRegistration {
 	private final Class<?> explicitDomainType;
 	private final Class<? extends AttributeConverter<?,?>> converterType;

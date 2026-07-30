@@ -32,6 +32,6 @@ public class PropertyAccessorServiceInitiator implements StandardServiceInitiato
 	public PropertyAccessorService initiateService(
 			@Nonnull Map<String, Object> configurationValues,
 			@Nonnull ServiceRegistryImplementor registry) {
-		return new ByteBuddyPropertyAccessorService();
+		return new ByteBuddyPropertyAccessorService( configurationValues );
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.boot.model;
 import jakarta.persistence.GenerationType;
 import org.hibernate.AnnotationException;
 import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.id.IdentifierGenerator;
@@ -37,6 +38,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Emmanuel Bernard
  * @author Strong Liu
  */
+@Remove
 public class IdentifierGeneratorDefinition implements Serializable {
 	private final String name;
 	private final String strategy;

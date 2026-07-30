@@ -5,6 +5,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
@@ -38,7 +39,10 @@ public interface MetadataBuildingContext {
 	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}
 	 *
 	 * @return The options
+	 *
+	 * @apiNote This method will be removed in 9.0.
 	 */
+	@Remove
 	MetadataBuildingOptions getBuildingOptions();
 
 	/**
@@ -67,41 +71,49 @@ public interface MetadataBuildingContext {
 	}
 
 	@Incubating
+	@Remove
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getRegistry() );
 	}
 
 	@Incubating
+	@Remove
 	default int getPreferredSqlTypeCodeForDuration() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForDuration( getRegistry() );
 	}
 
 	@Incubating
+	@Remove
 	default int getPreferredSqlTypeCodeForUuid() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForUuid( getRegistry() );
 	}
 
 	@Incubating
+	@Remove
 	default int getPreferredSqlTypeCodeForInstant() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getRegistry() );
 	}
 
 	@Incubating
+	@Remove
 	default int getPreferredSqlTypeCodeForArray() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getRegistry() );
 	}
 
 	@Incubating
+	@Remove
 	default boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return isPreferJavaTimeJdbcTypesEnabled( getRegistry() );
 	}
 
 	@Incubating
+	@Remove
 	default boolean isPreferNativeEnumTypesEnabled() {
 		return isPreferNativeEnumTypesEnabled( getRegistry() );
 	}
 
 	@Incubating
+	@Remove
 	default boolean isPreferLocaleLanguageTagEnabled() {
 		return isPreferLocaleLanguageTagEnabled( getRegistry() );
 	}
